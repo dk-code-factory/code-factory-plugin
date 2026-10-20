@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "code-factory": {
+      "type": "streamable-http",
+      "url": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp"
+    }
+  }
+}

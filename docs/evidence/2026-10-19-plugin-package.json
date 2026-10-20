@@ -1,0 +1,17 @@
+{
+  "result": "passed",
+  "plugin": "code-factory@code-factory-host-test",
+  "version": "0.2.0",
+  "checks": [
+    "real marketplace discovery",
+    "real isolated plugin install",
+    "cached MCP configuration and both skills"
+  ],
+  "workAcceptance": "not verified",
+  "at": "2026-10-19T22:12:37Z",
+  "artifact": "dist/code-factory-plugin-0.2.0.zip",
+  "sha256": "31c6fa8b29789b980abe725d76198f8590c2c02ed5721d6133ba3975fefb4237",
+  "daemonVersion": "0.1.0-c3566a582fdd",
+  "personalMarketplace": "code-factory-personal",
+  "globalPluginEnabled": false
+}

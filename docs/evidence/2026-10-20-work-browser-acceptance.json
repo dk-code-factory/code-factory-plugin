@@ -1,0 +1,137 @@
+{
+  "at": "2026-10-20T16:55:15.626181+00:00",
+  "installedVersion": "0.1.0-850eb63cda16",
+  "pluginVersion": "0.2.2",
+  "ready": false,
+  "remoteAppId": "asdk_app_6ad792b279348191b76d3443615b66e0",
+  "cloudPackageId": "Plugin_34caeb5c66048191a1ac0c8f01c31e73",
+  "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+  "conversations": {
+    "inbox": "https://chatgpt.com/c/6ad794c2-2b1c-83ea-b3d8-4ae289a1e2ea",
+    "completePluginSetupAndUI": "https://chatgpt.com/c/6ad79644-5860-83e8-b49f-f8f552219897",
+    "eventsAfterRefresh": "https://chatgpt.com/c/6ad79b69-c640-83e8-ab6c-5a086b084acf"
+  },
+  "browser": {
+    "control": "owner-approved Chrome DevTools auto-connect; same signed-in Chrome session",
+    "package": "installed from actual linked ZIP; Apps1,Skills2,Try in chat; version0.2.2",
+    "starter": "opens browser Work chat instead of desktop launcher",
+    "oauth": "actual ChatGPT DCR201, code exchange200, authenticated MCP200 after private owner approval303",
+    "inbox": "actual embedded Code Factory iframe,Connected,2issues,1PR,30-second sync timestamps",
+    "nativeConsentFixes": [
+      "strict-origin policy retains native form Origin without request query leakage",
+      "CSP permits only exact validated ChatGPT callback beside self"
+    ],
+    "hostCSP": "host displayed CSP off; production enforcement remains unverified"
+  },
+  "realCodex": {
+    "version": "0.161.0",
+    "runId": "09f11628428c72dea969f0f860b6334d",
+    "item": "dkropachev/code-factory-pilot-20261019#1",
+    "mode": "plan",
+    "sandbox": "read-only",
+    "publishing": "ask",
+    "status": "idle",
+    "setupSkill": "real question answered Focused; SETUP_ANSWER_OK and SETUP_FOLLOWUP_OK observed",
+    "embeddedUI": "question answered Continue using widget; UI_ANSWER_OK and UI_FOLLOWUP_OK observed"
+  },
+  "recovery": {
+    "runId": "09f11628428c72dea969f0f860b6334d",
+    "beforeStatus": "waiting",
+    "attentionMethod": "item/tool/requestUserInput",
+    "browserRefreshWhilePending": "verified: reloaded Work chat retained Connected and Needs attention1",
+    "afterRestartStatus": "interrupted",
+    "oldAttentionStatus": "stale",
+    "staleAnswer": "rejected by actual installed MCP endpoint",
+    "worktreeRetained": true,
+    "at": "2026-10-20T16:37:24.257217+00:00",
+    "afterResumeStatus": "idle",
+    "attentionHistory": [
+      {
+        "method": "item/tool/requestUserInput",
+        "status": "stale"
+      },
+      {
+        "method": "item/tool/requestUserInput",
+        "status": "answered"
+      },
+      {
+        "method": "item/tool/requestUserInput",
+        "status": "answered"
+      }
+    ],
+    "sameWorktree": true,
+    "cleanWorktree": true,
+    "gatewayRestartedAt": "2026-10-20T16:45:58.717944+00:00",
+    "gatewayRestart": "actual authenticated widget remained Connected with no alerts and retained UI_FOLLOWUP_OK after gateway restart"
+  },
+  "migrationRollback": {
+    "at": "2026-10-20T16:10:52.043096+00:00",
+    "from": "0.1.0-df7e345c8bba",
+    "rollbackVersion": "0.1.0-c68e17b77f80",
+    "previousGatewayAndDaemon": "verified active with compatible restored port10000 profile",
+    "restoredVersion": "0.1.0-df7e345c8bba",
+    "newCanonicalGateway": "verified healthy after upgrade and idempotent route reuse"
+  },
+  "publicSDK": {
+    "at": "2026-10-20T16:11:05.071Z",
+    "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+    "sdk": "@modelcontextprotocol/client 2.3.1",
+    "mode": "public-ingress",
+    "checks": [
+      {
+        "name": "public TLS ingress 199.38.181.54",
+        "status": "passed",
+        "remoteAddress": "199.38.181.54"
+      },
+      {
+        "name": "public TLS ingress 209.177.145.137",
+        "status": "passed",
+        "remoteAddress": "209.177.145.137"
+      },
+      {
+        "name": "SDK OAuth discovery, DCR and PKCE setup",
+        "status": "passed"
+      },
+      {
+        "name": "real owner consent and SDK OAuth PKCE token exchange",
+        "status": "passed"
+      },
+      {
+        "name": "SDK transport negotiation",
+        "status": "passed",
+        "server": "code-factory"
+      },
+      {
+        "name": "SDK tool discovery and open_factory",
+        "status": "passed",
+        "toolCount": 24
+      },
+      {
+        "name": "SDK embedded UI resource",
+        "status": "passed"
+      },
+      {
+        "name": "test access and refresh credentials revoked",
+        "status": "passed"
+      }
+    ],
+    "workAcceptance": "unverified: SDK test does not operate a signed-in ChatGPT session",
+    "publicIngress": "verified from this machine using every public DNS IP",
+    "result": "passed",
+    "testClientRegistrationCreated": true
+  },
+  "automatedVerification": "make verify passed on installed850eb63cda16 source; full race/browser/installer/package/smoke checks",
+  "callbacks": {
+    "state": "unverified",
+    "storedSubscriptions": 0,
+    "hostReply": "Host MCP Events subscriptions are unavailable in this session",
+    "retried": "fresh Work chat after Refresh tools; no polling/timer substitution"
+  },
+  "remaining": [
+    "Real host MCP Events subscription, signed delivery, filtering, refresh and unsubscribe",
+    "One-hour connected soak",
+    "Coordinated logout/login service-start check",
+    "Full current-version Work inbox revision/New/priority/cleanup matrix",
+    "Host CSP enforcement with CSP enabled"
+  ]
+}

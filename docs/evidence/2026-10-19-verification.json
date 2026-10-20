@@ -1,0 +1,20 @@
+{
+  "version": "0.1.0-5dde57428e46",
+  "recordedAt": "2026-10-19T19:24:23Z",
+  "archive": "dist/code-factory-0.1.0-5dde57428e46-linux-amd64.tar.gz",
+  "archiveSha256": "e5bf3e55625515b0dab253b0ef26fcaee8206a259599c171b51a6e96a557651d",
+  "commands": [
+    {
+      "command": "CODE_FACTORY_REAL_CODEX=1 make verify",
+      "result": "passed",
+      "evidence": "2026-10-19-local-verification.log"
+    },
+    {
+      "command": "CODE_FACTORY_SYSTEMD_STORE=/tmp/code-factory-container-39vixd95 python3 scripts/test_systemd.py",
+      "result": "passed; provider executables are fixtures",
+      "evidence": "2026-10-19-isolated-systemd.log"
+    }
+  ],
+  "readiness": "blocked pending guided Work/tunnel acceptance",
+  "localLiveAcceptanceVersion": "0.1.0-b6d163cfd985"
+}

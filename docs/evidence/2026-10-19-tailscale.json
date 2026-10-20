@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-19T19:41:50Z",
+  "publicMcp": "https://dkropachev-ai-rig.tail62c9f9.ts.net:10000/mcp",
+  "privateConsent": "https://dkropachev-ai-rig.tail62c9f9.ts.net:8444",
+  "checks": [
+    "public dynamic registration",
+    "actual Tailscale Serve owner identity and consent page",
+    "real HTTPS OAuth PKCE code exchange",
+    "authenticated HTTPS MCP reaches real installed daemon and private pilot inbox",
+    "HTTPS refresh-token rotation",
+    "revocation and unauthenticated denial"
+  ],
+  "workAcceptance": "not yet verified in Work",
+  "version": "0.1.0-855884388481",
+  "publicIngressVerified": true,
+  "previousTailscalePortsPreserved": [
+    443,
+    8443
+  ]
+}

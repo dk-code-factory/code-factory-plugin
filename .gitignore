@@ -1,0 +1,10 @@
+/bin/
+/web/node_modules/
+/web/test-results/
+/web/playwright-report/
+*.db*
+.env
+/plugin/.app.json
+__pycache__/
+
+/dist/

@@ -1,0 +1,61 @@
+{
+  "installedVersionAtFailure": "0.1.0-c68e17b77f80",
+  "browserControl": "verified: owner-approved auto-connect to signed-in Google Chrome",
+  "workAcceptance": "blocked pending actual connection",
+  "codeFactoryPort10000": {
+    "at": "2026-10-20T15:54:31.423Z",
+    "errors": [
+      {
+        "at": "2026-10-20T15:45:01.691Z",
+        "path": "/backend-api/aip/connectors/mcp/oauth_config",
+        "status": 500,
+        "requestId": null
+      },
+      {
+        "at": "2026-10-20T15:46:20.431Z",
+        "path": "/backend-api/aip/connectors/mcp/oauth_config",
+        "status": 500,
+        "requestId": null
+      },
+      {
+        "at": "2026-10-20T15:49:54.691Z",
+        "path": "/backend-api/aip/connectors/mcp/oauth_config",
+        "status": 500,
+        "requestId": null
+      },
+      {
+        "at": "2026-10-20T15:52:28.219Z",
+        "path": "/backend-api/aip/connectors/mcp",
+        "status": 500,
+        "requestId": null
+      }
+    ],
+    "requests": [
+      {
+        "path": "/backend-api/aip/connectors/mcp/oauth_config",
+        "status": 500,
+        "durationMs": 30137
+      },
+      {
+        "path": "/backend-api/aip/connectors/mcp",
+        "status": 500,
+        "durationMs": 120118
+      }
+    ]
+  },
+  "control": {
+    "url": "https://developers.openai.com/mcp",
+    "oauthDiscoveryHttpStatus": 404,
+    "durationMs": 910,
+    "pluginCreated": false
+  },
+  "sameHost443Probe": {
+    "url": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory-probe/mcp",
+    "oauthDiscoveryHttpStatus": 200,
+    "durationMs": 1531,
+    "authorizationEnabled": false,
+    "pluginCreated": false,
+    "temporaryRoutesRemoved": true
+  },
+  "interpretation": "The observed setup works through standard443 in this controlled discovery test. This does not prove a universal port restriction or a completed Code Factory connection."
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "code-factory": {
+      "type": "http",
+      "url": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+go vet ./...
+cd web && npm run check
+
+> code-factory-ui@0.1.0 check
+> tsc --noEmit
+
+go build -o bin/fake-codex ./internal/testutil/fakecodex
+go test -race ./...
+?   	codefactory/cmd/code-factory	[no test files]
+ok  	codefactory/internal/app	(cached)
+?   	codefactory/internal/buildinfo	[no test files]
+ok  	codefactory/internal/codex	(cached)
+?   	codefactory/internal/domain	[no test files]
+ok  	codefactory/internal/events	(cached)
+ok  	codefactory/internal/gateway	(cached)
+ok  	codefactory/internal/providers	(cached)
+ok  	codefactory/internal/setup	(cached)
+ok  	codefactory/internal/store	(cached)
+?   	codefactory/internal/testhost	[no test files]
+?   	codefactory/internal/testutil	[no test files]
+?   	codefactory/internal/testutil/fakecodex	[no test files]
+ok  	codefactory/internal/transport	(cached)
+?   	codefactory/internal/web	[no test files]
+cd web && npm test
+
+> code-factory-ui@0.1.0 test
+> playwright test
+
+[WebServer] (node:43198) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:43211) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:43471) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/factory.spec.ts:228:1 › triage does not launch, launch edits and attention answer survive reopening (674ms)
+  ✓  2 tests/factory.spec.ts:281:1 › plugin settings accept repository and secure credential without echo (289ms)
+  ✓  3 tests/factory.spec.ts:307:1 › MCP bridge drives the assembled daemon through launch, question, answer and follow-up (2.6s)
+
+  3 passed (4.6s)
+python3 scripts/test_packaging.py
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.070s
+
+OK
+....
+----------------------------------------------------------------------
+Ran 4 tests in 17.489s
+
+OK
+PASS: compiled daemon, authenticated MCP 2.0, stdio tunnel proxy, private credential files

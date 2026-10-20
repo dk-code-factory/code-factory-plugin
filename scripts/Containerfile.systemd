@@ -1,0 +1,6 @@
+FROM docker.io/library/ubuntu:24.04
+ENV container=podman
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends systemd dbus-user-session git python3 ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN useradd -m -u 1001 pilot
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]

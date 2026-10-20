@@ -1,0 +1,107 @@
+./scripts/verify.sh
+make[1]: Entering directory '/extra/dkropachev/code-factory-plugin'
+cd web && npm ci && npm run build
+
+added 41 packages, and audited 42 packages in 665ms
+
+8 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+
+> code-factory-ui@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 186 modules transformed.
+rendering chunks...
+[plugin vite:singlefile] 
+
+[plugin vite:singlefile] Inlining: index-BFZbL-UK.js
+[plugin vite:singlefile] Inlining: style-BHNGz9MW.css
+computing gzip size...
+../internal/web/dist/index.html  460.11 kB │ gzip: 131.72 kB
+✓ built in 765ms
+python3 scripts/package_plugin.py --embed
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.0.zip
+mkdir -p bin
+go build -trimpath -o bin/code-factory ./cmd/code-factory
+make[1]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+make[1]: Entering directory '/extra/dkropachev/code-factory-plugin'
+go vet ./...
+cd web && npm run check
+
+> code-factory-ui@0.1.0 check
+> tsc --noEmit
+
+make[1]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+make[1]: Entering directory '/extra/dkropachev/code-factory-plugin'
+go build -o bin/fake-codex ./internal/testutil/fakecodex
+go test -race ./...
+?   	codefactory/cmd/code-factory	[no test files]
+ok  	codefactory/internal/app	1.980s
+?   	codefactory/internal/buildinfo	[no test files]
+ok  	codefactory/internal/codex	1.395s
+?   	codefactory/internal/domain	[no test files]
+ok  	codefactory/internal/events	(cached)
+ok  	codefactory/internal/gateway	(cached)
+ok  	codefactory/internal/pluginbundle	(cached)
+ok  	codefactory/internal/providers	(cached)
+ok  	codefactory/internal/setup	(cached)
+ok  	codefactory/internal/store	(cached)
+?   	codefactory/internal/testhost	[no test files]
+?   	codefactory/internal/testutil	[no test files]
+?   	codefactory/internal/testutil/fakecodex	[no test files]
+ok  	codefactory/internal/transport	1.169s
+?   	codefactory/internal/web	[no test files]
+cd web && npm test
+
+> code-factory-ui@0.1.0 test
+> playwright test
+
+[WebServer] (node:72271) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:72284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:72498) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/factory.spec.ts:228:1 › triage does not launch, launch edits and attention answer survive reopening (871ms)
+  ✓  2 tests/factory.spec.ts:281:1 › plugin settings accept repository and secure credential without echo (286ms)
+  ✓  3 tests/factory.spec.ts:307:1 › MCP bridge drives the assembled daemon through launch, question, answer and follow-up (2.6s)
+
+  3 passed (5.5s)
+python3 scripts/test_packaging.py
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.098s
+
+OK
+make[1]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+/extra/dkropachev/code-factory-plugin/dist/code-factory-0.1.0-9ea1273b279a-linux-amd64.tar.gz
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.0.zip
+....
+----------------------------------------------------------------------
+Ran 4 tests in 17.582s
+
+OK
+PASS: compiled daemon, authenticated MCP 2.0, stdio tunnel proxy, private credential files

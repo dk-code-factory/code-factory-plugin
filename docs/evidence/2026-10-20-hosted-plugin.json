@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-20T01:57:23Z",
+  "origin": "https://dkropachev-ai-rig.tail62c9f9.ts.net:10000",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/plugin.zip",
+      "status": 200,
+      "contentType": "application/zip"
+    },
+    {
+      "path": "/plugin.zip.sha256",
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/plugin-release.json",
+      "status": 200,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/plugin.json",
+      "status": 200,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/mcp.json",
+      "status": 200,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/assets/logo.svg",
+      "status": 200,
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "/mcp",
+      "status": 401,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/approve",
+      "status": 404,
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/gateway-auth.json",
+      "status": 404,
+      "contentType": "text/plain; charset=utf-8"
+    }
+  ],
+  "release": {
+    "authentication": "oauth",
+    "downloadUrl": "https://dkropachev-ai-rig.tail62c9f9.ts.net:10000/plugin.zip",
+    "mcpUrl": "https://dkropachev-ai-rig.tail62c9f9.ts.net:10000/mcp",
+    "name": "code-factory",
+    "sha256": "35db26418168cc9ca38127a237a54c8169b8bb38216e91c1a3cefb1e134793bf",
+    "version": "0.2.0",
+    "workInstallation": "requires user installation and OAuth approval; hosted package alone does not install in Work"
+  },
+  "zipBytes": 7729,
+  "publicIngressDownloadVerified": true,
+  "browserLandingAndDownloadVerified": true,
+  "version": "0.1.0-9ea1273b279a"
+}

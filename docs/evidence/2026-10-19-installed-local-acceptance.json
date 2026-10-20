@@ -1,0 +1,39 @@
+{
+  "version": "0.1.0-b6d163cfd985",
+  "at": "2026-10-19T19:19:32Z",
+  "checks": [
+    {
+      "check": "initial unread baseline",
+      "state": "verified",
+      "count": 2
+    },
+    {
+      "check": "scheduled sync New and revision-aware unread with independent action history",
+      "state": "verified",
+      "seconds": 27.43,
+      "newIssue": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/3"
+    },
+    {
+      "check": "PR enrichment and related fixture",
+      "state": "verified",
+      "head": "213bebe8a79af54cf74a677a1a2b6d577e238e42"
+    },
+    {
+      "check": "installed systemd Codex launches isolated worktree and delivers real question",
+      "state": "verified",
+      "run": "d349691b3b64a47fd85d5515359c20b9"
+    },
+    {
+      "check": "installed systemd question answer and follow-up",
+      "state": "verified"
+    },
+    {
+      "check": "real service restart preserves worktree/history and rejects stale answer before explicit resume",
+      "state": "verified"
+    },
+    {
+      "check": "dirty worktree refused and clean explicit cleanup succeeds",
+      "state": "verified"
+    }
+  ]
+}

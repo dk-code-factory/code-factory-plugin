@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-20T03:05:34.707604+00:00",
+  "operation": "ChatGPT Add custom MCP server",
+  "userReportedError": "A service needed to create the app is temporarily unavailable. Try again shortly.",
+  "gatewayHealthHTTP": 200,
+  "services": "daemon and gateway active",
+  "newOAuthRegistrationObserved": false,
+  "workAccessTokens": 0,
+  "traceObservation": "No new request entries attributable to the reported retry; visible entries match our earlier endpoint checks.",
+  "assessment": "Failure appears upstream of the gateway during ChatGPT app creation; exact backend cause unverified.",
+  "publicStatus": "OpenAI status page reported fully operational when checked; no broad incident confirmed.",
+  "readiness": "blocked"
+}
