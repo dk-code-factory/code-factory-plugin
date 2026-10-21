@@ -1,0 +1,100 @@
+# Widgets and elements
+
+[Entity model](README.md) · [Panes](panes.md) · [Pages](pages.md) ·
+[Connections](connections.md) · [Source/tests](references.md)
+
+Element names in **bold** define scoped element IDs, for example
+`W-MESSAGE.text`. Labels in quotation marks are current user-facing labels.
+Collections repeat by their item, run, request or configuration key. “Save” means
+an explicit submission; editing a local field alone does not persist it.
+
+## Shared shell
+
+<!-- specs:widgets-0 -->
+| Widget | Elements | States and inputs | Outputs/connections |
+| --- | --- | --- | --- |
+| `W-IDENTITY` | **mark**, **name** “Code Factory”, **subtitle**, **connection** text. | Connection begins “Connecting to Work…”, then Connected or Disconnected/reconnecting. | Connection status is feedback, not a reconnect button. |
+| `W-NAVIGATION` | **inbox**, **agents**, **settings** buttons; **current** marker; **agents-count** badge; **needs-attention** button and **attention-count**. | Pending requests determine badges/counts; current page is highlighted. | Tab actions select a page. Needs attention selects Agents and opens the first pending request if one exists; it does not itself select that request's run. |
+| `W-GLOBAL-ERROR` | **message** alert; **dismiss** button. | Visible for a stored shared-action/poll error; a successful shared action clears it. Launch preparation/Start failures use the dialog-local alert instead. | Dismiss clears the displayed error without repairing the operation or dismissing a dialog. |
+| `W-CONNECTION-BLOCKER` | **connecting** message; **setup-hint**; delayed **blocker** alert via shell error feedback. | Replaces the page body until an initial snapshot exists. Navigation remains in the shell. | Explains that a supported connected host is required; there is no password or connection wizard here. |
+| `W-CONTINUITY-NOTICE` | **runs-survive-close** notice; **computer-online** notice. | Always displayed in the shell footer. | Informational; closing the host view is not an interrupt action. |
+<!-- /specs:widgets-0 -->
+
+## Inbox and item detail
+
+<!-- specs:widgets-1 -->
+| Widget | Elements | States and inputs | Outputs/connections |
+| --- | --- | --- | --- |
+| `W-INBOX-QUERY` | **heading**, **sync-help**, **search** text input, **filter** select: open/all/new/unread/acted-on. | Matches search against title and identifier, without case sensitivity; combines it with the selected filter. | Changes the visible item rows locally. Search/filter do not change the selected item or launch work. |
+| `W-SYNC-HEALTH` | Repeated **repository-id**, **last-success**, **waiting**, **error**. | For each repository, show its error, otherwise last successful time, otherwise first-sync waiting text. | Display only. Saving repositories and background refreshes update its inputs. |
+| `W-ITEM-ROW` | Whole-row **select** button; **kind**, **id**, **priority**, **title**, **unread-dot**, **author**, **state**, **draft**, **new-badge**, **acted-on**. | Repeated per item; selected style; priority can be Pending. New, unread and acted-on are separate indications. | Selects that item in `P-ITEM-DETAIL`; selection triggers detail loading and revision-aware read handling. |
+| `W-INBOX-EMPTY` | **empty-heading**, **baseline-help**, **add-repository** button. | Displayed only when the underlying inbox has no records. A filter/search yielding no matches currently has no distinct no-results message. | Add repository selects Settings; it does not automatically focus a field. |
+| `W-ITEM-OVERVIEW` | **loading** / **select-item** prompt; **id**, **kind**, **state**, **title**, **body**. | No selection shows a prompt; a selected item shows Loading until detail and matching snapshot entry are available. Empty body shows “No description.” | Loading detail causes the exact displayed revision to be marked read. It does not launch an agent. |
+| `W-ITEM-ACTIONS` | **launch** “Launch agent”; **unread** “Mark unread”; **acknowledge** “Acknowledge new”; **record-action**. | Available with item detail. These are separate actions, not one combined completion state. | Launch opens `D-LAUNCH`. Successful item mutations refresh the shared snapshot and reread selected detail/history without resetting independent drafts or repeating displayed-revision reads. |
+| `W-PRIORITY` | **priority**, **source**, **rationale-or-error**, **override** select: automatic/P0/P1/P2/P3; **save**. | Displayed priority may be pending. Selecting automatic sends a cleared override on Save. The selector is a local draft and is not initialized to the stored override. | Save changes only local priority state; it does not write provider labels. |
+| `W-RELATIONSHIPS` | Repeated **target**, **evidence-or-local** description, conditional **remove** button; **target-input** required text; **add** button. | Only manual links expose Remove. Reference targets are text, not implemented navigation links. | Add/remove local relationships and refresh selected detail. Remove removes the row; unrelated drafts survive. Add clears only the submitted target draft if unchanged during the request. Late reads cannot replace a later selection. No upstream mutation. |
+| `W-TICKET-CONTEXT` | Repeated **ticket-id**, **summary-or-error**, **status**. | Present for available linked ticket records; failures are text in the same display. | Display only; a ticket identifier is not a clickable ticket page in this UI. |
+| `W-PR-EVIDENCE` | Conditional **head**, **branch**; **checks-disclosure** and **checks-content**. | Head/branch appear when present; checks use an expandable details section. | Expands/collapses checks locally. No separate PR/checks page. |
+| `W-ITEM-HISTORY` | **activity** rows: kind/author/body; **action-history** rows: kind/time; section headings. | Activity omits reference-only entries; personal action history uses separately retained detail. Successful item mutations reread selected detail/history without consuming unread/New or resetting unrelated drafts. | Display only. Successful item mutations refresh visible action history; read, New and action indicators remain independent. |
+<!-- /specs:widgets-1 -->
+
+## Agents
+
+<!-- specs:widgets-2 -->
+| Widget | Elements | States and inputs | Outputs/connections |
+| --- | --- | --- | --- |
+| `W-RUN-ROW` | Whole-row **select**; **item-title-or-id**, **profile**, **status**, **attention-badge**. | Repeated per run except prepared runs. Cleaned runs are not filtered out. | Selects a run in `P-RUN-DETAIL`. An attention badge is not a separate answer button. |
+| `W-RUN-EMPTY` | **no-runs** guidance; **select-run** guidance. | Run list has no nonprepared runs, or detail has no selected matching run. | Instructs the owner to launch from an issue/PR or select retained work; no automatic launch. |
+| `W-RUN-CONTROLS` | **status**, **profile-name**, **workspace**, conditional **run-error** alert; **interrupt**, **resume**, **cleanup** buttons. | Interrupt exists when a turn identity exists; Resume for interrupted/failed; Cleanup for idle/interrupted/failed. | Performs explicit run actions and refreshes snapshot on success or failure while preserving action errors. Dirty cleanup retains workspace/history/draft and shows interrupted state; explicit Resume continues that run. No cleanup confirmation dialog is implemented. |
+| `W-ATTENTION-NOTICE` | Whole-notice **answer** button; **blocking-label** or **continuing-label**. | Repeated for pending requests belonging to the selected run. | Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent. |
+| `W-TRANSCRIPT` | **heading**, **live-region**, repeated **block-label** and **block-text**; **waiting**, **loading-more**, **restart-history**. | Displays conversation, commands/output, summary, plan, changes and run errors when present. Reads history in pages, retaining up to 1,000 events in the view. | Additional pages load automatically. “View history from the beginning” resets the displayed cursor/events when the retained-event threshold is reached; it does not restart the task. |
+| `W-MESSAGE` | **text** “Message agent” textarea; **send** button. | Send is disabled while submitting, for blank/whitespace text, or unless status is idle/running/waiting. | Sends follow-up or current-turn steering on the selected run. Success clears text; failure preserves it and shows shell error feedback. |
+<!-- /specs:widgets-2 -->
+
+## Launch dialog
+
+<!-- specs:widgets-3 -->
+| Widget | Elements | States and inputs | Outputs/connections |
+| --- | --- | --- | --- |
+| `W-DIALOG-FRAME` | **heading**, **close**, contextual **item** or **blocking-status**; dialog-local **response-error** for launch/attention; attention-only **open-chat**. | Each modal receives initial focus on its first visible enabled control, contains Tab/Shift+Tab, responds to Escape and restores a connected opener. Polling retains current focus; replacing focused controls recovers focus inside the dialog. | Close or Escape dismisses that dialog without answering or interrupting work. Visible enabled controls contain forward/reverse Tab; updates preserve connected focused controls. Focus returns to a still-connected permitted opener. Backdrop dismissal is not implemented. |
+| `W-LAUNCH-EDITOR` | **profile** select, **task-prompt** textarea, **model** input, **effort** select, **base** input, repeated **skills** checkboxes; **workspace-policy**, **approval-policy**, **publishing-authority** descriptions; **review** button. | Effort choices: local default/low/medium/high/xhigh/max/ultra. Profile change replaces prompt/model/effort/skill drafts; base remains its existing draft. Review disabled while preparing. Agent mode, sandbox, approvals and publishing are profile settings, not editable fields in this dialog. | Review prepares a durable snapshot and switches to review. Editing fields alone creates no work. |
+| `W-LAUNCH-REVIEW` | **workspace**, **branch-and-base**, **permissions**, **publishing**, **skills**, **prepared-prompt**; **edit**, **start** buttons. | Displays prepared values; Start disabled while submitting. | Edit returns to the local editor; a later Review prepares another snapshot. A received Start success closes launch, selects the run and changes to Agents. Repeated Start is rejected after the first queues the run. A lost first response can leave this review open while work already runs; retry reports an error. Close starts no additional work and does not delete the snapshot. |
+<!-- /specs:widgets-3 -->
+
+## Attention dialog
+
+<!-- specs:widgets-4 -->
+| Widget | Elements | States and inputs | Outputs/connections |
+| --- | --- | --- | --- |
+| `W-QUESTIONS` | Repeated **question** legend; **options** radio labels/descriptions; conditional **answer-text** or **secret-answer** input; **submit-answer**. | Text input appears for no options or an Other-enabled question; secret text uses a password field. No radio choice is automatically selected. Submit disabled while busy or any question lacks a value. | Sends one response containing all questions. Success refreshes and closes the dialog; stale/invalid responses remain an inline error. |
+| `W-APPROVAL` | **request-details** display; permission-specific **deny** / **approve-requested-for-turn** buttons, or repeated **available-decision** buttons. | Permission approval grants only the requested permissions for the current turn; other approval choices come from the request, with accept/decline/cancel as fallback. Buttons disabled while submitting. | Submits the chosen response for this request. No broader permission editor is offered. The nonquestion branch displays the request detail payload in the current implementation. |
+| `W-ELICITATION` | **message**; URL mode: **open-authorization**, **continue**; form mode: repeated **field-title**, **description**, and **boolean-answer**, **enum-answer**, **multi-enum-answer**, **number-answer**, **email-answer**, or **text-answer** plus **submit-form**; unsupported form: **native-support-notice**; always **decline**, **cancel**. | Uses supported schema constraints for required scalar/select fields, numeric bounds and string lengths. A schema-less unsupported request displays a native-host-support notice. Do not infer complete schema support or complete required-field handling for every field type. | URL opens through the host. Continue reports completion without verifying the external authorization itself. Form submits entered values; Decline/Cancel submit their corresponding decisions. Busy disables response submissions, not the external-open button. |
+<!-- /specs:widgets-4 -->
+
+## Settings
+
+<!-- specs:widgets-5 -->
+| Widget | Elements | States and inputs | Outputs/connections |
+| --- | --- | --- | --- |
+| `W-REPOSITORY-SETTINGS` | Repeated **repository-summary**; **repository** required input, **checkout**, **default-base**, **save**, **discover-skills**. | Checkout/base optional. Summary shows checkout or managed clone plus error/Connected. | Save persists repository settings and refreshes. Discover uses the entered checkout, falling back to the root directory, and refreshes available skills. It does not submit an unsaved repository first. |
+| `W-POLICY-SETTINGS` | **priority-labels** text area, **assessment-prompt** text area, **notifications** checkbox, **jira-url**, **jira-email**, **save**. | Label mapping is entered as structured text and must parse; policy fields are local drafts until Save. Jira fields existing in UI do not mean Jira is enabled for this pilot. | Save changes policy/configuration, invalidating dependent assessments. The notifications checkbox is not a subscription-management UI and cannot make an unsupported host subscribe. |
+| `W-JIRA-CREDENTIAL` | **token** password input with autocomplete off; **save-securely** button; **read-only-notice**. | Required nonempty value in a reusable password input. Success clears the field; ordinary settings never display stored token content. This widget has no separate form expiry, reachability challenge or single-use session. | Dedicated private save operation; failures use the shell alert. There is no explicit success toast or credential-readback control. |
+| `W-PROFILE-SETTINGS` | **existing-profile** select; **new**; **name**, **prompt-template**, **model**, **effort**; **mode**, **sandbox**, **approval**, **publishing** selectors; repeated **default-skills**; **save**. | Mode: Default/Plan. Sandbox: read-only/workspace-write/danger-full-access. Approval: on-request/untrusted/never. Publishing: ask/authorized. Effort is free text here. Name required. | New replaces the draft with profile defaults; selection loads an existing profile. Save persists for future preparation, not already-prepared snapshots. |
+| `W-SKILL-SETTINGS` | **managed-skill** select with Create a skill option; **name** required input; **instructions** text area; **save**. | Existing choices include managed skills only. Selecting an existing skill loads name/content. Selecting Create a skill currently does not reset populated fields. | Save creates/replaces managed skill content. No delete, rename migration or file-tree editor is present. |
+| `W-DIAGNOSTICS` | **check-connection** button; conditional **version**, **timestamp**, repeated **check-state**, **check-id**, **detail**; **provider-sign-in-help**. | Initially no result. Results distinguish verified, failed and unverified. | Explicitly requests diagnostics; it neither starts sign-in nor repairs a connection. No in-flight disabling is currently specified. |
+<!-- /specs:widgets-5 -->
+
+## Auxiliary owned surfaces
+
+These appear outside the embedded shell. Their private session fields are
+implementation/session data, not user-entered specification elements.
+
+<!-- specs:widgets-6 -->
+| Widget | Elements | States and inputs | Outputs/connections |
+| --- | --- | --- | --- |
+| `W-PACKAGE-OVERVIEW` | **branding**, **version**, **capability-summary**, **portable-download**, **checksum**, **privacy-notice**. | Public package landing page; version/downloads bound to configured host. | Downloads artifacts. Downloading does not install the plugin or create host authentication. |
+| `W-CONNECTION-GUIDE` | **browser-steps**, **endpoint**, **browser-package-download**, **mapping-warning**, **portable-package-help**, **manifest**, **connection-config**, **release-details** links. | Browser package link is displayed even before a mapping is available; following it can return a missing-registration error. | Guides external host setup and downloads the correctly bound package when available. Does not launch a desktop app or invent a remote connection ID. |
+| `W-OWNER-CONSENT` | **connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”. | Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages. | Allow or Deny consumes the request and redirects to its registered host callback. No credential field. |
+| `W-LOCAL-TUNNEL-KEY` | **heading**, **restricted-key-help**, hidden-then-visible **key** password field, **save-and-start**, **status**. | Alternate tunnel setup only. Form revealed after local reachability/session verification; expires and accepts a submission once. | Clears the input on submit, displays result, removes form on success. This is distinct from both owner consent and the Jira token input. |
+| `W-BROWSER-LAB` | **sign-in-boundary-notice**, **screenshot**, **location** summary, **url**, **navigate**, **refresh**, **text-to-send** password field, **send-text**, **key-controls**, **scroll-up/down**, **message**. | Optional developer/operator lab with separate profile and private access. User controls sign-in. | Controls the isolated browser; screenshot click selects coordinates. This tool is not a page or settings pane of the product inbox. |
+<!-- /specs:widgets-6 -->

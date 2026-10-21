@@ -1,0 +1,10 @@
+{
+  "name": "code-factory-local",
+  "interface": {"displayName": "Code Factory development"},
+  "plugins": [{
+    "name": "code-factory",
+    "source": {"source": "local", "path": "./plugin"},
+    "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+    "category": "Productivity"
+  }]
+}

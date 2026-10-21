@@ -1,0 +1,451 @@
+package app
+
+import (
+	"codefactory/internal/domain"
+	"codefactory/internal/providers"
+	"codefactory/internal/store"
+	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"regexp"
+	"sort"
+	"strings"
+	"time"
+)
+
+type App struct {
+	Store   *store.Store
+	Vault   *store.Vault
+	GitHub  *providers.GitHub
+	Runs    *Manager
+	DataDir string
+}
+
+func ID() string {
+	var b [16]byte
+	_, e := rand.Read(b[:])
+	if e != nil {
+		panic(e)
+	}
+	return hex.EncodeToString(b[:])
+}
+func (a *App) Init(ctx context.Context) error {
+	var c domain.Config
+	if e := a.Store.Get(ctx, "config", "settings", &c); errors.Is(e, store.ErrNotFound) {
+		if e = a.Store.Put(ctx, "config", "settings", domain.Defaults(), ""); e != nil {
+			return e
+		}
+	} else if e != nil {
+		return e
+	}
+	for _, p := range domain.Profiles() {
+		var old domain.Profile
+		if e := a.Store.Get(ctx, "profile", p.ID, &old); errors.Is(e, store.ErrNotFound) {
+			if e = a.Store.Put(ctx, "profile", p.ID, p, ""); e != nil {
+				return e
+			}
+		} else if e != nil {
+			return e
+		}
+	}
+	return nil
+}
+func (a *App) Config(ctx context.Context) (domain.Config, error) {
+	var c domain.Config
+	e := a.Store.Get(ctx, "config", "settings", &c)
+	return c, e
+}
+func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
+	if c.JiraURL != "" && !providers.ValidJiraURL(c.JiraURL) {
+		return fmt.Errorf("Jira URL must be an HTTPS atlassian.net tenant")
+	}
+	for _, p := range c.PriorityLabels {
+		if p < 0 || p > 3 {
+			return fmt.Errorf("priority must be P0–P3")
+		}
+	}
+	if c.AssessmentPrompt == "" {
+		return fmt.Errorf("assessment prompt required")
+	}
+	c.ID = "settings"
+	c.PolicyVersion = ID()
+	return a.Store.Put(ctx, "config", c.ID, c, "config.changed")
+}
+
+var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
+
+func (a *App) SaveRepository(ctx context.Context, r domain.Repository) error {
+	if !repoPattern.MatchString(r.ID) || strings.Contains(r.ID, "..") || strings.HasPrefix(r.Base, "-") {
+		return fmt.Errorf("invalid repository or base")
+	}
+	var old domain.Repository
+	if e := a.Store.Get(ctx, "repository", r.ID, &old); e == nil {
+		old.Checkout = r.Checkout
+		old.Base = r.Base
+		r = old
+	} else if !errors.Is(e, store.ErrNotFound) {
+		return e
+	}
+	return a.Store.Put(ctx, "repository", r.ID, r, "repository.changed")
+}
+func (a *App) SaveProfile(ctx context.Context, p domain.Profile) error {
+	if p.ID == "" {
+		p.ID = ID()
+	}
+	if p.Name == "" || p.Prompt == "" {
+		return fmt.Errorf("name and prompt required")
+	}
+	if p.Mode != "" && p.Mode != "default" && p.Mode != "plan" {
+		return fmt.Errorf("invalid collaboration mode")
+	}
+	if p.Sandbox != "read-only" && p.Sandbox != "workspace-write" && p.Sandbox != "danger-full-access" {
+		return fmt.Errorf("invalid sandbox")
+	}
+	if p.Approval != "on-request" && p.Approval != "untrusted" && p.Approval != "never" {
+		return fmt.Errorf("invalid approval policy")
+	}
+	if p.Publishing != "ask" && p.Publishing != "authorized" {
+		return fmt.Errorf("invalid publishing authority")
+	}
+	return a.Store.Put(ctx, "profile", p.ID, p, "profile.changed")
+}
+func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, error) {
+	items, e := store.List[domain.Item](ctx, a.Store, "item")
+	if e != nil {
+		return nil, e
+	}
+	c, e := a.Config(ctx)
+	if e != nil {
+		return nil, e
+	}
+	out := []domain.InboxEntry{}
+	for _, i := range items {
+		if state != "all" && i.State != "open" {
+			continue
+		}
+		var u domain.UserState
+		if e = a.Store.Get(ctx, "user", i.ID, &u); e != nil {
+			return nil, e
+		}
+		var assess domain.Assessment
+		if e = a.Store.Get(ctx, "assessment", i.ID, &assess); e != nil && !errors.Is(e, store.ErrNotFound) {
+			return nil, e
+		}
+		entry := domain.InboxEntry{Item: i, User: u, Unread: u.ReadRevision != i.Revision, Assessment: assess, PrioritySource: "pending"}
+		if u.Override != nil {
+			entry.Priority = u.Override
+			entry.PrioritySource = "override"
+		} else {
+			for _, l := range i.Labels {
+				if p, ok := c.PriorityLabels[l]; ok {
+					if entry.Priority == nil || p < *entry.Priority {
+						x := p
+						entry.Priority = &x
+						entry.PrioritySource = "label"
+					}
+				}
+			}
+			if entry.Priority == nil && assess.Status == "complete" && assess.Revision == i.Revision && assess.Policy == c.PolicyVersion && assess.Context == a.AssessmentContext(ctx, i) {
+				x := assess.Priority
+				entry.Priority = &x
+				entry.PrioritySource = "inference"
+			}
+		}
+		out = append(out, entry)
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		p, q := 4, 4
+		if out[i].Priority != nil {
+			p = *out[i].Priority
+		}
+		if out[j].Priority != nil {
+			q = *out[j].Priority
+		}
+		if p != q {
+			return p < q
+		}
+		return out[i].Item.Updated.After(out[j].Item.Updated)
+	})
+	return out, nil
+}
+func (a *App) UserAction(ctx context.Context, id, kind, revision string, priority *int) error {
+	return a.Store.Write(ctx, func(t *store.Tx) error {
+		var i domain.Item
+		if e := t.Get("item", id, &i); e != nil {
+			return e
+		}
+		var u domain.UserState
+		if e := t.Get("user", id, &u); e != nil {
+			return e
+		}
+		switch kind {
+		case "read":
+			if revision == "" {
+				return fmt.Errorf("displayed revision required")
+			}
+			u.ReadRevision = revision
+		case "unread":
+			u.ReadRevision = ""
+		case "acknowledge":
+			u.New = false
+		case "priority":
+			if priority != nil && (*priority < 0 || *priority > 3) {
+				return fmt.Errorf("invalid priority")
+			}
+			u.Override = priority
+		case "acted":
+			u.Actions = append(u.Actions, domain.Action{ID: ID(), Kind: "plugin", At: time.Now().UTC()})
+		default:
+			return fmt.Errorf("unknown action")
+		}
+		if e := t.Put("user", id, u); e != nil {
+			return e
+		}
+		return t.Event("item.state", id, u)
+	})
+}
+func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.Item, user string, checkpoint time.Time, full bool) error {
+	return a.Store.Write(ctx, func(t *store.Tx) error {
+		for _, i := range items {
+			var old domain.Item
+			e := t.Get("item", i.ID, &old)
+			if e != nil && !errors.Is(e, store.ErrNotFound) {
+				return e
+			}
+			created := errors.Is(e, store.ErrNotFound)
+			var u domain.UserState
+			if created {
+				u = domain.UserState{ID: i.ID, New: r.Imported, Actions: []domain.Action{}}
+			} else if e = t.Get("user", i.ID, &u); e != nil {
+				return e
+			}
+			for _, act := range i.Activity {
+				if user != "" && act.Author == user && (act.Kind == "comment" || act.Kind == "review" || act.Kind == "review-comment") {
+					found := false
+					for _, x := range u.Actions {
+						if x.ID == act.ID {
+							found = true
+						}
+					}
+					if !found {
+						u.Actions = append(u.Actions, domain.Action{ID: act.ID, Kind: "github:" + act.Kind, At: time.Now().UTC()})
+					}
+				}
+			}
+			if e = t.Put("user", i.ID, u); e != nil {
+				return e
+			}
+			if e = t.Put("item", i.ID, i); e != nil {
+				return e
+			}
+			if old.Revision != i.Revision {
+				if e = t.Event("item.changed", i.ID, map[string]any{"id": i.ID, "new": u.New, "title": i.Title}); e != nil {
+					return e
+				}
+				assess := domain.Assessment{ID: i.ID, Revision: i.Revision, Status: "pending"}
+				if e = t.Put("assessment", i.ID, assess); e != nil {
+					return e
+				}
+			}
+			for _, l := range Discover(i) {
+				if e = t.Put("relationship", l.ID, l); e != nil {
+					return e
+				}
+			}
+		}
+		var current domain.Repository
+		if e := t.Get("repository", r.ID, &current); e != nil {
+			return e
+		}
+		current.LastSync = checkpoint
+		if full {
+			current.LastFull = checkpoint
+		}
+		current.Imported = true
+		current.Error = ""
+		current.RetryAt = time.Time{}
+		if e := t.Put("repository", r.ID, current); e != nil {
+			return e
+		}
+		return t.Event("sync.completed", r.ID, map[string]any{"repository": r.ID, "at": checkpoint})
+	})
+}
+func (a *App) Sync(ctx context.Context) error {
+	repos, e := store.List[domain.Repository](ctx, a.Store, "repository")
+	if e != nil {
+		return e
+	}
+	if len(repos) == 0 {
+		return nil
+	}
+	user, e := a.GitHub.User(ctx)
+	if e != nil {
+		for _, r := range repos {
+			r.Error = e.Error()
+			_ = a.Store.Put(ctx, "repository", r.ID, r, "sync.error")
+		}
+		return e
+	}
+	for _, r := range repos {
+		if time.Now().Before(r.RetryAt) {
+			continue
+		}
+		at := time.Now().UTC()
+		full := !r.Imported || time.Since(r.LastFull) > time.Hour
+		items, err := a.GitHub.Sync(ctx, r, full)
+		if err != nil {
+			r.Error = err.Error()
+			var rate *providers.RateLimitError
+			if errors.As(err, &rate) {
+				r.RetryAt = rate.Until
+			}
+			if e = a.Store.Put(ctx, "repository", r.ID, r, "sync.error"); e != nil {
+				return e
+			}
+			continue
+		}
+		if e = a.Import(ctx, r, items, user, at, full); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
+const SyncInterval = 30 * time.Second
+
+func (a *App) SyncLoop(ctx context.Context) {
+	ticker := time.NewTicker(SyncInterval)
+	defer ticker.Stop()
+	a.syncLoop(ctx, ticker.C)
+}
+func (a *App) syncLoop(ctx context.Context, ticks <-chan time.Time) {
+	for {
+		if ctx.Err() != nil {
+			return
+		}
+		_ = a.Sync(ctx)
+		_ = a.RefreshJira(ctx)
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticks:
+		}
+	}
+}
+
+var ghRef = regexp.MustCompile(`https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(?:issues|pull)/([0-9]+)`)
+var shortRef = regexp.MustCompile(`(?:\b([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#([0-9]+)\b`)
+
+func Discover(i domain.Item) []domain.Relationship {
+	text := i.Title + "\n" + i.Body + "\n" + i.Branch
+	for _, a := range i.Activity {
+		text += "\n" + a.Body + " " + a.URL
+	}
+	out := []domain.Relationship{}
+	seen := map[string]bool{}
+	add := func(target, evidence, kind string) {
+		if target == i.ID || seen[target] {
+			return
+		}
+		seen[target] = true
+		out = append(out, domain.Relationship{ID: i.ID + "->" + target, Source: i.ID, Target: target, Kind: kind, Evidence: evidence})
+	}
+	for _, m := range ghRef.FindAllStringSubmatch(text, -1) {
+		add(m[1]+"#"+m[2], m[0], "github")
+	}
+	for _, m := range shortRef.FindAllStringSubmatch(text, -1) {
+		repo := m[1]
+		if repo == "" {
+			repo = i.Repository
+		}
+		add(repo+"#"+m[2], m[0], "github")
+	}
+	for _, m := range providers.JiraKey.FindAllString(text, -1) {
+		add(m, m, "jira")
+	}
+	return out
+}
+func (a *App) Link(ctx context.Context, l domain.Relationship, remove bool) error {
+	if l.Source == "" || l.Target == "" || l.Source == l.Target {
+		return fmt.Errorf("source and different target required")
+	}
+	l.ID = "local:" + l.Source + "->" + l.Target
+	l.Manual = true
+	l.Kind = "local"
+	return a.Store.Write(ctx, func(t *store.Tx) error {
+		if remove {
+			if e := t.Delete("relationship", l.ID); e != nil {
+				return e
+			}
+		} else if e := t.Put("relationship", l.ID, l); e != nil {
+			return e
+		}
+		return t.Event("relationship.changed", l.Source, l)
+	})
+}
+func raw(v any) json.RawMessage { b, _ := json.Marshal(v); return b }
+
+func (a *App) AssessmentContext(ctx context.Context, item domain.Item) string {
+	links, err := store.List[domain.Relationship](ctx, a.Store, "relationship")
+	if err != nil {
+		return "unavailable"
+	}
+	data := []any{item.Revision}
+	for _, l := range links {
+		if l.Source != item.ID {
+			continue
+		}
+		data = append(data, l)
+		var linked domain.Item
+		if a.Store.Get(ctx, "item", l.Target, &linked) == nil {
+			data = append(data, linked.Revision)
+		}
+		var ticket domain.Ticket
+		if a.Store.Get(ctx, "ticket", l.Target, &ticket) == nil {
+			data = append(data, ticket)
+		}
+	}
+	b, _ := json.Marshal(data)
+	h := sha256.Sum256(b)
+	return hex.EncodeToString(h[:])
+}
+func (a *App) RefreshJira(ctx context.Context) error {
+	c, e := a.Config(ctx)
+	if e != nil || c.JiraURL == "" {
+		return e
+	}
+	token, e := a.Vault.Get(ctx, "jira")
+	if errors.Is(e, store.ErrNotFound) {
+		return nil
+	}
+	if e != nil {
+		return e
+	}
+	links, e := store.List[domain.Relationship](ctx, a.Store, "relationship")
+	if e != nil {
+		return e
+	}
+	seen := map[string]bool{}
+	for _, l := range links {
+		if providers.JiraKey.FindString(l.Target) != l.Target || l.Target == "" || seen[l.Target] {
+			continue
+		}
+		seen[l.Target] = true
+		ticket, e := providers.JiraTicket(ctx, c.JiraURL, c.JiraEmail, token, l.Target)
+		if e != nil {
+			ticket.Error = e.Error()
+		}
+		var old domain.Ticket
+		_ = a.Store.Get(ctx, "ticket", l.Target, &old)
+		if string(raw(old)) != string(raw(ticket)) {
+			if e = a.Store.Put(ctx, "ticket", l.Target, ticket, "ticket.changed"); e != nil {
+				return e
+			}
+		}
+	}
+	return nil
+}

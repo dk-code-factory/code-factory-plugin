@@ -1,0 +1,2960 @@
+{
+  "version": 1,
+  "terms": [
+    {
+      "id": "owner",
+      "name": "Owner",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The person authorized to manage the private workspace."
+    },
+    {
+      "id": "repository",
+      "name": "Repository",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A versioned collection of source material and its related work items."
+    },
+    {
+      "id": "inbox",
+      "name": "Inbox",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The collection of synchronized issues and pull requests available for personal triage."
+    },
+    {
+      "id": "work-item",
+      "name": "Work item",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An issue or pull request tracked in the private workspace."
+    },
+    {
+      "id": "agent-run",
+      "name": "Agent run",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Retained agent work with a task, workspace, conversation and lifecycle status."
+    },
+    {
+      "id": "profile",
+      "name": "Work profile",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Reusable task defaults, execution permissions and publishing authority."
+    },
+    {
+      "id": "skill",
+      "name": "Skill",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Named instructions selected as context for agent work."
+    },
+    {
+      "id": "prepared-launch",
+      "name": "Prepared launch",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A durable snapshot of proposed work settings awaiting an explicit start."
+    },
+    {
+      "id": "attention-request",
+      "name": "Attention request",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A question, approval or supported form response requested by an agent."
+    },
+    {
+      "id": "credential",
+      "name": "Credential",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A private value that authorizes access to a service."
+    },
+    {
+      "id": "priority",
+      "name": "Priority",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The urgency assigned to an item by local override, label mapping or background assessment."
+    },
+    {
+      "id": "relationship",
+      "name": "Relationship",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A local or discovered reference connecting work items or ticket context."
+    },
+    {
+      "id": "subscription",
+      "name": "Subscription",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A host registration for delivery of matching application events."
+    },
+    {
+      "id": "reconciliation",
+      "name": "Reconciliation",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A reviewed decision about consistency among related contracts, implementation and assertions."
+    },
+    {
+      "id": "verification",
+      "name": "Verification",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Recorded execution of checks against identified inputs."
+    },
+    {
+      "id": "workspace",
+      "name": "Workspace",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An isolated working checkout retained for an agent task."
+    },
+    {
+      "id": "transcript",
+      "name": "Transcript",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The retained conversation, output and changes belonging to agent work."
+    },
+    {
+      "id": "host",
+      "name": "Host",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The application presenting the connected private workspace."
+    },
+    {
+      "id": "glossary",
+      "name": "Glossary",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The canonical vocabulary and meanings used to describe the application."
+    },
+    {
+      "id": "entity",
+      "name": "UI entity",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A named logical part of the visible interface."
+    },
+    {
+      "id": "widget-type",
+      "name": "Widget type",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A reusable control or display with a cohesive purpose."
+    },
+    {
+      "id": "widget-instance",
+      "name": "Widget instance",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A displayed occurrence of a widget with its own local context."
+    },
+    {
+      "id": "pane",
+      "name": "Pane",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A group of controls or displays sharing a task or selected record."
+    },
+    {
+      "id": "page",
+      "name": "Page",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A complete logical task surface."
+    },
+    {
+      "id": "dialog",
+      "name": "Dialog",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A temporary task surface above a page."
+    },
+    {
+      "id": "shell",
+      "name": "Shell",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Shared identity, navigation, feedback and continuity around task surfaces."
+    },
+    {
+      "id": "element",
+      "name": "Named element",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An individually named control, label, indicator or display field within a widget."
+    },
+    {
+      "id": "coverage-gap",
+      "name": "Coverage gap",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An identified shortfall in supported capability or evidence about behavior."
+    },
+    {
+      "id": "known-limitation",
+      "name": "Known limitation",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An observed constraint or shortcoming in current behavior or operating conditions."
+    },
+    {
+      "id": "unverified-behavior",
+      "name": "Unverified behavior",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Behavior whose claimed result has not yet been established by the required evidence."
+    },
+    {
+      "id": "keyboard-focus",
+      "name": "Keyboard focus",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The interface element currently designated to receive keyboard input."
+    },
+    {
+      "id": "modal-dialog",
+      "name": "Modal dialog",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A dialog that restricts user interaction to its active task surface while open."
+    },
+    {
+      "id": "state-new",
+      "name": "New",
+      "aliases": [],
+      "category": "state",
+      "definition": "An item discovered after the initial synchronization baseline and not yet acknowledged."
+    },
+    {
+      "id": "state-unread",
+      "name": "Unread",
+      "aliases": [],
+      "category": "state",
+      "definition": "An item with content changes beyond its last read revision."
+    },
+    {
+      "id": "state-acted-on",
+      "name": "Acted on",
+      "aliases": [],
+      "category": "state",
+      "definition": "An item with recorded personal action history independent of read and discovery status."
+    },
+    {
+      "id": "state-loading",
+      "name": "Loading",
+      "aliases": [],
+      "category": "state",
+      "definition": "Requested content is not yet available for display."
+    },
+    {
+      "id": "state-empty",
+      "name": "Empty",
+      "aliases": [],
+      "category": "state",
+      "definition": "The current collection has no records."
+    },
+    {
+      "id": "state-ready",
+      "name": "Ready",
+      "aliases": [],
+      "category": "state",
+      "definition": "Content is available for interaction."
+    },
+    {
+      "id": "state-error",
+      "name": "Error",
+      "aliases": [],
+      "category": "state",
+      "definition": "An operation or content request has failed."
+    },
+    {
+      "id": "state-connected",
+      "name": "Connected",
+      "aliases": [],
+      "category": "state",
+      "definition": "The host connection is available."
+    },
+    {
+      "id": "state-disconnected",
+      "name": "Disconnected",
+      "aliases": [],
+      "category": "state",
+      "definition": "The host connection is unavailable or reconnecting."
+    },
+    {
+      "id": "state-pending",
+      "name": "Pending",
+      "aliases": [],
+      "category": "state",
+      "definition": "A decision, assessment or response has not yet resolved."
+    },
+    {
+      "id": "state-prepared",
+      "name": "Prepared",
+      "aliases": [],
+      "category": "state",
+      "definition": "Work settings are retained for review before an explicit start."
+    },
+    {
+      "id": "state-queued",
+      "name": "Queued",
+      "aliases": [],
+      "category": "state",
+      "definition": "Explicitly started work is awaiting execution."
+    },
+    {
+      "id": "state-starting",
+      "name": "Starting",
+      "aliases": [],
+      "category": "state",
+      "definition": "A requested agent session is being initialized."
+    },
+    {
+      "id": "state-running",
+      "name": "Running",
+      "aliases": [],
+      "category": "state",
+      "definition": "An agent turn is active."
+    },
+    {
+      "id": "state-waiting",
+      "name": "Waiting",
+      "aliases": [],
+      "category": "state",
+      "definition": "An agent session is awaiting input or another required result."
+    },
+    {
+      "id": "state-idle",
+      "name": "Idle",
+      "aliases": [],
+      "category": "state",
+      "definition": "The current turn has finished and the retained session can receive follow-up."
+    },
+    {
+      "id": "state-interrupted",
+      "name": "Interrupted",
+      "aliases": [],
+      "category": "state",
+      "definition": "Active work has stopped and requires explicit continuation."
+    },
+    {
+      "id": "state-failed",
+      "name": "Failed",
+      "aliases": [],
+      "category": "state",
+      "definition": "Work ended with an error and requires explicit recovery."
+    },
+    {
+      "id": "state-cleaned",
+      "name": "Cleaned",
+      "aliases": [],
+      "category": "state",
+      "definition": "The stopped working checkout has been removed while history remains retained."
+    },
+    {
+      "id": "state-blocking",
+      "name": "Blocking",
+      "aliases": [],
+      "category": "state",
+      "definition": "A request requires a response before the agent can proceed."
+    },
+    {
+      "id": "state-continuing",
+      "name": "Continuing",
+      "aliases": [],
+      "category": "state",
+      "definition": "A pending request permits the agent to keep working."
+    },
+    {
+      "id": "state-verified",
+      "name": "Verified",
+      "aliases": [],
+      "category": "state",
+      "definition": "A check has observed its required successful result."
+    },
+    {
+      "id": "state-unverified",
+      "name": "Unverified",
+      "aliases": [],
+      "category": "state",
+      "definition": "A required result has not been established by observation."
+    },
+    {
+      "id": "connection-contains",
+      "name": "contains",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Places a logical child within a task surface."
+    },
+    {
+      "id": "connection-selects",
+      "name": "selects",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Changes which record or subset is displayed."
+    },
+    {
+      "id": "connection-navigates",
+      "name": "navigates",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Changes the active logical page."
+    },
+    {
+      "id": "connection-opens",
+      "name": "opens",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Shows a temporary task surface."
+    },
+    {
+      "id": "connection-closes",
+      "name": "closes",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Dismisses a temporary task surface."
+    },
+    {
+      "id": "connection-submits",
+      "name": "submits",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Sends an explicit state change or response."
+    },
+    {
+      "id": "connection-refreshes",
+      "name": "refreshes",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Supplies updated values to a display."
+    },
+    {
+      "id": "connection-references",
+      "name": "references",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Names a related domain record without implying navigation."
+    },
+    {
+      "id": "connection-external",
+      "name": "external",
+      "aliases": [],
+      "category": "connection-type",
+      "definition": "Leaves the owned surface through an artifact, callback or host-mediated link."
+    },
+    {
+      "id": "ui-s-factory",
+      "name": "Factory shell",
+      "aliases": [],
+      "category": "ui-shell",
+      "definition": "The factory shell within the application interface."
+    },
+    {
+      "id": "ui-w-identity",
+      "name": "Identity widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The identity widget within the application interface."
+    },
+    {
+      "id": "element-w-identity-mark",
+      "name": "mark",
+      "aliases": [],
+      "category": "element",
+      "definition": "The mark control or displayed value in the identity widget.",
+      "scope": "ui-w-identity"
+    },
+    {
+      "id": "element-w-identity-name",
+      "name": "name",
+      "aliases": [],
+      "category": "element",
+      "definition": "The name control or displayed value in the identity widget.",
+      "scope": "ui-w-identity"
+    },
+    {
+      "id": "element-w-identity-subtitle",
+      "name": "subtitle",
+      "aliases": [],
+      "category": "element",
+      "definition": "The subtitle control or displayed value in the identity widget.",
+      "scope": "ui-w-identity"
+    },
+    {
+      "id": "element-w-identity-connection",
+      "name": "connection",
+      "aliases": [],
+      "category": "element",
+      "definition": "The connection control or displayed value in the identity widget.",
+      "scope": "ui-w-identity"
+    },
+    {
+      "id": "ui-w-navigation",
+      "name": "Navigation widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The navigation widget within the application interface."
+    },
+    {
+      "id": "element-w-navigation-inbox",
+      "name": "inbox",
+      "aliases": [],
+      "category": "element",
+      "definition": "The inbox control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-agents",
+      "name": "agents",
+      "aliases": [],
+      "category": "element",
+      "definition": "The agents control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-settings",
+      "name": "settings",
+      "aliases": [],
+      "category": "element",
+      "definition": "The settings control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-current",
+      "name": "current",
+      "aliases": [],
+      "category": "element",
+      "definition": "The current control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-agents-count",
+      "name": "agents-count",
+      "aliases": [],
+      "category": "element",
+      "definition": "The agents count control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-needs-attention",
+      "name": "needs-attention",
+      "aliases": [],
+      "category": "element",
+      "definition": "The needs attention control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-attention-count",
+      "name": "attention-count",
+      "aliases": [],
+      "category": "element",
+      "definition": "The attention count control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "ui-w-global-error",
+      "name": "Global error widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The global error widget within the application interface."
+    },
+    {
+      "id": "element-w-global-error-message",
+      "name": "message",
+      "aliases": [],
+      "category": "element",
+      "definition": "The message control or displayed value in the global error widget.",
+      "scope": "ui-w-global-error"
+    },
+    {
+      "id": "element-w-global-error-dismiss",
+      "name": "dismiss",
+      "aliases": [],
+      "category": "element",
+      "definition": "The dismiss control or displayed value in the global error widget.",
+      "scope": "ui-w-global-error"
+    },
+    {
+      "id": "ui-w-connection-blocker",
+      "name": "Connection blocker widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The connection blocker widget within the application interface."
+    },
+    {
+      "id": "element-w-connection-blocker-connecting",
+      "name": "connecting",
+      "aliases": [],
+      "category": "element",
+      "definition": "The connecting control or displayed value in the connection blocker widget.",
+      "scope": "ui-w-connection-blocker"
+    },
+    {
+      "id": "element-w-connection-blocker-setup-hint",
+      "name": "setup-hint",
+      "aliases": [],
+      "category": "element",
+      "definition": "The setup hint control or displayed value in the connection blocker widget.",
+      "scope": "ui-w-connection-blocker"
+    },
+    {
+      "id": "element-w-connection-blocker-blocker",
+      "name": "blocker",
+      "aliases": [],
+      "category": "element",
+      "definition": "The blocker control or displayed value in the connection blocker widget.",
+      "scope": "ui-w-connection-blocker"
+    },
+    {
+      "id": "ui-w-continuity-notice",
+      "name": "Continuity notice widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The continuity notice widget within the application interface."
+    },
+    {
+      "id": "element-w-continuity-notice-runs-survive-close",
+      "name": "runs-survive-close",
+      "aliases": [],
+      "category": "element",
+      "definition": "The runs survive close control or displayed value in the continuity notice widget.",
+      "scope": "ui-w-continuity-notice"
+    },
+    {
+      "id": "element-w-continuity-notice-computer-online",
+      "name": "computer-online",
+      "aliases": [],
+      "category": "element",
+      "definition": "The computer online control or displayed value in the continuity notice widget.",
+      "scope": "ui-w-continuity-notice"
+    },
+    {
+      "id": "ui-w-inbox-query",
+      "name": "Inbox query widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The inbox query widget within the application interface."
+    },
+    {
+      "id": "element-w-inbox-query-heading",
+      "name": "heading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The heading control or displayed value in the inbox query widget.",
+      "scope": "ui-w-inbox-query"
+    },
+    {
+      "id": "element-w-inbox-query-sync-help",
+      "name": "sync-help",
+      "aliases": [],
+      "category": "element",
+      "definition": "The sync help control or displayed value in the inbox query widget.",
+      "scope": "ui-w-inbox-query"
+    },
+    {
+      "id": "element-w-inbox-query-search",
+      "name": "search",
+      "aliases": [],
+      "category": "element",
+      "definition": "The search control or displayed value in the inbox query widget.",
+      "scope": "ui-w-inbox-query"
+    },
+    {
+      "id": "element-w-inbox-query-filter",
+      "name": "filter",
+      "aliases": [],
+      "category": "element",
+      "definition": "The filter control or displayed value in the inbox query widget.",
+      "scope": "ui-w-inbox-query"
+    },
+    {
+      "id": "ui-w-sync-health",
+      "name": "Sync health widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The sync health widget within the application interface."
+    },
+    {
+      "id": "element-w-sync-health-repository-id",
+      "name": "repository-id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repository id control or displayed value in the sync health widget.",
+      "scope": "ui-w-sync-health"
+    },
+    {
+      "id": "element-w-sync-health-last-success",
+      "name": "last-success",
+      "aliases": [],
+      "category": "element",
+      "definition": "The last success control or displayed value in the sync health widget.",
+      "scope": "ui-w-sync-health"
+    },
+    {
+      "id": "element-w-sync-health-waiting",
+      "name": "waiting",
+      "aliases": [],
+      "category": "element",
+      "definition": "The waiting control or displayed value in the sync health widget.",
+      "scope": "ui-w-sync-health"
+    },
+    {
+      "id": "element-w-sync-health-error",
+      "name": "error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The error control or displayed value in the sync health widget.",
+      "scope": "ui-w-sync-health"
+    },
+    {
+      "id": "ui-w-item-row",
+      "name": "Item row widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The item row widget within the application interface."
+    },
+    {
+      "id": "element-w-item-row-select",
+      "name": "select",
+      "aliases": [],
+      "category": "element",
+      "definition": "The select control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-kind",
+      "name": "kind",
+      "aliases": [],
+      "category": "element",
+      "definition": "The kind control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-id",
+      "name": "id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The id control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-priority",
+      "name": "priority",
+      "aliases": [],
+      "category": "element",
+      "definition": "The priority control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-title",
+      "name": "title",
+      "aliases": [],
+      "category": "element",
+      "definition": "The title control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-unread-dot",
+      "name": "unread-dot",
+      "aliases": [],
+      "category": "element",
+      "definition": "The unread dot control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-author",
+      "name": "author",
+      "aliases": [],
+      "category": "element",
+      "definition": "The author control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-state",
+      "name": "state",
+      "aliases": [],
+      "category": "element",
+      "definition": "The state control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-draft",
+      "name": "draft",
+      "aliases": [],
+      "category": "element",
+      "definition": "The draft control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-new-badge",
+      "name": "new-badge",
+      "aliases": [],
+      "category": "element",
+      "definition": "The new badge control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "element-w-item-row-acted-on",
+      "name": "acted-on",
+      "aliases": [],
+      "category": "element",
+      "definition": "The acted on control or displayed value in the item row widget.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "ui-w-inbox-empty",
+      "name": "Inbox empty widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The inbox empty widget within the application interface."
+    },
+    {
+      "id": "element-w-inbox-empty-empty-heading",
+      "name": "empty-heading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The empty heading control or displayed value in the inbox empty widget.",
+      "scope": "ui-w-inbox-empty"
+    },
+    {
+      "id": "element-w-inbox-empty-baseline-help",
+      "name": "baseline-help",
+      "aliases": [],
+      "category": "element",
+      "definition": "The baseline help control or displayed value in the inbox empty widget.",
+      "scope": "ui-w-inbox-empty"
+    },
+    {
+      "id": "element-w-inbox-empty-add-repository",
+      "name": "add-repository",
+      "aliases": [],
+      "category": "element",
+      "definition": "The add repository control or displayed value in the inbox empty widget.",
+      "scope": "ui-w-inbox-empty"
+    },
+    {
+      "id": "ui-w-item-overview",
+      "name": "Item overview widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The item overview widget within the application interface."
+    },
+    {
+      "id": "element-w-item-overview-loading",
+      "name": "loading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The loading control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-item-overview-select-item",
+      "name": "select-item",
+      "aliases": [],
+      "category": "element",
+      "definition": "The select item control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-item-overview-id",
+      "name": "id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The id control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-item-overview-kind",
+      "name": "kind",
+      "aliases": [],
+      "category": "element",
+      "definition": "The kind control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-item-overview-state",
+      "name": "state",
+      "aliases": [],
+      "category": "element",
+      "definition": "The state control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-item-overview-title",
+      "name": "title",
+      "aliases": [],
+      "category": "element",
+      "definition": "The title control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-item-overview-body",
+      "name": "body",
+      "aliases": [],
+      "category": "element",
+      "definition": "The body control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "ui-w-item-actions",
+      "name": "Item actions widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The item actions widget within the application interface."
+    },
+    {
+      "id": "element-w-item-actions-launch",
+      "name": "launch",
+      "aliases": [],
+      "category": "element",
+      "definition": "The launch control or displayed value in the item actions widget.",
+      "scope": "ui-w-item-actions"
+    },
+    {
+      "id": "element-w-item-actions-unread",
+      "name": "unread",
+      "aliases": [],
+      "category": "element",
+      "definition": "The unread control or displayed value in the item actions widget.",
+      "scope": "ui-w-item-actions"
+    },
+    {
+      "id": "element-w-item-actions-acknowledge",
+      "name": "acknowledge",
+      "aliases": [],
+      "category": "element",
+      "definition": "The acknowledge control or displayed value in the item actions widget.",
+      "scope": "ui-w-item-actions"
+    },
+    {
+      "id": "element-w-item-actions-record-action",
+      "name": "record-action",
+      "aliases": [],
+      "category": "element",
+      "definition": "The record action control or displayed value in the item actions widget.",
+      "scope": "ui-w-item-actions"
+    },
+    {
+      "id": "ui-w-priority",
+      "name": "Priority widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The priority widget within the application interface."
+    },
+    {
+      "id": "element-w-priority-priority",
+      "name": "priority",
+      "aliases": [],
+      "category": "element",
+      "definition": "The priority control or displayed value in the priority widget.",
+      "scope": "ui-w-priority"
+    },
+    {
+      "id": "element-w-priority-source",
+      "name": "source",
+      "aliases": [],
+      "category": "element",
+      "definition": "The source control or displayed value in the priority widget.",
+      "scope": "ui-w-priority"
+    },
+    {
+      "id": "element-w-priority-rationale-or-error",
+      "name": "rationale-or-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The rationale or error control or displayed value in the priority widget.",
+      "scope": "ui-w-priority"
+    },
+    {
+      "id": "element-w-priority-override",
+      "name": "override",
+      "aliases": [],
+      "category": "element",
+      "definition": "The override control or displayed value in the priority widget.",
+      "scope": "ui-w-priority"
+    },
+    {
+      "id": "element-w-priority-save",
+      "name": "save",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save control or displayed value in the priority widget.",
+      "scope": "ui-w-priority"
+    },
+    {
+      "id": "ui-w-relationships",
+      "name": "Relationships widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The relationships widget within the application interface."
+    },
+    {
+      "id": "element-w-relationships-target",
+      "name": "target",
+      "aliases": [],
+      "category": "element",
+      "definition": "The target control or displayed value in the relationships widget.",
+      "scope": "ui-w-relationships"
+    },
+    {
+      "id": "element-w-relationships-evidence-or-local",
+      "name": "evidence-or-local",
+      "aliases": [],
+      "category": "element",
+      "definition": "The evidence or local control or displayed value in the relationships widget.",
+      "scope": "ui-w-relationships"
+    },
+    {
+      "id": "element-w-relationships-remove",
+      "name": "remove",
+      "aliases": [],
+      "category": "element",
+      "definition": "The remove control or displayed value in the relationships widget.",
+      "scope": "ui-w-relationships"
+    },
+    {
+      "id": "element-w-relationships-target-input",
+      "name": "target-input",
+      "aliases": [],
+      "category": "element",
+      "definition": "The target input control or displayed value in the relationships widget.",
+      "scope": "ui-w-relationships"
+    },
+    {
+      "id": "element-w-relationships-add",
+      "name": "add",
+      "aliases": [],
+      "category": "element",
+      "definition": "The add control or displayed value in the relationships widget.",
+      "scope": "ui-w-relationships"
+    },
+    {
+      "id": "ui-w-ticket-context",
+      "name": "Ticket context widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The ticket context widget within the application interface."
+    },
+    {
+      "id": "element-w-ticket-context-ticket-id",
+      "name": "ticket-id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The ticket id control or displayed value in the ticket context widget.",
+      "scope": "ui-w-ticket-context"
+    },
+    {
+      "id": "element-w-ticket-context-summary-or-error",
+      "name": "summary-or-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The summary or error control or displayed value in the ticket context widget.",
+      "scope": "ui-w-ticket-context"
+    },
+    {
+      "id": "element-w-ticket-context-status",
+      "name": "status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The status control or displayed value in the ticket context widget.",
+      "scope": "ui-w-ticket-context"
+    },
+    {
+      "id": "ui-w-pr-evidence",
+      "name": "Pr evidence widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The pr evidence widget within the application interface."
+    },
+    {
+      "id": "element-w-pr-evidence-head",
+      "name": "head",
+      "aliases": [],
+      "category": "element",
+      "definition": "The head control or displayed value in the pr evidence widget.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-branch",
+      "name": "branch",
+      "aliases": [],
+      "category": "element",
+      "definition": "The branch control or displayed value in the pr evidence widget.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-checks-disclosure",
+      "name": "checks-disclosure",
+      "aliases": [],
+      "category": "element",
+      "definition": "The checks disclosure control or displayed value in the pr evidence widget.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-checks-content",
+      "name": "checks-content",
+      "aliases": [],
+      "category": "element",
+      "definition": "The checks content control or displayed value in the pr evidence widget.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "ui-w-item-history",
+      "name": "Item history widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The item history widget within the application interface."
+    },
+    {
+      "id": "element-w-item-history-activity",
+      "name": "activity",
+      "aliases": [],
+      "category": "element",
+      "definition": "The activity control or displayed value in the item history widget.",
+      "scope": "ui-w-item-history"
+    },
+    {
+      "id": "element-w-item-history-action-history",
+      "name": "action-history",
+      "aliases": [],
+      "category": "element",
+      "definition": "The action history control or displayed value in the item history widget.",
+      "scope": "ui-w-item-history"
+    },
+    {
+      "id": "ui-w-run-row",
+      "name": "Run row widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The run row widget within the application interface."
+    },
+    {
+      "id": "element-w-run-row-select",
+      "name": "select",
+      "aliases": [],
+      "category": "element",
+      "definition": "The select control or displayed value in the run row widget.",
+      "scope": "ui-w-run-row"
+    },
+    {
+      "id": "element-w-run-row-item-title-or-id",
+      "name": "item-title-or-id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The item title or id control or displayed value in the run row widget.",
+      "scope": "ui-w-run-row"
+    },
+    {
+      "id": "element-w-run-row-profile",
+      "name": "profile",
+      "aliases": [],
+      "category": "element",
+      "definition": "The profile control or displayed value in the run row widget.",
+      "scope": "ui-w-run-row"
+    },
+    {
+      "id": "element-w-run-row-status",
+      "name": "status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The status control or displayed value in the run row widget.",
+      "scope": "ui-w-run-row"
+    },
+    {
+      "id": "element-w-run-row-attention-badge",
+      "name": "attention-badge",
+      "aliases": [],
+      "category": "element",
+      "definition": "The attention badge control or displayed value in the run row widget.",
+      "scope": "ui-w-run-row"
+    },
+    {
+      "id": "ui-w-run-empty",
+      "name": "Run empty widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The run empty widget within the application interface."
+    },
+    {
+      "id": "element-w-run-empty-no-runs",
+      "name": "no-runs",
+      "aliases": [],
+      "category": "element",
+      "definition": "The no runs control or displayed value in the run empty widget.",
+      "scope": "ui-w-run-empty"
+    },
+    {
+      "id": "element-w-run-empty-select-run",
+      "name": "select-run",
+      "aliases": [],
+      "category": "element",
+      "definition": "The select run control or displayed value in the run empty widget.",
+      "scope": "ui-w-run-empty"
+    },
+    {
+      "id": "ui-w-run-controls",
+      "name": "Run controls widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The run controls widget within the application interface."
+    },
+    {
+      "id": "element-w-run-controls-status",
+      "name": "status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The status control or displayed value in the run controls widget.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-profile-name",
+      "name": "profile-name",
+      "aliases": [],
+      "category": "element",
+      "definition": "The profile name control or displayed value in the run controls widget.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-workspace",
+      "name": "workspace",
+      "aliases": [],
+      "category": "element",
+      "definition": "The workspace control or displayed value in the run controls widget.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-run-error",
+      "name": "run-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The run error control or displayed value in the run controls widget.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-interrupt",
+      "name": "interrupt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The interrupt control or displayed value in the run controls widget.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-resume",
+      "name": "resume",
+      "aliases": [],
+      "category": "element",
+      "definition": "The resume control or displayed value in the run controls widget.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-cleanup",
+      "name": "cleanup",
+      "aliases": [],
+      "category": "element",
+      "definition": "The cleanup control or displayed value in the run controls widget.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "ui-w-attention-notice",
+      "name": "Attention notice widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The attention notice widget within the application interface."
+    },
+    {
+      "id": "element-w-attention-notice-answer",
+      "name": "answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "The answer control or displayed value in the attention notice widget.",
+      "scope": "ui-w-attention-notice"
+    },
+    {
+      "id": "element-w-attention-notice-blocking-label",
+      "name": "blocking-label",
+      "aliases": [],
+      "category": "element",
+      "definition": "The blocking label control or displayed value in the attention notice widget.",
+      "scope": "ui-w-attention-notice"
+    },
+    {
+      "id": "element-w-attention-notice-continuing-label",
+      "name": "continuing-label",
+      "aliases": [],
+      "category": "element",
+      "definition": "The continuing label control or displayed value in the attention notice widget.",
+      "scope": "ui-w-attention-notice"
+    },
+    {
+      "id": "ui-w-transcript",
+      "name": "Transcript widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The transcript widget within the application interface."
+    },
+    {
+      "id": "element-w-transcript-heading",
+      "name": "heading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The heading control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-live-region",
+      "name": "live-region",
+      "aliases": [],
+      "category": "element",
+      "definition": "The live region control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-block-label",
+      "name": "block-label",
+      "aliases": [],
+      "category": "element",
+      "definition": "The block label control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-block-text",
+      "name": "block-text",
+      "aliases": [],
+      "category": "element",
+      "definition": "The block text control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-waiting",
+      "name": "waiting",
+      "aliases": [],
+      "category": "element",
+      "definition": "The waiting control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-loading-more",
+      "name": "loading-more",
+      "aliases": [],
+      "category": "element",
+      "definition": "The loading more control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-restart-history",
+      "name": "restart-history",
+      "aliases": [],
+      "category": "element",
+      "definition": "The restart history control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "ui-w-message",
+      "name": "Message widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The message widget within the application interface."
+    },
+    {
+      "id": "element-w-message-text",
+      "name": "text",
+      "aliases": [],
+      "category": "element",
+      "definition": "The text control or displayed value in the message widget.",
+      "scope": "ui-w-message"
+    },
+    {
+      "id": "element-w-message-send",
+      "name": "send",
+      "aliases": [],
+      "category": "element",
+      "definition": "The send control or displayed value in the message widget.",
+      "scope": "ui-w-message"
+    },
+    {
+      "id": "ui-w-dialog-frame",
+      "name": "Dialog frame widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The dialog frame widget within the application interface."
+    },
+    {
+      "id": "element-w-dialog-frame-heading",
+      "name": "heading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The heading control or displayed value in the dialog frame widget.",
+      "scope": "ui-w-dialog-frame"
+    },
+    {
+      "id": "element-w-dialog-frame-close",
+      "name": "close",
+      "aliases": [],
+      "category": "element",
+      "definition": "The close control or displayed value in the dialog frame widget.",
+      "scope": "ui-w-dialog-frame"
+    },
+    {
+      "id": "element-w-dialog-frame-item",
+      "name": "item",
+      "aliases": [],
+      "category": "element",
+      "definition": "The item control or displayed value in the dialog frame widget.",
+      "scope": "ui-w-dialog-frame"
+    },
+    {
+      "id": "element-w-dialog-frame-blocking-status",
+      "name": "blocking-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The blocking status control or displayed value in the dialog frame widget.",
+      "scope": "ui-w-dialog-frame"
+    },
+    {
+      "id": "element-w-dialog-frame-response-error",
+      "name": "response-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The response error control or displayed value in the dialog frame widget.",
+      "scope": "ui-w-dialog-frame"
+    },
+    {
+      "id": "element-w-dialog-frame-open-chat",
+      "name": "open-chat",
+      "aliases": [],
+      "category": "element",
+      "definition": "The open chat control or displayed value in the dialog frame widget.",
+      "scope": "ui-w-dialog-frame"
+    },
+    {
+      "id": "ui-w-launch-editor",
+      "name": "Launch editor widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The launch editor widget within the application interface."
+    },
+    {
+      "id": "element-w-launch-editor-profile",
+      "name": "profile",
+      "aliases": [],
+      "category": "element",
+      "definition": "The profile control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-task-prompt",
+      "name": "task-prompt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The task prompt control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-model",
+      "name": "model",
+      "aliases": [],
+      "category": "element",
+      "definition": "The model control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-effort",
+      "name": "effort",
+      "aliases": [],
+      "category": "element",
+      "definition": "The effort control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-base",
+      "name": "base",
+      "aliases": [],
+      "category": "element",
+      "definition": "The base control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-skills",
+      "name": "skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The skills control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-workspace-policy",
+      "name": "workspace-policy",
+      "aliases": [],
+      "category": "element",
+      "definition": "The workspace policy control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-approval-policy",
+      "name": "approval-policy",
+      "aliases": [],
+      "category": "element",
+      "definition": "The approval policy control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-publishing-authority",
+      "name": "publishing-authority",
+      "aliases": [],
+      "category": "element",
+      "definition": "The publishing authority control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-editor-review",
+      "name": "review",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review control or displayed value in the launch editor widget.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "ui-w-launch-review",
+      "name": "Launch review widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The launch review widget within the application interface."
+    },
+    {
+      "id": "element-w-launch-review-workspace",
+      "name": "workspace",
+      "aliases": [],
+      "category": "element",
+      "definition": "The workspace control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-branch-and-base",
+      "name": "branch-and-base",
+      "aliases": [],
+      "category": "element",
+      "definition": "The branch and base control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-permissions",
+      "name": "permissions",
+      "aliases": [],
+      "category": "element",
+      "definition": "The permissions control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-publishing",
+      "name": "publishing",
+      "aliases": [],
+      "category": "element",
+      "definition": "The publishing control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-skills",
+      "name": "skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The skills control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-prepared-prompt",
+      "name": "prepared-prompt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The prepared prompt control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-edit",
+      "name": "edit",
+      "aliases": [],
+      "category": "element",
+      "definition": "The edit control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-start",
+      "name": "start",
+      "aliases": [],
+      "category": "element",
+      "definition": "The start control or displayed value in the launch review widget.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "ui-w-questions",
+      "name": "Questions widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The questions widget within the application interface."
+    },
+    {
+      "id": "element-w-questions-question",
+      "name": "question",
+      "aliases": [],
+      "category": "element",
+      "definition": "The question control or displayed value in the questions widget.",
+      "scope": "ui-w-questions"
+    },
+    {
+      "id": "element-w-questions-options",
+      "name": "options",
+      "aliases": [],
+      "category": "element",
+      "definition": "The options control or displayed value in the questions widget.",
+      "scope": "ui-w-questions"
+    },
+    {
+      "id": "element-w-questions-answer-text",
+      "name": "answer-text",
+      "aliases": [],
+      "category": "element",
+      "definition": "The answer text control or displayed value in the questions widget.",
+      "scope": "ui-w-questions"
+    },
+    {
+      "id": "element-w-questions-secret-answer",
+      "name": "secret-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "The secret answer control or displayed value in the questions widget.",
+      "scope": "ui-w-questions"
+    },
+    {
+      "id": "element-w-questions-submit-answer",
+      "name": "submit-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "The submit answer control or displayed value in the questions widget.",
+      "scope": "ui-w-questions"
+    },
+    {
+      "id": "ui-w-approval",
+      "name": "Approval widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The approval widget within the application interface."
+    },
+    {
+      "id": "element-w-approval-request-details",
+      "name": "request-details",
+      "aliases": [],
+      "category": "element",
+      "definition": "The request details control or displayed value in the approval widget.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "element-w-approval-deny",
+      "name": "deny",
+      "aliases": [],
+      "category": "element",
+      "definition": "The deny control or displayed value in the approval widget.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "element-w-approval-approve-requested-for-turn",
+      "name": "approve-requested-for-turn",
+      "aliases": [],
+      "category": "element",
+      "definition": "The approve requested for turn control or displayed value in the approval widget.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "element-w-approval-available-decision",
+      "name": "available-decision",
+      "aliases": [],
+      "category": "element",
+      "definition": "The available decision control or displayed value in the approval widget.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "ui-w-elicitation",
+      "name": "Elicitation widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The elicitation widget within the application interface."
+    },
+    {
+      "id": "element-w-elicitation-message",
+      "name": "message",
+      "aliases": [],
+      "category": "element",
+      "definition": "The message control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-open-authorization",
+      "name": "open-authorization",
+      "aliases": [],
+      "category": "element",
+      "definition": "The open authorization control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-continue",
+      "name": "continue",
+      "aliases": [],
+      "category": "element",
+      "definition": "The continue control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-field-title",
+      "name": "field-title",
+      "aliases": [],
+      "category": "element",
+      "definition": "The field title control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-description",
+      "name": "description",
+      "aliases": [],
+      "category": "element",
+      "definition": "The description control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-boolean-answer",
+      "name": "boolean-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "Checkbox value for a true or false form answer.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-enum-answer",
+      "name": "enum-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "Single choice selected from a fixed set of form answer values.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-multi-enum-answer",
+      "name": "multi-enum-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "Multiple choices selected from a fixed set of form answer values.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-number-answer",
+      "name": "number-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "Numeric form answer with integer or fractional values and applicable bounds.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-email-answer",
+      "name": "email-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "Email address entered as a form answer.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-text-answer",
+      "name": "text-answer",
+      "aliases": [],
+      "category": "element",
+      "definition": "Text entered as a form answer.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-native-support-notice",
+      "name": "native-support-notice",
+      "aliases": [],
+      "category": "element",
+      "definition": "Notice that a verification request requires native host support.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-submit-form",
+      "name": "submit-form",
+      "aliases": [],
+      "category": "element",
+      "definition": "The submit form control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-decline",
+      "name": "decline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The decline control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "element-w-elicitation-cancel",
+      "name": "cancel",
+      "aliases": [],
+      "category": "element",
+      "definition": "The cancel control or displayed value in the elicitation widget.",
+      "scope": "ui-w-elicitation"
+    },
+    {
+      "id": "ui-w-repository-settings",
+      "name": "Repository settings widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The repository settings widget within the application interface."
+    },
+    {
+      "id": "element-w-repository-settings-repository-summary",
+      "name": "repository-summary",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repository summary control or displayed value in the repository settings widget.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-repository",
+      "name": "repository",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repository control or displayed value in the repository settings widget.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-checkout",
+      "name": "checkout",
+      "aliases": [],
+      "category": "element",
+      "definition": "The checkout control or displayed value in the repository settings widget.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-default-base",
+      "name": "default-base",
+      "aliases": [],
+      "category": "element",
+      "definition": "The default base control or displayed value in the repository settings widget.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-save",
+      "name": "save",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save control or displayed value in the repository settings widget.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-discover-skills",
+      "name": "discover-skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The discover skills control or displayed value in the repository settings widget.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "ui-w-policy-settings",
+      "name": "Policy settings widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The policy settings widget within the application interface."
+    },
+    {
+      "id": "element-w-policy-settings-priority-labels",
+      "name": "priority-labels",
+      "aliases": [],
+      "category": "element",
+      "definition": "The priority labels control or displayed value in the policy settings widget.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-policy-settings-assessment-prompt",
+      "name": "assessment-prompt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The assessment prompt control or displayed value in the policy settings widget.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-policy-settings-notifications",
+      "name": "notifications",
+      "aliases": [],
+      "category": "element",
+      "definition": "The notifications control or displayed value in the policy settings widget.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-policy-settings-jira-url",
+      "name": "jira-url",
+      "aliases": [],
+      "category": "element",
+      "definition": "The jira url control or displayed value in the policy settings widget.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-policy-settings-jira-email",
+      "name": "jira-email",
+      "aliases": [],
+      "category": "element",
+      "definition": "The jira email control or displayed value in the policy settings widget.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-policy-settings-save",
+      "name": "save",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save control or displayed value in the policy settings widget.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "ui-w-jira-credential",
+      "name": "Jira credential widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The jira credential widget within the application interface."
+    },
+    {
+      "id": "element-w-jira-credential-token",
+      "name": "token",
+      "aliases": [],
+      "category": "element",
+      "definition": "The token control or displayed value in the jira credential widget.",
+      "scope": "ui-w-jira-credential"
+    },
+    {
+      "id": "element-w-jira-credential-save-securely",
+      "name": "save-securely",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save securely control or displayed value in the jira credential widget.",
+      "scope": "ui-w-jira-credential"
+    },
+    {
+      "id": "element-w-jira-credential-read-only-notice",
+      "name": "read-only-notice",
+      "aliases": [],
+      "category": "element",
+      "definition": "The read only notice control or displayed value in the jira credential widget.",
+      "scope": "ui-w-jira-credential"
+    },
+    {
+      "id": "ui-w-profile-settings",
+      "name": "Profile settings widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The profile settings widget within the application interface."
+    },
+    {
+      "id": "element-w-profile-settings-existing-profile",
+      "name": "existing-profile",
+      "aliases": [],
+      "category": "element",
+      "definition": "The existing profile control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-new",
+      "name": "new",
+      "aliases": [],
+      "category": "element",
+      "definition": "The new control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-name",
+      "name": "name",
+      "aliases": [],
+      "category": "element",
+      "definition": "The name control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-prompt-template",
+      "name": "prompt-template",
+      "aliases": [],
+      "category": "element",
+      "definition": "The prompt template control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-model",
+      "name": "model",
+      "aliases": [],
+      "category": "element",
+      "definition": "The model control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-effort",
+      "name": "effort",
+      "aliases": [],
+      "category": "element",
+      "definition": "The effort control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-mode",
+      "name": "mode",
+      "aliases": [],
+      "category": "element",
+      "definition": "The mode control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-sandbox",
+      "name": "sandbox",
+      "aliases": [],
+      "category": "element",
+      "definition": "The sandbox control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-approval",
+      "name": "approval",
+      "aliases": [],
+      "category": "element",
+      "definition": "The approval control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-publishing",
+      "name": "publishing",
+      "aliases": [],
+      "category": "element",
+      "definition": "The publishing control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-default-skills",
+      "name": "default-skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The default skills control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-profile-settings-save",
+      "name": "save",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save control or displayed value in the profile settings widget.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "ui-w-skill-settings",
+      "name": "Skill settings widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The skill settings widget within the application interface."
+    },
+    {
+      "id": "element-w-skill-settings-managed-skill",
+      "name": "managed-skill",
+      "aliases": [],
+      "category": "element",
+      "definition": "The managed skill control or displayed value in the skill settings widget.",
+      "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "element-w-skill-settings-name",
+      "name": "name",
+      "aliases": [],
+      "category": "element",
+      "definition": "The name control or displayed value in the skill settings widget.",
+      "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "element-w-skill-settings-instructions",
+      "name": "instructions",
+      "aliases": [],
+      "category": "element",
+      "definition": "The instructions control or displayed value in the skill settings widget.",
+      "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "element-w-skill-settings-save",
+      "name": "save",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save control or displayed value in the skill settings widget.",
+      "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "ui-w-diagnostics",
+      "name": "Diagnostics widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The diagnostics widget within the application interface."
+    },
+    {
+      "id": "element-w-diagnostics-check-connection",
+      "name": "check-connection",
+      "aliases": [],
+      "category": "element",
+      "definition": "The check connection control or displayed value in the diagnostics widget.",
+      "scope": "ui-w-diagnostics"
+    },
+    {
+      "id": "element-w-diagnostics-version",
+      "name": "version",
+      "aliases": [],
+      "category": "element",
+      "definition": "The version control or displayed value in the diagnostics widget.",
+      "scope": "ui-w-diagnostics"
+    },
+    {
+      "id": "element-w-diagnostics-timestamp",
+      "name": "timestamp",
+      "aliases": [],
+      "category": "element",
+      "definition": "The timestamp control or displayed value in the diagnostics widget.",
+      "scope": "ui-w-diagnostics"
+    },
+    {
+      "id": "element-w-diagnostics-check-state",
+      "name": "check-state",
+      "aliases": [],
+      "category": "element",
+      "definition": "The check state control or displayed value in the diagnostics widget.",
+      "scope": "ui-w-diagnostics"
+    },
+    {
+      "id": "element-w-diagnostics-check-id",
+      "name": "check-id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The check id control or displayed value in the diagnostics widget.",
+      "scope": "ui-w-diagnostics"
+    },
+    {
+      "id": "element-w-diagnostics-detail",
+      "name": "detail",
+      "aliases": [],
+      "category": "element",
+      "definition": "The detail control or displayed value in the diagnostics widget.",
+      "scope": "ui-w-diagnostics"
+    },
+    {
+      "id": "element-w-diagnostics-provider-sign-in-help",
+      "name": "provider-sign-in-help",
+      "aliases": [],
+      "category": "element",
+      "definition": "The provider sign in help control or displayed value in the diagnostics widget.",
+      "scope": "ui-w-diagnostics"
+    },
+    {
+      "id": "ui-w-package-overview",
+      "name": "Package overview widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The package overview widget within the application interface."
+    },
+    {
+      "id": "element-w-package-overview-branding",
+      "name": "branding",
+      "aliases": [],
+      "category": "element",
+      "definition": "The branding control or displayed value in the package overview widget.",
+      "scope": "ui-w-package-overview"
+    },
+    {
+      "id": "element-w-package-overview-version",
+      "name": "version",
+      "aliases": [],
+      "category": "element",
+      "definition": "The version control or displayed value in the package overview widget.",
+      "scope": "ui-w-package-overview"
+    },
+    {
+      "id": "element-w-package-overview-capability-summary",
+      "name": "capability-summary",
+      "aliases": [],
+      "category": "element",
+      "definition": "The capability summary control or displayed value in the package overview widget.",
+      "scope": "ui-w-package-overview"
+    },
+    {
+      "id": "element-w-package-overview-portable-download",
+      "name": "portable-download",
+      "aliases": [],
+      "category": "element",
+      "definition": "The portable download control or displayed value in the package overview widget.",
+      "scope": "ui-w-package-overview"
+    },
+    {
+      "id": "element-w-package-overview-checksum",
+      "name": "checksum",
+      "aliases": [],
+      "category": "element",
+      "definition": "The checksum control or displayed value in the package overview widget.",
+      "scope": "ui-w-package-overview"
+    },
+    {
+      "id": "element-w-package-overview-privacy-notice",
+      "name": "privacy-notice",
+      "aliases": [],
+      "category": "element",
+      "definition": "The privacy notice control or displayed value in the package overview widget.",
+      "scope": "ui-w-package-overview"
+    },
+    {
+      "id": "ui-w-connection-guide",
+      "name": "Connection guide widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The connection guide widget within the application interface."
+    },
+    {
+      "id": "element-w-connection-guide-browser-steps",
+      "name": "browser-steps",
+      "aliases": [],
+      "category": "element",
+      "definition": "The browser steps control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "element-w-connection-guide-endpoint",
+      "name": "endpoint",
+      "aliases": [],
+      "category": "element",
+      "definition": "The endpoint control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "element-w-connection-guide-browser-package-download",
+      "name": "browser-package-download",
+      "aliases": [],
+      "category": "element",
+      "definition": "The browser package download control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "element-w-connection-guide-mapping-warning",
+      "name": "mapping-warning",
+      "aliases": [],
+      "category": "element",
+      "definition": "The mapping warning control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "element-w-connection-guide-portable-package-help",
+      "name": "portable-package-help",
+      "aliases": [],
+      "category": "element",
+      "definition": "The portable package help control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "element-w-connection-guide-manifest",
+      "name": "manifest",
+      "aliases": [],
+      "category": "element",
+      "definition": "The manifest control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "element-w-connection-guide-connection-config",
+      "name": "connection-config",
+      "aliases": [],
+      "category": "element",
+      "definition": "The connection config control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "element-w-connection-guide-release-details",
+      "name": "release-details",
+      "aliases": [],
+      "category": "element",
+      "definition": "The release details control or displayed value in the connection guide widget.",
+      "scope": "ui-w-connection-guide"
+    },
+    {
+      "id": "ui-w-owner-consent",
+      "name": "Owner consent widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The owner consent widget within the application interface."
+    },
+    {
+      "id": "element-w-owner-consent-connection-heading",
+      "name": "connection-heading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The connection heading control or displayed value in the owner consent widget.",
+      "scope": "ui-w-owner-consent"
+    },
+    {
+      "id": "element-w-owner-consent-client-name",
+      "name": "client-name",
+      "aliases": [],
+      "category": "element",
+      "definition": "The client name control or displayed value in the owner consent widget.",
+      "scope": "ui-w-owner-consent"
+    },
+    {
+      "id": "element-w-owner-consent-callback-destination",
+      "name": "callback-destination",
+      "aliases": [],
+      "category": "element",
+      "definition": "The callback destination control or displayed value in the owner consent widget.",
+      "scope": "ui-w-owner-consent"
+    },
+    {
+      "id": "element-w-owner-consent-owner-access-warning",
+      "name": "owner-access-warning",
+      "aliases": [],
+      "category": "element",
+      "definition": "The owner access warning control or displayed value in the owner consent widget.",
+      "scope": "ui-w-owner-consent"
+    },
+    {
+      "id": "element-w-owner-consent-allow",
+      "name": "allow",
+      "aliases": [],
+      "category": "element",
+      "definition": "The allow control or displayed value in the owner consent widget.",
+      "scope": "ui-w-owner-consent"
+    },
+    {
+      "id": "element-w-owner-consent-deny",
+      "name": "deny",
+      "aliases": [],
+      "category": "element",
+      "definition": "The deny control or displayed value in the owner consent widget.",
+      "scope": "ui-w-owner-consent"
+    },
+    {
+      "id": "ui-w-local-tunnel-key",
+      "name": "Local tunnel key widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The local tunnel key widget within the application interface."
+    },
+    {
+      "id": "element-w-local-tunnel-key-heading",
+      "name": "heading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The heading control or displayed value in the local tunnel key widget.",
+      "scope": "ui-w-local-tunnel-key"
+    },
+    {
+      "id": "element-w-local-tunnel-key-restricted-key-help",
+      "name": "restricted-key-help",
+      "aliases": [],
+      "category": "element",
+      "definition": "The restricted key help control or displayed value in the local tunnel key widget.",
+      "scope": "ui-w-local-tunnel-key"
+    },
+    {
+      "id": "element-w-local-tunnel-key-key",
+      "name": "key",
+      "aliases": [],
+      "category": "element",
+      "definition": "The key control or displayed value in the local tunnel key widget.",
+      "scope": "ui-w-local-tunnel-key"
+    },
+    {
+      "id": "element-w-local-tunnel-key-save-and-start",
+      "name": "save-and-start",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save and start control or displayed value in the local tunnel key widget.",
+      "scope": "ui-w-local-tunnel-key"
+    },
+    {
+      "id": "element-w-local-tunnel-key-status",
+      "name": "status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The status control or displayed value in the local tunnel key widget.",
+      "scope": "ui-w-local-tunnel-key"
+    },
+    {
+      "id": "ui-w-browser-lab",
+      "name": "Browser lab widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The browser lab widget within the application interface."
+    },
+    {
+      "id": "element-w-browser-lab-sign-in-boundary-notice",
+      "name": "sign-in-boundary-notice",
+      "aliases": [],
+      "category": "element",
+      "definition": "The sign in boundary notice control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-screenshot",
+      "name": "screenshot",
+      "aliases": [],
+      "category": "element",
+      "definition": "The screenshot control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-location",
+      "name": "location",
+      "aliases": [],
+      "category": "element",
+      "definition": "The location control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-url",
+      "name": "url",
+      "aliases": [],
+      "category": "element",
+      "definition": "The url control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-navigate",
+      "name": "navigate",
+      "aliases": [],
+      "category": "element",
+      "definition": "The navigate control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-refresh",
+      "name": "refresh",
+      "aliases": [],
+      "category": "element",
+      "definition": "The refresh control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-text-to-send",
+      "name": "text-to-send",
+      "aliases": [],
+      "category": "element",
+      "definition": "The text to send control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-send-text",
+      "name": "send-text",
+      "aliases": [],
+      "category": "element",
+      "definition": "The send text control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-key-controls",
+      "name": "key-controls",
+      "aliases": [],
+      "category": "element",
+      "definition": "The key controls control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-scroll-up-down",
+      "name": "scroll-up/down",
+      "aliases": [],
+      "category": "element",
+      "definition": "The upward and downward scroll controls in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "element-w-browser-lab-message",
+      "name": "message",
+      "aliases": [],
+      "category": "element",
+      "definition": "The message control or displayed value in the browser lab widget.",
+      "scope": "ui-w-browser-lab"
+    },
+    {
+      "id": "ui-p-identity",
+      "name": "Identity pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The identity pane within the application interface."
+    },
+    {
+      "id": "ui-p-navigation",
+      "name": "Navigation pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The navigation pane within the application interface."
+    },
+    {
+      "id": "ui-p-feedback",
+      "name": "Feedback pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The feedback pane within the application interface."
+    },
+    {
+      "id": "ui-p-continuity",
+      "name": "Continuity pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The continuity pane within the application interface."
+    },
+    {
+      "id": "ui-p-inbox-query",
+      "name": "Inbox query pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The inbox query pane within the application interface."
+    },
+    {
+      "id": "ui-p-inbox-list",
+      "name": "Inbox list pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The inbox list pane within the application interface."
+    },
+    {
+      "id": "ui-p-item-detail",
+      "name": "Item detail pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The item detail pane within the application interface."
+    },
+    {
+      "id": "ui-p-run-list",
+      "name": "Run list pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The run list pane within the application interface."
+    },
+    {
+      "id": "ui-p-run-detail",
+      "name": "Run detail pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The run detail pane within the application interface."
+    },
+    {
+      "id": "ui-p-repositories",
+      "name": "Repositories pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The repositories pane within the application interface."
+    },
+    {
+      "id": "ui-p-policies",
+      "name": "Policies pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The policies pane within the application interface."
+    },
+    {
+      "id": "ui-p-profiles",
+      "name": "Profiles pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The profiles pane within the application interface."
+    },
+    {
+      "id": "ui-p-skills",
+      "name": "Skills pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The skills pane within the application interface."
+    },
+    {
+      "id": "ui-p-diagnostics",
+      "name": "Diagnostics pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The diagnostics pane within the application interface."
+    },
+    {
+      "id": "ui-p-launch-frame",
+      "name": "Launch frame pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The launch frame pane within the application interface."
+    },
+    {
+      "id": "ui-p-launch-editor",
+      "name": "Launch editor pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The launch editor pane within the application interface."
+    },
+    {
+      "id": "ui-p-launch-review",
+      "name": "Launch review pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The launch review pane within the application interface."
+    },
+    {
+      "id": "ui-p-attention-frame",
+      "name": "Attention frame pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The attention frame pane within the application interface."
+    },
+    {
+      "id": "ui-p-questions",
+      "name": "Questions pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The questions pane within the application interface."
+    },
+    {
+      "id": "ui-p-approval",
+      "name": "Approval pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The approval pane within the application interface."
+    },
+    {
+      "id": "ui-p-elicitation",
+      "name": "Elicitation pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The elicitation pane within the application interface."
+    },
+    {
+      "id": "ui-p-package-overview",
+      "name": "Package overview pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The package overview pane within the application interface."
+    },
+    {
+      "id": "ui-p-connection-guide",
+      "name": "Connection guide pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The connection guide pane within the application interface."
+    },
+    {
+      "id": "ui-p-owner-consent",
+      "name": "Owner consent pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The owner consent pane within the application interface."
+    },
+    {
+      "id": "ui-p-local-tunnel-key",
+      "name": "Local tunnel key pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The local tunnel key pane within the application interface."
+    },
+    {
+      "id": "ui-p-browser-lab",
+      "name": "Browser lab pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The browser lab pane within the application interface."
+    },
+    {
+      "id": "ui-page-inbox",
+      "name": "Inbox page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The inbox page within the application interface."
+    },
+    {
+      "id": "ui-page-agents",
+      "name": "Agents page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The agents page within the application interface."
+    },
+    {
+      "id": "ui-page-settings",
+      "name": "Settings page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The settings page within the application interface."
+    },
+    {
+      "id": "ui-d-launch",
+      "name": "Launch dialog",
+      "aliases": [],
+      "category": "ui-dialog",
+      "definition": "The launch dialog within the application interface."
+    },
+    {
+      "id": "ui-d-attention",
+      "name": "Attention dialog",
+      "aliases": [],
+      "category": "ui-dialog",
+      "definition": "The attention dialog within the application interface."
+    },
+    {
+      "id": "ui-page-package",
+      "name": "Package page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The package page within the application interface."
+    },
+    {
+      "id": "ui-page-owner-consent",
+      "name": "Owner consent page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The owner consent page within the application interface."
+    },
+    {
+      "id": "ui-page-local-tunnel-setup",
+      "name": "Local tunnel setup page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The local tunnel setup page within the application interface."
+    },
+    {
+      "id": "ui-page-browser-lab",
+      "name": "Browser lab page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The browser lab page within the application interface."
+    },
+    {
+      "id": "ui-c-navigate",
+      "name": "Navigate connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The navigate connection within the application interface."
+    },
+    {
+      "id": "ui-c-filter",
+      "name": "Filter connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The filter connection within the application interface."
+    },
+    {
+      "id": "ui-c-select-item",
+      "name": "Select item connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The select item connection within the application interface."
+    },
+    {
+      "id": "ui-c-empty-setup",
+      "name": "Empty setup connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The empty setup connection within the application interface."
+    },
+    {
+      "id": "ui-c-item-state",
+      "name": "Item state connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The item state connection within the application interface."
+    },
+    {
+      "id": "ui-c-priority",
+      "name": "Priority connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The priority connection within the application interface."
+    },
+    {
+      "id": "ui-c-link",
+      "name": "Link connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The link connection within the application interface."
+    },
+    {
+      "id": "ui-c-launch-open",
+      "name": "Launch open connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The launch open connection within the application interface."
+    },
+    {
+      "id": "ui-c-launch-profile",
+      "name": "Launch profile connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The launch profile connection within the application interface."
+    },
+    {
+      "id": "ui-c-prepare",
+      "name": "Prepare connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The prepare connection within the application interface."
+    },
+    {
+      "id": "ui-c-launch-edit",
+      "name": "Launch edit connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The launch edit connection within the application interface."
+    },
+    {
+      "id": "ui-c-start",
+      "name": "Start connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The start connection within the application interface."
+    },
+    {
+      "id": "ui-c-select-run",
+      "name": "Select run connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The select run connection within the application interface."
+    },
+    {
+      "id": "ui-c-run-action",
+      "name": "Run action connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The run action connection within the application interface."
+    },
+    {
+      "id": "ui-c-follow-up",
+      "name": "Follow up connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The follow up connection within the application interface."
+    },
+    {
+      "id": "ui-c-run-attention",
+      "name": "Run attention connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The run attention connection within the application interface."
+    },
+    {
+      "id": "ui-c-global-attention",
+      "name": "Global attention connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The global attention connection within the application interface."
+    },
+    {
+      "id": "ui-c-attention-chat",
+      "name": "Attention chat connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The attention chat connection within the application interface."
+    },
+    {
+      "id": "ui-c-answer",
+      "name": "Answer connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The answer connection within the application interface."
+    },
+    {
+      "id": "ui-c-dismiss",
+      "name": "Dismiss connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The dismiss connection within the application interface."
+    },
+    {
+      "id": "ui-c-repository-save",
+      "name": "Repository save connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The repository save connection within the application interface."
+    },
+    {
+      "id": "ui-c-discover-skills",
+      "name": "Discover skills connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The discover skills connection within the application interface."
+    },
+    {
+      "id": "ui-c-policy-save",
+      "name": "Policy save connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The policy save connection within the application interface."
+    },
+    {
+      "id": "ui-c-credential-save",
+      "name": "Credential save connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The credential save connection within the application interface."
+    },
+    {
+      "id": "ui-c-profile-save",
+      "name": "Profile save connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The profile save connection within the application interface."
+    },
+    {
+      "id": "ui-c-skill-save",
+      "name": "Skill save connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The skill save connection within the application interface."
+    },
+    {
+      "id": "ui-c-diagnose",
+      "name": "Diagnose connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The diagnose connection within the application interface."
+    },
+    {
+      "id": "ui-c-state-refresh",
+      "name": "State refresh connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The state refresh connection within the application interface."
+    },
+    {
+      "id": "ui-c-transcript",
+      "name": "Transcript connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The transcript connection within the application interface."
+    },
+    {
+      "id": "ui-c-package",
+      "name": "Package connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The package connection within the application interface."
+    },
+    {
+      "id": "ui-c-consent",
+      "name": "Consent connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The consent connection within the application interface."
+    },
+    {
+      "id": "ui-c-external-auth",
+      "name": "External auth connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The external auth connection within the application interface."
+    },
+    {
+      "id": "ui-c-tunnel-key",
+      "name": "Tunnel key connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The tunnel key connection within the application interface."
+    },
+    {
+      "id": "ui-c-browser-lab",
+      "name": "Browser lab connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The browser lab connection within the application interface."
+    }
+  ]
+}

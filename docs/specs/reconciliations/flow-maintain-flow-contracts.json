@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "flow": "flow-maintain-flow-contracts",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "4d852c1e1cc9a4b966a356e7097e8a960ec01ae6bb68cf67dd82ab8d19989071",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "kind": "behavior",
+    "description": "S5 adds hosted push/PR verification using exact event SHAs, one exact reviewed public-root bootstrap without a fabricated diff, and tag-driven promotion of the same verified checksummed main CI artifacts. The original fourteen-flow adoption pin and list are unchanged.",
+    "implementation": "Inspected scripts/ci.py comparison and run_verification plus release.py resolve/deliver and both pinned GitHub Actions workflows. First public import has no publishable ancestor, is SHA-pinned by administrator and receives all fixture checks. Later mismatched or missing comparisons fail. Publisher requires exact main push CI and cannot overwrite existing releases or install services.",
+    "tests": "Read HostedCITests temporary Git histories and failure cases for unknown roots, SHA mismatch, exact PR/push bases, merge bases, fixture environment, wrong workflow or branch provenance, altered bytes, unsafe paths/symlinks and dry-run nonpublication. Existing201specification and20legacy suites remain required, alongside real browser fixtures and packaging tests."
+  },
+  "verification": [
+    {
+      "command": [
+        "python3",
+        "scripts/test_user_flows.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.204
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_specs*.py"
+      ],
+      "exit_code": 0,
+      "seconds": 24.047
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_ci.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.442
+    }
+  ],
+  "dependencies": {
+    "flow:maintain-flow-contracts": "be504ecc7120a6dc7b94fb54fa70494a4932be5877157709d001cdbb69a786af",
+    "term:coverage-gap": "3b799b0f9605c02e2663de1a111c49570b1b6d5e778756c1b36b8429ea2678d2",
+    "term:entity": "07ec47dae1bd02f84144f54dfe8136a0bb974a7cd4fdd915d57267ed34d9b2ba",
+    "term:glossary": "b547834c67578031a1d18c811d8a47ff19bd94b21fc119c9bf1dd44da6fcf86d",
+    "term:known-limitation": "0fdebfeba4ba3833140261c969ddce989df52b13b64f69c2b450c856e549c5cf",
+    "term:reconciliation": "4df6436ac02c57918c6deb0b86c69870c1588fbc9217d185361548c37dbc48bc",
+    "term:unverified-behavior": "de8ab99bb6a4e18bd691e91229482f3e4431311ec0dc7644b167055fdaadde95",
+    "term:verification": "f7e80e0254971775ce668def376326edd6f8482704d5091c7573c25c73dd261d"
+  }
+}

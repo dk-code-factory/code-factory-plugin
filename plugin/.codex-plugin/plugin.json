@@ -1,0 +1,33 @@
+{
+  "name": "code-factory",
+  "version": "0.2.2",
+  "description": "Triage GitHub issues and pull requests, launch isolated Codex tasks, and answer agents in ChatGPT Work.",
+  "keywords": [
+    "github",
+    "triage",
+    "codex",
+    "agents",
+    "inbox"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Code Factory",
+    "shortDescription": "GitHub issue and PR triage with local Codex agents",
+    "longDescription": "Review GitHub issues and pull requests, prioritize work, launch Codex in isolated worktrees, and answer questions from the embedded inbox. Repository state, history, and credentials stay on your computer. Connections use Tailscale HTTPS with owner-approved OAuth.",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#285D45",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg",
+    "defaultPrompt": [
+      "Open Code Factory\u2019s GitHub issue and pull-request dashboard.",
+      "Show my agents that need attention.",
+      "Investigate an issue with a read-only Codex agent."
+    ]
+  },
+  "onboardingSkill": "./skills/code-factory-setup/SKILL.md"
+}

@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "flow": "flow-install-connect",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "19bff708d7b08642cbfd7381689b6f34a102dac0abb8e4fae363754946e06b9d",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "kind": "behavior",
+    "description": "Adopt S1-S3 from the existing complete-package/private-owner connection path. No product behavior was changed by this specification baseline. Initial contracts remain pinned to the original fourteen-flow source baseline; regenerated references and graphs do not establish additional product behavior. Changed UI bundles now receive content-specific advertised identity, so a host can distinguish changed content after upgrade; fresh metadata/view verification remains an operator requirement. Public source publication replaces personal operator details with installation-neutral documentation, omits private evidence/history, and retains the same scope of existing runtime assertions; hosted verification uses fixtures only.",
+    "implementation": "Reviewed setup/plugin linking, portable versus registered browser packaging, and gateway owner consent. References name actual entry points; the existing endpoints and provider pin stay unchanged. Inspected resourceURI full SHA256 over embedded bytes, registerUIResource exact current advertisement/read, exact static legacy middleware and bind metadata/output template receiving the same snapshot URI. Public source publication replaces personal operator details with installation-neutral documentation, omits private evidence/history, and retains the same scope of existing runtime assertions; hosted verification uses fixtures only.",
+    "tests": "S1 maps deterministic package and app-ID rejection assertions; S2 maps owner/PKCE/rotation/revocation and native form regressions. S3 remains a real-host gap, with dated evidence linked rather than inferred from fixtures. These notes describe inspected assertion scope; successful verification must come from the reconcile runner, not this review text. The new actual SDK identity/compatibility fixture and enhanced authenticated tool discovery assert deterministic content identities, exact metadata/body agreement, unadvertised legacy compatibility, rejected arbitrary old/query identities and unchanged CSP. Host cache invalidation/real Work refresh and final installed UI acceptance remain unclaimed. Public source publication replaces personal operator details with installation-neutral documentation, omits private evidence/history, and retains the same scope of existing runtime assertions; hosted verification uses fixtures only."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-count=1",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 2.35
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_packaging.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.281
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_user_flows.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.204
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_specs*.py"
+      ],
+      "exit_code": 0,
+      "seconds": 24.047
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_ci.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.442
+    }
+  ],
+  "dependencies": {
+    "flow:install-connect": "23947b6ffcc6dfdb36a4c639ba41052a0d0b64edf995df3980315f4e276fe261",
+    "term:connection-external": "abae3043ac242da44010f35a199f2dfce1e1869a2c594d8ad9f62ab50ed5707b",
+    "term:connection-submits": "db9235f7739e4586bcf0223293e3cf3b86d75796e97f5204c4c4f1dedf62e9d0",
+    "term:coverage-gap": "3b799b0f9605c02e2663de1a111c49570b1b6d5e778756c1b36b8429ea2678d2",
+    "term:credential": "2737bc81ee0b2b2c1983be1652b68c6acadebf3769ce82318674dd33cc77ac99",
+    "term:element-w-connection-guide-browser-package-download": "a0c0a0d4fa2d877a64eb5df5057e4621545e10ad12634183481a9a9c94e536cc",
+    "term:element-w-connection-guide-browser-steps": "764ea548dbd01e022344e48af6c4839f0eec09800861ad9982cca53dd39a03ef",
+    "term:element-w-connection-guide-connection-config": "8ac5977806e40df04a39e8c5a132db1e9dccf9fe1e703815ada6e6a505cf6979",
+    "term:element-w-connection-guide-endpoint": "e7d7b64359c560c38efc1e9a8477b9a654492efde587afcca21464e44c4c5b5a",
+    "term:element-w-connection-guide-manifest": "b8e95c86c61363097b542414caf0d5e2edefc0c3e95a33d9ac64ced0604d5a3b",
+    "term:element-w-connection-guide-mapping-warning": "63434daee900a14c395f126a01b381465a0f42717bde4c44bb7e2e1bbfdaf06c",
+    "term:element-w-connection-guide-portable-package-help": "c2fc020b0e8d754277d238bb7f7b7a327a02d6ac9d1b52582eaeebe332938fca",
+    "term:element-w-connection-guide-release-details": "c779e7256f66ba59de2e7c20757920847aecf0ecc002e62758f204df59630440",
+    "term:element-w-local-tunnel-key-heading": "a9db2c94ffcdc2f9658bc076181d6f7f5df4501990df409bcf871e1f14aff4d1",
+    "term:element-w-local-tunnel-key-key": "d0074aaf3665141d16d2df632ae7c7986eede080e314acfa8d2d156ae2ec0c85",
+    "term:element-w-local-tunnel-key-restricted-key-help": "155152b378305a5e13ff8ff5e3fc703f38e2d5510c7bf41e98f459c86e147b4f",
+    "term:element-w-local-tunnel-key-save-and-start": "75d36edca5630d9a20a0b40c2aaede728016bb2c8bb4583bb6d265cd2aa13415",
+    "term:element-w-local-tunnel-key-status": "823d349c4863bab345b4a0e63cb5b7d455ee373be6de78677bc52ba0e58b764a",
+    "term:element-w-owner-consent-allow": "d1c49f9fc5da4aa546c1646183469a380816c2df556ec870a55dc5cd5b33e15a",
+    "term:element-w-owner-consent-callback-destination": "8987d21dca6b94472ce74473f293b95c705dbc5f0c6b887980acfc7cd4e3346e",
+    "term:element-w-owner-consent-client-name": "33fad0260263b9328b8e6dccadf2786ee761cb6f5b3c75e2a15d7cbfd8441282",
+    "term:element-w-owner-consent-connection-heading": "62571266842c49cb7a173067093f3d69eed2a4c5c64eaf3e2eef4d45dee40695",
+    "term:element-w-owner-consent-deny": "c26fc3f607ab6f8d0905a0a4c00d5344d837e70c7d859db7dc789f2edddaa071",
+    "term:element-w-owner-consent-owner-access-warning": "b48f08c03d143a8fb3f0b69c2b245743406d6341fb041d462dba5ab1d63a5434",
+    "term:element-w-package-overview-branding": "10a006da440634d2671971ba1c75409d36f6fdb564dfef43968c942e5f1b56f6",
+    "term:element-w-package-overview-capability-summary": "c7043ac84183b612106a82bcb6052a0f8f3dc2fd7f2e9cfdba4e093089a2b1ff",
+    "term:element-w-package-overview-checksum": "99e0b497fd8d00366683fcdd633ca90bdad77483ebe59199a616bf1a347c5c0f",
+    "term:element-w-package-overview-portable-download": "f9dbae622edf62b2cfd141e9eb59f2cd1d1df18461a14ab587455897291b6f47",
+    "term:element-w-package-overview-privacy-notice": "3acfa42da7988f00c54a2a77fe876db81f31db8e16c042a8f2daaefd62042b9b",
+    "term:element-w-package-overview-version": "94db8d5ae80b0320b4ef17d1a3d3c89fc2c867225ac9bdb6785e60b685b56610",
+    "term:host": "961c137bbb0aa15fd1f5ff21fe8a516dbe1912183a1decdcb77b1dde63329217",
+    "term:known-limitation": "0fdebfeba4ba3833140261c969ddce989df52b13b64f69c2b450c856e549c5cf",
+    "term:owner": "39beaa5052fedb3fe830f56fe0f21b3863904c4baa405da718f84959f92f791b",
+    "term:state-error": "6aabc4f1e62348c79afd406a1b8f59604a8eb5029a7b1bfd222556281c888871",
+    "term:ui-c-consent": "3e8fea02cff58158ed46dc9cc856a9201794e38227177b5d9685cce16ca4389b",
+    "term:ui-c-package": "9d28c02af1c66c265ac515c2c80fe460ed1a719b14ad28c259971eb356c14184",
+    "term:ui-c-tunnel-key": "b525705f47c3d5d19de01ef49d816e66057125e79031d151ba9f70dfea928f87",
+    "term:ui-p-connection-guide": "f2ea656234ad76c2be29edb5a5d76530aeec5568b1efbd9a145158873baa3d8a",
+    "term:ui-p-local-tunnel-key": "0b9f285c91ed8954bd0e10c9bcd5c55e6d9817ed6c9b3522e107f0400a893a26",
+    "term:ui-p-owner-consent": "9097b63a281f8ffe9809f4f3a1cf9f0d67479c63dce427422e092da79720d9e0",
+    "term:ui-p-package-overview": "3d965625d848193b3860365dec7da1491c7f8819b349a92e2c9aa5cfec6f306c",
+    "term:ui-page-local-tunnel-setup": "d7c3990e86692e0eb972c57d5890c368722d29cb581122809a234ba5e2ab92e4",
+    "term:ui-page-owner-consent": "d11a8e9dd7dd6f6009876165f0c8e7231e39d27b24f9b1be56f9254131d126ad",
+    "term:ui-page-package": "fd1e156158ff91bec15056ab28f539425fb7066c84e6cdf9c278f892a3d86d1a",
+    "term:ui-w-connection-guide": "49fd55889b0eab30b274301a9d0d5abd503bc4a42e458222e947a8520155f015",
+    "term:ui-w-local-tunnel-key": "d42f906d5ec133da819f43d1ee6b3c5b54728320dda843857a6faf1c45d4a9bb",
+    "term:ui-w-owner-consent": "7b0e80edec3a82be37c84b094f0810ff62826539369b10a8aec516d08924251f",
+    "term:ui-w-package-overview": "050a94959c4cd9ca28d21de8170803c57a039b8e293a024ca7ddf69292d8a955",
+    "term:unverified-behavior": "de8ab99bb6a4e18bd691e91229482f3e4431311ec0dc7644b167055fdaadde95",
+    "ui:C-CONSENT": "134626ecdf7b7459d79968dfa7cda0e9ff82afc94c770c24ab6a4a6ab1446869",
+    "ui:C-PACKAGE": "668729f58764a8e781d0b25f198a66efb595d74fad1b74c6a3ef012508faca43",
+    "ui:C-TUNNEL-KEY": "ee2202495933a046344b89015a92116839432fa71c11605606bc37aa89e71b1f",
+    "ui:P-CONNECTION-GUIDE": "ae877d4d281beab49c1530d45c86039dbef6daaabc7de3febd087323fd4eae90",
+    "ui:P-LOCAL-TUNNEL-KEY": "9b1f2daeabdec24614bb120af0ab78dd09ba5a4671c01bed9b7108661a14da24",
+    "ui:P-OWNER-CONSENT": "f0a2e109d95b1d0787e6f99eb9126fd8de365c6a186a5434389c7ddf446eb076",
+    "ui:P-PACKAGE-OVERVIEW": "40b49d9f18b9861f07aa35dd3f5a609232a61d768de2a0521705041877b912c9",
+    "ui:PAGE-LOCAL-TUNNEL-SETUP": "830369e78c900d57aab6ad9bf4640aff3f3a5db34e69ecc8ee3ae63402ee3f5e",
+    "ui:PAGE-OWNER-CONSENT": "ca48e7c09801e2c99a5857689ac3fc943cdac4412729f9c08246d4ee6e8a2572",
+    "ui:PAGE-PACKAGE": "a74cc7c3a699b6093e7b85b79cd31bd498644e7477f946050db41bae72440da7",
+    "ui:W-CONNECTION-GUIDE": "bfc32c5ae826cab892aa971d155b0dc5877982134071eb0cc204bad058549d37",
+    "ui:W-LOCAL-TUNNEL-KEY": "25c17d9f2d0936c5249e01a0e0b594e9ecd25c87ffc03c9b472e4944bd37fa04",
+    "ui:W-OWNER-CONSENT": "7073c33da5f4820f7f2625b30d8dbc8a798c9e8cd2c02538471fe2bf73ebfd37",
+    "ui:W-PACKAGE-OVERVIEW": "66d25951d555f1e937371341e3a1259525b27c39f95f2ea8db4ac49c07d44f64"
+  }
+}

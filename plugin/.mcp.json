@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "code-factory": {
+      "type": "http",
+      "url": "https://example.invalid/code-factory/mcp"
+    }
+  }
+}

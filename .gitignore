@@ -1,0 +1,20 @@
+/bin/
+/web/node_modules/
+/web/test-results/
+/web/playwright-report/
+*.db*
+.env
+/plugin/.app.json
+__pycache__/
+
+/dist/
+
+# Personal installation and browser state never belongs in public source.
+**/runtime.json
+**/owner.token
+**/gateway-auth.json
+**/vault.key
+**/tailscale.json
+**/registered-app.json
+/browser-pilot/
+/docs/evidence/
