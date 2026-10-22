@@ -52,3 +52,29 @@ hour. Local health and fixtures do not substitute for it. Coordinate desktop
 logout/login with the owner because it closes desktop apps, Chrome and RDP; inspect
 again only after the owner confirms authentication is complete. Preserve SSH and
 existing service/lingering policy. A session cycle is not cold-boot proof.
+
+## Question recovery and response confirmation · 2026-10-22
+
+The published Agents pane retains native and structured-message questions. A
+stopped textual ask is checked in a separate ephemeral read-only helper; the
+optional helper model defaults to the task model. The retained task gets at most
+two question-only Plan form-repair attempts, then a durable text fallback. Task
+mode, sandbox and publishing authority remain those of the original run.
+
+A clock accompanies readable waiting labels; a circular arrow accompanies recovery
+progress. Take over stops recovery. Inspect technical transcript opens the owning
+agent and preserves its message draft. Automatic inputs are labelled Question
+recovery; actual user replies retain their role. No reply needed dismisses only a
+textual fallback and never answers or authorizes work.
+
+After a successful UI answer, the owning agent opens with ✓ Answer sent for five
+seconds; approvals and other forms show ✓ Response sent. This confirmation is local
+to that run and view lifetime. Polling does not prolong it. Failed or uncertain
+submissions never confirm or replay; refresh failure after successful submission
+is separate feedback. Agent text, including UI_ANSWER_OK, stays literal transcript
+content. Old records without origin metadata retain native-request semantics.
+
+The 2026-10-22 source verification in [acceptance](acceptance.md) covers fixtures
+only. No services were restarted and no installed plugin was changed for this
+merge. Actual-host recovery, assistive technology, callbacks, one-hour soak and
+login-cycle acceptance require separate version-bound observations.

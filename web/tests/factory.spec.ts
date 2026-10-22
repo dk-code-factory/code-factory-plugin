@@ -75,9 +75,14 @@ async function host(
     readItem?: (detail: Detail) => Promise<Detail>;
     failPreparation?: boolean;
     theme?: "light" | "dark";
+    answerFailure?: "failed" | "uncertain";
+    failRefreshAfterAnswer?: boolean;
+    transcript?: string;
+    recoveryInput?: boolean;
   } = {},
 ) {
   const state = options.snapshot ?? initial();
+  let answered = false;
   let relationships: Detail["relationships"] = [];
   const calls: { name: string; arguments: Record<string, unknown> }[] = [];
   await page.exposeFunction(
@@ -89,6 +94,11 @@ async function host(
       switch (p.name) {
         case "read_snapshot":
         case "open_factory":
+          if (answered && options.failRefreshAfterAnswer)
+            return {
+              isError: true,
+              content: [{ type: "text", text: "Fixture refresh unavailable" }],
+            };
           data = structuredClone(state);
           break;
         case "read_changes":
@@ -238,9 +248,35 @@ async function host(
                       entity: "run-1",
                       data: {
                         method: "item/agentMessage/delta",
-                        params: { delta: "Inspecting reconnect logic" },
+                        params: {
+                          delta:
+                            options.transcript ?? "Inspecting reconnect logic",
+                        },
                       },
                       at: new Date().toISOString(),
+                    },
+                    {
+                      seq: state.cursor + 1,
+                      kind: "run.output",
+                      entity: String(a.id),
+                      at: new Date().toISOString(),
+                      data: {
+                        method: "item/completed",
+                        params: {
+                          codeFactorySource: "question-recovery",
+                          item: {
+                            id: "automatic-input",
+                            type: "userMessage",
+                            content: [
+                              {
+                                text: options.recoveryInput
+                                  ? "Automatic question-only request"
+                                  : "",
+                              },
+                            ],
+                          },
+                        },
+                      },
                     },
                   ]
                 : [],
@@ -248,10 +284,34 @@ async function host(
             hasMore: false,
           };
           break;
-        case "answer_request":
-          state.attention = [];
-          state.runs[0].status = "idle";
-          state.runs[0].turnId = "";
+        case "answer_request": {
+          if (options.answerFailure === "failed")
+            return {
+              isError: true,
+              content: [{ type: "text", text: "Fixture answer denied" }],
+            };
+          const request = state.attention.find((at) => at.id === a.id)!;
+          const run = state.runs.find((r) => r.id === request.runId)!;
+          state.attention = state.attention.filter((at) => at.id !== a.id);
+          run.status = "idle";
+          run.turnId = "";
+          state.cursor++;
+          answered = true;
+          if (options.answerFailure === "uncertain")
+            return {
+              isError: true,
+              content: [{ type: "text", text: "Answer delivery uncertain" }],
+            };
+          break;
+        }
+        case "dismiss_question":
+          state.attention = state.attention.filter((at) => at.id !== a.id);
+          state.cursor++;
+          break;
+        case "interrupt_run":
+          state.questionRecoveries = [];
+          state.runs.find((r) => r.id === a.id)!.status = "interrupted";
+          state.runs.find((r) => r.id === a.id)!.turnId = "";
           state.cursor++;
           break;
         case "set_jira_credential":
@@ -809,7 +869,7 @@ test("triage does not launch, launch edits and attention answer survive reopenin
     },
   ]);
   await ui.getByRole("button", { name: "Inbox", exact: true }).click();
-  await ui.getByRole("button", { name: "Agents", exact: true }).click();
+  await ui.getByRole("button", { name: /^Agents/ }).click();
   await ui.getByRole("button", { name: /Investigation · idle/ }).click();
   await ui.getByLabel("Message agent").fill("Explain the test result.");
   await ui.getByRole("button", { name: "Send message" }).click();
@@ -839,6 +899,17 @@ test("plugin settings accept repository and secure credential without echo", asy
   await expect(
     ui.getByText("owner/repo · /home/user/project · Connected"),
   ).toBeVisible();
+  const helper = ui.getByLabel("Question helper model (optional)");
+  await expect(helper).toHaveValue("");
+  await helper.fill("fixture-helper-model");
+  await ui.getByRole("button", { name: "Save settings", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        calls.find((c) => c.name === "save_settings")?.arguments
+          .questionHelperModel,
+    )
+    .toBe("fixture-helper-model");
   const input = ui.getByLabel("Jira API token");
   await expect(input).toHaveAttribute("type", "password");
   await input.fill("secure-test-token");
@@ -1127,4 +1198,281 @@ test("MCP bridge drives the assembled daemon through launch, question, answer an
     .toBe(1);
   expect(calls.filter((call) => call.name === "start_run")).toHaveLength(1);
   expect(forbidden).toEqual([]);
+});
+
+function questionSnapshot(): Snapshot {
+  const snap = initial();
+  snap.runs = ["run-1", "run-2"].map((id, i) => ({
+    id,
+    itemId: snap.inbox[0].item.id,
+    profile: { ...snap.profiles[0], name: `Agent ${i + 1}` },
+    prompt: "Investigate",
+    skills: [],
+    worktree: `/local/${id}`,
+    branch: id,
+    base: "HEAD",
+    threadId: id,
+    turnId: `turn-${i + 1}`,
+    status: "waiting",
+    error: "",
+    created: new Date().toISOString(),
+  }));
+  snap.attention = [
+    {
+      id: "question-1",
+      runId: "run-1",
+      origin: "rpc",
+      method: "item/tool/requestUserInput",
+      blocking: true,
+      status: "pending",
+      params: {
+        questions: [
+          {
+            id: "scope",
+            header: "Scope",
+            question: "Which target?",
+            isOther: true,
+          },
+        ],
+      },
+    },
+  ];
+  return snap;
+}
+
+test("answer confirmation expires despite polling, stays with its run and never alters transcript text", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const { ui, state, calls } = await host(page, {
+    snapshot: questionSnapshot(),
+    transcript: "UI_ANSWER_OK ✓ Answer sent is agent text",
+  });
+  await ui
+    .getByRole("button", { name: "Needs attention 1", exact: true })
+    .click();
+  await ui.getByRole("textbox", { name: "Which target?" }).fill("One");
+  await ui.getByRole("button", { name: "Answer", exact: true }).click();
+  const confirmation = ui.locator(".answer-confirmation");
+  await expect(confirmation).toHaveText("✓ Answer sent");
+  await expect(
+    ui.getByRole("heading", { name: "Agent 1", exact: true }),
+  ).toBeVisible();
+  await expect(ui.locator(".transcript")).toContainText(
+    "UI_ANSWER_OK ✓ Answer sent is agent text",
+  );
+  await ui
+    .getByRole("textbox", { name: "Message agent" })
+    .fill("Keep my draft");
+  await ui.getByRole("button").filter({ hasText: "Agent 2 · waiting" }).click();
+  await expect(confirmation).toHaveCount(0);
+  await ui.getByRole("button").filter({ hasText: "Agent 1 · idle" }).click();
+  await expect(confirmation).toHaveText("✓ Answer sent");
+  await expect(ui.getByRole("textbox", { name: "Message agent" })).toHaveValue(
+    "Keep my draft",
+  );
+  state.cursor++;
+  await page.clock.runFor(4000);
+  await expect(confirmation).toBeVisible();
+  state.cursor++;
+  await page.clock.runFor(1200);
+  await expect(confirmation).toHaveCount(0);
+  expect(calls.filter((c) => c.name === "answer_request")).toHaveLength(1);
+  await page.reload();
+  await ui.getByRole("button", { name: /^Agents/ }).click();
+  await ui.getByRole("button").filter({ hasText: "Agent 1 · idle" }).click();
+  await expect(confirmation).toHaveCount(0);
+});
+
+for (const failure of ["failed", "uncertain"] as const) {
+  test(`${failure} answers retain error feedback without confirmation or replay`, async ({
+    page,
+  }) => {
+    const { ui, calls } = await host(page, {
+      snapshot: questionSnapshot(),
+      answerFailure: failure,
+    });
+    await ui
+      .getByRole("button", { name: "Needs attention 1", exact: true })
+      .click();
+    await ui.getByRole("textbox", { name: "Which target?" }).fill("One");
+    await ui.getByRole("button", { name: "Answer", exact: true }).click();
+    await expect(ui.getByRole("alert")).toContainText(
+      failure === "failed"
+        ? "Fixture answer denied"
+        : "Answer delivery uncertain",
+    );
+    await expect(ui.locator(".answer-confirmation")).toHaveCount(0);
+    await page.waitForTimeout(2200);
+    expect(calls.filter((c) => c.name === "answer_request")).toHaveLength(1);
+  });
+}
+
+test("successful answer keeps confirmation when the following refresh fails", async ({
+  page,
+}) => {
+  const { ui, calls } = await host(page, {
+    snapshot: questionSnapshot(),
+    failRefreshAfterAnswer: true,
+  });
+  await ui
+    .getByRole("button", { name: "Needs attention 1", exact: true })
+    .click();
+  await ui.getByRole("textbox", { name: "Which target?" }).fill("One");
+  await ui.getByRole("button", { name: "Answer", exact: true }).click();
+  await expect(ui.locator(".answer-confirmation")).toHaveText("✓ Answer sent");
+  await expect(ui.getByRole("alert")).toContainText(
+    "Response sent, but refresh failed",
+  );
+  await expect(ui.getByRole("dialog")).toHaveCount(0);
+  expect(calls.filter((c) => c.name === "answer_request")).toHaveLength(1);
+});
+
+test("approval responses use Response sent and keep other run attention", async ({
+  page,
+}) => {
+  const snap = questionSnapshot();
+  snap.attention[0].method = "item/commandExecution/requestApproval";
+  snap.attention[0].params = {
+    command: "git status",
+    availableDecisions: ["decline"],
+  };
+  snap.attention.push({
+    ...snap.attention[0],
+    id: "approval-2",
+    runId: "run-2",
+  });
+  const { ui, state } = await host(page, { snapshot: snap });
+  await ui
+    .getByRole("button", { name: "Needs attention 2", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "decline", exact: true }).click();
+  await expect(ui.locator(".answer-confirmation")).toHaveText(
+    "✓ Response sent",
+  );
+  expect(state.attention.map((a) => a.id)).toEqual(["approval-2"]);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`recovery icons, fallback controls and keyboard navigation at narrow width in ${theme}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const snap = questionSnapshot();
+    snap.questionRecoveries = [
+      {
+        id: "recovery-1",
+        runId: "run-1",
+        stage: "requesting-form",
+        attempts: 2,
+      },
+    ];
+    const { ui, state, calls } = await host(page, {
+      snapshot: snap,
+      theme,
+      recoveryInput: true,
+    });
+    await ui.getByRole("button", { name: /^Agents/ }).click();
+    await ui
+      .getByRole("button")
+      .filter({ hasText: "Agent 1 · waiting" })
+      .click();
+    await expect(
+      ui.getByText("Recovering question · attempt 2 of 2"),
+    ).toBeVisible();
+    await expect(
+      ui
+        .locator(".transcript article")
+        .filter({ hasText: "Automatic question-only request" })
+        .locator("small"),
+    ).toHaveText("Question recovery");
+    const recovery = ui.locator("div.notice");
+    await expect(recovery.locator("svg")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    await expect(recovery.locator("svg path")).toHaveCount(2);
+    await expect(
+      ui.getByRole("status", { name: "Run status" }).locator("svg circle"),
+    ).toHaveCount(1);
+    await expect(
+      ui.getByRole("textbox", { name: "Message agent" }),
+    ).toBeEnabled();
+    await ui
+      .getByRole("textbox", { name: "Message agent" })
+      .fill("Retain recovery draft");
+    await expect(
+      ui.getByRole("button", { name: "Send message", exact: true }),
+    ).toBeDisabled();
+    await scanOwnedApp(page, `${theme}-recovery-narrow`);
+    await ui.getByRole("button", { name: "Take over", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      ui.getByRole("button", { name: "Take over", exact: true }),
+    ).toHaveCount(0);
+    expect(
+      calls.some(
+        (c) => c.name === "interrupt_run" && c.arguments.id === "run-1",
+      ),
+    ).toBe(true);
+    state.attention[0].origin = "text";
+    state.cursor++;
+    await page.waitForTimeout(1200);
+    const opener = ui.getByRole("button", {
+      name: "Waiting for your answer — Answer",
+    });
+    await opener.focus();
+    await page.keyboard.press("Enter");
+    const inspect = ui.getByRole("button", {
+      name: "Inspect technical transcript",
+    });
+    await tabTo(page, inspect);
+    await page.keyboard.press("Enter");
+    await expect(
+      ui.getByRole("textbox", { name: "Message agent" }),
+    ).toHaveValue("Retain recovery draft");
+    await expect(
+      ui.getByRole("heading", { name: "Technical transcript" }),
+    ).toBeFocused();
+    await opener.click();
+    await scanOwnedApp(page, `${theme}-fallback-narrow`);
+    await ui
+      .getByRole("button", { name: "No reply needed", exact: true })
+      .focus();
+    await page.keyboard.press("Enter");
+    await expect(ui.getByRole("dialog")).toHaveCount(0);
+    expect(calls.filter((c) => c.name === "dismiss_question")).toHaveLength(1);
+    expect(
+      calls.filter(
+        (c) => c.name === "answer_request" || c.name === "send_message",
+      ),
+    ).toHaveLength(0);
+    expect(
+      await ui.locator("body").evaluate((e) => e.scrollWidth <= e.clientWidth),
+    ).toBe(true);
+  });
+}
+
+test("text fallback submits its answer through the owning request", async ({
+  page,
+}) => {
+  const snap = questionSnapshot();
+  snap.attention[0].origin = "text";
+  const { ui, calls } = await host(page, { snapshot: snap });
+  await ui
+    .getByRole("button", { name: "Needs attention 1", exact: true })
+    .click();
+  await ui
+    .getByRole("textbox", { name: "Which target?" })
+    .fill("My fallback answer");
+  await ui.getByRole("button", { name: "Answer", exact: true }).click();
+  await expect(ui.locator(".answer-confirmation")).toHaveText("✓ Answer sent");
+  expect(
+    calls.filter((c) => c.name === "answer_request").map((c) => c.arguments),
+  ).toEqual([
+    {
+      id: "question-1",
+      answer: { answers: { scope: { answers: ["My fallback answer"] } } },
+    },
+  ]);
 });

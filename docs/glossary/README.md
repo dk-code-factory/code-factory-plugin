@@ -2739,4 +2739,88 @@ The tunnel key connection within the application interface.
 `ui-c-browser-lab` · ui-connection
 
 The browser lab connection within the application interface.
+
+<a id="question-recovery"></a>
+## Question recovery
+
+`question-recovery` · domain
+
+A bounded effort to recover an unanswered human question while preserving the original task and authority.
+
+<a id="state-recovering"></a>
+## Recovering
+
+`state-recovering` · state
+
+A pending human question is being checked or restated before task continuation.
+
+<a id="element-w-run-controls-waiting-icon"></a>
+## waiting-icon
+
+`element-w-run-controls-waiting-icon` · element · scope: ui-w-run-controls
+
+The decorative clock beside a readable waiting status.
+
+<a id="element-w-run-controls-recovery-progress"></a>
+## recovery-progress
+
+`element-w-run-controls-recovery-progress` · element · scope: ui-w-run-controls
+
+The readable status of question recovery and its bounded attempts.
+
+<a id="element-w-run-controls-recovery-icon"></a>
+## recovery-icon
+
+`element-w-run-controls-recovery-icon` · element · scope: ui-w-run-controls
+
+The decorative circular arrow beside recovery progress.
+
+<a id="element-w-run-controls-takeover"></a>
+## takeover
+
+`element-w-run-controls-takeover` · element · scope: ui-w-run-controls
+
+The control that stops question recovery for owner takeover.
+
+<a id="element-w-run-controls-confirmation"></a>
+## confirmation
+
+`element-w-run-controls-confirmation` · element · scope: ui-w-run-controls
+
+The temporary acknowledgement of a successful response in its owning run.
+
+<a id="element-w-attention-notice-waiting-icon"></a>
+## waiting-icon
+
+`element-w-attention-notice-waiting-icon` · element · scope: ui-w-attention-notice
+
+The decorative clock beside a readable waiting request label.
+
+<a id="element-w-questions-dismiss"></a>
+## dismiss
+
+`element-w-questions-dismiss` · element · scope: ui-w-questions
+
+The control that dismisses a textual question without replying or granting authority.
+
+<a id="element-w-policy-settings-question-helper-model"></a>
+## question-helper-model
+
+`element-w-policy-settings-question-helper-model` · element · scope: ui-w-policy-settings
+
+The optional model used to check stopped task questions, with an empty value meaning the task model.
+
+<a id="ui-c-question-recovery"></a>
+## Question recovery data connection
+
+`ui-c-question-recovery` · ui-connection
+
+The connection between question recovery progress and its owning question and run.
+
+<a id="ui-c-dismiss-question"></a>
+## Question dismissal connection
+
+`ui-c-dismiss-question` · ui-connection
+
+The local dismissal connection for a textual question.
 <!-- /specs:terms -->

@@ -25,10 +25,11 @@ Closing the view or transport does not stop work. Process loss makes old request
 - **S2** Explicit resume reconnects retained work instead of replaying its original task.
 - **S3** Dirty cleanup retains the workspace after interrupting the retained session; continuation requires explicit Resume. Clean stopped workspace cleanup retains history.
 
+Native request IDs become stale after process loss. Structured message questions retain durable identity; unanswered native questions and interrupted repairs retain a textual fallback on the original run. Lost approvals never become textual authorization. Answering a fallback restores the retained session without replaying repair attempts or prior answers; explicit Resume remains available for ordinary interrupted work.
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior).
+Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery).
 UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/README.md#P-RUN-LIST), [P-RUN-DETAIL](../ui/README.md#P-RUN-DETAIL), [W-RUN-ROW](../ui/README.md#W-RUN-ROW), [W-RUN-EMPTY](../ui/README.md#W-RUN-EMPTY), [W-RUN-CONTROLS](../ui/README.md#W-RUN-CONTROLS), [C-SELECT-RUN](../ui/README.md#C-SELECT-RUN), [C-RUN-ACTION](../ui/README.md#C-RUN-ACTION).
 
 ## Flow diagram
@@ -36,7 +37,7 @@ UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/READ
 ```mermaid
 flowchart TD
     N0["Reopen and inspect retained status and history #40;S1#41;"]
-    N1["Explicitly resume interrupted or failed work #40;S2#41;"]
+    N1["Explicitly resume retained work, or answer a recovered question #40;S2#41;"]
     N2["Continue retained workspace without replaying task or answers"]
     N3["Request cleanup of a stopped run #40;S3#41;"]
     N4["Refuse dirty workspace cleanup"]
@@ -64,6 +65,7 @@ flowchart TD
 - [go.sum](../../go.sum) — Shared domain, persistence, transport or dependency contract
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
+- [internal/app/questions.go](../../internal/app/questions.go) — Bounded recovery and durable text/structured question answer claims; preserve authority and redaction. (`func (m *Manager) answerSynthetic(`)
 
 ## Test references
 
@@ -71,10 +73,14 @@ flowchart TD
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestNonblockingApprovalsCrashAndResume(`; S2. Crashed fake process can explicitly resume.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestConcurrentPollingSteeringAndAnswersThenDirtyCleanup(`; S3. Dirty cleanup returns an error and retains the unsaved file; the assertion does not verify session retirement, interrupted status, stale requests or subsequent explicit resume.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("dirty cleanup retains the daemon workspace and history until explicit Resume"`; S2, S3. Assembled dirty cleanup shows interrupted state/refusal, retains file/history/draft, disables Send, then resumes the same run/thread/workspace explicitly.
+- [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(`; S1, S2. Structured question retains identity across restart; concurrent responses accept only once.
+- [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(`; S1. Lost native question becomes text; approvals remain stale.
+- [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestRestartDuringRepairRetainsOneFallbackWithoutReplayingAttempts(`; S1. In-flight repair restart produces one durable fallback without replaying attempts.
+- [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestRestartMaterializesAlreadyPersistedFallback(`; S1. Crash between persisted fallback stage and attention creation is repaired idempotently.
 
 ## Verification and gaps
 
-Local suites: `go`.
+Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
 - **S1** — `gap-flow-recover-cleanup-s1-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Prepared-run recovery persistence is implemented but lacks a targeted assertion. Next verification: Persist a prepared run, reconstruct recovery state, and assert that its prepared snapshot survives without launching or creating a workspace.
 - **S2** — `gap-flow-recover-cleanup-s2-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Fake resume success does not prove full real-provider history preservation; dated real acceptance is in ../acceptance.md. Next verification: Check existing dated provider acceptance against the current binary and retain explicit evidence of resumed conversation/workspace history without task or answer replay; fixture success alone is insufficient.

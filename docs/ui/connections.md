@@ -42,8 +42,8 @@ for a clickable navigation control.
 | `C-FOLLOW-UP` | `W-MESSAGE` → selected run → `W-TRANSCRIPT` | Message text and displayed current-turn context. | Submits idle follow-up or active steering. Stale active-turn responses fail; success clears the message draft. |
 | `C-RUN-ATTENTION` | `W-ATTENTION-NOTICE[requestId]` → `D-ATTENTION` | Notice click; request ID belonging to the selected run. | Opens that request without answering. |
 | `C-GLOBAL-ATTENTION` | `W-NAVIGATION.needs-attention` → Agents and optional `D-ATTENTION` | Current pending-request list. | Navigates to Agents; opens its first pending request if present. It does not automatically change selected run. |
-| `C-ATTENTION-CHAT` | `W-DIALOG-FRAME.open-chat` → `PAGE-AGENTS`/`P-RUN-DETAIL` | Current attention's owning run ID. | Closes attention, selects its run and navigates to Agents. No answer is submitted. |
-| `C-ANSWER` | `W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state | Response matched to current request ID. | Submits once through live request validation. Success refreshes/ closes; errors remain inside attention. |
+| `C-ATTENTION-CHAT` | `W-DIALOG-FRAME.open-chat` → `PAGE-AGENTS`/`P-RUN-DETAIL`; textual fallback inspection also selects W-TRANSCRIPT. | Current attention's owning run ID. | Closes attention, selects its run and navigates to Agents. No answer is submitted. Text fallback uses Inspect technical transcript and preserves the owning run draft. |
+| `C-ANSWER` | `W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state | Response matched to current request ID. | Submits once through request identity validation. Success closes attention, selects the owner and starts a five-second local confirmation independently of refresh. Failed/uncertain submissions never confirm or replay; refresh failure after success is reported separately. |
 | `C-DISMISS` | Launch/attention close control → underlying page | Close click or Escape inside the active dialog. | Dismisses only that dialog and restores its connected opener when permitted. No attention answer or interrupt is sent. |
 | `C-REPOSITORY-SAVE` | `W-REPOSITORY-SETTINGS.save` → repository summary / sync inputs | Repository ID, checkout and default base. | Submits and refreshes settings/health. Inbox items arrive through background synchronization, not an implied immediate import. |
 | `C-DISCOVER-SKILLS` | `W-REPOSITORY-SETTINGS.discover-skills` → profile and launch skill choices | Draft checkout or fallback root. | Loads/discovers skills and refreshes shared choices without saving the repository first. |
@@ -59,6 +59,8 @@ for a clickable navigation control.
 | `C-EXTERNAL-AUTH` | `W-ELICITATION.open-authorization` → external authorization page | Request-supplied URL opened through host. | External. Continue reports the user's completion decision; it does not independently prove external success. |
 | `C-TUNNEL-KEY` | `W-LOCAL-TUNNEL-KEY` → alternate local transport session | Single-use private setup input. | Submits and removes form on success; does not navigate into Settings or activate Jira. |
 | `C-BROWSER-LAB` | `W-BROWSER-LAB` controls → isolated browser → screenshot/location | Explicit lab navigation/click/key/scroll operations. | Developer utility feedback loop; never an Inbox/Agents page transition. |
+| `C-QUESTION-RECOVERY` | Recovery records bind stage and attempt progress to the owning run and its recovered question. | Owning recovery or attention identity. | Recovery records bind stage and attempt progress to the owning run and its recovered question. |
+| `C-DISMISS-QUESTION` | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. | Owning recovery or attention identity. | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. |
 <!-- /specs:connections-0 -->
 
 ## Navigation overview
@@ -140,6 +142,7 @@ flowchart LR
     N2 -->|"C-GLOBAL-ATTENTION"| N70
     N23 -->|"C-ATTENTION-CHAT"| N67
     N23 -->|"C-ATTENTION-CHAT"| N48
+    N23 -->|"C-ATTENTION-CHAT"| N21
     N26 -->|"C-ANSWER"| N70
     N26 -->|"C-ANSWER"| N48
     N27 -->|"C-ANSWER"| N70
@@ -169,6 +172,10 @@ flowchart LR
     N28 -->|"C-EXTERNAL-AUTH"| N28
     N38 -->|"C-TUNNEL-KEY"| N73
     N39 -->|"C-BROWSER-LAB"| N74
+    N19 -->|"C-QUESTION-RECOVERY"| N26
+    N19 -->|"C-QUESTION-RECOVERY"| N19
+    N26 -->|"C-DISMISS-QUESTION"| N70
+    N26 -->|"C-DISMISS-QUESTION"| N48
 ```
 <!-- /specs:connections -->
 

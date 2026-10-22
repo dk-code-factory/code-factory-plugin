@@ -10,11 +10,37 @@ import type {
   EventPage,
   JournalEvent,
   Profile,
+  QuestionRecovery,
   Run,
   Snapshot,
 } from "./types";
 import "./style.css";
 
+function StatusIcon({ recovery = false }: { recovery?: boolean }) {
+  return (
+    <svg
+      className="status-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {recovery ? (
+        <>
+          <path d="M20 7v5h-5" />
+          <path d="M20 12a8 8 0 1 0-2 5M20 7l-3-3" />
+        </>
+      ) : (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 2" />
+        </>
+      )}
+    </svg>
+  );
+}
 function Factory() {
   const [snap, setSnap] = useState<Snapshot>();
   const [tab, setTab] = useState("Inbox");
@@ -26,6 +52,27 @@ function Factory() {
   const [attentionId, setAttentionId] = useState("");
   const [filter, setFilter] = useState("open");
   const [search, setSearch] = useState("");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [inspectRun, setInspectRun] = useState("");
+  const [confirmations, setConfirmations] = useState<
+    Record<string, { text: string; expires: number }>
+  >({});
+  useEffect(() => {
+    const next = Math.min(
+      ...Object.values(confirmations).map((c) => c.expires),
+    );
+    if (!Number.isFinite(next)) return;
+    const timer = setTimeout(
+      () =>
+        setConfirmations((old) =>
+          Object.fromEntries(
+            Object.entries(old).filter(([, c]) => c.expires > Date.now()),
+          ),
+        ),
+      Math.max(0, next - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [confirmations]);
   const cursor = useRef(0);
   const mounted = useRef(true);
   const refresh = useCallback(async () => {
@@ -332,6 +379,20 @@ function Factory() {
                     key={runId}
                     run={snap.runs.find((r) => r.id === runId)!}
                     attention={pending.filter((a) => a.runId === runId)}
+                    recoveries={(snap.questionRecoveries ?? []).filter(
+                      (r) => r.runId === runId,
+                    )}
+                    confirmation={confirmations[runId]?.text}
+                    message={drafts[runId] ?? ""}
+                    setMessage={(text) =>
+                      setDrafts((old) => ({ ...old, [runId]: text }))
+                    }
+                    clearMessage={(sent) =>
+                      setDrafts((old) =>
+                        old[runId] === sent ? { ...old, [runId]: "" } : old,
+                      )
+                    }
+                    inspect={inspectRun === runId}
                     action={action}
                     openAttention={setAttentionId}
                     onError={setError}
@@ -362,6 +423,7 @@ function Factory() {
           )}
           {currentAttention && (
             <AttentionDialog
+              key={currentAttention.id}
               attention={currentAttention}
               close={() => setAttentionId("")}
               answer={async (answer) => {
@@ -369,11 +431,37 @@ function Factory() {
                   id: currentAttention.id,
                   answer,
                 });
-                await refresh();
+                setError("");
+                const owner = currentAttention.runId;
+                setConfirmations((old) => ({
+                  ...old,
+                  [owner]: {
+                    text:
+                      currentAttention.method === "item/tool/requestUserInput"
+                        ? "✓ Answer sent"
+                        : "✓ Response sent",
+                    expires: Date.now() + 5000,
+                  },
+                }));
+                setRunId(owner);
+                setTab("Agents");
                 setAttentionId("");
+                try {
+                  await refresh();
+                } catch (e) {
+                  setError(`Response sent, but refresh failed: ${String(e)}`);
+                }
+              }}
+              dismiss={async () => {
+                if (
+                  await action("dismiss_question", { id: currentAttention.id })
+                )
+                  setAttentionId("");
               }}
               chat={() => {
                 setRunId(currentAttention.runId);
+                if (currentAttention.origin === "text")
+                  setInspectRun(currentAttention.runId);
                 setTab("Agents");
                 setAttentionId("");
               }}
@@ -849,7 +937,10 @@ function transcriptBlocks(events: JournalEvent[]) {
       label = "Agent";
       text = item.text ?? "";
     } else if (item?.type === "userMessage") {
-      label = "You";
+      label =
+        p.codeFactorySource === "question-recovery"
+          ? "Question recovery"
+          : "You";
       text = (item.content ?? []).map((v) => v.text ?? "").join("\n");
     } else if (item?.type === "commandExecution") {
       label = "Command";
@@ -882,12 +973,24 @@ function transcriptBlocks(events: JournalEvent[]) {
 function Agent({
   run,
   attention,
+  recoveries,
+  confirmation,
+  message,
+  setMessage,
+  clearMessage,
+  inspect,
   action,
   openAttention,
   onError,
 }: {
   run: Run;
   attention: Attention[];
+  recoveries: QuestionRecovery[];
+  confirmation?: string;
+  message: string;
+  setMessage: (text: string) => void;
+  clearMessage: (sent: string) => void;
+  inspect: boolean;
   action: Action;
   openAttention: (id: string) => void;
   onError: (e: string) => void;
@@ -895,8 +998,16 @@ function Agent({
   const [events, setEvents] = useState<JournalEvent[]>([]);
   const [cursor, setCursor] = useState(0);
   const [hasMore, setMore] = useState(false);
-  const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const transcript = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (inspect) transcript.current?.focus();
+  }, [inspect]);
+  const recovery = recoveries.find((r) =>
+    ["checking", "requesting-form", "awaiting-answer", "answered"].includes(
+      r.stage,
+    ),
+  );
   const pageCursor = useRef(0);
   const [historyVersion, setHistoryVersion] = useState(0);
   useEffect(() => {
@@ -938,8 +1049,29 @@ function Agent({
         aria-live="polite"
         aria-atomic="true"
       >
+        {run.status === "waiting" && <StatusIcon />}
         {run.status}
       </span>
+      {confirmation && (
+        <p role="status" className="answer-confirmation">
+          {confirmation}
+        </p>
+      )}
+      {recovery && (
+        <div className="notice recovery-progress" role="status">
+          <StatusIcon recovery />
+          {recovery.stage === "checking"
+            ? "Checking for a pending question"
+            : recovery.stage === "requesting-form"
+              ? `Recovering question · attempt ${recovery.attempts} of 2`
+              : recovery.stage === "awaiting-answer"
+                ? "Question recovered · waiting for your answer"
+                : "Restoring original task mode"}
+          <button onClick={() => void action("interrupt_run", { id: run.id })}>
+            Take over
+          </button>
+        </div>
+      )}
       <h2>{run.profile.name}</h2>
       <p>
         <code>{run.worktree}</code>
@@ -972,13 +1104,16 @@ function Agent({
           key={a.id}
           onClick={() => openAttention(a.id)}
         >
-          {a.blocking
+          {(a.blocking || a.origin === "text") && <StatusIcon />}
+          {a.blocking || a.origin === "text"
             ? "Waiting for your answer"
             : "Question · agent continues"}{" "}
           — Answer
         </button>
       ))}
-      <h3>Conversation & progress</h3>
+      <h3 ref={transcript} tabIndex={-1}>
+        Technical transcript
+      </h3>
       <div className="transcript" aria-live="polite">
         {transcriptBlocks(events).map((b) => (
           <article key={b.key}>
@@ -1005,13 +1140,14 @@ function Agent({
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
+          const sent = message;
           try {
             await call("send_message", {
               id: run.id,
               text: message,
               expectedTurn: run.turnId,
             });
-            setMessage("");
+            clearMessage(sent);
           } catch (e) {
             onError(String(e));
           } finally {
@@ -1032,7 +1168,8 @@ function Agent({
           disabled={
             busy ||
             !message.trim() ||
-            !["idle", "running", "waiting"].includes(run.status)
+            !["idle", "running", "waiting"].includes(run.status) ||
+            !!recovery
           }
         >
           Send message
@@ -1045,11 +1182,13 @@ function AttentionDialog({
   attention: a,
   close,
   answer,
+  dismiss,
   chat,
 }: {
   attention: Attention;
   close: () => void;
   answer: (value: unknown) => Promise<void>;
+  dismiss: () => Promise<void>;
   chat: () => void;
 }) {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -1184,7 +1323,16 @@ function AttentionDialog({
             </div>
           </>
         )}
-        <button onClick={chat}>Open agent chat</button>
+        {a.origin === "text" && (
+          <button disabled={busy} onClick={() => void dismiss()}>
+            No reply needed
+          </button>
+        )}
+        <button onClick={chat}>
+          {a.origin === "text"
+            ? "Inspect technical transcript"
+            : "Open agent chat"}
+        </button>
       </section>
     </div>
   );
@@ -1284,6 +1432,16 @@ function Settings({
               value={labels}
               onChange={(e) => setLabels(e.target.value)}
               rows={5}
+            />
+          </label>
+          <label>
+            Question helper model (optional)
+            <input
+              value={config.questionHelperModel ?? ""}
+              onChange={(e) =>
+                setConfig({ ...config, questionHelperModel: e.target.value })
+              }
+              placeholder="Use the task model"
             />
           </label>
           <label>

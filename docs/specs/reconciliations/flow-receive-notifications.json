@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
-  "fingerprint": "4779edd806f5fcf69d12583037b866a644b3be0538f9d8e8877ddaef220b3aaa",
+  "base": "9cd2c99bb972009ed2f5b5d35f0f2fa141077111",
+  "fingerprint": "49f1c7cb90850523d1244f1dc1d211615a084e8cdb7db234f834e04701b883a5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "adoption",
-    "description": "Adopt the existing S1 subscription verification/filtering, S2 bounded retry/progress behavior and explicit S3 real-host blocker at the fixed fourteen-flow initial baseline. Transport/429/server failures retry under eight failed attempts; gone disables, other failures/exhaustion advance, and notification-disabled processing skips events without later replay. Public source publication replaces personal operator details with installation-neutral documentation, omits private evidence/history, and retains the same scope of existing runtime assertions; hosted verification uses fixtures only.",
-    "implementation": "Inspected events.Tick: the delivery match includes config.Notifications; cursor advancement still occurs for nonmatching/disabled events. Failed delivery increments attempts; 410 disables, only transport/429/server failures below the attempt limit retain retry state, otherwise progress advances/reset occurs. These existing outcomes are described without changing product code. Public source publication replaces personal operator details with installation-neutral documentation, omits private evidence/history, and retains the same scope of existing runtime assertions; hosted verification uses fixtures only.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signature/duplicate/filter handling and one HTTP503 retry preserve event identity; expiry and idempotent unsubscribe are asserted. Dedicated transport/429/permanent/410/exhaustion/disabled-no-replay, changed-key refresh, restart and post-unsubscribe no-delivery assertions remain gaps. Real-host subscriptions/callbacks remain blocked; fixture success does not close S3. Public source publication replaces personal operator details with installation-neutral documentation, omits private evidence/history, and retains the same scope of existing runtime assertions; hosted verification uses fixtures only."
+    "kind": "structure",
+    "description": "S1-S3 subscription challenge, delivery, filtering and refresh behavior remain unchanged. Recovery writes ordinary journal attention/run events; host callback acceptance remains explicitly open and is not inferred from UI confirmation.",
+    "implementation": "Compared events service and notification transport with the baseline: no event subscription/callback code changed. Recovery uses existing Store event writes and the confirmation is view-local React state, with no new host notification call or background delivery mechanism.",
+    "tests": "Inspected subscription verification/retry/dedup/refresh/expiry and callback safety assertions. They rerun in fixture mode, while browser response confirmation checks only local owning-run status. No fixture receipt closes real host callback challenge/delivery gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 2.35
+      "seconds": 3.853
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.164
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.047
+      "seconds": 24.546
     },
     {
       "command": [
@@ -56,12 +56,12 @@
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "7b01c3aaa34435a634a0c8c52c8b7fed6a4d34bcdc0a89a488ed2ad41ba3b03c",
-    "term:attention-request": "4b89a48903c6811021edb435ec88799a894413be5b43844b31441f4af59d5371",
-    "term:coverage-gap": "3b799b0f9605c02e2663de1a111c49570b1b6d5e778756c1b36b8429ea2678d2",
-    "term:host": "961c137bbb0aa15fd1f5ff21fe8a516dbe1912183a1decdcb77b1dde63329217",
-    "term:known-limitation": "0fdebfeba4ba3833140261c969ddce989df52b13b64f69c2b450c856e549c5cf",
-    "term:subscription": "67f1f8a37b6ef55a04f2c9b3241839a2f5ed8f6826fb37985dae817178e868d8",
-    "term:unverified-behavior": "de8ab99bb6a4e18bd691e91229482f3e4431311ec0dc7644b167055fdaadde95"
+    "flow:receive-notifications": "6c16ee68d34ceabebf2a9316dddd95c6a4fb9e12d53080d43bd477c22b04db98",
+    "term:attention-request": "dba51ce6eae05ceeb63ad01e7846d1669a1f0d616004ad591c22def72478377c",
+    "term:coverage-gap": "5439d412988ad17087a17eb704c07da38244d510612b7bc26bbc493a177c807d",
+    "term:host": "a1c725004b05372e6bd51356a91bb0f855bc92b786ff6b4a15f5bf93247816d8",
+    "term:known-limitation": "488e665e326093ccdb0dee9a96d518e966eaf77ce35ed68bcd7d9e682a5ccd7e",
+    "term:subscription": "ab6a22fb1d1c11a9da3f09b9f78b5025e2139cb1135c64fb3e3aede706f21be2",
+    "term:unverified-behavior": "f2f4dca98d1595e41c32c5a73dddf26ba84c1d557f7d5956f2ca37b537d8596c"
   }
 }
