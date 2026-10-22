@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "flow": "relate-items",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "d717741415e075ed20dd32759c80660cf4aa72507b7aaac5964ec87e0798c07b",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "description": "Adopt discovered reference evidence, local link edits and conditional ticket context in S1-S3. The Jira branch is conditional and does not enable Jira for this pilot.",
+    "implementation": "Reviewed Discover, Link, RefreshJira and the restricted GET-only Jira provider. Manual link identities differ from discovered references and unlink preserves the discovered record.",
+    "tests": "S1/S2 use the direct discovery/local-unlink assertions in InboxRevisionStatesPriorityAndLinks. No Jira fixture/live tenant acceptance is claimed for S3; the missing coverage is retained as a gap."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 1.769
+    }
+  ]
+}

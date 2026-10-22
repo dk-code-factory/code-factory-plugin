@@ -1,0 +1,219 @@
+make verify FLOW_ARGS='--base HEAD --merge-base'
+make[1]: Entering directory '/extra/dkropachev/code-factory-plugin'
+./scripts/verify.sh
+make[2]: Entering directory '/extra/dkropachev/code-factory-plugin'
+python3 scripts/specs.py check --base HEAD --merge-base
+Affected: flow-answer-attention, flow-configure-work, flow-install-connect, flow-interact-agent, flow-launch-agent, flow-maintain-flow-contracts, flow-operate-installation, flow-protect-secrets, flow-receive-notifications, flow-recover-cleanup, flow-relate-items, flow-resolve-priority, flow-sync-inbox, flow-triage-inbox, flow-view-live-work, glossary, ui
+make[2]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+make[2]: Entering directory '/extra/dkropachev/code-factory-plugin'
+cd web && npm ci && npm run build
+
+added 43 packages, and audited 44 packages in 538ms
+
+8 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+
+> code-factory-ui@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 187 modules transformed.
+rendering chunks...
+[plugin vite:singlefile] 
+
+[plugin vite:singlefile] Inlining: index-CzVKvJ95.js
+[plugin vite:singlefile] Inlining: style-DJtnexo-.css
+computing gzip size...
+../internal/web/dist/index.html  476.63 kB │ gzip: 136.45 kB
+✓ built in 735ms
+python3 scripts/package_plugin.py --embed
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.2.zip
+mkdir -p bin
+go build -trimpath -o bin/code-factory ./cmd/code-factory
+make[2]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+make[2]: Entering directory '/extra/dkropachev/code-factory-plugin'
+python3 scripts/specs.py validate
+{"valid": true, "terms": 449, "entities": 116, "flows": 15}
+go vet ./...
+cd web && npm run check
+
+> code-factory-ui@0.1.0 check
+> tsc --noEmit
+
+make[2]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+make[2]: Entering directory '/extra/dkropachev/code-factory-plugin'
+go build -o bin/fake-codex ./internal/testutil/fakecodex
+go test -race -count=1 ./...
+?   	codefactory/cmd/code-factory	[no test files]
+ok  	codefactory/internal/app	2.079s
+?   	codefactory/internal/buildinfo	[no test files]
+ok  	codefactory/internal/codex	1.415s
+?   	codefactory/internal/domain	[no test files]
+ok  	codefactory/internal/events	1.036s
+ok  	codefactory/internal/gateway	1.579s
+ok  	codefactory/internal/pluginbundle	1.077s
+ok  	codefactory/internal/providers	1.025s
+ok  	codefactory/internal/setup	1.538s
+ok  	codefactory/internal/store	1.026s
+?   	codefactory/internal/testhost	[no test files]
+?   	codefactory/internal/testutil	[no test files]
+?   	codefactory/internal/testutil/fakecodex	[no test files]
+ok  	codefactory/internal/transport	1.285s
+ok  	codefactory/internal/web	1.006s
+cd web && npm test
+
+> code-factory-ui@0.1.0 test
+> playwright test
+
+[WebServer] (node:1131958) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1132031) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 48 tests using 1 worker
+
+(node:1132292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/factory.spec.ts:538:3 › Axe WCAG A/AA scans the owned app iframe across core states in light theme (2.7s)
+  ✓   2 tests/factory.spec.ts:538:3 › Axe WCAG A/AA scans the owned app iframe across core states in dark theme (2.3s)
+  ✓   3 tests/factory.spec.ts:619:1 › keyboard launch review traps focus, preserves edits and restores its opener on Escape (1.2s)
+  ✓   4 tests/factory.spec.ts:694:1 › keyboard attention stays contained through updates and Escape restores the pending opener (1.6s)
+  ✓   5 tests/factory.spec.ts:765:1 › launch preparation failure is announced inside the dialog without losing keyboard edits (402ms)
+  ✓   6 tests/factory.spec.ts:809:1 › item actions refresh visible history while unread, New and drafts remain independent (700ms)
+  ✓   7 tests/factory.spec.ts:848:1 › unlink removes the visible relationship without clearing unrelated detail drafts (405ms)
+  ✓   8 tests/factory.spec.ts:875:1 › a delayed relationship refresh cannot replace a later selection or its drafts (564ms)
+  ✓   9 tests/factory.spec.ts:934:1 › triage does not launch, launch edits and attention answer survive reopening (1.1s)
+  ✓  10 tests/factory.spec.ts:1054:1 › settings save repository and priority rows without unused integrations (288ms)
+  ✓  11 tests/factory.spec.ts:1114:1 › item switching restores saved priorities and keeps relationship drafts by item (916ms)
+  ✓  12 tests/factory.spec.ts:1169:1 › failed immediate priority saves restore the saved value with an inline error (234ms)
+  ✓  13 tests/factory.spec.ts:1183:1 › empty filtered inbox offers Clear filters and hides zero attention (155ms)
+  ✓  14 tests/factory.spec.ts:1201:1 › Open agent targets the newest retained run and keeps message drafts across tabs and runs (560ms)
+  ✓  15 tests/factory.spec.ts:1239:1 › default launch opens review directly and Draft launches reopens its immutable snapshot newest first (576ms)
+  ✓  16 tests/factory.spec.ts:1283:1 › global attention selects its owning run and returns to its conversation after answering (512ms)
+  ✓  17 tests/factory.spec.ts:1351:1 › unverifiable Start disables retry and Edit until read_run locates accepted work (369ms)
+  ✓  18 tests/factory.spec.ts:1381:1 › repository form shows saving and errors beside retained inputs (194ms)
+  ✓  19 tests/factory.spec.ts:1413:3 › readable approval choices preserve payloads in a narrow light embed (6.8s)
+  ✓  20 tests/factory.spec.ts:1413:3 › readable approval choices preserve payloads in a narrow dark embed (6.8s)
+  ✓  21 tests/factory.spec.ts:1549:1 › confirmed unaccepted Start allows an explicit retry of the same snapshot (378ms)
+  ✓  22 tests/factory.spec.ts:1576:1 › collapsed settings editors preserve capabilities and show independent save results (452ms)
+  ✓  23 tests/factory.spec.ts:1629:1 › agent conversation collapses commands while keeping plans changes and failures visible (270ms)
+  ✓  24 tests/factory.spec.ts:1682:5 › single-page navigation preserves list context and drafts at 1280px in light (597ms)
+  ✓  25 tests/factory.spec.ts:1682:5 › single-page navigation preserves list context and drafts at 390px in light (531ms)
+  ✓  26 tests/factory.spec.ts:1682:5 › single-page navigation preserves list context and drafts at 1280px in dark (562ms)
+  ✓  27 tests/factory.spec.ts:1682:5 › single-page navigation preserves list context and drafts at 390px in dark (513ms)
+  ✓  28 tests/factory.spec.ts:1803:1 › page changes keep keyboard focus usable when an unread row leaves the list (280ms)
+  ✓  29 tests/factory.spec.ts:1821:3 › small inbox GitHub links open the original issue and PR without selecting either in light (670ms)
+  ✓  30 tests/factory.spec.ts:1821:3 › small inbox GitHub links open the original issue and PR without selecting either in dark (680ms)
+  ✓  31 tests/factory.spec.ts:1895:3 › inbox GitHub link deny failure stays in the list with visible feedback (185ms)
+  ✓  32 tests/factory.spec.ts:1895:3 › inbox GitHub link rpc failure stays in the list with visible feedback (163ms)
+  ✓  33 tests/factory.spec.ts:1922:3 › settings has a dedicated light view without inbox or agent navigation (199ms)
+  ✓  34 tests/factory.spec.ts:1922:3 › settings has a dedicated dark view without inbox or agent navigation (196ms)
+  ✓  35 tests/factory.spec.ts:1954:1 › inbox and agent views have no settings entry or configuration controls (372ms)
+  ✓  36 tests/factory.spec.ts:1975:1 › separate settings can save while the inbox view retains its item and agent drafts (356ms)
+  ✓  37 tests/factory.spec.ts:2116:1 › lost Start response locates the accepted daemon run without another Start (429ms)
+  ✓  38 tests/factory.spec.ts:2180:1 › dirty cleanup retains the daemon workspace and history until explicit Resume (1.5s)
+  ✓  39 tests/factory.spec.ts:2266:1 › MCP bridge drives the assembled daemon through launch, question, answer and follow-up (2.5s)
+  ✓  40 tests/factory.spec.ts:2299:3 › focused work queues use GitHub ownership review requests and pending priority in light (553ms)
+  ✓  41 tests/factory.spec.ts:2299:3 › focused work queues use GitHub ownership review requests and pending priority in dark (527ms)
+  ✓  42 tests/factory.spec.ts:2375:1 › item opens a prefilled conversation and first-message Start stays explicit (582ms)
+  ✓  43 tests/factory.spec.ts:2425:1 › first-message launch uncertainty survives leaving and reopening its item (339ms)
+  ✓  44 tests/factory.spec.ts:2452:1 › Messages lists waiting agents and answering removes only its owning request (297ms)
+  ✓  45 tests/factory.spec.ts:2502:1 › first-message launch reviews changed authority before starting its prepared snapshot (284ms)
+  ✓  46 tests/factory.spec.ts:2526:1 › first-message lost Start response locates accepted work without another launch (231ms)
+  ✓  47 tests/factory.spec.ts:2545:1 › a late first-message Start cannot replace another item's draft (417ms)
+  ✓  48 tests/factory.spec.ts:2590:1 › first-message preparation errors retain the editable draft without starting (244ms)
+
+  48 passed (43.7s)
+python3 scripts/test_packaging.py
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.100s
+
+OK
+python3 scripts/test_live_connection_test.py
+FAILED: connection test stopped
+PASSED: ephemeral test credentials revoked
+.FAILED: public TLS ingress 199.38.181.54
+FAILED: public TLS ingress 209.177.145.137
+FAILED: connection test stopped
+..
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+python3 scripts/test_connection_probe.py
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.509s
+
+OK
+node --test scripts/test_browser_lab.mjs
+✔ configuration refuses nonloopback binds and nonprivate UI origins (0.534651ms)
+✔ location metadata drops secret query, fragment and dynamic identifiers (0.447125ms)
+✔ owner, Host, session, Origin and CSRF protect every browser action (16.350695ms)
+✔ browser errors never expose submitted input or URLs (1.813588ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 58.407658
+node --test scripts/test_browser_control.mjs
+✔ no arguments preserve owner-approved auto-connect and all privacy flags (0.709762ms)
+✔ pilot mode attaches only to the dedicated existing loopback browser (0.219124ms)
+✔ explicit endpoint accepts split and equals options and exact IPv4 or IPv6 loopback literals (0.257066ms)
+✔ every supported mode retains statistics, CrUX and header protections exactly once (0.554117ms)
+✔ conflicting, repeated, missing and unknown options fail closed (0.267746ms)
+✔ endpoint validation rejects remote hosts, normalized aliases and URL metadata (0.440212ms)
+✔ argument parsing is deterministic and cannot mutate inputs or later calls (0.08962ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 29.60631
+python3 scripts/test_user_flows.py
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 1.037s
+
+OK
+python3 -m unittest discover -s scripts -p 'test_specs*.py'
+.........................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 201 tests in 24.385s
+
+OK
+make[2]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+/extra/dkropachev/code-factory-plugin/dist/code-factory-0.1.0-c0601b8f3508-linux-amd64.tar.gz
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.2.zip
+......
+----------------------------------------------------------------------
+Ran 6 tests in 21.069s
+
+OK
+PASS: compiled daemon, authenticated MCP 2.0, stdio tunnel proxy, private credential files
+make[1]: Leaving directory '/extra/dkropachev/code-factory-plugin'

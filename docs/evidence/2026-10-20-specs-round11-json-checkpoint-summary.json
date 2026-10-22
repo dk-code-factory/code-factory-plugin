@@ -1,0 +1,475 @@
+{
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "generated_documents": 22,
+  "render_unchanged": true,
+  "registry_counts": {
+    "terms": 386,
+    "entities": 109,
+    "flows": 15
+  },
+  "fresh_records": 17,
+  "receipt_errors": [],
+  "records": [
+    {
+      "path": "docs/specs/reconciliations/flow-answer-attention.json",
+      "fingerprint": "59e3ad3d6544627e3f70ea48580d9f14ec8b656931328eb57dcd1eeb1fd11531",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "6671710915deaa4ff2d50bb40ff425ad9cdedac72c53ffec80590c54d78403f3"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-configure-work.json",
+      "fingerprint": "c57f7d1a02d89beee591a50f1998555fafd98c41570661c98dfa9fe6efcdae64",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "0f59bde904f12d63b3af9b6a4c80ee9c9fa24726ee7384a184b63749f694d248"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-install-connect.json",
+      "fingerprint": "71d6a58188aed90129f82a8676115d8f7714830b9158284a7fd1022de4ed842f",
+      "review_kind": "adoption",
+      "verification_commands": 4,
+      "sha256": "e5457078f06e50e5699851dc7ea077ff0cf46eca73c6db4814cfbf68f9855086"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-interact-agent.json",
+      "fingerprint": "96a267f9a2a32fdf954410109e3be76dfecd2c337c6ac465369ce0d08372769d",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "b3ea687fc358826121f36e5da50ebe57ef521ae7218e4f0283e953763b8f7915"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-launch-agent.json",
+      "fingerprint": "bf56a8a237cbf7276cc234571ecc999eb6f658441f1af6d314090bf36278863e",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "b9983dad8ab62b0ac60a4c81716d19b9adc10d1f8307be2844ffa30dc558cf72"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-maintain-flow-contracts.json",
+      "fingerprint": "cdb37e317c5407b54b4429f58aec644521d6bbf13892f9bedef15585f76b4c8c",
+      "review_kind": "behavior",
+      "verification_commands": 2,
+      "sha256": "eb2bae0147e81b511ba90300967b877e29f2867863fb72a88ee97cd4b79499a9"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-operate-installation.json",
+      "fingerprint": "f428516c781ae712eea928d51f70522c8bc91438139980f58965c73d330f1fd7",
+      "review_kind": "adoption",
+      "verification_commands": 10,
+      "sha256": "9f13feb83b6402f6c7dd2904a9a08be0f708e88d5d65956a4aa4349a339f4c64"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-protect-secrets.json",
+      "fingerprint": "12814c88464c4c2864a43a3a81742c08f52aff73f7b8cbaa24fc03489a0d6851",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "ff307e8603019099d4a94014697b94d6f96aa9328385b3bfa9d6605101446572"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-receive-notifications.json",
+      "fingerprint": "e10ab6ba6bf55aa6e29466efc5a80dee1f03abeac7a33688ea99446a68ca3c34",
+      "review_kind": "adoption",
+      "verification_commands": 3,
+      "sha256": "7318118e7b0242c0edba42177933e75fa3c48eb3239f5fdf044a2ce26fe75dda"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-recover-cleanup.json",
+      "fingerprint": "da1329fee998350427c4dd60df1c50fd40983f580a6d55b028472a7ddb9f71d8",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "f6a00e1381918ab775bdebcb18537856961dbe3b1c34f1adc05d9cf478448a3a"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-relate-items.json",
+      "fingerprint": "baed147331a08e8ee7dcf080f6683374a4e668137575bf1e06ade430fb3016e5",
+      "review_kind": "adoption",
+      "verification_commands": 3,
+      "sha256": "1b858b4902a2adda7431a6b0ded8a6cd8ed1297984c48116d90639a9858732f8"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-resolve-priority.json",
+      "fingerprint": "4dda18153d883c61e00d87e41f62dcbebc643d11f273286676c72c2f8d324740",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "3f3c7059278ba530a1f249168b8218a05551f6a825b024b39016a45fe7776820"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-sync-inbox.json",
+      "fingerprint": "80b7c778ae9966e4bd5b9552e5132d2cbf5ffbcc2d8fee054402e22464541db1",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "e90d851e33292d1ac2e237c09329b327600e8569f5aaddca2acc04d802b57eda"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-triage-inbox.json",
+      "fingerprint": "28c1e705a1a8d12629243d02dc9ef0f6ba9e92c8bcc6443cfd9936cb4f652867",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "8200394abb0debf29d54fc60d63406a9fbc07054e5bb9f62ebe5c287e01bc8d2"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-view-live-work.json",
+      "fingerprint": "a44d52d54de59d7d13d00f9fa659ad97f38185bbfc639c57684436d0aad7988f",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "8ffb7a44114f54202b35373ea2ecd970d9e97fcfb59cdc052cfcae56c00fa0c1"
+    },
+    {
+      "path": "docs/specs/reconciliations/glossary.json",
+      "fingerprint": "fd27d44d43fc36c7d9aa624f81d94fbbfb78f5f18ef096eb96242f572f040faa",
+      "review_kind": "adoption",
+      "verification_commands": 2,
+      "sha256": "e7faf4fd71dc781f9cbdb86842e16925b2b800e642274915187fedd6fd4b9b41"
+    },
+    {
+      "path": "docs/specs/reconciliations/ui.json",
+      "fingerprint": "20cce3937171a1b4467090bb9fd5d3467287552ca6b1fc6d87a0e13975365625",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "9dd2adcf002b6ab7b28aaba951018c772ccab43303d07a7718baa4066453e1cd"
+    }
+  ],
+  "source_sha256": {
+    "AGENTS.md": "0321ea4e958fc91995c5763828b5843c4c207654b854306966e77e9f2bcbb774",
+    "Makefile": "a5d2c82bc531ba6bc4c160d668bfe54dc13f9a4789c48b33945d4a66b4692370",
+    "scripts/specs.py": "8c055f96341c3f45b0b73afb6d920c00b35181d56e42101f50250ac54d39e97d",
+    "scripts/user_flows.py": "1223e73cdfccd0acf1c6fb3781a5e70d3e6af7d5a382b7d95eecec28ce44fa5f",
+    "scripts/verify.sh": "2480533212ead3506156d3e1087dcc258f271e0fc97fd02c9929990128bf408a",
+    "scripts/test_user_flows.py": "7e493b8e8eb413ab4ad379cca6e589666e63c88ee73258c419d2a6cd573d2a3a",
+    "docs/specs/README.md": "d886ef07ccb2db2c978ad707427523c598c38692808a7fe461c0d19be7092835",
+    "docs/user-flows/catalog.json": "c6f555e7c8a9bdff7233bdd901bca4ab4eb2bb243728b6a9e7515cea823efb71",
+    "docs/ui/entities.json": "380d22b45c7705f92fc1b975706453a0f93d4799bf5be6b1cfb79f50dc6e9015",
+    "docs/glossary/terms.json": "86c70773693162f6ae8d377fd5ab4094b813f555539e00dbc51fa5597050cbfa",
+    "web/tests/factory.spec.ts": "35bf2b9711952a62a010ae8d9bda573f66acc6f65d0825c8f6d68050febc0742",
+    "docs/user-flows/maintain-flow-contracts.md": "53eec1d85cb934486da9bea954b06ac00bb3a5285e37d253c38905996e51118c",
+    "docs/acceptance.md": "721d1dd2ef8fe37bc5e89f9dcc66938edd6f8aee0e50c11821595762c5bf9fe3",
+    "scripts/test_specs.py": "1bc0a398d9a207323908df1a0e06e3c62e546c8799b85a061e62230ea88ff337",
+    "scripts/test_specs_adoption.py": "9ad7adfd7aab39a07686fe763426e2d73a0f03ef07f1e2788517f6358af7a656",
+    "scripts/test_specs_baseline_dispatch.py": "97c733162dc45eba7912df53361c0201d5ec258f2b77fa9c40cd790df7d979f7",
+    "scripts/test_specs_ci.py": "a43b2728ba816a80c107d9622fce0a5c95a6d6b7f23381f2e23778533ddf584d",
+    "scripts/test_specs_cleanup_cancel.py": "caaf0e419b070e937164716b8a31e629b189b7d60fcbc1bccc25265bd0cbd77c",
+    "scripts/test_specs_dispatch.py": "4daf99a052b77f1120cccb5d55bd77c7794ba9b14f65efc2cab6d6929113f7a2",
+    "scripts/test_specs_foundations.py": "e275f21a08e92f47c6a38d2feb8ef416605051af4ad47d399d5cc28712383a97",
+    "scripts/test_specs_go_cache.py": "defc5484f484a27a3a70f6003d27180a67c5ff719df5214741f0f7dbfa265c59",
+    "scripts/test_specs_historical_inputs.py": "516fad2d491f22727fb0949da5311446e6394093908edcc38bcff116f8ead69d",
+    "scripts/test_specs_json_types.py": "dc69ad1667c3d30aadc6dfc354bec35f5a1b8a51fa70a25cf4bad5530418163c",
+    "scripts/test_specs_policy.py": "a46a85f09f38e8017ea85d717aab61d632aaa00ea9caee7346492bb97c055420",
+    "scripts/test_specs_render_repair.py": "010a6f50c1ae72ab0d904cc46bd72f6b65a060124ea829d39d4b46c01301e4a4",
+    "scripts/test_specs_rendering.py": "d65d6b272432cad152796084070567167d65fe042de8345075a3bbc2fc59c5fe",
+    "scripts/test_specs_retirement.py": "3bbbee37a2a6d874c76c1bdbfb9bd7b9c4ea6e1c3ab489526bc2fede6ce37163",
+    "scripts/test_specs_runner.py": "d730e0cd7ddae222c81d25314b3b867f9c3ec1830b4544f63a0b3646ca15bf0d",
+    "scripts/test_specs_suite_policy.py": "4b9e30b76960b7d90d961f67d9d9de526c4050f461208b8fd2ec5e37244d14c0",
+    "scripts/test_specs_ui_schema.py": "24d8c52735d2a667b64d7af3e2e81a0b963145f41422ba3d3228a646aa372a13",
+    ".agents/skills/maintain-glossary/SKILL.md": "938fe28cf487eb9ac58f81a11821c449e3bd60d55544f7e339d44a333ffa65c7",
+    ".agents/skills/maintain-ui-specs/SKILL.md": "6eca07dd88e585df0519188f6b2e2d67dac314530621b342cbebc143d76ea137",
+    ".agents/skills/reconcile-specs/SKILL.md": "4c537c4ae18d98493ee3471fc4324a74be2fcc2cb28ac3c5f8a30f5f75dd2e0b",
+    ".agents/skills/reconcile-user-flows/SKILL.md": "72fada689057875e29e79109ed0637d09064e87ada3e829989497ebd53f28d98",
+    ".codex/agents/glossary-maintainer.toml": "a77a3dee1375198cd03f1d742200cc6bd835232587a3de5a1c45cfacaea4316f",
+    ".codex/agents/specification-coordinator.toml": "7399b9615d32c012806b4055cc6ef0b578695f8fa7550256daeb8319828161e7",
+    ".codex/agents/specification-reviewer.toml": "f66dc73c8ad1f8e0a751a472e8d2c1745a013b9b8cdab0bb8fdf63f204c4d84d",
+    ".codex/agents/ui-specification-maintainer.toml": "3375c7dc54cf4d2fb3c709893dc66b4dd7f644ab31d778a0cbdc3f5fe74d13aa",
+    ".codex/agents/user-flow-maintainer.toml": "66682bc4461e70f76fa49a2da7ad35da26179010149d12f4a51306d65c787957"
+  },
+  "frozen_input_hashes": {
+    "AGENTS.md": "0321ea4e958fc91995c5763828b5843c4c207654b854306966e77e9f2bcbb774",
+    "Makefile": "a5d2c82bc531ba6bc4c160d668bfe54dc13f9a4789c48b33945d4a66b4692370",
+    "scripts/specs.py": "8c055f96341c3f45b0b73afb6d920c00b35181d56e42101f50250ac54d39e97d",
+    "scripts/user_flows.py": "1223e73cdfccd0acf1c6fb3781a5e70d3e6af7d5a382b7d95eecec28ce44fa5f",
+    "scripts/verify.sh": "2480533212ead3506156d3e1087dcc258f271e0fc97fd02c9929990128bf408a",
+    "docs/specs/README.md": "d886ef07ccb2db2c978ad707427523c598c38692808a7fe461c0d19be7092835",
+    "docs/user-flows/catalog.json": "c6f555e7c8a9bdff7233bdd901bca4ab4eb2bb243728b6a9e7515cea823efb71",
+    "docs/user-flows/maintain-flow-contracts.md": "53eec1d85cb934486da9bea954b06ac00bb3a5285e37d253c38905996e51118c",
+    "scripts/test_specs.py": "1bc0a398d9a207323908df1a0e06e3c62e546c8799b85a061e62230ea88ff337",
+    "scripts/test_specs_adoption.py": "9ad7adfd7aab39a07686fe763426e2d73a0f03ef07f1e2788517f6358af7a656",
+    "scripts/test_specs_baseline_dispatch.py": "97c733162dc45eba7912df53361c0201d5ec258f2b77fa9c40cd790df7d979f7",
+    "scripts/test_specs_ci.py": "a43b2728ba816a80c107d9622fce0a5c95a6d6b7f23381f2e23778533ddf584d",
+    "scripts/test_specs_cleanup_cancel.py": "caaf0e419b070e937164716b8a31e629b189b7d60fcbc1bccc25265bd0cbd77c",
+    "scripts/test_specs_dispatch.py": "4daf99a052b77f1120cccb5d55bd77c7794ba9b14f65efc2cab6d6929113f7a2",
+    "scripts/test_specs_foundations.py": "e275f21a08e92f47c6a38d2feb8ef416605051af4ad47d399d5cc28712383a97",
+    "scripts/test_specs_go_cache.py": "defc5484f484a27a3a70f6003d27180a67c5ff719df5214741f0f7dbfa265c59",
+    "scripts/test_specs_historical_inputs.py": "516fad2d491f22727fb0949da5311446e6394093908edcc38bcff116f8ead69d",
+    "scripts/test_specs_json_types.py": "dc69ad1667c3d30aadc6dfc354bec35f5a1b8a51fa70a25cf4bad5530418163c",
+    "scripts/test_specs_policy.py": "a46a85f09f38e8017ea85d717aab61d632aaa00ea9caee7346492bb97c055420",
+    "scripts/test_specs_render_repair.py": "010a6f50c1ae72ab0d904cc46bd72f6b65a060124ea829d39d4b46c01301e4a4",
+    "scripts/test_specs_rendering.py": "d65d6b272432cad152796084070567167d65fe042de8345075a3bbc2fc59c5fe",
+    "scripts/test_specs_retirement.py": "3bbbee37a2a6d874c76c1bdbfb9bd7b9c4ea6e1c3ab489526bc2fede6ce37163",
+    "scripts/test_specs_runner.py": "d730e0cd7ddae222c81d25314b3b867f9c3ec1830b4544f63a0b3646ca15bf0d",
+    "scripts/test_specs_suite_policy.py": "4b9e30b76960b7d90d961f67d9d9de526c4050f461208b8fd2ec5e37244d14c0",
+    "scripts/test_specs_ui_schema.py": "24d8c52735d2a667b64d7af3e2e81a0b963145f41422ba3d3228a646aa372a13"
+  },
+  "rendered_documents_sha256": {
+    "docs/glossary/README.md": "378db9604b6e5035ff586b28626e3ca435d77fb3a72d0c1335012676491a2736",
+    "docs/ui/widgets.md": "cc54a90b1038448f4250ac2ec6a17a38a601957a55f025d2b9675d52397d9b04",
+    "docs/ui/panes.md": "7dc5fd18e3fcab643712cc892902092385a81c60b9b870002f47c28b48173d63",
+    "docs/ui/pages.md": "70844f16e8c7e0ebc5f0c7b6cfdbf1815a41a644fe1a0867484615d8cf621f79",
+    "docs/ui/connections.md": "b982f9c641f3b45cb378f9bc6ab95db2c80d448b97116b536fc55999022f2f5c",
+    "docs/ui/references.md": "54f0690fd26b97051f354a8dee730f965e1930afebcd37a4f8ce5f4e68552a6a",
+    "docs/ui/README.md": "e523831945cc528a4e74387020f2406e07e82a20edf210fa9fc58a86ff5f2746",
+    "docs/user-flows/install-connect.md": "1ef86c197b356b74b8d56c1fde23cea4f09d0b8adb6c49c5adec6156fe5bcbc8",
+    "docs/user-flows/configure-work.md": "5838dd996e3ba2f02ebaf5f073202a7ab8d1e4861e4538c491c60faa4e69c96f",
+    "docs/user-flows/sync-inbox.md": "0a63a1fa39d7e7eea0cf5e99b65f76d98f02595fe69acea2a5c94d90fee19718",
+    "docs/user-flows/triage-inbox.md": "0a6b2e29bd689e9ab32a999510569d4d11184310654aba810b8fcb7e523229c1",
+    "docs/user-flows/resolve-priority.md": "e1dc180acbd436ef293e5218e4a719591686f6b00990a26a9ce5e53a8141f0ac",
+    "docs/user-flows/relate-items.md": "2f1f8e4851a7fb951cafa922c3a8194967e6311cd783e0b69e1beb7be219ec36",
+    "docs/user-flows/launch-agent.md": "bef8323ff40bc20227f9921b1da5936bdfa5f873c66f43ad38d818e444d669ea",
+    "docs/user-flows/interact-agent.md": "7e0fa57b35cc4cb0f97a24824475e0d334c55bcd948b95e87381b1c8cedfc67a",
+    "docs/user-flows/answer-attention.md": "9a8e28ffda56886555aee5bdd96e9770b0561bbb20ae5bcbbd0a4453413c17a4",
+    "docs/user-flows/recover-cleanup.md": "8c4a7258e7151601f9a7dc9b7b112665011fa9fc4f6e20982911ede6771d031b",
+    "docs/user-flows/view-live-work.md": "98d07b13f841dce3a46318516a46a53f50ef2b90ae6cfa5cef7e82ded7c84301",
+    "docs/user-flows/receive-notifications.md": "4a64d1e15903f2693b348eac64477b678d189bc58afc0937e1b7930f78aa8744",
+    "docs/user-flows/protect-secrets.md": "a044516c48cba58869948382b56bc36c92d42095008efa3071d8af2517f4e93c",
+    "docs/user-flows/operate-installation.md": "68943875b3c14ae96c28c4670513e7ab7b1746847e4972a398af3770422efe7e",
+    "docs/user-flows/maintain-flow-contracts.md": "53eec1d85cb934486da9bea954b06ac00bb3a5285e37d253c38905996e51118c"
+  },
+  "compiled_package_version": "0.1.0-850eb63cda16",
+  "plugin_version": "0.2.2",
+  "adoption": {
+    "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+    "flows": [
+      "install-connect",
+      "configure-work",
+      "sync-inbox",
+      "triage-inbox",
+      "resolve-priority",
+      "relate-items",
+      "launch-agent",
+      "interact-agent",
+      "answer-attention",
+      "recover-cleanup",
+      "view-live-work",
+      "receive-notifications",
+      "protect-secrets",
+      "operate-installation"
+    ]
+  },
+  "checkpoint": "round11 JSON checkpoint before settings documentation corrections",
+  "date_local": "2026-10-20",
+  "timezone": "America/Santo_Domingo",
+  "recorded_at_utc": "2026-10-21T01:37:10.679879+00:00",
+  "scope": "Passed full CI for frozen JSON checker/tests before later documentation-only configure-work and C-LINK corrections.",
+  "fixture_environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "branch": "feat/aligned-specifications",
+  "head": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "main": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "new_anchored_methods": {
+    "json_types": 7,
+    "scenarios": [
+      "S3"
+    ],
+    "scope": "Raw duplicate object members, collection shape/item types, valid arrays, all-byte invalid-render preservation, and ambiguous receipt/review rejection. Existing dedicated snapshot tests retain S4 mappings."
+  },
+  "json_declaration_scope": "Shared JSON reads reject duplicate object member names recursively, including equivalent escaped spellings. Declared registry/catalog/inventory/recipe/suite collections require actual arrays and declared entry types before consumer iteration. False-valued objects and string gaps cannot create membership or coverage. Invalid collection CLI renders/checks preserve complete repository snapshots; duplicate review input is rejected before verification or prior receipt removal.",
+  "independent_review": {
+    "agent": "review_evidence_round11",
+    "findings": 0,
+    "reported_targeted_methods_passed": 7,
+    "scope": "Targeted JSON closure review of all seven new methods, nested/escaped duplicates, 24 malformed entity collection probes and valid production/legacy arrays. This bounded review does not establish absence of every possible defect.",
+    "frozen_source_sha256": {
+      "scripts/specs.py": "8c055f96341c3f45b0b73afb6d920c00b35181d56e42101f50250ac54d39e97d",
+      "scripts/user_flows.py": "1223e73cdfccd0acf1c6fb3781a5e70d3e6af7d5a382b7d95eecec28ce44fa5f",
+      "scripts/test_specs_json_types.py": "dc69ad1667c3d30aadc6dfc354bec35f5a1b8a51fa70a25cf4bad5530418163c"
+    }
+  },
+  "retained_historical_checkpoint": {
+    "summary": "docs/evidence/2026-10-20-specs-round9-summary.json",
+    "scope": "Preserved prior 119-specification/20-legacy checkpoint and logs; superseded for current fixture freshness by this round11 evidence."
+  },
+  "review_input": {
+    "path": "/tmp/code-factory-round11-review.json",
+    "sha256": "8865bf40b4cdb62281badce78c542dc946cf93c8baac5ad92683b5fc070a1f60",
+    "subjects": 17,
+    "classifications": "Sixteen initial foundation/product adoption reviews at the original baseline; contributor behavior with related implementation and meaningful test changes."
+  },
+  "not_executed": [
+    "Real-provider lifecycle/model calls",
+    "Installed-provider handshake guarded by CODE_FACTORY_REAL_CODEX=1",
+    "Deployed public OAuth/MCP probes",
+    "Owner Chrome/authentication actions",
+    "Installed service changes or deployment"
+  ],
+  "remaining_acceptance": [
+    "Real-host event subscription/callback lifecycle",
+    "Accessibility acceptance",
+    "One-hour connected soak",
+    "Coordinated logout/login",
+    "Other current acceptance-ledger gaps"
+  ],
+  "browser_scope": "Controlled Node host retains state while host document and iframe reload; original run, transcript, choices and attention request are asserted, with one prepare/start/answer and same-run follow-up. This is not daemon restart or real-host/tunnel/failed-poll recovery.",
+  "expected_negative_output": "Offline ingress-negative regressions print simulated FAILED/public TLS lines while assertions pass. No deployed public probe ran.",
+  "runtime_action": "No installed runtime, credentials, authentication or owner browser session changed.",
+  "verifier_cleanup_scope": "Owned original process groups receive TERM/grace/KILL and leader reaping on completion/failure/timeout/cancellation. Detached descendants remain outside the guarantee; only isolated probes set child-subreaper state.",
+  "tests": {
+    "specification": 126,
+    "legacy_flow": 20,
+    "tooling_total": 146,
+    "playwright_browser": 3,
+    "installer": 4,
+    "packaging": 5,
+    "offline_ingress_regressions": 3,
+    "offline_connection_probe_regressions": 2,
+    "node_browser_lab": 4,
+    "skills": 4,
+    "agent_toml": 5,
+    "local_links_and_anchors": 925
+  },
+  "final_commands": [
+    {
+      "command": [
+        "python3",
+        "scripts/specs.py",
+        "reconcile",
+        "--base",
+        "main",
+        "--merge-base",
+        "--review",
+        "/tmp/code-factory-round11-review.json"
+      ],
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-round11-reconciliation.log"
+    },
+    {
+      "command": [
+        "make",
+        "ci",
+        "FLOW_BASE=main"
+      ],
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-round11-ci.log"
+    },
+    {
+      "commands": [
+        [
+          "make",
+          "specs-ci",
+          "FLOW_BASE=main"
+        ],
+        [
+          "make",
+          "flows-validate"
+        ],
+        [
+          "make",
+          "flows-check",
+          "FLOW_BASE=main"
+        ],
+        [
+          "python3",
+          "scripts/user_flows.py",
+          "validate"
+        ],
+        [
+          "python3",
+          "scripts/user_flows.py",
+          "check",
+          "--base",
+          "main",
+          "--merge-base"
+        ]
+      ],
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-round11-aliases.log"
+    }
+  ],
+  "executed_reconciliation_commands": [
+    [
+      "go",
+      "build",
+      "-o",
+      "bin/fake-codex",
+      "./internal/testutil/fakecodex"
+    ],
+    [
+      "npm",
+      "--prefix",
+      "web",
+      "test"
+    ],
+    [
+      "go",
+      "test",
+      "-race",
+      "-count=1",
+      "./..."
+    ],
+    [
+      "python3",
+      "scripts/test_user_flows.py"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_specs*.py"
+    ],
+    [
+      "python3",
+      "scripts/test_packaging.py"
+    ],
+    [
+      "make",
+      "build"
+    ],
+    [
+      "python3",
+      "scripts/package.py"
+    ],
+    [
+      "python3",
+      "scripts/test_installer.py"
+    ],
+    [
+      "python3",
+      "scripts/smoke.py"
+    ],
+    [
+      "python3",
+      "scripts/test_live_connection_test.py"
+    ],
+    [
+      "python3",
+      "scripts/test_connection_probe.py"
+    ],
+    [
+      "node",
+      "--test",
+      "scripts/test_browser_lab.mjs"
+    ]
+  ],
+  "verification_logs": [
+    {
+      "path": "docs/evidence/2026-10-20-specs-round11-validation.log",
+      "sha256": "9a669ed766cd73b1745028aedf6db019979e677484e4d0bc1b0aaffd5ab22222"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round11-reconciliation.log",
+      "sha256": "595cf5d22d5c53974ac679c17dc4e08607cabeff93b9a481a4172c1826e6bf53"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round11-ci.log",
+      "sha256": "46ff3e9b327bff6db63c7ae806685bf8cdb7f00193d54bdb220661f604ee1b6a"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round11-aliases.log",
+      "sha256": "72b8c5a608e3c50e818c4b34709153cf06c9e088a22eb2f6c9f68dee3f5f46ad"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round11-skills.log",
+      "sha256": "f3de32b883b34550fb1254d20183d1c458bd1da50bf6edfd990ad26c9083499e"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round11-links.log",
+      "sha256": "63568e7e0a6d56377253d747e5a68c5b0956e25e315c27b2055f0aaa55dd1c91"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round11-freshness.log",
+      "sha256": "ff32e27d2f8a1f63015b8b3ee1ac7f46d86cf27d9aeb73a4b4992690346715fe"
+    }
+  ]
+}

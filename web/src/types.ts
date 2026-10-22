@@ -23,6 +23,8 @@ export interface Item {
     url: string;
   }[];
   checks?: unknown;
+  reviewRequests?: string[];
+  reviewTeams?: string[];
 }
 export interface UserState {
   new: boolean;
@@ -94,6 +96,7 @@ export interface Question {
   options?: { label: string; description: string }[];
 }
 export interface Entry {
+  hasPullRequest?: boolean;
   item: Item;
   user: UserState;
   unread: boolean;
@@ -116,6 +119,7 @@ export interface Config {
   notifications: boolean;
 }
 export interface Snapshot {
+  viewer?: { login: string; teams: string[] | null; teamError?: string };
   cursor: number;
   inbox: Entry[];
   repositories: Repository[];

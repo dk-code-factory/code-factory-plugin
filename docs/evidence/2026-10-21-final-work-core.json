@@ -1,0 +1,352 @@
+{
+  "at": "2026-10-21T04:40:26.181Z",
+  "version": "0.1.0-e945f9020696",
+  "pluginVersion": "0.2.2",
+  "repository": "dkropachev/code-factory-pilot-20261019",
+  "conversation": "https://chatgpt.com/c/6ad83f57-a748-83e8-a7d1-41b1067dff2f",
+  "uiResource": "ui://code-factory/inbox-20bb414d84daff3385c280380994bed88503ccd310499fbad58531151152c877.html",
+  "binarySHA256": "0a6650e5d6f806ea4835bd94fcd6bee8bf615e20285f65c48668b010dd92500f",
+  "actualNewLaunch": {
+    "id": "7dd6fd8e7f9e876a19b6ea0387ba143d",
+    "profile": "pilot-local",
+    "mode": "plan",
+    "sandbox": "read-only",
+    "publishing": "ask",
+    "questionAnswered": "Continue (Recommended)",
+    "agentResponse": "FINAL_LAUNCH_ANSWER_OK Continue",
+    "repeatedStart": {
+      "transport": "installed local MCP proxy",
+      "rejected": true,
+      "error": "run cannot start from waiting"
+    }
+  },
+  "recoveredRun": {
+    "id": "17ba06d423599fc17695704a9b0ae43a",
+    "questionRetainedAcrossWorkReload": true,
+    "freshQuestionAnswered": "LIVE_RECOVERY_ANSWER_OK Continue",
+    "followup": "FINAL_BUILD_FOLLOWUP_OK Continue",
+    "dirtyCleanupRefused": true,
+    "refusalMessage": "git worktree failed; check repository access and base reference",
+    "interruptedStateVisible": true,
+    "draftPreserved": true,
+    "syntheticSentinelPreserved": true,
+    "sameProviderThread": true,
+    "onlyCreatedSentinelRemoved": true,
+    "cleanCleanupSucceeded": true,
+    "historyPreservedAfterCleanup": true
+  },
+  "gatewayOnlyRestart": {
+    "at": "2026-10-21T04:33:36.922229Z",
+    "exit": 0,
+    "authenticatedPollingResponsesAfterRestart": 4,
+    "reloginRequired": false,
+    "postRestartUIAlerts": []
+  },
+  "accessibility": {
+    "engine": "axe-core4.14.0",
+    "actualScans": 8,
+    "automatedViolations": 0,
+    "scope": "Actual installed app document. Dark is the real host theme; light scans temporarily changed only the app data-theme attribute, then restored dark. No account theme change and no exclusions.",
+    "limits": "Modal overlap leaves contrast manual-review nodes; no full WCAG or screen-reader conformance claim.",
+    "scans": [
+      {
+        "at": "2026-10-21T04:28:30.501Z",
+        "value": {
+          "at": "2026-10-21T04:28:29.490Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "dark",
+          "state": "inbox",
+          "ruleCount": 64,
+          "passes": 22,
+          "violations": [],
+          "incomplete": []
+        }
+      },
+      {
+        "at": "2026-10-21T04:34:47.461Z",
+        "value": {
+          "at": "2026-10-21T04:34:46.477Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "dark",
+          "state": "Launch agent",
+          "ruleCount": 65,
+          "passes": 21,
+          "violations": [],
+          "incomplete": [
+            {
+              "id": "color-contrast",
+              "impact": "serious",
+              "nodes": [
+                {
+                  "target": [
+                    "p:nth-child(3)"
+                  ],
+                  "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
+                },
+                {
+                  "target": [
+                    "p:nth-child(9)"
+                  ],
+                  "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "at": "2026-10-21T04:35:30.765Z",
+        "value": {
+          "at": "2026-10-21T04:35:29.724Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "dark",
+          "state": "Review agent launch",
+          "ruleCount": 65,
+          "passes": 23,
+          "violations": [],
+          "incomplete": [
+            {
+              "id": "color-contrast",
+              "impact": "serious",
+              "nodes": [
+                {
+                  "target": [
+                    ".modal > p"
+                  ],
+                  "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
+                },
+                {
+                  "target": [
+                    "pre"
+                  ],
+                  "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "at": "2026-10-21T04:36:20.601Z",
+        "value": {
+          "at": "2026-10-21T04:36:19.562Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "dark",
+          "state": "Agent needs attention",
+          "ruleCount": 64,
+          "passes": 20,
+          "violations": [],
+          "incomplete": []
+        }
+      },
+      {
+        "at": "2026-10-21T04:37:42.019Z",
+        "value": {
+          "at": "2026-10-21T04:37:40.980Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "dark",
+          "state": "Inbox",
+          "ruleCount": 64,
+          "passes": 22,
+          "violations": [],
+          "incomplete": []
+        }
+      },
+      {
+        "at": "2026-10-21T04:37:44.230Z",
+        "value": {
+          "at": "2026-10-21T04:37:43.180Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "light",
+          "state": "Inbox",
+          "ruleCount": 64,
+          "passes": 22,
+          "violations": [],
+          "incomplete": []
+        }
+      },
+      {
+        "at": "2026-10-21T04:37:57.806Z",
+        "value": {
+          "at": "2026-10-21T04:37:56.773Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "light",
+          "state": "Launch agent",
+          "ruleCount": 65,
+          "passes": 22,
+          "violations": [],
+          "incomplete": [
+            {
+              "id": "color-contrast",
+              "impact": "serious",
+              "nodes": [
+                {
+                  "target": [
+                    "p:nth-child(3)"
+                  ],
+                  "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
+                },
+                {
+                  "target": [
+                    ".modal > p:nth-child(9)"
+                  ],
+                  "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "at": "2026-10-21T04:38:04.440Z",
+        "value": {
+          "at": "2026-10-21T04:38:03.395Z",
+          "engine": {
+            "name": "axe-core",
+            "version": "4.14.0"
+          },
+          "theme": "dark",
+          "state": "Settings",
+          "ruleCount": 64,
+          "passes": 22,
+          "violations": [],
+          "incomplete": []
+        }
+      }
+    ]
+  },
+  "observations": [
+    {
+      "at": "2026-10-21T04:28:29.397Z",
+      "value": {
+        "at": "2026-10-21T04:28:28.296Z",
+        "theme": "dark",
+        "html": "rgba(0, 0, 0, 0)",
+        "body": "rgb(23, 32, 28)",
+        "root": "rgb(23, 32, 28)",
+        "main": "rgb(23, 32, 28)",
+        "backgroundVariable": "#17201c",
+        "connection": "● Connected"
+      }
+    },
+    {
+      "at": "2026-10-21T04:30:53.003Z",
+      "value": {
+        "at": "2026-10-21T04:30:51.901Z",
+        "status": "idle",
+        "agentResult": "You\nUse request_user_input to ask me to choose Continue or Stop and wait. After my answer, reply LIVE_UI_ANSWER_OK and the option. Do not edit files or contact external systems.\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems.\nYou\nReply LIVE_UI_FOLLOWUP_OK and the option I selected. Do not edit files or contact external systems.\nAgent\nLIVE_UI_FOLLOWUP_OK Continue\nYou\nUse request_user_input to ask me Continue or Stop, then wait. After I answer reply LIVE_RECOVERY_ANSWER_OK and the option. Do not edit files or contact external systems.\nYou\nResume the existing task. Inspect current state before acting; do not replay completed actions.\nAgent\nPrevious question aborted; no answer recorded. Asking again.\nAgent\nLIVE_RECOVERY_ANSWER_OK Continue"
+      }
+    },
+    {
+      "at": "2026-10-21T04:31:42.653Z",
+      "value": {
+        "cleanupRefused": false,
+        "status": "interrupted",
+        "alerts": [
+          "Error: git worktree failed; check repository access and base reference\n×"
+        ],
+        "draft": "Draft retained across dirty cleanup 20261021; do not send."
+      }
+    },
+    {
+      "at": "2026-10-21T04:32:17.248Z",
+      "value": {
+        "at": "2026-10-21T04:32:14.652Z",
+        "resumed": true,
+        "status": "idle",
+        "draft": "Draft retained across dirty cleanup 20261021; do not send.",
+        "transcript": " not edit files or contact external systems.\nAgent\nLIVE_UI_FOLLOWUP_OK Continue\nYou\nUse request_user_input to ask me Continue or Stop, then wait. After I answer reply LIVE_RECOVERY_ANSWER_OK and the option. Do not edit files or contact external systems.\nYou\nResume the existing task. Inspect current state before acting; do not replay completed actions.\nAgent\nPrevious question aborted; no answer recorded. Asking again.\nAgent\nLIVE_RECOVERY_ANSWER_OK Continue\nYou\nReply FINAL_BUILD_FOLLOWUP_OK and the option I selected. Do not edit files or contact external systems.\nAgent\nFINAL_BUILD_FOLLOWUP_OK Continue\nYou\nResume the existing task. Inspect current state before acting; do not replay completed actions.\nAgent\nTask complete. Selected option: Continue. Last reply: FINAL_BUILD_FOLLOWUP_OK Continue.",
+        "alerts": []
+      }
+    },
+    {
+      "at": "2026-10-21T04:32:54.950Z",
+      "value": {
+        "at": "2026-10-21T04:32:50.048Z",
+        "status": "cleaned",
+        "historyPreserved": true,
+        "alerts": []
+      }
+    },
+    {
+      "at": "2026-10-21T04:34:49.671Z",
+      "value": {
+        "state": "launch",
+        "tabContained": true,
+        "activeText": "Review launch",
+        "closeName": "Close launch",
+        "closeSymbol": "×"
+      }
+    },
+    {
+      "at": "2026-10-21T04:35:56.807Z",
+      "value": {
+        "state": "review",
+        "tabContained": true,
+        "focusedText": "Start agent",
+        "closeName": "Close launch",
+        "closeGlyph": "×"
+      }
+    },
+    {
+      "at": "2026-10-21T04:36:22.813Z",
+      "value": {
+        "state": "attention",
+        "tabContained": true,
+        "lastControl": "Open agent chat",
+        "closeName": "Close attention",
+        "closeGlyph": "×"
+      }
+    },
+    {
+      "at": "2026-10-21T04:36:50.433Z",
+      "value": {
+        "dialogClosed": true,
+        "restoredKeyboardOpener": "Waiting for your answer — Answer"
+      }
+    },
+    {
+      "at": "2026-10-21T04:37:12.124Z",
+      "value": {
+        "at": "2026-10-21T04:37:11.923Z",
+        "status": "idle",
+        "agentResult": "You\nUse request_user_input to ask me Continue or Stop and wait. After I answer, reply FINAL_LAUNCH_ANSWER_OK and the option. Do not edit files or contact external systems.\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems.\nAgent\nFINAL_LAUNCH_ANSWER_OK Continue",
+        "alerts": []
+      }
+    },
+    {
+      "at": "2026-10-21T04:38:00.017Z",
+      "value": {
+        "theme": "light",
+        "tabContained": true,
+        "lastText": "Review launch",
+        "closeAccessibleName": "Close launch",
+        "closeGlyph": "×"
+      }
+    }
+  ],
+  "soak": "in progress; separate final evidence required",
+  "csp": "Owner approved temporary account-wide enable/test/restore after soak; not yet executed",
+  "events": "No confirmed host subscription or callback; see interim evidence"
+}

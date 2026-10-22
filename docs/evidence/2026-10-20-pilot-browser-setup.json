@@ -1,0 +1,17 @@
+{
+  "observed_at_utc": "2026-10-21T03:22:54.005216+00:00",
+  "scope": "Owner-approved dedicated browser profile setup; not installed-host behavior acceptance",
+  "authorization": "User selected dedicated pilot profile and acknowledged initial manual sign-in and local debugging access",
+  "unit": "code-factory-pilot-browser.service",
+  "browser": "Chrome/155.0.8059.84",
+  "debug_endpoint": "http://127.0.0.1:9224",
+  "bind": "127.0.0.1 only",
+  "debug_discovery_http_status": 200,
+  "profile": "~/.local/share/code-factory/browser-pilot/profile",
+  "profile_directory_mode": "0700",
+  "existing_browser_data_copied": false,
+  "existing_main_and_lab_browsers": "Preserved; no profile or authentication export",
+  "sign_in": "Pending user confirmation; browser inspection paused",
+  "native_debug_approval": "Dedicated port mode replaces autoConnect for this profile",
+  "application_version_tested": null
+}

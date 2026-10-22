@@ -1,0 +1,350 @@
+{
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "generated_documents": 22,
+  "render_unchanged": true,
+  "registry_counts": {
+    "terms": 386,
+    "entities": 109,
+    "flows": 15
+  },
+  "fresh_records": 17,
+  "receipt_errors": [],
+  "records": [
+    {
+      "path": "docs/specs/reconciliations/flow-answer-attention.json",
+      "fingerprint": "2a9fd13bb134baeacb061ad9ce9cfe0e0c023090ffb584dd41c67cc0bbd40bf1",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-configure-work.json",
+      "fingerprint": "bf11ffc2d48b3e7d5c0db5b18d6beada3011dfca2c8c073a14cc6179744d4e27",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-install-connect.json",
+      "fingerprint": "954a679cc15578b32634542d5c8f1be94a2a269a1653c43a8a3ffcc94cc150b1",
+      "review_kind": "adoption",
+      "verification_commands": 4
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-interact-agent.json",
+      "fingerprint": "31ff0be726eb9e7ea5e1c4e2fa13e740232ecf1ad10a847211d8e48599b4f58c",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-launch-agent.json",
+      "fingerprint": "48b5d352b78583acbccc43af18e4cd9b18c809894f850b1e006d5bf497deeafd",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-maintain-flow-contracts.json",
+      "fingerprint": "a55a258df81755e37b276ae893281643ebc7d0c9fc07715239e6ed0dcab46136",
+      "review_kind": "behavior",
+      "verification_commands": 2
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-operate-installation.json",
+      "fingerprint": "3a8afb0a57cc4dfe8b94fa02522720b606d20e3ab173fe70e245f135af58f6cb",
+      "review_kind": "adoption",
+      "verification_commands": 10
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-protect-secrets.json",
+      "fingerprint": "b29c371f2fbaf8318c3a80fa9fb6143f3956d641344fa44d68dd73cfc5c6fe17",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-receive-notifications.json",
+      "fingerprint": "43b0ba8550135f1f3f62877c3461a6bb7d3238ebcaaeb6b4f22ccfe9076b3288",
+      "review_kind": "adoption",
+      "verification_commands": 3
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-recover-cleanup.json",
+      "fingerprint": "d42ae00e02e7a3b9d07faa7954d652c273d59d24975d8a878549bdedcc3933c7",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-relate-items.json",
+      "fingerprint": "eae74a611e76a3dd22ebe921d51bc78ce12836cac85b7b989b48217849ba2532",
+      "review_kind": "adoption",
+      "verification_commands": 3
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-resolve-priority.json",
+      "fingerprint": "e9a74d83da6920143e5b440bf55cbe21e389b15c755f5b5eeee9cbba5c3eb082",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-sync-inbox.json",
+      "fingerprint": "0f8bfa4df98f79d4da062f8524abf0c94b233e881dd4d2cd077d0d33ccc29106",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-triage-inbox.json",
+      "fingerprint": "33292dbf6aa296cec24fbfcf08e3dcbc5192ffa310e71da4f79fbca6aea000af",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-view-live-work.json",
+      "fingerprint": "28dbafe73f0aa52d3d45c40cd88b3aee6c48e8fc020cac374fbf9ff5dcdf7589",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    },
+    {
+      "path": "docs/specs/reconciliations/glossary.json",
+      "fingerprint": "95d72a51e4589b97bb77f4b498ca244d6be56f495f9e8e1f538b177a29f18585",
+      "review_kind": "adoption",
+      "verification_commands": 2
+    },
+    {
+      "path": "docs/specs/reconciliations/ui.json",
+      "fingerprint": "bb2a9eca0cfa841903a085cb8b384d8dd333ca474e8301232c062bed25d1bdaa",
+      "review_kind": "adoption",
+      "verification_commands": 5
+    }
+  ],
+  "source_sha256": {
+    "AGENTS.md": "0321ea4e958fc91995c5763828b5843c4c207654b854306966e77e9f2bcbb774",
+    "Makefile": "a5d2c82bc531ba6bc4c160d668bfe54dc13f9a4789c48b33945d4a66b4692370",
+    "scripts/specs.py": "2ba7e908dbf130d4d83ce80d94b6a5a3212945c0300477dabc60769de4758d69",
+    "scripts/user_flows.py": "adc610c55e7e1a6c1a13e87aa1c428469dcbea75bb232514dd6f243a289ef7d1",
+    "scripts/verify.sh": "2480533212ead3506156d3e1087dcc258f271e0fc97fd02c9929990128bf408a",
+    "scripts/test_user_flows.py": "7e493b8e8eb413ab4ad379cca6e589666e63c88ee73258c419d2a6cd573d2a3a",
+    "docs/specs/README.md": "fc34f34aa742497180d1c7a74b59d5a7f75115aa25e823e6499ac82a33308318",
+    "docs/user-flows/catalog.json": "4e49dc24a2fdb1aaaa32ffd0e402c7b50b163b28e54c6c96f954b0b769a9a091",
+    "docs/ui/entities.json": "380d22b45c7705f92fc1b975706453a0f93d4799bf5be6b1cfb79f50dc6e9015",
+    "docs/glossary/terms.json": "86c70773693162f6ae8d377fd5ab4094b813f555539e00dbc51fa5597050cbfa",
+    "web/tests/factory.spec.ts": "35bf2b9711952a62a010ae8d9bda573f66acc6f65d0825c8f6d68050febc0742",
+    "scripts/test_specs.py": "b9d7cd80e2439997c4beac014f5aca688b9c48a396181a4ef5bcf1db224b816f",
+    "scripts/test_specs_adoption.py": "9ad7adfd7aab39a07686fe763426e2d73a0f03ef07f1e2788517f6358af7a656",
+    "scripts/test_specs_baseline_dispatch.py": "97c733162dc45eba7912df53361c0201d5ec258f2b77fa9c40cd790df7d979f7",
+    "scripts/test_specs_ci.py": "003cb49d48e48b54257af9c7f0a8f7dcd6955999342f040a42ef5831d40dc8ca",
+    "scripts/test_specs_dispatch.py": "4daf99a052b77f1120cccb5d55bd77c7794ba9b14f65efc2cab6d6929113f7a2",
+    "scripts/test_specs_foundations.py": "e275f21a08e92f47c6a38d2feb8ef416605051af4ad47d399d5cc28712383a97",
+    "scripts/test_specs_go_cache.py": "defc5484f484a27a3a70f6003d27180a67c5ff719df5214741f0f7dbfa265c59",
+    "scripts/test_specs_historical_inputs.py": "516fad2d491f22727fb0949da5311446e6394093908edcc38bcff116f8ead69d",
+    "scripts/test_specs_policy.py": "a46a85f09f38e8017ea85d717aab61d632aaa00ea9caee7346492bb97c055420",
+    "scripts/test_specs_retirement.py": "3bbbee37a2a6d874c76c1bdbfb9bd7b9c4ea6e1c3ab489526bc2fede6ce37163",
+    "scripts/test_specs_suite_policy.py": "4b9e30b76960b7d90d961f67d9d9de526c4050f461208b8fd2ec5e37244d14c0",
+    ".agents/skills/maintain-glossary/SKILL.md": "938fe28cf487eb9ac58f81a11821c449e3bd60d55544f7e339d44a333ffa65c7",
+    ".agents/skills/maintain-ui-specs/SKILL.md": "6eca07dd88e585df0519188f6b2e2d67dac314530621b342cbebc143d76ea137",
+    ".agents/skills/reconcile-specs/SKILL.md": "4c537c4ae18d98493ee3471fc4324a74be2fcc2cb28ac3c5f8a30f5f75dd2e0b",
+    ".agents/skills/reconcile-user-flows/SKILL.md": "72fada689057875e29e79109ed0637d09064e87ada3e829989497ebd53f28d98",
+    ".codex/agents/glossary-maintainer.toml": "a77a3dee1375198cd03f1d742200cc6bd835232587a3de5a1c45cfacaea4316f",
+    ".codex/agents/specification-coordinator.toml": "7399b9615d32c012806b4055cc6ef0b578695f8fa7550256daeb8319828161e7",
+    ".codex/agents/specification-reviewer.toml": "f66dc73c8ad1f8e0a751a472e8d2c1745a013b9b8cdab0bb8fdf63f204c4d84d",
+    ".codex/agents/ui-specification-maintainer.toml": "3375c7dc54cf4d2fb3c709893dc66b4dd7f644ab31d778a0cbdc3f5fe74d13aa",
+    ".codex/agents/user-flow-maintainer.toml": "66682bc4461e70f76fa49a2da7ad35da26179010149d12f4a51306d65c787957"
+  },
+  "compiled_package_version": "0.1.0-850eb63cda16",
+  "plugin_version": "0.2.2",
+  "adoption": {
+    "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+    "flows": [
+      "install-connect",
+      "configure-work",
+      "sync-inbox",
+      "triage-inbox",
+      "resolve-priority",
+      "relate-items",
+      "launch-agent",
+      "interact-agent",
+      "answer-attention",
+      "recover-cleanup",
+      "view-live-work",
+      "receive-notifications",
+      "protect-secrets",
+      "operate-installation"
+    ]
+  },
+  "date_local": "2026-10-20",
+  "timezone": "America/Santo_Domingo",
+  "recorded_at_utc": "2026-10-21T00:56:26.252280+00:00",
+  "scope": "Source specifications, fixture verification and independent targeted review; existing live acceptance gaps remain open.",
+  "fixture_environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "tests": {
+    "specification": 86,
+    "legacy_flow": 20,
+    "playwright_browser": 3,
+    "installer": 4,
+    "packaging": 5,
+    "offline_ingress_regressions": 3,
+    "offline_connection_probe_regressions": 2,
+    "node_browser_lab": 4,
+    "skills": 4,
+    "agent_toml": 5,
+    "local_links_and_anchors": 880
+  },
+  "final_commands": [
+    {
+      "command": "python3 scripts/specs.py reconcile --base main --merge-base --review /tmp/code-factory-round2-review.json",
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-final-reconciliation.log"
+    },
+    {
+      "command": "make ci FLOW_BASE=main",
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-final-ci.log"
+    },
+    {
+      "command": "make specs-ci FLOW_BASE=main; make flows-validate; make flows-check FLOW_BASE=main; legacy CLI validate/check",
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-final-aliases.log"
+    }
+  ],
+  "targeted_independent_review": {
+    "agent": "review_history_closure_round7",
+    "findings": 0,
+    "reported_mutations": 24,
+    "reported_isolated_git_repositories": 2,
+    "scope": "Historical/current directory selectors, argv/declared inputs, retired/current replacements, current plus mandatory execution and stale/failing receipt checks. This targeted review does not establish absence of every possible defect."
+  },
+  "retained_intermediate_results": {
+    "reconciliation_log": "docs/evidence/2026-10-20-specs-review-reconciliation.log",
+    "ci_log": "docs/evidence/2026-10-20-specs-review-ci.log",
+    "scope": "Both passed before a later review found historical-directory discovery missing from fingerprints. Scope notes preserve the limitation; final-cycle results follow the correction."
+  },
+  "not_executed": [
+    "Real-provider lifecycle/model calls",
+    "Installed-provider handshake guarded by CODE_FACTORY_REAL_CODEX=1",
+    "Deployed public OAuth/MCP probes",
+    "Owner Chrome/authentication actions",
+    "Installed service changes or deployment"
+  ],
+  "remaining_acceptance": [
+    "Real-host event subscription/callback lifecycle",
+    "Accessibility acceptance",
+    "One-hour connected soak",
+    "Coordinated logout/login",
+    "Other current acceptance-ledger gaps"
+  ],
+  "browser_scope": "Controlled Node host retains state while host document and iframe reload; original run, transcript, choices and attention request are asserted, with one prepare/start/answer and same-run follow-up. This is not daemon restart or real-host/tunnel/failed-poll recovery.",
+  "expected_negative_output": "Offline ingress regression tests print simulated FAILED/public TLS lines and still pass their assertions. The historical pre-fix red-proof log intentionally contains four failures against an isolated prior runner.",
+  "runtime_action": "No installed runtime, credentials or owner browser session changed.",
+  "executed_reconciliation_commands": [
+    [
+      "go",
+      "build",
+      "-o",
+      "bin/fake-codex",
+      "./internal/testutil/fakecodex"
+    ],
+    [
+      "npm",
+      "--prefix",
+      "web",
+      "test"
+    ],
+    [
+      "go",
+      "test",
+      "-race",
+      "-count=1",
+      "./..."
+    ],
+    [
+      "python3",
+      "scripts/test_user_flows.py"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_specs*.py"
+    ],
+    [
+      "make",
+      "build"
+    ],
+    [
+      "python3",
+      "scripts/package.py"
+    ],
+    [
+      "python3",
+      "scripts/test_installer.py"
+    ],
+    [
+      "python3",
+      "scripts/smoke.py"
+    ],
+    [
+      "python3",
+      "scripts/test_live_connection_test.py"
+    ],
+    [
+      "python3",
+      "scripts/test_connection_probe.py"
+    ],
+    [
+      "node",
+      "--test",
+      "scripts/test_browser_lab.mjs"
+    ],
+    [
+      "python3",
+      "scripts/test_packaging.py"
+    ]
+  ],
+  "historical_red_proof": "docs/evidence/2026-10-20-specs-historical-red-proof.log",
+  "branch": "feat/aligned-specifications",
+  "head": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "main": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "go_race_packages": [
+    "codefactory/internal/app",
+    "codefactory/internal/codex",
+    "codefactory/internal/events",
+    "codefactory/internal/gateway",
+    "codefactory/internal/pluginbundle",
+    "codefactory/internal/providers",
+    "codefactory/internal/setup",
+    "codefactory/internal/store",
+    "codefactory/internal/transport"
+  ],
+  "verification_logs": [
+    {
+      "path": "docs/evidence/2026-10-20-specs-final-aliases.log",
+      "sha256": "69b2ad85bb390293c70b27515235529ee2e5eb0cb2e5174c8144efffee000823"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-final-ci.log",
+      "sha256": "0c2963c562cdff769e58f46bd24ac1b07c15631dde6ce9cf15cd98add795ceb0"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-final-freshness.log",
+      "sha256": "9bb74b269ddeddf86e74d3598fc2c2876e8986783d99d8b8dc1d6bec3e7370bd"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-final-links.log",
+      "sha256": "bbc8d8bc4efa7527fe9142c489bd777318a202103acc730e3b0594c7a69933bf"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-final-reconciliation.log",
+      "sha256": "aa891419c6da67d511e9b099fdb7b5cfd4ae4d9e0e8d2d5fcd36c889ae529033"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-final-skills.log",
+      "sha256": "e115abb38f304be9eab2f62259513f876f5670eaecd85d46c2fb002e6ec1104c"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-final-validation.log",
+      "sha256": "8501b2221131ccd2efca61b50e5de6168cba375a0b69f638886afff2d0860397"
+    }
+  ]
+}

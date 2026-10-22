@@ -1,0 +1,34 @@
+
+UTC 2026-10-21T01:16:20.407891+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 /tmp/code-factory-review-aliases.py
+COMMAND ['make', 'specs-ci', 'FLOW_BASE=main']
+python3 scripts/specs.py validate
+{"valid": true, "terms": 386, "entities": 109, "flows": 15}
+python3 scripts/test_user_flows.py
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 1.024s
+
+OK
+python3 -m unittest discover -s scripts -p 'test_specs*.py'
+.......................................................................................................................
+----------------------------------------------------------------------
+Ran 119 tests in 20.425s
+
+OK
+make specs-check
+make[1]: Entering directory '/extra/dkropachev/code-factory-plugin'
+python3 scripts/specs.py check --base main
+Affected: flow-answer-attention, flow-configure-work, flow-install-connect, flow-interact-agent, flow-launch-agent, flow-maintain-flow-contracts, flow-operate-installation, flow-protect-secrets, flow-receive-notifications, flow-recover-cleanup, flow-relate-items, flow-resolve-priority, flow-sync-inbox, flow-triage-inbox, flow-view-live-work, glossary, ui
+make[1]: Leaving directory '/extra/dkropachev/code-factory-plugin'
+COMMAND ['make', 'flows-validate']
+python3 scripts/specs.py validate
+{"valid": true, "terms": 386, "entities": 109, "flows": 15}
+COMMAND ['make', 'flows-check', 'FLOW_BASE=main']
+python3 scripts/specs.py check --base main
+Affected: flow-answer-attention, flow-configure-work, flow-install-connect, flow-interact-agent, flow-launch-agent, flow-maintain-flow-contracts, flow-operate-installation, flow-protect-secrets, flow-receive-notifications, flow-recover-cleanup, flow-relate-items, flow-resolve-priority, flow-sync-inbox, flow-triage-inbox, flow-view-live-work, glossary, ui
+COMMAND ['python3', 'scripts/user_flows.py', 'validate']
+{"valid": true, "terms": 386, "entities": 109, "flows": 15}
+COMMAND ['python3', 'scripts/user_flows.py', 'check', '--base', 'main', '--merge-base']
+Affected: flow-answer-attention, flow-configure-work, flow-install-connect, flow-interact-agent, flow-launch-agent, flow-maintain-flow-contracts, flow-operate-installation, flow-protect-secrets, flow-receive-notifications, flow-recover-cleanup, flow-relate-items, flow-resolve-priority, flow-sync-inbox, flow-triage-inbox, flow-view-live-work, glossary, ui
+exit_code=0

@@ -1,0 +1,223 @@
+{
+  "date": "2026-10-21",
+  "completed_utc": "2026-10-21T13:06:11.824781+00:00",
+  "status": "passed local verification",
+  "scope": "Local deterministic fixtures, build and packaging; no installed-host acceptance.",
+  "comparison": {
+    "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+    "selection": "Complete current worktree, preserving existing uncommitted changes; CI uses the same HEAD merge base."
+  },
+  "build": {
+    "version": "0.1.0-b3c0fdf03dc5",
+    "binary_sha256": "b908acda2839fc01f633375db5fbc2f64f3e8f5564a33735e587b428a590d7a7",
+    "package": "dist/code-factory-0.1.0-b3c0fdf03dc5-linux-amd64.tar.gz",
+    "package_sha256": "e40f936040a903223268d840f4f485d22301bbf790dc47987a9a826f1795bc0f",
+    "browser_plugin_version": "0.2.2"
+  },
+  "source_sha256": {
+    "web/src/main.tsx": "28bcbf1a64d8a18aa00cabc7b6c158f3cd8a65b6d8a92b516679e02a0a338f0b",
+    "web/src/style.css": "65c3875bde6c6a99256e2734935c0fdbfeb6dba8eb7402e9859cea689e0adf4f",
+    "web/src/modal-focus.ts": "613906959d3c4481b200bd15dd604a64e8b96905cc2b2be343cf72664e6a9609",
+    "web/tests/factory.spec.ts": "3cbd57c3c95c2d63d85f7dcff5da9d9c2f0ffbea1c11f1004b1fd29e9eef6c81",
+    "internal/pluginbundle/hosting.go": "41d7131145eda7d677cbc4ddd543be7ac5bea40411fc7706191ddf998f12b865",
+    "internal/pluginbundle/hosting_test.go": "2cccfa71a04595703c626bdbe4bc14bed33ce92de68f27aab517f1c2e9e0dada",
+    "internal/gateway/gateway.go": "ffd48c897480f0e140778d8c83f28ceb855dc50bffbce393d62c1714416ca360",
+    "internal/web/dist/index.html": "a73a430a1d8efbfa48aaa8ddeae0e86b12f1df47efde092a7c32748dfc636874",
+    "docs/glossary/terms.json": "3b0e508c5b7318e7c9d70f1d616c4ae673185bfe453aa8e2e445bfb51ec18ace",
+    "docs/ui/entities.json": "2f99d7f41d45eb0ed8219621a089dd4094ac6733a6d89e087a30b11849af29e4",
+    "docs/user-flows/catalog.json": "00b330a908ae06ca39bc2fc79ce396fe5fecba2ca12012abc0b9d07f337ef141"
+  },
+  "verification": [
+    {
+      "command": [
+        "python3",
+        "scripts/specs.py",
+        "reconcile",
+        "--base",
+        "HEAD",
+        "--review",
+        "/tmp/cf-spec-review.json"
+      ],
+      "exit_code": 0,
+      "subjects": 17,
+      "log": "2026-10-21-workflow-reconciliation.log"
+    },
+    {
+      "command": [
+        "make",
+        "specs-check"
+      ],
+      "exit_code": 0,
+      "log": "2026-10-21-workflow-specs-check.log"
+    },
+    {
+      "command": [
+        "make",
+        "ci",
+        "FLOW_BASE=HEAD"
+      ],
+      "exit_code": 0,
+      "log": "2026-10-21-workflow-ci.log",
+      "coverage": "26 browser fixtures; Go race tests and vet; frontend types/build; 201 specification and 20 legacy tooling tests; packaging, six installer cases, connection/browser-controller fixtures and compiled daemon/MCP/stdio smoke."
+    }
+  ],
+  "browser_assertions": [
+    "Saved override initializes by item including P0; every priority and automatic saves immediately; rejection restores previous value with inline feedback.",
+    "Relationship drafts remain by item across item/tab changes; message drafts remain by run across selection/tab changes while the app stays open.",
+    "Open agent chooses newest retained run excluding prepared/cleaned records; New run remains available.",
+    "Default launch enters immutable prepared review with mode/policy; newest draft reopens without another preparation or implicit Start.",
+    "Assembled daemon lost Start response locates its accepted run with read_run; unknown status disables Start/Edit; confirmed prepared status permits explicit same-ID retry.",
+    "Global attention displays owning title/profile, selects that run and returns focus/conversation after answer.",
+    "Readable accept/session/deny/cancel/amendment and requested-permission labels submit unchanged payloads; actual approval/review/editor rectangles fit both 390px themes.",
+    "Repository form shows local Saving/error with retained values; first success returns to Inbox; profile/mode/skill/discovery feedback and diagnostics remain available; Jira controls stay disabled.",
+    "Command output and workspace details collapse while plans, changes and failures stay visible; dirty cleanup/explicit Resume preserve retained work.",
+    "Empty searches offer No matching items/Clear filters; zero-attention shortcut is hidden."
+  ],
+  "hosting_assertions": "Valid observed remote registration promotes browser artifact; missing/invalid mapping leads with OAuth connection steps; portable artifacts and manifests remain collapsed.",
+  "accessibility_fixture_scans": [
+    {
+      "screen": "axe-dark-agents",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-detail",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-inbox",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-launch",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 2
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-question",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-review",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-settings",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-agents",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-detail",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-inbox",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-launch",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 2
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-question",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-review",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-settings",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    }
+  ],
+  "visual_evidence": [
+    "2026-10-21-workflow-approval-light.png",
+    "2026-10-21-workflow-launch-light.png",
+    "2026-10-21-workflow-approval-dark.png",
+    "2026-10-21-workflow-launch-dark.png"
+  ],
+  "specification_scope": {
+    "terms": 421,
+    "entities": 110,
+    "flows": 15,
+    "prior_ui_entity_gap_ids_preserved": 127,
+    "prior_flow_gap_ids_preserved": 22,
+    "open_gaps": 163,
+    "pinned_product_adoption_policy_changed": false
+  },
+  "installed_changes": false,
+  "remaining_limits": [
+    "New build is not installed or observed in the signed-in Work host. Earlier installed-version evidence retains its original scope.",
+    "Ordinary relationship/message drafts end on app reload/close; prepared launches and conversation history remain durable.",
+    "Fixtures do not establish real-host subscriptions/callbacks, login, new-build soak, full manual contrast, screen-reader or accessibility acceptance.",
+    "Independent-client concurrent Starts, other approval/schema/secret-field variants and enabled Jira UI behavior remain explicit specification gaps."
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "flow": "flow-maintain-flow-contracts",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "b6e0b7d2e70f17f64c0dfb72269199e82cf458fdfb6fb5ad689178f0d52aa21d",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "kind": "behavior",
+    "description": "Contributors now inspect bounded read-only reports with exact next argv and actual deduplicated old/current anchors, plus typed open-gap inventory. V2 gap IDs/kind/severity/owner/next verification remain explicit and v1 historical reasons stay untyped. UI-only mixed decisions separate pinned initial adoption from new behavior without overriding product-flow policy.",
+    "implementation": "Inspected CLI report/gaps dispatch, pure reporting and gap helpers, version-aware schema/rendering/history support, focused module APIs and old/new operational module fingerprints. Legacy CLI stdout/flags and public patch/callback defaults remain compatible. Mixed UI decisions cover each direct contract and keep path/anchor adoption eligibility pinned; current behavior needs related code/tests. Pure browser-controller option gates are a separate operational input; Make and release verification now include their Node test. The approved pilot mode is documented without changing the default native path or granting arbitrary session access.",
+    "tests": "Read five actual CLI/v2 integration methods, eleven reporting methods including coverage-group-only limits/anchors, nine gap schema/migration/report methods, five module compatibility/fingerprint methods, four fixed-seed combined cases and seven mixed-policy methods. They assert real selected argv/read-only output, strict metadata/global IDs/owners, preserved reasons and history, old/current anchor scope, seeded rename/retirement/Unicode/index combinations and per-contract cochange/adoption boundaries. Reports themselves record no verification success. Seven pure browser option methods reject unsafe/ambiguous options and keep privacy defaults; no browser/authentication is invoked by them."
+  },
+  "verification": [
+    {
+      "command": [
+        "python3",
+        "scripts/test_user_flows.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.205
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_specs*.py"
+      ],
+      "exit_code": 0,
+      "seconds": 24.433
+    }
+  ],
+  "dependencies": {
+    "flow:maintain-flow-contracts": "927b9a8264257aaa86f671a7ac902c229e010fe626a7e339f09bec1b2c3b14ca",
+    "term:coverage-gap": "26ab80ee06df75dfa45c1b0ad03d0e1197b7de001c52d1afc64207aa3572d2ed",
+    "term:entity": "067fe270524e78644d77f55c85681d5a77dbef7c395801b9ef6b74fa48a6e315",
+    "term:glossary": "025917d764503d4b9308eeb23ab360a4f78ccfa29d923e657f7df9bccf117cae",
+    "term:known-limitation": "a30d16a8d43805defe9961b7e7a4d1cb13d3a9f217e086299f26195b729beb15",
+    "term:reconciliation": "6f5fc6825f60642d36034d80534780c558b9604205e27b1cdbd1ebe5b1a182df",
+    "term:unverified-behavior": "3750689759ebf9872ccba3195ef8de3aa59d46f410bf4b1f53f23e3b723b3a82",
+    "term:verification": "a718fdfbc205c822098d870a89d034a4a752b02aa73b6e0479a18a4dd24a66ee"
+  }
+}

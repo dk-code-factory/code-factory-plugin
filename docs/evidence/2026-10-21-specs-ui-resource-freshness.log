@@ -1,0 +1,45 @@
+
+UTC 2026-10-21T04:26:16.873531+00:00
+$ CODE_FACTORY_REAL_CODEX=0 ['python3', '/tmp/specs-ui-resource-final-check.py']
+{"rendered": 22}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'validate']
+{"valid": true, "terms": 391, "entities": 109, "flows": 15}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'check', '--base', 'main', '--merge-base']
+Affected: flow-answer-attention, flow-configure-work, flow-install-connect, flow-interact-agent, flow-launch-agent, flow-maintain-flow-contracts, flow-operate-installation, flow-protect-secrets, flow-receive-notifications, flow-recover-cleanup, flow-relate-items, flow-resolve-priority, flow-sync-inbox, flow-triage-inbox, flow-view-live-work, glossary, ui
+COMMAND ['git', 'diff', '--check']
+{
+  "generated_documents": 22,
+  "render_unchanged": true,
+  "registry_counts": {
+    "terms": 391,
+    "entities": 109,
+    "flows": 15
+  },
+  "fresh_records": 17,
+  "receipt_errors": [],
+  "compiled_package_version": "0.1.0-e945f9020696",
+  "compiled_binary_sha256": "0a6650e5d6f806ea4835bd94fcd6bee8bf615e20285f65c48668b010dd92500f",
+  "plugin_version": "0.2.2",
+  "gap_inventory_counts": {
+    "total": 163,
+    "kind": {
+      "known-limitation": 7,
+      "unverified-behavior": 156
+    },
+    "severity": {
+      "P1": 17,
+      "P2": 136,
+      "P3": 10
+    },
+    "owner": {
+      "specification-coordinator": 27,
+      "ui-specification-maintainer": 120,
+      "user-flow-maintainer": 16
+    },
+    "typed": 163,
+    "legacy": 0,
+    "with_next_verification": 163
+  }
+}
+
+exit_code=0

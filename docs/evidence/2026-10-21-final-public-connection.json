@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-21T04:33:52Z",
+  "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+  "checks": [
+    {
+      "name": "public TLS ingress 199.38.181.54",
+      "status": "passed"
+    },
+    {
+      "name": "public TLS ingress 209.177.145.137",
+      "status": "passed"
+    },
+    {
+      "name": "OAuth discovery and unauthenticated MCP challenge",
+      "status": "passed"
+    },
+    {
+      "name": "private application state and approval unavailable publicly",
+      "status": "passed"
+    },
+    {
+      "name": "public OAuth client registration",
+      "status": "passed"
+    },
+    {
+      "name": "real owner-only Tailscale consent and OAuth PKCE exchange",
+      "status": "passed"
+    },
+    {
+      "name": "MCP initialize, tools/list, open_factory and embedded UI resource",
+      "status": "passed"
+    },
+    {
+      "name": "refresh rotation and replay rejection",
+      "status": "passed"
+    },
+    {
+      "name": "ephemeral test credentials revoked",
+      "status": "passed"
+    }
+  ],
+  "workAcceptance": "unverified: this test does not operate a signed-in ChatGPT session",
+  "result": "passed"
+}

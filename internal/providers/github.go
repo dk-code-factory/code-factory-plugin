@@ -156,6 +156,28 @@ func (g *GitHub) User(ctx context.Context) (string, error) {
 	return u.Login, e
 }
 
+// Teams uses the current GitHub authentication and follows every membership page.
+func (g *GitHub) Teams(ctx context.Context) ([]string, error) {
+	raw, err := g.pages(ctx, "/user/teams?per_page=100")
+	if err != nil {
+		return nil, err
+	}
+	teams := []string{}
+	for _, b := range raw {
+		var t struct {
+			Slug         string
+			Organization domain.Actor
+		}
+		if err := json.Unmarshal(b, &t); err != nil {
+			return nil, err
+		}
+		if t.Organization.Login != "" && t.Slug != "" {
+			teams = append(teams, t.Organization.Login+"/"+t.Slug)
+		}
+	}
+	return teams, nil
+}
+
 type ghIssue struct {
 	Number             int
 	Title, Body, State string
@@ -223,12 +245,21 @@ func (g *GitHub) Sync(ctx context.Context, repo domain.Repository, full bool) ([
 		if len(i.Pull) > 0 && string(i.Pull) != "null" {
 			v.Kind = "pr"
 			var pr struct {
-				Draft  bool
-				Merged bool
-				Head   struct{ SHA, Ref string }
+				Draft              bool
+				Merged             bool
+				Head               struct{ SHA, Ref string }
+				RequestedReviewers []domain.Actor          `json:"requested_reviewers"`
+				RequestedTeams     []struct{ Slug string } `json:"requested_teams"`
 			}
 			if _, e = g.get(ctx, fmt.Sprintf("%s/pulls/%d", path, i.Number), &pr); e != nil {
 				return nil, e
+			}
+			for _, reviewer := range pr.RequestedReviewers {
+				v.ReviewRequests = append(v.ReviewRequests, reviewer.Login)
+			}
+			org := strings.SplitN(repo.ID, "/", 2)[0]
+			for _, team := range pr.RequestedTeams {
+				v.ReviewTeams = append(v.ReviewTeams, org+"/"+team.Slug)
 			}
 			v.Draft = pr.Draft
 			v.Head = pr.Head.SHA

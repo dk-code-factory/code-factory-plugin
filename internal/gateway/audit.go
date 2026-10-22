@@ -3,9 +3,10 @@ package gateway
 import (
 	"log/slog"
 	"net/http"
+	"time"
 )
 
-// Only fixed endpoint labels and response status are logged. URLs, queries,
+// Only fixed endpoint labels, response status and elapsed time are logged. URLs, queries,
 // headers, request bodies, client IDs, codes and tokens never enter diagnostics.
 func audit(surface string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -28,13 +29,14 @@ func audit(surface string, next http.Handler) http.Handler {
 		case "/.well-known/oauth-authorization-server":
 			route = "oauth_server_metadata"
 		}
+		started := time.Now()
 		response := &statusWriter{ResponseWriter: w}
 		next.ServeHTTP(response, r)
 		status := response.status
 		if status == 0 {
 			status = http.StatusOK
 		}
-		slog.Info("Code Factory gateway request", "surface", surface, "route", route, "status", status)
+		slog.Info("Code Factory gateway request", "surface", surface, "route", route, "status", status, "duration_ms", time.Since(started).Milliseconds())
 	})
 }
 

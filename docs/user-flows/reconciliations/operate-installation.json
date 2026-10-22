@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "flow": "operate-installation",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "90c18f718a9d1966e9e3cadde156ae2b6d7d163ee5eedf614a3c87bb3520a4f8",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "description": "Adopt safe release transitions, rollback, data-retaining uninstall and truthful diagnostics in S1-S4.",
+    "implementation": "Reviewed lifecycle backups/operation recovery/profile restoration, scoped Tailscale route ownership and version-bound evidence. This change executes packaged/service fixtures only and does not modify running user services.",
+    "tests": "Packaged installer, gateway profile archive/rollback, route ownership and version-bound evidence fixtures are required local checks. Real logout/login, installed host soak/CSP/callbacks stay open; deployed probes and rootless systemd checks are referenced as opt-in."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 1.769
+    },
+    {
+      "command": [
+        "make",
+        "build"
+      ],
+      "exit_code": 0,
+      "seconds": 2.417
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/package.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.916
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_installer.py"
+      ],
+      "exit_code": 0,
+      "seconds": 17.67
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/smoke.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.064
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_live_connection_test.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.064
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_connection_probe.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.566
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_browser_lab.mjs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.114
+    }
+  ]
+}

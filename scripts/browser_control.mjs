@@ -7,12 +7,16 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { Client } from '../web/node_modules/@modelcontextprotocol/client/dist/index.mjs';
 import { StdioClientTransport } from '../web/node_modules/@modelcontextprotocol/client/dist/stdio.mjs';
+import { parseBrowserOptions } from './browser_options.mjs';
 
+// Reject unsupported modes and unsafe endpoints before accessing the tool binary
+// or constructing a transport. The browser itself is started by the owner unit.
+const options = parseBrowserOptions(process.argv.slice(2));
 const binary = join(homedir(), '.local/lib/code-factory/browser-tools/node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js');
 await access(binary);
 const transport = new StdioClientTransport({
   command: process.execPath,
-  args: [binary, '--autoConnect', '--no-usage-statistics', '--no-performance-crux', '--redact-network-headers'],
+  args: [binary, ...options.transportArgs],
   stderr: 'pipe',
 });
 // Upstream error text can contain complete URLs; do not emit it automatically.
@@ -37,7 +41,9 @@ try {
       process.stdout.write(JSON.stringify({ id: request.id, result }) + '\n');
     } catch {
       process.stdout.write(JSON.stringify({ id: request?.id, failed: true,
-        reason: 'Browser operation failed; check Chrome remote-debugging switch and native permission prompt.' }) + '\n');
+        reason: options.mode === 'auto'
+          ? 'Browser operation failed; check Chrome remote-debugging switch and native permission prompt.'
+          : 'Browser operation failed; check the approved Chrome debugging listener.' }) + '\n');
     }
   }
 } finally {

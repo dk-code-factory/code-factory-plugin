@@ -51,13 +51,21 @@ custom connections and event-triggered tasks. Follow the
 ## Daily use
 
 Open the embedded inbox and configure only the dedicated private pilot repository.
+Inbox and Agents are full-width lists; clicking a row opens its dedicated page.
+Use Back to return to the originating list or item with context preserved.
+Top Inbox/Agents navigation always opens the list.
 Initial records are unread without New; new discoveries get New. Opening detail
 marks the displayed revision read. Action history is independent of unread state.
 Sync runs every 30 seconds; visible UI polling runs every second after successful
 responses. Network failures defer those updates and appear in diagnostics.
 
-Edit a profile, select skills, review the prepared launch and explicitly Start.
-Use **Plan · interactive questions** for the supported Codex question path.
+Launch from an item to open the default prepared review, or use **Edit** and
+**Advanced** to customize it; explicitly **Start** to create work. **Open agent**
+continues the newest retained run, while **New run** prepares another proposal.
+Prepared records reopen from **Draft launches**. Priority picker changes save
+immediately; item relationship and run message drafts survive tab/record changes
+within the open app and end on reload. Use **Plan · interactive questions** for
+the supported Codex question path.
 Answer in the attention dialog. Follow up in agent chat. Interrupt and Resume are
 separate operations. Opening an item never starts work. Closing the UI leaves work
 running; the computer and both services must remain available.
@@ -149,7 +157,7 @@ must stay private.
 
 `make verify` builds, checks types/vet, runs race/protocol/browser tests, creates a
 checksummed package, exercises installer failure/recovery paths and runs a compiled
-daemon smoke test. Set `CODE_FACTORY_REAL_CODEX=1` for real model lifecycle tests.
+daemon smoke test. Use the explicit `make test-real-provider` target for real model lifecycle tests.
 `python3 scripts/test_systemd.py` separately tests the package under isolated Ubuntu
 with a real user systemd manager and fixture provider executables. The container has
 no Go or Node. Neither fixtures nor real Codex alone establish Work acceptance.

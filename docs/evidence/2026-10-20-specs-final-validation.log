@@ -1,0 +1,29 @@
+
+UTC 2026-10-21T00:52:14.591558+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 scripts/specs.py render
+{"rendered": 22}
+exit_code=0
+
+UTC 2026-10-21T00:52:18.720457+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 /tmp/code-factory-review-preflight.py
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'render']
+{"rendered": 22}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'render']
+{"rendered": 22}
+deterministic_render_documents 22
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'validate']
+{"valid": true, "terms": 386, "entities": 109, "flows": 15}
+COMMAND ['/usr/bin/python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py']
+......................................................................................
+----------------------------------------------------------------------
+Ran 86 tests in 9.301s
+
+OK
+COMMAND ['/usr/bin/python3', 'scripts/test_user_flows.py']
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 0.342s
+
+OK
+COMMAND ['git', 'diff', '--check']
+exit_code=0

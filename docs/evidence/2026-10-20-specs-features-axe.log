@@ -1,0 +1,18 @@
+
+UTC 2026-10-21T03:44:28.940406+00:00
+$ CODE_FACTORY_REAL_CODEX=0 ['python3', '/tmp/specs-features-axe.py']
+{
+  "scan_count": 14,
+  "automated_violations": 0,
+  "manual_review_nodes": 6,
+  "manual_html": [
+    "<button class=\"close\" aria-label=\"Close launch\">\u00d7</button>",
+    "<button class=\"close\" aria-label=\"Close attention\">\u00d7</button>",
+    "<button class=\"close\" aria-label=\"Close launch\">\u00d7</button>",
+    "<button class=\"close\" aria-label=\"Close launch\">\u00d7</button>",
+    "<button class=\"close\" aria-label=\"Close attention\">\u00d7</button>",
+    "<button class=\"close\" aria-label=\"Close launch\">\u00d7</button>"
+  ]
+}
+
+exit_code=0

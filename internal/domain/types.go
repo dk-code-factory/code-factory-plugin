@@ -28,25 +28,33 @@ type Activity struct {
 	Updated string `json:"updated"`
 	URL     string `json:"url"`
 }
+type GitHubViewer struct {
+	Login     string   `json:"login"`
+	Teams     []string `json:"teams"`
+	TeamError string   `json:"teamError,omitempty"`
+}
+
 type Item struct {
-	ID         string          `json:"id"`
-	Repository string          `json:"repository"`
-	Number     int             `json:"number"`
-	Kind       string          `json:"kind"`
-	Title      string          `json:"title"`
-	Body       string          `json:"body"`
-	URL        string          `json:"url"`
-	State      string          `json:"state"`
-	Author     string          `json:"author"`
-	Assignees  []string        `json:"assignees"`
-	Labels     []string        `json:"labels"`
-	Draft      bool            `json:"draft"`
-	Head       string          `json:"head"`
-	Branch     string          `json:"branch"`
-	Revision   string          `json:"revision"`
-	Updated    time.Time       `json:"updated"`
-	Activity   []Activity      `json:"activity"`
-	Checks     json.RawMessage `json:"checks,omitempty"`
+	ID             string          `json:"id"`
+	Repository     string          `json:"repository"`
+	Number         int             `json:"number"`
+	Kind           string          `json:"kind"`
+	Title          string          `json:"title"`
+	Body           string          `json:"body"`
+	URL            string          `json:"url"`
+	State          string          `json:"state"`
+	Author         string          `json:"author"`
+	Assignees      []string        `json:"assignees"`
+	Labels         []string        `json:"labels"`
+	Draft          bool            `json:"draft"`
+	Head           string          `json:"head"`
+	Branch         string          `json:"branch"`
+	Revision       string          `json:"revision"`
+	Updated        time.Time       `json:"updated"`
+	Activity       []Activity      `json:"activity"`
+	Checks         json.RawMessage `json:"checks,omitempty"`
+	ReviewRequests []string        `json:"reviewRequests,omitempty"`
+	ReviewTeams    []string        `json:"reviewTeams,omitempty"`
 }
 
 func (i Item) ContentRevision() string {
@@ -159,6 +167,7 @@ type Event struct {
 	At     time.Time       `json:"at"`
 }
 type InboxEntry struct {
+	HasPullRequest bool       `json:"hasPullRequest"`
 	Item           Item       `json:"item"`
 	User           UserState  `json:"user"`
 	Unread         bool       `json:"unread"`

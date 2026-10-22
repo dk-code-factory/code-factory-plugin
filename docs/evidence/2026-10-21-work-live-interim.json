@@ -1,0 +1,87 @@
+{
+  "at": "2026-10-21T04:25:51.849Z",
+  "scope": "Interim actual Work observations across installed versions06d6ed8a13f0 and229fc8debabc; not final-version acceptance.",
+  "pilotRepository": "dkropachev/code-factory-pilot-20261019",
+  "fixtureIssue": 4,
+  "run": "17ba06d423599fc17695704a9b0ae43a",
+  "debuggerReconnect": {
+    "at": "2026-10-21T04:16:34.328Z",
+    "endpoint": "http://127.0.0.1:9224",
+    "nativePermissionPromptRequired": false,
+    "existingSignedInProfileRetained": true
+  },
+  "events": {
+    "discovery": "Work reported three available event definitions",
+    "creation": "No creation response, error or automation ID observed after more than15minutes; Work was instructed to stop retries and reported doing so",
+    "storedSubscriptionsAt": "2026-10-21T04:24:08Z",
+    "storedSubscriptionsCount": 0,
+    "delivery": "unverified",
+    "cause": "undetermined; do not infer permanent account restriction or successful Events from discovery"
+  },
+  "cachedUI": {
+    "installedVersion": "0.1.0-229fc8debabc",
+    "installedResourceSHA256": "20bb414d84daff3385c280380994bed88503ccd310499fbad58531151152c877",
+    "installedResourceHasBackgroundFix": true,
+    "actualWidgetAfterFreshChatReloadAndRefreshToolsHasBackgroundVariable": false,
+    "resourceURI": "ui://code-factory/inbox.html",
+    "officialGuidance": "https://developers.openai.com/plugins/build/chatgpt-ui",
+    "correction": "Content-derived resource URI implemented; final installed host confirmation pending"
+  },
+  "observations": [
+    {
+      "at": "2026-10-21T04:07:26.377Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"theme\":\"dark\",\"htmlBackground\":\"rgba(0, 0, 0, 0)\",\"bodyBackground\":\"rgba(0, 0, 0, 0)\",\"mainBackground\":\"rgba(0, 0, 0, 0)\",\"foreground\":\"rgb(224, 233, 226)\",\"backgroundVariable\":\"\",\"scheme\":\"dark\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:10:02.643Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"closeAccessibleName\":\"Close attention\",\"symbol\":\"×\",\"insideDialog\":true,\"lastControl\":\"Open agent chat\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:10:05.959Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"dialogClosed\":true,\"restoredFocus\":\"Waiting for your answer — Answer\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:12:19.473Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"openedRead\":true,\"newBadge\":true,\"actions\":\"\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:12:25.580Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"markedUnread\":true,\"newBadge\":true,\"actions\":\"\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:12:31.686Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"acknowledged\":true,\"unread\":true,\"actions\":\"\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:12:49.399Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"baselineBeforeComment\":{\"read\":true,\"newBadge\":false}}\n```"
+    },
+    {
+      "at": "2026-10-21T04:13:05.418Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"at\":\"2026-10-21T04:13:04.318Z\",\"laterRevisionUnread\":false,\"newBadge\":false,\"text\":\"○ Issue · dkropachev/code-factory-pilot-20261019#4\\nP2\\nPilot fixture: current-version inbox acceptance 2026-10-21\\ndkropachev · open\",\"connected\":\"● Connected\",\"sync\":\"dkropachev/code-factory-pilot-20261019 · 12:12:55 AM\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:13:45.006Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"at\":\"2026-10-21T04:13:43.904Z\",\"laterRevisionUnread\":true,\"newBadge\":false,\"actedOn\":true,\"sync\":\"dkropachev/code-factory-pilot-20261019 · 12:13:25 AM\"}\n```"
+    },
+    {
+      "at": "2026-10-21T04:16:56.043Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"at\":\"2026-10-21T04:16:54.946Z\",\"theme\":\"dark\",\"htmlBackground\":\"rgba(0, 0, 0, 0)\",\"bodyBackground\":\"rgba(0, 0, 0, 0)\",\"rootBackground\":\"rgba(0, 0, 0, 0)\",\"mainBackground\":\"rgba(0, 0, 0, 0)\",\"backgroundVariable\":\"\",\"connected\":\"● Connected\",\"alerts\":[]}\n```"
+    },
+    {
+      "at": "2026-10-21T04:19:24.167Z",
+      "tool": "evaluate_script",
+      "result": "Script ran on page and returned:\n```json\n{\"at\":\"2026-10-21T04:19:23.066Z\",\"theme\":\"dark\",\"html\":\"rgba(0, 0, 0, 0)\",\"body\":\"rgba(0, 0, 0, 0)\",\"main\":\"rgba(0, 0, 0, 0)\",\"backgroundVariable\":\"\",\"connection\":\"● Connected\"}\n```"
+    }
+  ]
+}

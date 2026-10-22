@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "flow": "sync-inbox",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "fe4a490c1c2f201df4cbbf9d4d6c0b104ddf8b1a375f6e5c80e512efd0687be3",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "description": "Adopt initial unread baseline, subsequent New discovery, enriched revisions and recoverable refresh failures in S1-S3.",
+    "implementation": "Reviewed Import/Sync/syncLoop and GitHub pages/enrichment/cache paths. Checkpoints advance on successful import; rate failures preserve progress and record retry/error state.",
+    "tests": "Scheduled-sync tests exercise revocation, recovery and later discoveries; provider fixtures exercise pagination, enriched revisions, rate limits and identity-scoped cache. Hourly reconciliation/closed history and full host matrix remain explicit partial gaps."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 1.769
+    }
+  ]
+}

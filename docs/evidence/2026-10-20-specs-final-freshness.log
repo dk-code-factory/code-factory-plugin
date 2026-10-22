@@ -1,0 +1,48 @@
+
+UTC 2026-10-21T00:55:10.190050+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 /tmp/code-factory-review-final-check.py
+{"rendered": 22}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'validate']
+{"valid": true, "terms": 386, "entities": 109, "flows": 15}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'check', '--base', 'main', '--merge-base']
+Affected: flow-answer-attention, flow-configure-work, flow-install-connect, flow-interact-agent, flow-launch-agent, flow-maintain-flow-contracts, flow-operate-installation, flow-protect-secrets, flow-receive-notifications, flow-recover-cleanup, flow-relate-items, flow-resolve-priority, flow-sync-inbox, flow-triage-inbox, flow-view-live-work, glossary, ui
+COMMAND ['git', 'diff', '--check']
+{
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "generated_documents": 22,
+  "render_unchanged": true,
+  "registry_counts": {
+    "terms": 386,
+    "entities": 109,
+    "flows": 15
+  },
+  "fresh_records": 17,
+  "receipt_errors": [],
+  "compiled_package_version": "0.1.0-850eb63cda16",
+  "plugin_version": "0.2.2"
+}
+exit_code=0
+
+UTC 2026-10-21T00:56:08.288285+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 /tmp/code-factory-review-final-check.py
+{"rendered": 22}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'validate']
+{"valid": true, "terms": 386, "entities": 109, "flows": 15}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'check', '--base', 'main', '--merge-base']
+Affected: flow-answer-attention, flow-configure-work, flow-install-connect, flow-interact-agent, flow-launch-agent, flow-maintain-flow-contracts, flow-operate-installation, flow-protect-secrets, flow-receive-notifications, flow-recover-cleanup, flow-relate-items, flow-resolve-priority, flow-sync-inbox, flow-triage-inbox, flow-view-live-work, glossary, ui
+COMMAND ['git', 'diff', '--check']
+{
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "generated_documents": 22,
+  "render_unchanged": true,
+  "registry_counts": {
+    "terms": 386,
+    "entities": 109,
+    "flows": 15
+  },
+  "fresh_records": 17,
+  "receipt_errors": [],
+  "compiled_package_version": "0.1.0-850eb63cda16",
+  "plugin_version": "0.2.2"
+}
+exit_code=0

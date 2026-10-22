@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-21T05:42:47.166630+00:00",
+  "version": "0.1.0-e945f9020696",
+  "status": "awaiting_owner_timing_confirmation",
+  "logout_performed": false,
+  "session_before": {
+    "id": "36",
+    "Name": "dkropachev",
+    "Remote": "yes",
+    "Type": "wayland",
+    "Class": "user",
+    "State": "active"
+  },
+  "lingering_before": "Linger=yes",
+  "services_before": {
+    "code-factory.service": {
+      "ActiveState": "active",
+      "SubState": "running",
+      "MainPID": "3192521",
+      "ExecMainStartTimestampMonotonic": "97921158589"
+    },
+    "code-factory-gateway.service": {
+      "ActiveState": "active",
+      "SubState": "running",
+      "MainPID": "3206877",
+      "ExecMainStartTimestampMonotonic": "98294161034"
+    },
+    "code-factory-pilot-browser.service": {
+      "ActiveState": "active",
+      "SubState": "running",
+      "MainPID": "2987881",
+      "ExecMainStartTimestampMonotonic": "93889709875"
+    }
+  },
+  "scope": "Owner coordination required before closing desktop apps, Chrome and RDP. Existing SSH sessions and lingering policy must be preserved. A login cycle with Linger=yes does not prove cold-boot startup."
+}

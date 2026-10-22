@@ -22,7 +22,7 @@ func TestHostedPackageIsCompleteBoundToHostAndChecksummed(t *testing.T) {
 				t.Fatal(e)
 			}
 			mux := http.NewServeMux()
-			bundle.Register(mux)
+			bundle.Register(mux, nil)
 			get := func(path string) *httptest.ResponseRecorder {
 				t.Helper()
 				w := httptest.NewRecorder()
@@ -34,7 +34,7 @@ func TestHostedPackageIsCompleteBoundToHostAndChecksummed(t *testing.T) {
 				t.Fatal("missing hosted installation page")
 			}
 			links := regexp.MustCompile(`(?:href|src)="([^"]+)"`).FindAllStringSubmatch(page.Body.String(), -1)
-			if len(links) != 7 {
+			if len(links) != 6 {
 				t.Fatal("unexpected public landing link count", len(links))
 			}
 			for _, link := range links {
@@ -186,5 +186,37 @@ func TestBrowserPackageRequiresRealAppMappingAndOmitsBundledMCP(t *testing.T) {
 		if len(parts) != 2 || fmt.Sprintf("%x", sha256.Sum256(files[parts[1]])) != parts[0] {
 			t.Fatal("browser checksum mismatch")
 		}
+	}
+}
+
+func TestLandingPrioritizesOnlyValidRegisteredBrowserPackage(t *testing.T) {
+	bundle, err := New("https://pilot.ts.net/code-factory")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{"", "Plugin_package", "asdk_app_observed"} {
+		t.Run(id, func(t *testing.T) {
+			mux := http.NewServeMux()
+			bundle.Register(mux, func() (string, error) { return id, nil })
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, httptest.NewRequest("GET", "/", nil))
+			body := w.Body.String()
+			primary := `class="button" href="https://pilot.ts.net/code-factory/plugin-browser.zip"`
+			if strings.Contains(body, primary) != (id == "asdk_app_observed") {
+				t.Fatal("incorrect primary download", body)
+			}
+			if !strings.Contains(body, `<details><summary>Advanced packages &amp; manifests</summary>`) && !strings.Contains(body, `<details><summary>Advanced packages & manifests</summary>`) {
+				t.Fatal("missing collapsed advanced packages")
+			}
+			if strings.Index(body, "Advanced packages") > strings.Index(body, `href="https://pilot.ts.net/code-factory/plugin.zip"`) {
+				t.Fatal("portable package outside advanced section")
+			}
+			if id != "asdk_app_observed" && strings.Contains(body, "/plugin-browser.zip") {
+				t.Fatal("unbound browser download offered")
+			}
+			if !strings.Contains(body, "Connect in browser Work") || !strings.Contains(body, "OAuth") {
+				t.Fatal("connection steps missing")
+			}
+		})
 	}
 }

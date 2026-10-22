@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-21T05:45:08.361154+00:00",
+  "branch": "feat/aligned-specifications",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "installed_version": "0.1.0-e945f9020696",
+  "binary_sha256": "0a6650e5d6f806ea4835bd94fcd6bee8bf615e20285f65c48668b010dd92500f",
+  "ui_resource": "ui://code-factory/inbox-20bb414d84daff3385c280380994bed88503ccd310499fbad58531151152c877.html",
+  "status": "core, triage, public transport, one-hour soak and scoped CSP verified; full readiness remains blocked",
+  "login_cycle": "awaiting owner timing confirmation; no logout performed",
+  "debugger": "Approved persistent pilot profile reattached without native Allow; post-login reuse still pending",
+  "CSP_setting_restored_to_off": true,
+  "unverified_operator_checkpoints": [
+    "ownership",
+    "callbacks",
+    "subscription.lifecycle",
+    "rollback",
+    "credentials",
+    "login"
+  ],
+  "other_limits": [
+    "Manual accessibility overlap checks and broader conformance remain open",
+    "Only connect-src denial and successful bridge operation exercised in CSP test; other directives not exhaustively tested",
+    "Events creation returned no confirmed automation ID, stored subscription or callback; cause undetermined",
+    "Current-build ownership, rollback and credential checkpoints are not claimed merely from earlier-version evidence",
+    "No cold-boot startup proof; existing Linger=yes policy preserved"
+  ],
+  "artifacts": [
+    {
+      "path": "docs/evidence/2026-10-21-specs-ui-resource-summary.json",
+      "sha256": "0f60fa39e632750f7486c54e7a930d026f2845ed8ad16f59f2e98b503c4adf1e"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-operator-gap-summary.json",
+      "sha256": "cabe0df3944e605b20e7d2cef9e6d9f699078d678e926026813ce67c87bb4bcd"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-final-work-core.json",
+      "sha256": "6f89cd651b7753976fee522c14b1365e02277007fe00f1f410778b5c21336cf9"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-final-work-triage.json",
+      "sha256": "5b04bf26d35ba4cb8207e01e88fa6a8251e7be0265c07dff0ee7cbd8adf25598"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-connected-soak.json",
+      "sha256": "840cd3e0f811dce7a964ac7e96c2d955af4c2794d62f5f43b67d63bed3d1e7c9"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-work-csp.json",
+      "sha256": "bbbe2778a079a512fa78946a9a0e0b0da35c5e55b0e4479ea6acc157bf4b5bb5"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-final-public-connection.json",
+      "sha256": "7c69d6a42b748edfbf6cbf50063607f5563e2faae2de2bcee2400d8e29e91ac5"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-final-sdk-connection.json",
+      "sha256": "82bab4e749cf69c8b22fadcddd2970cdb46c46744c8758e0cc1d041d406ad52c"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-login-cycle.json",
+      "sha256": "7a7940efe636dfb4e6bb4abfe28af74311817a58106793ca3b95a86fb1738192"
+    }
+  ],
+  "commit_or_push_performed": false
+}

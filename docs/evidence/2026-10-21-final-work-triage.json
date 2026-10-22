@@ -1,0 +1,217 @@
+{
+  "at": "2026-10-21T05:26:41.731Z",
+  "version": "0.1.0-e945f9020696",
+  "fixture": "dkropachev/code-factory-pilot-20261019#5",
+  "scope": "Actual final-version Work iframe. Only this synthetic private pilot issue was changed; its temporary manual link and priority overrides were removed, P2 label restored.",
+  "newReadAndAcknowledgement": "New+unread on arrival; opening clears unread while retaining New; marking unread then acknowledging New retains unread and no action; Record action appends immediate history without clearing unread.",
+  "priority": "P2 label; P0 manual override; reset to P2; temporary P2 removal -> Pending/running -> real P3 inference0.99; override P0 supersedes inference; clearing override restores inference; later comment triggers new-revision inference; final P2 label restored.",
+  "revisionUILimit": "The brief Pending state on the comment revision was not captured by the UI probe; the actual journal proves running and complete assessments for both distinct revisions. The UI did show later unread without New.",
+  "journal": {
+    "at": "2026-10-21T05:26:41.701627+00:00",
+    "events": [
+      {
+        "at": "2026-10-21T05:22:59.946086869Z",
+        "status": "running",
+        "revision": "5abeae66162fb70f0cf8b59478a14d10692efd94b58167f95cede614fe50e481",
+        "priority": 0
+      },
+      {
+        "at": "2026-10-21T05:23:07.078966311Z",
+        "status": "complete",
+        "revision": "5abeae66162fb70f0cf8b59478a14d10692efd94b58167f95cede614fe50e481",
+        "priority": 3
+      },
+      {
+        "at": "2026-10-21T05:23:59.945945706Z",
+        "status": "running",
+        "revision": "04965b91fc267e7cb78c67c9e3bb4ea0a53720ea14d4550665cfbc72e1d7dad4",
+        "priority": 0
+      },
+      {
+        "at": "2026-10-21T05:24:05.731744756Z",
+        "status": "complete",
+        "revision": "04965b91fc267e7cb78c67c9e3bb4ea0a53720ea14d4550665cfbc72e1d7dad4",
+        "priority": 3
+      }
+    ],
+    "finalState": {
+      "labels": [
+        "P2",
+        "pilot-fixture"
+      ],
+      "manualOverride": null,
+      "new": false,
+      "unread": true,
+      "actionCount": 2,
+      "testLinkRemoved": true
+    },
+    "lastAssessment": {
+      "status": "pending",
+      "priority": 0,
+      "confidence": 0,
+      "rationale": "",
+      "revision": "771f6fea76756fa8289848fa335387db48efa608b7a090a573f95968616af5db"
+    }
+  },
+  "observations": [
+    {
+      "at": "2026-10-21T05:20:46.914Z",
+      "value": {
+        "at": "2026-10-21T05:20:45.813Z",
+        "newItem": "○ Issue · dkropachev/code-factory-pilot-20261019#5\nP2\nPilot fixture: final binary triage matrix 2026-10-21\ndkropachev · open\nNew",
+        "newBadge": true,
+        "unread": true,
+        "sync": "dkropachev/code-factory-pilot-20261019 · 1:20:24 AM"
+      }
+    },
+    {
+      "at": "2026-10-21T05:21:07.893Z",
+      "value": {
+        "at": "2026-10-21T05:21:03.290Z",
+        "openedRead": true,
+        "newBadge": true,
+        "actions": "",
+        "priority": "Priority P2",
+        "source": "label · pending"
+      }
+    },
+    {
+      "at": "2026-10-21T05:21:14.000Z",
+      "value": {
+        "markedUnread": true,
+        "newBadge": true
+      }
+    },
+    {
+      "at": "2026-10-21T05:21:20.107Z",
+      "value": {
+        "acknowledged": true,
+        "unreadRetained": true,
+        "actions": ""
+      }
+    },
+    {
+      "at": "2026-10-21T05:21:26.214Z",
+      "value": {
+        "at": "2026-10-21T05:21:21.914Z",
+        "historyUpdatedWithoutReselection": true,
+        "history": "\n\nplugin · 10/21/2026, 1:21:20 AM",
+        "unreadRetained": true,
+        "newBadge": false
+      }
+    },
+    {
+      "at": "2026-10-21T05:21:50.970Z",
+      "value": {
+        "at": "2026-10-21T05:21:46.269Z",
+        "priority": "P0",
+        "source": "override"
+      }
+    },
+    {
+      "at": "2026-10-21T05:21:57.078Z",
+      "value": {
+        "at": "2026-10-21T05:21:52.377Z",
+        "priority": "P2",
+        "source": "label",
+        "overrideRemoved": true
+      }
+    },
+    {
+      "at": "2026-10-21T05:22:03.188Z",
+      "value": {
+        "at": "2026-10-21T05:21:59.186Z",
+        "linkDisplayed": "dkropachev/code-factory-pilot-20261019#1 Local linkRemove",
+        "inputCleared": true
+      }
+    },
+    {
+      "at": "2026-10-21T05:22:09.296Z",
+      "value": {
+        "at": "2026-10-21T05:22:05.096Z",
+        "removedWithoutReselection": true
+      }
+    },
+    {
+      "at": "2026-10-21T05:23:11.181Z",
+      "value": {
+        "at": "2026-10-21T05:23:08.902Z",
+        "inferenceObserved": true,
+        "states": [
+          {
+            "at": "2026-10-21T05:22:50.068Z",
+            "priority": "Priority P2",
+            "source": "label · pending"
+          },
+          {
+            "at": "2026-10-21T05:22:59.889Z",
+            "priority": "Priority pending",
+            "source": "pending · pending"
+          },
+          {
+            "at": "2026-10-21T05:23:01.692Z",
+            "priority": "Priority pending",
+            "source": "pending · running"
+          },
+          {
+            "at": "2026-10-21T05:23:08.902Z",
+            "priority": "Priority P3",
+            "source": "inference · Synthetic acceptance fixture; no production incident, requested code changes, or urgent deadline."
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-10-21T05:23:45.413Z",
+      "value": {
+        "at": "2026-10-21T05:23:40.711Z",
+        "priority": "Priority P0",
+        "overrideSupersedesInference": true
+      }
+    },
+    {
+      "at": "2026-10-21T05:23:51.522Z",
+      "value": {
+        "at": "2026-10-21T05:23:46.920Z",
+        "priority": "Priority P3",
+        "inferenceRestored": true
+      }
+    },
+    {
+      "at": "2026-10-21T05:23:52.628Z",
+      "value": {
+        "at": "2026-10-21T05:23:51.526Z",
+        "baselineBeforeFinalRevision": {
+          "read": true,
+          "newBadge": false,
+          "priority": "P3"
+        }
+      }
+    },
+    {
+      "at": "2026-10-21T05:24:48.700Z",
+      "value": {
+        "revisionRefreshed": false,
+        "states": [
+          {
+            "at": "2026-10-21T05:24:22.588Z",
+            "priority": "P3",
+            "unread": true,
+            "newBadge": false
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-10-21T05:26:09.130Z",
+      "value": {
+        "at": "2026-10-21T05:26:08.028Z",
+        "labelPriorityRestored": "P2",
+        "unread": true,
+        "newBadge": false,
+        "actedOn": true,
+        "sync": "dkropachev/code-factory-pilot-20261019 · 1:25:54 AM"
+      }
+    }
+  ]
+}

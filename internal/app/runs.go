@@ -37,6 +37,7 @@ type session struct {
 	secrets   []string
 	completed map[string]bool
 	tails     map[string]string
+	started   chan struct{}
 }
 
 func NewManager(ctx context.Context, a *App, binary string) *Manager {
@@ -48,9 +49,10 @@ func (m *Manager) Recover(ctx context.Context) error {
 		return e
 	}
 	for _, r := range runs {
-		if r.Status == "idle" || r.Status == "running" || r.Status == "waiting" || r.Status == "queued" || r.Status == "starting" {
+		if r.Status == "idle" || r.Status == "running" || r.Status == "waiting" || r.Status == "queued" || r.Status == "starting" || (r.Status == "interrupted" && (r.Error == "Daemon stopped; resume explicitly" || r.Error == "Codex process disconnected; resume explicitly")) {
 			r.Status = "interrupted"
-			r.Error = "Daemon stopped; resume explicitly"
+			r.Error = ""
+			r.TurnID = ""
 			if e = m.app.Store.Write(ctx, func(t *store.Tx) error {
 				if e := t.Put("run", r.ID, r); e != nil {
 					return e
@@ -176,10 +178,17 @@ func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, erro
 	return r, m.app.Store.Put(ctx, "run", r.ID, r, "")
 }
 func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run, error) {
+	r, _, err := m.start(ctx, id, resume, "")
+	return r, err
+}
+
+// start claims the retained run before launching its process. A wake message is
+// the resumed turn itself, never a second turn following a generic resume prompt.
+func (m *Manager) start(ctx context.Context, id string, resume bool, message string) (domain.Run, *session, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.ctx.Err() != nil {
-		return domain.Run{}, fmt.Errorf("daemon is stopping")
+		return domain.Run{}, nil, fmt.Errorf("daemon is stopping")
 	}
 	old := m.live[id]
 	if old != nil {
@@ -194,7 +203,22 @@ func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run
 		if (!resume && r.Status != "prepared") || (resume && r.Status != "interrupted" && r.Status != "failed") {
 			return fmt.Errorf("run cannot start from %s", r.Status)
 		}
+		if resume && message != "" && r.ThreadID == "" {
+			return fmt.Errorf("retained Codex session is unavailable; start a new run")
+		}
+		if old != nil {
+			for _, at := range old.pending {
+				at.Status = "stale"
+				if e := t.Put("attention", at.ID, at); e != nil {
+					return e
+				}
+				if e := t.Event("attention.resolved", at.RunID, map[string]any{"id": at.ID, "runId": at.RunID, "status": at.Status, "blocking": at.Blocking}); e != nil {
+					return e
+				}
+			}
+		}
 		r.Status = "queued"
+		r.TurnID = ""
 		r.Error = ""
 		if e := t.Put("run", id, r); e != nil {
 			return e
@@ -202,7 +226,7 @@ func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run
 		return t.Event("run.state", id, map[string]string{"id": id, "status": r.Status})
 	})
 	if err != nil {
-		return r, err
+		return r, nil, err
 	}
 	if old != nil {
 		old.retired = true
@@ -210,11 +234,15 @@ func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run
 			_ = old.client.Close()
 		}
 	}
-	s := &session{run: r, pending: map[string]domain.Attention{}, completed: map[string]bool{}}
+	s := &session{run: r, pending: map[string]domain.Attention{}, completed: map[string]bool{}, started: make(chan struct{})}
 	m.live[id] = s
 	m.wg.Add(1)
-	go func() { defer m.wg.Done(); m.launch(s, resume) }()
-	return r, nil
+	go func() {
+		defer m.wg.Done()
+		defer close(s.started)
+		m.launch(s, resume, message)
+	}()
+	return r, s, nil
 }
 
 func command(ctx context.Context, dir string, args ...string) (string, error) {
@@ -288,7 +316,7 @@ func (m *Manager) fail(s *session, e error) {
 		_ = s.client.Close()
 	}
 }
-func (m *Manager) launch(s *session, resume bool) {
+func (m *Manager) launch(s *session, resume bool, message string) {
 	ctx, cancel := context.WithTimeout(m.ctx, 2*time.Minute)
 	defer cancel()
 	s.mu.Lock()
@@ -384,6 +412,10 @@ func (m *Manager) launch(s *session, resume bool) {
 		m.fail(s, e)
 		return
 	}
+	if method == "thread/resume" && result.Thread.ID != r.ThreadID {
+		m.fail(s, fmt.Errorf("provider did not restore the retained Codex session"))
+		return
+	}
 	s.mu.Lock()
 	s.run.ThreadID = result.Thread.ID
 	if s.run.Profile.Model == "" {
@@ -398,7 +430,10 @@ func (m *Manager) launch(s *session, resume bool) {
 	}
 	text := r.Prompt
 	if resume {
-		text = "Resume the existing task. Inspect current state before acting; do not replay completed actions."
+		text = message
+		if text == "" {
+			text = "Resume the existing task. Inspect current state before acting; do not replay completed actions."
+		}
 	}
 	input := []map[string]any{{"type": "text", "text": text}}
 	for _, sk := range r.Skills {
@@ -454,7 +489,8 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 	if msg.Method == "process/closed" {
 		if s.run.Status != "failed" {
 			s.run.Status = "interrupted"
-			s.run.Error = "Codex process disconnected; resume explicitly"
+			s.run.Error = ""
+			s.run.TurnID = ""
 		}
 		for id, a := range s.pending {
 			a.Status = "stale"
@@ -558,7 +594,7 @@ func (m *Manager) get(id string) (*session, error) {
 	s := m.live[id]
 	m.mu.Unlock()
 	if s == nil {
-		return nil, fmt.Errorf("run is disconnected; resume explicitly")
+		return nil, fmt.Errorf("run is disconnected")
 	}
 	return s, nil
 }
@@ -566,12 +602,50 @@ func (m *Manager) Message(ctx context.Context, id, text, expected string) error 
 	if strings.TrimSpace(text) == "" {
 		return fmt.Errorf("message is empty")
 	}
+	var r domain.Run
+	if e := m.app.Store.Get(ctx, "run", id, &r); e != nil {
+		return e
+	}
+	if r.Status == "interrupted" || r.Status == "failed" {
+		if expected != "" {
+			return fmt.Errorf("active turn changed; refresh before sending")
+		}
+		_, s, e := m.start(ctx, id, true, text)
+		if e != nil {
+			return e
+		}
+		// Do not clear the caller's draft until the submitted turn is accepted.
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-s.started:
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if s.run.Status == "failed" {
+			return fmt.Errorf("%s", s.run.Error)
+		}
+		if s.run.Status == "interrupted" {
+			return fmt.Errorf("session disconnected; check the conversation before sending again")
+		}
+		return nil
+	}
 	s, e := m.get(id)
 	if e != nil {
 		return e
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.retired {
+		return fmt.Errorf("session changed; refresh before sending")
+	}
+	if s.started != nil {
+		select {
+		case <-s.started:
+		default:
+			return fmt.Errorf("run is starting")
+		}
+	}
 	if s.client == nil {
 		return fmt.Errorf("run is starting")
 	}
@@ -899,6 +973,14 @@ func regexpSkillName(s string) bool {
 	return s != ""
 }
 func (m *Manager) Cleanup(ctx context.Context, id string) error {
+	// Serialize workspace removal against session wake-up and message delivery.
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	s := m.live[id]
+	if s != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	var r domain.Run
 	if e := m.app.Store.Get(ctx, "run", id, &r); e != nil {
 		return e
@@ -906,8 +988,7 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 	if r.Status != "interrupted" && r.Status != "failed" && r.Status != "idle" {
 		return fmt.Errorf("run must be stopped before cleanup")
 	}
-	if s, e := m.get(id); e == nil {
-		s.mu.Lock()
+	if s != nil {
 		s.retired = true
 		if s.client != nil {
 			_ = s.client.Close()
@@ -917,7 +998,6 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 			_ = m.saveAttention(ctx, at, "attention.resolved")
 		}
 		s.pending = map[string]domain.Attention{}
-		s.mu.Unlock()
 	}
 	r.Status = "interrupted"
 	if e := m.app.Store.Put(ctx, "run", id, r, "run.state"); e != nil {

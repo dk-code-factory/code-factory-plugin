@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "flow": "triage-inbox",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "6b019fe36dbe047bd700daef2b88aecbdbee224bf971a76f47c24836aeec61ba",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "description": "Adopt independent read/New/action states and revision-aware reading in S1/S2; S3 preserves the explicit boundary between browsing and agent launch.",
+    "implementation": "Reviewed UserAction branches, Inbox state derivation, ItemDetail revision handling and separate read_item/prepare_launch/start_run transport operations.",
+    "tests": "InboxRevisionStatesPriorityAndLinks asserts stale-read handling and independent activity. UI triage asserts no prepare/start when detail opens. Acknowledge/filter combinations and the full host matrix remain documented gaps."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "build",
+        "-o",
+        "bin/fake-codex",
+        "./internal/testutil/fakecodex"
+      ],
+      "exit_code": 0,
+      "seconds": 0.032
+    },
+    {
+      "command": [
+        "npm",
+        "--prefix",
+        "web",
+        "test"
+      ],
+      "exit_code": 0,
+      "seconds": 4.625
+    },
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 1.769
+    }
+  ]
+}

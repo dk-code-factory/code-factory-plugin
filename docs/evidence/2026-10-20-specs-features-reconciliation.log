@@ -1,0 +1,172 @@
+
+UTC 2026-10-21T03:33:32.954466+00:00
+$ CODE_FACTORY_REAL_CODEX=0 ['python3', 'scripts/specs.py', 'reconcile', '--base', 'main', '--merge-base', '--review', '/tmp/specs-features-review.json']
+Verify: ["go", "build", "-o", "bin/fake-codex", "./internal/testutil/fakecodex"]
+Verify: ["npm", "--prefix", "web", "test"]
+
+> code-factory-ui@0.1.0 test
+> playwright test
+
+[WebServer] (node:3018057) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3018070) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 13 tests using 1 worker
+
+(node:3018286) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/factory.spec.ts:338:3 › Axe WCAG A/AA scans the owned app iframe across core states in light theme (1.9s)
+  ✓   2 tests/factory.spec.ts:338:3 › Axe WCAG A/AA scans the owned app iframe across core states in dark theme (1.8s)
+  ✓   3 tests/factory.spec.ts:388:1 › keyboard launch review traps focus, preserves edits and restores its opener on Escape (2.1s)
+  ✓   4 tests/factory.spec.ts:457:1 › keyboard attention stays contained through updates and Escape restores the pending opener (1.6s)
+  ✓   5 tests/factory.spec.ts:532:1 › launch preparation failure is announced inside the dialog without losing keyboard edits (270ms)
+  ✓   6 tests/factory.spec.ts:567:1 › item actions refresh visible history while unread, New and drafts remain independent (329ms)
+  ✓   7 tests/factory.spec.ts:608:1 › unlink removes the visible relationship without clearing unrelated detail drafts (297ms)
+  ✓   8 tests/factory.spec.ts:635:1 › a delayed relationship refresh cannot replace a later selection or its drafts (389ms)
+  ✓   9 tests/factory.spec.ts:694:1 › triage does not launch, launch edits and attention answer survive reopening (829ms)
+  ✓  10 tests/factory.spec.ts:806:1 › plugin settings accept repository and secure credential without echo (286ms)
+  ✓  11 tests/factory.spec.ts:930:1 › repeated Start after a lost first response reports rejection and retains exactly one daemon run (1.3s)
+  ✓  12 tests/factory.spec.ts:1004:1 › dirty cleanup retains the daemon workspace and history until explicit Resume (2.6s)
+  ✓  13 tests/factory.spec.ts:1081:1 › MCP bridge drives the assembled daemon through launch, question, answer and follow-up (2.6s)
+
+  13 passed (17.9s)
+Verify: ["go", "test", "-race", "-count=1", "./..."]
+?   	codefactory/cmd/code-factory	[no test files]
+ok  	codefactory/internal/app	1.943s
+?   	codefactory/internal/buildinfo	[no test files]
+ok  	codefactory/internal/codex	1.408s
+?   	codefactory/internal/domain	[no test files]
+ok  	codefactory/internal/events	1.031s
+ok  	codefactory/internal/gateway	1.486s
+ok  	codefactory/internal/pluginbundle	1.059s
+ok  	codefactory/internal/providers	1.015s
+ok  	codefactory/internal/setup	1.517s
+ok  	codefactory/internal/store	1.026s
+?   	codefactory/internal/testhost	[no test files]
+?   	codefactory/internal/testutil	[no test files]
+?   	codefactory/internal/testutil/fakecodex	[no test files]
+ok  	codefactory/internal/transport	1.171s
+?   	codefactory/internal/web	[no test files]
+Verify: ["python3", "scripts/test_user_flows.py"]
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 1.057s
+
+OK
+Verify: ["python3", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_specs*.py"]
+.........................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 201 tests in 24.229s
+
+OK
+Verify: ["make", "build"]
+cd web && npm ci && npm run build
+
+added 43 packages, and audited 44 packages in 528ms
+
+8 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+
+> code-factory-ui@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 187 modules transformed.
+rendering chunks...
+[plugin vite:singlefile] 
+
+[plugin vite:singlefile] Inlining: index-DitAQa9J.js
+[plugin vite:singlefile] Inlining: style-D7IbCPmP.css
+computing gzip size...
+../internal/web/dist/index.html  462.06 kB │ gzip: 132.53 kB
+✓ built in 716ms
+python3 scripts/package_plugin.py --embed
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.2.zip
+mkdir -p bin
+go build -trimpath -o bin/code-factory ./cmd/code-factory
+Verify: ["python3", "scripts/package.py"]
+/extra/dkropachev/code-factory-plugin/dist/code-factory-0.1.0-06d6ed8a13f0-linux-amd64.tar.gz
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.2.zip
+Verify: ["python3", "scripts/test_installer.py"]
+......
+----------------------------------------------------------------------
+Ran 6 tests in 20.849s
+
+OK
+Verify: ["python3", "scripts/smoke.py"]
+PASS: compiled daemon, authenticated MCP 2.0, stdio tunnel proxy, private credential files
+Verify: ["python3", "scripts/test_live_connection_test.py"]
+FAILED: connection test stopped
+PASSED: ephemeral test credentials revoked
+.FAILED: public TLS ingress 199.38.181.54
+FAILED: public TLS ingress 209.177.145.137
+FAILED: connection test stopped
+..
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+Verify: ["python3", "scripts/test_connection_probe.py"]
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.511s
+
+OK
+Verify: ["node", "--test", "scripts/test_browser_lab.mjs"]
+✔ configuration refuses nonloopback binds and nonprivate UI origins (0.5872ms)
+✔ location metadata drops secret query, fragment and dynamic identifiers (0.503131ms)
+✔ owner, Host, session, Origin and CSRF protect every browser action (18.122869ms)
+✔ browser errors never expose submitted input or URLs (2.361021ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 66.188054
+Verify: ["node", "--test", "scripts/test_browser_control.mjs"]
+✔ no arguments preserve owner-approved auto-connect and all privacy flags (0.753504ms)
+✔ pilot mode attaches only to the dedicated existing loopback browser (0.209827ms)
+✔ explicit endpoint accepts split and equals options and exact IPv4 or IPv6 loopback literals (0.313512ms)
+✔ every supported mode retains statistics, CrUX and header protections exactly once (3.708719ms)
+✔ conflicting, repeated, missing and unknown options fail closed (0.270341ms)
+✔ endpoint validation rejects remote hosts, normalized aliases and URL metadata (0.407951ms)
+✔ argument parsing is deterministic and cannot mutate inputs or later calls (0.101332ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37.797691
+Verify: ["python3", "scripts/test_packaging.py"]
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.122s
+
+OK
+{"reconciled": ["flow-answer-attention", "flow-configure-work", "flow-install-connect", "flow-interact-agent", "flow-launch-agent", "flow-maintain-flow-contracts", "flow-operate-installation", "flow-protect-secrets", "flow-receive-notifications", "flow-recover-cleanup", "flow-relate-items", "flow-resolve-priority", "flow-sync-inbox", "flow-triage-inbox", "flow-view-live-work", "glossary", "ui"]}
+
+exit_code=0

@@ -1,0 +1,3742 @@
+{
+  "at": "2026-10-21T05:34:58.745502+00:00",
+  "version": "0.1.0-e945f9020696",
+  "source": "Actual signed-in Work app iframe and independent user-service checks",
+  "scope": "30-second DOM/service sampling plus continuous connection-status mutation observation and counts of successful MCP Apps response messages. No message bodies or credentials recorded. The same iframe document remained loaded. Includes normal pilot UI/triage activity.",
+  "ui": {
+    "startedAt": "2026-10-21T04:33:49.700Z",
+    "finishedAt": "2026-10-21T05:34:57.611Z",
+    "elapsedSeconds": 3667.911,
+    "samples": [
+      {
+        "at": "2026-10-21T04:33:49.700Z",
+        "elapsedSeconds": 0.00010000000894069671,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:33:24 AM"
+        ],
+        "rpcResponses": 0,
+        "pollResponses": 0,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:34:19.701Z",
+        "elapsedSeconds": 30.00040000000596,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:33:54 AM"
+        ],
+        "rpcResponses": 20,
+        "pollResponses": 19,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:34:49.700Z",
+        "elapsedSeconds": 60.00020000000298,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:34:24 AM"
+        ],
+        "rpcResponses": 43,
+        "pollResponses": 37,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:35:19.700Z",
+        "elapsedSeconds": 90.00020000000298,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:34:54 AM"
+        ],
+        "rpcResponses": 62,
+        "pollResponses": 55,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:35:49.700Z",
+        "elapsedSeconds": 120.00030000001192,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:35:24 AM"
+        ],
+        "rpcResponses": 82,
+        "pollResponses": 73,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:36:19.700Z",
+        "elapsedSeconds": 150.00010000000893,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [],
+        "rpcResponses": 118,
+        "pollResponses": 103,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:36:44.911Z",
+        "elapsedSeconds": 175.21090000000595,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [],
+        "rpcResponses": 151,
+        "pollResponses": 135,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:36:49.700Z",
+        "elapsedSeconds": 180.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [],
+        "rpcResponses": 158,
+        "pollResponses": 142,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:37:19.700Z",
+        "elapsedSeconds": 210.00010000000893,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:36:54 AM"
+        ],
+        "rpcResponses": 198,
+        "pollResponses": 174,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:37:49.700Z",
+        "elapsedSeconds": 240.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:37:24 AM"
+        ],
+        "rpcResponses": 221,
+        "pollResponses": 192,
+        "mainBackground": "rgb(246, 248, 245)"
+      },
+      {
+        "at": "2026-10-21T04:38:19.701Z",
+        "elapsedSeconds": 270.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:37:54 AM"
+        ],
+        "rpcResponses": 244,
+        "pollResponses": 210,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:38:20.065Z",
+        "elapsedSeconds": 270.36490000000595,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:37:54 AM"
+        ],
+        "rpcResponses": 244,
+        "pollResponses": 210,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:38:49.700Z",
+        "elapsedSeconds": 300.00020000000296,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:38:24 AM"
+        ],
+        "rpcResponses": 264,
+        "pollResponses": 229,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:39:19.700Z",
+        "elapsedSeconds": 330.00020000000296,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:38:54 AM"
+        ],
+        "rpcResponses": 283,
+        "pollResponses": 247,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:39:49.701Z",
+        "elapsedSeconds": 360.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:39:24 AM"
+        ],
+        "rpcResponses": 303,
+        "pollResponses": 266,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:40:19.700Z",
+        "elapsedSeconds": 390.00020000000296,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:39:54 AM"
+        ],
+        "rpcResponses": 322,
+        "pollResponses": 284,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:40:45.709Z",
+        "elapsedSeconds": 416.0086000000089,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:40:24 AM"
+        ],
+        "rpcResponses": 339,
+        "pollResponses": 300,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:40:49.701Z",
+        "elapsedSeconds": 420.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:40:24 AM"
+        ],
+        "rpcResponses": 341,
+        "pollResponses": 302,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:41:19.700Z",
+        "elapsedSeconds": 450.00020000000296,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:40:54 AM"
+        ],
+        "rpcResponses": 361,
+        "pollResponses": 321,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:41:49.700Z",
+        "elapsedSeconds": 480.00020000000296,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:41:24 AM"
+        ],
+        "rpcResponses": 380,
+        "pollResponses": 339,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:42:04.390Z",
+        "elapsedSeconds": 494.68990000000593,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:41:54 AM"
+        ],
+        "rpcResponses": 390,
+        "pollResponses": 348,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:42:19.700Z",
+        "elapsedSeconds": 510.00010000000896,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:41:54 AM"
+        ],
+        "rpcResponses": 399,
+        "pollResponses": 357,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:42:49.700Z",
+        "elapsedSeconds": 540.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:42:24 AM"
+        ],
+        "rpcResponses": 418,
+        "pollResponses": 375,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:43:00.498Z",
+        "elapsedSeconds": 550.797700000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:42:54 AM"
+        ],
+        "rpcResponses": 425,
+        "pollResponses": 381,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:43:19.700Z",
+        "elapsedSeconds": 570.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:42:54 AM"
+        ],
+        "rpcResponses": 438,
+        "pollResponses": 394,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:43:49.700Z",
+        "elapsedSeconds": 600.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:43:24 AM"
+        ],
+        "rpcResponses": 457,
+        "pollResponses": 412,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:43:56.605Z",
+        "elapsedSeconds": 606.904300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:43:24 AM"
+        ],
+        "rpcResponses": 461,
+        "pollResponses": 416,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:44:19.701Z",
+        "elapsedSeconds": 630.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:43:54 AM"
+        ],
+        "rpcResponses": 476,
+        "pollResponses": 430,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:44:49.700Z",
+        "elapsedSeconds": 660.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:44:24 AM"
+        ],
+        "rpcResponses": 495,
+        "pollResponses": 448,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:44:52.709Z",
+        "elapsedSeconds": 663.0087000000029,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:44:24 AM"
+        ],
+        "rpcResponses": 497,
+        "pollResponses": 450,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:45:19.700Z",
+        "elapsedSeconds": 690.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:44:54 AM"
+        ],
+        "rpcResponses": 515,
+        "pollResponses": 467,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:45:48.816Z",
+        "elapsedSeconds": 719.1155,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:45:24 AM"
+        ],
+        "rpcResponses": 535,
+        "pollResponses": 486,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:45:49.700Z",
+        "elapsedSeconds": 720.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:45:24 AM"
+        ],
+        "rpcResponses": 535,
+        "pollResponses": 486,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:46:19.701Z",
+        "elapsedSeconds": 750.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:45:54 AM"
+        ],
+        "rpcResponses": 555,
+        "pollResponses": 505,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:46:44.921Z",
+        "elapsedSeconds": 775.220700000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:46:24 AM"
+        ],
+        "rpcResponses": 572,
+        "pollResponses": 521,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:46:49.700Z",
+        "elapsedSeconds": 780.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:46:24 AM"
+        ],
+        "rpcResponses": 575,
+        "pollResponses": 524,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:47:19.700Z",
+        "elapsedSeconds": 810.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:46:54 AM"
+        ],
+        "rpcResponses": 594,
+        "pollResponses": 542,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:47:41.028Z",
+        "elapsedSeconds": 831.3274000000059,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:47:24 AM"
+        ],
+        "rpcResponses": 609,
+        "pollResponses": 556,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:47:49.700Z",
+        "elapsedSeconds": 840.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:47:24 AM"
+        ],
+        "rpcResponses": 614,
+        "pollResponses": 561,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:48:19.701Z",
+        "elapsedSeconds": 870.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:47:54 AM"
+        ],
+        "rpcResponses": 634,
+        "pollResponses": 580,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:48:37.131Z",
+        "elapsedSeconds": 887.431100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:48:24 AM"
+        ],
+        "rpcResponses": 646,
+        "pollResponses": 591,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:48:49.700Z",
+        "elapsedSeconds": 900.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:48:24 AM"
+        ],
+        "rpcResponses": 654,
+        "pollResponses": 599,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:49:19.700Z",
+        "elapsedSeconds": 930.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:48:54 AM"
+        ],
+        "rpcResponses": 674,
+        "pollResponses": 618,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:49:49.701Z",
+        "elapsedSeconds": 960.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:49:24 AM"
+        ],
+        "rpcResponses": 694,
+        "pollResponses": 637,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:49:53.507Z",
+        "elapsedSeconds": 963.8065,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:49:24 AM"
+        ],
+        "rpcResponses": 696,
+        "pollResponses": 639,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:50:19.701Z",
+        "elapsedSeconds": 990.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:49:54 AM"
+        ],
+        "rpcResponses": 713,
+        "pollResponses": 655,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:50:34.696Z",
+        "elapsedSeconds": 1004.995700000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:50:24 AM"
+        ],
+        "rpcResponses": 723,
+        "pollResponses": 664,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:50:49.701Z",
+        "elapsedSeconds": 1020.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:50:24 AM"
+        ],
+        "rpcResponses": 731,
+        "pollResponses": 672,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:51:05.047Z",
+        "elapsedSeconds": 1035.3468000000119,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:50:54 AM"
+        ],
+        "rpcResponses": 742,
+        "pollResponses": 682,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:51:19.701Z",
+        "elapsedSeconds": 1050.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:50:54 AM"
+        ],
+        "rpcResponses": 751,
+        "pollResponses": 691,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:51:49.700Z",
+        "elapsedSeconds": 1080.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:51:24 AM"
+        ],
+        "rpcResponses": 771,
+        "pollResponses": 710,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:52:01.152Z",
+        "elapsedSeconds": 1091.451700000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:51:54 AM"
+        ],
+        "rpcResponses": 778,
+        "pollResponses": 716,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:52:19.700Z",
+        "elapsedSeconds": 1110.0001000000088,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:51:54 AM"
+        ],
+        "rpcResponses": 791,
+        "pollResponses": 729,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:52:49.700Z",
+        "elapsedSeconds": 1140.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:52:24 AM"
+        ],
+        "rpcResponses": 811,
+        "pollResponses": 748,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:52:57.256Z",
+        "elapsedSeconds": 1147.556,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:52:24 AM"
+        ],
+        "rpcResponses": 816,
+        "pollResponses": 753,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:53:19.700Z",
+        "elapsedSeconds": 1170.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:52:54 AM"
+        ],
+        "rpcResponses": 830,
+        "pollResponses": 766,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:53:49.700Z",
+        "elapsedSeconds": 1200.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:53:24 AM"
+        ],
+        "rpcResponses": 850,
+        "pollResponses": 785,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:53:53.364Z",
+        "elapsedSeconds": 1203.664,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:53:24 AM"
+        ],
+        "rpcResponses": 852,
+        "pollResponses": 787,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:54:19.701Z",
+        "elapsedSeconds": 1230.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:53:54 AM"
+        ],
+        "rpcResponses": 869,
+        "pollResponses": 803,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:54:49.470Z",
+        "elapsedSeconds": 1259.769300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:54:24 AM"
+        ],
+        "rpcResponses": 888,
+        "pollResponses": 821,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:54:49.701Z",
+        "elapsedSeconds": 1260.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:54:24 AM"
+        ],
+        "rpcResponses": 888,
+        "pollResponses": 821,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:55:19.700Z",
+        "elapsedSeconds": 1290.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:54:54 AM"
+        ],
+        "rpcResponses": 908,
+        "pollResponses": 840,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:55:45.574Z",
+        "elapsedSeconds": 1315.873600000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:55:24 AM"
+        ],
+        "rpcResponses": 924,
+        "pollResponses": 855,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:55:49.700Z",
+        "elapsedSeconds": 1320.0001000000088,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:55:24 AM"
+        ],
+        "rpcResponses": 927,
+        "pollResponses": 858,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:56:19.700Z",
+        "elapsedSeconds": 1350.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:55:54 AM"
+        ],
+        "rpcResponses": 946,
+        "pollResponses": 876,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:56:41.679Z",
+        "elapsedSeconds": 1371.978600000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:56:24 AM"
+        ],
+        "rpcResponses": 961,
+        "pollResponses": 890,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:56:49.701Z",
+        "elapsedSeconds": 1380.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:56:24 AM"
+        ],
+        "rpcResponses": 966,
+        "pollResponses": 895,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:57:19.700Z",
+        "elapsedSeconds": 1410.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:56:54 AM"
+        ],
+        "rpcResponses": 985,
+        "pollResponses": 913,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:57:37.785Z",
+        "elapsedSeconds": 1428.0851000000089,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:57:24 AM"
+        ],
+        "rpcResponses": 998,
+        "pollResponses": 925,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:57:49.701Z",
+        "elapsedSeconds": 1440.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:57:24 AM"
+        ],
+        "rpcResponses": 1005,
+        "pollResponses": 932,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:58:19.700Z",
+        "elapsedSeconds": 1470.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:57:54 AM"
+        ],
+        "rpcResponses": 1024,
+        "pollResponses": 950,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:58:33.893Z",
+        "elapsedSeconds": 1484.192400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:58:24 AM"
+        ],
+        "rpcResponses": 1033,
+        "pollResponses": 958,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:58:49.700Z",
+        "elapsedSeconds": 1500.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:58:24 AM"
+        ],
+        "rpcResponses": 1043,
+        "pollResponses": 968,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:59:19.700Z",
+        "elapsedSeconds": 1530.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:58:54 AM"
+        ],
+        "rpcResponses": 1063,
+        "pollResponses": 987,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:59:29.998Z",
+        "elapsedSeconds": 1540.2981000000088,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:59:24 AM"
+        ],
+        "rpcResponses": 1070,
+        "pollResponses": 993,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T04:59:49.700Z",
+        "elapsedSeconds": 1560.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:59:24 AM"
+        ],
+        "rpcResponses": 1083,
+        "pollResponses": 1006,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:00:19.701Z",
+        "elapsedSeconds": 1590.000300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:59:54 AM"
+        ],
+        "rpcResponses": 1103,
+        "pollResponses": 1025,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:00:26.103Z",
+        "elapsedSeconds": 1596.402300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "12:59:54 AM"
+        ],
+        "rpcResponses": 1107,
+        "pollResponses": 1029,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:00:49.700Z",
+        "elapsedSeconds": 1620.0001000000088,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:00:24 AM"
+        ],
+        "rpcResponses": 1122,
+        "pollResponses": 1043,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:01:19.700Z",
+        "elapsedSeconds": 1650.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:00:54 AM"
+        ],
+        "rpcResponses": 1141,
+        "pollResponses": 1061,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:01:22.209Z",
+        "elapsedSeconds": 1652.509,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:00:54 AM"
+        ],
+        "rpcResponses": 1143,
+        "pollResponses": 1063,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:01:49.701Z",
+        "elapsedSeconds": 1680.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:01:24 AM"
+        ],
+        "rpcResponses": 1161,
+        "pollResponses": 1080,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:02:18.313Z",
+        "elapsedSeconds": 1708.613200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:01:54 AM"
+        ],
+        "rpcResponses": 1179,
+        "pollResponses": 1097,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:02:19.701Z",
+        "elapsedSeconds": 1710.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:01:54 AM"
+        ],
+        "rpcResponses": 1180,
+        "pollResponses": 1098,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:02:49.700Z",
+        "elapsedSeconds": 1740.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:02:24 AM"
+        ],
+        "rpcResponses": 1200,
+        "pollResponses": 1117,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:03:14.420Z",
+        "elapsedSeconds": 1764.7195,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:02:54 AM"
+        ],
+        "rpcResponses": 1216,
+        "pollResponses": 1132,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:03:19.700Z",
+        "elapsedSeconds": 1770.0001000000088,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:02:54 AM"
+        ],
+        "rpcResponses": 1219,
+        "pollResponses": 1135,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:03:49.701Z",
+        "elapsedSeconds": 1800.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:03:24 AM"
+        ],
+        "rpcResponses": 1239,
+        "pollResponses": 1154,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:04:10.525Z",
+        "elapsedSeconds": 1820.8244000000059,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:03:54 AM"
+        ],
+        "rpcResponses": 1253,
+        "pollResponses": 1167,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:04:19.701Z",
+        "elapsedSeconds": 1830.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:03:54 AM"
+        ],
+        "rpcResponses": 1258,
+        "pollResponses": 1172,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:04:49.700Z",
+        "elapsedSeconds": 1860.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:04:24 AM"
+        ],
+        "rpcResponses": 1278,
+        "pollResponses": 1191,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:05:06.630Z",
+        "elapsedSeconds": 1876.929400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:04:54 AM"
+        ],
+        "rpcResponses": 1289,
+        "pollResponses": 1201,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:05:19.700Z",
+        "elapsedSeconds": 1890.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:04:54 AM"
+        ],
+        "rpcResponses": 1297,
+        "pollResponses": 1209,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:05:49.701Z",
+        "elapsedSeconds": 1920.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:05:24 AM"
+        ],
+        "rpcResponses": 1316,
+        "pollResponses": 1227,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:06:02.735Z",
+        "elapsedSeconds": 1933.0347000000029,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:05:54 AM"
+        ],
+        "rpcResponses": 1325,
+        "pollResponses": 1235,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:06:19.700Z",
+        "elapsedSeconds": 1950.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:05:54 AM"
+        ],
+        "rpcResponses": 1336,
+        "pollResponses": 1246,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:06:49.700Z",
+        "elapsedSeconds": 1980.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:06:24 AM"
+        ],
+        "rpcResponses": 1356,
+        "pollResponses": 1265,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:06:58.841Z",
+        "elapsedSeconds": 1989.1405,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:06:54 AM"
+        ],
+        "rpcResponses": 1362,
+        "pollResponses": 1270,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:07:19.700Z",
+        "elapsedSeconds": 2010.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:06:54 AM"
+        ],
+        "rpcResponses": 1375,
+        "pollResponses": 1283,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:07:49.700Z",
+        "elapsedSeconds": 2040.0001000000088,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:07:24 AM"
+        ],
+        "rpcResponses": 1394,
+        "pollResponses": 1301,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:07:54.947Z",
+        "elapsedSeconds": 2045.247,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:07:24 AM"
+        ],
+        "rpcResponses": 1398,
+        "pollResponses": 1305,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:08:19.700Z",
+        "elapsedSeconds": 2070.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:07:54 AM"
+        ],
+        "rpcResponses": 1414,
+        "pollResponses": 1320,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:08:49.700Z",
+        "elapsedSeconds": 2100.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:08:24 AM"
+        ],
+        "rpcResponses": 1434,
+        "pollResponses": 1339,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:08:51.053Z",
+        "elapsedSeconds": 2101.352400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:08:24 AM"
+        ],
+        "rpcResponses": 1435,
+        "pollResponses": 1340,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:09:19.701Z",
+        "elapsedSeconds": 2130.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:08:54 AM"
+        ],
+        "rpcResponses": 1454,
+        "pollResponses": 1358,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:09:47.159Z",
+        "elapsedSeconds": 2157.458700000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:09:24 AM"
+        ],
+        "rpcResponses": 1472,
+        "pollResponses": 1375,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:09:49.700Z",
+        "elapsedSeconds": 2160.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:09:24 AM"
+        ],
+        "rpcResponses": 1474,
+        "pollResponses": 1377,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:10:19.701Z",
+        "elapsedSeconds": 2190.000600000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:09:54 AM"
+        ],
+        "rpcResponses": 1493,
+        "pollResponses": 1395,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:10:43.264Z",
+        "elapsedSeconds": 2213.564100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:10:24 AM"
+        ],
+        "rpcResponses": 1509,
+        "pollResponses": 1410,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:10:49.700Z",
+        "elapsedSeconds": 2220.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:10:24 AM"
+        ],
+        "rpcResponses": 1514,
+        "pollResponses": 1415,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:11:19.700Z",
+        "elapsedSeconds": 2250.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:10:54 AM"
+        ],
+        "rpcResponses": 1534,
+        "pollResponses": 1434,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:11:39.370Z",
+        "elapsedSeconds": 2269.669900000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:11:24 AM"
+        ],
+        "rpcResponses": 1547,
+        "pollResponses": 1446,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:11:49.700Z",
+        "elapsedSeconds": 2280.000300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:11:24 AM"
+        ],
+        "rpcResponses": 1553,
+        "pollResponses": 1452,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:12:19.701Z",
+        "elapsedSeconds": 2310.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:11:54 AM"
+        ],
+        "rpcResponses": 1573,
+        "pollResponses": 1471,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:12:35.475Z",
+        "elapsedSeconds": 2325.774300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:12:24 AM"
+        ],
+        "rpcResponses": 1583,
+        "pollResponses": 1480,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:12:49.701Z",
+        "elapsedSeconds": 2340.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:12:24 AM"
+        ],
+        "rpcResponses": 1592,
+        "pollResponses": 1489,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:13:19.700Z",
+        "elapsedSeconds": 2370.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:12:54 AM"
+        ],
+        "rpcResponses": 1612,
+        "pollResponses": 1508,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:13:31.579Z",
+        "elapsedSeconds": 2381.879,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:13:24 AM"
+        ],
+        "rpcResponses": 1620,
+        "pollResponses": 1515,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:13:49.700Z",
+        "elapsedSeconds": 2400.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:13:24 AM"
+        ],
+        "rpcResponses": 1632,
+        "pollResponses": 1527,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:14:19.701Z",
+        "elapsedSeconds": 2430.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:13:54 AM"
+        ],
+        "rpcResponses": 1651,
+        "pollResponses": 1545,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:14:27.684Z",
+        "elapsedSeconds": 2437.984,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:13:54 AM"
+        ],
+        "rpcResponses": 1657,
+        "pollResponses": 1551,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:14:49.700Z",
+        "elapsedSeconds": 2460.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:14:24 AM"
+        ],
+        "rpcResponses": 1671,
+        "pollResponses": 1564,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:15:19.700Z",
+        "elapsedSeconds": 2490.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:14:54 AM"
+        ],
+        "rpcResponses": 1691,
+        "pollResponses": 1583,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:15:23.792Z",
+        "elapsedSeconds": 2494.0915,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:14:54 AM"
+        ],
+        "rpcResponses": 1693,
+        "pollResponses": 1585,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:15:49.701Z",
+        "elapsedSeconds": 2520.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:15:24 AM"
+        ],
+        "rpcResponses": 1710,
+        "pollResponses": 1601,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:16:19.701Z",
+        "elapsedSeconds": 2550.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:15:54 AM"
+        ],
+        "rpcResponses": 1729,
+        "pollResponses": 1619,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:16:19.895Z",
+        "elapsedSeconds": 2550.195,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:15:54 AM"
+        ],
+        "rpcResponses": 1730,
+        "pollResponses": 1620,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:16:49.700Z",
+        "elapsedSeconds": 2580.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:16:24 AM"
+        ],
+        "rpcResponses": 1749,
+        "pollResponses": 1638,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:17:16.001Z",
+        "elapsedSeconds": 2606.300400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:16:54 AM"
+        ],
+        "rpcResponses": 1766,
+        "pollResponses": 1654,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:17:19.700Z",
+        "elapsedSeconds": 2610.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:16:54 AM"
+        ],
+        "rpcResponses": 1768,
+        "pollResponses": 1656,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:17:49.700Z",
+        "elapsedSeconds": 2640.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:17:24 AM"
+        ],
+        "rpcResponses": 1788,
+        "pollResponses": 1675,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:18:12.107Z",
+        "elapsedSeconds": 2662.407,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:17:54 AM"
+        ],
+        "rpcResponses": 1802,
+        "pollResponses": 1688,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:18:19.701Z",
+        "elapsedSeconds": 2670.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:17:54 AM"
+        ],
+        "rpcResponses": 1807,
+        "pollResponses": 1693,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:18:49.700Z",
+        "elapsedSeconds": 2700.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:18:24 AM"
+        ],
+        "rpcResponses": 1827,
+        "pollResponses": 1712,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:19:08.212Z",
+        "elapsedSeconds": 2718.5115,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:18:54 AM"
+        ],
+        "rpcResponses": 1839,
+        "pollResponses": 1723,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:19:19.700Z",
+        "elapsedSeconds": 2730.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:18:54 AM"
+        ],
+        "rpcResponses": 1846,
+        "pollResponses": 1730,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:19:41.684Z",
+        "elapsedSeconds": 2751.983800000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:19:24 AM"
+        ],
+        "rpcResponses": 1860,
+        "pollResponses": 1743,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:19:49.701Z",
+        "elapsedSeconds": 2760.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:19:24 AM"
+        ],
+        "rpcResponses": 1865,
+        "pollResponses": 1748,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:20:19.700Z",
+        "elapsedSeconds": 2790.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:19:54 AM"
+        ],
+        "rpcResponses": 1884,
+        "pollResponses": 1766,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:20:46.918Z",
+        "elapsedSeconds": 2817.218100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:20:24 AM"
+        ],
+        "rpcResponses": 1902,
+        "pollResponses": 1783,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:20:49.700Z",
+        "elapsedSeconds": 2820.000300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:20:24 AM"
+        ],
+        "rpcResponses": 1904,
+        "pollResponses": 1785,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:21:19.700Z",
+        "elapsedSeconds": 2850.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:20:54 AM"
+        ],
+        "rpcResponses": 1933,
+        "pollResponses": 1801,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:21:49.700Z",
+        "elapsedSeconds": 2880.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:21:24 AM"
+        ],
+        "rpcResponses": 1958,
+        "pollResponses": 1818,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:22:19.700Z",
+        "elapsedSeconds": 2910.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:21:54 AM"
+        ],
+        "rpcResponses": 1988,
+        "pollResponses": 1836,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:22:25.130Z",
+        "elapsedSeconds": 2915.429300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:21:54 AM"
+        ],
+        "rpcResponses": 1991,
+        "pollResponses": 1839,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:22:49.701Z",
+        "elapsedSeconds": 2940.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:22:24 AM"
+        ],
+        "rpcResponses": 2008,
+        "pollResponses": 1855,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:23:19.700Z",
+        "elapsedSeconds": 2970.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:22:54 AM"
+        ],
+        "rpcResponses": 2032,
+        "pollResponses": 1873,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:23:49.700Z",
+        "elapsedSeconds": 3000.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:23:24 AM"
+        ],
+        "rpcResponses": 2058,
+        "pollResponses": 1891,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:24:19.700Z",
+        "elapsedSeconds": 3030.000100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:23:54 AM"
+        ],
+        "rpcResponses": 2082,
+        "pollResponses": 1908,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:24:48.704Z",
+        "elapsedSeconds": 3059.003300000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:24:24 AM"
+        ],
+        "rpcResponses": 2102,
+        "pollResponses": 1927,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:24:49.700Z",
+        "elapsedSeconds": 3060.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:24:24 AM"
+        ],
+        "rpcResponses": 2103,
+        "pollResponses": 1928,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:25:19.700Z",
+        "elapsedSeconds": 3090.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:24:54 AM"
+        ],
+        "rpcResponses": 2121,
+        "pollResponses": 1945,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:25:49.701Z",
+        "elapsedSeconds": 3120.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:25:24 AM"
+        ],
+        "rpcResponses": 2141,
+        "pollResponses": 1964,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:26:09.134Z",
+        "elapsedSeconds": 3139.433800000012,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:25:54 AM"
+        ],
+        "rpcResponses": 2154,
+        "pollResponses": 1976,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:26:19.701Z",
+        "elapsedSeconds": 3150.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:25:54 AM"
+        ],
+        "rpcResponses": 2161,
+        "pollResponses": 1983,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:26:49.700Z",
+        "elapsedSeconds": 3180.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:26:24 AM"
+        ],
+        "rpcResponses": 2180,
+        "pollResponses": 2001,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:27:19.700Z",
+        "elapsedSeconds": 3210.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:26:54 AM"
+        ],
+        "rpcResponses": 2200,
+        "pollResponses": 2020,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:27:49.700Z",
+        "elapsedSeconds": 3240.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:27:24 AM"
+        ],
+        "rpcResponses": 2219,
+        "pollResponses": 2038,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:28:06.849Z",
+        "elapsedSeconds": 3257.1491000000087,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:27:54 AM"
+        ],
+        "rpcResponses": 2230,
+        "pollResponses": 2048,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:28:19.700Z",
+        "elapsedSeconds": 3270.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:27:54 AM"
+        ],
+        "rpcResponses": 2238,
+        "pollResponses": 2056,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:28:49.701Z",
+        "elapsedSeconds": 3300.0005,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:28:24 AM"
+        ],
+        "rpcResponses": 2258,
+        "pollResponses": 2075,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:29:19.700Z",
+        "elapsedSeconds": 3330.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:28:54 AM"
+        ],
+        "rpcResponses": 2278,
+        "pollResponses": 2094,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:29:21.505Z",
+        "elapsedSeconds": 3331.804900000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:28:54 AM"
+        ],
+        "rpcResponses": 2279,
+        "pollResponses": 2095,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:29:49.700Z",
+        "elapsedSeconds": 3360.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:29:24 AM"
+        ],
+        "rpcResponses": 2297,
+        "pollResponses": 2112,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:30:19.700Z",
+        "elapsedSeconds": 3390.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:29:54 AM"
+        ],
+        "rpcResponses": 2317,
+        "pollResponses": 2131,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:30:49.701Z",
+        "elapsedSeconds": 3420.000400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:30:24 AM"
+        ],
+        "rpcResponses": 2336,
+        "pollResponses": 2149,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:31:05.910Z",
+        "elapsedSeconds": 3436.210100000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:30:54 AM"
+        ],
+        "rpcResponses": 2347,
+        "pollResponses": 2159,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:31:19.700Z",
+        "elapsedSeconds": 3450.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:30:54 AM"
+        ],
+        "rpcResponses": 2356,
+        "pollResponses": 2168,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:31:49.700Z",
+        "elapsedSeconds": 3480.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:31:24 AM"
+        ],
+        "rpcResponses": 2376,
+        "pollResponses": 2187,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:32:15.579Z",
+        "elapsedSeconds": 3505.878400000006,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:31:54 AM"
+        ],
+        "rpcResponses": 2393,
+        "pollResponses": 2203,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:32:19.700Z",
+        "elapsedSeconds": 3510.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:31:54 AM"
+        ],
+        "rpcResponses": 2396,
+        "pollResponses": 2206,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:32:49.700Z",
+        "elapsedSeconds": 3540.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:32:24 AM"
+        ],
+        "rpcResponses": 2415,
+        "pollResponses": 2224,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:33:19.700Z",
+        "elapsedSeconds": 3570.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:32:54 AM"
+        ],
+        "rpcResponses": 2435,
+        "pollResponses": 2243,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:33:49.700Z",
+        "elapsedSeconds": 3600.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:33:24 AM"
+        ],
+        "rpcResponses": 2455,
+        "pollResponses": 2262,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:34:18.021Z",
+        "elapsedSeconds": 3628.320600000009,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:33:54 AM"
+        ],
+        "rpcResponses": 2474,
+        "pollResponses": 2280,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:34:19.700Z",
+        "elapsedSeconds": 3630.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:33:54 AM"
+        ],
+        "rpcResponses": 2475,
+        "pollResponses": 2281,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:34:49.700Z",
+        "elapsedSeconds": 3660.000200000003,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:34:24 AM"
+        ],
+        "rpcResponses": 2494,
+        "pollResponses": 2299,
+        "mainBackground": "rgb(23, 32, 28)"
+      },
+      {
+        "at": "2026-10-21T05:34:57.611Z",
+        "elapsedSeconds": 3667.911,
+        "connected": true,
+        "status": "\u25cf Connected",
+        "hidden": false,
+        "alerts": 0,
+        "syncTimes": [
+          "1:34:24 AM"
+        ],
+        "rpcResponses": 2499,
+        "pollResponses": 2304,
+        "mainBackground": "rgb(23, 32, 28)"
+      }
+    ],
+    "transitions": [],
+    "rpcResponses": 2499,
+    "pollResponses": 2304,
+    "unloaded": false,
+    "uniqueSyncTimes": 121,
+    "maxSampleGapSeconds": 30.00040000000581,
+    "passed": true
+  },
+  "health": {
+    "expectedVersion": "0.1.0-e945f9020696",
+    "samples": [
+      {
+        "at": "2026-10-21T04:33:50.847636+00:00",
+        "elapsedSeconds": 2.3000757209956646e-07,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:34:20.857501+00:00",
+        "elapsedSeconds": 30.009984660995542,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:34:50.868677+00:00",
+        "elapsedSeconds": 60.019891788004315,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:35:20.879059+00:00",
+        "elapsedSeconds": 90.03110716100491,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:35:50.889360+00:00",
+        "elapsedSeconds": 120.04141064200667,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:36:20.899088+00:00",
+        "elapsedSeconds": 150.05180914400262,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:36:50.909624+00:00",
+        "elapsedSeconds": 180.06153976799396,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:37:20.919545+00:00",
+        "elapsedSeconds": 210.07199807099823,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:37:50.929614+00:00",
+        "elapsedSeconds": 240.0820144419995,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:38:20.939222+00:00",
+        "elapsedSeconds": 270.09207424300257,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:38:50.950180+00:00",
+        "elapsedSeconds": 300.1018714969978,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:39:20.959505+00:00",
+        "elapsedSeconds": 330.11261243000627,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:39:50.970195+00:00",
+        "elapsedSeconds": 360.12189645000035,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:40:20.980908+00:00",
+        "elapsedSeconds": 390.13290317599603,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:40:50.991998+00:00",
+        "elapsedSeconds": 420.1436177440046,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:41:21.002760+00:00",
+        "elapsedSeconds": 450.1546375420003,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:41:51.014735+00:00",
+        "elapsedSeconds": 480.16525082400767,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:42:21.025813+00:00",
+        "elapsedSeconds": 510.1772226220055,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:42:51.035894+00:00",
+        "elapsedSeconds": 540.1882888010005,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:43:21.046936+00:00",
+        "elapsedSeconds": 570.198357486006,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:43:51.057090+00:00",
+        "elapsedSeconds": 600.2095072049997,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:44:21.067537+00:00",
+        "elapsedSeconds": 630.2194656479987,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:44:51.075804+00:00",
+        "elapsedSeconds": 660.2299206040043,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:45:21.086629+00:00",
+        "elapsedSeconds": 690.2382029370056,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:45:51.096754+00:00",
+        "elapsedSeconds": 720.2491103039938,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:46:21.107102+00:00",
+        "elapsedSeconds": 750.2591678220051,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:46:51.117066+00:00",
+        "elapsedSeconds": 780.2697177770024,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:47:21.127194+00:00",
+        "elapsedSeconds": 810.2794973590062,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:47:51.136836+00:00",
+        "elapsedSeconds": 840.2896789990045,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:48:21.147514+00:00",
+        "elapsedSeconds": 870.2993820660049,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:48:51.157002+00:00",
+        "elapsedSeconds": 900.3100136300054,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:49:21.167175+00:00",
+        "elapsedSeconds": 930.3196929940023,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:49:51.177520+00:00",
+        "elapsedSeconds": 960.3296778469958,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:50:21.187754+00:00",
+        "elapsedSeconds": 990.3400637050072,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:50:51.198662+00:00",
+        "elapsedSeconds": 1020.3501633419946,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:51:21.209623+00:00",
+        "elapsedSeconds": 1050.361447289004,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:51:51.220397+00:00",
+        "elapsedSeconds": 1080.3721591219946,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:52:21.230567+00:00",
+        "elapsedSeconds": 1110.382898722004,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:52:51.240478+00:00",
+        "elapsedSeconds": 1140.3929922740062,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:53:21.250849+00:00",
+        "elapsedSeconds": 1170.403027856999,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:53:51.261289+00:00",
+        "elapsedSeconds": 1200.4133659020008,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:54:21.271657+00:00",
+        "elapsedSeconds": 1230.4237893819954,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:54:51.282150+00:00",
+        "elapsedSeconds": 1260.4340891559987,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:55:21.292400+00:00",
+        "elapsedSeconds": 1290.4449761809956,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:55:51.302976+00:00",
+        "elapsedSeconds": 1320.4548309090023,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:56:21.312996+00:00",
+        "elapsedSeconds": 1350.4654618439963,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:56:51.322664+00:00",
+        "elapsedSeconds": 1380.4755232850002,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:57:21.332566+00:00",
+        "elapsedSeconds": 1410.4852107479965,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:57:51.342140+00:00",
+        "elapsedSeconds": 1440.495101374996,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:58:21.350510+00:00",
+        "elapsedSeconds": 1470.5045520489948,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:58:51.360965+00:00",
+        "elapsedSeconds": 1500.5132509270043,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:59:21.371743+00:00",
+        "elapsedSeconds": 1530.5235226710065,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T04:59:51.382610+00:00",
+        "elapsedSeconds": 1560.5342670039972,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:00:21.392761+00:00",
+        "elapsedSeconds": 1590.5451965920074,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:00:51.403485+00:00",
+        "elapsedSeconds": 1620.5554150050011,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:01:21.413246+00:00",
+        "elapsedSeconds": 1650.566038970006,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:01:51.424101+00:00",
+        "elapsedSeconds": 1680.5756906229944,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:02:21.434545+00:00",
+        "elapsedSeconds": 1710.586555151007,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:02:51.444785+00:00",
+        "elapsedSeconds": 1740.5970191420056,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:03:21.454869+00:00",
+        "elapsedSeconds": 1770.6073597109935,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:03:51.465247+00:00",
+        "elapsedSeconds": 1800.6174432779953,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:04:21.475210+00:00",
+        "elapsedSeconds": 1830.6278224130074,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:04:51.484387+00:00",
+        "elapsedSeconds": 1860.6377614649973,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:05:21.494723+00:00",
+        "elapsedSeconds": 1890.6468111269933,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:05:51.505329+00:00",
+        "elapsedSeconds": 1920.6571576569986,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:06:21.515617+00:00",
+        "elapsedSeconds": 1950.6678467610036,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:06:51.526113+00:00",
+        "elapsedSeconds": 1980.6781589510065,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:07:21.535908+00:00",
+        "elapsedSeconds": 2010.688555857996,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:07:51.544267+00:00",
+        "elapsedSeconds": 2040.698427905998,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:08:21.554400+00:00",
+        "elapsedSeconds": 2070.7067067919997,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:08:51.564780+00:00",
+        "elapsedSeconds": 2100.716828413002,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:09:21.573263+00:00",
+        "elapsedSeconds": 2130.7272333120054,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:09:51.584940+00:00",
+        "elapsedSeconds": 2160.735876854,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:10:21.595464+00:00",
+        "elapsedSeconds": 2190.7478330769954,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:10:51.606060+00:00",
+        "elapsedSeconds": 2220.757974742999,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:11:21.615951+00:00",
+        "elapsedSeconds": 2250.768661384005,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:11:51.626872+00:00",
+        "elapsedSeconds": 2280.7784661460028,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:12:21.637543+00:00",
+        "elapsedSeconds": 2310.789459706997,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:12:51.648486+00:00",
+        "elapsedSeconds": 2340.8003032660054,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:13:21.658829+00:00",
+        "elapsedSeconds": 2370.811258449001,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:13:51.669643+00:00",
+        "elapsedSeconds": 2400.821551300003,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:14:21.680629+00:00",
+        "elapsedSeconds": 2430.832541979995,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:14:51.691957+00:00",
+        "elapsedSeconds": 2460.8435219179955,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:15:21.702059+00:00",
+        "elapsedSeconds": 2490.854655283998,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:15:51.713117+00:00",
+        "elapsedSeconds": 2520.8648729599954,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:16:21.723098+00:00",
+        "elapsedSeconds": 2550.8755673510022,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:16:51.732588+00:00",
+        "elapsedSeconds": 2580.8857187370013,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:17:21.743159+00:00",
+        "elapsedSeconds": 2610.895121032998,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:17:51.753860+00:00",
+        "elapsedSeconds": 2640.9056422400026,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:18:21.765551+00:00",
+        "elapsedSeconds": 2670.9163456069946,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:18:51.776744+00:00",
+        "elapsedSeconds": 2700.928025882007,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:19:21.787118+00:00",
+        "elapsedSeconds": 2730.939233696001,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:19:51.798529+00:00",
+        "elapsedSeconds": 2760.9497573260014,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:20:21.808684+00:00",
+        "elapsedSeconds": 2790.9611889399966,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:20:51.819258+00:00",
+        "elapsedSeconds": 2820.971458212007,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:21:21.829851+00:00",
+        "elapsedSeconds": 2850.981863021996,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:21:51.839959+00:00",
+        "elapsedSeconds": 2880.9923425970046,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:22:21.850281+00:00",
+        "elapsedSeconds": 2911.002421748999,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:22:51.861171+00:00",
+        "elapsedSeconds": 2941.013223482005,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:23:21.871815+00:00",
+        "elapsedSeconds": 2971.0238327849947,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:23:51.882674+00:00",
+        "elapsedSeconds": 3001.034540819004,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:24:21.893746+00:00",
+        "elapsedSeconds": 3031.045316429998,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:24:51.904384+00:00",
+        "elapsedSeconds": 3061.0565494059992,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:25:21.915209+00:00",
+        "elapsedSeconds": 3091.0670531060023,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:25:51.925117+00:00",
+        "elapsedSeconds": 3121.077843375999,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:26:21.934586+00:00",
+        "elapsedSeconds": 3151.0877602529945,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:26:51.945050+00:00",
+        "elapsedSeconds": 3181.0970864870033,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:27:21.955767+00:00",
+        "elapsedSeconds": 3211.107672293001,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:27:51.966497+00:00",
+        "elapsedSeconds": 3241.1183995720057,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:28:21.977842+00:00",
+        "elapsedSeconds": 3271.1292657519953,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:28:51.987730+00:00",
+        "elapsedSeconds": 3301.1404868990066,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:29:21.998473+00:00",
+        "elapsedSeconds": 3331.1503887209983,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:29:52.008686+00:00",
+        "elapsedSeconds": 3361.1611357200018,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:30:22.019255+00:00",
+        "elapsedSeconds": 3391.171334365994,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:30:52.030480+00:00",
+        "elapsedSeconds": 3421.181904373996,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:31:22.041344+00:00",
+        "elapsedSeconds": 3451.192983425004,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:31:52.051280+00:00",
+        "elapsedSeconds": 3481.2039682869945,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:32:22.061523+00:00",
+        "elapsedSeconds": 3511.213791974995,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:32:52.071356+00:00",
+        "elapsedSeconds": 3541.224199104996,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:33:22.079419+00:00",
+        "elapsedSeconds": 3571.2338467619993,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:33:52.089719+00:00",
+        "elapsedSeconds": 3601.241905089002,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:34:22.097713+00:00",
+        "elapsedSeconds": 3631.2522948340047,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      },
+      {
+        "at": "2026-10-21T05:34:52.105235+00:00",
+        "elapsedSeconds": 3661.2601845989993,
+        "services": {
+          "code-factory.service": "active",
+          "code-factory-gateway.service": "active",
+          "code-factory-pilot-browser.service": "active"
+        },
+        "version": "0.1.0-e945f9020696"
+      }
+    ]
+  },
+  "passed": true
+}

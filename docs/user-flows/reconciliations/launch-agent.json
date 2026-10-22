@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "flow": "launch-agent",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "dd0f2af588e2726d146a59453beef6c02d991ed2a319af4d9983321c931af9f2",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "description": "Adopt editable preparation and explicit isolated start in S1/S2, with immutable selected skill/profile snapshot behavior in S3.",
+    "implementation": "Reviewed Prepare snapshot construction, Start state transaction and asynchronous launch/workspace paths. Prepared work has no process/worktree until explicit Start; publishing is accurately described as provider-mediated authority.",
+    "tests": "Preparation helper checks missing worktree before Start; UI tests assert edited preparation and a single explicit launch, and assembled fixture reaches the agent. Duplicate-start concurrency and edit-after-snapshot assertions remain gaps; opt-in skill loading is labeled skipped by default."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "build",
+        "-o",
+        "bin/fake-codex",
+        "./internal/testutil/fakecodex"
+      ],
+      "exit_code": 0,
+      "seconds": 0.032
+    },
+    {
+      "command": [
+        "npm",
+        "--prefix",
+        "web",
+        "test"
+      ],
+      "exit_code": 0,
+      "seconds": 4.625
+    },
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 1.769
+    }
+  ]
+}

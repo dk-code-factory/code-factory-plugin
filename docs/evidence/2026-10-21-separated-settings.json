@@ -1,0 +1,341 @@
+{
+  "date": "2026-10-21",
+  "verified_utc": "2026-10-21T16:12:16.143676+00:00",
+  "status": "implemented, verified and installed; separate signed-in Work views observed",
+  "scope": "original issue/PR GitHub links and independent settings view; complete current worktree preserved",
+  "comparison_base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "source_sha256": {
+    "web/src/main.tsx": "adbed51b0da37100e6dc3715acb652d29ba16174d74f162a31d743536eded333",
+    "web/src/style.css": "e0e0f80418b650726ed86bf39ae3dfffa94289aaa0ad2adb29172c172671bc94",
+    "web/tests/factory.spec.ts": "bdb62a78ae7f19c6b0c965a2712996645661efa9c7f4bad544b949568674f45d",
+    "internal/web/dist/index.html": "f7552680c1c76ada67c38a61717cd37fff61262012db8e0649c8e1cfbd114719",
+    "internal/web/embed.go": "9799bc3d5ae6af90c84c2435ceb5c7cc5669e0c549a4b029865a2e0822b2dc8e",
+    "internal/web/embed_test.go": "c9245443cf4dc8bba561cdb8f60221a15bb945ab18c43b5f29580c485408c803",
+    "internal/transport/mcp.go": "c5387063f76a833e9e0cad284a9d4091dffd0d10ca7605c1f46c9b5a6e5669eb",
+    "internal/transport/mcp_test.go": "3ebaf8daa716aa143461512ce1d71ada92b198b0f93cb5d76d06c7ff34a834bc",
+    "internal/transport/ui_resource_test.go": "fa7b58e83d17bf7081692612614edc2984bfd48c80ced39c419b34005cbd2a02",
+    "docs/ui/design.md": "c264b400f07030a044e353c6cda5df4ac4be855d7bb0289f1050761052f127d5",
+    "docs/ui/entities.json": "64d61a4f322a94aea9e3a4478f2efc3101213a9cbadaf5f838038cee2d862d2b",
+    "docs/glossary/terms.json": "fd0a2947524323b7e72ff238ab82db996f78d6cc3b0de10631d3fa82fbca51e1",
+    "docs/user-flows/catalog.json": "9e64ff2ad8cbb556c6ee4b012c5ca0ca33a1045425d4c95cac162586ff53514d"
+  },
+  "verification": [
+    {
+      "argv": [
+        "python3",
+        "scripts/specs.py",
+        "reconcile",
+        "--base",
+        "HEAD",
+        "--review",
+        "/tmp/cf-separated-review.json"
+      ],
+      "exit_code": 0,
+      "subjects": 17,
+      "log": "2026-10-21-separated-settings-reconciliation.log"
+    },
+    {
+      "argv": [
+        "make",
+        "specs-check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "make",
+        "ci",
+        "FLOW_BASE=HEAD"
+      ],
+      "exit_code": 0,
+      "log": "2026-10-21-separated-settings-ci.log",
+      "coverage": "39 browser tests; Go race/vet, frontend types/build, 201 specification and 20 legacy tests; packaging, six installer cases and compiled MCP/stdio smoke"
+    }
+  ],
+  "fixture_scope": [
+    "Issue and PR original href/host request in 390px light/dark; keyboard focus, no selection/read/New/action-history mutation, no overflow or nested interactive controls",
+    "Host denial and RPC failure have visible errors",
+    "Independent settings document, tool/resource mapping and configuration-only snapshot; no inbox navigation or inline settings; saves remain in settings",
+    "Concurrent task and settings documents retain item selection and message draft during config saves",
+    "Existing draft isolation, explicit Start, uncertain Start recovery, attention context, approval payload, compact navigation and dirty cleanup/Resume cases remain passing"
+  ],
+  "automated_accessibility_scans": [
+    {
+      "screen": "axe-dark-agents",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-detail",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-inbox",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-launch",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-question",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-review",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-settings",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-agents",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-detail",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-inbox",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-launch",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-question",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-review",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-settings",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-github-links-light",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-github-links-dark",
+      "axe_version": "4.14.0",
+      "violations": 0,
+      "incomplete": []
+    }
+  ],
+  "fixture_screenshots": [
+    "2026-10-21-github-links-light.png",
+    "2026-10-21-github-links-dark.png"
+  ],
+  "rollout": {
+    "verified_utc": "2026-10-21T15:40:17.123225+00:00",
+    "before_version": "0.1.0-125bfd2f9079",
+    "installed_version": "0.1.0-3fe6288ffc29",
+    "binary_sha256": "98148008aa5ce1d3be5e645633c567441b16493777fd6389ad9d00a3d1a84821",
+    "archive_sha256": "348a6be8cb1744c9309af6fc3501abbe6e99e01eecee5cbbf3d55123b0633fee",
+    "services": [
+      "active",
+      "active"
+    ],
+    "routes_unchanged": true,
+    "owner_token_registration_gateway_profile_unchanged": true,
+    "provider_paths_unchanged": true,
+    "retained_run_count": 4,
+    "workspace_and_thread_ids_preserved": true,
+    "database_and_gateway_backups_present": true,
+    "ui_resource": "ui://code-factory/inbox-f7552680c1c76ada67c38a61717cd37fff61262012db8e0649c8e1cfbd114719.html",
+    "settings_resource": "ui://code-factory/settings-428239d588a353e45fe27337ffcb77151394d76760d8b43c1d226df15365bb3e.html",
+    "settings_entry_configuration_only": true,
+    "only_pilot_repository": true,
+    "pilot_item_id": "dkropachev/code-factory-pilot-20261019#1",
+    "pilot_item_initially_unread": false
+  },
+  "doctor": {
+    "version": "0.1.0-3fe6288ffc29",
+    "states": {
+      "verified": 12,
+      "unverified": 20
+    },
+    "note": "Unverified acceptance checkpoints remain separate from service health."
+  },
+  "installed_work_smoke": {
+    "existing_signed_in_session_reused": true,
+    "tool_metadata_refreshed": true,
+    "inbox_conversation": "https://chatgpt.com/c/6ad8de04-67d0-83e9-9474-0d786d5d4fcf",
+    "settings_conversation": "https://chatgpt.com/c/6ad8de3d-ba58-83e9-89ec-ba7c591f8e71",
+    "rendered_bundles_match_release": true,
+    "inbox": {
+      "heading": "Inbox",
+      "navigation": [
+        "Inbox",
+        "Agents"
+      ],
+      "settingsForms": 0,
+      "links": [
+        {
+          "text": "GitHub\n\u2197",
+          "label": "Open issue dkropachev/code-factory-pilot-20261019#1 on GitHub",
+          "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/1"
+        },
+        {
+          "text": "GitHub\n\u2197",
+          "label": "Open issue dkropachev/code-factory-pilot-20261019#5 on GitHub",
+          "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/5"
+        },
+        {
+          "text": "GitHub\n\u2197",
+          "label": "Open issue dkropachev/code-factory-pilot-20261019#4 on GitHub",
+          "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/4"
+        },
+        {
+          "text": "GitHub\n\u2197",
+          "label": "Open issue dkropachev/code-factory-pilot-20261019#3 on GitHub",
+          "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/3"
+        },
+        {
+          "text": "GitHub\n\u2197",
+          "label": "Open pull request dkropachev/code-factory-pilot-20261019#2 on GitHub",
+          "href": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/2"
+        }
+      ],
+      "alerts": [],
+      "bundleScriptSHA256": "601cb4c74495aae2e2e0ec3160ee6adc1ad08f3ec5eb4053880ed446de1ff416"
+    },
+    "settings": {
+      "heading": "Settings",
+      "surface": "settings",
+      "navigationCount": 0,
+      "sections": [
+        "Repositories",
+        "Priorities & notifications",
+        "Launch profiles",
+        "Managed skills",
+        "Connection diagnostics"
+      ],
+      "forms": 5,
+      "taskCount": 0,
+      "alerts": [],
+      "bundleScriptSHA256": "601cb4c74495aae2e2e0ec3160ee6adc1ad08f3ec5eb4053880ed446de1ff416"
+    },
+    "link_host_acknowledgement": {
+      "linkActivated": true,
+      "replies": [
+        {
+          "resultKeys": [],
+          "isError": null
+        }
+      ],
+      "heading": "Inbox",
+      "alerts": []
+    },
+    "inbox_after_link": {
+      "heading": "Inbox",
+      "rows": [
+        "Pilot fixture: reconnect revision tracking\ndkropachev/code-factory-pilot-20261019#1\nActed on\nP1",
+        "Pilot fixture: final binary triage matrix 2026-10-21\ndkropachev/code-factory-pilot-20261019#5\nActed on\nP2",
+        "Pilot fixture: current-version inbox acceptance 2026-10-21\ndkropachev/code-factory-pilot-20261019#4\nActed on\nP2",
+        "Pilot fixture: later discovery\ndkropachev/code-factory-pilot-20261019#3\nNew\nP2",
+        "Add a Code Factory enrichment fixture\ndkropachev/code-factory-pilot-20261019#2\nPR\nActed on\nP2"
+      ],
+      "detailCount": 0,
+      "alerts": []
+    },
+    "limitations": "Real host accepted ui/open-link with an empty successful result; destination browser page was not observed in the pilot targets. Fixture tests verify exact issue/PR request payloads. No settings were changed and no agent was started during this smoke. Full lifecycle/provider, Events, login, soak and manual accessibility acceptance were not repeated."
+  },
+  "specifications": {
+    "glossary_terms": 429,
+    "ui_entities": 110,
+    "flows": 15,
+    "policy": "Pinned adoption policy and stable gap IDs retained; fixture results do not close broader installed-host gaps."
+  }
+}

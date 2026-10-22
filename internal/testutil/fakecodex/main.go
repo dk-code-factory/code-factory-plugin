@@ -37,6 +37,17 @@ func main() {
 		if json.Unmarshal(scanner.Bytes(), &m) != nil {
 			os.Exit(3)
 		}
+		if path := os.Getenv("CF_FAKE_RECORD"); path != "" && (m.Method == "thread/start" || m.Method == "thread/resume" || m.Method == "turn/start") {
+			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+			if err != nil {
+				os.Exit(5)
+			}
+			_, err = f.Write(append(append([]byte{}, scanner.Bytes()...), '\n'))
+			_ = f.Close()
+			if err != nil {
+				os.Exit(5)
+			}
+		}
 		reply := func(v any) { send(map[string]any{"id": m.ID, "result": v}) }
 		switch m.Method {
 		case "initialize":

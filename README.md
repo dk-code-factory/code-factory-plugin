@@ -25,15 +25,35 @@ The repository includes a portable plugin manifest and onboarding skill. A cloud
 
 ## Development
 
-Requirements: Python 3 with `python3 -m pip install -r scripts/requirements-dev.txt`, Go 1.26+ (Go's automatic toolchain download works from 1.25), Node.js 22.12+ and npm. Building the frontend is required before compiling changes to the embedded UI.
+[User-flow contracts](docs/user-flows/README.md) map implementation-agnostic
+behavior to code, tests and known gaps. Use the repository
+[reconciliation skill](.agents/skills/reconcile-user-flows/SKILL.md) when changing
+any of these. `make flows-check` checks current edits; `make ci FLOW_BASE=main`
+checks branch changes from their common ancestor and runs full local verification.
+
+The [UI entity specification](docs/ui/README.md) describes widgets and their
+elements, panes, pages/dialogs and connections, with hierarchy/navigation diagrams
+and links to implementation and existing test assertions.
+
+The [maintained specification system](docs/specs/README.md) aligns the
+[glossary](docs/glossary/README.md), UI registry and behavior catalog with one
+reconciliation gate. `make specs-report` shows bounded impact and exact next
+commands; `make specs-gaps` inventories typed open gaps and verification owners.
+UI/behavior registries use version 2 with stable gap IDs and explicit next checks;
+legacy version-1 snapshots remain supported. Use `make specs-validate`,
+`make specs-check` and the fast `make specs-ci`; historical flow commands remain compatible. Project skills and
+five scoped agent definitions document maintenance ownership. CI is deterministic
+and runs without agents or model credentials.
+
+Requirements: Python 3.11+ with `python3 -m pip install -r scripts/requirements-dev.txt`, Go 1.26+ (Go's automatic toolchain download works from 1.25), Node.js 22.12+ and npm. Building the frontend is required before compiling changes to the embedded UI.
 
 ```sh
 make verify
-CODE_FACTORY_REAL_CODEX=1 make verify
+make test-real-provider
 python3 scripts/test_systemd.py
 ```
 
-`make test` runs Go race tests and browser tests. Install the matching Playwright Chromium browser with `cd web && npx playwright install chromium` if it is absent. The opt-in Codex tests include real model task execution, question/answer, skill loading, follow-up, interrupt, resume, stale-answer rejection and priority inference in an isolated local repository. Provider, run, subscription and browser tests use isolated fixtures and do not publish to GitHub or Jira.
+`make test` runs Go race tests and browser tests. Default Make and verify commands force fixture mode, including when `CODE_FACTORY_REAL_CODEX=1` is inherited; real model execution requires `make test-real-provider`. Install the matching Playwright Chromium browser with `cd web && npx playwright install chromium` if it is absent. The opt-in Codex tests include real model task execution, question/answer, skill loading, follow-up, interrupt, resume, stale-answer rejection and priority inference in an isolated local repository. Provider, run, subscription and browser tests use isolated fixtures and do not publish to GitHub or Jira.
 
 For local daemon development:
 

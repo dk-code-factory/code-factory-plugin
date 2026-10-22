@@ -1,0 +1,6 @@
+
+UTC 2026-10-21T03:33:32.603795+00:00
+$ CODE_FACTORY_REAL_CODEX=0 ['python3', 'scripts/specs.py', 'validate']
+{"valid": true, "terms": 391, "entities": 109, "flows": 15}
+
+exit_code=0

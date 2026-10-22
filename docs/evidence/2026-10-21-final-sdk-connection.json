@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-21T04:36:43.835Z",
+  "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+  "sdk": "@modelcontextprotocol/client 2.3.1",
+  "mode": "public-ingress",
+  "checks": [
+    {
+      "name": "public TLS ingress 209.177.145.137",
+      "status": "passed",
+      "remoteAddress": "209.177.145.137"
+    },
+    {
+      "name": "public TLS ingress 199.38.181.54",
+      "status": "passed",
+      "remoteAddress": "199.38.181.54"
+    },
+    {
+      "name": "SDK OAuth discovery, DCR and PKCE setup",
+      "status": "passed"
+    },
+    {
+      "name": "real owner consent and SDK OAuth PKCE token exchange",
+      "status": "passed"
+    },
+    {
+      "name": "SDK transport negotiation",
+      "status": "passed",
+      "server": "code-factory"
+    },
+    {
+      "name": "SDK tool discovery and open_factory",
+      "status": "passed",
+      "toolCount": 24
+    },
+    {
+      "name": "SDK embedded UI resource",
+      "status": "passed"
+    },
+    {
+      "name": "test access and refresh credentials revoked",
+      "status": "passed"
+    }
+  ],
+  "workAcceptance": "unverified: SDK test does not operate a signed-in ChatGPT session",
+  "publicIngress": "verified from this machine using every public DNS IP",
+  "result": "passed",
+  "testClientRegistrationCreated": true
+}

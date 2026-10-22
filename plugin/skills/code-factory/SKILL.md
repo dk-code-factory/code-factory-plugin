@@ -6,7 +6,8 @@ description: Open the Code Factory repository inbox, triage GitHub issues and pu
 Code Factory’s inbox contains GitHub issues and pull requests. It is not an email mailbox. No email address or webmail URL is needed. If this plugin’s tools are absent, report the missing Code Factory connection and guide OAuth setup instead of searching mailbox connections.
 
 Use the Code Factory MCP tools supplied by this plugin. Open `open_factory` for
-the embedded inbox, settings, and agent workspace. Names may carry a host namespace;
+the focused Issues, My PRs, Review PRs and Messages tabs. Item selection opens its conversation with context; opening it does not start work. Use `open_settings` for the separate
+configuration view. Names may carry a host namespace;
 use the tools actually exposed by the installed plugin.
 
 Opening or listing an item never starts work. For a launch request, prepare the
@@ -28,5 +29,5 @@ If tools are unavailable, finish the plugin's connection/setup flow. Use OAuth
 with the bundled HTTPS endpoint and approve in a browser connected to the owner's
 Tailscale network. Never request credentials in chat. Use `diagnostics` for
 observed connection state; local health does not prove Work callbacks or UI
-acceptance. Settings remain in the embedded app, and Jira stays disabled for the
+acceptance. Settings open in their own embedded view, and Jira stays disabled for the
 personal pilot unless the user explicitly changes that scope.

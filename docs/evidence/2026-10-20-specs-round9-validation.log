@@ -1,0 +1,52 @@
+
+UTC 2026-10-21T01:16:21.561079+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 /tmp/code-factory-round9-validation.py
+{
+  "valid": true,
+  "specification_methods_discovered": 119,
+  "new_exact_anchored_methods": 33,
+  "new_scenario_mappings": [
+    "S3"
+  ],
+  "test_modules": {
+    "scripts/test_specs.py": 18,
+    "scripts/test_specs_adoption.py": 4,
+    "scripts/test_specs_baseline_dispatch.py": 8,
+    "scripts/test_specs_ci.py": 10,
+    "scripts/test_specs_cleanup_cancel.py": 2,
+    "scripts/test_specs_dispatch.py": 11,
+    "scripts/test_specs_foundations.py": 9,
+    "scripts/test_specs_go_cache.py": 2,
+    "scripts/test_specs_historical_inputs.py": 5,
+    "scripts/test_specs_policy.py": 7,
+    "scripts/test_specs_render_repair.py": 7,
+    "scripts/test_specs_rendering.py": 10,
+    "scripts/test_specs_retirement.py": 4,
+    "scripts/test_specs_runner.py": 5,
+    "scripts/test_specs_suite_policy.py": 8,
+    "scripts/test_specs_ui_schema.py": 9
+  },
+  "generated_documents": 22,
+  "generated_bytes_current": true,
+  "adoption_unchanged": {
+    "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+    "flows": [
+      "install-connect",
+      "configure-work",
+      "sync-inbox",
+      "triage-inbox",
+      "resolve-priority",
+      "relate-items",
+      "launch-agent",
+      "interact-agent",
+      "answer-attention",
+      "recover-cleanup",
+      "view-live-work",
+      "receive-notifications",
+      "protect-secrets",
+      "operate-installation"
+    ]
+  },
+  "frozen_inputs_unchanged": 24
+}
+exit_code=0

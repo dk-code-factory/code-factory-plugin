@@ -1,0 +1,24 @@
+
+UTC 2026-10-21T00:46:33.134649+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 /tmp/code-factory-review-preflight.py
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'render']
+{"rendered": 22}
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'render']
+{"rendered": 22}
+deterministic_render_documents 22
+COMMAND ['/usr/bin/python3', 'scripts/specs.py', 'validate']
+{"valid": true, "terms": 386, "entities": 109, "flows": 15}
+COMMAND ['/usr/bin/python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py']
+.................................................................................
+----------------------------------------------------------------------
+Ran 81 tests in 7.018s
+
+OK
+COMMAND ['/usr/bin/python3', 'scripts/test_user_flows.py']
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 0.340s
+
+OK
+COMMAND ['git', 'diff', '--check']
+exit_code=0

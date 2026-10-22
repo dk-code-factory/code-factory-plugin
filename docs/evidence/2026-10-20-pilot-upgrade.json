@@ -1,0 +1,170 @@
+{
+  "at": "2026-10-21T03:48:38.040402+00:00",
+  "version": "0.1.0-06d6ed8a13f0",
+  "previous_version": "0.1.0-850eb63cda16",
+  "upgrade_exit": 0,
+  "release_manifest_files_verified": 156,
+  "archive_sha256": "59e8af23d6a74d54927c30653873c7b515045b66c63770359b04478c9b192c9b",
+  "binary_sha256": "0149a08b1f729fe62b18743cb147781fe0f70f2113e18f7eb87bf3b3a6730d77",
+  "doctor_exit": 0,
+  "checks": [
+    {
+      "id": "prerequisite.git",
+      "state": "verified"
+    },
+    {
+      "id": "prerequisite.gh",
+      "state": "verified"
+    },
+    {
+      "id": "prerequisite.codex",
+      "state": "verified"
+    },
+    {
+      "id": "prerequisite.systemctl",
+      "state": "verified"
+    },
+    {
+      "id": "prerequisite.tailscale",
+      "state": "verified"
+    },
+    {
+      "id": "provider.codex",
+      "state": "verified"
+    },
+    {
+      "id": "provider.github",
+      "state": "verified"
+    },
+    {
+      "id": "daemon",
+      "state": "verified"
+    },
+    {
+      "id": "transport.tailscale",
+      "state": "verified"
+    },
+    {
+      "id": "gateway.process",
+      "state": "verified"
+    },
+    {
+      "id": "gateway.readiness",
+      "state": "verified"
+    },
+    {
+      "id": "sync.dkropachev/code-factory-pilot-20261019",
+      "state": "verified"
+    },
+    {
+      "id": "callback.delivery",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.packaging",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.provider",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.ownership",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.tunnel.readiness",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.plugin.fresh-chat",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.inbox",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.priority",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.launch",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.question.answer",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.follow-up",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.callbacks",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.subscription.lifecycle",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.recovery",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.rollback",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.credentials",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.cleanup",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.soak",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance.login",
+      "state": "unverified"
+    },
+    {
+      "id": "acceptance",
+      "state": "unverified"
+    }
+  ],
+  "services": {
+    "code-factory.service": "active",
+    "code-factory-gateway.service": "active",
+    "code-factory-pilot-browser.service": "active"
+  },
+  "routes": {
+    "dkropachev-ai-rig.tail62c9f9.ts.net:10000": {
+      "/": "http://127.0.0.1:8788"
+    },
+    "dkropachev-ai-rig.tail62c9f9.ts.net:443": {
+      "/": "http://127.0.0.1:8644",
+      "/.well-known/oauth-authorization-server/code-factory": "http://127.0.0.1:8788/.well-known/oauth-authorization-server",
+      "/.well-known/oauth-protected-resource/code-factory/mcp": "http://127.0.0.1:8788/.well-known/oauth-protected-resource/mcp",
+      "/code-factory": "http://127.0.0.1:8788"
+    },
+    "dkropachev-ai-rig.tail62c9f9.ts.net:8443": {
+      "/": "http://127.0.0.1:8081"
+    },
+    "dkropachev-ai-rig.tail62c9f9.ts.net:8444": {
+      "/": "http://127.0.0.1:8789"
+    },
+    "dkropachev-ai-rig.tail62c9f9.ts.net:8445": {
+      "/": "http://127.0.0.1:8790"
+    }
+  },
+  "run_status_counts": {
+    "interrupted": 1,
+    "cleaned": 1
+  },
+  "scope": "Installed binary and transport preflight only. Signed-in Work UI, Events, connected soak and login cycle remain unverified for this version."
+}

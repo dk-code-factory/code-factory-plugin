@@ -77,7 +77,7 @@ func run() error {
 		case "/user":
 			fmt.Fprint(w, `{"login":"pilot"}`)
 		case "/repos/pilot/fixture/issues":
-			fmt.Fprint(w, `[{"number":1,"title":"Assembled daemon fixture","body":"Inspect the fixture","state":"open","html_url":"https://github.com/pilot/fixture/issues/1","updated_at":"2026-10-19T12:00:00Z","user":{"login":"pilot"},"labels":[{"name":"P1"}]}]`)
+			fmt.Fprint(w, `[{"number":1,"title":"Assembled daemon fixture","body":"Inspect the fixture","state":"open","html_url":"https://github.com/pilot/fixture/issues/1","updated_at":"2026-10-19T12:00:00Z","user":{"login":"pilot"},"labels":[{"name":"P1"}]},{"number":2,"title":"Fresh first message fixture","body":"Investigate the first-message workflow","state":"open","html_url":"https://github.com/pilot/fixture/issues/2","updated_at":"2026-10-19T12:00:00Z","user":{"login":"pilot"},"labels":[{"name":"P1"}]}]`)
 		default:
 			fmt.Fprint(w, `[]`)
 		}

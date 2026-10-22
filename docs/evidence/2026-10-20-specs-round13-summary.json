@@ -1,0 +1,534 @@
+{
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "generated_documents": 22,
+  "render_unchanged": true,
+  "registry_counts": {
+    "terms": 386,
+    "entities": 109,
+    "flows": 15
+  },
+  "fresh_records": 17,
+  "receipt_errors": [],
+  "records": [
+    {
+      "path": "docs/specs/reconciliations/flow-answer-attention.json",
+      "fingerprint": "5ced2bd7981fec5133be01cbd87e81b258935c1000a58e9d41f5885c37e3a76b",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "6d44322db171b889fa9b98a4c96a3325eb2faeccdead154d40d330dcadc4ef82"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-configure-work.json",
+      "fingerprint": "3ef228c3c3571dbd6543cd6469691148415b04e215128e4fe5877a9072e72c90",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "0cb0a91c31debb893ff4c50492fc9dee2d280cfb5890a6db1a0679caa57f373b"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-install-connect.json",
+      "fingerprint": "daa48d159e058d5d8483621dc96abbbed3e15de67762c94c321b9e82a5538b0a",
+      "review_kind": "adoption",
+      "verification_commands": 4,
+      "sha256": "dc62ecbefc3ea0d36f2712d9c93bf63fce4dad99e584a29345e756985e37adf6"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-interact-agent.json",
+      "fingerprint": "ed3fc02b6e571f7c6c970c8eab4c3217585a1fbf46573b88b3b8ebf5167be219",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "64db60ebf64aa7fc9311e95b9df4c13de8bfed7425b8b921373bf7f472e42fca"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-launch-agent.json",
+      "fingerprint": "2e030354fc4fadeb1a4ceb03ab8f19f4e866f97dfe523d14233b9b0642ca33e6",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "99f26129a997c0c9063b45c372101549a58dc7c6fc16db1ed18911169fe4e742"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-maintain-flow-contracts.json",
+      "fingerprint": "28bb38d48acdc4d925e24c64a23c686fec3f3556c43b61adf986a7176f3220b2",
+      "review_kind": "behavior",
+      "verification_commands": 2,
+      "sha256": "e0460fc743cdc9ee3be914b9f25ed812033cdf0f82d4158d0c96ef91f47cc32d"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-operate-installation.json",
+      "fingerprint": "bb4acbf9b9c81ab050cc6671146d333677ebb5e3ef34a594f9bbe1e6ace25e81",
+      "review_kind": "adoption",
+      "verification_commands": 10,
+      "sha256": "b86752a5afa0fd7c94ecd2db9b0e937f394885aa5a0af8324ea0a1b2da0cc1f7"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-protect-secrets.json",
+      "fingerprint": "591512283c3c3bdad608efa89715603886e23354584edccca8e5e22bb2895fa8",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "1b53ccdeb128408d134907bb017627f0bd1253cf8879a1bcff52327efffb4956"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-receive-notifications.json",
+      "fingerprint": "ad55e7e4ad2922bffccb0ae92d7453f557d1b3c5f07d52094bce82a8ed0be5fe",
+      "review_kind": "adoption",
+      "verification_commands": 3,
+      "sha256": "ede3084d00ebc08fe78c79f11f77d06a6f9c780721c71f522fc8e29aa6d2e8eb"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-recover-cleanup.json",
+      "fingerprint": "42497268ec6735b54d549af377529b3128de0252bc1da4467c3a9fea68ffd516",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "d481a7861eb4d8a7e3899b73927ebacbadd44187a0f42b0d28d9f4fc41f70347"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-relate-items.json",
+      "fingerprint": "e83c64dd2f1afd3c78a9103aedc7a71e9d5178ef971964350b3b4fdbbb1c740d",
+      "review_kind": "adoption",
+      "verification_commands": 3,
+      "sha256": "7ffb57014843ca9341c5fb4d66ead7c99da8b955abd7fe0cdf48e00196c1da0b"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-resolve-priority.json",
+      "fingerprint": "0b1f072f75ed0aec48281d69c0a41b0bc8aad443e53818b882bca81f29ea3c5c",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "c61cff8db8fb535b5c232e639c1efcdb827eff277dc63888c8653537dfe72438"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-sync-inbox.json",
+      "fingerprint": "8f68acd1be6ce2b35121c2b901f028a1bceb7e43e04507436a6d5519610d6eff",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "a3aa6e971874744c030410a3cd0e02329a300dae7e58cd5dc54e6e5eece9018b"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-triage-inbox.json",
+      "fingerprint": "141c36bdcfd2a0f2f9f2a81bc0550918b7a69721fa02a87f5077abc6ad4fc859",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "b60b835bf10435c2a8f04c863707407a39604c51f85f713530f39e303fa00c61"
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-view-live-work.json",
+      "fingerprint": "b4ba9b9f32d09ed62b99ba8aa7846a98c3f73e84b55452d3c050284d5d7786b2",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "ba45b57e10b22930e3cda02802bc1e6587c14b315f4c406b49b5517b88311a2b"
+    },
+    {
+      "path": "docs/specs/reconciliations/glossary.json",
+      "fingerprint": "6d414bb8aaa0867528b404de6e57382111af67a968b6bd5f463c56d99a581944",
+      "review_kind": "adoption",
+      "verification_commands": 2,
+      "sha256": "ff50dda18891dabf7b49d1e6c838d8817b4f48c9858fae22cfe990bc2a3d411d"
+    },
+    {
+      "path": "docs/specs/reconciliations/ui.json",
+      "fingerprint": "ea0d92e1abfe6a06edc5a5ea0539a1a6ceebcf9b74d801c05cacb40a3181a0de",
+      "review_kind": "adoption",
+      "verification_commands": 5,
+      "sha256": "cc9ea014485c99d31e0452794ab622b55b0d01cd9f0a030ae554c4081438aef4"
+    }
+  ],
+  "source_sha256": {
+    "AGENTS.md": "0321ea4e958fc91995c5763828b5843c4c207654b854306966e77e9f2bcbb774",
+    "Makefile": "a5d2c82bc531ba6bc4c160d668bfe54dc13f9a4789c48b33945d4a66b4692370",
+    "scripts/specs.py": "026d6ad2bf851983d55773ef97d6a7532f70ce1e5d48157b4605de3292f4802d",
+    "scripts/user_flows.py": "074d2bce6c61b1689eeee44448e555e18338ce7e9adf561b0aadd1a9ef34691e",
+    "scripts/verify.sh": "2480533212ead3506156d3e1087dcc258f271e0fc97fd02c9929990128bf408a",
+    "scripts/test_user_flows.py": "7e493b8e8eb413ab4ad379cca6e589666e63c88ee73258c419d2a6cd573d2a3a",
+    "scripts/test_installer.py": "3a1c59545740073aeaa6ed5f6a51ff47869d17570c9150a32bd94892c1f1e0e6",
+    "docs/specs/README.md": "8d77bb0ccedebc9b9545af3763bf414e50580e3d3be54763dac43a31646566b4",
+    "docs/user-flows/catalog.json": "74381033ab5e2785f775fc53adb828a8eda18e530a850aebe3315302850827a6",
+    "docs/ui/entities.json": "9f39ea493f3ab7fb8367d5f89f3d48b5a84c16bc53ec8c408deb641360ab66b1",
+    "docs/glossary/terms.json": "86c70773693162f6ae8d377fd5ab4094b813f555539e00dbc51fa5597050cbfa",
+    "web/tests/factory.spec.ts": "35bf2b9711952a62a010ae8d9bda573f66acc6f65d0825c8f6d68050febc0742",
+    "docs/user-flows/maintain-flow-contracts.md": "e835d52bc95c225b5ecf8238fd3a4c25b49e7f288c7f71c1f7bf2402517ac946",
+    "docs/acceptance.md": "a2adf0772b2b64e1d7351ff2aca34f172b17937135055b0c62ec981ec41d847d",
+    "scripts/test_specs.py": "1bc0a398d9a207323908df1a0e06e3c62e546c8799b85a061e62230ea88ff337",
+    "scripts/test_specs_adoption.py": "9ad7adfd7aab39a07686fe763426e2d73a0f03ef07f1e2788517f6358af7a656",
+    "scripts/test_specs_baseline_dispatch.py": "97c733162dc45eba7912df53361c0201d5ec258f2b77fa9c40cd790df7d979f7",
+    "scripts/test_specs_ci.py": "a43b2728ba816a80c107d9622fce0a5c95a6d6b7f23381f2e23778533ddf584d",
+    "scripts/test_specs_cleanup_cancel.py": "caaf0e419b070e937164716b8a31e629b189b7d60fcbc1bccc25265bd0cbd77c",
+    "scripts/test_specs_dispatch.py": "4daf99a052b77f1120cccb5d55bd77c7794ba9b14f65efc2cab6d6929113f7a2",
+    "scripts/test_specs_foundations.py": "e275f21a08e92f47c6a38d2feb8ef416605051af4ad47d399d5cc28712383a97",
+    "scripts/test_specs_go_cache.py": "defc5484f484a27a3a70f6003d27180a67c5ff719df5214741f0f7dbfa265c59",
+    "scripts/test_specs_historical_inputs.py": "516fad2d491f22727fb0949da5311446e6394093908edcc38bcff116f8ead69d",
+    "scripts/test_specs_json_types.py": "dc69ad1667c3d30aadc6dfc354bec35f5a1b8a51fa70a25cf4bad5530418163c",
+    "scripts/test_specs_maintenance_metadata.py": "ceef75a1094e8030a8d12012b3670ced111cf98863431cf742ad79d39158da2b",
+    "scripts/test_specs_markdown_refs.py": "c27ad026a37291443a6da6a7c356b39609b99c6e787814cbde46893598952387",
+    "scripts/test_specs_policy.py": "a46a85f09f38e8017ea85d717aab61d632aaa00ea9caee7346492bb97c055420",
+    "scripts/test_specs_receipt_scalars.py": "1ce12946456466486f856a58011c7dccb1d7c3120a205450a8259fbe0230f06b",
+    "scripts/test_specs_registry_invariants.py": "6918b512585bf70c76624f3869b7a8392602f058750f9c46f14c7de5fce62d13",
+    "scripts/test_specs_render_repair.py": "010a6f50c1ae72ab0d904cc46bd72f6b65a060124ea829d39d4b46c01301e4a4",
+    "scripts/test_specs_rendering.py": "d65d6b272432cad152796084070567167d65fe042de8345075a3bbc2fc59c5fe",
+    "scripts/test_specs_retirement.py": "3bbbee37a2a6d874c76c1bdbfb9bd7b9c4ea6e1c3ab489526bc2fede6ce37163",
+    "scripts/test_specs_runner.py": "d730e0cd7ddae222c81d25314b3b867f9c3ec1830b4544f63a0b3646ca15bf0d",
+    "scripts/test_specs_snapshot_edges.py": "077eaf127208659784cfd9d76fca98e646d05c47542808663d47159a535cfa88",
+    "scripts/test_specs_suite_policy.py": "4b9e30b76960b7d90d961f67d9d9de526c4050f461208b8fd2ec5e37244d14c0",
+    "scripts/test_specs_ui_schema.py": "24d8c52735d2a667b64d7af3e2e81a0b963145f41422ba3d3228a646aa372a13",
+    ".agents/skills/maintain-glossary/SKILL.md": "938fe28cf487eb9ac58f81a11821c449e3bd60d55544f7e339d44a333ffa65c7",
+    ".agents/skills/maintain-ui-specs/SKILL.md": "6eca07dd88e585df0519188f6b2e2d67dac314530621b342cbebc143d76ea137",
+    ".agents/skills/reconcile-specs/SKILL.md": "4c537c4ae18d98493ee3471fc4324a74be2fcc2cb28ac3c5f8a30f5f75dd2e0b",
+    ".agents/skills/reconcile-user-flows/SKILL.md": "72fada689057875e29e79109ed0637d09064e87ada3e829989497ebd53f28d98",
+    ".codex/agents/glossary-maintainer.toml": "a77a3dee1375198cd03f1d742200cc6bd835232587a3de5a1c45cfacaea4316f",
+    ".codex/agents/specification-coordinator.toml": "7399b9615d32c012806b4055cc6ef0b578695f8fa7550256daeb8319828161e7",
+    ".codex/agents/specification-reviewer.toml": "f66dc73c8ad1f8e0a751a472e8d2c1745a013b9b8cdab0bb8fdf63f204c4d84d",
+    ".codex/agents/ui-specification-maintainer.toml": "3375c7dc54cf4d2fb3c709893dc66b4dd7f644ab31d778a0cbdc3f5fe74d13aa",
+    ".codex/agents/user-flow-maintainer.toml": "66682bc4461e70f76fa49a2da7ad35da26179010149d12f4a51306d65c787957"
+  },
+  "frozen_input_hashes": {
+    ".agents/skills/maintain-glossary/SKILL.md": "938fe28cf487eb9ac58f81a11821c449e3bd60d55544f7e339d44a333ffa65c7",
+    ".agents/skills/maintain-ui-specs/SKILL.md": "6eca07dd88e585df0519188f6b2e2d67dac314530621b342cbebc143d76ea137",
+    ".agents/skills/reconcile-specs/SKILL.md": "4c537c4ae18d98493ee3471fc4324a74be2fcc2cb28ac3c5f8a30f5f75dd2e0b",
+    ".agents/skills/reconcile-user-flows/SKILL.md": "72fada689057875e29e79109ed0637d09064e87ada3e829989497ebd53f28d98",
+    ".codex/agents/glossary-maintainer.toml": "a77a3dee1375198cd03f1d742200cc6bd835232587a3de5a1c45cfacaea4316f",
+    ".codex/agents/specification-coordinator.toml": "7399b9615d32c012806b4055cc6ef0b578695f8fa7550256daeb8319828161e7",
+    ".codex/agents/specification-reviewer.toml": "f66dc73c8ad1f8e0a751a472e8d2c1745a013b9b8cdab0bb8fdf63f204c4d84d",
+    ".codex/agents/ui-specification-maintainer.toml": "3375c7dc54cf4d2fb3c709893dc66b4dd7f644ab31d778a0cbdc3f5fe74d13aa",
+    ".codex/agents/user-flow-maintainer.toml": "66682bc4461e70f76fa49a2da7ad35da26179010149d12f4a51306d65c787957",
+    "AGENTS.md": "0321ea4e958fc91995c5763828b5843c4c207654b854306966e77e9f2bcbb774",
+    "Makefile": "a5d2c82bc531ba6bc4c160d668bfe54dc13f9a4789c48b33945d4a66b4692370",
+    "docs/glossary/terms.json": "86c70773693162f6ae8d377fd5ab4094b813f555539e00dbc51fa5597050cbfa",
+    "docs/specs/README.md": "8d77bb0ccedebc9b9545af3763bf414e50580e3d3be54763dac43a31646566b4",
+    "docs/ui/README.md": "e523831945cc528a4e74387020f2406e07e82a20edf210fa9fc58a86ff5f2746",
+    "docs/ui/connections.md": "3a3ec56b3b0e14d577f616787e9d39eeb9474c9944e70c31f02ff4e6b666a010",
+    "docs/ui/entities.json": "9f39ea493f3ab7fb8367d5f89f3d48b5a84c16bc53ec8c408deb641360ab66b1",
+    "docs/ui/pages.md": "70844f16e8c7e0ebc5f0c7b6cfdbf1815a41a644fe1a0867484615d8cf621f79",
+    "docs/ui/panes.md": "82c46dd613e5ae0a24d7815800981c52aad743cd12b7e598650730a84a200e75",
+    "docs/ui/references.md": "54f0690fd26b97051f354a8dee730f965e1930afebcd37a4f8ce5f4e68552a6a",
+    "docs/ui/widgets.md": "d59be9e101c247d960ad3d9953996a8949d439cc6c6d69cdd076f3d63b4e001e",
+    "docs/user-flows/README.md": "d58f88da54de76e7ac7d96df08e8ce3b6b16159b48ec7d2f21a08d7765d6e3cf",
+    "docs/user-flows/answer-attention.md": "9a8e28ffda56886555aee5bdd96e9770b0561bbb20ae5bcbbd0a4453413c17a4",
+    "docs/user-flows/catalog.json": "74381033ab5e2785f775fc53adb828a8eda18e530a850aebe3315302850827a6",
+    "docs/user-flows/configure-work.md": "0a585cf6797e96219b9886e090ed51f65a4f97af7ffa4a527f2d4f1486f93608",
+    "docs/user-flows/install-connect.md": "1ef86c197b356b74b8d56c1fde23cea4f09d0b8adb6c49c5adec6156fe5bcbc8",
+    "docs/user-flows/interact-agent.md": "7e0fa57b35cc4cb0f97a24824475e0d334c55bcd948b95e87381b1c8cedfc67a",
+    "docs/user-flows/launch-agent.md": "a0de20876eca6fbd8dc84b68fd658e37e2187fec966aad0c8d69077c6ab6bbe9",
+    "docs/user-flows/maintain-flow-contracts.md": "e835d52bc95c225b5ecf8238fd3a4c25b49e7f288c7f71c1f7bf2402517ac946",
+    "docs/user-flows/operate-installation.md": "d1f5d5e77dc310ca82995057314c4160039a4a46c6a24f059c3a5ff40aa25ad0",
+    "docs/user-flows/protect-secrets.md": "919d8e98b59f7d5a237f7df452dd4d04bbdac86e5bafcbfbeb1abcc08b4b05a4",
+    "docs/user-flows/receive-notifications.md": "ed4ed03d9ffae7127c2cae8218a72700a2e1b9ae34bf46578d63759d8c06cf4d",
+    "docs/user-flows/recover-cleanup.md": "527deb23e9ce31905133376fd30017a4e8c791814525685f289e84f09cec21a1",
+    "docs/user-flows/relate-items.md": "2f1f8e4851a7fb951cafa922c3a8194967e6311cd783e0b69e1beb7be219ec36",
+    "docs/user-flows/resolve-priority.md": "6cc9cb8167a17602cdd245181041342aee9c47684339776a0f41ffde4b618c2a",
+    "docs/user-flows/sync-inbox.md": "0a63a1fa39d7e7eea0cf5e99b65f76d98f02595fe69acea2a5c94d90fee19718",
+    "docs/user-flows/triage-inbox.md": "0a6b2e29bd689e9ab32a999510569d4d11184310654aba810b8fcb7e523229c1",
+    "docs/user-flows/view-live-work.md": "98d07b13f841dce3a46318516a46a53f50ef2b90ae6cfa5cef7e82ded7c84301",
+    "scripts/specs.py": "026d6ad2bf851983d55773ef97d6a7532f70ce1e5d48157b4605de3292f4802d",
+    "scripts/test_installer.py": "3a1c59545740073aeaa6ed5f6a51ff47869d17570c9150a32bd94892c1f1e0e6",
+    "scripts/test_specs.py": "1bc0a398d9a207323908df1a0e06e3c62e546c8799b85a061e62230ea88ff337",
+    "scripts/test_specs_adoption.py": "9ad7adfd7aab39a07686fe763426e2d73a0f03ef07f1e2788517f6358af7a656",
+    "scripts/test_specs_baseline_dispatch.py": "97c733162dc45eba7912df53361c0201d5ec258f2b77fa9c40cd790df7d979f7",
+    "scripts/test_specs_ci.py": "a43b2728ba816a80c107d9622fce0a5c95a6d6b7f23381f2e23778533ddf584d",
+    "scripts/test_specs_cleanup_cancel.py": "caaf0e419b070e937164716b8a31e629b189b7d60fcbc1bccc25265bd0cbd77c",
+    "scripts/test_specs_dispatch.py": "4daf99a052b77f1120cccb5d55bd77c7794ba9b14f65efc2cab6d6929113f7a2",
+    "scripts/test_specs_foundations.py": "e275f21a08e92f47c6a38d2feb8ef416605051af4ad47d399d5cc28712383a97",
+    "scripts/test_specs_go_cache.py": "defc5484f484a27a3a70f6003d27180a67c5ff719df5214741f0f7dbfa265c59",
+    "scripts/test_specs_historical_inputs.py": "516fad2d491f22727fb0949da5311446e6394093908edcc38bcff116f8ead69d",
+    "scripts/test_specs_json_types.py": "dc69ad1667c3d30aadc6dfc354bec35f5a1b8a51fa70a25cf4bad5530418163c",
+    "scripts/test_specs_maintenance_metadata.py": "ceef75a1094e8030a8d12012b3670ced111cf98863431cf742ad79d39158da2b",
+    "scripts/test_specs_markdown_refs.py": "c27ad026a37291443a6da6a7c356b39609b99c6e787814cbde46893598952387",
+    "scripts/test_specs_policy.py": "a46a85f09f38e8017ea85d717aab61d632aaa00ea9caee7346492bb97c055420",
+    "scripts/test_specs_receipt_scalars.py": "1ce12946456466486f856a58011c7dccb1d7c3120a205450a8259fbe0230f06b",
+    "scripts/test_specs_registry_invariants.py": "6918b512585bf70c76624f3869b7a8392602f058750f9c46f14c7de5fce62d13",
+    "scripts/test_specs_render_repair.py": "010a6f50c1ae72ab0d904cc46bd72f6b65a060124ea829d39d4b46c01301e4a4",
+    "scripts/test_specs_rendering.py": "d65d6b272432cad152796084070567167d65fe042de8345075a3bbc2fc59c5fe",
+    "scripts/test_specs_retirement.py": "3bbbee37a2a6d874c76c1bdbfb9bd7b9c4ea6e1c3ab489526bc2fede6ce37163",
+    "scripts/test_specs_runner.py": "d730e0cd7ddae222c81d25314b3b867f9c3ec1830b4544f63a0b3646ca15bf0d",
+    "scripts/test_specs_snapshot_edges.py": "077eaf127208659784cfd9d76fca98e646d05c47542808663d47159a535cfa88",
+    "scripts/test_specs_suite_policy.py": "4b9e30b76960b7d90d961f67d9d9de526c4050f461208b8fd2ec5e37244d14c0",
+    "scripts/test_specs_ui_schema.py": "24d8c52735d2a667b64d7af3e2e81a0b963145f41422ba3d3228a646aa372a13",
+    "scripts/test_user_flows.py": "7e493b8e8eb413ab4ad379cca6e589666e63c88ee73258c419d2a6cd573d2a3a",
+    "scripts/user_flows.py": "074d2bce6c61b1689eeee44448e555e18338ce7e9adf561b0aadd1a9ef34691e",
+    "scripts/verify.sh": "2480533212ead3506156d3e1087dcc258f271e0fc97fd02c9929990128bf408a",
+    "web/tests/factory.spec.ts": "35bf2b9711952a62a010ae8d9bda573f66acc6f65d0825c8f6d68050febc0742"
+  },
+  "rendered_documents_sha256": {
+    "docs/glossary/README.md": "378db9604b6e5035ff586b28626e3ca435d77fb3a72d0c1335012676491a2736",
+    "docs/ui/widgets.md": "d59be9e101c247d960ad3d9953996a8949d439cc6c6d69cdd076f3d63b4e001e",
+    "docs/ui/panes.md": "82c46dd613e5ae0a24d7815800981c52aad743cd12b7e598650730a84a200e75",
+    "docs/ui/pages.md": "70844f16e8c7e0ebc5f0c7b6cfdbf1815a41a644fe1a0867484615d8cf621f79",
+    "docs/ui/connections.md": "3a3ec56b3b0e14d577f616787e9d39eeb9474c9944e70c31f02ff4e6b666a010",
+    "docs/ui/references.md": "54f0690fd26b97051f354a8dee730f965e1930afebcd37a4f8ce5f4e68552a6a",
+    "docs/ui/README.md": "e523831945cc528a4e74387020f2406e07e82a20edf210fa9fc58a86ff5f2746",
+    "docs/user-flows/install-connect.md": "1ef86c197b356b74b8d56c1fde23cea4f09d0b8adb6c49c5adec6156fe5bcbc8",
+    "docs/user-flows/configure-work.md": "0a585cf6797e96219b9886e090ed51f65a4f97af7ffa4a527f2d4f1486f93608",
+    "docs/user-flows/sync-inbox.md": "0a63a1fa39d7e7eea0cf5e99b65f76d98f02595fe69acea2a5c94d90fee19718",
+    "docs/user-flows/triage-inbox.md": "0a6b2e29bd689e9ab32a999510569d4d11184310654aba810b8fcb7e523229c1",
+    "docs/user-flows/resolve-priority.md": "6cc9cb8167a17602cdd245181041342aee9c47684339776a0f41ffde4b618c2a",
+    "docs/user-flows/relate-items.md": "2f1f8e4851a7fb951cafa922c3a8194967e6311cd783e0b69e1beb7be219ec36",
+    "docs/user-flows/launch-agent.md": "a0de20876eca6fbd8dc84b68fd658e37e2187fec966aad0c8d69077c6ab6bbe9",
+    "docs/user-flows/interact-agent.md": "7e0fa57b35cc4cb0f97a24824475e0d334c55bcd948b95e87381b1c8cedfc67a",
+    "docs/user-flows/answer-attention.md": "9a8e28ffda56886555aee5bdd96e9770b0561bbb20ae5bcbbd0a4453413c17a4",
+    "docs/user-flows/recover-cleanup.md": "527deb23e9ce31905133376fd30017a4e8c791814525685f289e84f09cec21a1",
+    "docs/user-flows/view-live-work.md": "98d07b13f841dce3a46318516a46a53f50ef2b90ae6cfa5cef7e82ded7c84301",
+    "docs/user-flows/receive-notifications.md": "ed4ed03d9ffae7127c2cae8218a72700a2e1b9ae34bf46578d63759d8c06cf4d",
+    "docs/user-flows/protect-secrets.md": "919d8e98b59f7d5a237f7df452dd4d04bbdac86e5bafcbfbeb1abcc08b4b05a4",
+    "docs/user-flows/operate-installation.md": "d1f5d5e77dc310ca82995057314c4160039a4a46c6a24f059c3a5ff40aa25ad0",
+    "docs/user-flows/maintain-flow-contracts.md": "e835d52bc95c225b5ecf8238fd3a4c25b49e7f288c7f71c1f7bf2402517ac946"
+  },
+  "compiled_package_version": "0.1.0-850eb63cda16",
+  "plugin_version": "0.2.2",
+  "adoption": {
+    "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+    "flows": [
+      "install-connect",
+      "configure-work",
+      "sync-inbox",
+      "triage-inbox",
+      "resolve-priority",
+      "relate-items",
+      "launch-agent",
+      "interact-agent",
+      "answer-attention",
+      "recover-cleanup",
+      "view-live-work",
+      "receive-notifications",
+      "protect-secrets",
+      "operate-installation"
+    ]
+  },
+  "checkpoint": "round13 registry ownership, typed receipt evidence and interrupted installation recovery",
+  "date_local": "2026-10-20",
+  "timezone": "America/Santo_Domingo",
+  "recorded_at_utc": "2026-10-21T02:34:19.684994+00:00",
+  "scope": "Frozen current source and documentation verified by required reconciliation, one final full branch CI and required fast/compatibility/static/freshness checks. Fixture evidence leaves installed-version and real-host acceptance gaps open.",
+  "fixture_environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "branch": "feat/aligned-specifications",
+  "head": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "main": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "new_anchored_methods": {
+    "registry_invariants": 12,
+    "receipt_scalars": 3,
+    "contributor_total": 15,
+    "scope": "S1 covers actual owned/historical test impact and independent consumer isolation. Historical structural cleanup also exercises S2. Registry/scalar/receipt failure and freshness assertions map S3; no new target-selection claim. The hidden declared assertion is not executed by ownership metadata fixtures."
+  },
+  "registry_scope": "Same-scope names/aliases compare after case folding, whitespace normalization and NFC, preserving original display spelling and separate scopes. Current UI assertion inventories require entity owners; displayed instances require exact nonempty text id/type/pane/repeat fields. Historical ownerless definitions and before content identities conservatively select existing UI subjects/consumers, or existing flows in a UI-free registry. Old paths retain freshness and content/absence without supplying behavioral cochanges; ordinarily owned assertions retain precise entity impact.",
+  "receipt_scope": "Glossary, UI, catalog and receipt versions require exact JSON integer one. Required successful verification statuses require exact JSON integer zero. Boolean/float equality coercions fail both helper and actual legacy/unified CLI checks without evidence rewrites; restoring actual generated valid receipts passes.",
+  "installer_scope": {
+    "product_assertion_anchor": "def test_interrupted_upgrade_pending_state_restores_database_and_archives_new_state(",
+    "scenario": "operate-installation:S1",
+    "boundary": "An isolated process-backed service-restart gate hard-kills the activated upgrade before installation.json commit, retaining pending.json and compatible backup. Fresh rollback must select pending state because the committed installation has no previous release; old database sentinel/health restore, post-kill mutation archive, unchanged owner token and pending removal are asserted.",
+    "supervision": "A private short-lived subreaper supervises the probe and reaps detached owned children on bounded timeout, caller SIGINT/SIGTERM and success. One inert supervisor method exercises four modes; this is fixture cleanup coverage rather than additional product interruption stages.",
+    "retained_gaps": [
+      "Other interruption stages",
+      "Power loss or storage durability failures",
+      "Recovery through real user systemd",
+      "Coordinated desktop logout/login"
+    ]
+  },
+  "documentation_corrections": {
+    "launch": "Only prepared Start queues work; later requests reject. A lost first response can leave active work with review open; existing browser tests submit Start once and do not prove repeat or lost-response recovery.",
+    "cleanup": "Cleanup retires retained session, stales pending requests and stores interrupted before dirty workspace removal can fail. Dirty refusal preserves files but continuing needs Resume; post-refusal session/status/Resume assertions remain gaps.",
+    "secrets": "Expiry/reachability/origin/single-use belong to the temporary tunnel form. Jira uses a reusable nonempty password input clearing on success; repeated/invalid/failed saves remain browser gaps.",
+    "installation": "The new hard-kill assertion covers one pending-operation boundary only, distinct from existing returned-failure automatic recovery."
+  },
+  "independent_closure_reviews": {
+    "findings": 0,
+    "scope": "Root reported independent closure of registry/receipt invariants, historical orphan-removal CLI/freshness/behavior-ownership precision, source-fidelity documentation and bounded installer assertions/supervisor timeout/INT/TERM/success cleanup. These reviews do not claim exhaustive absence of defects."
+  },
+  "retained_historical_checkpoint": {
+    "summary": "docs/evidence/2026-10-20-specs-round12-summary.json",
+    "scope": "Preserves prior 145-specification/20-legacy verification and its original source scope; superseded for current source freshness by round13."
+  },
+  "review_input": {
+    "path": "/tmp/code-factory-round13-review.json",
+    "sha256": "f1ca78dbb699f5850da38386d7706d50b9c129b07a062d4f878fcd0820b0e653",
+    "subjects": 17,
+    "classifications": "Sixteen original-baseline foundation/product adoption reviews and one contributor behavior review with related source and meaningful tests."
+  },
+  "not_executed": [
+    "Real-provider lifecycle/model calls",
+    "Installed-provider handshake guarded by CODE_FACTORY_REAL_CODEX=1",
+    "Deployed public OAuth/MCP probes",
+    "Owner Chrome/authentication actions",
+    "Installed service changes or deployment"
+  ],
+  "remaining_acceptance": [
+    "Real-host event subscription/callback lifecycle",
+    "Accessibility acceptance",
+    "One-hour connected soak",
+    "Coordinated logout/login",
+    "Other current acceptance-ledger gaps"
+  ],
+  "browser_scope": "Controlled Node host retains original run/transcript/choices/request across host/iframe reload with one prepare/start/answer and same-run follow-up; this is not daemon restart or real-host/tunnel/failed-poll recovery.",
+  "expected_negative_output": "Offline ingress-negative regressions print simulated FAILED/public TLS messages while assertions pass; no deployed public probe ran.",
+  "runtime_action": "No installed runtime, credentials, authentication or owner browser session changed.",
+  "tests": {
+    "specification": 160,
+    "legacy_flow": 20,
+    "tooling_total": 180,
+    "playwright_browser": 3,
+    "installer": 6,
+    "installer_process_fixture_methods": 5,
+    "installer_supervisor_methods": 1,
+    "installer_supervisor_modes": 4,
+    "packaging": 5,
+    "offline_ingress_regressions": 3,
+    "offline_connection_probe_regressions": 2,
+    "node_browser_lab": 4,
+    "skills": 4,
+    "agent_toml": 5,
+    "local_links_and_anchors": 976
+  },
+  "final_commands": [
+    {
+      "command": [
+        "python3",
+        "scripts/specs.py",
+        "reconcile",
+        "--base",
+        "main",
+        "--merge-base",
+        "--review",
+        "/tmp/code-factory-round13-review.json"
+      ],
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-round13-reconciliation.log"
+    },
+    {
+      "command": [
+        "make",
+        "ci",
+        "FLOW_BASE=main"
+      ],
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-round13-ci.log"
+    },
+    {
+      "commands": [
+        [
+          "make",
+          "specs-ci",
+          "FLOW_BASE=main"
+        ],
+        [
+          "make",
+          "flows-validate"
+        ],
+        [
+          "make",
+          "flows-check",
+          "FLOW_BASE=main"
+        ],
+        [
+          "python3",
+          "scripts/user_flows.py",
+          "validate"
+        ],
+        [
+          "python3",
+          "scripts/user_flows.py",
+          "check",
+          "--base",
+          "main",
+          "--merge-base"
+        ]
+      ],
+      "exit_code": 0,
+      "log": "docs/evidence/2026-10-20-specs-round13-aliases.log"
+    }
+  ],
+  "executed_reconciliation_commands": [
+    [
+      "go",
+      "build",
+      "-o",
+      "bin/fake-codex",
+      "./internal/testutil/fakecodex"
+    ],
+    [
+      "npm",
+      "--prefix",
+      "web",
+      "test"
+    ],
+    [
+      "go",
+      "test",
+      "-race",
+      "-count=1",
+      "./..."
+    ],
+    [
+      "python3",
+      "scripts/test_user_flows.py"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_specs*.py"
+    ],
+    [
+      "python3",
+      "scripts/test_packaging.py"
+    ],
+    [
+      "make",
+      "build"
+    ],
+    [
+      "python3",
+      "scripts/package.py"
+    ],
+    [
+      "python3",
+      "scripts/test_installer.py"
+    ],
+    [
+      "python3",
+      "scripts/smoke.py"
+    ],
+    [
+      "python3",
+      "scripts/test_live_connection_test.py"
+    ],
+    [
+      "python3",
+      "scripts/test_connection_probe.py"
+    ],
+    [
+      "node",
+      "--test",
+      "scripts/test_browser_lab.mjs"
+    ]
+  ],
+  "verification_logs": [
+    {
+      "path": "docs/evidence/2026-10-20-specs-round13-validation.log",
+      "sha256": "f22d1365a6445da418202fb27b414ca14f38f2b0caed4d67a3ed140a6c7ecb6b"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round13-reconciliation.log",
+      "sha256": "265c5c523fc725dfdc670f5a86edc4d6e4df71e1fa12f930f79a832da41cf346"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round13-ci.log",
+      "sha256": "3d818feef573726eaeeca5dee750ef36b2b169d181acf9288683a4034f273ff4"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round13-aliases.log",
+      "sha256": "bd824a2e22c0a76b16b64f5fbd90f8c9af8abaf52c425edb9eedb8e0b7f84122"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round13-skills.log",
+      "sha256": "79d274c4a6d050bf80ab54037ab42dfa54da6c6ea9f7636d1a92648930a20c14"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round13-links.log",
+      "sha256": "d632d9a6d6bdace6e9f8d923db865a2cdcde6f2e14de0fe3ccbf6d32f2063896"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-round13-freshness.log",
+      "sha256": "6c655f9715a996c8c9e1769aa898c309eff8bb3f6296ee93842f0c86df907607"
+    }
+  ]
+}

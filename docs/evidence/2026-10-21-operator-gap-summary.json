@@ -1,0 +1,142 @@
+{
+  "at": "2026-10-21T05:43:07.397876+00:00",
+  "installed_version": "0.1.0-e945f9020696",
+  "scope": "Structural narrowing of two stale gap reasons to dated actual operator soak/connect-src evidence; no source/test/runtime or product behavior change.",
+  "subjects": [
+    "flow-install-connect",
+    "flow-view-live-work"
+  ],
+  "gap_ids": [
+    "gap-flow-install-connect-s3-01",
+    "gap-flow-view-live-work-s3-01"
+  ],
+  "notes": "Completed soak is bounded dated evidence; hidden/disconnected/backoff assertions remain gaps. Actual connect-src denial plus restored account setting does not prove every CSP directive, manual accessibility or complete host acceptance. Login gap unchanged, awaiting owner timing.",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "all_subjects_fresh": 17,
+  "errors": [],
+  "generated_documents": 22,
+  "generated_current": true,
+  "tests": {
+    "specification": 201,
+    "legacy": 20,
+    "browser": 13,
+    "packaging": 5
+  },
+  "source_test_hashes_unchanged": true,
+  "reconciliation_log": {
+    "path": "docs/evidence/2026-10-21-operator-gap-reconciliation.log",
+    "sha256": "9622e44f3b76152a9e381712329805532fdd7383453e85b35e7f9079be4f247e"
+  },
+  "records": [
+    {
+      "path": "docs/specs/reconciliations/flow-install-connect.json",
+      "sha256": "fed149148c0a4fa5cd56b8e6acfef081672acc5f350622c78cb118d2f331c89b",
+      "fingerprint": "900327a29a2017663c8d36b2c4d18e0a4d5a8f6ec2cdb4904a2bc37173c3e94a",
+      "review_kind": "structure",
+      "commands": [
+        [
+          "go",
+          "test",
+          "-race",
+          "-count=1",
+          "./..."
+        ],
+        [
+          "python3",
+          "scripts/test_packaging.py"
+        ],
+        [
+          "python3",
+          "scripts/test_user_flows.py"
+        ],
+        [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "scripts",
+          "-p",
+          "test_specs*.py"
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/reconciliations/flow-view-live-work.json",
+      "sha256": "ce64f8a7d941da89c43d769d6c3ea766f6c975adbd2753519e4c5bfff5d379c5",
+      "fingerprint": "b49babec9f28894d89f98edb712b2e0e1313c3b02277620ce3f47447b4de9285",
+      "review_kind": "structure",
+      "commands": [
+        [
+          "go",
+          "build",
+          "-o",
+          "bin/fake-codex",
+          "./internal/testutil/fakecodex"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "web",
+          "test"
+        ],
+        [
+          "go",
+          "test",
+          "-race",
+          "-count=1",
+          "./..."
+        ],
+        [
+          "python3",
+          "scripts/test_user_flows.py"
+        ],
+        [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "scripts",
+          "-p",
+          "test_specs*.py"
+        ]
+      ]
+    }
+  ],
+  "immutable_archive": {
+    "path": "/tmp/code-factory-immutable-packages/0a103d97365d6a6139946e8171662cec7fe897650d0f9d5b2d28d4aed0e1e64a.tar.gz",
+    "sha256": "0a103d97365d6a6139946e8171662cec7fe897650d0f9d5b2d28d4aed0e1e64a",
+    "mode": "0o400"
+  },
+  "published_archive_unchanged": true,
+  "not_run": [
+    "Full CI",
+    "Release packaging",
+    "Installed/service/browser commands"
+  ],
+  "operator_evidence": [
+    {
+      "path": "docs/evidence/2026-10-21-connected-soak.json",
+      "sha256": "840cd3e0f811dce7a964ac7e96c2d955af4c2794d62f5f43b67d63bed3d1e7c9"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-work-csp.json",
+      "sha256": "bbbe2778a079a512fa78946a9a0e0b0da35c5e55b0e4479ea6acc157bf4b5bb5"
+    }
+  ],
+  "historical_summaries_unchanged": [
+    {
+      "path": "docs/evidence/2026-10-21-specs-ui-resource-summary.json",
+      "sha256": "0f60fa39e632750f7486c54e7a930d026f2845ed8ad16f59f2e98b503c4adf1e"
+    },
+    {
+      "path": "docs/evidence/2026-10-21-specs-live-background-summary.json",
+      "sha256": "4abc2b9c4be05a2b7e2cd9ef2e42bbf2c308a261d5a5204bf605da7e8b6463c2"
+    },
+    {
+      "path": "docs/evidence/2026-10-20-specs-features-summary.json",
+      "sha256": "9ed176808f9e0be3c6dc2c78c5d5858250fb42671e5096b5972271dedadda16b"
+    }
+  ]
+}

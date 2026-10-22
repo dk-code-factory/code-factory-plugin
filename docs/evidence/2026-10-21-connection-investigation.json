@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-21",
+  "observed_version": "0.1.0-c0601b8f3508",
+  "conversation": "https://chatgpt.com/c/6ad8f51d-2af8-83ea-b1d5-a07f06960ecf",
+  "browser_initial": {
+    "heading": "Issues",
+    "status": [
+      "Connected"
+    ],
+    "alerts": [
+      "Error: McpServerError: Connection failed.\u00d7"
+    ],
+    "watch": {
+      "started": "2026-10-21T17:56:47.590Z",
+      "responses": 0,
+      "errors": []
+    }
+  },
+  "browser_later": {
+    "at": "2026-10-21T18:03:38.593Z",
+    "status": [
+      "Connected"
+    ],
+    "alerts": [
+      "Error: McpServerError: Connection failed.\u00d7"
+    ],
+    "watch": {
+      "started": "2026-10-21T17:56:47.590Z",
+      "responses": 263,
+      "errors": []
+    }
+  },
+  "finding": "Confirmed stale shared connection/read error while connected: 263 RPC replies with no new JSON-RPC errors over the bounded watch, while the same error banner remained.",
+  "gateway_mcp_502_utc": [
+    "2026-10-21T16:55:17.371876Z",
+    "2026-10-21T17:07:02.854437Z",
+    "2026-10-21T17:07:09.132767Z",
+    "2026-10-21T17:07:14.137646Z"
+  ],
+  "daemon_restarts": "Only authorized upgrades at 16:35:58 and 17:23:15 UTC; no crash/oom evidence observed.",
+  "network": "Tailscale Running, online, health warnings empty during investigation. Current public TLS/OAuth/MCP check passed both ingress peers and revoked ephemeral credentials.",
+  "limitations": "Old proxy logs contain only HTTP 502, not underlying error classes: cancellation versus upstream connection failure cannot be attributed retrospectively. Browser replies count JSON-RPC responses; no response bodies or credentials recorded. Earlier physical network interruption is separately dated in tailscale-recovery evidence."
+}

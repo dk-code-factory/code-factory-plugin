@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "flow": "flow-operate-installation",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "7f7fa3db8d56bb2066c425aa6f8b3a92f2f61472af5bf6aa1a95a5a20030ff7d",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "kind": "behavior",
+    "description": "Operational proxy diagnosis now distinguishes client cancellation, deadlines, refused local daemon, reset, EOF and timeout using fixed safe categories and numeric request latency; installation and repair scope stay unchanged.",
+    "implementation": "Inspected web/src/bridge.ts bounded known-read retries and rejected-handshake replacement, Factory poll/action separation, ItemDetail/Agent local read recovery, plus gateway proxyError fixed-class logging and audit numeric duration. Start/Send/answers/saves are never automatically retried, and no auth material enters the iframe or logs.",
+    "tests": "Read six UI-CONNECT browser cases: three failed initial handshakes then recovery; polling outage and draft preservation; item read recovery with one displayed-revision read; transcript retention; uncertain Send once with surviving error; and tool-result Connection failed text not retried. Gateway tests classify seven failure categories, exclude hidden request/error values and preserve 502/streaming; audit tests assert nonnegative numeric latency and no request details. Existing flow assertions and stable manual/host gaps remain."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "build",
+        "-o",
+        "bin/fake-codex",
+        "./internal/testutil/fakecodex"
+      ],
+      "exit_code": 0,
+      "seconds": 0.141
+    },
+    {
+      "command": [
+        "npm",
+        "--prefix",
+        "web",
+        "test"
+      ],
+      "exit_code": 0,
+      "seconds": 74.344
+    },
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-count=1",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 2.812
+    },
+    {
+      "command": [
+        "make",
+        "build"
+      ],
+      "exit_code": 0,
+      "seconds": 2.188
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/package.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.287
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_installer.py"
+      ],
+      "exit_code": 0,
+      "seconds": 21.266
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/smoke.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.181
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_live_connection_test.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.161
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_connection_probe.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.665
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_browser_lab.mjs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.201
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "scripts/test_browser_control.mjs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.161
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_user_flows.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.205
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_specs*.py"
+      ],
+      "exit_code": 0,
+      "seconds": 24.433
+    }
+  ],
+  "dependencies": {
+    "flow:operate-installation": "ea6b9b8aadcacce94dc43fbce44f1a72c5f9904d2a216c0f27aeb6d5c744a41b",
+    "term:connection-refreshes": "1a1ee2488968226bf8cd841af18cd333ceafc1a3049bbbac10519d9a05cb04e6",
+    "term:connection-submits": "1d8e6728ccc82c540824460edf7e4886fb1f4ae9d23bef1ed5ee06279e5760ea",
+    "term:coverage-gap": "26ab80ee06df75dfa45c1b0ad03d0e1197b7de001c52d1afc64207aa3572d2ed",
+    "term:element-w-browser-lab-key-controls": "d3706e1fe65fb93852abfb4e72a2a0faf772f122cfe7b51d2773062ba4b31faf",
+    "term:element-w-browser-lab-location": "7ea08df1a4dd9d56acd92039ded5c1794de7ccf1fc9f0b1020bfbf73c15cf6ab",
+    "term:element-w-browser-lab-message": "6a10f125aa9d204b6de7036857c87ebe59808b26af6e4b62c6983196ac69374e",
+    "term:element-w-browser-lab-navigate": "111adf8294cb937c68cea8fd6563ea6cdb76b042f90f7fb714446d037d922f81",
+    "term:element-w-browser-lab-refresh": "afccd70399db87bb304424b95c65ca38d042e3703bbfbb24496435a8c36cf716",
+    "term:element-w-browser-lab-screenshot": "34f70b694b00551bf23a00c829e9ea2def56563b5c5d7cd7404bd653cd3ec2a8",
+    "term:element-w-browser-lab-scroll-up-down": "7e7a080b154c3650bd3e86f3720c79d3aaa00ffb79bf50ba1bb3aa01f57ab6ca",
+    "term:element-w-browser-lab-send-text": "f945dc73861114078fe6dcdbf170d380bcaa13b00e92cc45b7694fde07b907cb",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "8c92f6ad68382a91aa5d9e445c6e6129b64fe67465fcead9441348fd9cdbe6c3",
+    "term:element-w-browser-lab-text-to-send": "d29030eb096775a36adce653d396562efa439ef7007cf57b10c0601214f0f140",
+    "term:element-w-browser-lab-url": "68d8f74ee4938de125f92822d0e44b8282b36d3d72423b9bd71818d3da1bcda6",
+    "term:element-w-diagnostics-check-connection": "0cbcb268f04d89fd340197477535164e0e37b20ba2920889429d2ca6e7a56144",
+    "term:element-w-diagnostics-check-id": "db8ff00c34b30d83be380f47ae666d5d9d3e82d843943fa414bfceeaf4c0d13f",
+    "term:element-w-diagnostics-check-state": "90f225049141183ebbf1cd40ae985b7b1e3dd80ae8ab641a73be03a30539b0de",
+    "term:element-w-diagnostics-detail": "806a0a4bfc8c9f31c42e872c6897553339325ded5ccaac2b5dbe1242e7186ff3",
+    "term:element-w-diagnostics-provider-sign-in-help": "54a951dead24a0a65c82b73d5bdd6bce12f59960b7c150ea345853e9b3edc3d8",
+    "term:element-w-diagnostics-timestamp": "ba40cc16ec062a3fbffd4649d154eb6d531e6bb0fe5e082758cef621e90bcffc",
+    "term:element-w-diagnostics-version": "891403c47ed15d6229d1715f9460583076928b9133c74a3410f723995c31b8d9",
+    "term:owner": "f6bd984e4509b5c66c89b759a3ee5f8e9b257f2225678b9847a47e0f76071727",
+    "term:state-failed": "b48e1d68900837418fa15c35c27d58d33a016e83e9aed1eb90434d377a949927",
+    "term:state-unverified": "739e18edc622212b47e7c74817d0813eff04025ed6b930d6fbeac49486316f76",
+    "term:state-verified": "d77c0efc1e0e9372700b4fbcb694d63dba3bb6380e03b7149b6a3588e82c15a0",
+    "term:ui-c-browser-lab": "4b8f8e42aaa2be6efa4824ea020dbad7ba5053d448c7be4356cf621449f36148",
+    "term:ui-c-diagnose": "793a234da8135457d461c7489e8ed830a63899c16c0666901b330495ef15f5c6",
+    "term:ui-p-browser-lab": "b39d62d81c616b905ac47b6cf78e396a40ffa425d9736c310d12084ee3bc0fe4",
+    "term:ui-p-diagnostics": "079768c0a4d65452130e871833a269d291b618f4d3f1eee0da7f0b2cc6705a15",
+    "term:ui-page-browser-lab": "822eea47a34b8aa14bfdf54cc17b86dd6c2174410ba8012618f210b411970b96",
+    "term:ui-w-browser-lab": "ef6788cf8090482eca21eb2edb182d47efe00a79478e7ce5a929739c1965cc8e",
+    "term:ui-w-diagnostics": "f0be35d687b8e596611b92f5e0503fcef8343aef3ef568bd20775fefb1936026",
+    "term:unverified-behavior": "3750689759ebf9872ccba3195ef8de3aa59d46f410bf4b1f53f23e3b723b3a82",
+    "term:verification": "a718fdfbc205c822098d870a89d034a4a752b02aa73b6e0479a18a4dd24a66ee",
+    "ui:C-BROWSER-LAB": "5c4a143e48569350889b4f11d3bc0f21d0e144011d8bc32b5a6374c970124f6e",
+    "ui:C-DIAGNOSE": "1823983adefa55ef7a168b66ffd750fa9e39087895628ddf431caa8743429305",
+    "ui:P-BROWSER-LAB": "3c8e518664c84f0f9c572eb6198d946acee62fb1b57d7813638c18559b4401d9",
+    "ui:P-DIAGNOSTICS": "cc8f12ddc10dd4893f9ff279ca3b2e8de58a0d9cde1c734325cc244db778bb06",
+    "ui:PAGE-BROWSER-LAB": "f9804f69608c61e90f42dc7c388a2b41ad5470c5db2358b1a8600779c61221a1",
+    "ui:W-BROWSER-LAB": "8824577f74c7e69db314b00ba5533a0f8d806015b499627f43d6528d091b7f13",
+    "ui:W-DIAGNOSTICS": "2d1f57f2cc2c5c5c44938c1801d60ec34fae1abdb707bccb4bcbef95989abd1a"
+  }
+}

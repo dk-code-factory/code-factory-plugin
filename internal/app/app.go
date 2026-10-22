@@ -122,6 +122,23 @@ func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, err
 	if e != nil {
 		return nil, e
 	}
+	links, e := store.List[domain.Relationship](ctx, a.Store, "relationship")
+	if e != nil {
+		return nil, e
+	}
+	kinds := map[string]string{}
+	for _, item := range items {
+		kinds[item.ID] = item.Kind
+	}
+	hasPR := map[string]bool{}
+	for _, link := range links {
+		if kinds[link.Source] == "pr" {
+			hasPR[link.Target] = true
+		}
+		if kinds[link.Target] == "pr" || strings.Contains(link.Evidence, "github.com/") && strings.Contains(link.Evidence, "/pull/") {
+			hasPR[link.Source] = true
+		}
+	}
 	out := []domain.InboxEntry{}
 	for _, i := range items {
 		if state != "all" && i.State != "open" {
@@ -135,7 +152,7 @@ func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, err
 		if e = a.Store.Get(ctx, "assessment", i.ID, &assess); e != nil && !errors.Is(e, store.ErrNotFound) {
 			return nil, e
 		}
-		entry := domain.InboxEntry{Item: i, User: u, Unread: u.ReadRevision != i.Revision, Assessment: assess, PrioritySource: "pending"}
+		entry := domain.InboxEntry{HasPullRequest: hasPR[i.ID], Item: i, User: u, Unread: u.ReadRevision != i.Revision, Assessment: assess, PrioritySource: "pending"}
 		if u.Override != nil {
 			entry.Priority = u.Override
 			entry.PrioritySource = "override"
@@ -290,6 +307,28 @@ func (a *App) Sync(ctx context.Context) error {
 		}
 		return e
 	}
+	viewer := domain.GitHubViewer{Login: user, Teams: []string{}}
+	var previous domain.GitHubViewer
+	if err := a.Store.Get(ctx, "identity", "github", &previous); err != nil && !errors.Is(err, store.ErrNotFound) {
+		return err
+	}
+	if previous.Login == user {
+		viewer = previous
+	}
+	saveViewer := func() error {
+		if string(raw(viewer)) == string(raw(previous)) {
+			return nil
+		}
+		if err := a.Store.Put(ctx, "identity", "github", viewer, "identity.changed"); err != nil {
+			return err
+		}
+		previous = viewer
+		return nil
+	}
+	if err := saveViewer(); err != nil {
+		return err
+	}
+	teamsChecked := false
 	for _, r := range repos {
 		if time.Now().Before(r.RetryAt) {
 			continue
@@ -307,6 +346,24 @@ func (a *App) Sync(ctx context.Context) error {
 				return e
 			}
 			continue
+		}
+		if !teamsChecked {
+			for _, item := range items {
+				if len(item.ReviewTeams) == 0 {
+					continue
+				}
+				teamsChecked = true
+				teams, err := a.GitHub.Teams(ctx)
+				viewer.Teams = teams
+				viewer.TeamError = ""
+				if err != nil {
+					viewer.TeamError = "Team review requests unavailable: " + err.Error()
+				}
+				if err := saveViewer(); err != nil {
+					return err
+				}
+				break
+			}
 		}
 		if e = a.Import(ctx, r, items, user, at, full); e != nil {
 			return e

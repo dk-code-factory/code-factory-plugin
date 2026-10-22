@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "flow": "flow-receive-notifications",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "98f2d9a9585cfbe62d29cfd97c2a2df2e8d8ea7866fbda495d711cfafd28db04",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "kind": "adoption",
+    "description": "Adopt the existing S1 subscription verification/filtering, S2 bounded retry/progress behavior and explicit S3 real-host blocker at the fixed fourteen-flow initial baseline. Transport/429/server failures retry under eight failed attempts; gone disables, other failures/exhaustion advance, and notification-disabled processing skips events without later replay. Daily-workflow changes do not change this pipeline or establish additional installed-host acceptance; shared UI consumers and fresh mapped suites are reviewed here.",
+    "implementation": "Inspected events.Tick: the delivery match includes config.Notifications; cursor advancement still occurs for nonmatching/disabled events. Failed delivery increments attempts; 410 disables, only transport/429/server failures below the attempt limit retain retry state, otherwise progress advances/reset occurs. These existing outcomes are described without changing product code.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signature/duplicate/filter handling and one HTTP503 retry preserve event identity; expiry and idempotent unsubscribe are asserted. Dedicated transport/429/permanent/410/exhaustion/disabled-no-replay, changed-key refresh, restart and post-unsubscribe no-delivery assertions remain gaps. Real-host subscriptions/callbacks remain blocked; fixture success does not close S3."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-count=1",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 2.812
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_user_flows.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.205
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_specs*.py"
+      ],
+      "exit_code": 0,
+      "seconds": 24.433
+    }
+  ],
+  "dependencies": {
+    "flow:receive-notifications": "c4dc9efb12be91f206837c0dce9a2d6c19ddb8cad9963fb6a1b8c63928a7008f",
+    "term:attention-request": "a9254fc3b47436d042a99b20b0582c9a2e91dd30fc09cf1eb31aad7ebf684d87",
+    "term:coverage-gap": "26ab80ee06df75dfa45c1b0ad03d0e1197b7de001c52d1afc64207aa3572d2ed",
+    "term:host": "a63eca5e09a51b564b789bfa4764f32516389479cfcdd5d989c96b5852f92d4d",
+    "term:known-limitation": "a30d16a8d43805defe9961b7e7a4d1cb13d3a9f217e086299f26195b729beb15",
+    "term:subscription": "c1e75c99e952508a98bf383661e957b632f7298f950e8d0b851244b06c948e0c",
+    "term:unverified-behavior": "3750689759ebf9872ccba3195ef8de3aa59d46f410bf4b1f53f23e3b723b3a82"
+  }
+}

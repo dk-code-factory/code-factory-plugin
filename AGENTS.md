@@ -35,10 +35,13 @@ checks. Start new sessions in this project directory so these instructions load.
 
 ## Browser and credentials
 
-- Prefer `node scripts/browser_control.mjs` attaching to the user's existing
-  Google Chrome through `chrome://inspect/#remote-debugging` and native Allow.
-  Read the runbook for the JSON-line protocol, safe output handling, frame IDs,
-  and the native typing workaround for React inputs inside the app iframe.
+- The user approved a dedicated persistent pilot Chrome profile with local debug
+  access on `127.0.0.1:9224`, separate from the main browser and lab profile.
+  Use `node scripts/browser_control.mjs --pilot` only for that approved mode.
+  Default `node scripts/browser_control.mjs` still uses the existing Chrome native
+  `chrome://inspect/#remote-debugging` and Allow flow. Read the runbook before
+  either mode; pause inspection during the initial manual sign-in and never copy
+  authentication between profiles. Keep every debug listener loopback-only.
 - Controller readiness is not browser attachment. Discover current page IDs and
   fresh element UIDs. Do not reuse historical terminal session IDs or UI UIDs.
 - RDP: `192.168.0.100:3389`, first username `remote`, then Ubuntu user
@@ -49,6 +52,32 @@ checks. Start new sessions in this project directory so these instructions load.
   `gateway-auth.json`, `owner.token`, subscription rows, or credential files.
 
 ## Verification and evidence
+
+- Maintain the [layered specifications](docs/specs/README.md) using
+  [reconcile-specs](.agents/skills/reconcile-specs/SKILL.md). Behavior contracts
+  reference UI entities and glossary terms; UI references glossary terms; glossary
+  definitions have no specification links or backlinks. Use scoped glossary, UI
+  and behavior skills for their owned registries and generated blocks.
+- Run `make specs-check` (or compatible `make flows-check`) for current edits and
+  `make ci FLOW_BASE=<base-branch-or-commit>` for a branch/PR. Behavior changes
+  require related implementation and meaningful tests. Accurate descriptions may
+  remain for refactors, terminology corrections and structural-reference updates
+  with substantive review and fresh verification. Never broaden the pinned
+  product-flow adoption exception. Explicit behavior reviews require related code
+  and test changes even with unchanged descriptions; new/retired UI contracts
+  cannot borrow unrelated entity changes. Declare indirect suite inputs so runner,
+  source and dependency changes invalidate prior verification. Default Make/verify
+  commands force fixture mode; real model checks use `make test-real-provider`.
+- Use `make specs-report` (or `report --json`) for compact impact and exact next
+  argv, and `make specs-gaps` for open-gap owners, severity and next verification.
+  Reports never establish successful execution. Version-2 gap records retain their
+  stored IDs; narrow or close only the assertions actually verified. UI-only mixed
+  reviews need complete per-contract decisions and cannot override the pinned
+  product-flow adoption policy.
+- For UI work, reconcile widget elements/states, pane/page containment, displayed
+  instances and selection/navigation/data connections in `docs/ui/entities.json`.
+  Read actual assertions and retain explicit coverage gaps. Generated inventories
+  and fixture verification do not establish real browser/accessibility acceptance.
 
 - `make verify`: build, checks, tests, packaging, installer recovery, and smoke.
   Run checks appropriate to changes; documentation-only edits need link/content

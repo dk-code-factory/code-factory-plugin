@@ -1,0 +1,132 @@
+{
+  "date": "2026-10-21",
+  "verified_utc": "2026-10-21T13:34:31.509122+00:00",
+  "scope": "Installed service upgrade and read-only signed-in Work dashboard smoke; separate from fixture CI and full product acceptance.",
+  "before_version": "0.1.0-e945f9020696",
+  "installed_version": "0.1.0-b3c0fdf03dc5",
+  "archive_sha256": "e40f936040a903223268d840f4f485d22301bbf790dc47987a9a826f1795bc0f",
+  "installed_binary_sha256": "b908acda2839fc01f633375db5fbc2f64f3e8f5564a33735e587b428a590d7a7",
+  "installation": {
+    "version": "0.1.0-b3c0fdf03dc5",
+    "binary_matches_verified_release": true,
+    "daemon_and_gateway": [
+      "active",
+      "active"
+    ],
+    "routes_unchanged": true,
+    "owner_token_and_registration_and_gateway_profile_unchanged": true,
+    "provider_paths_unchanged": true,
+    "retained_run_count": 4,
+    "status_counts": {
+      "cleaned": 2,
+      "interrupted": 2
+    },
+    "pending_attention": 0,
+    "ui_resource": "ui://code-factory/inbox-a73a430a1d8efbfa48aaa8ddeae0e86b12f1df47efde092a7c32748dfc636874.html",
+    "ui_markers_verified": true,
+    "database_and_gateway_backups_present": true,
+    "no_pending_upgrade": true
+  },
+  "retained_sessions": "Four runs retain their IDs, workspace paths and provider thread IDs. One previously idle retained session became interrupted on daemon restart and requires explicit Resume; it was not automatically resumed.",
+  "doctor": {
+    "version": "0.1.0-b3c0fdf03dc5",
+    "failed_checks": [],
+    "verified_checks": [
+      "prerequisite.git",
+      "prerequisite.gh",
+      "prerequisite.codex",
+      "prerequisite.systemctl",
+      "prerequisite.tailscale",
+      "provider.codex",
+      "provider.github",
+      "daemon",
+      "transport.tailscale",
+      "gateway.process",
+      "gateway.readiness",
+      "sync.dkropachev/code-factory-pilot-20261019"
+    ],
+    "unverified_checks": [
+      "callback.delivery",
+      "acceptance.packaging",
+      "acceptance.provider",
+      "acceptance.ownership",
+      "acceptance.tunnel.readiness",
+      "acceptance.plugin.fresh-chat",
+      "acceptance.inbox",
+      "acceptance.priority",
+      "acceptance.launch",
+      "acceptance.question.answer",
+      "acceptance.follow-up",
+      "acceptance.callbacks",
+      "acceptance.subscription.lifecycle",
+      "acceptance.recovery",
+      "acceptance.rollback",
+      "acceptance.credentials",
+      "acceptance.cleanup",
+      "acceptance.soak",
+      "acceptance.login",
+      "acceptance"
+    ]
+  },
+  "hosting": {
+    "configured_https_landing_status": 200,
+    "registered_browser_package_primary": true,
+    "portable_artifacts_collapsed": true,
+    "scope": "Configured HTTPS hostname; not an independent public-ingress probe."
+  },
+  "work_dashboard_smoke": {
+    "conversation": "https://chatgpt.com/c/6ad8bea0-5b84-83e8-b0dd-6d2b23f4c656",
+    "metadata_refresh_completed": true,
+    "existing_oauth_session_reused": true,
+    "rendered_bundle_matches_release": true,
+    "observations": [
+      {
+        "title": "Code Factory",
+        "connection": "\u25cf Connected",
+        "oldTaglinePresent": false,
+        "zeroAttentionShortcutPresent": false,
+        "syncDetailsCollapsed": true,
+        "alerts": [],
+        "bundleScriptSHA256": "7d63199ac3e765fb3b5d7815a4faf861ddfedbb11179b8465e793c063fa90c56"
+      },
+      {
+        "openedSettings": true
+      },
+      {
+        "sections": [
+          {
+            "name": "Repositories",
+            "open": true
+          },
+          {
+            "name": "Priorities & notifications",
+            "open": false
+          },
+          {
+            "name": "Integrations",
+            "open": false
+          },
+          {
+            "name": "Launch profiles",
+            "open": false
+          },
+          {
+            "name": "Managed skills",
+            "open": false
+          },
+          {
+            "name": "Connection diagnostics",
+            "open": false
+          }
+        ],
+        "jiraDisabled": true,
+        "priorityRows": 4
+      },
+      {
+        "returnedToInbox": true
+      }
+    ]
+  },
+  "preserved": "Existing GitHub/Codex authentication and executable mapping, owner token, registered app mapping, gateway profile, Tailscale routes, unrelated browser tabs, and desktop session.",
+  "remaining_scope": "The new build has installed read-only dashboard/Settings smoke evidence. Earlier launch/question/follow-up/recovery/soak/CSP observations remain tied to e945; new-build full acceptance, Events, coordinated login and manual accessibility remain open."
+}

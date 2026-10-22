@@ -2,8 +2,156 @@
 
 This runbook records the working arrangement on this computer as of
 **2026-10-20**. Verify live state before changing it. The agent runs commands and
-browser tests; the owner supplies initial sign-in and native Chrome consent.
+browser tests; the owner supplies initial sign-in and consent for the selected
+attachment mode. Default native attachment uses Chrome Allow; the explicitly
+approved pilot profile uses private loopback debugging.
 Do not turn routine local work into instructions for the owner to execute.
+
+## Continue by message; Messages means blocked asks · 2026-10-21
+
+Installed **0.1.0-08c15806095a** removes Resume and the Messages / All agents inventory.
+Activity lives only in issue/PR work status. Send to interrupted/failed retained
+work restores its original thread/workspace and uses the submitted message as the
+continuation turn. There is no generic resume turn before it. Ordinary accepted
+sends clear only unchanged text; failed or uncertain sends keep drafts and are not
+replayed automatically. A missing retained session/workspace is an error; prepared
+and cleaned records cannot silently create substitute work. First Start remains
+explicit. Work history / Draft launches belong to Item details; Interrupt, profile,
+workspace and cleanup remain secondary Details. Dirty cleanup protection remains.
+
+Messages counts/lists only pending blocking requests for live waiting/running
+sessions. Nonblocking requests remain on their owning conversation. Stale,
+answered, orphaned or disconnected requests are excluded. Selecting an ask opens
+its owning item/run/dialog; answering removes only that ask.
+
+The [message-wake record](evidence/2026-10-21-message-wake.json) separates 62 browser
+fixtures/CI from one actual signed-in Plan/read-only/ask run: native question in
+Messages, UI interrupt/stale exclusion, inactive UI Send restoring the same Codex
+session, new question, UI answer/completion and own clean cleanup/history. Existing
+runs are unchanged. The initial snapshot was prepared with the local owner tool,
+then explicitly reviewed/started in the installed embedded UI. Native approval
+variants, Events, login, soak and full manual accessibility remain version-bound
+or outstanding; this check does not replace them.
+
+## Human-facing conversation · 2026-10-21
+
+Installed **0.1.0-9313f82ae73f** defaults to agent progress/status and final messages,
+user replies and readable errors. Technical activity (commands, plans, raw changes,
+provider summaries and error JSON) stays under the existing Details disclosure.
+Question/approval controls remain actionable outside it. Data is retained; only
+its normal presentation changes. The prior Agent details & actions label is now
+Details; `.agent-details` identifies that disclosure. Native closed details can
+retain child layout rectangles: use checkVisibility or the accessibility tree,
+rather than rectangle presence alone, to judge actual visibility.
+
+The [concise conversation record](evidence/2026-10-21-concise-conversation.json)
+separates 58 browser tests/CI from an installed nonempty retained pilot transcript.
+That check recorded only labels, counts and visibility and started no agent work.
+Full history/host lifecycle and manual accessibility remain separate acceptance.
+
+## Connection failures and read recovery · 2026-10-21
+
+A connected view can retain an old bundle and its stale error state. The
+[investigation](evidence/2026-10-21-connection-investigation.json) observed an old
+failure banner through 263 subsequent RPC replies without another protocol error.
+Installed **0.1.0-d28d7827a940** fixes that state separation and failed-handshake
+recovery. Known reads retry bounded transport failures; Start, Send, answers,
+saves and lifecycle actions remain one attempt. The exact host-wrapped
+McpServerError connection exception is distinct from ordinary tool validation.
+
+Healthy polling clears polling feedback only; item/transcript reads recover
+locally and preserve drafts/output. Use the new content-fingerprinted view after
+upgrades; preserve existing open views/drafts rather than silently reloading them.
+Gateway upstream warnings record only fixed reason labels (client_canceled,
+deadline_exceeded, daemon_unavailable, connection_reset, upstream_eof,
+upstream_timeout or upstream_transport). Request audit adds duration_ms. Correlate
+these timestamps with the UI; the previous status-only logs cannot reconstruct
+all earlier causes. Never add raw error strings, headers, tokens or bodies.
+
+The [recovery record](evidence/2026-10-21-connection-recovery.json) separates 56
+browser fixtures/CI from two controlled read-only fault probes in signed-in Work.
+Those probes replace one healthy read reply locally and remove their listeners;
+they do not establish a real outage cause or full uptime/accessibility acceptance.
+
+## Focused queues and first-message chat · 2026-10-21
+
+`open_factory` now opens Issues (open/no linked PR by default), My PRs,
+Review PRs and Messages. Retained runs are under Messages / All agents. A work
+row opens its conversation with item summary immediately; no intermediate item
+page or Open agent step. First-message drafts remain per item, follow-ups per run.
+Start is explicit; changed authority is reviewed again, and uncertain Start checks
+the same record before retry. New run under Item details keeps the optional review.
+Settings remains its own chat view. Priority badges precede titles.
+
+Installed **0.1.0-c0601b8f3508** passed 48 browser tests and branch CI. The
+[work queues record](evidence/2026-10-21-work-queues.json) separates fixtures from
+actual signed-in read-only queue/conversation navigation. It does not replace
+full provider lifecycle, Events, soak, login or manual accessibility acceptance.
+
+## Repository identifier links · 2026-10-21
+
+The inbox repository/number text is the external issue/PR link; no separate
+GitHub label/icon remains. It is outside the row selection button and uses the
+same host bridge. Build **0.1.0-87df721c6d6c** passed branch CI and fresh signed-in
+Work rendering checks. See the [identifier record](evidence/2026-10-21-identifier-link.json)
+for exact source/build/fixture/host scope. The transient connection report and
+recovered public connection checks are recorded [separately](evidence/2026-10-21-tailscale-recovery.json).
+
+## Independent settings entry · 2026-10-21
+
+`open_factory` opens the inbox and agent surface; `open_settings` opens its own
+configuration view in chat. Main navigation contains only Inbox and Agents.
+Settings saves stay in that view and do not close or reset an open task view.
+Each inbox row has a separate original-GitHub issue/PR link routed through the
+host browser; activating it does not select or mark the item read.
+
+The two documents have independent content-fingerprinted resource identities.
+The legacy static resource remains inbox-only; cross-surface/query/stale variants
+are rejected. Refresh existing tool metadata and open fresh views after upgrade.
+Use the [separate settings record](evidence/2026-10-21-separated-settings.json) for
+this revision’s actual fixture/installed-host scope.
+
+Installed **0.1.0-3fe6288ffc29** passed 39 browser tests and branch CI. Fresh
+signed-in Inbox and Settings chats loaded matching release JavaScript, with
+independent navigation and no settings inside the inbox. The host accepted the
+pilot PR link request without an error; destination-page navigation was not
+observed in the pilot targets. No config or agent work was changed by this smoke.
+
+## Compact single-page UI · 2026-10-21
+
+The source [layout contract](ui/design.md) uses a full-width Inbox list and a
+separate item page, plus separate Agents list and Agent conversation pages. Top
+Inbox/Agents navigation always returns to the list. Contextual Back restores list
+query, scroll and row focus, or the originating item. Relationships and secondary
+triage actions are disclosures; ordinary drafts survive record/page changes.
+Brand/footer chrome, normal connection/sync text and unused integration forms are
+absent. Use the [compact verification record](evidence/2026-10-21-compact-ui.json)
+for this revision’s source/build/rollout scope. **0.1.0-125bfd2f9079** is installed;
+a fresh signed-in Work view has matching release JavaScript and passed bounded
+list/item/agent/Back/Settings smoke. Older records remain version-bound.
+
+## Local workflow revision · 2026-10-21
+
+The source UI now opens the default prepared review directly; **Edit** exposes
+customization and **Advanced** holds model, effort, base and skills. **Start agent**
+remains explicit. **Open agent** continues the newest retained run from an item;
+**New run** starts a separate proposal. Retained prepared records reopen from the
+collapsed **Draft launches** group. An uncertain Start reads the same run before
+offering another Start; unavailable status leaves **Check start status**.
+
+Priority selections save immediately and restore the previous value with inline
+feedback on failure. Link drafts stay with their item and message drafts with
+their run while the app remains open. Reload ends those ordinary drafts. Global
+attention selects its run and identifies the item/profile. Workspace/cleanup and
+command output are disclosures; cleanup still retires a retained session before
+a dirty refusal. Settings uses collapsed sections; Jira stays disabled.
+
+These source changes have a separate [local verification record](evidence/2026-10-21-workflow-simplification.json).
+The [installed upgrade](evidence/2026-10-21-workflow-upgrade.json) is now
+**0.1.0-b3c0fdf03dc5**, with healthy services and a fresh signed-in Work dashboard
+whose JavaScript matches the release. This is read-only dashboard/Settings smoke;
+earlier full core and soak observations remain tied to `e945`. Future upgrades
+must first inspect unrelated live runs and preserve the approved browser session.
 
 ## Machine and access
 
@@ -52,7 +200,7 @@ to Chrome. Use the browser controller below.
 
 | Item | Current value |
 | --- | --- |
-| Last verified daemon | `0.1.0-850eb63cda16` |
+| Last verified installed daemon | `0.1.0-08c15806095a` (real Plan/read-only message wake and blocking Messages verified; prior full soak/CSP evidence remains version-bound) |
 | Complete browser package | `0.2.2` |
 | Stable launcher | `~/.local/bin/code-factory` |
 | Versioned releases | `~/.local/lib/code-factory` |
@@ -64,7 +212,53 @@ to Chrome. Use the browser controller below.
 | Owner approval | `https://dkropachev-ai-rig.tail62c9f9.ts.net:8444/approve` (flow supplies its query) |
 | Installed complete plugin | `https://chatgpt.com/plugins/Plugin_34caeb5c66048191a1ac0c8f01c31e73` |
 | Registered remote app | `asdk_app_6ad792b279348191b76d3443615b66e0` |
-| Dedicated private fixtures | `dkropachev/code-factory-pilot-20261019`; issues 1/3 and PR 2 |
+| Dedicated private fixtures | `dkropachev/code-factory-pilot-20261019`; issues 1/3/4/5 and PR 2; retain synthetic 4/5 while acceptance is incomplete |
+
+The [prior Work core evidence](evidence/2026-10-21-final-work-core.json)
+records the installed `0.1.0-e945f9020696` build and content-fingerprinted resource.
+Initial pilot-profile sign-in was confirmed, and the actual refreshed Work iframe
+now paints dark owned backgrounds despite transparent host `html`. A new explicit
+Plan/read-only/ask launch, question/answer, recovered-run follow-up, dirty refusal,
+same-thread Resume and clean cleanup/history were observed. Gateway-only restart
+retained authenticated polling without relogin. Controller reattachment retained
+the signed-in profile without another native Allow prompt.
+
+The [final-build triage matrix](evidence/2026-10-21-final-work-triage.json)
+records synthetic issue 5 arriving New/unread, independent displayed read/New/action
+history, immediate relationship Add/Remove and priority override/label/inference
+precedence on this installed build. Removing its P2 label showed Pending/running
+then real Codex P3 inference; a later comment restored unread without New, and
+the journal proves reassessment for the changed revision. The brief comment-time
+Pending UI state was not captured. Test overrides/link were removed and P2 restored;
+issues 4/5 remain retained synthetic fixtures.
+
+Both [raw public transport](evidence/2026-10-21-final-public-connection.json) and
+[independent SDK](evidence/2026-10-21-final-sdk-connection.json) checks passed both
+public ingress peers and revoked ephemeral credentials. Actual core observation
+is separate from these protocol probes. Eight actual app scans found no automated
+violations, with six overlap-related contrast nodes still requiring manual review;
+light diagnostic scans changed only the app theme attribute and restored dark.
+No complete WCAG or screen-reader acceptance is claimed.
+
+The [connected soak](evidence/2026-10-21-connected-soak.json) passed on the same
+iframe from `2026-10-21T04:33:49.700Z` to `05:34:57.611Z` (3667.911 seconds): 178 UI
+samples, 2304 successful polling responses and 121 distinct sync times, with no
+disconnects, alerts, connection transitions or unload. Independent service sampling
+also retained all three expected services and version `e945` for over an hour.
+This bounded observed interval is complete; it is not a guarantee of future uptime.
+
+The authorized [CSP check](evidence/2026-10-21-work-csp.json) passed an actual
+`connect-src` denial for an unlisted reserved `.invalid` origin without credentials
+or application data. The app already enforced this policy with the global toggle
+off. Temporarily enabling the global toggle persisted across Settings reload;
+a fresh Work view remained Connected and bridged successfully. The setting was
+restored to off and verified after reload. Earlier “CSP off” labels alone did not
+prove absent app enforcement. Other CSP directives remain outside this probe.
+
+Events creation produced no confirmed response, error or subscription ID after
+a stalled attempt; stored subscriptions remain zero, with cause undetermined.
+The real desktop logout/login has not run: timing awaits the owner's confirmation.
+Preserve the current session and unchanged lingering policy until that coordination.
 
 These IDs are observations, not templates for another account. Reuse working
 resources. The complete package has **Apps 1 + Skills 2**, a connected account, and
@@ -92,9 +286,39 @@ The separate browser lab, when running, uses private 8445. Never use
 `tailscale serve reset`, `tailscale funnel reset`, or whole-port 443 `off` to
 repair/remove this app. Keep existing login/lingering policy.
 
+## Approved persistent pilot browser mode
+
+The owner explicitly approved a separate persistent pilot profile to avoid native
+Allow prompts on every controller reconnect. Its private profile is
+`~/.local/share/code-factory/browser-pilot/profile`, with debugging bound only to
+`127.0.0.1:9224`. The root operator owns setup and the transient user unit
+`code-factory-pilot-browser`; do not alter the main browser on 9222, the separate
+lab on 9223, existing authentication or unrelated tabs.
+
+The owner completes the first ChatGPT sign-in manually in that profile. Pause all
+inspection during sign-in and resume only after explicit confirmation. Never copy
+cookies, tokens or profiles from the main browser. Once the approved profile is
+signed in and running, attach the local controller with:
+
+```sh
+node scripts/browser_control.mjs --pilot
+```
+
+This explicit mode uses the approved loopback browser URL; it does not launch a
+browser or authorize another profile. An optional `--browser-url` is limited to
+an already-approved literal HTTP loopback endpoint; aliases, credentials, URL
+paths, queries and fragments are rejected without echo. Selecting a URL grants
+no new permission to inspect another session. The persistent profile can retain its own
+sign-in across controller reconnects. Controller readiness still does not prove
+attachment: perform an actual page operation and obtain fresh page/element IDs.
+All JSON-line output filtering, URL masking and iframe typing rules below apply.
+Keep 9224 private; do not expose it through LAN binds, Tailscale or public hosting.
+A real desktop logout/login remains coordinated with the owner and requires its
+own observed startup evidence.
+
 ## Attach to the owner's signed-in Chrome
 
-Use this flow instead of launching another browser or copying cookies.
+The default controller mode retains the existing native attachment flow. The approved pilot mode above is the separate explicit alternative; neither mode copies cookies.
 
 1. Reuse the installed Google Chrome on the remote desktop.
 2. The owner signs into ChatGPT manually. Do not inspect during sign-in. Wait for
@@ -129,9 +353,9 @@ discovery; use `--autoConnect` through this controller. Missing
 `DevToolsActivePort` usually means the native debugging switch is not enabled.
 
 The controller uses local stdio and disables usage statistics and CrUX reporting.
-Never expose 9222/9223 through LAN binds or Tailscale. Do not restart Chrome with
-another profile, copy its cookies, enable insecure certificate handling in the
-real browser, or change unrelated browser settings to make attachment succeed.
+Never expose 9222/9223 through LAN binds or Tailscale. Outside the explicitly approved pilot profile above, do not restart Chrome with
+another profile. Never copy authentication, enable insecure certificate handling,
+or change unrelated browser settings to make attachment succeed.
 
 Use only the relevant ChatGPT test tabs and private approval page. Preserve the
 owner's unrelated tabs and conversations. Do not repeatedly ask for permission
@@ -212,20 +436,42 @@ React updates and agent state changes rather than treating a click as completion
 
 ## Build and connection checks
 
+Development changes use the [layered specification gate](specs/README.md),
+canonical [glossary](glossary/README.md), [UI registry](ui/README.md) and
+[user-flow contracts](user-flows/README.md). The repository `reconcile-specs`
+skill coordinates maintenance; layer skills retain separate ownership. Run
+`make specs-check` for current edits, `make specs-ci` for fast deterministic
+checks, and `make ci FLOW_BASE=<base>` for the full branch comparison. Historical
+flow commands remain compatible. Reconciliation records describe local review
+and verification and never substitute for installed-version browser evidence.
+
+The UI registry includes widget types, displayed instances, elements, conditional
+states, panes/pages/dialogs, endpoints, existing assertions and explicit gaps.
+Its generated inventory/diagrams do not establish every visual or accessibility
+variant. No agent runs or model credentials are needed by the specification gate.
+
 ```sh
 make verify
 make connection-test
 make connection-sdk-test
 # Optional real-model suite; consumes the authenticated Codex account:
-CODE_FACTORY_REAL_CODEX=1 make verify
+make test-real-provider
 ```
 
 `make verify` covers build, vet/types, race/protocol/browser tests, packaging,
-installer lifecycle and compiled smoke. The deployed connection commands test
+installer lifecycle and compiled smoke. Default Make/verify commands force `CODE_FACTORY_REAL_CODEX=0`; an inherited or command-line opt-in cannot activate real model tests. Use the explicit provider target above for those tests. The deployed connection commands test
 public TLS, OAuth and MCP with ephemeral tokens that they revoke. SDK tests force
 fresh connections and verify each actual public peer address. `--tailnet` is
 explicitly local-only and cannot prove internet access or ChatGPT acceptance.
 Use live `tailscale.json` as the endpoint source; never default new work to 10000.
+
+The embedded UI is advertised with a full-content SHA256 resource URI. Changed
+HTML/JS/CSS must produce a new identity in every tool reference and resource
+advertisement. The original exact static URI remains an unadvertised read alias;
+arbitrary previous hashes and query suffixes are not compatibility aliases. A
+healthy local resource read is not proof that Work loaded it: after upgrade,
+refresh tool metadata/open a fresh view and verify the actual content identity
+and rendered owned surfaces before recording UI acceptance.
 
 Build source changes into a versioned release, then install that release before
 claiming the real Work app exercised those changes. Follow

@@ -1,0 +1,326 @@
+{
+  "date": "2026-10-21",
+  "verified_utc": "2026-10-21T23:01:36.742683+00:00",
+  "status": "implemented, verified and installed; real read-only message wake and Messages question lifecycle observed in signed-in Work",
+  "request": "Show activity only as issue/PR work status; remove Resume and restore a retained Codex session when a message is sent. Messages contains asks blocking human input only.",
+  "behavior": {
+    "activity": "Work status in issue/PR metadata; newest unfinished retained run preferred over newer cleaned history. No standalone activity header or Resume control.",
+    "send": "One submitted message restores the retained thread/workspace/snapshot and starts that message as its only continuation turn; no original/generic prompt or old answer replay. Clear only accepted unchanged drafts. Failed sends retain drafts; mutations are never automatically replayed.",
+    "Messages": "Count/list only live pending blocking questions and approvals. Exclude nonblocking, answered, stale, orphaned and disconnected requests. Select exact owning item/run/request; remove only answered asks.",
+    "secondary": "Work history and Draft launches are scoped to Item details. Interrupt/profile/workspace/cleanup remain under Details. Dirty files are protected; prepared and cleaned records cannot bypass initial Start or create substitute work."
+  },
+  "comparison_base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "source_sha256": {
+    "internal/app/runs.go": "88c7d86def0affcf0f5da36c3eb186f157085d216a536c2339b989d5cf3f5d3d",
+    "internal/app/app_test.go": "501482b6c6c11e29b6316a59485221198f1c9397b79a310a30b323ccae6617c0",
+    "internal/testutil/fakecodex/main.go": "ceb7ed7ca4944c1b81eaff6d2fde7748a5863ac6cdf75aee631f6ffc5e84a5c6",
+    "internal/transport/mcp.go": "bba86fb0a61fbd50edd293169737fd0ee8607090724ef3ed89b8240116a835bd",
+    "web/src/main.tsx": "00189bacce9602fd961204ede2877b43dc21cfb32a77384912f6a739b5a9262d",
+    "web/tests/factory.spec.ts": "3232b8aaa2c97455754cb2fde141dfd822152a7167c1a4fbcd2b3b3a7051a393",
+    "internal/web/dist/index.html": "84c719065d34ff70f3d885532c6348965e6c7cc8891df329c89037993e07d311",
+    "docs/ui/design.md": "cbcb4b881ba09199312e3509a24674d85b40524967bca59a1f5fc400449903de",
+    "docs/ui/entities.json": "9ad3234dcfce06c3b0fdb08dfe1d7f38c1732cc6ebb18dc6588ddc3ce118b38e",
+    "docs/glossary/terms.json": "765b28d21b417800a56a1bcda786215ee9e39d23e64808e49c216b8d67473289",
+    "docs/user-flows/catalog.json": "c0de6faf2f24f6a92910f503d212e585faef1fedb6d7e26d60576cfaf7cbaec2"
+  },
+  "verification": [
+    {
+      "argv": [
+        "python3",
+        "scripts/specs.py",
+        "reconcile",
+        "--base",
+        "HEAD",
+        "--review",
+        "/tmp/cf-message-wake-review.json"
+      ],
+      "exit_code": 0,
+      "log": "2026-10-21-message-wake-reconciliation.log",
+      "subjects": 17
+    },
+    {
+      "argv": [
+        "make",
+        "specs-check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "make",
+        "ci",
+        "FLOW_BASE=HEAD"
+      ],
+      "exit_code": 0,
+      "log": "2026-10-21-message-wake-ci.log",
+      "coverage": "62 browser tests; Go race/vet; frontend types/build; 201 specification and 20 legacy tests; packaging, six installer recovery cases and compiled MCP/stdio smoke."
+    }
+  ],
+  "fixture_scope": "Eight concurrent wake attempts accept one exact provider thread/resume + turn/start pair; original thread/workspace/profile/prompt remain. Missing thread/worktree and prepared/cleaned sends reject. Interrupted questions stale and cannot answer a new session request. Encrypted secret-answer redaction survives message wake. Both narrow themes cover work status, accepted draft clearing, duplicate-submit disabling, failed draft retention and no separate Resume mutation. Messages mixes valid blocking questions/approval with excluded states and checks exact answer payloads and request ownership. Assembled dirty cleanup preserves file/history/thread/workspace and continues by Send.",
+  "automated_accessibility_scans": [
+    {
+      "screen": "axe-dark-agents",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-detail",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-inbox",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-launch",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-question",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-review",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-settings",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-agents",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-detail",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-inbox",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-launch",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-question",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-review",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-settings",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-concise-conversation-light",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-concise-conversation-dark",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-work-queues-light",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-work-queues-dark",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-first-message",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-github-links-light",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-github-links-dark",
+      "violations": 0,
+      "incomplete": []
+    }
+  ],
+  "fixture_screenshots": [
+    "2026-10-21-message-wake-light.png",
+    "2026-10-21-message-wake-dark.png"
+  ],
+  "specifications": {
+    "terms": 456,
+    "entities": 117,
+    "flows": 15,
+    "policy": "Stable gap IDs and pinned adoption base/list retained. Fixture assertions and bounded installed observation do not establish all host variants or manual accessibility."
+  },
+  "rollout": {
+    "verified_utc": "2026-10-21T22:54:05.273188+00:00",
+    "before_version": "0.1.0-25d671a13c8d",
+    "installed_version": "0.1.0-08c15806095a",
+    "binary_sha256": "851090ca87e76541b61ba8ceb96e906bd03606d781bba343fd0370614e33c90e",
+    "archive_sha256": "deeb9d88f859f45cf91beae94e5e951b61679b9524a4a25f46edb1f6316ffabe",
+    "services": [
+      "active",
+      "active"
+    ],
+    "routes_unchanged": true,
+    "owner_token_registration_gateway_profile_unchanged": true,
+    "provider_paths_unchanged": true,
+    "retained_run_count": 5,
+    "workspace_and_thread_ids_preserved": true,
+    "database_and_gateway_backups_present": true,
+    "ui_resource": "ui://code-factory/inbox-84c719065d34ff70f3d885532c6348965e6c7cc8891df329c89037993e07d311.html",
+    "settings_resource": "ui://code-factory/settings-c86611856a8a38b7adf0edc56d02dfe86ffefba0cd496ac5140a7d2d67d8765b.html",
+    "settings_entry_configuration_only": true,
+    "only_pilot_repository": true,
+    "pilot_item_id": "dkropachev/code-factory-pilot-20261019#1",
+    "pilot_item_initially_unread": false
+  },
+  "doctor": {
+    "version": "0.1.0-08c15806095a",
+    "states": {
+      "verified": 12,
+      "unverified": 20
+    }
+  },
+  "installed_work_check": {
+    "navigation": [
+      "Issues",
+      "My PRs",
+      "Review PRs",
+      "Messages 1"
+    ],
+    "bundleScriptSHA256": "c22cb9f80233e5fda10990334676df653c67c776b159aa8b93817dff985bf607",
+    "controller_reattached_to_existing_test_run": true,
+    "live_message_wake": {
+      "prepared_in_owner_tool_reviewed_started_in_embedded_ui": true,
+      "review": {
+        "plan": true,
+        "readOnly": true,
+        "ask": true,
+        "prompt": true,
+        "validated_in_initial_review_before_UI_Start": true
+      },
+      "provider_version": "0.161.0",
+      "profile": "pilot-local",
+      "mode": "plan",
+      "sandbox": "read-only",
+      "publishing": "ask",
+      "initial_blocking_question_shown_in_Messages": {
+        "count": 1,
+        "noAllAgents": true,
+        "noHistory": true
+      },
+      "interrupt_staled_initial_request": true,
+      "interrupted_ask_removed_from_Messages": true,
+      "inactive_composer": {
+        "inserted": true,
+        "valueMatches": true,
+        "sendEnabled": true,
+        "noResume": true,
+        "status": "Inactive"
+      },
+      "send_restored_same_run_thread_workspace": true,
+      "new_question_has_distinct_request_id": true,
+      "new_blocking_question_shown_in_Messages": true,
+      "answered_in_embedded_ui": true,
+      "real_reply_marker_observed": true,
+      "answer_removed_only_resolved_request": true,
+      "own_clean_worktree_removed_history_retained": true,
+      "unrelated_runs_unchanged": true,
+      "run_id": "f14faad63a1aa8075833871c258c16ce",
+      "item_id": "dkropachev/code-factory-pilot-20261019#1"
+    },
+    "conversation": "https://chatgpt.com/c/6ad9429e-c144-83e9-8890-74e797a2cbe3",
+    "release_bundle_matches": true,
+    "verified_utc": "2026-10-21T23:01:07.235660+00:00"
+  },
+  "limitations": "Real-provider/browser check uses one explicitly identified pilot-local Plan/read-only/ask run in the dedicated private pilot repository. It covers a blocking native question, UI interrupt/stale exclusion, inactive UI Send restoring the same session, another native question, UI answer/completion and clean cleanup/history. Initial proposal was prepared with the authenticated local owner tool and reviewed/started through the embedded UI. Existing runs remained unchanged. Native approvals are fixture-verified for this version, with no new real command/permission approval, Events, login, soak or full manual accessibility acceptance. No repository edits or external publications were requested; no unrelated session, authentication or Tailscale route changed."
+}

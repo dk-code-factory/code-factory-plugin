@@ -1,0 +1,277 @@
+{
+  "date": "2026-10-21",
+  "verified_utc": "2026-10-21T16:37:54.804447+00:00",
+  "status": "implemented, verified and installed; exact identifier links observed in signed-in Work",
+  "request": "Use the repository/number text as the original GitHub issue/PR link; remove extra GitHub label.",
+  "comparison_base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "source_sha256": {
+    "web/src/main.tsx": "98f50a0727f460ed96820e8e1d42febea922231c60c528002be5f2b286f2c055",
+    "web/src/style.css": "9e6f6f163aa78746412f77beedc1a0af3085022c009a66910d104dcd76ecae99",
+    "web/tests/factory.spec.ts": "5a9343cc4ad7f5d90ba8b7f80a0eac64696f6d8d5ade836cdba47c7716205163",
+    "internal/web/dist/index.html": "30d51df63d16e29b84a9f415852bce1b7766fb518df9ec3dbf5021e9b9319a1c",
+    "docs/ui/design.md": "85ab61c0acbda6b219252b5b29c00de5d1eae80ccf4ed68f8613de10cae39862",
+    "docs/ui/entities.json": "1a91c1704ea9fc1daf9cb39f9758f5b64a0f1642ec9de0810ec12a4e23ffb552",
+    "docs/user-flows/triage-inbox.md": "af44f139edee4046d7486cb53e68e857e1aa506dfdfa714b6e7085ae1702f35d"
+  },
+  "verification": [
+    {
+      "argv": [
+        "python3",
+        "scripts/specs.py",
+        "reconcile",
+        "--base",
+        "HEAD",
+        "--review",
+        "/tmp/cf-identifier-review.json"
+      ],
+      "exit_code": 0,
+      "log": "2026-10-21-identifier-link-reconciliation.log",
+      "subjects": 17
+    },
+    {
+      "argv": [
+        "make",
+        "specs-check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "make",
+        "ci",
+        "FLOW_BASE=HEAD"
+      ],
+      "exit_code": 0,
+      "log": "2026-10-21-identifier-link-ci.log",
+      "coverage": "39 browser tests; Go race/vet; frontend types/build; 201 specification and 20 legacy tests; packaging, six installer cases and compiled MCP/stdio smoke"
+    }
+  ],
+  "fixture_scope": "Both themes at 390px assert exact full pilot identifier once, no standalone GitHub label, metadata containment outside the button, original issue and PR href/host payload, keyboard activation, preserved unread/New/no reads, no overflow, primary item opening and scoped Axe. Existing denial/rejection and lifecycle tests remain passing.",
+  "axe_scans": [
+    {
+      "screen": "axe-dark-agents",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-detail",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-inbox",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-dark-launch",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-question",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-review",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-dark-settings",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-agents",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-detail",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-inbox",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-light-launch",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-question",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "aria-prohibited-attr",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-review",
+      "violations": 0,
+      "incomplete": [
+        {
+          "rule": "color-contrast",
+          "nodes": 1
+        },
+        {
+          "rule": "label-content-name-mismatch",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "axe-light-settings",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-github-links-light",
+      "violations": 0,
+      "incomplete": []
+    },
+    {
+      "screen": "axe-github-links-dark",
+      "violations": 0,
+      "incomplete": []
+    }
+  ],
+  "screenshots": [
+    "2026-10-21-identifier-github-links-light.png",
+    "2026-10-21-identifier-github-links-dark.png"
+  ],
+  "rollout": {
+    "verified_utc": "2026-10-21T16:35:58.220267+00:00",
+    "before_version": "0.1.0-3fe6288ffc29",
+    "installed_version": "0.1.0-87df721c6d6c",
+    "binary_sha256": "bd6b42992b77459a7ebfb2d7ecaf74c2fdea2f1e4945a12ccbb28ca038154456",
+    "archive_sha256": "689f6e9cba6e61cf55a1d422fcd618a0f993d6cfb8b884ca8b61ccb3edcd2d2b",
+    "services": [
+      "active",
+      "active"
+    ],
+    "routes_unchanged": true,
+    "owner_token_registration_gateway_profile_unchanged": true,
+    "provider_paths_unchanged": true,
+    "retained_run_count": 4,
+    "workspace_and_thread_ids_preserved": true,
+    "database_and_gateway_backups_present": true,
+    "ui_resource": "ui://code-factory/inbox-30d51df63d16e29b84a9f415852bce1b7766fb518df9ec3dbf5021e9b9319a1c.html",
+    "settings_resource": "ui://code-factory/settings-68e2669f79050392643ecbf35c2267631a978a2745978a783722690599337fce.html",
+    "settings_entry_configuration_only": true,
+    "only_pilot_repository": true,
+    "pilot_item_id": "dkropachev/code-factory-pilot-20261019#1",
+    "pilot_item_initially_unread": false
+  },
+  "installed_work_smoke": {
+    "heading": "Inbox",
+    "navigation": [
+      "Inbox",
+      "Agents"
+    ],
+    "links": [
+      {
+        "text": "dkropachev/code-factory-pilot-20261019#1",
+        "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/1",
+        "label": "Open issue dkropachev/code-factory-pilot-20261019#1 on GitHub",
+        "inMetadata": true,
+        "insideButton": false
+      },
+      {
+        "text": "dkropachev/code-factory-pilot-20261019#5",
+        "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/5",
+        "label": "Open issue dkropachev/code-factory-pilot-20261019#5 on GitHub",
+        "inMetadata": true,
+        "insideButton": false
+      },
+      {
+        "text": "dkropachev/code-factory-pilot-20261019#4",
+        "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/4",
+        "label": "Open issue dkropachev/code-factory-pilot-20261019#4 on GitHub",
+        "inMetadata": true,
+        "insideButton": false
+      },
+      {
+        "text": "dkropachev/code-factory-pilot-20261019#3",
+        "href": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/3",
+        "label": "Open issue dkropachev/code-factory-pilot-20261019#3 on GitHub",
+        "inMetadata": true,
+        "insideButton": false
+      },
+      {
+        "text": "dkropachev/code-factory-pilot-20261019#2",
+        "href": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/2",
+        "label": "Open pull request dkropachev/code-factory-pilot-20261019#2 on GitHub",
+        "inMetadata": true,
+        "insideButton": false
+      }
+    ],
+    "statuses": [
+      "Connected"
+    ],
+    "alerts": [],
+    "separateGitHubLabel": false,
+    "bundleScriptSHA256": "dae100b6b512c864b8ced7ffe449a42a784463ec1dbd7697f41cce62fb3ba5aa",
+    "release_bundle_matches": true,
+    "conversation": "https://chatgpt.com/c/6ad8ea04-b6c4-83ea-a99c-151962bd9e19",
+    "tool_metadata_refreshed": true,
+    "startup": "Initial document was captured before heading mounted; subsequent connected render verified."
+  },
+  "doctor": {
+    "version": "0.1.0-87df721c6d6c",
+    "failed_checks": 0,
+    "verified_checks": 12,
+    "unverified_checkpoints": 20
+  },
+  "limitations": "Bounded signed-in rendered-content verification. No full lifecycle, soak, Events, login, manual accessibility or external destination-page acceptance was repeated. Stable gaps and adoption policy preserved.",
+  "tailscale_check": "2026-10-21-tailscale-recovery.json"
+}

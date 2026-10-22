@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-21T04:15:47.366869+00:00",
+  "version": "0.1.0-229fc8debabc",
+  "upgrade_exit": 0,
+  "manifest_files_verified": 182,
+  "archive_sha256": "71276d9d4e9923559f3766372e55515e91335382be3240534bfe4f4ef92cec41",
+  "binary_sha256": "1a4127961ce60ce3c496280264e86995a39668ca3a374c9df79ab63f0395b4a7",
+  "daemon": "verified",
+  "gateway": "verified",
+  "retained_run": {
+    "id": "17ba06d423599fc17695704a9b0ae43a",
+    "status": "interrupted",
+    "worktree_exists": true
+  },
+  "old_attention_status": "stale",
+  "old_attention_answer_rejected": true,
+  "rejection": "run is disconnected; resume explicitly",
+  "scope": "Upgrade health and restart invalidation; actual corrected iframe remains to be observed."
+}

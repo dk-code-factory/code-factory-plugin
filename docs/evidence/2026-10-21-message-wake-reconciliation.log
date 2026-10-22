@@ -1,0 +1,216 @@
+Verify: ["go", "build", "-o", "bin/fake-codex", "./internal/testutil/fakecodex"]
+Verify: ["npm", "--prefix", "web", "test"]
+
+> code-factory-ui@0.1.0 test
+> playwright test
+
+[WebServer] (node:2198109) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:2198122) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 62 tests using 1 worker
+
+(node:2198266) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/factory.spec.ts:581:3 › Axe WCAG A/AA scans the owned app iframe across core states in light theme (2.4s)
+  ✓   2 tests/factory.spec.ts:581:3 › Axe WCAG A/AA scans the owned app iframe across core states in dark theme (2.3s)
+  ✓   3 tests/factory.spec.ts:662:1 › keyboard launch review traps focus, preserves edits and restores its opener on Escape (1.2s)
+  ✓   4 tests/factory.spec.ts:737:1 › keyboard attention stays contained through updates and Escape restores the pending opener (1.7s)
+  ✓   5 tests/factory.spec.ts:808:1 › launch preparation failure is announced inside the dialog without losing keyboard edits (445ms)
+  ✓   6 tests/factory.spec.ts:852:1 › item actions refresh visible history while unread, New and drafts remain independent (713ms)
+  ✓   7 tests/factory.spec.ts:891:1 › unlink removes the visible relationship without clearing unrelated detail drafts (386ms)
+  ✓   8 tests/factory.spec.ts:918:1 › a delayed relationship refresh cannot replace a later selection or its drafts (552ms)
+  ✓   9 tests/factory.spec.ts:977:1 › triage does not launch, launch edits and attention answer survive reopening (1.3s)
+  ✓  10 tests/factory.spec.ts:1097:1 › settings save repository and priority rows without unused integrations (302ms)
+  ✓  11 tests/factory.spec.ts:1157:1 › item switching restores saved priorities and keeps relationship drafts by item (972ms)
+  ✓  12 tests/factory.spec.ts:1212:1 › failed immediate priority saves restore the saved value with an inline error (243ms)
+  ✓  13 tests/factory.spec.ts:1226:1 › empty filtered inbox offers Clear filters and hides zero attention (160ms)
+  ✓  14 tests/factory.spec.ts:1244:1 › Open agent targets the newest retained run and keeps message drafts across tabs and runs (721ms)
+  ✓  15 tests/factory.spec.ts:1285:1 › default launch opens review directly and Draft launches reopens its immutable snapshot newest first (662ms)
+  ✓  16 tests/factory.spec.ts:1329:1 › global attention selects its owning run and returns to its conversation after answering (512ms)
+  ✓  17 tests/factory.spec.ts:1397:1 › unverifiable Start disables retry and Edit until read_run locates accepted work (369ms)
+  ✓  18 tests/factory.spec.ts:1427:1 › repository form shows saving and errors beside retained inputs (180ms)
+  ✓  19 tests/factory.spec.ts:1459:3 › readable approval choices preserve payloads in a narrow light embed (6.9s)
+  ✓  20 tests/factory.spec.ts:1459:3 › readable approval choices preserve payloads in a narrow dark embed (6.8s)
+  ✓  21 tests/factory.spec.ts:1597:1 › confirmed unaccepted Start allows an explicit retry of the same snapshot (381ms)
+  ✓  22 tests/factory.spec.ts:1624:1 › collapsed settings editors preserve capabilities and show independent save results (432ms)
+  ✓  23 tests/factory.spec.ts:1678:3 › agent conversation shows human messages and keeps technical activity under Details in light (1.3s)
+  ✓  24 tests/factory.spec.ts:1678:3 › agent conversation shows human messages and keeps technical activity under Details in dark (1.3s)
+  ✓  25 tests/factory.spec.ts:1898:1 › technical-only activity leaves a concise waiting state in the conversation (180ms)
+  ✓  26 tests/factory.spec.ts:1936:5 › single-page navigation preserves list context and drafts at 1280px in light (681ms)
+  ✓  27 tests/factory.spec.ts:1936:5 › single-page navigation preserves list context and drafts at 390px in light (649ms)
+  ✓  28 tests/factory.spec.ts:1936:5 › single-page navigation preserves list context and drafts at 1280px in dark (694ms)
+  ✓  29 tests/factory.spec.ts:1936:5 › single-page navigation preserves list context and drafts at 390px in dark (630ms)
+  ✓  30 tests/factory.spec.ts:2057:1 › page changes keep keyboard focus usable when an unread row leaves the list (271ms)
+  ✓  31 tests/factory.spec.ts:2075:3 › small inbox GitHub links open the original issue and PR without selecting either in light (672ms)
+  ✓  32 tests/factory.spec.ts:2075:3 › small inbox GitHub links open the original issue and PR without selecting either in dark (664ms)
+  ✓  33 tests/factory.spec.ts:2149:3 › inbox GitHub link deny failure stays in the list with visible feedback (168ms)
+  ✓  34 tests/factory.spec.ts:2149:3 › inbox GitHub link rpc failure stays in the list with visible feedback (165ms)
+  ✓  35 tests/factory.spec.ts:2176:3 › settings has a dedicated light view without inbox or agent navigation (181ms)
+  ✓  36 tests/factory.spec.ts:2176:3 › settings has a dedicated dark view without inbox or agent navigation (180ms)
+  ✓  37 tests/factory.spec.ts:2208:1 › inbox and agent views have no settings entry or configuration controls (448ms)
+  ✓  38 tests/factory.spec.ts:2229:1 › separate settings can save while the inbox view retains its item and agent drafts (363ms)
+  ✓  39 tests/factory.spec.ts:2370:1 › lost Start response locates the accepted daemon run without another Start (411ms)
+  ✓  40 tests/factory.spec.ts:2434:1 › sending a message restores the dirty retained daemon session without a Resume action (1.5s)
+  ✓  41 tests/factory.spec.ts:2525:1 › MCP bridge drives the assembled daemon through launch, question, answer and follow-up (2.6s)
+  ✓  42 tests/factory.spec.ts:2558:3 › focused work queues use GitHub ownership review requests and pending priority in light (544ms)
+  ✓  43 tests/factory.spec.ts:2558:3 › focused work queues use GitHub ownership review requests and pending priority in dark (492ms)
+  ✓  44 tests/factory.spec.ts:2634:1 › item opens a prefilled conversation and first-message Start stays explicit (608ms)
+  ✓  45 tests/factory.spec.ts:2687:1 › first-message launch uncertainty survives leaving and reopening its item (339ms)
+  ✓  46 tests/factory.spec.ts:2714:1 › Messages lists waiting agents and answering removes only its owning request (533ms)
+  ✓  47 tests/factory.spec.ts:2812:1 › first-message launch reviews changed authority before starting its prepared snapshot (269ms)
+  ✓  48 tests/factory.spec.ts:2836:1 › first-message lost Start response locates accepted work without another launch (284ms)
+  ✓  49 tests/factory.spec.ts:2855:1 › a late first-message Start cannot replace another item's draft (400ms)
+  ✓  50 tests/factory.spec.ts:2900:1 › first-message preparation errors retain the editable draft without starting (226ms)
+  ✓  51 tests/factory.spec.ts:2920:1 › initial bridge failures retry a fresh handshake without reloading or losing state (3.4s)
+  ✓  52 tests/factory.spec.ts:2938:1 › transient polling outage recovers without a stale error banner or lost first message (4.3s)
+  ✓  53 tests/factory.spec.ts:2971:1 › transient item read failure retries and marks only the successfully displayed revision read (2.3s)
+  ✓  54 tests/factory.spec.ts:3000:1 › transcript recovery keeps output and draft while removing only its own read error (4.3s)
+  ✓  55 tests/factory.spec.ts:3033:1 › mutation connection failure is not replayed and later polling does not dismiss it (3.1s)
+  ✓  56 tests/factory.spec.ts:3063:1 › read tool errors are not mistaken for retryable transport errors (3.0s)
+  ✓  57 tests/factory.spec.ts:3086:1 › exact host-wrapped MCP connection error retries a read without exposing its framework text (2.0s)
+  ✓  58 tests/factory.spec.ts:3130:1 › exact host-wrapped connection failure never replays a mutation (3.1s)
+  ✓  59 tests/factory.spec.ts:3159:3 › inactive work status and sending a message restore the retained session in light (337ms)
+  ✓  60 tests/factory.spec.ts:3159:3 › inactive work status and sending a message restore the retained session in dark (330ms)
+  ✓  61 tests/factory.spec.ts:3226:1 › failed inactive message keeps its draft and never calls Resume or replays the send (309ms)
+  ✓  62 tests/factory.spec.ts:3256:1 › cleaned work keeps its Finished item status while offering an explicit fresh conversation (160ms)
+
+  62 passed (1.2m)
+Verify: ["go", "test", "-race", "-count=1", "./..."]
+?   	codefactory/cmd/code-factory	[no test files]
+ok  	codefactory/internal/app	2.247s
+?   	codefactory/internal/buildinfo	[no test files]
+ok  	codefactory/internal/codex	1.407s
+?   	codefactory/internal/domain	[no test files]
+ok  	codefactory/internal/events	1.034s
+ok  	codefactory/internal/gateway	1.541s
+ok  	codefactory/internal/pluginbundle	1.073s
+ok  	codefactory/internal/providers	1.021s
+ok  	codefactory/internal/setup	1.526s
+ok  	codefactory/internal/store	1.027s
+?   	codefactory/internal/testhost	[no test files]
+?   	codefactory/internal/testutil	[no test files]
+?   	codefactory/internal/testutil/fakecodex	[no test files]
+ok  	codefactory/internal/transport	1.256s
+ok  	codefactory/internal/web	1.005s
+Verify: ["python3", "scripts/test_user_flows.py"]
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 1.052s
+
+OK
+Verify: ["python3", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_specs*.py"]
+.........................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 201 tests in 24.264s
+
+OK
+Verify: ["make", "build"]
+cd web && npm ci && npm run build
+
+added 43 packages, and audited 44 packages in 498ms
+
+8 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+
+> code-factory-ui@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 187 modules transformed.
+rendering chunks...
+[plugin vite:singlefile] 
+
+[plugin vite:singlefile] Inlining: index-CPh2jY-d.js
+[plugin vite:singlefile] Inlining: style-21xukAaB.css
+computing gzip size...
+../internal/web/dist/index.html  479.51 kB │ gzip: 137.44 kB
+✓ built in 705ms
+python3 scripts/package_plugin.py --embed
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.2.zip
+mkdir -p bin
+go build -trimpath -o bin/code-factory ./cmd/code-factory
+Verify: ["python3", "scripts/package.py"]
+/extra/dkropachev/code-factory-plugin/dist/code-factory-0.1.0-08c15806095a-linux-amd64.tar.gz
+/extra/dkropachev/code-factory-plugin/dist/code-factory-plugin-0.2.2.zip
+Verify: ["python3", "scripts/test_installer.py"]
+......
+----------------------------------------------------------------------
+Ran 6 tests in 21.107s
+
+OK
+Verify: ["python3", "scripts/smoke.py"]
+PASS: compiled daemon, authenticated MCP 2.0, stdio tunnel proxy, private credential files
+Verify: ["python3", "scripts/test_live_connection_test.py"]
+FAILED: connection test stopped
+PASSED: ephemeral test credentials revoked
+.FAILED: public TLS ingress 199.38.181.54
+FAILED: public TLS ingress 209.177.145.137
+FAILED: connection test stopped
+..
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+Verify: ["python3", "scripts/test_connection_probe.py"]
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.512s
+
+OK
+Verify: ["node", "--test", "scripts/test_browser_lab.mjs"]
+✔ configuration refuses nonloopback binds and nonprivate UI origins (0.609998ms)
+✔ location metadata drops secret query, fragment and dynamic identifiers (0.501343ms)
+✔ owner, Host, session, Origin and CSRF protect every browser action (18.152009ms)
+✔ browser errors never expose submitted input or URLs (2.026262ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65.97618
+Verify: ["node", "--test", "scripts/test_browser_control.mjs"]
+✔ no arguments preserve owner-approved auto-connect and all privacy flags (0.796067ms)
+✔ pilot mode attaches only to the dedicated existing loopback browser (0.225253ms)
+✔ explicit endpoint accepts split and equals options and exact IPv4 or IPv6 loopback literals (0.307629ms)
+✔ every supported mode retains statistics, CrUX and header protections exactly once (0.693415ms)
+✔ conflicting, repeated, missing and unknown options fail closed (0.261282ms)
+✔ endpoint validation rejects remote hosts, normalized aliases and URL metadata (0.406846ms)
+✔ argument parsing is deterministic and cannot mutate inputs or later calls (0.08549ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 32.496996
+Verify: ["python3", "scripts/test_packaging.py"]
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.122s
+
+OK
+{"reconciled": ["flow-answer-attention", "flow-configure-work", "flow-install-connect", "flow-interact-agent", "flow-launch-agent", "flow-maintain-flow-contracts", "flow-operate-installation", "flow-protect-secrets", "flow-receive-notifications", "flow-recover-cleanup", "flow-relate-items", "flow-resolve-priority", "flow-sync-inbox", "flow-triage-inbox", "flow-view-live-work", "glossary", "ui"]}

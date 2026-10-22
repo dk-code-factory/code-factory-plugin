@@ -1,0 +1,89 @@
+{
+  "at": "2026-10-21T05:37:26.875Z",
+  "version": "0.1.0-e945f9020696",
+  "authorization": "Owner explicitly approved temporary account-wide enable/test/restore after the one-hour soak",
+  "scope": "Actual installed Code Factory app iframe. Tests connect-src enforcement using an unlisted reserved .invalid origin, credentials omitted and no app data sent. Does not establish every CSP directive.",
+  "baselineAccountSetting": false,
+  "baseline": {
+    "at": "2026-10-21T05:35:35.147Z",
+    "probe": "Reserved .invalid origin; credentials omitted and no app data sent",
+    "fetchSucceeded": false,
+    "errorType": "TypeError",
+    "violations": [
+      {
+        "directive": "connect-src",
+        "disposition": "enforce",
+        "blockedCategory": "unlisted .invalid origin",
+        "policyDirectives": [
+          "default-src",
+          "script-src",
+          "worker-src",
+          "style-src",
+          "style-src-elem",
+          "style-src-attr",
+          "img-src",
+          "font-src",
+          "connect-src",
+          "media-src",
+          "object-src",
+          "frame-src",
+          "base-uri",
+          "upgrade-insecure-requests"
+        ]
+      }
+    ],
+    "enforcedConnectBlock": true,
+    "connection": "● Connected"
+  },
+  "accountFlagEnabledAndPersistedAfterReload": true,
+  "freshWorkConversation": "https://chatgpt.com/c/6ad84f44-fcc8-83ea-b5d5-f57b5a6e744a",
+  "freshWidgetCspOffWarning": false,
+  "enforcedProbe": {
+    "at": "2026-10-21T05:36:46.411Z",
+    "probe": "Reserved .invalid origin; credentials omitted and no app data sent",
+    "fetchSucceeded": false,
+    "errorType": "TypeError",
+    "violations": [
+      {
+        "directive": "connect-src",
+        "disposition": "enforce",
+        "blockedCategory": "unlisted .invalid origin",
+        "policyDirectives": [
+          "default-src",
+          "script-src",
+          "worker-src",
+          "style-src",
+          "style-src-elem",
+          "style-src-attr",
+          "img-src",
+          "font-src",
+          "connect-src",
+          "media-src",
+          "object-src",
+          "frame-src",
+          "base-uri",
+          "upgrade-insecure-requests"
+        ]
+      }
+    ],
+    "enforcedConnectBlock": true,
+    "connection": "● Connected"
+  },
+  "positiveBridge": {
+    "at": "2026-10-21T05:36:52.216Z",
+    "connection": "● Connected",
+    "pollResponses": 3,
+    "alerts": [],
+    "background": "rgb(23, 32, 28)",
+    "backgroundVariable": "#17201c"
+  },
+  "restoration": {
+    "at": "2026-10-21T05:37:01.645Z",
+    "setting": "Enforce CSP for custom apps",
+    "enabled": false,
+    "role": "switch",
+    "type": "BUTTON"
+  },
+  "interpretation": "The app's declared connect policy was enforced both before and after enabling the global default-CSP switch. The earlier CSP off UI label alone did not establish that this app lacked enforcement.",
+  "passed": true
+}

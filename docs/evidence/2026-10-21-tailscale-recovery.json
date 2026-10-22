@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-21",
+  "checked_utc": "2026-10-21T16:31:01.245460+00:00",
+  "installed_version": "0.1.0-3fe6288ffc29",
+  "user_report": "Cannot connect; subsequently confirmed error gone.",
+  "observations": {
+    "tailscaled": "active",
+    "backend": "Running",
+    "health_warnings": [],
+    "network_errors_local_time": "11:49:25\u201312:11:36 America/Santo_Domingo",
+    "coordination_recovered_local_time": "12:11:49 America/Santo_Domingo",
+    "netcheck": {
+      "udp": true,
+      "ipv4": true,
+      "ipv6": false,
+      "captive_portal": false,
+      "nearest_relay": "Miami",
+      "relay_latency_ms": 57.7
+    },
+    "direct_pc_ping_ms": 25,
+    "code_factory_services": [
+      "active",
+      "active"
+    ],
+    "tailnet_metadata_http": 200,
+    "mcp_unauthenticated_http": 401,
+    "root_route": "Unrelated / backend on loopback 8644 has no listener; preserved unchanged."
+  },
+  "verification": {
+    "argv": [
+      "make",
+      "connection-test"
+    ],
+    "exit_code": 0,
+    "public_ingress_peers": [
+      "199.38.181.54",
+      "209.177.145.137"
+    ],
+    "checks": [
+      "TLS on both public ingress peers",
+      "OAuth discovery and unauthenticated MCP challenge",
+      "Public isolation of private state/approval",
+      "Client registration and owner-only Tailscale consent",
+      "PKCE exchange and MCP initialization, tools and embedded resource",
+      "Refresh rotation/replay rejection",
+      "Ephemeral credentials revoked"
+    ]
+  },
+  "changes": "None. No service restart, route, ACL, authentication or network change.",
+  "interpretation": "Observed network/relay interruption recovered. Specific underlying network cause was not determined."
+}

@@ -1,0 +1,9 @@
+
+UTC 2026-10-21T00:46:33.134976+00:00
+$ CODE_FACTORY_REAL_CODEX=0 python3 /tmp/code-factory-round2-links.py
+{
+  "markdown_files": 36,
+  "local_links_and_anchors": 871,
+  "errors": []
+}
+exit_code=0

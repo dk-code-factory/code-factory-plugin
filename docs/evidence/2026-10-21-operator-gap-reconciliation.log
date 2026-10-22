@@ -1,0 +1,71 @@
+
+UTC 2026-10-21T05:41:54.758389+00:00
+$ ['python3', 'scripts/specs.py', 'reconcile', '--base', 'main', '--merge-base', '--review', '/tmp/specs-operator-gap-review.json']
+Verify: ["go", "build", "-o", "bin/fake-codex", "./internal/testutil/fakecodex"]
+Verify: ["npm", "--prefix", "web", "test"]
+
+> code-factory-ui@0.1.0 test
+> playwright test
+
+[WebServer] (node:3347228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3347241) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 13 tests using 1 worker
+
+(node:3347391) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/factory.spec.ts:338:3 › Axe WCAG A/AA scans the owned app iframe across core states in light theme (1.9s)
+  ✓   2 tests/factory.spec.ts:338:3 › Axe WCAG A/AA scans the owned app iframe across core states in dark theme (1.8s)
+  ✓   3 tests/factory.spec.ts:409:1 › keyboard launch review traps focus, preserves edits and restores its opener on Escape (2.1s)
+  ✓   4 tests/factory.spec.ts:478:1 › keyboard attention stays contained through updates and Escape restores the pending opener (1.6s)
+  ✓   5 tests/factory.spec.ts:553:1 › launch preparation failure is announced inside the dialog without losing keyboard edits (237ms)
+  ✓   6 tests/factory.spec.ts:588:1 › item actions refresh visible history while unread, New and drafts remain independent (334ms)
+  ✓   7 tests/factory.spec.ts:629:1 › unlink removes the visible relationship without clearing unrelated detail drafts (296ms)
+  ✓   8 tests/factory.spec.ts:656:1 › a delayed relationship refresh cannot replace a later selection or its drafts (388ms)
+  ✓   9 tests/factory.spec.ts:715:1 › triage does not launch, launch edits and attention answer survive reopening (848ms)
+  ✓  10 tests/factory.spec.ts:827:1 › plugin settings accept repository and secure credential without echo (286ms)
+  ✓  11 tests/factory.spec.ts:951:1 › repeated Start after a lost first response reports rejection and retains exactly one daemon run (1.3s)
+  ✓  12 tests/factory.spec.ts:1025:1 › dirty cleanup retains the daemon workspace and history until explicit Resume (2.6s)
+  ✓  13 tests/factory.spec.ts:1102:1 › MCP bridge drives the assembled daemon through launch, question, answer and follow-up (2.6s)
+
+  13 passed (17.2s)
+Verify: ["go", "test", "-race", "-count=1", "./..."]
+?   	codefactory/cmd/code-factory	[no test files]
+ok  	codefactory/internal/app	1.944s
+?   	codefactory/internal/buildinfo	[no test files]
+ok  	codefactory/internal/codex	1.406s
+?   	codefactory/internal/domain	[no test files]
+ok  	codefactory/internal/events	1.032s
+ok  	codefactory/internal/gateway	1.494s
+ok  	codefactory/internal/pluginbundle	1.059s
+ok  	codefactory/internal/providers	1.017s
+ok  	codefactory/internal/setup	1.506s
+ok  	codefactory/internal/store	1.027s
+?   	codefactory/internal/testhost	[no test files]
+?   	codefactory/internal/testutil	[no test files]
+?   	codefactory/internal/testutil/fakecodex	[no test files]
+ok  	codefactory/internal/transport	1.186s
+?   	codefactory/internal/web	[no test files]
+Verify: ["python3", "scripts/test_user_flows.py"]
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 1.077s
+
+OK
+Verify: ["python3", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_specs*.py"]
+.........................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 201 tests in 24.186s
+
+OK
+Verify: ["python3", "scripts/test_packaging.py"]
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.099s
+
+OK
+{"reconciled": ["flow-install-connect", "flow-view-live-work"]}
+
+exit_code=0

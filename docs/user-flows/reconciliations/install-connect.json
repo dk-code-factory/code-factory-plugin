@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "flow": "install-connect",
+  "base": "53ff8be70ddf852b6b13226582ccfaa9cef1f9dc",
+  "fingerprint": "19bb6b3839d1522a8bea909fd27c5ecd01e607c4ffff25d56571537d554c934f",
+  "environment": {
+    "CODE_FACTORY_REAL_CODEX": "0"
+  },
+  "review": {
+    "description": "Adopt S1-S3 from the existing complete-package/private-owner connection path. No product behavior was changed by this specification baseline.",
+    "implementation": "Reviewed setup/plugin linking, portable versus registered browser packaging, and gateway owner consent. References name actual entry points; the existing endpoints and provider pin stay unchanged.",
+    "tests": "S1 maps deterministic package and app-ID rejection assertions; S2 maps owner/PKCE/rotation/revocation and native form regressions. S3 remains a real-host gap, with dated evidence linked rather than inferred from fixtures."
+  },
+  "verification": [
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./..."
+      ],
+      "exit_code": 0,
+      "seconds": 1.769
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_packaging.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.164
+    }
+  ]
+}

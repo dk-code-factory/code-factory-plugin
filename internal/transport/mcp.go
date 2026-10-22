@@ -8,6 +8,7 @@ import (
 	"codefactory/internal/store"
 	"codefactory/internal/web"
 	"context"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
@@ -20,7 +21,48 @@ import (
 	"time"
 )
 
-const ResourceURI = "ui://code-factory/inbox.html"
+const legacyResourceURI = "ui://code-factory/inbox.html"
+
+// ResourceURI identifies the embedded HTML bytes, including its bundled JS/CSS.
+var ResourceURI = resourceURI(web.HTML)
+var SettingsResourceURI = settingsResourceURI(web.SettingsHTML())
+
+func resourceURI(html string) string {
+	return fmt.Sprintf("ui://code-factory/inbox-%x.html", sha256.Sum256([]byte(html)))
+}
+
+func settingsResourceURI(html string) string {
+	return fmt.Sprintf("ui://code-factory/settings-%x.html", sha256.Sum256([]byte(html)))
+}
+
+func uiResourceContents(uri, html string) *mcp.ReadResourceResult {
+	return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: uri, MIMEType: "text/html;profile=mcp-app", Text: html, Meta: mcp.Meta{"ui": map[string]any{"csp": map[string]any{"connectDomains": []string{}, "resourceDomains": []string{}}}}}}}
+}
+func registerSettingsUIResource(m *mcp.Server, html string) string {
+	uri := settingsResourceURI(html)
+	m.AddResource(&mcp.Resource{URI: uri, Name: "Code Factory settings", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return uiResourceContents(uri, html), nil
+	})
+	return uri
+}
+func registerUIResource(m *mcp.Server, html string) string {
+	uri := resourceURI(html)
+	m.AddResource(&mcp.Resource{URI: uri, Name: "Code Factory", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return uiResourceContents(uri, html), nil
+	})
+	// Only the original inbox URI has a compatibility alias. Settings cannot alias it.
+	m.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
+		return func(ctx context.Context, method string, req mcp.Request) (mcp.Result, error) {
+			if method == "resources/read" {
+				if params, ok := req.GetParams().(*mcp.ReadResourceParams); ok && params != nil && params.URI == legacyResourceURI {
+					return uiResourceContents(legacyResourceURI, html), nil
+				}
+			}
+			return next(ctx, method, req)
+		}
+	})
+	return uri
+}
 
 type Server struct {
 	App         *app.App
@@ -80,14 +122,14 @@ type SkillInput struct {
 	CWD string `json:"cwd"`
 }
 
-func bind[I any](s *mcp.Server, name, desc string, appOnly, readOnly bool, f func(context.Context, I) (any, error)) {
+func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnly bool, f func(context.Context, I) (any, error)) {
 	vis := []string{"model", "app"}
 	if appOnly {
 		vis = []string{"app"}
 	}
-	meta := mcp.Meta{"ui": map[string]any{"resourceUri": ResourceURI, "visibility": vis}}
-	if name == "open_factory" {
-		meta["openai/outputTemplate"] = ResourceURI
+	meta := mcp.Meta{"ui": map[string]any{"resourceUri": resourceURI, "visibility": vis}}
+	if name == "open_factory" || name == "open_settings" {
+		meta["openai/outputTemplate"] = resourceURI
 	}
 	openWorld := name == "start_run" || name == "send_message" || name == "answer_request"
 	destructive := name == "cleanup_run"
@@ -102,48 +144,48 @@ func bind[I any](s *mcp.Server, name, desc string, appOnly, readOnly bool, f fun
 func ptr[T any](v T) *T { return &v }
 func New(a *app.App, ev *events.Service) *Server {
 	s := &Server{App: a, Events: ev}
-	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. Use prepare_launch, review the snapshot, then start_run only when requested. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
+	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. Use prepare_launch, review the snapshot, then start_run only when requested. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
 	s.MCP = m
-	m.AddResource(&mcp.Resource{URI: ResourceURI, Name: "Code Factory", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
-		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: ResourceURI, MIMEType: "text/html;profile=mcp-app", Text: web.HTML, Meta: mcp.Meta{"ui": map[string]any{"csp": map[string]any{"connectDomains": []string{}, "resourceDomains": []string{}}}}}}}, nil
-	})
-	bind(m, "open_factory", "Open Code Factory’s GitHub issue and pull-request dashboard, repository settings, and local Codex agents. No email account is needed.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
-	bind(m, "list_inbox", "List synchronized issues and PRs without marking anything read.", false, true, func(ctx context.Context, in InboxInput) (any, error) { return a.Inbox(ctx, in.State) })
-	bind(m, "read_item", "Read item detail. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
-	bind(m, "item_action", "Mark displayed revision read, unread, acknowledge, record action, or override priority.", false, false, func(ctx context.Context, in UserAction) (any, error) {
+	uri := registerUIResource(m, web.HTML)
+	settingsURI := registerSettingsUIResource(m, web.SettingsHTML())
+	bind(m, settingsURI, "open_settings", "Open Code Factory settings in its own dedicated view. Configure repositories, priorities, profiles and skills here; settings are not part of the inbox or agent UI.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.settingsSnapshot(ctx) })
+	bind(m, uri, "open_factory", "Open Code Factory’s GitHub issue and pull-request dashboard and local Codex agents. No email account is needed.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
+	bind(m, uri, "list_inbox", "List synchronized issues and PRs without marking anything read.", false, true, func(ctx context.Context, in InboxInput) (any, error) { return a.Inbox(ctx, in.State) })
+	bind(m, uri, "read_item", "Read item detail. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
+	bind(m, uri, "item_action", "Mark displayed revision read, unread, acknowledge, record action, or override priority.", false, false, func(ctx context.Context, in UserAction) (any, error) {
 		return nil, a.UserAction(ctx, in.ID, in.Action, in.Revision, in.Priority)
 	})
-	bind(m, "get_settings", "Read configuration without credentials.", false, true, func(ctx context.Context, _ Empty) (any, error) { return a.Config(ctx) })
-	bind(m, "save_settings", "Save priority, assessment, Jira tenant and notification settings.", false, false, func(ctx context.Context, in domain.Config) (any, error) { return nil, a.SaveConfig(ctx, in) })
-	bind(m, "save_repository", "Configure a GitHub owner/repository and optional existing local checkout.", false, false, func(ctx context.Context, in RepositoryInput) (any, error) {
+	bind(m, settingsURI, "get_settings", "Read configuration without credentials.", false, true, func(ctx context.Context, _ Empty) (any, error) { return a.Config(ctx) })
+	bind(m, settingsURI, "save_settings", "Save priority, assessment, Jira tenant and notification settings.", false, false, func(ctx context.Context, in domain.Config) (any, error) { return nil, a.SaveConfig(ctx, in) })
+	bind(m, settingsURI, "save_repository", "Configure a GitHub owner/repository and optional existing local checkout.", false, false, func(ctx context.Context, in RepositoryInput) (any, error) {
 		return nil, a.SaveRepository(ctx, domain.Repository{ID: in.ID, Checkout: in.Checkout, Base: in.Base})
 	})
-	bind(m, "save_profile", "Create or edit a launch profile, prompt, permissions, skills and publishing authority.", false, false, func(ctx context.Context, in domain.Profile) (any, error) { return nil, a.SaveProfile(ctx, in) })
-	bind(m, "set_jira_credential", "Store a Jira API token from the secure UI. Never return the credential.", true, false, func(ctx context.Context, in CredentialInput) (any, error) {
+	bind(m, settingsURI, "save_profile", "Create or edit a launch profile, prompt, permissions, skills and publishing authority.", false, false, func(ctx context.Context, in domain.Profile) (any, error) { return nil, a.SaveProfile(ctx, in) })
+	bind(m, settingsURI, "set_jira_credential", "Store a Jira API token from the secure UI. Never return the credential.", true, false, func(ctx context.Context, in CredentialInput) (any, error) {
 		if strings.TrimSpace(in.Token) == "" {
 			return nil, fmt.Errorf("token required")
 		}
 		return nil, a.Vault.Set(ctx, "jira", in.Token)
 	})
-	bind(m, "set_relationship", "Add or remove a local item relationship; never changes GitHub or Jira.", false, false, func(ctx context.Context, in LinkInput) (any, error) {
+	bind(m, uri, "set_relationship", "Add or remove a local item relationship; never changes GitHub or Jira.", false, false, func(ctx context.Context, in LinkInput) (any, error) {
 		return nil, a.Link(ctx, domain.Relationship{Source: in.Source, Target: in.Target, Evidence: in.Evidence}, in.Remove)
 	})
-	bind(m, "prepare_launch", "Prepare an editable, durable launch snapshot. Does not start an agent.", false, false, func(ctx context.Context, in app.LaunchInput) (any, error) {
+	bind(m, uri, "prepare_launch", "Prepare an editable, durable launch snapshot. Does not start an agent.", false, false, func(ctx context.Context, in app.LaunchInput) (any, error) {
 		r, e := a.Runs.Prepare(ctx, in)
 		return publicRun(r), e
 	})
-	bind(m, "start_run", "Start a prepared launch or explicitly resume an interrupted run. Returns immediately.", false, false, func(ctx context.Context, in StartInput) (any, error) {
+	bind(m, uri, "start_run", "Start a prepared launch or explicitly resume an interrupted run. Returns immediately.", false, false, func(ctx context.Context, in StartInput) (any, error) {
 		r, e := a.Runs.Start(ctx, in.ID, in.Resume)
 		return publicRun(r), e
 	})
-	bind(m, "list_runs", "List agent status and retained workspaces.", false, true, func(ctx context.Context, _ Empty) (any, error) {
+	bind(m, uri, "list_runs", "List agent status and retained workspaces.", false, true, func(ctx context.Context, _ Empty) (any, error) {
 		runs, e := store.List[domain.Run](ctx, a.Store, "run")
 		for i := range runs {
 			runs[i] = publicRun(runs[i])
 		}
 		return runs, e
 	})
-	bind(m, "read_run", "Read a run snapshot and pending attention requests.", false, true, func(ctx context.Context, in IDInput) (any, error) {
+	bind(m, uri, "read_run", "Read a run snapshot and pending attention requests.", false, true, func(ctx context.Context, in IDInput) (any, error) {
 		var run domain.Run
 		if e := a.Store.Get(ctx, "run", in.ID, &run); e != nil {
 			return nil, e
@@ -157,23 +199,23 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return map[string]any{"run": publicRun(run), "attention": out}, e
 	})
-	bind(m, "send_message", "Send follow-up chat; provide expectedTurn for an active turn to steer safely.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
+	bind(m, uri, "send_message", "Send a message, restoring an inactive retained session when needed. Provide expectedTurn for an active turn to steer safely.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
 		return nil, a.Runs.Message(ctx, in.ID, in.Text, in.ExpectedTurn)
 	})
-	bind(m, "answer_request", "Answer a matching live question or approval once. Stale answers are rejected.", false, false, func(ctx context.Context, in AnswerInput) (any, error) {
+	bind(m, uri, "answer_request", "Answer a matching live question or approval once. Stale answers are rejected.", false, false, func(ctx context.Context, in AnswerInput) (any, error) {
 		b, e := json.Marshal(in.Answer)
 		if e != nil {
 			return nil, e
 		}
 		return nil, a.Runs.Answer(ctx, in.ID, b)
 	})
-	bind(m, "interrupt_run", "Interrupt the active turn, preserving worktree and history.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Interrupt(ctx, in.ID) })
-	bind(m, "cleanup_run", "Explicitly remove a stopped run's clean worktree. Refuses uncommitted changes.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Cleanup(ctx, in.ID) })
-	bind(m, "discover_skills", "Discover local Codex skills for a checkout.", false, true, func(ctx context.Context, in SkillInput) (any, error) { return a.Runs.DiscoverSkills(ctx, in.CWD) })
-	bind(m, "save_skill", "Create or edit a service-managed skill with YAML frontmatter.", false, false, func(ctx context.Context, in SaveSkillInput) (any, error) {
+	bind(m, uri, "interrupt_run", "Interrupt the active turn, preserving worktree and history.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Interrupt(ctx, in.ID) })
+	bind(m, uri, "cleanup_run", "Explicitly remove a stopped run's clean worktree. Refuses uncommitted changes.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Cleanup(ctx, in.ID) })
+	bind(m, settingsURI, "discover_skills", "Discover local Codex skills for a checkout.", false, true, func(ctx context.Context, in SkillInput) (any, error) { return a.Runs.DiscoverSkills(ctx, in.CWD) })
+	bind(m, settingsURI, "save_skill", "Create or edit a service-managed skill with YAML frontmatter.", false, false, func(ctx context.Context, in SaveSkillInput) (any, error) {
 		return nil, a.Runs.SaveSkill(ctx, domain.Skill{Name: in.Name, Content: in.Content})
 	})
-	bind(m, "read_changes", "Read up to 200 incremental journal events after a cursor. App-only polling.", true, true, func(ctx context.Context, in Page) (any, error) {
+	bind(m, uri, "read_changes", "Read up to 200 incremental journal events after a cursor. App-only polling.", true, true, func(ctx context.Context, in Page) (any, error) {
 		ev, e := a.Store.Events(ctx, in.After, in.Limit)
 		next := in.After
 		for _, v := range ev {
@@ -181,20 +223,20 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return map[string]any{"events": ev, "cursor": next, "hasMore": next < a.Store.Latest(ctx)}, e
 	})
-	bind(m, "read_snapshot", "Read current UI state and a cursor for incremental updates.", true, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
+	bind(m, uri, "read_snapshot", "Read current UI state and a cursor for incremental updates.", true, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
 	type TranscriptInput struct {
 		ID    string `json:"id"`
 		After int64  `json:"after,omitempty"`
 		Limit int    `json:"limit,omitempty"`
 	}
-	bind(m, "read_transcript", "Page durable agent output and diffs without loading the entire transcript.", true, true, func(ctx context.Context, in TranscriptInput) (any, error) {
+	bind(m, uri, "read_transcript", "Page durable agent output and diffs without loading the entire transcript.", true, true, func(ctx context.Context, in TranscriptInput) (any, error) {
 		return a.Store.RunEvents(ctx, in.ID, in.After, in.Limit)
 	})
-	bind(m, "diagnostics", "Check daemon, providers, Codex compatibility and outstanding host setup blockers.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.diagnostics(ctx), nil })
+	bind(m, settingsURI, "diagnostics", "Check daemon, providers, Codex compatibility and outstanding host setup blockers.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.diagnostics(ctx), nil })
 	registerEvents(m, ev)
 	return s
 }
-func (s *Server) snapshot(ctx context.Context) (any, error) {
+func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 	cursor := s.App.Store.Latest(ctx)
 	inbox, e := s.App.Inbox(ctx, "all")
 	if e != nil {
@@ -223,9 +265,33 @@ func (s *Server) snapshot(ctx context.Context) (any, error) {
 	if e != nil {
 		return nil, e
 	}
+	var viewer domain.GitHubViewer
+	if err := s.App.Store.Get(ctx, "identity", "github", &viewer); err != nil && !errors.Is(err, store.ErrNotFound) {
+		return nil, err
+	}
 	config, e := s.App.Config(ctx)
-	return map[string]any{"inbox": inbox, "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "skills": skills, "config": config, "cursor": cursor}, e
+	return map[string]any{"viewer": viewer, "inbox": inbox, "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "skills": skills, "config": config, "cursor": cursor}, e
 }
+
+// The model-visible settings entry does not disclose unrelated task/run contents.
+func (s *Server) settingsSnapshot(ctx context.Context) (map[string]any, error) {
+	cursor := s.App.Store.Latest(ctx)
+	repos, err := store.List[domain.Repository](ctx, s.App.Store, "repository")
+	if err != nil {
+		return nil, err
+	}
+	profiles, err := store.List[domain.Profile](ctx, s.App.Store, "profile")
+	if err != nil {
+		return nil, err
+	}
+	skills, err := store.List[domain.Skill](ctx, s.App.Store, "skill")
+	if err != nil {
+		return nil, err
+	}
+	config, err := s.App.Config(ctx)
+	return map[string]any{"repositories": repos, "profiles": profiles, "skills": skills, "config": config, "cursor": cursor, "inbox": []any{}, "runs": []any{}, "attention": []any{}}, err
+}
+
 func (s *Server) detail(ctx context.Context, id string) (any, error) {
 	var item domain.Item
 	if e := s.App.Store.Get(ctx, "item", id, &item); e != nil {
