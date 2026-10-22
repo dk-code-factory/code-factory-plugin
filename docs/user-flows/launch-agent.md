@@ -25,11 +25,13 @@ Leaving the initial conversation retains its message and busy/uncertain state pe
 - **S2** Explicit Start queues prepared work once and returns before completion; subsequent Start requests for that run are rejected. An uncertain response locates the accepted run before another action is offered.
 - **S3** Selected skill contents and profile choices remain fixed in the prepared snapshot.
 
+- **S4** Select a pipeline before explicit Start, retaining an edited first message and reviewing the selected authority.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [prepared-launch](../glossary/README.md#prepared-launch), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [workspace](../glossary/README.md#workspace), [agent-run](../glossary/README.md#agent-run), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [keyboard-focus](../glossary/README.md#keyboard-focus), [modal-dialog](../glossary/README.md#modal-dialog).
-UI entities: [D-LAUNCH](../ui/README.md#D-LAUNCH), [P-LAUNCH-FRAME](../ui/README.md#P-LAUNCH-FRAME), [P-LAUNCH-EDITOR](../ui/README.md#P-LAUNCH-EDITOR), [P-LAUNCH-REVIEW](../ui/README.md#P-LAUNCH-REVIEW), [W-DIALOG-FRAME](../ui/README.md#W-DIALOG-FRAME), [W-LAUNCH-EDITOR](../ui/README.md#W-LAUNCH-EDITOR), [W-LAUNCH-REVIEW](../ui/README.md#W-LAUNCH-REVIEW), [C-LAUNCH-OPEN](../ui/README.md#C-LAUNCH-OPEN), [C-LAUNCH-PROFILE](../ui/README.md#C-LAUNCH-PROFILE), [C-PREPARE](../ui/README.md#C-PREPARE), [C-LAUNCH-EDIT](../ui/README.md#C-LAUNCH-EDIT), [C-START](../ui/README.md#C-START), [C-DISMISS](../ui/README.md#C-DISMISS), [W-NEW-CHAT](../ui/README.md#W-NEW-CHAT), [P-NEW-CHAT](../ui/README.md#P-NEW-CHAT), [C-START-CHAT](../ui/README.md#C-START-CHAT).
+Glossary: [prepared-launch](../glossary/README.md#prepared-launch), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [workspace](../glossary/README.md#workspace), [agent-run](../glossary/README.md#agent-run), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [keyboard-focus](../glossary/README.md#keyboard-focus), [modal-dialog](../glossary/README.md#modal-dialog), [agent-pipeline](../glossary/README.md#agent-pipeline).
+UI entities: [D-LAUNCH](../ui/README.md#D-LAUNCH), [P-LAUNCH-FRAME](../ui/README.md#P-LAUNCH-FRAME), [P-LAUNCH-EDITOR](../ui/README.md#P-LAUNCH-EDITOR), [P-LAUNCH-REVIEW](../ui/README.md#P-LAUNCH-REVIEW), [W-DIALOG-FRAME](../ui/README.md#W-DIALOG-FRAME), [W-LAUNCH-EDITOR](../ui/README.md#W-LAUNCH-EDITOR), [W-LAUNCH-REVIEW](../ui/README.md#W-LAUNCH-REVIEW), [C-LAUNCH-OPEN](../ui/README.md#C-LAUNCH-OPEN), [C-LAUNCH-PROFILE](../ui/README.md#C-LAUNCH-PROFILE), [C-PREPARE](../ui/README.md#C-PREPARE), [C-LAUNCH-EDIT](../ui/README.md#C-LAUNCH-EDIT), [C-START](../ui/README.md#C-START), [C-DISMISS](../ui/README.md#C-DISMISS), [W-NEW-CHAT](../ui/README.md#W-NEW-CHAT), [P-NEW-CHAT](../ui/README.md#P-NEW-CHAT), [C-START-CHAT](../ui/README.md#C-START-CHAT), [C-PIPELINE-SELECT](../ui/README.md#C-PIPELINE-SELECT).
 
 ## Flow diagram
 
@@ -42,6 +44,7 @@ flowchart TD
     N4["Verify the same retained run before permitting retry"]
     N5["Optional New run prepares a durable review with Edit and Advanced"]
     N6(["Unstarted draft or prepared review retained"])
+    N7["Select a pipeline before explicit Start, retaining an edited first message and reviewing the selected authority. #40;S4#41;"]
     N0 --> N1
     N0 -->|"customize a separate proposal"| N5
     N5 -->|"reviewed Start"| N1
@@ -54,6 +57,8 @@ flowchart TD
     N4 -->|"accepted work located"| N3
     N4 -->|"confirmed still prepared#59; explicit retry"| N1
     N4 -->|"unknown status#59; retain disabled Start and Check status"| N6
+    N0 -->|"additional workbench path"| N7
+    N7 -->|"resolved or explicit recovery"| N3
 ```
 
 ## Implementation references
@@ -97,6 +102,7 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("confirmed unaccepted Start allows an explicit retry of the same snapshot"`; S2. Status-confirmed unaccepted Start permits explicit retry without reprepare.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `item opens a prefilled conversation and first-message Start stays explicit`; S1, S2. Item opens Agent with summary, prefilled prompt and closed details; no intermediate item-only page or Open agent control, no work before Start, retained item draft, exact prepare/start payload and conversation afterward.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `first-message launch uncertainty survives leaving and reopening its item`; S1, S2. Uncertain first-message Start remains disabled across Back/reopen; Check reads the same prepared record with no additional Start/preparation.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `first-message pipeline selection preserves an edited prompt`; S4. Selected profile reaches preparation only after Start and edited text remains intact.
 
 ## Verification and gaps
 

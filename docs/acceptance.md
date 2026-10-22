@@ -1,17 +1,62 @@
 # Work acceptance gate
 
-Status: **compact UI and separate Settings installed; bounded smoke verified; full pilot readiness blocked**
-(2026-10-21).
+Status: **workbench and bounded question-recovery smoke verified; full pilot readiness blocked**
+(2026-10-22).
 
-Current installed daemon: **0.1.0-08c15806095a**. Complete browser plugin: **0.2.2**.
-Current separate-view smoke, earlier compact navigation, `b3` workflow smoke and `e945` core results are recorded below; the `850`, `06d6` and `229fc8` observations
-retained later in this ledger remain evidence for those earlier versions.
+Current installed daemon: **0.1.0-ebf7a6cdd84a**. Complete browser plugin: **0.2.2**.
 The [installed private plugin](https://chatgpt.com/plugins/Plugin_34caeb5c66048191a1ac0c8f01c31e73)
-references the observed registered app
-`asdk_app_6ad792b279348191b76d3443615b66e0`. Its page shows Apps1, Skills2,
-version0.2.2, a connected account and **Try in chat**. The starter opens browser
-Work successfully. The canonical endpoint is
-`https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp`.
+uses registered app `asdk_app_6ad792b279348191b76d3443615b66e0`; its package and
+registered app identifiers remain distinct. The existing signed-in pilot profile
+and connected account were reused. Historical results below remain bound to their
+recorded versions.
+
+## Workbench, PR monitoring and question recovery · 2026-10-22
+
+Installed **0.1.0-ebf7a6cdd84a** provides Working, Issues, My PRs, Review PRs and
+Messages, with open Issues by default. Working follows GitHub completion rather
+than a stopped agent. Linked PRs expose independent lifecycle, review and current-head
+CI, while manual/development implementation links remain distinct from references.
+The actual pilot PR displayed open / no review decision / CI success. Pipeline
+selection showed its selected mode, read-only sandbox and ask-before-publishing
+authority before explicit first-message Start.
+
+All **68 browser tests**, Go race tests, reviewed specification checks and branch
+CI passed. **23 fixture Axe scans** had zero automated violations; incomplete
+nodes and manual accessibility remain separate. The pinned **Codex 0.161.0** real
+lifecycle target also passed in an isolated temporary repository before the final
+technical-message display correction. Fixture coverage includes two failed form
+attempts, free-text fallback, restart/answer races, native/async formats, GitHub
+completion, current-head metadata and exact PR/check links.
+
+After Refresh tools and a fresh installed Work chat, a real native question reached
+Messages and its UI answer completed; a UI follow-up retained the same thread.
+That final Plan/read-only/ask snapshot was prepared and started through the owner
+MCP interface after authority review. An earlier `71a9` build also exercised the
+explicit Plan launch review/Start in the actual UI. On the final build, a new
+Investigation / Default / read-only / ask session was launched through the UI
+pipeline selector and first-message Start. It ended with a plain-text question;
+the helper produced a native form on its **first repair attempt**, the UI answer
+continued the original thread, and the completion marker appeared with no remaining
+questions. Automatic repair/continuation input stayed outside the normal
+conversation and appeared as two Question recovery blocks in the same-session
+console. Console switching retained the draft; the owned draft was then cleared
+using native keyboard editing. The four new test worktrees were cleaned, retaining
+history. Issue-5 work remains tracked until its GitHub completion, as configured.
+
+A keyboard-navigation error triggered cleanup of older clean pilot run
+`09f11628428c72dea969f0f860b6334d`. Its tracked worktree was restored from the
+retained branch and its prior interrupted state restored while the services were
+stopped with no live/idle runs. The branch head, path, Codex thread and other run
+record fields were verified. All six original run states match their baseline at
+the end. Owner credentials and the pinned executable path were preserved. Required
+unrelated public-root/private routes and scoped Code Factory routes were verified;
+the full Serve configuration hash changed during the session, so complete byte-for-byte
+route preservation is not claimed.
+
+See the [version-bound workbench record](evidence/2026-10-22-workbench.json).
+Real host subscriptions/callbacks, a soak on this build, desktop logout/login,
+full manual accessibility, and the real model's second-attempt/text-fallback matrix
+remain open. No full readiness or delivered host push notification claim is made.
 
 ## Item work status, message wake and blocking asks · 2026-10-21
 

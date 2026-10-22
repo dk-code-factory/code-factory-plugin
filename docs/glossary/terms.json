@@ -3464,6 +3464,203 @@
       "category": "element",
       "definition": "The displayed activity or waiting state in a work status widget.",
       "scope": "ui-w-work-status"
+    },
+    {
+      "id": "working-queue",
+      "name": "Working queue",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The collection of launched work whose issue remains open without a merged implementation pull request, or whose pull request remains open."
+    },
+    {
+      "id": "agent-pipeline",
+      "name": "Agent pipeline",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A selected reusable profile for one retained agent session."
+    },
+    {
+      "id": "question-recovery",
+      "name": "Question recovery",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A bounded dialogue that turns an unresolved textual request for human input into an answerable question."
+    },
+    {
+      "id": "session-console",
+      "name": "Session console",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An alternative view of one retained agent conversation and its technical activity."
+    },
+    {
+      "id": "implementation-relationship",
+      "name": "Implementation relationship",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An explicit association between an issue and a pull request intended to address it."
+    },
+    {
+      "id": "ui-page-working",
+      "name": "Working page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The page displaying launched work awaiting GitHub completion."
+    },
+    {
+      "id": "ui-w-session-console",
+      "name": "Session console widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The widget displaying a retained session and its technical activity."
+    },
+    {
+      "id": "ui-w-question-recovery",
+      "name": "Question recovery widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The widget displaying question repair progress and user takeover."
+    },
+    {
+      "id": "ui-c-session-console",
+      "name": "Session console connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection selecting a retained session presentation."
+    },
+    {
+      "id": "element-w-navigation-working",
+      "name": "working",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control opening the Working queue.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-pr-evidence-lifecycle",
+      "name": "lifecycle",
+      "aliases": [],
+      "category": "element",
+      "definition": "The independently displayed open, closed or merged pull request state.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-review",
+      "name": "review",
+      "aliases": [],
+      "category": "element",
+      "definition": "The authoritative pull request review decision.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-ci",
+      "name": "ci",
+      "aliases": [],
+      "category": "element",
+      "definition": "The current-head check rollup.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-linked-pr",
+      "name": "linked-pr",
+      "aliases": [],
+      "category": "element",
+      "definition": "A related pull request summary and source link.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-error",
+      "name": "error",
+      "aliases": [],
+      "category": "element",
+      "definition": "A visible unavailable or stale synchronization result.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-new-chat-pipeline",
+      "name": "pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The selected reusable launch profile.",
+      "scope": "ui-w-new-chat"
+    },
+    {
+      "id": "element-w-session-console-output",
+      "name": "output",
+      "aliases": [],
+      "category": "element",
+      "definition": "The redacted technical activity and conversation stream.",
+      "scope": "ui-w-session-console"
+    },
+    {
+      "id": "element-w-question-recovery-progress",
+      "name": "progress",
+      "aliases": [],
+      "category": "element",
+      "definition": "The current question recovery stage and attempt count.",
+      "scope": "ui-w-question-recovery"
+    },
+    {
+      "id": "element-w-question-recovery-takeover",
+      "name": "takeover",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control returning session control to the user.",
+      "scope": "ui-w-question-recovery"
+    },
+    {
+      "id": "element-w-transcript-console",
+      "name": "console",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control switching between conversation and session console.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-policy-settings-question-helper-model",
+      "name": "question-helper-model",
+      "aliases": [],
+      "category": "element",
+      "definition": "The optional model used for question recovery.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-run-controls-session-status",
+      "name": "session-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The displayed lifecycle status of the currently selected session.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-questions-no-reply",
+      "name": "no-reply",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control dismissing a textual fallback that needs no user answer.",
+      "scope": "ui-w-questions"
+    },
+    {
+      "id": "element-w-pr-evidence-check-link",
+      "name": "check-link",
+      "aliases": [],
+      "category": "element",
+      "definition": "A source link to an individual CI check or status provider.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "ui-c-pipeline-select",
+      "name": "Pipeline selection connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The pipeline selection connection within the application interface."
+    },
+    {
+      "id": "ui-c-text-dismiss",
+      "name": "Text question dismissal connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The text question dismissal connection within the application interface."
     }
   ]
 }

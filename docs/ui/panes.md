@@ -24,8 +24,8 @@ The list expresses logical composition, not required component boundaries.
 <!-- specs:panes-1 -->
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
-| `P-INBOX-QUERY` | `W-INBOX-QUERY`, `W-SYNC-HEALTH` | Compact search/filter row on the list page; only repository errors accompany it. |
-| `P-INBOX-LIST` | `W-ITEM-ROW` repeated by item ID, or `W-INBOX-EMPTY` | Full-width filtered list, exclusively on PAGE-INBOX. Selection navigates away to one item. |
+| `P-INBOX-QUERY` | `W-INBOX-QUERY`, `W-SYNC-HEALTH` | Independent compact search/filter controls for the current work queue, with repository errors when present. |
+| `P-INBOX-LIST` | `W-ITEM-ROW` repeated by item ID, or `W-INBOX-EMPTY` | Full-width filtered list on the active Working, Issues, My PRs or Review PRs page. Selection opens one item conversation. |
 | `P-ITEM-DETAIL` | `W-ITEM-OVERVIEW`, `W-ITEM-ACTIONS`, `W-PRIORITY`, `W-RELATIONSHIPS`, `W-TICKET-CONTEXT`, `W-PR-EVIDENCE`, `W-ITEM-HISTORY`; contextual Back-only `W-NAVIGATION` instance. | Item summary above chat and collapsed triage/details below it on PAGE-AGENT. |
 <!-- /specs:panes-1 -->
 
@@ -35,7 +35,7 @@ The list expresses logical composition, not required component boundaries.
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
 | `P-RUN-LIST` | `W-RUN-ROW` repeated by run ID, or `W-RUN-EMPTY` | Collapsed Work history inside the selected item’s Item details, containing only that item’s retained conversations and nested Draft launches. |
-| `P-RUN-DETAIL` | `W-RUN-CONTROLS`, `W-ATTENTION-NOTICE` repeated by request ID, `W-TRANSCRIPT`, `W-MESSAGE`; or `W-RUN-EMPTY`; contextual Back-only `W-NAVIGATION` instance. | Conversation content on PAGE-AGENT below the item summary, with origin-specific Back and per-run follow-up drafts. |
+| `P-RUN-DETAIL` | `W-RUN-CONTROLS`, `W-ATTENTION-NOTICE` repeated by request ID, `W-TRANSCRIPT`, `W-MESSAGE`; or `W-RUN-EMPTY`; contextual Back-only `W-NAVIGATION` instance. Session console and question recovery widgets share the retained session context. | Conversation content on PAGE-AGENT below the item summary, with origin-specific Back and per-run follow-up drafts. |
 <!-- /specs:panes-2 -->
 
 ## Settings panes

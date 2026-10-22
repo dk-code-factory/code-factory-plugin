@@ -10,7 +10,7 @@ At least one repository has synchronized items.
 
 ## Main flow
 
-1. Open Issues, defaulting to open issues with no linked pull request, sorted by priority with unknown priorities last. My PRs shows open pull requests authored by the authenticated account; Review PRs shows open requests to that account or its teams. Each tab retains its own search and filters. No matches offers Clear filters. Repository/number links open the original source independently.
+1. Open Issues, defaulting to open issues including those with linked pull requests, sorted by priority with unknown priorities last. My PRs shows open pull requests authored by the authenticated account; Review PRs shows open requests to that account or its teams. Each tab retains its own search and filters. No matches offers Clear filters. Repository/number links open the original source independently.
 2. Select an item to open its conversation immediately with item information and a source-description summary. Continue the newest retained run or see a prefilled editable first message; the list is replaced. Full description, activity, priority, checks and relationships are in Item details below chat.
 3. Mark the displayed version read, or use Actions to mark unread, acknowledge New or record an action.
 4. Continue receiving unread indications for later changes even after earlier actions.
@@ -25,11 +25,13 @@ Listing items and opening their external GitHub links do not mark them read. A f
 - **S2** Marking an old displayed version read leaves a newer version unread.
 - **S3** Focused queues apply pending/author/reviewer membership and priority order. Selecting an item opens its conversation with context; Back restores that queue. Listing, source links and selection never start work.
 
+- **S4** Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item), [state-new](../glossary/README.md#state-new), [state-unread](../glossary/README.md#state-unread), [state-acted-on](../glossary/README.md#state-acted-on), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior).
-UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [P-INBOX-QUERY](../ui/README.md#P-INBOX-QUERY), [P-INBOX-LIST](../ui/README.md#P-INBOX-LIST), [P-ITEM-DETAIL](../ui/README.md#P-ITEM-DETAIL), [W-INBOX-QUERY](../ui/README.md#W-INBOX-QUERY), [W-SYNC-HEALTH](../ui/README.md#W-SYNC-HEALTH), [W-ITEM-ROW](../ui/README.md#W-ITEM-ROW), [W-INBOX-EMPTY](../ui/README.md#W-INBOX-EMPTY), [W-ITEM-OVERVIEW](../ui/README.md#W-ITEM-OVERVIEW), [W-ITEM-ACTIONS](../ui/README.md#W-ITEM-ACTIONS), [W-ITEM-HISTORY](../ui/README.md#W-ITEM-HISTORY), [C-FILTER](../ui/README.md#C-FILTER), [C-SELECT-ITEM](../ui/README.md#C-SELECT-ITEM), [C-ITEM-STATE](../ui/README.md#C-ITEM-STATE), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [C-BACK](../ui/README.md#C-BACK), [C-ITEM-SOURCE](../ui/README.md#C-ITEM-SOURCE), [PAGE-MY-PRS](../ui/README.md#PAGE-MY-PRS), [PAGE-REVIEW-PRS](../ui/README.md#PAGE-REVIEW-PRS), [W-NEW-CHAT](../ui/README.md#W-NEW-CHAT), [C-START-CHAT](../ui/README.md#C-START-CHAT).
+Glossary: [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item), [state-new](../glossary/README.md#state-new), [state-unread](../glossary/README.md#state-unread), [state-acted-on](../glossary/README.md#state-acted-on), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [working-queue](../glossary/README.md#working-queue), [implementation-relationship](../glossary/README.md#implementation-relationship).
+UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [P-INBOX-QUERY](../ui/README.md#P-INBOX-QUERY), [P-INBOX-LIST](../ui/README.md#P-INBOX-LIST), [P-ITEM-DETAIL](../ui/README.md#P-ITEM-DETAIL), [W-INBOX-QUERY](../ui/README.md#W-INBOX-QUERY), [W-SYNC-HEALTH](../ui/README.md#W-SYNC-HEALTH), [W-ITEM-ROW](../ui/README.md#W-ITEM-ROW), [W-INBOX-EMPTY](../ui/README.md#W-INBOX-EMPTY), [W-ITEM-OVERVIEW](../ui/README.md#W-ITEM-OVERVIEW), [W-ITEM-ACTIONS](../ui/README.md#W-ITEM-ACTIONS), [W-ITEM-HISTORY](../ui/README.md#W-ITEM-HISTORY), [C-FILTER](../ui/README.md#C-FILTER), [C-SELECT-ITEM](../ui/README.md#C-SELECT-ITEM), [C-ITEM-STATE](../ui/README.md#C-ITEM-STATE), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [C-BACK](../ui/README.md#C-BACK), [C-ITEM-SOURCE](../ui/README.md#C-ITEM-SOURCE), [PAGE-MY-PRS](../ui/README.md#PAGE-MY-PRS), [PAGE-REVIEW-PRS](../ui/README.md#PAGE-REVIEW-PRS), [W-NEW-CHAT](../ui/README.md#W-NEW-CHAT), [C-START-CHAT](../ui/README.md#C-START-CHAT), [PAGE-WORKING](../ui/README.md#PAGE-WORKING), [W-PR-EVIDENCE](../ui/README.md#W-PR-EVIDENCE).
 
 ## Flow diagram
 
@@ -41,6 +43,7 @@ flowchart TD
     N3["Later changes retain independent unread indication"]
     N4["Old displayed revision cannot consume newer changes #40;S2#41;"]
     N5(["Triage state retained"])
+    N6["Track launched work and show independent linked PR lifecycle, review and current-head CI#59; merged implementation links complete issues without changing their GitHub state. #40;S4#41;"]
     N0 --> N1
     N1 --> N2
     N2 -->|"later change"| N3
@@ -49,6 +52,8 @@ flowchart TD
     N2 -->|"current revision"| N5
     N3 --> N5
     N1 -->|"Back restores search, filter, scroll and row focus"| N0
+    N0 -->|"additional workbench path"| N6
+    N6 -->|"resolved or explicit recovery"| N5
 ```
 
 ## Implementation references
@@ -73,6 +78,7 @@ flowchart TD
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration
 - [internal/web/embed.go](../../internal/web/embed.go) — Embedded UI build and host-fixture configuration
+- [internal/app/work.go](../../internal/app/work.go) — Server queue membership and linked PR/work projections. (`func (a *App) projectWork(`)
 
 ## Test references
 
@@ -92,6 +98,8 @@ flowchart TD
 - [internal/app/work_queues_test.go](../../internal/app/work_queues_test.go) — `func TestInboxDetectsPullRequestsInBothDirectionsAndExternalEvidence(`; S3. Known forward/reverse PR links and explicit external PR evidence mark issue membership; removal clears it.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `transient item read failure retries and marks only the successfully displayed revision read`; S3. Three failed item requests retry locally; only the recovered displayed revision is marked read, once.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `read tool errors are not mistaken for retryable transport errors`; S3. Tool-result errors containing Connection failed are not transport failures: item read is attempted once and explicit Retry remains.
+- [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestWorkingTracksSessionsUntilGitHubCompletion(`; S4. Working completion follows explicit implementation links; references do not complete an issue.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Working and linked PR monitoring follow server projections`; S4. Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch.
 
 ## Verification and gaps
 

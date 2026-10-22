@@ -139,6 +139,9 @@ flowchart TD
     N113["W-WAITING-ROW"]
     N114["W-NEW-CHAT"]
     N116["W-WORK-STATUS"]
+    N117["PAGE-WORKING"]
+    N118["W-SESSION-CONSOLE"]
+    N119["W-QUESTION-RECOVERY"]
     N0 --> N38
     N0 --> N39
     N0 --> N40
@@ -149,6 +152,7 @@ flowchart TD
     N0 --> N104
     N0 --> N109
     N0 --> N110
+    N0 --> N117
     N63 --> N41
     N63 --> N42
     N64 --> N111
@@ -180,6 +184,8 @@ flowchart TD
     N109 --> N42
     N110 --> N41
     N110 --> N42
+    N117 --> N41
+    N117 --> N42
     I0["P-IDENTITY/W-IDENTITY"]
     N38 --> I0
     I0 -.->|"type"| N1
@@ -321,6 +327,15 @@ flowchart TD
     I46["P-RUN-DETAIL/W-WORK-STATUS"]
     N45 --> I46
     I46 -.->|"type"| N116
+    I47["P-INBOX-LIST/W-PR-EVIDENCE"]
+    N42 --> I47
+    I47 -.->|"type"| N14
+    I48["P-RUN-DETAIL/W-SESSION-CONSOLE"]
+    N45 --> I48
+    I48 -.->|"type"| N118
+    I49["P-RUN-DETAIL/W-QUESTION-RECOVERY"]
+    N45 --> I49
+    I49 -.->|"type"| N119
 ```
 <!-- /specs:containment -->
 
@@ -396,6 +411,9 @@ No installed UI, authentication, service or browser-session change is implied.
 | `P-INBOX-LIST/W-WORK-STATUS` | `W-WORK-STATUS` | `P-INBOX-LIST` | item ID |
 | `P-ITEM-DETAIL/W-WORK-STATUS` | `W-WORK-STATUS` | `P-ITEM-DETAIL` | selected item |
 | `P-RUN-DETAIL/W-WORK-STATUS` | `W-WORK-STATUS` | `P-RUN-DETAIL` | fallback conversation without a retained item |
+| `P-INBOX-LIST/W-PR-EVIDENCE` | `W-PR-EVIDENCE` | `P-INBOX-LIST` | per PR or linked PR summary in list metadata |
+| `P-RUN-DETAIL/W-SESSION-CONSOLE` | `W-SESSION-CONSOLE` | `P-RUN-DETAIL` | one per displayed retained session |
+| `P-RUN-DETAIL/W-QUESTION-RECOVERY` | `W-QUESTION-RECOVERY` | `P-RUN-DETAIL` | one per displayed retained session |
 <!-- /specs:instances -->
 
 ## Canonical entity names
@@ -520,4 +538,10 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="W-NEW-CHAT"></a>`W-NEW-CHAT` | widget | [First message widget](../glossary/README.md#ui-w-new-chat) |
 | <a id="C-START-CHAT"></a>`C-START-CHAT` | connection | [First message start connection](../glossary/README.md#ui-c-start-chat) |
 | <a id="W-WORK-STATUS"></a>`W-WORK-STATUS` | widget | [Work status widget](../glossary/README.md#ui-w-work-status) |
+| <a id="PAGE-WORKING"></a>`PAGE-WORKING` | page | [Working page](../glossary/README.md#ui-page-working) |
+| <a id="W-SESSION-CONSOLE"></a>`W-SESSION-CONSOLE` | widget | [Session console widget](../glossary/README.md#ui-w-session-console) |
+| <a id="W-QUESTION-RECOVERY"></a>`W-QUESTION-RECOVERY` | widget | [Question recovery widget](../glossary/README.md#ui-w-question-recovery) |
+| <a id="C-SESSION-CONSOLE"></a>`C-SESSION-CONSOLE` | connection | [Session console connection](../glossary/README.md#ui-c-session-console) |
+| <a id="C-PIPELINE-SELECT"></a>`C-PIPELINE-SELECT` | connection | [Pipeline selection connection](../glossary/README.md#ui-c-pipeline-select) |
+| <a id="C-TEXT-DISMISS"></a>`C-TEXT-DISMISS` | connection | [Text question dismissal connection](../glossary/README.md#ui-c-text-dismiss) |
 <!-- /specs:terminology -->

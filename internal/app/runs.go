@@ -21,29 +21,46 @@ import (
 )
 
 type Manager struct {
-	app    *App
-	ctx    context.Context
-	Binary string
-	mu     sync.Mutex
-	live   map[string]*session
-	wg     sync.WaitGroup
+	app      *App
+	ctx      context.Context
+	Binary   string
+	mu       sync.Mutex
+	answerMu sync.Mutex
+	live     map[string]*session
+	wg       sync.WaitGroup
+	closing  bool
+	cancel   context.CancelFunc
 }
 type session struct {
-	mu        sync.Mutex
-	run       domain.Run
-	client    *codex.Client
-	pending   map[string]domain.Attention
-	retired   bool
-	secrets   []string
-	completed map[string]bool
-	tails     map[string]string
-	started   chan struct{}
+	mu                sync.Mutex
+	run               domain.Run
+	client            *codex.Client
+	pending           map[string]domain.Attention
+	retired           bool
+	secrets           []string
+	completed         map[string]bool
+	tails             map[string]string
+	started           chan struct{}
+	finalText         string
+	lastCompletedTurn string
+	internalInputs    map[string]string
+	recovery          *domain.QuestionRecovery
+	recoveryCancel    context.CancelFunc
+	recoveryWake      chan struct{}
 }
 
 func NewManager(ctx context.Context, a *App, binary string) *Manager {
-	return &Manager{app: a, ctx: ctx, Binary: binary, live: map[string]*session{}}
+	ctx, cancel := context.WithCancel(ctx)
+	return &Manager{app: a, ctx: ctx, cancel: cancel, Binary: binary, live: map[string]*session{}}
 }
 func (m *Manager) Recover(ctx context.Context) error {
+	m.mu.Lock()
+	if m.closing {
+		m.ctx, m.cancel = context.WithCancel(ctx)
+		m.closing = false
+		m.live = map[string]*session{}
+	}
+	m.mu.Unlock()
 	runs, e := store.List[domain.Run](ctx, m.app.Store, "run")
 	if e != nil {
 		return e
@@ -68,9 +85,27 @@ func (m *Manager) Recover(ctx context.Context) error {
 		return e
 	}
 	for _, a := range atts {
-		if a.Status == "pending" {
+		if a.Status == "pending" && a.Origin != "async" && a.Origin != "text" {
 			a.Status = "stale"
 			if e = m.saveAttention(ctx, a, "attention.resolved"); e != nil {
+				return e
+			}
+			if e = m.retainLostQuestion(ctx, a); e != nil {
+				return e
+			}
+		}
+	}
+	recoveries, e := store.List[domain.QuestionRecovery](ctx, m.app.Store, "question-recovery")
+	if e != nil {
+		return e
+	}
+	for _, r := range recoveries {
+		if r.Stage != "resolved" && r.Stage != "cancelled" && r.Stage != "fallback" {
+			r.Stage = "fallback"
+			if e = m.app.Store.Put(ctx, "question-recovery", r.ID, r, "run.recovery"); e != nil {
+				return e
+			}
+			if e = m.recoverTextQuestion(ctx, r); e != nil {
 				return e
 			}
 		}
@@ -79,14 +114,23 @@ func (m *Manager) Recover(ctx context.Context) error {
 }
 func (m *Manager) Close() {
 	m.mu.Lock()
+	m.closing = true
+	if m.cancel != nil {
+		m.cancel()
+	}
+	sessions := []*session{}
 	for _, s := range m.live {
+		sessions = append(sessions, s)
+	}
+	m.mu.Unlock()
+	for _, s := range sessions {
 		s.mu.Lock()
+		s.retired = true
 		if s.client != nil {
 			_ = s.client.Close()
 		}
 		s.mu.Unlock()
 	}
-	m.mu.Unlock()
 	m.wg.Wait()
 }
 func (m *Manager) busy() bool {
@@ -208,6 +252,9 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 		}
 		if old != nil {
 			for _, at := range old.pending {
+				if at.Origin == "async" || at.Origin == "text" {
+					continue
+				}
 				at.Status = "stale"
 				if e := t.Put("attention", at.ID, at); e != nil {
 					return e
@@ -229,12 +276,22 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 		return r, nil, err
 	}
 	if old != nil {
+		m.cancelRecoveryLocked(old)
 		old.retired = true
 		if old.client != nil {
 			_ = old.client.Close()
 		}
 	}
-	s := &session{run: r, pending: map[string]domain.Attention{}, completed: map[string]bool{}, started: make(chan struct{})}
+	s := &session{run: r, pending: map[string]domain.Attention{}, completed: map[string]bool{}, started: make(chan struct{}), recoveryWake: make(chan struct{}, 1)}
+	atts, e := store.List[domain.Attention](ctx, m.app.Store, "attention")
+	if e != nil {
+		return r, nil, e
+	}
+	for _, at := range atts {
+		if at.RunID == id && at.Status == "pending" && (at.Origin == "async" || at.Origin == "text") {
+			s.pending[at.ID] = at
+		}
+	}
 	m.live[id] = s
 	m.wg.Add(1)
 	go func() {
@@ -463,11 +520,18 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 }
 func (m *Manager) onMessage(s *session, msg codex.Message) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
+	var after func()
+	defer func() {
+		s.mu.Unlock()
+		if after != nil {
+			m.background(after)
+		}
+	}()
 	if s.retired {
 		return
 	}
 	ctx := m.ctx
+	internalInput := isRecoveryInput(s, msg)
 	// Apply streaming redaction before per-message redaction. Different items and
 	// output fields cannot accidentally combine each other's partial text.
 	var delta map[string]json.RawMessage
@@ -486,18 +550,35 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 		}
 	}
 	msg.Params = m.app.Vault.RedactJSON(ctx, msg.Params, s.secrets)
+	if internalInput {
+		var params map[string]json.RawMessage
+		if json.Unmarshal(msg.Params, &params) == nil {
+			params["codeFactorySource"] = raw("question-recovery")
+			msg.Params = raw(params)
+		}
+	}
 	if msg.Method == "process/closed" {
+		if s.recoveryCancel != nil {
+			s.recoveryCancel()
+		}
 		if s.run.Status != "failed" {
 			s.run.Status = "interrupted"
 			s.run.Error = ""
 			s.run.TurnID = ""
 		}
 		for id, a := range s.pending {
+			if a.Origin == "async" || a.Origin == "text" {
+				continue
+			}
 			a.Status = "stale"
 			_ = m.saveAttention(ctx, a, "attention.resolved")
+			_ = m.retainLostQuestion(ctx, a)
 			delete(s.pending, id)
 		}
 		_ = m.persist(s, "run.state")
+		if s.recovery != nil && s.recovery.Stage != "resolved" && s.recovery.Stage != "cancelled" {
+			m.fallbackLocked(s, s.recovery)
+		}
 		return
 	}
 	if len(msg.ID) > 0 {
@@ -505,13 +586,27 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 			_ = s.client.Reject(msg.ID, "Unsupported Code Factory request; use supported questions or approvals")
 			return
 		}
-		a := domain.Attention{ID: ID(), RunID: s.run.ID, RequestID: msg.ID, Method: msg.Method, Params: msg.Params, Blocking: true, Status: "pending", Created: time.Now().UTC()}
+		a := domain.Attention{ID: ID(), RunID: s.run.ID, RequestID: msg.ID, Method: msg.Method, Params: msg.Params, Blocking: true, Status: "pending", Created: time.Now().UTC(), Origin: "rpc"}
 		if msg.Method == "item/tool/requestUserInput" {
+			if !validQuestions(msg.Params) {
+				_ = s.client.Reject(msg.ID, "Invalid question form; provide nonempty unique questions and valid options")
+				return
+			}
 			var p struct{ IsBlocking *bool }
 			_ = json.Unmarshal(msg.Params, &p)
 			if p.IsBlocking != nil {
 				a.Blocking = *p.IsBlocking
 			}
+		}
+		var source struct{ TurnID, ItemID string }
+		_ = json.Unmarshal(msg.Params, &source)
+		a.TurnID = source.TurnID
+		a.ItemID = source.ItemID
+		if s.recovery != nil && s.recovery.Stage == "requesting-form" {
+			a.RecoveryID = s.recovery.ID
+			s.recovery.Stage = "awaiting-answer"
+			_ = m.saveRecovery(s.recovery)
+			m.wakeRecovery(s)
 		}
 		if e := m.saveAttention(ctx, a, "attention.required"); e != nil {
 			_ = s.client.Close()
@@ -531,10 +626,38 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 	}
 	_ = json.Unmarshal(msg.Params, &p)
 	if msg.Method == "turn/started" {
+		s.finalText = ""
 		s.run.TurnID = p.Turn.ID
 		s.run.Status = "running"
 	}
+	if msg.Method == "item/completed" {
+		var item struct {
+			TurnID string
+			Item   struct {
+				ID, Type, Text   string
+				AggregatedOutput string
+				Questions        []struct {
+					Title   string
+					Options []string
+				}
+			}
+		}
+		if json.Unmarshal(msg.Params, &item) == nil && item.Item.Type == "agentMessage" {
+			s.finalText = item.Item.Text
+			m.asyncQuestionsLocked(s, item.Item.ID, item.TurnID, item.Item.Questions)
+			if pullURL.MatchString(item.Item.Text) {
+				text := item.Item.Text
+				run := s.run
+				after = func() { m.recordPullReferences(run, text) }
+			}
+		}
+		if item.Item.Type == "commandExecution" && pullURL.MatchString(item.Item.AggregatedOutput) {
+			text, run := item.Item.AggregatedOutput, s.run
+			after = func() { m.recordPullReferences(run, text) }
+		}
+	}
 	if msg.Method == "turn/completed" {
+		s.lastCompletedTurn = p.Turn.ID
 		s.completed[p.Turn.ID] = true
 		s.run.TurnID = ""
 		s.run.Status = "idle"
@@ -549,11 +672,31 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 				TurnID string `json:"turnId"`
 			}
 			_ = json.Unmarshal(a.Params, &ap)
-			if ap.TurnID == p.Turn.ID {
+			if ap.TurnID == p.Turn.ID && a.Origin != "async" && a.Origin != "text" {
 				a.Status = "stale"
 				_ = m.saveAttention(ctx, a, "attention.resolved")
 				delete(s.pending, id)
+				if p.Turn.Status == "completed" {
+					_ = m.retainLostQuestion(ctx, a)
+					var retained domain.Attention
+					if m.app.Store.Get(ctx, "attention", "lost-question:"+a.ID+":text", &retained) == nil && retained.Status == "pending" {
+						s.pending[retained.ID] = retained
+					}
+				}
 			}
+		}
+		m.wakeRecovery(s)
+		if s.recovery != nil && s.recovery.RepairTurnID == p.Turn.ID {
+			if s.recovery.Stage == "awaiting-answer" && !hasPendingQuestions(s) {
+				m.fallbackLocked(s, s.recovery)
+			}
+			if s.recovery.Stage == "answered" {
+				r := s.recovery
+				after = func() { m.continueAfterRepair(s, r) }
+			}
+		} else if p.Turn.Status == "completed" && strings.TrimSpace(s.finalText) != "" && !hasPendingQuestions(s) {
+			turnID, text := p.Turn.ID, s.finalText
+			after = func() { m.checkStoppedTurn(s, turnID, text) }
 		}
 	}
 	if msg.Method == "serverRequest/resolved" {
@@ -599,8 +742,26 @@ func (m *Manager) get(id string) (*session, error) {
 	return s, nil
 }
 func (m *Manager) Message(ctx context.Context, id, text, expected string) error {
+	return m.message(ctx, id, text, expected, true)
+}
+func (m *Manager) message(ctx context.Context, id, text, expected string, routeQuestion bool) error {
 	if strings.TrimSpace(text) == "" {
 		return fmt.Errorf("message is empty")
+	}
+	if routeQuestion {
+		atts, err := store.List[domain.Attention](ctx, m.app.Store, "attention")
+		if err != nil {
+			return err
+		}
+		for _, at := range atts {
+			if at.RunID == id && at.Status == "pending" && at.Origin == "text" {
+				var p struct{ Questions []question }
+				_ = json.Unmarshal(at.Params, &p)
+				if len(p.Questions) == 1 {
+					return m.answerSynthetic(ctx, at, raw(map[string]any{"answers": map[string]any{p.Questions[0].ID: map[string]any{"answers": []string{text}}}}), &expected)
+				}
+			}
+		}
 	}
 	var r domain.Run
 	if e := m.app.Store.Get(ctx, "run", id, &r); e != nil {
@@ -652,6 +813,13 @@ func (m *Manager) Message(ctx context.Context, id, text, expected string) error 
 	if s.run.Status != "idle" && s.run.Status != "running" && s.run.Status != "waiting" {
 		return fmt.Errorf("run is %s", s.run.Status)
 	}
+	if s.recovery != nil && (s.recovery.Stage == "requesting-form" || s.recovery.Stage == "awaiting-answer" || s.recovery.Stage == "answered") {
+		return fmt.Errorf("question recovery is active; answer its form or interrupt to take over")
+	}
+	m.cancelRecoveryLocked(s)
+	return m.sendLocked(ctx, s, text, expected)
+}
+func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected string) error {
 	params := map[string]any{"threadId": s.run.ThreadID, "input": []map[string]string{{"type": "text", "text": text}}}
 	method := "turn/start"
 	if s.run.TurnID != "" {
@@ -671,7 +839,7 @@ func (m *Manager) Message(ctx context.Context, id, text, expected string) error 
 		Turn   struct{ ID string }
 		TurnID string `json:"turnId"`
 	}
-	if e = s.client.Call(ctx, method, params, &result); e != nil {
+	if e := s.client.Call(ctx, method, params, &result); e != nil {
 		return e
 	}
 	if result.Turn.ID != "" {
@@ -687,8 +855,9 @@ func (m *Manager) Interrupt(ctx context.Context, id string) error {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	m.cancelRecoveryLocked(s)
 	if s.run.TurnID == "" || s.client == nil {
-		return fmt.Errorf("no active turn")
+		return nil
 	}
 	return s.client.Call(ctx, "turn/interrupt", map[string]string{"threadId": s.run.ThreadID, "turnId": s.run.TurnID}, nil)
 }
@@ -696,6 +865,9 @@ func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage)
 	var a domain.Attention
 	if e := m.app.Store.Get(ctx, "attention", id, &a); e != nil {
 		return e
+	}
+	if a.Origin == "async" || a.Origin == "text" {
+		return m.answerSynthetic(ctx, a, result, nil)
 	}
 	s, e := m.get(a.RunID)
 	if e != nil {
@@ -747,6 +919,12 @@ func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage)
 		return e
 	}
 	delete(s.pending, id)
+	if s.recovery != nil && a.RecoveryID == s.recovery.ID && s.recovery.Stage == "awaiting-answer" {
+		s.recovery.Stage = "answered"
+		if e = m.saveRecovery(s.recovery); e != nil {
+			return e
+		}
+	}
 	if e = s.client.Reply(a.RequestID, result); e != nil {
 		a.Status = "stale"
 		_ = m.saveAttention(ctx, a, "attention.resolved")
@@ -989,6 +1167,7 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 		return fmt.Errorf("run must be stopped before cleanup")
 	}
 	if s != nil {
+		m.cancelRecoveryLocked(s)
 		s.retired = true
 		if s.client != nil {
 			_ = s.client.Close()
@@ -998,6 +1177,18 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 			_ = m.saveAttention(ctx, at, "attention.resolved")
 		}
 		s.pending = map[string]domain.Attention{}
+	}
+	atts, e := store.List[domain.Attention](ctx, m.app.Store, "attention")
+	if e != nil {
+		return e
+	}
+	for _, at := range atts {
+		if at.RunID == id && at.Status == "pending" {
+			at.Status = "stale"
+			if e = m.saveAttention(ctx, at, "attention.resolved"); e != nil {
+				return e
+			}
+		}
 	}
 	r.Status = "interrupted"
 	if e := m.app.Store.Put(ctx, "run", id, r, "run.state"); e != nil {
@@ -1061,11 +1252,15 @@ func (m *Manager) saveAttention(ctx context.Context, a domain.Attention, event s
 // Plan mode provides Codex's supported request_user_input path. The resolved
 // model is required by the app-server collaboration-mode settings schema.
 func applyMode(params map[string]any, p domain.Profile) {
-	if p.Mode == "plan" {
+	if p.Mode == "plan" || p.Model != "" {
 		settings := map[string]any{"model": p.Model, "developer_instructions": nil}
 		if p.Effort != "" {
 			settings["reasoning_effort"] = p.Effort
 		}
-		params["collaborationMode"] = map[string]any{"mode": "plan", "settings": settings}
+		mode := p.Mode
+		if mode == "" {
+			mode = "default"
+		}
+		params["collaborationMode"] = map[string]any{"mode": mode, "settings": settings}
 	}
 }

@@ -4,7 +4,7 @@ Owner workflow and layout contract, updated 2026-10-21.
 
 ## Navigation
 
-Use four compact tabs: **Issues**, **My PRs**, **Review PRs**, **Messages**.
+Use five compact tabs: **Working**, **Issues**, **My PRs**, **Review PRs**, **Messages**. Issues remains the initial view.
 Settings opens as its own Code Factory view in chat through `open_settings`.
 No branding block, sidebar, split view, permanent footer or empty detail pane.
 Show one full-width page at a time. Back restores its originating tab, query,
@@ -12,9 +12,8 @@ filter, scroll position and row focus. Queries remain independent between tabs.
 
 ## Work lists
 
-- Issues opens by default with **pending**: open issues with no linked PR,
-  including relationships discovered from either direction. Other filters can
-  include linked or closed issues. This tab always contains issues only.
+- Working contains items with a started pipeline, including idle/interrupted/failed sessions. A PR leaves when closed or merged; an issue leaves when closed or any linked implementation PR merges. A reference alone cannot complete work. Closure changes membership without stopping sessions or deleting history.
+- Issues defaults to **open**, including linked PR summaries. **pending** remains the optional open-without-PR filter. This tab always contains issues only.
 - My PRs defaults to open PRs authored by the authenticated GitHub account.
 - Review PRs defaults to open PRs requesting that account or one of its teams.
   Display identity or team-membership failures; do not guess the account.
@@ -33,7 +32,7 @@ identifier, a source-description summary and chat in one content column.
 There is no intermediate item-only page or Open agent step.
 
 Open the newest retained unfinished conversation when one exists. Otherwise
-show an editable first message prefilled from the default profile and item data.
+show an editable first message with a selectable pipeline. Default to Implementation for issues/My PRs and PR review for Review PRs; require selection if the default is unavailable. Changing a pipeline preserves edited text and invalidates an old proposal.
 Show profile, mode, permissions and publishing authority before **Start agent**.
 Opening the page never starts or prepares work. Start is explicit: prepare the
 visible message and profile choices, then start that retained proposal. If the
@@ -49,15 +48,15 @@ Show agent progress/status updates and final replies, your messages, readable
 errors and pending questions. Keep command output, plans, raw diffs, provider
 summaries and other technical activity in the existing collapsed **Details**
 section alongside workspace paths and cleanup. New human-facing messages remain
-visible while technical updates leave Details closed. Activity is shown only as the issue/PR’s work status in list metadata and its conversation header. There is no Resume button: sending a message to inactive retained work restores the same Codex session and uses that message as the continuation turn. Interrupt remains in Details; cleanup retains dirty-workspace protection. A failed send keeps its draft. No message or action is replayed automatically.
+visible while technical updates leave Details closed. Activity is shown as the issue/PR’s aggregate work status in list metadata and its conversation header; an older blocked session outranks newer idle work. PR lifecycle, approval and CI remain separate status values. Linked implementation and reference PRs show their own summaries above the conversation. There is no Resume button: sending a message to inactive retained work restores the same Codex session and uses that message as the continuation turn. Interrupt remains in Details; cleanup retains dirty-workspace protection. A failed send keeps its draft. No message or action is replayed automatically.
 
 ## Messages
 
-List only pending questions and approvals from agents blocked on human input, with the owning issue/PR, request type and question text. Exclude nonblocking, answered, stale, orphaned or disconnected requests. Count only those blocking requests; hide zero.
-Selecting a request opens its owning conversation and answer dialog. Answering
-returns to that conversation and removes only the resolved request from the list.
-There is no All agents section in Messages. Retained conversations are under the owning item’s **Item details → Work history**, with **Draft launches** inside.
-No requests shows “No messages waiting for you.”
+List unanswered questions and approvals with owning item/session context. Include live RPC questions, structured questions on agent messages, and recovered textual asks. Nonblocking questions say the agent continues. Exclude answered, stale, cleaned and orphaned requests. A lost live RPC ID is never reused; retained message/text questions can explicitly restore the original thread. Lost approvals require a fresh native authorization request.
+
+A small read-only helper examines a stopped reply without a native question. When human input is needed, it requests a proper form through at most two question-only Plan turns in the original session. Native forms take precedence. After failure, show a free-text answer and Open session console. No reply needed dismisses an uncertain textual ask without sending a task turn or authorizing an action. Persist attempt counts and stages, bound helper/check deadlines, and never replay uncertain sends. Explicit takeover cancels further repair. After answering, restore the selected task mode explicitly.
+
+The session console is an alternative rendering of the same journal: messages, commands/output, plans, diffs and errors, with shared answer/message/interrupt controls. It retains drafts and history limits and creates neither another CLI process nor a terminal transport.
 
 ## Density and verification
 
@@ -66,6 +65,6 @@ light and dark themes. Hide routine connection/sync success text; keep failures
 visible. Recover transient read failures automatically and clear their own feedback
 after success; preserve drafts, existing output and uncertain mutation errors.
 Never automatically repeat Start, Send, answers, saves or other mutations. Keep keyboard focus usable through page replacement and dialogs.
-Verify the four queues, priority placement, direct chat, draft isolation, explicit
+Verify the five queues, priority placement, direct chat, draft isolation, explicit
 Start/recovery, request ownership, source links and narrow layouts. Fixture
 verification does not establish full installed-host or accessibility acceptance.

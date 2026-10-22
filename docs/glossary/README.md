@@ -3198,4 +3198,186 @@ A compact display of activity or waiting state attached to a work item.
 `element-w-work-status-value` · element · scope: ui-w-work-status
 
 The displayed activity or waiting state in a work status widget.
+
+<a id="working-queue"></a>
+## Working queue
+
+`working-queue` · domain
+
+The collection of launched work whose issue remains open without a merged implementation pull request, or whose pull request remains open.
+
+<a id="agent-pipeline"></a>
+## Agent pipeline
+
+`agent-pipeline` · domain
+
+A selected reusable profile for one retained agent session.
+
+<a id="question-recovery"></a>
+## Question recovery
+
+`question-recovery` · domain
+
+A bounded dialogue that turns an unresolved textual request for human input into an answerable question.
+
+<a id="session-console"></a>
+## Session console
+
+`session-console` · domain
+
+An alternative view of one retained agent conversation and its technical activity.
+
+<a id="implementation-relationship"></a>
+## Implementation relationship
+
+`implementation-relationship` · domain
+
+An explicit association between an issue and a pull request intended to address it.
+
+<a id="ui-page-working"></a>
+## Working page
+
+`ui-page-working` · ui-page
+
+The page displaying launched work awaiting GitHub completion.
+
+<a id="ui-w-session-console"></a>
+## Session console widget
+
+`ui-w-session-console` · ui-widget
+
+The widget displaying a retained session and its technical activity.
+
+<a id="ui-w-question-recovery"></a>
+## Question recovery widget
+
+`ui-w-question-recovery` · ui-widget
+
+The widget displaying question repair progress and user takeover.
+
+<a id="ui-c-session-console"></a>
+## Session console connection
+
+`ui-c-session-console` · ui-connection
+
+The connection selecting a retained session presentation.
+
+<a id="element-w-navigation-working"></a>
+## working
+
+`element-w-navigation-working` · element · scope: ui-w-navigation
+
+The control opening the Working queue.
+
+<a id="element-w-pr-evidence-lifecycle"></a>
+## lifecycle
+
+`element-w-pr-evidence-lifecycle` · element · scope: ui-w-pr-evidence
+
+The independently displayed open, closed or merged pull request state.
+
+<a id="element-w-pr-evidence-review"></a>
+## review
+
+`element-w-pr-evidence-review` · element · scope: ui-w-pr-evidence
+
+The authoritative pull request review decision.
+
+<a id="element-w-pr-evidence-ci"></a>
+## ci
+
+`element-w-pr-evidence-ci` · element · scope: ui-w-pr-evidence
+
+The current-head check rollup.
+
+<a id="element-w-pr-evidence-linked-pr"></a>
+## linked-pr
+
+`element-w-pr-evidence-linked-pr` · element · scope: ui-w-pr-evidence
+
+A related pull request summary and source link.
+
+<a id="element-w-pr-evidence-error"></a>
+## error
+
+`element-w-pr-evidence-error` · element · scope: ui-w-pr-evidence
+
+A visible unavailable or stale synchronization result.
+
+<a id="element-w-new-chat-pipeline"></a>
+## pipeline
+
+`element-w-new-chat-pipeline` · element · scope: ui-w-new-chat
+
+The selected reusable launch profile.
+
+<a id="element-w-session-console-output"></a>
+## output
+
+`element-w-session-console-output` · element · scope: ui-w-session-console
+
+The redacted technical activity and conversation stream.
+
+<a id="element-w-question-recovery-progress"></a>
+## progress
+
+`element-w-question-recovery-progress` · element · scope: ui-w-question-recovery
+
+The current question recovery stage and attempt count.
+
+<a id="element-w-question-recovery-takeover"></a>
+## takeover
+
+`element-w-question-recovery-takeover` · element · scope: ui-w-question-recovery
+
+The control returning session control to the user.
+
+<a id="element-w-transcript-console"></a>
+## console
+
+`element-w-transcript-console` · element · scope: ui-w-transcript
+
+The control switching between conversation and session console.
+
+<a id="element-w-policy-settings-question-helper-model"></a>
+## question-helper-model
+
+`element-w-policy-settings-question-helper-model` · element · scope: ui-w-policy-settings
+
+The optional model used for question recovery.
+
+<a id="element-w-run-controls-session-status"></a>
+## session-status
+
+`element-w-run-controls-session-status` · element · scope: ui-w-run-controls
+
+The displayed lifecycle status of the currently selected session.
+
+<a id="element-w-questions-no-reply"></a>
+## no-reply
+
+`element-w-questions-no-reply` · element · scope: ui-w-questions
+
+The control dismissing a textual fallback that needs no user answer.
+
+<a id="element-w-pr-evidence-check-link"></a>
+## check-link
+
+`element-w-pr-evidence-check-link` · element · scope: ui-w-pr-evidence
+
+A source link to an individual CI check or status provider.
+
+<a id="ui-c-pipeline-select"></a>
+## Pipeline selection connection
+
+`ui-c-pipeline-select` · ui-connection
+
+The pipeline selection connection within the application interface.
+
+<a id="ui-c-text-dismiss"></a>
+## Text question dismissal connection
+
+`ui-c-text-dismiss` · ui-connection
+
+The text question dismissal connection within the application interface.
 <!-- /specs:terms -->

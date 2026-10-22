@@ -1,0 +1,274 @@
+{
+  "date": "2026-10-22",
+  "recordedAt": "2026-10-22T12:48:17.971506+00:00",
+  "installedVersion": "0.1.0-ebf7a6cdd84a",
+  "baseCommit": "0ea484ec511b94b1ec48c72812e853318f4fc06a",
+  "completePluginVersion": "0.2.2",
+  "completePackageId": "Plugin_34caeb5c66048191a1ac0c8f01c31e73",
+  "registeredAppId": "asdk_app_6ad792b279348191b76d3443615b66e0",
+  "pilotRepository": "dkropachev/code-factory-pilot-20261019",
+  "services": [
+    "active",
+    "active"
+  ],
+  "preservation": {
+    "ownerTokenPreserved": true,
+    "codexPathPreserved": true,
+    "fullServeConfigHashUnchanged": false,
+    "requiredRoutesVerified": true,
+    "routeScopeNote": "The full Serve configuration hash changed during the session; required unrelated root/private routes and scoped Code Factory routes were verified. No route reset or removal was performed."
+  },
+  "fixtures": {
+    "branchCI": "passed",
+    "specificationReconciliationSubjects": 17,
+    "specificationEntities": 123,
+    "specificationTerms": 482,
+    "browserTests": 68,
+    "goRaceTests": "passed",
+    "packagingInstallerRecoverySmoke": "passed",
+    "axeScans": [
+      {
+        "name": "axe-working-monitoring-light.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-first-message.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-github-links-dark.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-github-links-light.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-working-monitoring-dark.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-dark-settings.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-dark-launch.json",
+        "violations": 0,
+        "incomplete": 1
+      },
+      {
+        "name": "axe-dark-inbox.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-dark-review.json",
+        "violations": 0,
+        "incomplete": 2
+      },
+      {
+        "name": "axe-dark-question.json",
+        "violations": 0,
+        "incomplete": 2
+      },
+      {
+        "name": "axe-dark-detail.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-dark-agents.json",
+        "violations": 0,
+        "incomplete": 1
+      },
+      {
+        "name": "axe-concise-conversation-dark.json",
+        "violations": 0,
+        "incomplete": 1
+      },
+      {
+        "name": "axe-work-queues-dark.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-work-queues-light.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-light-question.json",
+        "violations": 0,
+        "incomplete": 2
+      },
+      {
+        "name": "axe-light-settings.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-light-review.json",
+        "violations": 0,
+        "incomplete": 2
+      },
+      {
+        "name": "axe-light-inbox.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-light-detail.json",
+        "violations": 0,
+        "incomplete": 0
+      },
+      {
+        "name": "axe-light-launch.json",
+        "violations": 0,
+        "incomplete": 1
+      },
+      {
+        "name": "axe-light-agents.json",
+        "violations": 0,
+        "incomplete": 1
+      },
+      {
+        "name": "axe-concise-conversation-light.json",
+        "violations": 0,
+        "incomplete": 1
+      }
+    ],
+    "scope": "Fixture coverage does not establish complete installed-host or manual accessibility acceptance."
+  },
+  "realProvider": {
+    "version": "0.161.0",
+    "independentLifecycleTarget": "make test-real-provider passed before the final technical-message display correction",
+    "scope": "Isolated temporary Git repository; separate from installed Work observations."
+  },
+  "installedWork": {
+    "conversation": "https://chatgpt.com/c/6ad9feeb-7820-83ea-988a-d538fec23bad",
+    "toolMetadataRefreshed": true,
+    "signedInSessionReused": true,
+    "observedTabs": [
+      "Working",
+      "Issues",
+      "My PRs",
+      "Review PRs",
+      "Messages"
+    ],
+    "defaultIssuesFilter": "open",
+    "prSummary": [
+      {
+        "id": "dkropachev/code-factory-pilot-20261019#2",
+        "state": "open",
+        "reviewDecision": "none",
+        "ci": "success",
+        "error": false
+      }
+    ],
+    "native": {
+      "id": "cdd65430e30ad11851820c99036b65aa",
+      "itemId": "dkropachev/code-factory-pilot-20261019#1",
+      "mode": "plan",
+      "sandbox": "read-only",
+      "publishing": "ask",
+      "startMethod": "owner MCP after snapshot authority review",
+      "sameThread": true,
+      "markers": {
+        "WORKBENCH_FINAL_NATIVE_OK": true,
+        "WORKBENCH_FINAL_FOLLOWUP_OK": true
+      },
+      "finalStatus": "cleaned",
+      "pendingQuestions": 0,
+      "recoveryEpisodes": [
+        {
+          "stage": "resolved",
+          "attempts": 0,
+          "originalMode": "plan"
+        },
+        {
+          "stage": "resolved",
+          "attempts": 0,
+          "originalMode": "plan"
+        }
+      ],
+      "technicalInputEvents": 0
+    },
+    "plainTextRecovery": {
+      "id": "163659455dc5221b154ccb2dd44e71f0",
+      "itemId": "dkropachev/code-factory-pilot-20261019#5",
+      "mode": "default",
+      "sandbox": "read-only",
+      "publishing": "ask",
+      "startMethod": "UI first-message Start after pipeline/mode/authority review",
+      "sameThread": true,
+      "markers": {
+        "WORKBENCH_FINAL_RECOVERY_OK": true
+      },
+      "finalStatus": "cleaned",
+      "pendingQuestions": 0,
+      "recoveryEpisodes": [
+        {
+          "stage": "resolved",
+          "attempts": 1,
+          "originalMode": "default"
+        },
+        {
+          "stage": "resolved",
+          "attempts": 0,
+          "originalMode": "default"
+        }
+      ],
+      "technicalInputEvents": 4
+    },
+    "plainTextQuestionBeforeRepairObserved": true,
+    "console": {
+      "visible": true,
+      "technicalRecoveryLabels": 2,
+      "automaticInputHiddenInConversation": true,
+      "automaticInputAvailableInConsole": true,
+      "draftRetainedBothDirections": true,
+      "ownDraftCleared": true
+    },
+    "cleanup": "Only the four newly created test worktrees were intentionally cleaned; their history remains retained. The new issue-5 work stays tracked until GitHub completion, as configured.",
+    "originalRunStatesAtEnd": {
+      "09f11628428c72dea969f0f860b6334d": "interrupted",
+      "129ad12bb3cba659212b7e304ce98ebd": "interrupted",
+      "17ba06d423599fc17695704a9b0ae43a": "cleaned",
+      "7dd6fd8e7f9e876a19b6ea0387ba143d": "interrupted",
+      "d349691b3b64a47fd85d5515359c20b9": "cleaned",
+      "f14faad63a1aa8075833871c258c16ce": "cleaned"
+    },
+    "originalRunStatesMatchBaseline": true,
+    "activeOrIdleRunCount": 0
+  },
+  "navigationIncident": {
+    "description": "Automated keyboard navigation selected Cleanup on an older clean pilot run instead of opening its prepared test proposal. Focus and controlled-draft state had not been verified.",
+    "affectedRun": "09f11628428c72dea969f0f860b6334d",
+    "restoration": {
+      "id": "09f11628428c72dea969f0f860b6334d",
+      "status": "interrupted",
+      "worktreeRestored": true,
+      "branchHeadPreserved": true,
+      "clean": true,
+      "threadPreserved": true,
+      "otherRecordFieldsPreserved": true
+    },
+    "repair": "Restored the tracked worktree from its retained branch and restored only the run status while the services were stopped with no live/idle runs. Branch head, thread and other run-record fields were verified.",
+    "prevention": "Remaining tests used new runs only. Verify focus and use native select-all/delete; this controller did not clear a controlled textbox with an empty fill."
+  },
+  "remainingAcceptance": {
+    "hostSubscriptionCount": 0,
+    "hostCallbacks": "unverified",
+    "newBuildSoak": "unverified",
+    "desktopLogoutLogin": "not performed; requires owner coordination",
+    "fullManualAccessibility": "unverified",
+    "realSecondAttemptAndTextFallback": "fixtures cover both; the installed real model produced a native form on its first repair attempt",
+    "readiness": "blocked"
+  }
+}

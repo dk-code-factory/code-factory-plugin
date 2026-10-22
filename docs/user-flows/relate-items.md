@@ -25,11 +25,13 @@ Removing a local relationship preserves independently discovered evidence. Missi
 - **S2** Adding and removing local links does not delete discovered references.
 - **S3** Configured ticket context is read-only; unavailable tickets remain visible as errors.
 
+- **S4** Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [relationship](../glossary/README.md#relationship), [work-item](../glossary/README.md#work-item), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior).
-UI entities: [W-RELATIONSHIPS](../ui/README.md#W-RELATIONSHIPS), [W-TICKET-CONTEXT](../ui/README.md#W-TICKET-CONTEXT), [W-PR-EVIDENCE](../ui/README.md#W-PR-EVIDENCE), [C-LINK](../ui/README.md#C-LINK), [C-BACK](../ui/README.md#C-BACK).
+Glossary: [relationship](../glossary/README.md#relationship), [work-item](../glossary/README.md#work-item), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [working-queue](../glossary/README.md#working-queue), [implementation-relationship](../glossary/README.md#implementation-relationship).
+UI entities: [W-RELATIONSHIPS](../ui/README.md#W-RELATIONSHIPS), [W-TICKET-CONTEXT](../ui/README.md#W-TICKET-CONTEXT), [W-PR-EVIDENCE](../ui/README.md#W-PR-EVIDENCE), [C-LINK](../ui/README.md#C-LINK), [C-BACK](../ui/README.md#C-BACK), [PAGE-WORKING](../ui/README.md#PAGE-WORKING).
 
 ## Flow diagram
 
@@ -41,6 +43,7 @@ flowchart TD
     N3["Display configured read-only ticket context #40;S3#41;"]
     N4["Show unavailable ticket error"]
     N5(["Related context retained without upstream edits"])
+    N6["Track launched work and show independent linked PR lifecycle, review and current-head CI#59; merged implementation links complete issues without changing their GitHub state. #40;S4#41;"]
     N0 -->|"add"| N1
     N0 -->|"inspect ticket"| N3
     N1 -->|"remove local link"| N2
@@ -49,6 +52,8 @@ flowchart TD
     N3 -->|"available"| N5
     N3 -->|"missing or inaccessible"| N4
     N4 --> N5
+    N0 -->|"additional workbench path"| N6
+    N6 -->|"resolved or explicit recovery"| N5
 ```
 
 ## Implementation references
@@ -63,6 +68,8 @@ flowchart TD
 - [go.sum](../../go.sum) — Shared domain, persistence, transport or dependency contract
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
+- [internal/app/work.go](../../internal/app/work.go) — Server queue membership and linked PR/work projections. (`func (a *App) projectWork(`)
+- [internal/providers/pull_requests.go](../../internal/providers/pull_requests.go) — Read-only authoritative PR review/CI/development links with current-head and freshness checks. (`func (g *GitHub) EnrichPullRequest(`)
 
 ## Test references
 
@@ -71,6 +78,9 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("a delayed relationship refresh cannot replace a later selection or its drafts"`; S2. A held earlier relationship detail response cannot replace a later selected item or its independent drafts.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S2. Unsubmitted relationship drafts are isolated by item and retained across tabs.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `single-page navigation preserves list context and drafts at`; S1. Both themes and 1280px/390px widths assert exclusive list/item/agent pages, Back focus/scroll/query restoration and per-record draft preservation.
+- [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestWorkingTracksSessionsUntilGitHubCompletion(`; S4. Working completion follows explicit implementation links; references do not complete an issue.
+- [internal/providers/pull_requests_test.go](../../internal/providers/pull_requests_test.go) — `func TestPullRequestMetadataPaginationCurrentHeadAndRevision(`; S4. Metadata pagination, status reruns, current head and stable semantic revisions.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Working and linked PR monitoring follow server projections`; S4. Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch.
 
 ## Verification and gaps
 

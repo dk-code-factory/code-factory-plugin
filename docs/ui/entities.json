@@ -20,7 +20,8 @@
         "D-ATTENTION",
         "PAGE-AGENT",
         "PAGE-MY-PRS",
-        "PAGE-REVIEW-PRS"
+        "PAGE-REVIEW-PRS",
+        "PAGE-WORKING"
       ],
       "elements": [],
       "states": [],
@@ -109,7 +110,7 @@
         "browser",
         "go"
       ],
-      "context": "Four focused work tabs and one conversation page. Settings opens independently.",
+      "context": "Five work tabs and one conversation page. Settings opens independently.",
       "state_description": "The owned body, root and main surfaces paint the active host light/dark theme background, including when host-injected document styling makes html transparent; body covers at least the viewport height."
     },
     {
@@ -234,6 +235,10 @@
         {
           "id": "W-NAVIGATION.messages",
           "term": "element-w-navigation-messages"
+        },
+        {
+          "id": "W-NAVIGATION.working",
+          "term": "element-w-navigation-working"
         }
       ],
       "states": [
@@ -286,7 +291,8 @@
         "UI-SINGLE-PAGE",
         "UI-NO-INLINE-SETTINGS",
         "UI-WORK-QUEUES",
-        "UI-WAITING-MESSAGES"
+        "UI-WAITING-MESSAGES",
+        "UI-WORKING-MONITOR"
       ],
       "gaps": [
         {
@@ -304,8 +310,8 @@
         "browser",
         "go"
       ],
-      "element_description": "Issues **inbox**, **my-prs**, **review-prs**, **messages** with conditional **attention-count**, **current** and contextual **back**.",
-      "state_description": "Four compact tabs; Messages counts only live pending blocking requests and hides zero. Settings has no entry.",
+      "element_description": "Working, Issues, My PRs, Review PRs and Messages controls, current page, attention count and contextual Back.",
+      "state_description": "Five compact tabs. Messages counts unanswered valid questions and approvals, including nonblocking and retained textual/message questions, and hides zero.",
       "interactions": "Each queue retains its own query and Back context. Messages opens the waiting list instead of choosing a request automatically."
     },
     {
@@ -1423,6 +1429,30 @@
         {
           "id": "W-PR-EVIDENCE.checks-content",
           "term": "element-w-pr-evidence-checks-content"
+        },
+        {
+          "id": "W-PR-EVIDENCE.lifecycle",
+          "term": "element-w-pr-evidence-lifecycle"
+        },
+        {
+          "id": "W-PR-EVIDENCE.review",
+          "term": "element-w-pr-evidence-review"
+        },
+        {
+          "id": "W-PR-EVIDENCE.ci",
+          "term": "element-w-pr-evidence-ci"
+        },
+        {
+          "id": "W-PR-EVIDENCE.linked-pr",
+          "term": "element-w-pr-evidence-linked-pr"
+        },
+        {
+          "id": "W-PR-EVIDENCE.error",
+          "term": "element-w-pr-evidence-error"
+        },
+        {
+          "id": "W-PR-EVIDENCE.check-link",
+          "term": "element-w-pr-evidence-check-link"
         }
       ],
       "states": [],
@@ -1461,11 +1491,19 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function PullRequestInfo(",
+          "purpose": "Linked summaries and check links above the conversation."
         }
       ],
       "assertions": [
         "ITEM-STATE",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-WORKING-MONITOR",
+        "API-PR-FRESHNESS",
+        "API-PR-ROLLUP"
       ],
       "gaps": [
         {
@@ -1479,12 +1517,13 @@
         }
       ],
       "suites": [
-        "tooling",
-        "go"
+        "go",
+        "browser",
+        "tooling"
       ],
-      "element_description": "Conditional **head**, **branch**; **checks-disclosure** and **checks-content**.",
-      "state_description": "Head/branch appear when present; checks use an expandable details section.",
-      "interactions": "Expands/collapses checks locally. No separate PR/checks page."
+      "element_description": "PR lifecycle, draft/head, review decision, CI rollup, check disclosure and linked PR summaries with source/check links.",
+      "state_description": "Lifecycle, approval and current-head CI are independent. Unknown/none/stale data do not imply success. Linked summaries distinguish implementation associations from references.",
+      "interactions": "Summaries update in list and item context. Source/check links use the host bridge. Expanding check details never launches work."
     },
     {
       "id": "W-ITEM-HISTORY",
@@ -1602,6 +1641,10 @@
         {
           "id": "W-RUN-ROW.draft-launches",
           "term": "element-w-run-row-draft-launches"
+        },
+        {
+          "id": "W-RUN-ROW.status",
+          "term": "element-w-run-row-status"
         }
       ],
       "states": [
@@ -1676,7 +1719,7 @@
         "browser",
         "go"
       ],
-      "element_description": "Whole-row **select**, **profile** and creation time within the owning item; **draft-launches** disclosure for prepared rows.",
+      "element_description": "Whole-row **select**, **profile** and creation time within the owning item; **draft-launches** disclosure for prepared rows. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
       "state_description": "Retained conversations are scoped to the selected item and carry no activity badge. Prepared drafts appear newest first under Draft launches.",
       "interactions": "Selecting history changes the retained conversation within the item page. Selecting a draft reopens its existing immutable review. No selection starts work."
     },
@@ -1806,6 +1849,10 @@
         {
           "id": "W-RUN-CONTROLS.cleanup-effect",
           "term": "element-w-run-controls-cleanup-effect"
+        },
+        {
+          "id": "W-RUN-CONTROLS.session-status",
+          "term": "element-w-run-controls-session-status"
         }
       ],
       "states": [
@@ -1894,7 +1941,7 @@
         "browser",
         "go"
       ],
-      "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget.",
+      "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
       "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions.",
       "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible."
     },
@@ -2041,6 +2088,10 @@
         {
           "id": "W-TRANSCRIPT.error-details",
           "term": "element-w-transcript-error-details"
+        },
+        {
+          "id": "W-TRANSCRIPT.console",
+          "term": "element-w-transcript-console"
         }
       ],
       "states": [
@@ -2096,7 +2147,8 @@
         "UI-AXE-CORE",
         "UI-CONVERSATION-DETAILS",
         "UI-CONNECT-TRANSCRIPT",
-        "UI-CONVERSATION-EMPTY"
+        "UI-CONVERSATION-EMPTY",
+        "UI-SESSION-CONSOLE"
       ],
       "gaps": [
         {
@@ -2114,8 +2166,8 @@
         "browser"
       ],
       "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too.",
-      "state_description": "The normal conversation contains agent progress/final messages, user replies and readable errors only. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery.",
-      "interactions": "Details reveals retained technical activity without starting or changing agent work. Pending question/approval controls remain outside the collapsed data. History paging/reset and the 1,000-event retained limit remain unchanged."
+      "state_description": "The normal conversation contains agent progress/final messages, user replies and readable errors only. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role.",
+      "interactions": "Details reveals retained technical activity without starting or changing agent work. Pending question/approval controls remain outside the collapsed data. History paging/reset and the 1,000-event retained limit remain unchanged. Session console reveals the full event stream using the same session and reply draft."
     },
     {
       "id": "W-MESSAGE",
@@ -2627,6 +2679,10 @@
         {
           "id": "W-QUESTIONS.submit-answer",
           "term": "element-w-questions-submit-answer"
+        },
+        {
+          "id": "W-QUESTIONS.no-reply",
+          "term": "element-w-questions-no-reply"
         }
       ],
       "states": [
@@ -2677,7 +2733,8 @@
         "RUN-RECOVERY-2",
         "UI-KEYBOARD-ATTENTION",
         "UI-AXE-CORE",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-TEXT-DISMISS"
       ],
       "gaps": [
         {
@@ -2697,7 +2754,7 @@
       ],
       "element_description": "Repeated **question** legend; **options** radio labels/descriptions; conditional **answer-text** or **secret-answer** input; **submit-answer**.",
       "state_description": "Text input appears for no options or an Other-enabled question; secret text uses a password field. No radio choice is automatically selected. Submit disabled while busy or any question lacks a value.",
-      "interactions": "Sends one response containing all questions. Success refreshes and closes the dialog; stale/invalid responses remain an inline error."
+      "interactions": "Sends one response containing all questions. Success refreshes and closes the dialog; stale/invalid responses remain an inline error. Textual fallback questions offer No reply needed, which clears local attention without advancing the session or answering any native approval."
     },
     {
       "id": "W-APPROVAL",
@@ -3101,6 +3158,10 @@
         {
           "id": "W-POLICY-SETTINGS.remove-label",
           "term": "element-w-policy-settings-remove-label"
+        },
+        {
+          "id": "W-POLICY-SETTINGS.question-helper-model",
+          "term": "element-w-policy-settings-question-helper-model"
         }
       ],
       "states": [],
@@ -3168,7 +3229,7 @@
         "browser",
         "go"
       ],
-      "element_description": "Repeated **priority-labels** label/priority rows with **add-label**/**remove-label**, **assessment-prompt**, **notifications**, **save**, **save-result**.",
+      "element_description": "Repeated **priority-labels** label/priority rows with **add-label**/**remove-label**, **assessment-prompt**, **notifications**, **save**, **save-result**. Optional question helper model, defaulting to the session model.",
       "state_description": "Collapsed initially. Each label maps to P0/P1/P2/P3; empty or duplicate labels are rejected inline. Saving disables the form; success/errors stay beside it.",
       "interactions": "Save changes policy/configuration, invalidating dependent assessments. The notifications checkbox is not a subscription-management UI and cannot make an unsupported host subscribe."
     },
@@ -4147,7 +4208,8 @@
       "assertions": [
         "UI-TRIAGE",
         "ITEM-STATE",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-WORKING-MONITOR"
       ],
       "gaps": [
         {
@@ -4166,7 +4228,7 @@
         "go"
       ],
       "composition": "`W-INBOX-QUERY`, `W-SYNC-HEALTH`",
-      "context": "Compact search/filter row on the list page; only repository errors accompany it."
+      "context": "Independent compact search/filter controls for the current work queue, with repository errors when present."
     },
     {
       "id": "P-INBOX-LIST",
@@ -4223,7 +4285,8 @@
         "ITEM-STATE",
         "API-UI-CONTENT",
         "UI-NO-MATCHES",
-        "UI-SINGLE-PAGE"
+        "UI-SINGLE-PAGE",
+        "UI-WORKING-MONITOR"
       ],
       "gaps": [
         {
@@ -4242,7 +4305,7 @@
         "go"
       ],
       "composition": "`W-ITEM-ROW` repeated by item ID, or `W-INBOX-EMPTY`",
-      "context": "Full-width filtered list, exclusively on PAGE-INBOX. Selection navigates away to one item."
+      "context": "Full-width filtered list on the active Working, Issues, My PRs or Review PRs page. Selection opens one item conversation."
     },
     {
       "id": "P-ITEM-DETAIL",
@@ -4505,7 +4568,7 @@
         "browser",
         "go"
       ],
-      "composition": "`W-RUN-CONTROLS`, `W-ATTENTION-NOTICE` repeated by request ID, `W-TRANSCRIPT`, `W-MESSAGE`; or `W-RUN-EMPTY`; contextual Back-only `W-NAVIGATION` instance.",
+      "composition": "`W-RUN-CONTROLS`, `W-ATTENTION-NOTICE` repeated by request ID, `W-TRANSCRIPT`, `W-MESSAGE`; or `W-RUN-EMPTY`; contextual Back-only `W-NAVIGATION` instance. Session console and question recovery widgets share the retained session context.",
       "context": "Conversation content on PAGE-AGENT below the item summary, with origin-specific Back and per-run follow-up drafts."
     },
     {
@@ -5691,9 +5754,9 @@
         "browser",
         "go"
       ],
-      "purpose": "Open unlinked issues by default, ordered by priority.",
+      "purpose": "Open issues including issues with linked PRs, ordered by priority.",
       "composition": "Query and full-width issue list only.",
-      "interactions": "Issues opens with pending: open issues with no related PR. Alternate filters expose other issues, never PRs. Preserve per-tab query, filter, scroll and row focus."
+      "interactions": "Issues defaults to open; pending remains the optional open-without-PR filter. Per-tab search, filter, scroll and row focus remain independent."
     },
     {
       "id": "PAGE-AGENTS",
@@ -5760,7 +5823,10 @@
         "API-UI-CONTENT",
         "UI-SINGLE-PAGE",
         "UI-NO-INLINE-SETTINGS",
-        "UI-WAITING-MESSAGES"
+        "UI-WAITING-MESSAGES",
+        "UI-SESSION-CONSOLE",
+        "API-ASYNC-QUESTION",
+        "API-QUESTION-REPAIR"
       ],
       "gaps": [
         {
@@ -5788,8 +5854,8 @@
         "go"
       ],
       "purpose": "Answer agents blocked on human input.",
-      "composition": "Blocking questions and approvals only; no agent or run inventory.",
-      "interactions": "List only pending blocking requests belonging to a live waiting or running session. Nonblocking, stale, answered, orphaned and disconnected requests are excluded. Select the owning item/conversation and exact request; answering removes only that request."
+      "composition": "Unanswered questions and approvals only; ordinary progress and results stay in the owning conversation.",
+      "interactions": "List unanswered native questions and approvals, structured message questions and textual fallback asks with their owning session. Live RPC requests require a matching connected session; async/text requests remain answerable through retained session recovery. Selection opens the exact answer dialog."
     },
     {
       "id": "PAGE-SETTINGS",
@@ -6351,7 +6417,8 @@
         "API-UI",
         "API-UI-CONTENT",
         "UI-SINGLE-PAGE",
-        "UI-NO-INLINE-SETTINGS"
+        "UI-NO-INLINE-SETTINGS",
+        "UI-WORKING-MONITOR"
       ],
       "gaps": [
         {
@@ -6370,7 +6437,7 @@
         "go"
       ],
       "endpoint_description": "`W-NAVIGATION` \u2192 one embedded `PAGE-*`",
-      "trigger": "Issues, My PRs, Review PRs or Messages tab.",
+      "trigger": "Working, Issues, My PRs, Review PRs or Messages tab.",
       "interactions": "Navigates between four task queues with independent query state; configuration remains a separate document.",
       "from": [
         "W-NAVIGATION"
@@ -6379,7 +6446,8 @@
         "PAGE-INBOX",
         "PAGE-MY-PRS",
         "PAGE-REVIEW-PRS",
-        "PAGE-AGENTS"
+        "PAGE-AGENTS",
+        "PAGE-WORKING"
       ],
       "connection_type": "connection-navigates",
       "external_boundary": false
@@ -7402,7 +7470,8 @@
         "RUN-RECOVERY-2",
         "UI-DIRTY-CLEANUP",
         "API-UI-CONTENT",
-        "UI-WAKE-MESSAGE"
+        "UI-WAKE-MESSAGE",
+        "UI-REPAIR-TAKEOVER"
       ],
       "gaps": [
         {
@@ -7430,10 +7499,11 @@
         "go"
       ],
       "endpoint_description": "`W-RUN-CONTROLS` \u2192 selected run \u2192 Agents widgets",
-      "trigger": "Interrupt, Resume or Cleanup; selected run ID.",
-      "interactions": "Explicit interrupt or cleanup refreshes state, retaining action failures and dirty work. Message submission is the continuation action for inactive retained sessions; there is no Resume button.",
+      "trigger": "Explicit Interrupt, question-recovery Take over session, or Cleanup for the selected retained run.",
+      "interactions": "Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary.",
       "from": [
-        "W-RUN-CONTROLS"
+        "W-RUN-CONTROLS",
+        "W-QUESTION-RECOVERY.takeover"
       ],
       "to": [
         "P-RUN-DETAIL",
@@ -8589,7 +8659,8 @@
         "PAGE-AGENTS",
         "PAGE-AGENT",
         "PAGE-SETTINGS",
-        "W-NAVIGATION"
+        "W-NAVIGATION",
+        "PAGE-WORKING"
       ],
       "connection_type": "connection-refreshes",
       "external_boundary": false
@@ -9085,7 +9156,8 @@
       ],
       "assertions": [
         "UI-SINGLE-PAGE",
-        "UI-PAGE-FALLBACK"
+        "UI-PAGE-FALLBACK",
+        "UI-WORKING-MONITOR"
       ],
       "gaps": [],
       "suites": [
@@ -9103,7 +9175,8 @@
         "PAGE-INBOX",
         "PAGE-MY-PRS",
         "PAGE-REVIEW-PRS",
-        "PAGE-AGENTS"
+        "PAGE-AGENTS",
+        "PAGE-WORKING"
       ],
       "connection_type": "connection-navigates",
       "external_boundary": false
@@ -9131,21 +9204,26 @@
       ],
       "assertions": [
         "UI-GITHUB-LINK",
-        "UI-GITHUB-LINK-ERROR"
+        "UI-GITHUB-LINK-ERROR",
+        "UI-WORKING-MONITOR"
       ],
       "gaps": [],
       "suites": [
         "tooling",
         "browser"
       ],
-      "endpoint_description": "Inbox source link \u2192 original GitHub issue or pull request in the host browser",
-      "trigger": "Click or keyboard activation of the displayed repository/number carries the original item URL.",
+      "endpoint_description": "Owned issue, PR and check links open their original GitHub or CI-provider destination through the host browser.",
+      "trigger": "Activate an item identifier, linked PR identifier or individual CI check link.",
       "interactions": "Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list.",
       "from": [
-        "W-ITEM-ROW.source-link"
+        "W-ITEM-ROW.source-link",
+        "W-PR-EVIDENCE.linked-pr",
+        "W-PR-EVIDENCE.check-link"
       ],
       "to": [
-        "W-ITEM-ROW.source-link"
+        "W-ITEM-ROW.source-link",
+        "W-PR-EVIDENCE.linked-pr",
+        "W-PR-EVIDENCE.check-link"
       ],
       "connection_type": "connection-external",
       "external_boundary": true
@@ -9472,7 +9550,10 @@
         }
       ],
       "assertions": [
-        "UI-WAITING-MESSAGES"
+        "UI-WAITING-MESSAGES",
+        "UI-SESSION-CONSOLE",
+        "API-ASYNC-QUESTION",
+        "API-QUESTION-REPAIR"
       ],
       "gaps": [],
       "suites": [
@@ -9480,8 +9561,8 @@
         "browser"
       ],
       "element_description": "Owning item **title**, identifier, request **question**, reply/approval **state** and **select**.",
-      "state_description": "Pending blocking requests with a live waiting/running owning session only. No requests shows No messages waiting for you.",
-      "interactions": "Selecting opens the owning conversation and exact answer dialog. Answering removes only that request; approval choices preserve exact payloads."
+      "state_description": "Blocking asks show Reply needed; nonblocking asks show that the agent continues. Stale, answered, cleaned and orphaned requests are excluded.",
+      "interactions": "List unanswered native questions and approvals, structured message questions and textual fallback asks with their owning session. Live RPC requests require a matching connected session; async/text requests remain answerable through retained session recovery. Selection opens the exact answer dialog."
     },
     {
       "id": "W-NEW-CHAT",
@@ -9510,6 +9591,10 @@
         {
           "id": "W-NEW-CHAT.error",
           "term": "element-w-new-chat-error"
+        },
+        {
+          "id": "W-NEW-CHAT.pipeline",
+          "term": "element-w-new-chat-pipeline"
         }
       ],
       "states": [],
@@ -9527,7 +9612,8 @@
         "UI-CHAT-AUTHORITY",
         "UI-CHAT-CONFIRMED",
         "UI-CHAT-LATE",
-        "UI-CHAT-PREPARE-ERROR"
+        "UI-CHAT-PREPARE-ERROR",
+        "UI-PIPELINE"
       ],
       "gaps": [
         {
@@ -9544,8 +9630,8 @@
         "tooling",
         "browser"
       ],
-      "element_description": "Prefilled editable **message**, profile/mode/permissions/publishing **authority**, explicit **start**, **check-status** and inline **error**.",
-      "state_description": "Per-item draft, busy, prepared retry and uncertain states persist across navigation. Start is disabled while busy/unknown.",
+      "element_description": "Prefilled editable **message**, profile/mode/permissions/publishing **authority**, explicit **start**, **check-status** and inline **error**. Selectable pipeline with displayed mode and authority.",
+      "state_description": "Per-item draft, busy, prepared retry and uncertain states persist across navigation. Start is disabled while busy/unknown. Implementation is the default for issues/My PRs and PR review for Review PRs; unavailable defaults require selection. Changing a pipeline invalidates an old prepared proposal and retains an edited prompt.",
       "interactions": "Start prepares the visible message once and starts the retained proposal. Changed authority requires another explicit Start. Lost responses read that run before offering retry; late results do not navigate another item."
     },
     {
@@ -9616,7 +9702,9 @@
         "UI-WAKE-MESSAGE",
         "UI-WAITING-MESSAGES",
         "UI-OPEN-AGENT",
-        "UI-FINISHED-STATUS"
+        "UI-FINISHED-STATUS",
+        "API-WORKING",
+        "UI-WORKING-MONITOR"
       ],
       "gaps": [
         {
@@ -9633,8 +9721,233 @@
         "browser"
       ],
       "element_description": "Compact **value** in issue/PR metadata.",
-      "state_description": "Not started, Starting, Active, Waiting for you, Inactive, Failed or Finished; pending blocking input takes precedence. Item lists use the newest retained unfinished conversation, falling back to cleaned history only when no unfinished run remains, matching item-open selection.",
+      "state_description": "Server aggregate across started sessions: Not started, Starting, Active, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent.",
       "interactions": "Display only; no separate activity control or Resume action."
+    },
+    {
+      "id": "PAGE-WORKING",
+      "kind": "page",
+      "terms": [
+        "ui-page-working"
+      ],
+      "contains": [
+        "P-INBOX-QUERY",
+        "P-INBOX-LIST"
+      ],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Factory(",
+          "purpose": "Owns PAGE-WORKING rendering and interaction."
+        }
+      ],
+      "assertions": [
+        "UI-WORKING-MONITOR",
+        "API-WORKING"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "purpose": "Follow launched work until GitHub completion.",
+      "composition": "Query and full-width issue/PR list.",
+      "interactions": "Uses server queue membership; idle, failed and interrupted sessions remain tracked. An issue closes on GitHub or completes when any linked implementation PR merges. PR closure or merge removes its own work. History and outstanding questions remain accessible."
+    },
+    {
+      "id": "W-SESSION-CONSOLE",
+      "kind": "widget",
+      "terms": [
+        "ui-w-session-console"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-SESSION-CONSOLE.output",
+          "term": "element-w-session-console-output"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Agent(",
+          "purpose": "Owns W-SESSION-CONSOLE rendering and interaction."
+        }
+      ],
+      "assertions": [
+        "UI-SESSION-CONSOLE"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "element_description": "Paged messages, commands/output, plans, changes and errors from the selected retained session.",
+      "state_description": "Selected instead of the concise conversation; preserves per-run reply draft and existing paging bounds.",
+      "interactions": "Uses the same answer, message and interrupt operations; does not open another process or terminal transport."
+    },
+    {
+      "id": "W-QUESTION-RECOVERY",
+      "kind": "widget",
+      "terms": [
+        "ui-w-question-recovery"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-QUESTION-RECOVERY.progress",
+          "term": "element-w-question-recovery-progress"
+        },
+        {
+          "id": "W-QUESTION-RECOVERY.takeover",
+          "term": "element-w-question-recovery-takeover"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Agent(",
+          "purpose": "Owns W-QUESTION-RECOVERY rendering and interaction."
+        }
+      ],
+      "assertions": [
+        "API-QUESTION-REPAIR",
+        "API-ASYNC-QUESTION",
+        "API-REPAIR-TAKEOVER",
+        "UI-REPAIR-TAKEOVER"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-question-recovery-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Native repair and takeover have provider fixtures; the complete installed-host timing and accessibility matrix remains unverified.",
+          "next_verification": "Exercise helper timing, keyboard takeover and both native form variants in the installed pilot and record version-bound evidence."
+        }
+      ],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "element_description": "Checking/form-repair progress, attempt count and Take over session.",
+      "state_description": "At most two question-only repair turns; form success waits for the user, failure exposes a free-text question and console.",
+      "interactions": "Takeover interrupts/cancels further repair. Answers are claimed once and restore the original task mode."
+    },
+    {
+      "id": "C-SESSION-CONSOLE",
+      "kind": "connection",
+      "terms": [
+        "ui-c-session-console"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Agent(",
+          "purpose": "Owns C-SESSION-CONSOLE rendering and interaction."
+        }
+      ],
+      "assertions": [
+        "UI-SESSION-CONSOLE"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "endpoint_description": "Conversation presentation to the same session console.",
+      "trigger": "View session console, or Open session console from a textual fallback.",
+      "interactions": "Switches presentation without launching or resuming another process.",
+      "from": [
+        "W-TRANSCRIPT.console",
+        "W-DIALOG-FRAME.open-chat"
+      ],
+      "to": [
+        "W-SESSION-CONSOLE"
+      ],
+      "connection_type": "connection-selects",
+      "external_boundary": false
+    },
+    {
+      "id": "C-PIPELINE-SELECT",
+      "kind": "connection",
+      "terms": [
+        "ui-c-pipeline-select"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function NewChat(",
+          "purpose": "Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal."
+        }
+      ],
+      "assertions": [
+        "UI-PIPELINE"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser"
+      ],
+      "from": [
+        "W-NEW-CHAT.pipeline"
+      ],
+      "to": [
+        "W-NEW-CHAT.message",
+        "W-NEW-CHAT.authority"
+      ],
+      "connection_type": "connection-selects",
+      "external_boundary": false,
+      "endpoint_description": "Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal.",
+      "trigger": "Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal.",
+      "interactions": "Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal."
+    },
+    {
+      "id": "C-TEXT-DISMISS",
+      "kind": "connection",
+      "terms": [
+        "ui-c-text-dismiss"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function AttentionDialog(",
+          "purpose": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval."
+        }
+      ],
+      "assertions": [
+        "UI-TEXT-DISMISS"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser"
+      ],
+      "from": [
+        "W-QUESTIONS.no-reply"
+      ],
+      "to": [
+        "PAGE-AGENT",
+        "W-ATTENTION-NOTICE",
+        "P-WAITING-QUEUE"
+      ],
+      "connection_type": "connection-submits",
+      "external_boundary": false,
+      "endpoint_description": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
+      "trigger": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
+      "interactions": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval."
     }
   ],
   "instances": [
@@ -9919,6 +10232,24 @@
       "type": "W-WORK-STATUS",
       "pane": "P-RUN-DETAIL",
       "repeat": "fallback conversation without a retained item"
+    },
+    {
+      "id": "P-INBOX-LIST/W-PR-EVIDENCE",
+      "type": "W-PR-EVIDENCE",
+      "pane": "P-INBOX-LIST",
+      "repeat": "per PR or linked PR summary in list metadata"
+    },
+    {
+      "id": "P-RUN-DETAIL/W-SESSION-CONSOLE",
+      "type": "W-SESSION-CONSOLE",
+      "pane": "P-RUN-DETAIL",
+      "repeat": "one per displayed retained session"
+    },
+    {
+      "id": "P-RUN-DETAIL/W-QUESTION-RECOVERY",
+      "type": "W-QUESTION-RECOVERY",
+      "pane": "P-RUN-DETAIL",
+      "repeat": "one per displayed retained session"
     }
   ],
   "assertions": [
@@ -10323,6 +10654,72 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "cleaned work keeps its Finished item status while offering an explicit fresh conversation",
       "assertion": "With only cleaned retained history, both list and focused item show Finished; a new prefilled conversation still requires explicit Start, with no implicit prepare/start/send."
+    },
+    {
+      "id": "UI-WORKING-MONITOR",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "Working and linked PR monitoring follow server projections",
+      "assertion": "Both narrow themes show linked PR lifecycle/review/CI and authoritative Working membership, update after merge, preserve GitHub links and never launch; scoped Axe scans cover the empty Working view."
+    },
+    {
+      "id": "UI-PIPELINE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "first-message pipeline selection preserves an edited prompt",
+      "assertion": "Pipeline changes retain edited text; only explicit Start sends the selected profile."
+    },
+    {
+      "id": "UI-SESSION-CONSOLE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "text fallback opens the same session console",
+      "assertion": "Text fallback opens technical output in the same session, retains the reply draft across presentation changes and sends the exact question answer without another launch. Automatic repair input is labeled Question recovery in the console and remains outside the concise conversation."
+    },
+    {
+      "id": "API-WORKING",
+      "path": "internal/app/work_tracking_test.go",
+      "anchor": "func TestWorkingTracksSessionsUntilGitHubCompletion(",
+      "assertion": "Older blocked sessions remain visible; implementation merges complete an issue while references and unmerged closure do not; reopening restores membership."
+    },
+    {
+      "id": "API-PR-FRESHNESS",
+      "path": "internal/app/work_tracking_test.go",
+      "anchor": "func TestPRMetadataFreshnessDoesNotConsumeUnreadOrLoseLinks(",
+      "assertion": "Polling timestamps do not mark items unread; failed refreshes preserve links and same-head CI; a new head cannot reuse prior success."
+    },
+    {
+      "id": "API-PR-ROLLUP",
+      "path": "internal/providers/pull_requests_test.go",
+      "anchor": "func TestPullRequestMetadataPaginationCurrentHeadAndRevision(",
+      "assertion": "Read-only authenticated metadata pagination, current-head review/CI, status reruns and stable revisions."
+    },
+    {
+      "id": "API-QUESTION-REPAIR",
+      "path": "internal/app/questions_test.go",
+      "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
+      "assertion": "First/second native repair, exactly two failed attempts before text fallback, duplicate rejection, same workspace/thread and explicit original-mode restoration. Repair and continuation inputs are tagged as technical exchanges; human input in the same repair turn is not tagged."
+    },
+    {
+      "id": "API-ASYNC-QUESTION",
+      "path": "internal/app/questions_test.go",
+      "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
+      "assertion": "Structured message questions persist through restart without fabricated RPC IDs; concurrent answers have one claimant."
+    },
+    {
+      "id": "API-REPAIR-TAKEOVER",
+      "path": "internal/app/questions_test.go",
+      "anchor": "func TestQuestionRepairUserTakeoverCancelsFurtherAttempts(",
+      "assertion": "Explicit interruption cancels further form repair and makes the old request unanswerable."
+    },
+    {
+      "id": "UI-REPAIR-TAKEOVER",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "question recovery progress and keyboard takeover retain",
+      "assertion": "Recovery progress shows attempt two of two; keyboard takeover opens the same console, preserves its draft and sends one interrupt without another launch."
+    },
+    {
+      "id": "UI-TEXT-DISMISS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "an uncertain textual reply can be dismissed without advancing",
+      "assertion": "No reply needed closes only textual attention and sends no answer, message or launch."
     }
   ],
   "source_map": [
@@ -10624,6 +11021,12 @@
       "anchor": "func (g *GitHub) Teams(",
       "entities": "Review PRs queue",
       "detail": "Paginated authenticated membership; failures remain explicit."
+    },
+    {
+      "path": "web/src/main.tsx",
+      "anchor": "function PullRequestInfo(",
+      "entities": "PR monitoring and linked implementation/reference summaries.",
+      "detail": "Source and check links use the host bridge; independent lifecycle, review, CI and stale/error states."
     }
   ],
   "coverage_groups": [
@@ -10753,7 +11156,10 @@
         "UI-AXE-CORE",
         "UI-DETAIL-SELECTION",
         "UI-LINK-REMOVE",
-        "UI-ITEM-DRAFTS"
+        "UI-ITEM-DRAFTS",
+        "UI-WORKING-MONITOR",
+        "API-PR-FRESHNESS",
+        "API-PR-ROLLUP"
       ],
       "gap": {
         "version": 1,
@@ -11066,6 +11472,33 @@
         "reason": "`LAB` covers controller access boundaries. It does not establish product UI acceptance.",
         "next_verification": "For Optional browser lab: Keep operator-controller fixture evidence separate and record actual installed-product UI acceptance in its host; lab fixture success must not close product UI checks."
       }
+    },
+    {
+      "name": "Work tracking and question recovery",
+      "entities": [
+        "PAGE-WORKING",
+        "W-SESSION-CONSOLE",
+        "W-QUESTION-RECOVERY",
+        "C-SESSION-CONSOLE"
+      ],
+      "assertions": [
+        "UI-WORKING-MONITOR",
+        "API-WORKING",
+        "UI-SESSION-CONSOLE",
+        "API-QUESTION-REPAIR",
+        "API-ASYNC-QUESTION",
+        "API-REPAIR-TAKEOVER",
+        "UI-REPAIR-TAKEOVER"
+      ],
+      "gap": {
+        "version": 1,
+        "id": "gap-coverage-workbench-01",
+        "kind": "unverified-behavior",
+        "severity": "P2",
+        "owner": "specification-coordinator",
+        "reason": "Fixture coverage does not establish installed host forms, callbacks or manual accessibility.",
+        "next_verification": "Observe native/async repair and fallback console in the dedicated installed pilot, retaining callback and manual accessibility gaps until actually verified."
+      }
     }
   ],
   "documents": [
@@ -11133,7 +11566,9 @@
             "W-MESSAGE",
             "W-WAITING-ROW",
             "W-NEW-CHAT",
-            "W-WORK-STATUS"
+            "W-WORK-STATUS",
+            "W-SESSION-CONSOLE",
+            "W-QUESTION-RECOVERY"
           ],
           "fields": [
             "element_description",
@@ -11397,7 +11832,8 @@
             "PAGE-SETTINGS",
             "PAGE-AGENT",
             "PAGE-MY-PRS",
-            "PAGE-REVIEW-PRS"
+            "PAGE-REVIEW-PRS",
+            "PAGE-WORKING"
           ],
           "fields": [
             "purpose",
@@ -11493,7 +11929,10 @@
             "C-BACK",
             "C-ITEM-SOURCE",
             "C-OPEN-SETTINGS",
-            "C-START-CHAT"
+            "C-START-CHAT",
+            "C-SESSION-CONSOLE",
+            "C-PIPELINE-SELECT",
+            "C-TEXT-DISMISS"
           ],
           "fields": [
             "endpoint_description",

@@ -11,7 +11,7 @@ The owner has opened the separate connected Settings view. Repository access is 
 ## Main flow
 
 1. Open the independent Settings view and its initially expanded Repositories form, focused on the first repository when none is configured. Save its identifier and optional checkout/base; show feedback while remaining in Settings.
-2. Expand Priorities & notifications to edit label/priority rows and the assessment policy.
+2. Expand Priorities & notifications to edit label/priority rows, the assessment policy and the optional question helper model.
 3. Create or edit work profiles, including prompts, model settings, permissions and publishing authority.
 4. Discover local skills or save managed skill content, then select skills for future launches.
 
@@ -80,7 +80,7 @@ flowchart TD
 
 ## Test references
 
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("settings save repository and priority rows without unused integrations"`; S1. Independent settings keeps save feedback and configured summaries visible without task navigation; no unused integration form.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("settings save repository and priority rows without unused integrations"`; S1. Independent settings keeps save feedback and configured summaries visible without task navigation; no unused integration form. Saves the optional question helper model.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestAssessmentCacheAndInvalidation(`; S3. Policy changes rerun inference.
 - [internal/app/real_codex_test.go](../../internal/app/real_codex_test.go) — `func TestRealCodexInteractiveLifecycle(`; S2. Opt-in real lifecycle saves a profile/skill and observes skill loading; skipped in default fixture verification.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("repository form shows saving and errors beside retained inputs"`; S1. Saving disables the form; exact inline failure preserves values.

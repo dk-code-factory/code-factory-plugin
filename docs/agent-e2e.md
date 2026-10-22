@@ -1,11 +1,49 @@
 # Continue development through the real Chrome session
 
 This runbook records the working arrangement on this computer as of
-**2026-10-20**. Verify live state before changing it. The agent runs commands and
+**2026-10-22**. Verify live state before changing it. The agent runs commands and
 browser tests; the owner supplies initial sign-in and consent for the selected
 attachment mode. Default native attachment uses Chrome Allow; the explicitly
 approved pilot profile uses private loopback debugging.
 Do not turn routine local work into instructions for the owner to execute.
+
+## Current workbench and form recovery · 2026-10-22
+
+Installed **0.1.0-ebf7a6cdd84a** has Working, Issues, My PRs, Review PRs and
+Messages. Issues defaults to open, including linked PR summaries. Working retains
+started work through idle/failure/interruption until GitHub closure or an
+implementation PR merge. Pipeline selection controls one retained Codex session;
+review its mode, sandbox, approvals and publishing authority before Start.
+
+Messages includes native, structured-message and recovered textual questions.
+A stopped textual ask gets at most two question-only Plan form-repair attempts
+in the same thread before free-text fallback and the optional session console.
+Automatic repair input is technical activity; actual user replies retain their
+ordinary role. No reply needed dismisses only a textual fallback. The console
+shares the original session, journal, reply draft and controls.
+
+After upgrading, open the observed app management path
+`/settings/plugins-settings/plugin_asdk_app_6ad792b279348191b76d3443615b66e0`,
+choose **Refresh tools**, wait for completion, then open a fresh Work chat from the
+installed complete plugin. An otherwise healthy old iframe can retain its cached
+widget. Verify the actual new tabs, filter and console behavior before acceptance.
+
+Operate only an explicitly identified newly created test run. The controller's
+empty `fill` did not clear/focus a controlled textbox in this session: verify the
+actual focused element and disabled Send state after native Control+A / Backspace.
+Do not batch unverified Tab/Enter navigation through retained run controls. A
+navigation error cleaned an older clean pilot worktree during this check; it was
+restored at the same branch head/path/thread and prior interrupted state. The
+[evidence record](evidence/2026-10-22-workbench.json) retains the incident and
+restoration verification. Element-argument script evaluation failed on this
+attachment; native click, fill and keyboard operations worked. No sign-in, CSP,
+route reset or global browser-setting workaround was used.
+
+The final installed native question/UI answer/follow-up and first-attempt recovery
+smoke is bounded evidence. Its Plan snapshot used owner MCP launch after review;
+the final Default/read-only recovery pipeline used UI selection and Start. The
+earlier `71a9` UI Plan launch is a separate observation. Host callbacks, new-build
+soak, login cycle and full manual accessibility remain separate open checks.
 
 ## Continue by message; Messages means blocked asks · 2026-10-21
 
@@ -200,7 +238,7 @@ to Chrome. Use the browser controller below.
 
 | Item | Current value |
 | --- | --- |
-| Last verified installed daemon | `0.1.0-08c15806095a` (real Plan/read-only message wake and blocking Messages verified; prior full soak/CSP evidence remains version-bound) |
+| Last verified installed daemon | `0.1.0-ebf7a6cdd84a` (bounded native question, follow-up and form-recovery smoke; earlier full soak/CSP evidence remains version-bound) |
 | Complete browser package | `0.2.2` |
 | Stable launcher | `~/.local/bin/code-factory` |
 | Versioned releases | `~/.local/lib/code-factory` |

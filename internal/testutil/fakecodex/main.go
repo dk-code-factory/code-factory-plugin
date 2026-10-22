@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,8 +24,11 @@ func main() {
 		}
 	}
 	notify := func(method string, p any) { send(map[string]any{"method": method, "params": p}) }
+	turnID := "turn-1"
+	turnNumber := 0
+	repairAttempts := 0
 	complete := func(status string) {
-		notify("turn/completed", map[string]any{"turn": map[string]any{"id": "turn-1", "status": status}})
+		notify("turn/completed", map[string]any{"turn": map[string]any{"id": turnID, "status": status}})
 	}
 	mode := os.Getenv("CF_FAKE_MODE")
 	for scanner.Scan() {
@@ -55,12 +59,58 @@ func main() {
 		case "initialized":
 		case "thread/start", "thread/resume":
 			reply(map[string]any{"thread": map[string]string{"id": "thread-1"}})
+		case "config/read":
+			reply(map[string]any{"config": map[string]any{}})
+		case "model/list":
+			reply(map[string]any{"data": []any{}})
 		case "skills/list":
 			if mode == "slow" {
 				time.Sleep(150 * time.Millisecond)
 			}
 			reply(map[string]any{"data": []any{}})
 		case "turn/start":
+			turnNumber++
+			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || mode == "async-question" {
+				turnID = fmt.Sprintf("turn-%d", turnNumber)
+			}
+			var inputs []struct{ Text string }
+			_ = json.Unmarshal(m.Params["input"], &inputs)
+			inputText := ""
+			for _, in := range inputs {
+				inputText += in.Text
+			}
+			if strings.Contains(string(m.Params["outputSchema"]), "needsInput") {
+				reply(map[string]any{"turn": map[string]string{"id": turnID}})
+				needs := strings.Contains(inputText, "Which target") || strings.Contains(inputText, "Please pick")
+				text, _ := json.Marshal(map[string]any{"needsInput": needs, "question": "Which target should I use?"})
+				notify("item/completed", map[string]any{"item": map[string]string{"id": "helper", "type": "agentMessage", "text": string(text)}})
+				complete("completed")
+				continue
+			}
+			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || mode == "async-question" {
+				notify("turn/started", map[string]any{"turn": map[string]string{"id": turnID}})
+				reply(map[string]any{"turn": map[string]string{"id": turnID}})
+				notify("item/completed", map[string]any{"turnId": turnID, "item": map[string]any{"id": "input-" + turnID, "type": "userMessage", "content": []any{map[string]string{"type": "text", "text": inputText}}}})
+				if mode == "async-question" && turnNumber == 1 {
+					notify("item/completed", map[string]any{"turnId": turnID, "item": map[string]any{"id": "async-1", "type": "agentMessage", "delivery": "async", "text": "Which target?", "questions": []any{map[string]any{"title": "Which target?", "options": []string{"One", "Two"}}}}})
+					complete("completed")
+					continue
+				}
+				if strings.Contains(inputText, "question-only recovery") {
+					repairAttempts++
+					if mode == "recover-first" || mode == "recover-second" && repairAttempts == 2 {
+						send(map[string]any{"id": 7, "method": "item/tool/requestUserInput", "params": map[string]any{"threadId": "thread-1", "turnId": turnID, "itemId": "repaired", "isBlocking": true, "questions": []any{map[string]any{"id": "target", "header": "Target", "question": "Which target?", "isOther": true}}}})
+						continue
+					}
+				}
+				text := "Task complete"
+				if turnNumber == 1 || strings.Contains(inputText, "question-only recovery") {
+					text = "Which target should I use?"
+				}
+				notify("item/completed", map[string]any{"item": map[string]string{"id": "final-" + turnID, "type": "agentMessage", "text": text}})
+				complete("completed")
+				continue
+			}
 			if mode == "burst" {
 				for n := 0; n < 2048; n++ {
 					notify("item/agentMessage/delta", map[string]any{"itemId": "burst", "delta": "output burst"})

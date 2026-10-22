@@ -27,12 +27,13 @@ type RateLimitError struct{ Until time.Time }
 func (e *RateLimitError) Error() string { return "GitHub rate limit; synchronization will retry" }
 
 type GitHub struct {
-	cacheBytes int
-	mu         sync.Mutex
-	cache      map[string]cacheEntry
-	BaseURL    string
-	Client     *http.Client
-	Token      func(context.Context) (string, error)
+	cacheBytes   int
+	mu           sync.Mutex
+	cache        map[string]cacheEntry
+	graphRetryAt time.Time
+	BaseURL      string
+	Client       *http.Client
+	Token        func(context.Context) (string, error)
 }
 
 func NewGitHub() *GitHub {
@@ -302,6 +303,7 @@ func (g *GitHub) Sync(ctx context.Context, repo domain.Repository, full bool) ([
 				return nil, e
 			}
 			v.Checks, _ = json.Marshal(map[string]any{"checks": checksObj.Runs, "statuses": statuses})
+			g.EnrichPullRequest(ctx, &v)
 		}
 		comments, e := g.activities(ctx, fmt.Sprintf("%s/issues/%d/comments?per_page=100", path, i.Number), "comment")
 		if e != nil {

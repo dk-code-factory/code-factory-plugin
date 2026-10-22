@@ -18,6 +18,8 @@ import type {
   Profile,
   Run,
   Snapshot,
+  PullRequest,
+  QuestionRecovery,
 } from "./types";
 import "./style.css";
 
@@ -30,23 +32,27 @@ function latestRun(runs: Run[], itemId: string) {
 function WorkStatus({
   run,
   blocked = false,
+  status: summary,
 }: {
   run?: Run;
   blocked?: boolean;
+  status?: string;
 }) {
-  const status = blocked
-    ? "Waiting for you"
-    : !run || run.status === "prepared"
-      ? "Not started"
-      : ["queued", "starting"].includes(run.status)
-        ? "Starting"
-        : ["running", "waiting"].includes(run.status)
-          ? "Active"
-          : run.status === "failed"
-            ? "Failed"
-            : run.status === "cleaned"
-              ? "Finished"
-              : "Inactive";
+  const status =
+    summary ??
+    (blocked
+      ? "Waiting for you"
+      : !run || run.status === "prepared"
+        ? "Not started"
+        : ["queued", "starting"].includes(run.status)
+          ? "Starting"
+          : ["running", "waiting"].includes(run.status)
+            ? "Active"
+            : run.status === "failed"
+              ? "Failed"
+              : run.status === "cleaned"
+                ? "Finished"
+                : "Inactive");
   return (
     <span
       className="status"
@@ -82,10 +88,11 @@ function Factory() {
     {},
   );
   const [attentionId, setAttentionId] = useState("");
+  const [consoleRuns, setConsoleRuns] = useState<Record<string, boolean>>({});
   const [queries, setQueries] = useState<
     Record<string, { filter: string; search: string }>
   >({});
-  const filter = queries[tab]?.filter ?? (tab === "Inbox" ? "pending" : "open");
+  const filter = queries[tab]?.filter ?? "open";
   const search = queries[tab]?.search ?? "";
   const setFilter = (filter: string) =>
     setQueries((old) => ({
@@ -96,7 +103,7 @@ function Factory() {
     setQueries((old) => ({
       ...old,
       [tab]: {
-        filter: old[tab]?.filter ?? (tab === "Inbox" ? "pending" : "open"),
+        filter: old[tab]?.filter ?? "open",
         search,
       },
     }));
@@ -211,15 +218,17 @@ function Factory() {
   const pending = settingsView
     ? []
     : (snap?.attention.filter((a) => a.status === "pending") ?? []);
-  const waiting = pending.filter(
-    (a) =>
-      a.blocking &&
-      snap?.runs.some(
-        (r) => r.id === a.runId && ["waiting", "running"].includes(r.status),
-      ),
+  const waiting = pending.filter((a) =>
+    snap?.runs.some(
+      (r) =>
+        r.id === a.runId &&
+        (a.origin === "async" || a.origin === "text"
+          ? !["prepared", "cleaned"].includes(r.status)
+          : ["waiting", "running"].includes(r.status)),
+    ),
   );
   const currentAttention = pending.find((a) => a.id === attentionId);
-  const queue = ["Inbox", "Mine", "Review"].includes(tab);
+  const queue = ["Working", "Inbox", "Mine", "Review"].includes(tab);
   const viewer = snap?.viewer;
   const visibleItems = (
     snap?.inbox.filter((v) => {
@@ -237,11 +246,26 @@ function Factory() {
             ),
           ));
       if (
-        tab === "Inbox"
-          ? v.item.kind !== "issue"
-          : tab === "Mine"
-            ? v.item.kind !== "pr" || !own
-            : v.item.kind !== "pr" || !requested
+        v.queues
+          ? !v.queues.includes(
+              (
+                {
+                  Working: "working",
+                  Inbox: "issues",
+                  Mine: "mine",
+                  Review: "review",
+                } as Record<string, string>
+              )[tab],
+            )
+          : tab === "Working"
+            ? !snap?.runs.some(
+                (r) => r.itemId === v.item.id && r.status !== "prepared",
+              ) || v.item.state !== "open"
+            : tab === "Inbox"
+              ? v.item.kind !== "issue"
+              : tab === "Mine"
+                ? v.item.kind !== "pr" || !own
+                : v.item.kind !== "pr" || !requested
       )
         return false;
       return (
@@ -314,7 +338,11 @@ function Factory() {
         .sort((a, b) => Date.parse(b.created) - Date.parse(a.created)) ?? [];
     const existing = runs.find((r) => r.status !== "prepared");
     const prepared = runs.find((r) => r.status === "prepared");
-    const profile = prepared?.profile ?? snap?.profiles[0];
+    const profile =
+      prepared?.profile ??
+      snap?.profiles.find(
+        (p) => p.id === (tab === "Review" ? "review" : "implement"),
+      );
     setChatDrafts((old) =>
       old[entry.item.id]
         ? old
@@ -364,6 +392,7 @@ function Factory() {
       {!settingsView && (
         <nav aria-label="Main navigation">
           {[
+            { id: "Working", label: "Working" },
             { id: "Inbox", label: "Issues" },
             { id: "Mine", label: "My PRs" },
             { id: "Review", label: "Review PRs" },
@@ -426,21 +455,25 @@ function Factory() {
             <section
               className="page"
               aria-label={
-                tab === "Inbox"
-                  ? "Issues"
-                  : tab === "Mine"
-                    ? "My PRs"
-                    : "Review PRs"
+                tab === "Working"
+                  ? "Working"
+                  : tab === "Inbox"
+                    ? "Issues"
+                    : tab === "Mine"
+                      ? "My PRs"
+                      : "Review PRs"
               }
               ref={pageRef}
               tabIndex={-1}
             >
               <h1 className="sr-only">
-                {tab === "Inbox"
-                  ? "Issues"
-                  : tab === "Mine"
-                    ? "My PRs"
-                    : "Review PRs"}
+                {tab === "Working"
+                  ? "Working"
+                  : tab === "Inbox"
+                    ? "Issues"
+                    : tab === "Mine"
+                      ? "My PRs"
+                      : "Review PRs"}
               </h1>
               <div className="toolbar">
                 <input
@@ -473,7 +506,7 @@ function Factory() {
                     {r.id} · {r.error}
                   </p>
                 ))}
-              {tab !== "Inbox" && !viewer?.login && (
+              {["Mine", "Review"].includes(tab) && !viewer?.login && (
                 <p role="alert">
                   GitHub identity unavailable. Check the connection in Settings.
                 </p>
@@ -527,13 +560,24 @@ function Factory() {
                         <span>{v.item.id}</span>
                       )}
                       <WorkStatus
+                        status={v.work?.status}
                         run={latestRun(snap.runs, v.item.id)}
                         blocked={waiting.some(
                           (a) =>
+                            a.blocking &&
                             snap.runs.find((r) => r.id === a.runId)?.itemId ===
-                            v.item.id,
+                              v.item.id,
                         )}
                       />
+                      {v.work && v.work.runIds.length > 1 && (
+                        <span>{v.work.runIds.length} sessions</span>
+                      )}
+                      {v.item.pr && <PRStatus pr={v.item.pr} />}
+                      {v.linkedPullRequests?.map((pr) => (
+                        <span key={pr.id}>
+                          {pr.id} · <PRStatus pr={pr} />
+                        </span>
+                      ))}
                       {v.item.kind === "pr" && <span>PR</span>}
                       {v.item.state !== "open" && <span>{v.item.state}</span>}
                       {v.item.draft && <span>Draft</span>}
@@ -594,7 +638,9 @@ function Factory() {
                         {run?.itemId} ·{" "}
                         {a.method.includes("Approval")
                           ? "Approval needed"
-                          : "Reply needed"}
+                          : a.blocking
+                            ? "Reply needed"
+                            : "Question · agent continues"}
                       </span>
                       {a.params.command && <span>{a.params.command}</span>}
                       {a.params.questions?.[0]?.question && (
@@ -628,7 +674,9 @@ function Factory() {
                     ? "My PRs"
                     : runBack === "Review"
                       ? "Review PRs"
-                      : "Messages"}
+                      : runBack === "Working"
+                        ? "Working"
+                        : "Messages"}
               </button>
               {agentEntry ? (
                 <ItemDetail
@@ -639,10 +687,13 @@ function Factory() {
                   onLaunch={setLaunch}
                   workStatus={
                     <WorkStatus
+                      status={agentEntry.work?.status}
                       run={
                         currentRun ?? latestRun(snap.runs, agentEntry.item.id)
                       }
-                      blocked={waiting.some((a) => a.runId === runId)}
+                      blocked={waiting.some(
+                        (a) => a.blocking && a.runId === runId,
+                      )}
                     />
                   }
                   history={
@@ -665,7 +716,7 @@ function Factory() {
                             onClick={() => openRun(r.id)}
                           >
                             {r.profile.name} ·{" "}
-                            {new Date(r.created).toLocaleString()}
+                            {new Date(r.created).toLocaleString()} · {r.status}
                           </button>
                         ))}
                       {snap.runs.some(
@@ -712,6 +763,15 @@ function Factory() {
                   conversation={
                     currentRun ? (
                       <Agent
+                        consoleView={!!consoleRuns[runId]}
+                        setConsoleView={(value) =>
+                          setConsoleRuns((old) => ({ ...old, [runId]: value }))
+                        }
+                        recovery={snap.questionRecoveries?.find(
+                          (r) =>
+                            r.runId === runId &&
+                            !["resolved", "cancelled"].includes(r.stage),
+                        )}
                         key={runId}
                         embedded
                         run={currentRun}
@@ -737,11 +797,11 @@ function Factory() {
                       />
                     ) : (
                       <NewChat
+                        profiles={snap.profiles}
                         entry={agentEntry}
                         draft={
                           chatDrafts[agentEntry.item.id] ?? {
-                            profile: snap.profiles[0],
-                            message: expandPrompt(snap.profiles[0], agentEntry),
+                            message: expandPrompt(undefined, agentEntry),
                           }
                         }
                         setDraft={(update) =>
@@ -749,11 +809,7 @@ function Factory() {
                             ...old,
                             [agentEntry.item.id]: update(
                               old[agentEntry.item.id] ?? {
-                                profile: snap.profiles[0],
-                                message: expandPrompt(
-                                  snap.profiles[0],
-                                  agentEntry,
-                                ),
+                                message: expandPrompt(undefined, agentEntry),
                               },
                             ),
                           }))
@@ -767,6 +823,15 @@ function Factory() {
                 />
               ) : currentRun ? (
                 <Agent
+                  consoleView={!!consoleRuns[runId]}
+                  setConsoleView={(value) =>
+                    setConsoleRuns((old) => ({ ...old, [runId]: value }))
+                  }
+                  recovery={snap.questionRecoveries?.find(
+                    (r) =>
+                      r.runId === runId &&
+                      !["resolved", "cancelled"].includes(r.stage),
+                  )}
                   key={runId}
                   run={currentRun}
                   title={
@@ -841,6 +906,17 @@ function Factory() {
               attention={currentAttention}
               context={`${snap.inbox.find((e) => e.item.id === attentionRun?.itemId)?.item.title ?? attentionRun?.itemId ?? currentAttention.runId} · ${attentionRun?.profile.name ?? "Agent"}`}
               close={() => setAttentionId("")}
+              dismiss={
+                currentAttention.origin === "text"
+                  ? async () => {
+                      await call("dismiss_question", {
+                        id: currentAttention.id,
+                      });
+                      setAttentionId("");
+                      await refresh();
+                    }
+                  : undefined
+              }
               answer={async (answer) => {
                 await call("answer_request", {
                   id: currentAttention.id,
@@ -855,6 +931,11 @@ function Factory() {
                 setAttentionId("");
               }}
               chat={() => {
+                if (currentAttention.origin === "text")
+                  setConsoleRuns((old) => ({
+                    ...old,
+                    [currentAttention.runId]: true,
+                  }));
                 openRun(currentAttention.runId);
                 setAttentionId("");
               }}
@@ -885,16 +966,92 @@ function expandPrompt(profile: Profile | undefined, entry: Entry) {
     .replaceAll("{{body}}", entry.item.body)
     .replaceAll("{{url}}", entry.item.url);
 }
+function PRStatus({ pr }: { pr: PullRequest }) {
+  return (
+    <span className="pr-status" aria-label="Pull request status">
+      {pr.state}
+      {pr.draft ? " · Draft" : ""} · {pr.reviewDecision.replaceAll("_", " ")} ·
+      CI {pr.ci}
+      {pr.error && " · Status unavailable or stale"}
+    </span>
+  );
+}
+function PullRequestInfo({
+  pr,
+  linked = false,
+}: {
+  pr: PullRequest;
+  linked?: boolean;
+}) {
+  const [error, setError] = useState("");
+  return (
+    <article className="pr-info">
+      {linked && (
+        <p>
+          <a
+            href={pr.url}
+            onClick={(event) => {
+              event.preventDefault();
+              void openLink(pr.url)
+                .then((result) => {
+                  if (result.isError)
+                    setError("The host could not open GitHub.");
+                })
+                .catch(() => setError("Could not open GitHub."));
+            }}
+          >
+            {pr.id}
+          </a>
+          {pr.title && ` · ${pr.title}`} ·{" "}
+          {pr.implementation ? "Implementation" : "Reference"}
+        </p>
+      )}
+      <PRStatus pr={pr} />
+      {pr.error && <p role="alert">{pr.error}</p>}
+      {error && <p role="alert">{error}</p>}
+      {pr.checks?.length > 0 && (
+        <details>
+          <summary>CI checks</summary>
+          {pr.checks.map((check, index) => (
+            <p key={`${check.name}:${index}`}>
+              {check.url ? (
+                <a
+                  href={check.url}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    void openLink(check.url)
+                      .then((result) => {
+                        if (result.isError)
+                          setError("The host could not open the check.");
+                      })
+                      .catch(() => setError("Could not open the check."));
+                  }}
+                >
+                  {check.name}
+                </a>
+              ) : (
+                check.name
+              )}{" "}
+              · {check.conclusion || check.status}
+            </p>
+          ))}
+        </details>
+      )}
+    </article>
+  );
+}
 function NewChat({
   entry,
   draft,
   setDraft,
   started,
+  profiles,
 }: {
   entry: Entry;
   draft: ChatDraft;
   setDraft: (update: (old: ChatDraft) => ChatDraft) => void;
   started: (run: Run) => void;
+  profiles: Profile[];
 }) {
   const update = (patch: Partial<ChatDraft>) =>
     setDraft((old) => ({ ...old, ...patch }));
@@ -976,9 +1133,39 @@ function NewChat({
   }
   return (
     <section aria-label="New agent conversation">
+      <label>
+        Agent pipeline
+        <select
+          aria-label="Agent pipeline"
+          value={profile?.id ?? ""}
+          disabled={draft.busy || draft.uncertain}
+          onChange={(event) => {
+            const next = profiles.find((p) => p.id === event.target.value);
+            update({
+              profile: next,
+              prepared: undefined,
+              preparedMessage: undefined,
+              error: "",
+              message:
+                draft.message === expandPrompt(profile, entry)
+                  ? expandPrompt(next, entry)
+                  : draft.message,
+            });
+          }}
+        >
+          <option value="">Select a pipeline</option>
+          {profiles.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </label>
       {!profile ? (
         <p role="alert">
-          No launch profile configured. Open Code Factory settings to add one.
+          {profiles.length
+            ? "Select a pipeline before starting."
+            : "No launch profile configured. Open Code Factory settings to add one."}
         </p>
       ) : (
         <>
@@ -1164,6 +1351,19 @@ function ItemDetail({
           </p>
         )}
       </section>
+      {entry.item.pr && (
+        <section aria-label="PR monitoring">
+          <PullRequestInfo pr={entry.item.pr} />
+        </section>
+      )}
+      {!!entry.linkedPullRequests?.length && (
+        <section aria-label="Linked pull requests">
+          <h2>Linked pull requests</h2>
+          {entry.linkedPullRequests.map((pr) => (
+            <PullRequestInfo key={pr.id} pr={pr} linked />
+          ))}
+        </section>
+      )}
       {conversation}
       <details className="item-details">
         <summary>Item details</summary>
@@ -1708,7 +1908,10 @@ function transcriptBlocks(events: JournalEvent[]) {
       label = "Agent";
       text = item.text ?? "";
     } else if (item?.type === "userMessage") {
-      label = "You";
+      label =
+        p.codeFactorySource === "question-recovery"
+          ? "Question recovery"
+          : "You";
       text = (item.content ?? []).map((v) => v.text ?? "").join("\n");
     } else if (item?.type === "commandExecution") {
       label = "Command";
@@ -1759,8 +1962,14 @@ function Agent({
   message,
   setMessage,
   embedded = false,
+  consoleView,
+  setConsoleView,
+  recovery,
 }: {
   embedded?: boolean;
+  consoleView: boolean;
+  setConsoleView: (value: boolean) => void;
+  recovery?: QuestionRecovery;
   run: Run;
   title: string;
   message: string;
@@ -1837,6 +2046,43 @@ function Agent({
         </>
       )}
       {run.error && <p role="alert">{run.error}</p>}
+      {embedded && (
+        <p aria-label="Session status">
+          {run.profile.name} · {run.status}
+        </p>
+      )}
+      <div className="buttons">
+        <button onClick={() => setConsoleView(!consoleView)}>
+          {consoleView ? "View conversation" : "View session console"}
+        </button>
+        {consoleView && run.turnId && (
+          <button onClick={() => void action("interrupt_run", { id: run.id })}>
+            Interrupt session
+          </button>
+        )}
+      </div>
+      {recovery &&
+        !["resolved", "cancelled", "fallback"].includes(recovery.stage) && (
+          <section aria-label="Question recovery">
+            <p role="status">
+              {recovery.stage === "checking"
+                ? "Checking whether the agent needs input…"
+                : recovery.stage === "awaiting-answer"
+                  ? "Question ready for your answer."
+                  : recovery.stage === "answered"
+                    ? "Returning to the selected task mode…"
+                    : `Preparing a question · attempt ${recovery.attempts} of 2`}
+            </p>
+            <button
+              onClick={() => {
+                setConsoleView(true);
+                void action("interrupt_run", { id: run.id });
+              }}
+            >
+              Take over session
+            </button>
+          </section>
+        )}
       {attention.map((a) => (
         <button
           className="notice"
@@ -1854,11 +2100,19 @@ function Agent({
           {historyError.message}
         </p>
       )}
-      <div className="transcript" aria-label="Conversation" aria-live="polite">
-        {conversation.map((b) => (
+      <div
+        className={`transcript ${consoleView ? "session-console" : ""}`}
+        aria-label={consoleView ? "Session console" : "Conversation"}
+        aria-live="polite"
+      >
+        {(consoleView ? blocks : conversation).map((b) => (
           <article key={b.key}>
             <small>{b.label === "Run error" ? "Agent error" : b.label}</small>
-            <p className="body">{b.text}</p>
+            {consoleView ? (
+              <pre>{b.text}</pre>
+            ) : (
+              <p className="body">{b.text}</p>
+            )}
           </article>
         ))}
         {!conversation.length && (
@@ -1933,7 +2187,7 @@ function Agent({
             Interrupt
           </button>
         )}
-        {activity.length > 0 && (
+        {!consoleView && activity.length > 0 && (
           <section aria-label="Technical activity">
             {activity.map((b) => (
               <article key={b.key}>
@@ -1968,12 +2222,14 @@ function AttentionDialog({
   close,
   answer,
   chat,
+  dismiss,
 }: {
   attention: Attention;
   context: string;
   close: () => void;
   answer: (value: unknown) => Promise<void>;
   chat: () => void;
+  dismiss?: () => Promise<void>;
 }) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
@@ -2005,9 +2261,11 @@ function AttentionDialog({
         <h2>Agent needs attention</h2>
         <p>{context}</p>
         <p>
-          {a.blocking
-            ? "The agent is waiting for your response."
-            : "The agent continues while you answer."}
+          {a.origin === "text"
+            ? "The agent stopped without a usable question form. Review its reply, answer here, or choose No reply needed."
+            : a.blocking
+              ? "The agent is waiting for your response."
+              : "The agent continues while you answer."}
         </p>
         {error && <p role="alert">{error}</p>}
         {questions ? (
@@ -2112,7 +2370,25 @@ function AttentionDialog({
             </div>
           </>
         )}
-        <button onClick={chat}>Open agent chat</button>
+        <button onClick={chat}>
+          {a.origin === "text" ? "Open session console" : "Open agent chat"}
+        </button>
+        {dismiss && (
+          <button
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await dismiss();
+              } catch (e) {
+                setError(String(e));
+                setBusy(false);
+              }
+            }}
+          >
+            No reply needed
+          </button>
+        )}
       </section>
     </div>
   );
@@ -2392,6 +2668,19 @@ function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
               }
             />
             Background notifications
+          </label>
+          <label>
+            Question helper model (optional)
+            <input
+              value={config.questionHelperModel ?? ""}
+              onChange={(event) =>
+                setConfig({
+                  ...config,
+                  questionHelperModel: event.target.value,
+                })
+              }
+              placeholder="Use the session model"
+            />
           </label>
           <button>Save settings</button>
         </SaveForm>

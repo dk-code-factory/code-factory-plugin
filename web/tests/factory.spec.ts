@@ -50,7 +50,7 @@ function initial(): Snapshot {
     repositories: [],
     profiles: [
       {
-        id: "investigate",
+        id: "implement",
         name: "Investigation",
         prompt: "Investigate {{title}}.\n{{body}}",
         skills: [],
@@ -359,6 +359,13 @@ async function host(
             ? "waiting"
             : "idle";
           if (run.status === "idle") run.turnId = "";
+          state.cursor++;
+          break;
+        }
+        case "dismiss_question": {
+          state.attention = state.attention.filter(
+            (request) => request.id !== a.id,
+          );
           state.cursor++;
           break;
         }
@@ -1121,6 +1128,9 @@ test("settings save repository and priority rows without unused integrations", a
   await ui.getByText("Priorities & notifications", { exact: true }).click();
   await ui.getByLabel("Priority label 1", { exact: true }).fill("urgent");
   await ui.getByLabel("Mapped priority 1", { exact: true }).selectOption("0");
+  await ui
+    .getByLabel("Question helper model (optional)")
+    .fill("fixture-small-model");
   await ui.getByRole("button", { name: "Save settings", exact: true }).click();
   const form = ui
     .getByRole("button", { name: "Save settings", exact: true })
@@ -1129,6 +1139,10 @@ test("settings save repository and priority rows without unused integrations", a
   expect(
     calls.find((c) => c.name === "save_settings")?.arguments.priorityLabels,
   ).toEqual({ urgent: 0, P1: 1, P2: 2, P3: 3 });
+  expect(
+    calls.find((c) => c.name === "save_settings")?.arguments
+      .questionHelperModel,
+  ).toBe("fixture-small-model");
 });
 
 function retained(
@@ -2451,7 +2465,14 @@ test("sending a message restores the dirty retained daemon session without a Res
   await ui.getByRole("button", { name: /Waiting for your answer/ }).click();
   await ui.getByRole("radio", { name: /Focused/ }).check();
   await ui.getByRole("button", { name: "Answer", exact: true }).click();
-  await expect(ui.locator(".detail .status")).toHaveText("Inactive");
+  await expect
+    .poll(
+      async () =>
+        (await daemon<Run[]>("list_runs")).find(
+          (r) => r.id === acceptedStarts[0].id,
+        )?.status,
+    )
+    .toBe("idle");
   const run = (await daemon<Run[]>("list_runs")).find(
     (entry) => entry.id === acceptedStarts[0].id,
   )!;
@@ -2468,7 +2489,12 @@ test("sending a message restores the dirty retained daemon session without a Res
   await expect(ui.getByRole("alert")).toContainText(
     /modified or untracked files|worktree/,
   );
-  await expect(ui.locator(".detail .status")).toHaveText("Inactive");
+  await expect
+    .poll(
+      async () =>
+        (await daemon<Run[]>("list_runs")).find((r) => r.id === run.id)?.status,
+    )
+    .toBe("interrupted");
   await expect(
     ui.getByRole("button", { name: "Resume agent", exact: true }),
   ).toHaveCount(0);
@@ -2596,7 +2622,9 @@ for (const theme of ["light", "dark"] as const) {
     snapshot.viewer!.teams = ["org/core"];
     const { ui, calls } = await host(page, { snapshot, theme });
     const rows = ui.getByRole("region", { name: "Items" }).getByRole("button");
-    await expect(ui.getByLabel("Inbox filter")).toHaveValue("pending");
+    await expect(ui.getByLabel("Inbox filter")).toHaveValue("open");
+    await expect(rows).toHaveCount(4);
+    await ui.getByLabel("Inbox filter").selectOption("pending");
     await expect(rows).toHaveText([
       /Work 7/,
       /Fix reconnect regression/,
@@ -2769,9 +2797,9 @@ test("Messages lists waiting agents and answering removes only its owning reques
   const { ui, calls } = await host(page, { snapshot });
   await ui.getByRole("button", { name: /^Messages/ }).click();
   const waiting = ui.getByRole("region", { name: "Waiting for you" });
-  await expect(waiting.getByRole("button")).toHaveCount(3);
+  await expect(waiting.getByRole("button")).toHaveCount(4);
   await expect(
-    ui.getByRole("button", { name: /^Messages\s*3$/ }),
+    ui.getByRole("button", { name: /^Messages\s*4$/ }),
   ).toBeVisible();
   await expect(ui.getByText("All agents", { exact: true })).toHaveCount(0);
   await expect(ui.getByText("Work history", { exact: true })).toHaveCount(0);
@@ -2785,7 +2813,7 @@ test("Messages lists waiting agents and answering removes only its owning reques
     ui.getByRole("heading", { name: "Second task", exact: true }),
   ).toBeVisible();
   await ui.getByRole("button", { name: "← Messages", exact: true }).click();
-  await expect(waiting.getByRole("button")).toHaveCount(2);
+  await expect(waiting.getByRole("button")).toHaveCount(3);
   await expect(waiting).toContainText("Fix reconnect regression");
   expect(calls.find((c) => c.name === "answer_request")!.arguments.id).toBe(
     "question-1",
@@ -2794,11 +2822,16 @@ test("Messages lists waiting agents and answering removes only its owning reques
   await expect(ui.getByRole("dialog")).toContainText("git status");
   await ui.getByRole("button", { name: "Deny", exact: true }).click();
   await ui.getByRole("button", { name: "← Messages", exact: true }).click();
-  await expect(waiting.getByRole("button")).toHaveCount(1);
+  await expect(waiting.getByRole("button")).toHaveCount(2);
   expect(
     calls.filter((c) => c.name === "answer_request").at(-1)?.arguments,
   ).toEqual({ id: "approval", answer: { decision: "decline" } });
-  await waiting.getByRole("button").click();
+  await waiting.getByRole("button", { name: /Reply needed/ }).click();
+  await ui.getByRole("radio", { name: /Focused/ }).check();
+  await ui.getByRole("button", { name: "Answer", exact: true }).click();
+  await ui.getByRole("button", { name: "← Messages", exact: true }).click();
+  await expect(waiting.getByRole("button")).toHaveCount(1);
+  await waiting.getByRole("button", { name: /agent continues/ }).click();
   await ui.getByRole("radio", { name: /Focused/ }).check();
   await ui.getByRole("button", { name: "Answer", exact: true }).click();
   await ui.getByRole("button", { name: "← Messages", exact: true }).click();
@@ -3277,4 +3310,334 @@ test("cleaned work keeps its Finished item status while offering an explicit fre
       ["start_run", "send_message", "prepare_launch"].includes(c.name),
     ),
   ).toHaveLength(0);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`Working and linked PR monitoring follow server projections in ${theme}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 820 });
+    const state = initial();
+    state.inbox[0].queues = ["issues", "working"];
+    state.inbox[0].work = {
+      tracked: true,
+      complete: false,
+      status: "Waiting for you",
+      runIds: ["older", "newer"],
+      attentionCount: 1,
+    };
+    const pr = {
+      id: "owner/repo#9",
+      title: "Reconnect fix",
+      url: "https://github.com/owner/repo/pull/9",
+      state: "open",
+      draft: false,
+      head: "current",
+      reviewDecision: "approved",
+      ci: "pending",
+      checks: [
+        {
+          name: "build",
+          status: "in_progress",
+          conclusion: "",
+          url: "https://github.com/owner/repo/actions/runs/9",
+        },
+      ],
+      syncedAt: new Date().toISOString(),
+      implementation: true,
+    };
+    state.inbox[0].linkedPullRequests = [pr];
+    state.runs = [
+      retained(state, "older", "waiting"),
+      retained(state, "newer", "idle", "2026-10-22T00:00:00Z"),
+    ];
+    const other = structuredClone(state.inbox[0]);
+    other.item.id = "owner/repo#2";
+    other.item.title = "Not started";
+    other.queues = ["issues"];
+    other.work = {
+      tracked: false,
+      complete: false,
+      status: "Not started",
+      runIds: [],
+      attentionCount: 0,
+    };
+    other.linkedPullRequests = [];
+    state.inbox.push(other);
+    const { ui, calls, openedLinks } = await host(page, {
+      snapshot: state,
+      theme,
+    });
+    await expect(ui.getByLabel("Inbox filter")).toHaveValue("open");
+    await expect(
+      ui.getByRole("region", { name: "Items" }).getByRole("button"),
+    ).toHaveCount(2);
+    await ui.getByRole("button", { name: "Working", exact: true }).click();
+    await expect(
+      ui.getByRole("region", { name: "Items" }).getByRole("button"),
+    ).toHaveCount(1);
+    await expect(ui.getByLabel("Work status")).toHaveText("Waiting for you");
+    await expect(ui.getByLabel("Pull request status")).toContainText(
+      "open · approved · CI pending",
+    );
+    await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+    await expect(ui.getByLabel("Session status")).toContainText("idle");
+    await expect(ui.getByLabel("Work status")).toHaveText("Waiting for you");
+    await showItemDetails(ui);
+    await ui.getByText("Work history", { exact: true }).click();
+    await expect(
+      ui.locator(".work-history").getByRole("button", { name: /waiting$/ }),
+    ).toBeVisible();
+    await expect(
+      ui.locator(".work-history").getByRole("button", { name: /idle$/ }),
+    ).toBeVisible();
+    const linked = ui.getByRole("region", { name: "Linked pull requests" });
+    await expect(linked).toContainText("Reconnect fix");
+    await linked.getByRole("link", { name: "owner/repo#9" }).click();
+    await expect.poll(() => openedLinks).toEqual([pr.url]);
+    await linked.getByText("CI checks", { exact: true }).click();
+    await linked.getByRole("link", { name: "build", exact: true }).click();
+    await expect.poll(() => openedLinks).toEqual([pr.url, pr.checks[0].url]);
+    pr.state = "merged";
+    pr.ci = "success";
+    state.inbox[0].queues = ["issues"];
+    state.inbox[0].work!.complete = true;
+    state.cursor++;
+    await expect(linked).toContainText("merged · approved · CI success");
+    await ui.getByRole("button", { name: "← Working", exact: true }).click();
+    await expect(
+      ui.getByRole("button", { name: /Fix reconnect regression/ }),
+    ).toHaveCount(0);
+    expect(
+      calls.filter((c) => ["prepare_launch", "start_run"].includes(c.name)),
+    ).toHaveLength(0);
+    await scanOwnedApp(page, `working-monitoring-${theme}`);
+  });
+}
+
+test("first-message pipeline selection preserves an edited prompt and launches the selected preset", async ({
+  page,
+}) => {
+  const state = initial();
+  state.profiles.push({
+    ...state.profiles[0],
+    id: "review",
+    name: "PR review",
+    prompt: "Review {{title}}",
+  });
+  const { ui, calls } = await host(page, { snapshot: state });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  await expect(ui.getByLabel("Agent pipeline")).toHaveValue("implement");
+  await ui
+    .getByLabel("Message agent")
+    .fill("Inspect the regression without publishing.");
+  await ui.getByLabel("Agent pipeline").selectOption("review");
+  await expect(ui.getByLabel("Message agent")).toHaveValue(
+    "Inspect the regression without publishing.",
+  );
+  expect(calls.filter((c) => c.name === "prepare_launch")).toHaveLength(0);
+  await ui.getByRole("button", { name: "Start agent", exact: true }).click();
+  await expect
+    .poll(() => calls.filter((c) => c.name === "start_run").length)
+    .toBe(1);
+  expect(
+    calls.find((c) => c.name === "prepare_launch")!.arguments.profileId,
+  ).toBe("review");
+});
+
+test("text fallback opens the same session console and preserves its reply draft", async ({
+  page,
+}) => {
+  const state = initial();
+  const run = retained(state, "retained", "interrupted");
+  state.runs = [run];
+  state.attention = [
+    {
+      id: "text-question",
+      runId: run.id,
+      origin: "text",
+      method: "item/tool/requestUserInput",
+      blocking: true,
+      status: "pending",
+      params: {
+        questions: [
+          {
+            id: "reply",
+            header: "Reply",
+            question: "Which target should I use?",
+            isOther: true,
+          },
+        ],
+      },
+    },
+  ];
+  const transcript: JournalEvent[] = [
+    {
+      seq: 1,
+      kind: "run.output",
+      entity: run.id,
+      at: new Date().toISOString(),
+      data: {
+        method: "item/completed",
+        params: {
+          item: {
+            id: "cmd",
+            type: "commandExecution",
+            command: "git status",
+            aggregatedOutput: "fixture command output",
+          },
+        },
+      },
+    },
+    {
+      seq: 2,
+      kind: "run.output",
+      entity: run.id,
+      at: new Date().toISOString(),
+      data: {
+        method: "item/completed",
+        params: {
+          codeFactorySource: "question-recovery",
+          item: {
+            id: "automatic-input",
+            type: "userMessage",
+            content: [
+              {
+                type: "text",
+                text: "Internal question form repair instructions",
+              },
+            ],
+          },
+        },
+      },
+    },
+  ];
+  const { ui, calls } = await host(page, { snapshot: state, transcript });
+  await ui.getByRole("button", { name: /Messages/ }).click();
+  await ui
+    .getByRole("region", { name: "Waiting for you" })
+    .getByRole("button")
+    .click();
+  await ui
+    .getByRole("button", { name: "Open session console", exact: true })
+    .click();
+  await expect(ui.getByLabel("Session console")).toContainText(
+    "fixture command output",
+  );
+  await expect(ui.getByLabel("Session console")).toContainText(
+    "Question recovery",
+  );
+  await expect(ui.getByLabel("Session console")).toContainText(
+    "Internal question form repair instructions",
+  );
+  await ui.getByLabel("Message agent").fill("Console draft");
+  await ui
+    .getByRole("button", { name: "View conversation", exact: true })
+    .click();
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Console draft");
+  await expect(
+    ui.getByText("fixture command output", { exact: false }),
+  ).not.toBeVisible();
+  await expect(
+    ui.getByText("Internal question form repair instructions", { exact: true }),
+  ).not.toBeVisible();
+  await ui.getByRole("button", { name: /Waiting for your answer/ }).click();
+  await ui
+    .getByRole("dialog")
+    .getByLabel("Which target should I use?")
+    .fill("Target one");
+  await ui.getByRole("button", { name: "Answer", exact: true }).click();
+  await expect
+    .poll(() => calls.filter((c) => c.name === "answer_request").length)
+    .toBe(1);
+  expect(
+    calls.filter((c) => c.name === "answer_request").map((c) => c.arguments),
+  ).toEqual([
+    {
+      id: "text-question",
+      answer: { answers: { reply: { answers: ["Target one"] } } },
+    },
+  ]);
+  expect(calls.filter((c) => c.name === "start_run")).toHaveLength(0);
+});
+
+test("question recovery progress and keyboard takeover retain the session draft", async ({
+  page,
+}) => {
+  const state = initial();
+  const run = retained(state, "repairing", "running");
+  run.turnId = "repair-turn";
+  state.runs = [run];
+  state.questionRecoveries = [
+    { id: "recovery", runId: run.id, stage: "requesting-form", attempts: 2 },
+  ];
+  const { ui, calls } = await host(page, { snapshot: state });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  await expect(
+    ui.getByRole("region", { name: "Question recovery" }),
+  ).toContainText("attempt 2 of 2");
+  await ui.getByLabel("Message agent").fill("Retain takeover context");
+  const takeover = ui.getByRole("button", {
+    name: "Take over session",
+    exact: true,
+  });
+  await takeover.focus();
+  await takeover.press("Enter");
+  await expect(ui.getByLabel("Session console")).toBeVisible();
+  await expect(ui.getByLabel("Message agent")).toHaveValue(
+    "Retain takeover context",
+  );
+  await expect
+    .poll(() =>
+      calls.filter((c) => c.name === "interrupt_run").map((c) => c.arguments),
+    )
+    .toEqual([{ id: run.id }]);
+  expect(calls.filter((c) => c.name === "start_run")).toHaveLength(0);
+});
+
+test("an uncertain textual reply can be dismissed without advancing its session", async ({
+  page,
+}) => {
+  const state = initial();
+  const run = retained(state, "retained", "idle");
+  state.runs = [run];
+  state.attention = [
+    {
+      id: "uncertain",
+      runId: run.id,
+      origin: "text",
+      method: "item/tool/requestUserInput",
+      blocking: true,
+      status: "pending",
+      params: {
+        questions: [
+          {
+            id: "reply",
+            header: "Reply",
+            question: "The agent's final reply",
+            isOther: true,
+          },
+        ],
+      },
+    },
+  ];
+  const { ui, calls } = await host(page, { snapshot: state });
+  await ui.getByRole("button", { name: /Messages/ }).click();
+  await ui
+    .getByRole("region", { name: "Waiting for you" })
+    .getByRole("button")
+    .click();
+  await ui
+    .getByRole("button", { name: "No reply needed", exact: true })
+    .click();
+  await expect(ui.getByRole("dialog")).toHaveCount(0);
+  expect(
+    calls.filter((c) => c.name === "dismiss_question").map((c) => c.arguments),
+  ).toEqual([{ id: "uncertain" }]);
+  expect(
+    calls.filter((c) =>
+      ["start_run", "send_message", "answer_request"].includes(c.name),
+    ),
+  ).toHaveLength(0);
+  expect(run.status).toBe("idle");
 });

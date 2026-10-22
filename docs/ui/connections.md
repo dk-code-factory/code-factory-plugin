@@ -25,7 +25,7 @@ for a clickable navigation control.
 <!-- specs:connections-0 -->
 | ID | From → to | Trigger and carried context | Result/type |
 | --- | --- | --- | --- |
-| `C-NAVIGATE` | `W-NAVIGATION` → one embedded `PAGE-*` | Issues, My PRs, Review PRs or Messages tab. | Navigates between four task queues with independent query state; configuration remains a separate document. |
+| `C-NAVIGATE` | `W-NAVIGATION` → one embedded `PAGE-*` | Working, Issues, My PRs, Review PRs or Messages tab. | Navigates between four task queues with independent query state; configuration remains a separate document. |
 | `C-FILTER` | `W-INBOX-QUERY` → `P-INBOX-LIST` | Search text and filter value. | Applies per-tab kind/ownership/review membership, filter and query. Pending issues exclude linked PRs; lists sort by priority then update time. |
 | `C-SELECT-ITEM` | Work row → item conversation | Click a row; item ID. | Loads and marks the displayed item revision read, continues the newest retained conversation or shows a prefilled first message. Never starts or prepares on selection. |
 | `C-ITEM-STATE` | `W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read. | Unread, acknowledge New or record action; item ID. | Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. |
@@ -37,7 +37,7 @@ for a clickable navigation control.
 | `C-LAUNCH-EDIT` | `W-LAUNCH-REVIEW.edit` → `P-LAUNCH-EDITOR` | Edit launch click. | Returns to the editor. The preceding prepared record is retained, not modified/deleted. |
 | `C-START` | `W-LAUNCH-REVIEW.start` → `PAGE-AGENTS`/`P-RUN-DETAIL` | Prepared run ID. | Explicit Start only. Error/lost response reads the same run; accepted work opens, still-prepared work permits retry, unknown status disables Start/Edit and offers Check start status. |
 | `C-SELECT-RUN` | Retained run or draft row → conversation or review | Retained conversation or draft row inside the owning item’s Work history. | Opens the selected retained conversation within the owning item, preserving the originating work queue Back context. Prepared rows reopen their existing immutable review without preparing or starting again. |
-| `C-RUN-ACTION` | `W-RUN-CONTROLS` → selected run → Agents widgets | Interrupt, Resume or Cleanup; selected run ID. | Explicit interrupt or cleanup refreshes state, retaining action failures and dirty work. Message submission is the continuation action for inactive retained sessions; there is no Resume button. |
+| `C-RUN-ACTION` | `W-RUN-CONTROLS` → selected run → Agents widgets | Explicit Interrupt, question-recovery Take over session, or Cleanup for the selected retained run. | Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary. |
 | `C-FOLLOW-UP` | `W-MESSAGE` → selected run → `W-TRANSCRIPT` | Message text and displayed current-turn context. | Send with current-turn identity while active, or restore the inactive retained session using this message as its first new turn. Success clears only unchanged submitted text after acceptance; failures preserve drafts and never cause automatic replay. |
 | `C-RUN-ATTENTION` | `W-ATTENTION-NOTICE[requestId]` → `D-ATTENTION` | Notice click; request ID belonging to the selected run. | Opens that request without answering. |
 | `C-GLOBAL-ATTENTION` | Messages request → owning run and attention dialog | Select one pending request. | Selects that exact owning run and request; identifies item/profile and returns to that conversation after answering. |
@@ -58,9 +58,12 @@ for a clickable navigation control.
 | `C-TUNNEL-KEY` | `W-LOCAL-TUNNEL-KEY` → alternate local transport session | Single-use private setup input. | Submits and removes form on success; does not navigate into Settings or activate Jira. |
 | `C-BROWSER-LAB` | `W-BROWSER-LAB` controls → isolated browser → screenshot/location | Explicit lab navigation/click/key/scroll operations. | Developer utility feedback loop; never an Inbox/Agents page transition. |
 | `C-BACK` | Conversation Back → originating work or Messages tab | Back action on the record page. | Restores list query, scroll and row focus when the row exists; missing rows leave a usable focus fallback. Ordinary drafts remain keyed to their records. |
-| `C-ITEM-SOURCE` | Inbox source link → original GitHub issue or pull request in the host browser | Click or keyboard activation of the displayed repository/number carries the original item URL. | Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list. |
+| `C-ITEM-SOURCE` | Owned issue, PR and check links open their original GitHub or CI-provider destination through the host browser. | Activate an item identifier, linked PR identifier or individual CI check link. | Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list. |
 | `C-OPEN-SETTINGS` | Host open_settings invocation → independent settings document | The settings entry tool advertises its own content-specific resource and output template. | Opens configuration in its own view. The inbox entry and legacy resource remain inbox-only. Both surfaces reuse authenticated bridged tools without owner credentials or direct iframe localhost access. |
 | `C-START-CHAT` | First-message Start → retained run conversation | Explicit Start with the visible message and authority. | Prepares then starts once; verifies the same run after an uncertain response. Preserves per-item draft and recovery state. |
+| `C-SESSION-CONSOLE` | Conversation presentation to the same session console. | View session console, or Open session console from a textual fallback. | Switches presentation without launching or resuming another process. |
+| `C-PIPELINE-SELECT` | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. |
+| `C-TEXT-DISMISS` | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. |
 <!-- /specs:connections-0 -->
 
 ## Navigation overview
@@ -73,6 +76,7 @@ flowchart LR
     N109["PAGE-MY-PRS"]
     N110["PAGE-REVIEW-PRS"]
     N64["PAGE-AGENTS"]
+    N117["PAGE-WORKING"]
     N5["W-INBOX-QUERY"]
     N42["P-INBOX-LIST"]
     N7["W-ITEM-ROW"]
@@ -89,6 +93,7 @@ flowchart LR
     N52["P-LAUNCH-EDITOR"]
     N16["W-RUN-ROW"]
     N18["W-RUN-CONTROLS"]
+    N119["W-QUESTION-RECOVERY"]
     N45["P-RUN-DETAIL"]
     N44["P-RUN-LIST"]
     N21["W-MESSAGE"]
@@ -117,12 +122,16 @@ flowchart LR
     N70["PAGE-LOCAL-TUNNEL-SETUP"]
     N37["W-BROWSER-LAB"]
     N71["PAGE-BROWSER-LAB"]
+    N14["W-PR-EVIDENCE"]
     N107["S-SETTINGS"]
     N114["W-NEW-CHAT"]
+    N118["W-SESSION-CONSOLE"]
+    N111["P-WAITING-QUEUE"]
     N2 -->|"C-NAVIGATE"| N63
     N2 -->|"C-NAVIGATE"| N109
     N2 -->|"C-NAVIGATE"| N110
     N2 -->|"C-NAVIGATE"| N64
+    N2 -->|"C-NAVIGATE"| N117
     N5 -->|"C-FILTER"| N42
     N7 -->|"C-SELECT-ITEM"| N104
     N10 -->|"C-ITEM-STATE"| N42
@@ -141,6 +150,8 @@ flowchart LR
     N16 -->|"C-SELECT-RUN"| N66
     N18 -->|"C-RUN-ACTION"| N45
     N18 -->|"C-RUN-ACTION"| N44
+    N119 -->|"C-RUN-ACTION"| N45
+    N119 -->|"C-RUN-ACTION"| N44
     N21 -->|"C-FOLLOW-UP"| N20
     N19 -->|"C-RUN-ATTENTION"| N67
     N113 -->|"C-GLOBAL-ATTENTION"| N104
@@ -170,6 +181,7 @@ flowchart LR
     N0 -->|"C-STATE-REFRESH"| N104
     N0 -->|"C-STATE-REFRESH"| N65
     N0 -->|"C-STATE-REFRESH"| N2
+    N0 -->|"C-STATE-REFRESH"| N117
     N20 -->|"C-TRANSCRIPT"| N20
     N33 -->|"C-PACKAGE"| N68
     N34 -->|"C-PACKAGE"| N68
@@ -181,10 +193,26 @@ flowchart LR
     N2 -->|"C-BACK"| N109
     N2 -->|"C-BACK"| N110
     N2 -->|"C-BACK"| N64
+    N2 -->|"C-BACK"| N117
     N7 -->|"C-ITEM-SOURCE"| N7
+    N7 -->|"C-ITEM-SOURCE"| N14
+    N7 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N7
+    N14 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N7
+    N14 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N14
     N107 -->|"C-OPEN-SETTINGS"| N65
     N114 -->|"C-START-CHAT"| N104
     N114 -->|"C-START-CHAT"| N104
+    N20 -->|"C-SESSION-CONSOLE"| N118
+    N22 -->|"C-SESSION-CONSOLE"| N118
+    N114 -->|"C-PIPELINE-SELECT"| N114
+    N114 -->|"C-PIPELINE-SELECT"| N114
+    N25 -->|"C-TEXT-DISMISS"| N104
+    N25 -->|"C-TEXT-DISMISS"| N19
+    N25 -->|"C-TEXT-DISMISS"| N111
 ```
 <!-- /specs:connections -->
 

@@ -80,6 +80,7 @@ type Page struct {
 }
 type InboxInput struct {
 	State string `json:"state,omitempty"`
+	Queue string `json:"queue,omitempty"`
 }
 type UserAction struct {
 	ID       string `json:"id"`
@@ -150,7 +151,22 @@ func New(a *app.App, ev *events.Service) *Server {
 	settingsURI := registerSettingsUIResource(m, web.SettingsHTML())
 	bind(m, settingsURI, "open_settings", "Open Code Factory settings in its own dedicated view. Configure repositories, priorities, profiles and skills here; settings are not part of the inbox or agent UI.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.settingsSnapshot(ctx) })
 	bind(m, uri, "open_factory", "Open Code Factory’s GitHub issue and pull-request dashboard and local Codex agents. No email account is needed.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
-	bind(m, uri, "list_inbox", "List synchronized issues and PRs without marking anything read.", false, true, func(ctx context.Context, in InboxInput) (any, error) { return a.Inbox(ctx, in.State) })
+	bind(m, uri, "list_inbox", "List synchronized issues and PRs, optionally filtering queue (working, issues, mine, review), without marking read.", false, true, func(ctx context.Context, in InboxInput) (any, error) {
+		if in.Queue != "" && in.Queue != "all" && in.Queue != "working" && in.Queue != "issues" && in.Queue != "mine" && in.Queue != "review" {
+			return nil, fmt.Errorf("unknown queue")
+		}
+		entries, err := a.Inbox(ctx, in.State)
+		if err != nil {
+			return nil, err
+		}
+		out := []domain.InboxEntry{}
+		for _, entry := range entries {
+			if app.ContainsQueue(entry, in.Queue) {
+				out = append(out, entry)
+			}
+		}
+		return out, nil
+	})
 	bind(m, uri, "read_item", "Read item detail. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
 	bind(m, uri, "item_action", "Mark displayed revision read, unread, acknowledge, record action, or override priority.", false, false, func(ctx context.Context, in UserAction) (any, error) {
 		return nil, a.UserAction(ctx, in.ID, in.Action, in.Revision, in.Priority)
@@ -197,7 +213,17 @@ func New(a *app.App, ev *events.Service) *Server {
 				out = append(out, at)
 			}
 		}
-		return map[string]any{"run": publicRun(run), "attention": out}, e
+		recoveries, err := store.List[domain.QuestionRecovery](ctx, a.Store, "question-recovery")
+		if err != nil {
+			return nil, err
+		}
+		runRecoveries := []domain.QuestionRecovery{}
+		for _, r := range recoveries {
+			if r.RunID == in.ID {
+				runRecoveries = append(runRecoveries, r)
+			}
+		}
+		return map[string]any{"run": publicRun(run), "attention": out, "questionRecoveries": runRecoveries}, e
 	})
 	bind(m, uri, "send_message", "Send a message, restoring an inactive retained session when needed. Provide expectedTurn for an active turn to steer safely.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
 		return nil, a.Runs.Message(ctx, in.ID, in.Text, in.ExpectedTurn)
@@ -210,6 +236,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		return nil, a.Runs.Answer(ctx, in.ID, b)
 	})
 	bind(m, uri, "interrupt_run", "Interrupt the active turn, preserving worktree and history.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Interrupt(ctx, in.ID) })
+	bind(m, uri, "dismiss_question", "Dismiss a textual fallback that needs no reply. Does not answer, authorize or advance the agent.", true, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.DismissQuestion(ctx, in.ID) })
 	bind(m, uri, "cleanup_run", "Explicitly remove a stopped run's clean worktree. Refuses uncommitted changes.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Cleanup(ctx, in.ID) })
 	bind(m, settingsURI, "discover_skills", "Discover local Codex skills for a checkout.", false, true, func(ctx context.Context, in SkillInput) (any, error) { return a.Runs.DiscoverSkills(ctx, in.CWD) })
 	bind(m, settingsURI, "save_skill", "Create or edit a service-managed skill with YAML frontmatter.", false, false, func(ctx context.Context, in SaveSkillInput) (any, error) {
@@ -261,6 +288,10 @@ func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 	if e != nil {
 		return nil, e
 	}
+	recoveries, e := store.List[domain.QuestionRecovery](ctx, s.App.Store, "question-recovery")
+	if e != nil {
+		return nil, e
+	}
 	skills, e := store.List[domain.Skill](ctx, s.App.Store, "skill")
 	if e != nil {
 		return nil, e
@@ -270,7 +301,7 @@ func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 		return nil, err
 	}
 	config, e := s.App.Config(ctx)
-	return map[string]any{"viewer": viewer, "inbox": inbox, "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "skills": skills, "config": config, "cursor": cursor}, e
+	return map[string]any{"viewer": viewer, "inbox": inbox, "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "questionRecoveries": recoveries, "skills": skills, "config": config, "cursor": cursor}, e
 }
 
 // The model-visible settings entry does not disclose unrelated task/run contents.
@@ -315,6 +346,15 @@ func (s *Server) detail(ctx context.Context, id string) (any, error) {
 	var state domain.UserState
 	if e = s.App.Store.Get(ctx, "user", id, &state); e != nil {
 		return nil, e
+	}
+	entries, e := s.App.Inbox(ctx, "all")
+	if e != nil {
+		return nil, e
+	}
+	for _, entry := range entries {
+		if entry.Item.ID == id {
+			return map[string]any{"item": item, "user": state, "relationships": out, "tickets": tickets, "linkedPullRequests": entry.LinkedPullRequests, "work": entry.Work, "queues": entry.Queues}, nil
+		}
 	}
 	return map[string]any{"item": item, "user": state, "relationships": out, "tickets": tickets}, nil
 }

@@ -22,6 +22,16 @@ The app-server connection/process belongs to the daemon, not to an MCP request o
 
 Publishing settings become developer instructions for the agent. The service cannot independently police every external operation performed by arbitrary tools; sandbox/approval policy and credentials define the execution boundary. A future host adapter must not reinterpret a profile to weaken it.
 
+## Work projections and question recovery
+
+Queue membership is a server projection, shared by snapshots and filtered inbox calls. Started runs track an item independently of runtime completion. A closed/merged PR leaves Working; a closed issue or merged explicitly associated implementation PR completes issue work. Reopening restores eligible work. Manual associations and GitHub development links carry implementation intent; source references retain evidence without acquiring that intent. Item activity aggregates all sessions so an older blocker remains visible.
+
+PR lifecycle, review and CI are independent typed values. Read-only GraphQL metadata provides current-head rollups and development links; latest opinionated reviews supply approval information when a repository has no authoritative review decision. Referenced PRs are fetched individually without configuring their repositories. Poll freshness and synchronization errors do not change content revisions. Failed metadata refresh preserves same-head results and development links; a changed head cannot inherit old CI success.
+
+Questions have RPC, structured-message or textual origins. Only RPC origins carry live process request IDs. Message/text answers durably claim the attention before steering or restoring the original session; uncertain delivery is not automatically replayed. Synthetic answers retain encrypted redaction values before delivery. Lost native questions can become textual continuations, while approvals must regain a native authorization request.
+
+A recovery episode is keyed by run and source turn, with durable stage and at most two claimed repair attempts. Its helper uses bounded redacted context, an ephemeral read-only thread, disabled external MCP/apps and a supported low reasoning effort. Repair turns use question-only Plan mode in the original thread and retain its sandbox, approval and publishing authority. Successful answers finish that question-only turn before an ordinary continuation explicitly restores the profile mode. User takeover cancels further repair; process loss retains the episode without replay. The console displays the same redacted journal and uses existing message, answer and interrupt operations. Journal metadata identifies daemon-generated repair and continuation input by its turn and exact text, preserving the role of real answers in that same turn.
+
 ## Host boundary
 
 HTTP is loopback-only and bearer-authenticated. The tunnel's stdio proxy reads the token locally and forwards MCP requests and required version-2 HTTP headers. The tunnel and associated Work workspace must be owner-only, since all tunnel callers share the owner's local service identity. Shared workspace deployment requires an additional authenticated principal boundary.

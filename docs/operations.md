@@ -50,25 +50,13 @@ custom connections and event-triggered tasks. Follow the
 
 ## Daily use
 
-Open the embedded inbox and configure only the dedicated private pilot repository.
-Inbox and Agents are full-width lists; clicking a row opens its dedicated page.
-Use Back to return to the originating list or item with context preserved.
-Top Inbox/Agents navigation always opens the list.
-Initial records are unread without New; new discoveries get New. Opening detail
-marks the displayed revision read. Action history is independent of unread state.
-Sync runs every 30 seconds; visible UI polling runs every second after successful
-responses. Network failures defer those updates and appear in diagnostics.
+Open the embedded inbox and configure only the dedicated private pilot repository. Working tracks launched work until its GitHub completion; Issues includes linked PR information; My PRs and Review PRs follow GitHub author/reviewer identity. Each queue retains its query and Back context. Item selection opens the conversation without starting an agent.
 
-Launch from an item to open the default prepared review, or use **Edit** and
-**Advanced** to customize it; explicitly **Start** to create work. **Open agent**
-continues the newest retained run, while **New run** prepares another proposal.
-Prepared records reopen from **Draft launches**. Priority picker changes save
-immediately; item relationship and run message drafts survive tab/record changes
-within the open app and end on reload. Use **Plan · interactive questions** for
-the supported Codex question path.
-Answer in the attention dialog. Follow up in agent chat. Interrupt and Resume are
-separate operations. Opening an item never starts work. Closing the UI leaves work
-running; the computer and both services must remain available.
+Choose a pipeline, review its mode, permissions and publishing authority, and explicitly Start. Each pipeline is one retained Codex session. New run and prepared proposals remain under Item details. Follow up by sending a message; inactive work restores its original thread and workspace. Interrupt remains explicit and cleanup refuses dirty worktrees.
+
+Messages lists native, structured-message and recovered textual questions and approvals. Answer the displayed form. If a stopped agent fails to produce a form, the helper gets at most two question-only repair attempts before offering a free-text answer and Open session console. The console shows the same session's technical activity and retains its draft. Take over session cancels further repair. Unknown delivery is never retried automatically; inspect the console first.
+
+PR lifecycle, review approval and current-head CI are independent. Linked implementation PRs can complete issue work on merge without changing the issue on GitHub. Incidental references cannot. Inaccessible or stale PR information remains visibly unknown. Sync runs every 30 seconds and visible UI refreshes through the host bridge; neither closing the UI nor GitHub completion stops a run.
 
 ## Diagnostics and evidence
 

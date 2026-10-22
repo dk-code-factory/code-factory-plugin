@@ -186,6 +186,15 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 			t.Fatal("task fixture missing", key)
 		}
 	}
+	working := request("tools/call", map[string]any{"name": "list_inbox", "arguments": map[string]any{"queue": "working", "state": "all"}}, true, "2026-07-28")
+	workingData := working["structuredContent"].(map[string]any)["data"].([]any)
+	if len(workingData) != 1 || workingData[0].(map[string]any)["work"].(map[string]any)["tracked"] != true {
+		t.Fatal("working projection missing retained work")
+	}
+	invalidQueue := request("tools/call", map[string]any{"name": "list_inbox", "arguments": map[string]any{"queue": "unknown"}}, true, "2026-07-28")
+	if invalidQueue["isError"] != true {
+		t.Fatal("unknown queue accepted")
+	}
 	settings := request("tools/call", map[string]any{"name": "open_settings", "arguments": map[string]any{}}, true, "2026-07-28")
 	if settings["isError"] == true || settings["structuredContent"] == nil {
 		t.Fatal("settings entry failed", settings)

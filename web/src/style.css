@@ -93,6 +93,20 @@ nav button[aria-current] {
   background: var(--tint);
   font-weight: 600;
 }
+.pr-status {
+  overflow-wrap: anywhere;
+}
+.pr-info {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.session-console {
+  font-family: monospace;
+}
+.session-console pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .attention,
 .connection {
   margin-left: auto;

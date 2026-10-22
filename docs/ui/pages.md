@@ -15,7 +15,7 @@ contains navigation to the other. Both may remain open concurrently.
 <!-- specs:surfaces -->
 | Surface | Context |
 | --- | --- |
-| `S-FACTORY` | Four focused work tabs and one conversation page. Settings opens independently. |
+| `S-FACTORY` | Five work tabs and one conversation page. Settings opens independently. |
 | `S-SETTINGS` | A separate MCP Apps settings document using the same authenticated connection and bridged tools. No Inbox/Agents navigation, attention, launch overlay or task pane. |
 <!-- /specs:surfaces -->
 
@@ -24,12 +24,13 @@ contains navigation to the other. Both may remain open concurrently.
 <!-- specs:pages-0 -->
 | Page | Purpose | Page-owned panes | Entry and exit |
 | --- | --- | --- | --- |
-| `PAGE-INBOX` | Open unlinked issues by default, ordered by priority. | Query and full-width issue list only. | Issues opens with pending: open issues with no related PR. Alternate filters expose other issues, never PRs. Preserve per-tab query, filter, scroll and row focus. |
-| `PAGE-AGENTS` | Answer agents blocked on human input. | Blocking questions and approvals only; no agent or run inventory. | List only pending blocking requests belonging to a live waiting or running session. Nonblocking, stale, answered, orphaned and disconnected requests are excluded. Select the owning item/conversation and exact request; answering removes only that request. |
+| `PAGE-INBOX` | Open issues including issues with linked PRs, ordered by priority. | Query and full-width issue list only. | Issues defaults to open; pending remains the optional open-without-PR filter. Per-tab search, filter, scroll and row focus remain independent. |
+| `PAGE-AGENTS` | Answer agents blocked on human input. | Unanswered questions and approvals only; ordinary progress and results stay in the owning conversation. | List unanswered native questions and approvals, structured message questions and textual fallback asks with their owning session. Live RPC requests require a matching connected session; async/text requests remain answerable through retained session recovery. Selection opens the exact answer dialog. |
 | `PAGE-SETTINGS` | Configure repositories, priorities, profiles, skills and diagnostics in an independent view. | One compact column of relevant repository/policy/profile/skill/diagnostic disclosures; no integration placeholder. | Opened through the dedicated open_settings tool/resource. No Inbox/Agents navigation; saving remains here with local progress/success/error feedback. It does not replace an already-open task view. |
 | `PAGE-AGENT` | Chat about one item immediately. | Item summary then existing conversation or prefilled first message, followed by collapsed Item details. No item-only intermediate page. | Item selection continues the newest retained run or opens a prefilled draft. First Start is explicit. Sending a message to inactive retained work restores its session and starts that submitted message. Back restores the originating queue. Work history and prepared drafts stay under Item details. |
 | `PAGE-MY-PRS` | Open pull requests authored by the authenticated GitHub account. | Query and full-width PR list only. | Independent search/filter and restored Back context; item selection opens its conversation directly. |
 | `PAGE-REVIEW-PRS` | Open pull requests requesting the authenticated account or one of its teams. | Query and full-width PR list only. | Independent search/filter and restored Back context; item selection opens its conversation directly. |
+| `PAGE-WORKING` | Follow launched work until GitHub completion. | Query and full-width issue/PR list. | Uses server queue membership; idle, failed and interrupted sessions remain tracked. An issue closes on GitHub or completes when any linked implementation PR merges. PR closure or merge removes its own work. History and outstanding questions remain accessible. |
 <!-- /specs:pages-0 -->
 
 Issues, My PRs and Review PRs are focused work lists. Messages contains pending requests and collapsed retained work. Item selection opens the Agent conversation directly. Settings is an independent configuration surface.

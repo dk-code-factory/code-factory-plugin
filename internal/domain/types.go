@@ -55,10 +55,19 @@ type Item struct {
 	Checks         json.RawMessage `json:"checks,omitempty"`
 	ReviewRequests []string        `json:"reviewRequests,omitempty"`
 	ReviewTeams    []string        `json:"reviewTeams,omitempty"`
+	PR             *PullRequest    `json:"pr,omitempty"`
+	ClosingIssues  []string        `json:"closingIssues,omitempty"`
 }
 
 func (i Item) ContentRevision() string {
 	i.Revision = ""
+	if i.PR != nil {
+		copy := *i.PR
+		copy.SyncedAt = time.Time{}
+		copy.Error = ""
+		copy.RetryAt = time.Time{}
+		i.PR = &copy
+	}
 	b, _ := json.Marshal(i)
 	h := sha256.Sum256(b)
 	return hex.EncodeToString(h[:])
@@ -126,13 +135,14 @@ type Profile struct {
 	Publishing string   `json:"publishing"`
 }
 type Config struct {
-	ID               string         `json:"id"`
-	PriorityLabels   map[string]int `json:"priorityLabels"`
-	AssessmentPrompt string         `json:"assessmentPrompt"`
-	PolicyVersion    string         `json:"policyVersion"`
-	JiraURL          string         `json:"jiraUrl"`
-	JiraEmail        string         `json:"jiraEmail"`
-	Notifications    bool           `json:"notifications"`
+	ID                  string         `json:"id"`
+	PriorityLabels      map[string]int `json:"priorityLabels"`
+	AssessmentPrompt    string         `json:"assessmentPrompt"`
+	PolicyVersion       string         `json:"policyVersion"`
+	JiraURL             string         `json:"jiraUrl"`
+	JiraEmail           string         `json:"jiraEmail"`
+	Notifications       bool           `json:"notifications"`
+	QuestionHelperModel string         `json:"questionHelperModel,omitempty"`
 }
 type Run struct {
 	ID       string    `json:"id"`
@@ -150,14 +160,18 @@ type Run struct {
 	Created  time.Time `json:"created"`
 }
 type Attention struct {
-	ID        string          `json:"id"`
-	RunID     string          `json:"runId"`
-	RequestID json.RawMessage `json:"requestId"`
-	Method    string          `json:"method"`
-	Params    json.RawMessage `json:"params"`
-	Blocking  bool            `json:"blocking"`
-	Status    string          `json:"status"`
-	Created   time.Time       `json:"created"`
+	ID         string          `json:"id"`
+	RunID      string          `json:"runId"`
+	RequestID  json.RawMessage `json:"requestId,omitempty"`
+	Method     string          `json:"method"`
+	Params     json.RawMessage `json:"params"`
+	Blocking   bool            `json:"blocking"`
+	Status     string          `json:"status"`
+	Created    time.Time       `json:"created"`
+	Origin     string          `json:"origin,omitempty"`
+	TurnID     string          `json:"turnId,omitempty"`
+	ItemID     string          `json:"itemId,omitempty"`
+	RecoveryID string          `json:"recoveryId,omitempty"`
 }
 type Event struct {
 	Seq    int64           `json:"seq"`
@@ -167,13 +181,59 @@ type Event struct {
 	At     time.Time       `json:"at"`
 }
 type InboxEntry struct {
-	HasPullRequest bool       `json:"hasPullRequest"`
-	Item           Item       `json:"item"`
-	User           UserState  `json:"user"`
-	Unread         bool       `json:"unread"`
-	Priority       *int       `json:"priority"`
-	PrioritySource string     `json:"prioritySource"`
-	Assessment     Assessment `json:"assessment"`
+	HasPullRequest     bool          `json:"hasPullRequest"`
+	Item               Item          `json:"item"`
+	User               UserState     `json:"user"`
+	Unread             bool          `json:"unread"`
+	Priority           *int          `json:"priority"`
+	PrioritySource     string        `json:"prioritySource"`
+	Assessment         Assessment    `json:"assessment"`
+	Queues             []string      `json:"queues"`
+	Work               WorkSummary   `json:"work"`
+	LinkedPullRequests []PullRequest `json:"linkedPullRequests"`
+}
+
+// PullRequest keeps provider lifecycle, review and CI state independent.
+type PullRequest struct {
+	ID             string    `json:"id"`
+	Title          string    `json:"title"`
+	URL            string    `json:"url"`
+	State          string    `json:"state"`
+	Draft          bool      `json:"draft"`
+	Head           string    `json:"head"`
+	ReviewDecision string    `json:"reviewDecision"`
+	CI             string    `json:"ci"`
+	Checks         []Check   `json:"checks"`
+	SyncedAt       time.Time `json:"syncedAt"`
+	RetryAt        time.Time `json:"retryAt,omitempty"`
+	Error          string    `json:"error,omitempty"`
+	Implementation bool      `json:"implementation,omitempty"`
+}
+type Check struct {
+	Name       string `json:"name"`
+	Status     string `json:"status"`
+	Conclusion string `json:"conclusion"`
+	URL        string `json:"url"`
+}
+type WorkSummary struct {
+	Tracked        bool     `json:"tracked"`
+	Complete       bool     `json:"complete"`
+	Status         string   `json:"status"`
+	RunIDs         []string `json:"runIds"`
+	AttentionCount int      `json:"attentionCount"`
+}
+
+// Recovery is an at-most-two-attempt dialogue with an existing Codex thread.
+// It contains no user answers or process request IDs.
+type QuestionRecovery struct {
+	ID           string `json:"id"`
+	RunID        string `json:"runId"`
+	SourceTurnID string `json:"sourceTurnId"`
+	Stage        string `json:"stage"`
+	Attempts     int    `json:"attempts"`
+	Question     string `json:"question"`
+	OriginalMode string `json:"originalMode"`
+	RepairTurnID string `json:"repairTurnId,omitempty"`
 }
 
 func Defaults() Config {

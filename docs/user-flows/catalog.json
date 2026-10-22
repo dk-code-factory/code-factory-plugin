@@ -645,7 +645,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Independent settings keeps save feedback and configured summaries visible without task navigation; no unused integration form."
+          "purpose": "Independent settings keeps save feedback and configured summaries visible without task navigation; no unused integration form. Saves the optional question helper model."
         },
         {
           "path": "internal/app/app_test.go",
@@ -848,7 +848,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -891,6 +892,16 @@
         {
           "path": "internal/testutil/fakecodex/main.go",
           "purpose": "Shared fake-provider verification input; changes require assertion reconciliation."
+        },
+        {
+          "path": "internal/app/work.go",
+          "anchor": "func (a *App) projectWork(",
+          "purpose": "Server queue membership and linked PR/work projections."
+        },
+        {
+          "path": "internal/providers/pull_requests.go",
+          "anchor": "func (g *GitHub) EnrichPullRequest(",
+          "purpose": "Read-only authoritative PR review/CI/development links with current-head and freshness checks."
         }
       ],
       "tests": [
@@ -942,6 +953,30 @@
             "S2"
           ],
           "purpose": "Authenticated account/team metadata is stored; membership failure clears stale teams with feedback; changed account never inherits old membership."
+        },
+        {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestWorkingTracksSessionsUntilGitHubCompletion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Working completion follows explicit implementation links; references do not complete an issue."
+        },
+        {
+          "path": "internal/providers/pull_requests_test.go",
+          "anchor": "func TestPullRequestMetadataPaginationCurrentHeadAndRevision(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Metadata pagination, status reruns, current head and stable semantic revisions."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "Working and linked PR monitoring follow server projections",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch."
         }
       ],
       "suites": [
@@ -978,7 +1013,8 @@
         "W-TICKET-CONTEXT",
         "W-PR-EVIDENCE",
         "C-LINK",
-        "PAGE-AGENT"
+        "PAGE-AGENT",
+        "PAGE-WORKING"
       ],
       "terms": [
         "repository",
@@ -987,7 +1023,9 @@
         "state-new",
         "state-unread",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "working-queue",
+        "implementation-relationship"
       ],
       "graph": {
         "start": "n0",
@@ -1019,6 +1057,11 @@
             "id": "n5",
             "label": "Inbox updated",
             "terminal": true
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -1056,6 +1099,16 @@
             "from": "n2",
             "to": "n5",
             "label": ""
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n5",
+            "label": "resolved or explicit recovery"
           }
         ]
       }
@@ -1067,7 +1120,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -1151,6 +1205,11 @@
         {
           "path": "internal/web/embed.go",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "internal/app/work.go",
+          "anchor": "func (a *App) projectWork(",
+          "purpose": "Server queue membership and linked PR/work projections."
         }
       ],
       "tests": [
@@ -1285,6 +1344,22 @@
             "S3"
           ],
           "purpose": "Tool-result errors containing Connection failed are not transport failures: item read is attempted once and explicit Retry remains."
+        },
+        {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestWorkingTracksSessionsUntilGitHubCompletion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Working completion follows explicit implementation links; references do not complete an issue."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "Working and linked PR monitoring follow server projections",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch."
         }
       ],
       "suites": [
@@ -1324,7 +1399,9 @@
         "PAGE-MY-PRS",
         "PAGE-REVIEW-PRS",
         "W-NEW-CHAT",
-        "C-START-CHAT"
+        "C-START-CHAT",
+        "PAGE-WORKING",
+        "W-PR-EVIDENCE"
       ],
       "terms": [
         "inbox",
@@ -1333,7 +1410,9 @@
         "state-unread",
         "state-acted-on",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "working-queue",
+        "implementation-relationship"
       ],
       "graph": {
         "start": "n0",
@@ -1365,6 +1444,11 @@
             "id": "n5",
             "label": "Triage state retained",
             "terminal": true
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -1407,6 +1491,16 @@
             "from": "n1",
             "to": "n0",
             "label": "Back restores search, filter, scroll and row focus"
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n5",
+            "label": "resolved or explicit recovery"
           }
         ]
       }
@@ -1648,7 +1742,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -1691,6 +1786,16 @@
         {
           "path": "internal/testutil/fakecodex/main.go",
           "purpose": "Shared fake-provider verification input; changes require assertion reconciliation."
+        },
+        {
+          "path": "internal/app/work.go",
+          "anchor": "func (a *App) projectWork(",
+          "purpose": "Server queue membership and linked PR/work projections."
+        },
+        {
+          "path": "internal/providers/pull_requests.go",
+          "anchor": "func (g *GitHub) EnrichPullRequest(",
+          "purpose": "Read-only authoritative PR review/CI/development links with current-head and freshness checks."
         }
       ],
       "tests": [
@@ -1734,6 +1839,30 @@
             "S1"
           ],
           "purpose": "Both themes and 1280px/390px widths assert exclusive list/item/agent pages, Back focus/scroll/query restoration and per-record draft preservation."
+        },
+        {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestWorkingTracksSessionsUntilGitHubCompletion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Working completion follows explicit implementation links; references do not complete an issue."
+        },
+        {
+          "path": "internal/providers/pull_requests_test.go",
+          "anchor": "func TestPullRequestMetadataPaginationCurrentHeadAndRevision(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Metadata pagination, status reruns, current head and stable semantic revisions."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "Working and linked PR monitoring follow server projections",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch."
         }
       ],
       "suites": [
@@ -1757,13 +1886,16 @@
         "W-TICKET-CONTEXT",
         "W-PR-EVIDENCE",
         "C-LINK",
-        "C-BACK"
+        "C-BACK",
+        "PAGE-WORKING"
       ],
       "terms": [
         "relationship",
         "work-item",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "working-queue",
+        "implementation-relationship"
       ],
       "graph": {
         "start": "n0",
@@ -1795,6 +1927,11 @@
             "id": "n5",
             "label": "Related context retained without upstream edits",
             "terminal": true
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -1837,6 +1974,16 @@
             "from": "n4",
             "to": "n5",
             "label": ""
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n5",
+            "label": "resolved or explicit recovery"
           }
         ]
       }
@@ -1848,7 +1995,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -2057,6 +2205,14 @@
             "S2"
           ],
           "purpose": "Uncertain first-message Start remains disabled across Back/reopen; Check reads the same prepared record with no additional Start/preparation."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "first-message pipeline selection preserves an edited prompt",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Selected profile reaches preparation only after Start and edited text remains intact."
         }
       ],
       "suites": [
@@ -2111,7 +2267,8 @@
         "C-DISMISS",
         "W-NEW-CHAT",
         "P-NEW-CHAT",
-        "C-START-CHAT"
+        "C-START-CHAT",
+        "C-PIPELINE-SELECT"
       ],
       "terms": [
         "prepared-launch",
@@ -2122,7 +2279,8 @@
         "coverage-gap",
         "unverified-behavior",
         "keyboard-focus",
-        "modal-dialog"
+        "modal-dialog",
+        "agent-pipeline"
       ],
       "graph": {
         "start": "draft",
@@ -2159,6 +2317,11 @@
             "id": "retained",
             "label": "Unstarted draft or prepared review retained",
             "terminal": true
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Select a pipeline before explicit Start, retaining an edited first message and reviewing the selected authority.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -2219,6 +2382,16 @@
             "from": "unknown",
             "to": "retained",
             "label": "unknown status; retain disabled Start and Check status"
+          },
+          {
+            "from": "draft",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "accepted",
+            "label": "resolved or explicit recovery"
           }
         ]
       }
@@ -2230,7 +2403,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -2318,6 +2492,11 @@
         {
           "path": "internal/web/embed.go",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Durable native/message/text question routing, bounded form repair, redaction and retained continuation."
         }
       ],
       "tests": [
@@ -2432,6 +2611,30 @@
             "S3"
           ],
           "purpose": "Interrupting a waiting fake provider stales its question and clears the turn; message wake restores the same thread/worktree, rejects the old request and answers only the new one."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Same-session bounded question repair, at-most-once answers and original-mode restoration."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Async questions survive restart and concurrent answers have one claimant."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "text fallback opens the same session console",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch."
         }
       ],
       "suites": [
@@ -2465,7 +2668,9 @@
         "C-FOLLOW-UP",
         "PAGE-AGENT",
         "C-BACK",
-        "W-WORK-STATUS"
+        "W-WORK-STATUS",
+        "W-QUESTION-RECOVERY",
+        "W-SESSION-CONSOLE"
       ],
       "terms": [
         "agent-run",
@@ -2473,7 +2678,9 @@
         "state-idle",
         "state-running",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery",
+        "session-console"
       ],
       "graph": {
         "start": "n0",
@@ -2509,6 +2716,11 @@
             "id": "n6",
             "label": "Retained same-run conversation",
             "terminal": true
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -2561,6 +2773,16 @@
             "from": "n0",
             "to": "n5",
             "label": "inactive message"
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n6",
+            "label": "resolved or explicit recovery"
           }
         ]
       }
@@ -2572,7 +2794,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -2665,6 +2888,11 @@
           "path": "web/src/modal-focus.ts",
           "anchor": "export function useModalFocus(",
           "purpose": "Initial modal focus, visible-control Tab containment, Escape dismissal, focus preservation across updates and conditional opener restoration."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Durable native/message/text question routing, bounded form repair, redaction and retained continuation."
         }
       ],
       "tests": [
@@ -2748,6 +2976,46 @@
             "S1"
           ],
           "purpose": "Two waiting agents show item/profile/questions; selecting second identifies its context, exact request is answered, its conversation opens, and the other request remains."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Same-session bounded question repair, at-most-once answers and original-mode restoration."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Async questions survive restart and concurrent answers have one claimant."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "text fallback opens the same session console",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestTextQuestionDismissalCannotAnswerOrApproveNativeRequests(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Text-only dismissal cannot approve a native request or launch work."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "an uncertain textual reply can be dismissed without advancing",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Uncertain helper output is reviewable and dismissible without sending another task turn."
         }
       ],
       "suites": [
@@ -2784,7 +3052,10 @@
         "PAGE-AGENTS",
         "P-WAITING-QUEUE",
         "W-WAITING-ROW",
-        "C-GLOBAL-ATTENTION"
+        "C-GLOBAL-ATTENTION",
+        "W-QUESTION-RECOVERY",
+        "W-SESSION-CONSOLE",
+        "C-TEXT-DISMISS"
       ],
       "terms": [
         "attention-request",
@@ -2794,7 +3065,9 @@
         "coverage-gap",
         "unverified-behavior",
         "keyboard-focus",
-        "modal-dialog"
+        "modal-dialog",
+        "question-recovery",
+        "session-console"
       ],
       "graph": {
         "start": "n0",
@@ -2810,7 +3083,7 @@
           },
           {
             "id": "n2",
-            "label": "Submit against the live request identity once",
+            "label": "Claim the matching pending question or approval once",
             "scenario": "S1"
           },
           {
@@ -2835,6 +3108,27 @@
             "id": "n7",
             "label": "Nonblocking request leaves work active",
             "scenario": "S3"
+          },
+          {
+            "id": "inspect_stopped",
+            "label": "Inspect a stopped reply for an unresolved human question",
+            "scenario": "S4"
+          },
+          {
+            "id": "repair_form",
+            "label": "Request a native question form in the same session at most twice"
+          },
+          {
+            "id": "text_fallback",
+            "label": "Show the pending question with a free-text answer"
+          },
+          {
+            "id": "session_console",
+            "label": "Open the same retained session console"
+          },
+          {
+            "id": "takeover",
+            "label": "Cancel further repair and return control to the user"
           }
         ],
         "edges": [
@@ -2882,6 +3176,61 @@
             "from": "n2",
             "to": "n6",
             "label": "claimed then delivery fails"
+          },
+          {
+            "from": "n0",
+            "to": "inspect_stopped",
+            "label": "no supported form"
+          },
+          {
+            "from": "inspect_stopped",
+            "to": "n3",
+            "label": "ordinary completion"
+          },
+          {
+            "from": "inspect_stopped",
+            "to": "repair_form",
+            "label": "human input needed"
+          },
+          {
+            "from": "repair_form",
+            "to": "n1",
+            "label": "native form received"
+          },
+          {
+            "from": "repair_form",
+            "to": "text_fallback",
+            "label": "two failures or unavailable recovery"
+          },
+          {
+            "from": "text_fallback",
+            "to": "n1",
+            "label": "answer directly"
+          },
+          {
+            "from": "text_fallback",
+            "to": "session_console",
+            "label": "inspect session"
+          },
+          {
+            "from": "session_console",
+            "to": "n1",
+            "label": "reply"
+          },
+          {
+            "from": "repair_form",
+            "to": "takeover",
+            "label": "explicit user takeover"
+          },
+          {
+            "from": "takeover",
+            "to": "session_console",
+            "label": "retain session and draft"
+          },
+          {
+            "from": "text_fallback",
+            "to": "n3",
+            "label": "No reply needed; dismiss local attention only"
           }
         ]
       }
@@ -2893,7 +3242,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -2932,6 +3282,11 @@
         {
           "path": "internal/testutil/fakecodex/main.go",
           "purpose": "Shared fake-provider verification input; changes require assertion reconciliation."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Durable native/message/text question routing, bounded form repair, redaction and retained continuation."
         }
       ],
       "tests": [
@@ -2992,6 +3347,38 @@
             "S2"
           ],
           "purpose": "Both themes verify work-item activity and message-triggered continuation, no Resume control, one submit and retained failure draft."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Same-session bounded question repair, at-most-once answers and original-mode restoration."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Async questions survive restart and concurrent answers have one claimant."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "text fallback opens the same session console",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Lost question IDs are stale but retained textual continuation remains; lost approvals never become textual authorization."
         }
       ],
       "suites": [
@@ -3039,7 +3426,9 @@
         "C-SELECT-RUN",
         "C-RUN-ACTION",
         "PAGE-AGENT",
-        "W-WORK-STATUS"
+        "W-WORK-STATUS",
+        "W-QUESTION-RECOVERY",
+        "W-SESSION-CONSOLE"
       ],
       "terms": [
         "agent-run",
@@ -3047,7 +3436,9 @@
         "state-interrupted",
         "state-cleaned",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery",
+        "session-console"
       ],
       "graph": {
         "start": "n0",
@@ -3088,6 +3479,11 @@
           {
             "id": "n7",
             "label": "Retire retained session, stale pending requests and mark interrupted"
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -3130,6 +3526,16 @@
             "from": "n3",
             "to": "n7",
             "label": "before attempting workspace removal"
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n5",
+            "label": "resolved or explicit recovery"
           }
         ]
       }
@@ -3141,7 +3547,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -3365,6 +3772,14 @@
             "S1"
           ],
           "purpose": "Technical-only work does not flood the normal conversation; status and pending attention remain available."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "text fallback opens the same session console",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Presentation switch reveals technical output and preserves the same draft and session."
         }
       ],
       "suites": [
@@ -3415,7 +3830,9 @@
         "PAGE-AGENT",
         "C-BACK",
         "S-SETTINGS",
-        "C-OPEN-SETTINGS"
+        "C-OPEN-SETTINGS",
+        "W-SESSION-CONSOLE",
+        "C-SESSION-CONSOLE"
       ],
       "terms": [
         "host",
@@ -3423,7 +3840,8 @@
         "agent-run",
         "transcript",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "session-console"
       ],
       "graph": {
         "start": "n0",
@@ -3459,6 +3877,11 @@
             "id": "n6",
             "label": "Current view available",
             "terminal": true
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Switch between concise conversation and full session console without changing the retained session or reply draft.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -3506,6 +3929,16 @@
             "from": "n2",
             "to": "n6",
             "label": "view current"
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n6",
+            "label": "resolved or explicit recovery"
           }
         ]
       }
@@ -3517,7 +3950,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -3571,6 +4005,14 @@
             "S1"
           ],
           "purpose": "Callback destination and challenge safety."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "PR watcher changes and recovered question attention use existing signed event names with metadata only and no duplicate acknowledged delivery."
         }
       ],
       "suites": [
@@ -3659,6 +4101,11 @@
           {
             "id": "n10",
             "label": "Advance past events without delivery while notifications disabled"
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Deliver PR monitoring and recovered-question metadata without private message content",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -3736,6 +4183,16 @@
             "from": "n10",
             "to": "n2",
             "label": "reenabled; future events only"
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "watched PR or recovered question"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n4",
+            "label": "delivered or bounded retry"
           }
         ]
       }
@@ -3747,7 +4204,8 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4"
       ],
       "implementation": [
         {
@@ -3856,6 +4314,11 @@
           "path": "internal/gateway/proxy_diagnostics.go",
           "anchor": "func proxyError(",
           "purpose": "Fixed safe upstream failure classes, preserving request secrecy and HTTP behavior."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Durable native/message/text question routing, bounded form repair, redaction and retained continuation."
         }
       ],
       "tests": [
@@ -3922,6 +4385,38 @@
             "S1"
           ],
           "purpose": "Failure categories contain no raw request/error details and preserve 502 behavior."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Same-session bounded question repair, at-most-once answers and original-mode restoration."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Async questions survive restart and concurrent answers have one claimant."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "text fallback opens the same session console",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Lost question IDs are stale but retained textual continuation remains; lost approvals never become textual authorization."
         }
       ],
       "suites": [
@@ -3960,13 +4455,17 @@
         "W-LOCAL-TUNNEL-KEY",
         "C-TUNNEL-KEY",
         "S-SETTINGS",
-        "C-OPEN-SETTINGS"
+        "C-OPEN-SETTINGS",
+        "W-QUESTION-RECOVERY",
+        "W-SESSION-CONSOLE"
       ],
       "terms": [
         "credential",
         "attention-request",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery",
+        "session-console"
       ],
       "graph": {
         "start": "n0",
@@ -4006,6 +4505,11 @@
           {
             "id": "n7",
             "label": "Reusable Jira password input requires a nonempty token"
+          },
+          {
+            "id": "workbench_s4",
+            "label": "Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.",
+            "scenario": "S4"
           }
         ],
         "edges": [
@@ -4063,6 +4567,16 @@
             "from": "n7",
             "to": "n0",
             "label": "empty token rejected; correct input"
+          },
+          {
+            "from": "n0",
+            "to": "workbench_s4",
+            "label": "additional workbench path"
+          },
+          {
+            "from": "workbench_s4",
+            "to": "n6",
+            "label": "resolved or explicit recovery"
           }
         ]
       }

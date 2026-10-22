@@ -23,6 +23,7 @@ export interface Item {
     url: string;
   }[];
   checks?: unknown;
+  pr?: PullRequest;
   reviewRequests?: string[];
   reviewTeams?: string[];
 }
@@ -79,6 +80,10 @@ export interface Attention {
   method: string;
   blocking: boolean;
   status: string;
+  origin?: "rpc" | "async" | "text";
+  turnId?: string;
+  itemId?: string;
+  recoveryId?: string;
   params: {
     questions?: Question[];
     availableDecisions?: unknown[];
@@ -97,6 +102,15 @@ export interface Question {
 }
 export interface Entry {
   hasPullRequest?: boolean;
+  queues?: string[];
+  work?: {
+    tracked: boolean;
+    complete: boolean;
+    status: string;
+    runIds: string[];
+    attentionCount: number;
+  };
+  linkedPullRequests?: PullRequest[];
   item: Item;
   user: UserState;
   unread: boolean;
@@ -117,6 +131,7 @@ export interface Config {
   jiraUrl: string;
   jiraEmail: string;
   notifications: boolean;
+  questionHelperModel?: string;
 }
 export interface Snapshot {
   viewer?: { login: string; teams: string[] | null; teamError?: string };
@@ -127,6 +142,7 @@ export interface Snapshot {
   runs: Run[];
   skills: Skill[];
   attention: Attention[];
+  questionRecoveries?: QuestionRecovery[];
   config: Config;
 }
 export interface JournalEvent {
@@ -144,6 +160,7 @@ export interface EventPage {
 export interface Detail {
   item: Item;
   user: UserState;
+  linkedPullRequests?: PullRequest[];
   relationships: {
     id: string;
     source: string;
@@ -152,6 +169,27 @@ export interface Detail {
     manual: boolean;
   }[];
   tickets: { id: string; summary: string; status: string; error: string }[];
+}
+
+export interface PullRequest {
+  id: string;
+  title: string;
+  url: string;
+  state: string;
+  draft: boolean;
+  head: string;
+  reviewDecision: string;
+  ci: string;
+  checks: { name: string; status: string; conclusion: string; url: string }[];
+  syncedAt: string;
+  error?: string;
+  implementation?: boolean;
+}
+export interface QuestionRecovery {
+  id: string;
+  runId: string;
+  stage: string;
+  attempts: number;
 }
 
 export interface Diagnostics {

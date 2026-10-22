@@ -14,15 +14,17 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
 type App struct {
-	Store   *store.Store
-	Vault   *store.Vault
-	GitHub  *providers.GitHub
-	Runs    *Manager
-	DataDir string
+	providerMu sync.Mutex
+	Store      *store.Store
+	Vault      *store.Vault
+	GitHub     *providers.GitHub
+	Runs       *Manager
+	DataDir    string
 }
 
 func ID() string {
@@ -174,6 +176,9 @@ func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, err
 		}
 		out = append(out, entry)
 	}
+	if e = a.projectWork(ctx, items, links, out); e != nil {
+		return nil, e
+	}
 	sort.SliceStable(out, func(i, j int) bool {
 		p, q := 4, 4
 		if out[i].Priority != nil {
@@ -226,6 +231,10 @@ func (a *App) UserAction(ctx context.Context, id, kind, revision string, priorit
 	})
 }
 func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.Item, user string, checkpoint time.Time, full bool) error {
+	previousLinks, err := store.List[domain.Relationship](ctx, a.Store, "relationship")
+	if err != nil {
+		return err
+	}
 	return a.Store.Write(ctx, func(t *store.Tx) error {
 		for _, i := range items {
 			var old domain.Item
@@ -234,6 +243,12 @@ func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.It
 				return e
 			}
 			created := errors.Is(e, store.ErrNotFound)
+			if i.PR != nil {
+				copy := *i.PR
+				i.PR = &copy
+			}
+			retainPRMetadata(old, &i)
+			i.Revision = i.ContentRevision()
 			var u domain.UserState
 			if created {
 				u = domain.UserState{ID: i.ID, New: r.Imported, Actions: []domain.Action{}}
@@ -273,6 +288,19 @@ func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.It
 					return e
 				}
 			}
+			for _, l := range previousLinks {
+				if l.Source == i.ID && l.Kind == "implementation" && !l.Manual {
+					if e = t.Delete("relationship", l.ID); e != nil {
+						return e
+					}
+				}
+			}
+			for _, issue := range i.ClosingIssues {
+				l := domain.Relationship{ID: "implementation:" + i.ID + "->" + issue, Source: i.ID, Target: issue, Kind: "implementation", Evidence: i.URL}
+				if e = t.Put("relationship", l.ID, l); e != nil {
+					return e
+				}
+			}
 		}
 		var current domain.Repository
 		if e := t.Get("repository", r.ID, &current); e != nil {
@@ -292,6 +320,8 @@ func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.It
 	})
 }
 func (a *App) Sync(ctx context.Context) error {
+	a.providerMu.Lock()
+	defer a.providerMu.Unlock()
 	repos, e := store.List[domain.Repository](ctx, a.Store, "repository")
 	if e != nil {
 		return e
@@ -385,6 +415,7 @@ func (a *App) syncLoop(ctx context.Context, ticks <-chan time.Time) {
 			return
 		}
 		_ = a.Sync(ctx)
+		_ = a.RefreshPullRequests(ctx)
 		_ = a.RefreshJira(ctx)
 		select {
 		case <-ctx.Done():
