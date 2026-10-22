@@ -3,6 +3,7 @@ package transport
 import (
 	"bytes"
 	"codefactory/internal/app"
+	"codefactory/internal/domain"
 	"codefactory/internal/events"
 	"codefactory/internal/providers"
 	"codefactory/internal/store"
@@ -112,7 +113,7 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 		if tool["name"] == "open_factory" && metadata["openai/outputTemplate"] != ResourceURI {
 			t.Fatal("open_factory output template does not match current UI", metadata)
 		}
-		if tool["name"] == "set_jira_credential" {
+		if tool["name"] == "set_jira_credential" || tool["name"] == "dismiss_question" {
 			meta := tool["_meta"].(map[string]any)["ui"].(map[string]any)
 			vis := meta["visibility"].([]any)
 			if len(vis) != 1 || vis[0] != "app" {
@@ -124,9 +125,39 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	if !found {
 		t.Fatal("missing credential tool")
 	}
+
+	for _, id := range []string{"r1", "r2"} {
+		if err := db.Put(ctx, "run", id, domain.Run{ID: id, Status: "interrupted"}, ""); err != nil {
+			t.Fatal(err)
+		}
+		if err := db.Put(ctx, "question-recovery", id, domain.QuestionRecovery{ID: id, RunID: id, Stage: "fallback", Question: "Which target?"}, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := db.Put(ctx, "attention", "text", domain.Attention{ID: "text", RunID: "r1", Origin: "text", Status: "pending", RecoveryID: "r1"}, ""); err != nil {
+		t.Fatal(err)
+	}
+	runReply := request("tools/call", map[string]any{"name": "read_run", "arguments": map[string]any{"id": "r1"}}, true, "2026-07-28")
+	runData := runReply["structuredContent"].(map[string]any)["data"].(map[string]any)
+	recoveries := runData["questionRecoveries"].([]any)
+	if len(recoveries) != 1 || recoveries[0].(map[string]any)["runId"] != "r1" {
+		t.Fatal("read_run leaked unrelated recovery")
+	}
+	dismissed := request("tools/call", map[string]any{"name": "dismiss_question", "arguments": map[string]any{"id": "text"}}, true, "2026-07-28")
+	if dismissed["isError"] == true {
+		t.Fatal(dismissed)
+	}
+	var text domain.Attention
+	if err := db.Get(ctx, "attention", "text", &text); err != nil || text.Status != "dismissed" {
+		t.Fatal("dismissal lost")
+	}
 	res := request("tools/call", map[string]any{"name": "read_snapshot", "arguments": map[string]any{}}, true, "2026-07-28")
 	if res["isError"] == true || res["structuredContent"] == nil {
 		t.Fatal(res)
+	}
+	snapshot := res["structuredContent"].(map[string]any)["data"].(map[string]any)
+	if len(snapshot["questionRecoveries"].([]any)) != 2 {
+		t.Fatal("snapshot omitted recoveries")
 	}
 	for name, args := range map[string]map[string]any{
 		"save_repository": {"id": "pilot/local", "checkout": "", "base": "main"},

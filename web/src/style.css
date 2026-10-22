@@ -410,3 +410,15 @@ footer {
     display: block;
   }
 }
+
+.status-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  margin-right: 0.4em;
+  flex-shrink: 0;
+}
+
+.recovery-progress button {
+  color: var(--accent);
+}

@@ -184,7 +184,17 @@ func New(a *app.App, ev *events.Service) *Server {
 				out = append(out, at)
 			}
 		}
-		return map[string]any{"run": publicRun(run), "attention": out}, e
+		recoveries, err := store.List[domain.QuestionRecovery](ctx, a.Store, "question-recovery")
+		if err != nil {
+			return nil, err
+		}
+		runRecoveries := []domain.QuestionRecovery{}
+		for _, r := range recoveries {
+			if r.RunID == in.ID {
+				runRecoveries = append(runRecoveries, r)
+			}
+		}
+		return map[string]any{"run": publicRun(run), "attention": out, "questionRecoveries": runRecoveries}, e
 	})
 	bind(m, uri, "send_message", "Send follow-up chat; provide expectedTurn for an active turn to steer safely.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
 		return nil, a.Runs.Message(ctx, in.ID, in.Text, in.ExpectedTurn)
@@ -197,6 +207,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		return nil, a.Runs.Answer(ctx, in.ID, b)
 	})
 	bind(m, uri, "interrupt_run", "Interrupt the active turn, preserving worktree and history.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Interrupt(ctx, in.ID) })
+	bind(m, uri, "dismiss_question", "Dismiss a textual fallback that needs no reply. Does not answer, authorize or advance the agent.", true, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.DismissQuestion(ctx, in.ID) })
 	bind(m, uri, "cleanup_run", "Explicitly remove a stopped run's clean worktree. Refuses uncommitted changes.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Cleanup(ctx, in.ID) })
 	bind(m, uri, "discover_skills", "Discover local Codex skills for a checkout.", false, true, func(ctx context.Context, in SkillInput) (any, error) { return a.Runs.DiscoverSkills(ctx, in.CWD) })
 	bind(m, uri, "save_skill", "Create or edit a service-managed skill with YAML frontmatter.", false, false, func(ctx context.Context, in SaveSkillInput) (any, error) {
@@ -248,12 +259,16 @@ func (s *Server) snapshot(ctx context.Context) (any, error) {
 	if e != nil {
 		return nil, e
 	}
+	recoveries, e := store.List[domain.QuestionRecovery](ctx, s.App.Store, "question-recovery")
+	if e != nil {
+		return nil, e
+	}
 	skills, e := store.List[domain.Skill](ctx, s.App.Store, "skill")
 	if e != nil {
 		return nil, e
 	}
 	config, e := s.App.Config(ctx)
-	return map[string]any{"inbox": inbox, "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "skills": skills, "config": config, "cursor": cursor}, e
+	return map[string]any{"inbox": inbox, "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "questionRecoveries": recoveries, "skills": skills, "config": config, "cursor": cursor}, e
 }
 func (s *Server) detail(ctx context.Context, id string) (any, error) {
 	var item domain.Item

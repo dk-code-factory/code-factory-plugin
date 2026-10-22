@@ -623,6 +623,11 @@
         {
           "path": "internal/web/embed.go",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Bounded recovery and durable text/structured question answer claims; preserve authority and redaction."
         }
       ],
       "tests": [
@@ -630,9 +635,10 @@
           "path": "web/tests/factory.spec.ts",
           "anchor": "test(\"plugin settings accept repository and secure credential without echo\"",
           "scenarios": [
-            "S1"
+            "S1",
+            "S3"
           ],
-          "purpose": "UI saves a repository through the host fixture."
+          "purpose": "UI saves a repository through the host fixture. Optional helper-model input starts empty and sends the configured override in save_settings."
         },
         {
           "path": "internal/app/app_test.go",
@@ -649,6 +655,14 @@
             "S2"
           ],
           "purpose": "Opt-in real lifecycle saves a profile/skill and observes skill loading; skipped in default fixture verification."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestQuestionHelperIsolationAndModelSelection(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Optional helper model selects explicit override or task model with an isolated read-only helper."
         }
       ],
       "suites": [
@@ -689,7 +703,8 @@
         "skill",
         "priority",
         "coverage-gap",
-        "known-limitation"
+        "known-limitation",
+        "question-recovery"
       ],
       "graph": {
         "start": "n0",
@@ -2075,6 +2090,11 @@
         {
           "path": "internal/web/embed.go",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Bounded recovery and durable text/structured question answer claims; preserve authority and redaction."
         }
       ],
       "tests": [
@@ -2093,6 +2113,30 @@
             "S2"
           ],
           "purpose": "Stale steering is rejected; matching steering succeeds."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestQuestionRepairUserTakeoverCancelsFurtherAttempts(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Takeover interrupts recovery, restores the retained session and rejects old form answers."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestHumanReplyInRepairTurnKeepsItsConversationRole(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Exact automatic input text is distinguished from a human reply in the same turn."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"answer confirmation expires despite polling, stays with its run and never alters transcript text\"",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Per-run drafts and literal transcript survive answer navigation and polling."
         }
       ],
       "suites": [
@@ -2107,7 +2151,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "user-flow-maintainer",
-          "reason": "Direct interrupt and pending-request invalidation are covered in the opt-in real-provider lifecycle, not asserted by a dedicated default fixture test.",
+          "reason": "The recovery takeover fixture asserts interruption and old-form rejection. General non-recovery interrupt and request invalidation still need their own default fixture; opt-in real-provider lifecycle evidence is separate.",
           "next_verification": "Add a default fake-provider fixture that directly interrupts active work and asserts the resulting run status and pending-request invalidation without invoking a real model."
         }
       ],
@@ -2131,7 +2175,8 @@
         "state-idle",
         "state-running",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "graph": {
         "start": "n0",
@@ -2161,7 +2206,7 @@
           },
           {
             "id": "n5",
-            "label": "Explicitly resume interrupted or failed session"
+            "label": "Explicitly resume, or restore retained session using the submitted answer"
           },
           {
             "id": "n6",
@@ -2225,7 +2270,9 @@
       "scenarios": [
         "S1",
         "S2",
-        "S3"
+        "S3",
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -2318,6 +2365,11 @@
           "path": "web/src/modal-focus.ts",
           "anchor": "export function useModalFocus(",
           "purpose": "Initial modal focus, visible-control Tab containment, Escape dismissal, focus preservation across updates and conditional opener restoration."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Bounded recovery and durable text/structured question answer claims; preserve authority and redaction."
         }
       ],
       "tests": [
@@ -2377,6 +2429,94 @@
             "S1"
           ],
           "purpose": "Keyboard question choices survive polling, Tab remains contained, Escape defers without answering and restores opener; later one answer reaches idle with polite run status."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "First/second native repair, two-attempt fallback, original mode restoration and duplicate rejection."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestOrdinaryCompletionDoesNotCreateQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Ordinary completion resolves without creating attention."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestRecoveryRejectsMalformedForms(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Invalid native forms cannot satisfy question recovery."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestQuestionRepairUserTakeoverCancelsFurtherAttempts(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Owner takeover cancels further attempts and rejects the old form."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestTextQuestionDismissalCannotAnswerOrApproveNativeRequests(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Dismissal cannot answer an approval or start work."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"answer confirmation expires despite polling, stays with its run and never alters transcript text\"",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Successful question answer opens the owner; five-second confirmation survives navigation, expires despite polling, disappears on reload, preserves per-run drafts and literal UI_ANSWER_OK agent text."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "`${failure} answers retain error feedback without confirmation or replay`",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Failed and uncertain answer calls show feedback without confirmation or automatic replay."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"successful answer keeps confirmation when the following refresh fails\"",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Successful delivery closes the dialog and confirms the owner even if refresh fails; the refresh error is separate."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"approval responses use Response sent and keep other run attention\"",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "An approval response uses Response sent and preserves another run request."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "`recovery icons, fallback controls and keyboard navigation at narrow width in ${theme}`",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "390px light/dark fixtures assert clock and circular-arrow SVGs hidden from assistive technology, recovery label and attempt bound, takeover, recovery input label, draft preservation, fallback inspection/dismissal, keyboard controls and scoped WCAG scans."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"text fallback submits its answer through the owning request\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Text fallback sends its form answer exactly through its owning attention identity and shows Answer sent."
         }
       ],
       "suites": [
@@ -2409,7 +2549,11 @@
         "C-RUN-ATTENTION",
         "C-ATTENTION-CHAT",
         "C-ANSWER",
-        "C-EXTERNAL-AUTH"
+        "C-EXTERNAL-AUTH",
+        "W-RUN-CONTROLS",
+        "W-TRANSCRIPT",
+        "C-QUESTION-RECOVERY",
+        "C-DISMISS-QUESTION"
       ],
       "terms": [
         "attention-request",
@@ -2419,7 +2563,8 @@
         "coverage-gap",
         "unverified-behavior",
         "keyboard-focus",
-        "modal-dialog"
+        "modal-dialog",
+        "question-recovery"
       ],
       "graph": {
         "start": "n0",
@@ -2440,8 +2585,7 @@
           },
           {
             "id": "n3",
-            "label": "Resolved response visible in run",
-            "terminal": true
+            "label": "Resolved response visible in run"
           },
           {
             "id": "n4",
@@ -2460,6 +2604,36 @@
             "id": "n7",
             "label": "Nonblocking request leaves work active",
             "scenario": "S3"
+          },
+          {
+            "id": "recover",
+            "label": "Check stopped text in an isolated helper; request native form at most twice",
+            "scenario": "S4"
+          },
+          {
+            "id": "fallback",
+            "label": "Retain a textual question after repair failure or restart"
+          },
+          {
+            "id": "dismiss",
+            "label": "Dismiss textual question without answering or advancing work",
+            "terminal": true
+          },
+          {
+            "id": "takeover",
+            "label": "Owner takes over; cancel further recovery attempts",
+            "terminal": true
+          },
+          {
+            "id": "confirm",
+            "label": "Open owning agent; show five-second local confirmation",
+            "scenario": "S5",
+            "terminal": true
+          },
+          {
+            "id": "noquestion",
+            "label": "Ordinary completion has no pending question",
+            "terminal": true
           }
         ],
         "edges": [
@@ -2507,6 +2681,46 @@
             "from": "n2",
             "to": "n6",
             "label": "claimed then delivery fails"
+          },
+          {
+            "from": "n0",
+            "to": "recover",
+            "label": "stopped textual ask"
+          },
+          {
+            "from": "recover",
+            "to": "n1",
+            "label": "native form recovered"
+          },
+          {
+            "from": "recover",
+            "to": "fallback",
+            "label": "bounded failure or lost process"
+          },
+          {
+            "from": "recover",
+            "to": "takeover",
+            "label": "take over"
+          },
+          {
+            "from": "fallback",
+            "to": "n1",
+            "label": "answer in retained session"
+          },
+          {
+            "from": "fallback",
+            "to": "dismiss",
+            "label": "no reply needed"
+          },
+          {
+            "from": "n3",
+            "to": "confirm",
+            "label": "delivery succeeded even if refresh fails"
+          },
+          {
+            "from": "recover",
+            "to": "noquestion",
+            "label": "no human input needed"
           }
         ]
       }
@@ -2557,6 +2771,11 @@
         {
           "path": "internal/testutil/fakecodex/main.go",
           "purpose": "Shared fake-provider verification input; changes require assertion reconciliation."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Bounded recovery and durable text/structured question answer claims; preserve authority and redaction."
         }
       ],
       "tests": [
@@ -2592,10 +2811,44 @@
             "S3"
           ],
           "purpose": "Assembled dirty cleanup shows interrupted state/refusal, retains file/history/draft, disables Send, then resumes the same run/thread/workspace explicitly."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Structured question retains identity across restart; concurrent responses accept only once."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Lost native question becomes text; approvals remain stale."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestRestartDuringRepairRetainsOneFallbackWithoutReplayingAttempts(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "In-flight repair restart produces one durable fallback without replaying attempts."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestRestartMaterializesAlreadyPersistedFallback(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Crash between persisted fallback stage and attention creation is repaired idempotently."
         }
       ],
       "suites": [
-        "go"
+        "go",
+        "browser"
       ],
       "gaps": [
         {
@@ -2645,7 +2898,8 @@
         "state-interrupted",
         "state-cleaned",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "graph": {
         "start": "n0",
@@ -2657,7 +2911,7 @@
           },
           {
             "id": "n1",
-            "label": "Explicitly resume interrupted or failed work",
+            "label": "Explicitly resume retained work, or answer a recovered question",
             "scenario": "S2"
           },
           {
@@ -3354,6 +3608,11 @@
         {
           "path": "internal/web/embed.go",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) answerSynthetic(",
+          "purpose": "Bounded recovery and durable text/structured question answer claims; preserve authority and redaction."
         }
       ],
       "tests": [
@@ -3412,6 +3671,15 @@
             "S2"
           ],
           "purpose": "Audit logs omit credential-bearing request details."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Synthetic answers are encrypted for redaction and omitted from the journal after restart."
         }
       ],
       "suites": [
@@ -3456,7 +3724,8 @@
         "credential",
         "attention-request",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "graph": {
         "start": "n0",

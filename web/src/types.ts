@@ -71,7 +71,17 @@ export interface Run {
   error: string;
   created: string;
 }
+export interface QuestionRecovery {
+  id: string;
+  runId: string;
+  stage: string;
+  attempts: number;
+}
 export interface Attention {
+  origin?: "rpc" | "async" | "text";
+  turnId?: string;
+  itemId?: string;
+  recoveryId?: string;
   id: string;
   runId: string;
   method: string;
@@ -107,6 +117,7 @@ export interface Entry {
   };
 }
 export interface Config {
+  questionHelperModel?: string;
   id: string;
   priorityLabels: Record<string, number>;
   assessmentPrompt: string;
@@ -116,6 +127,7 @@ export interface Config {
   notifications: boolean;
 }
 export interface Snapshot {
+  questionRecoveries?: QuestionRecovery[];
   cursor: number;
   inbox: Entry[];
   repositories: Repository[];

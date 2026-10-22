@@ -178,8 +178,8 @@
         "browser",
         "go"
       ],
-      "element_description": "**mark**, **name** \u201cCode Factory\u201d, **subtitle**, **connection** text.",
-      "state_description": "Connection begins \u201cConnecting to Work\u2026\u201d, then Connected or Disconnected/reconnecting.",
+      "element_description": "**mark**, **name** “Code Factory”, **subtitle**, **connection** text.",
+      "state_description": "Connection begins “Connecting to Work…”, then Connected or Disconnected/reconnecting.",
       "interactions": "Connection status is feedback, not a reconnect button."
     },
     {
@@ -1048,7 +1048,7 @@
         "go"
       ],
       "element_description": "**loading** / **select-item** prompt; **id**, **kind**, **state**, **title**, **body**.",
-      "state_description": "No selection shows a prompt; a selected item shows Loading until detail and matching snapshot entry are available. Empty body shows \u201cNo description.\u201d",
+      "state_description": "No selection shows a prompt; a selected item shows Loading until detail and matching snapshot entry are available. Empty body shows “No description.”",
       "interactions": "Loading detail causes the exact displayed revision to be marked read. It does not launch an agent."
     },
     {
@@ -1151,7 +1151,7 @@
         "browser",
         "go"
       ],
-      "element_description": "**launch** \u201cLaunch agent\u201d; **unread** \u201cMark unread\u201d; **acknowledge** \u201cAcknowledge new\u201d; **record-action**.",
+      "element_description": "**launch** “Launch agent”; **unread** “Mark unread”; **acknowledge** “Acknowledge new”; **record-action**.",
       "state_description": "Available with item detail. These are separate actions, not one combined completion state.",
       "interactions": "Launch opens `D-LAUNCH`. Successful item mutations refresh the shared snapshot and reread selected detail/history without resetting independent drafts or repeating displayed-revision reads."
     },
@@ -1822,7 +1822,8 @@
       "terms": [
         "ui-w-run-controls",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "contains": [],
       "elements": [
@@ -1853,13 +1854,35 @@
         {
           "id": "W-RUN-CONTROLS.cleanup",
           "term": "element-w-run-controls-cleanup"
+        },
+        {
+          "id": "W-RUN-CONTROLS.waiting-icon",
+          "term": "element-w-run-controls-waiting-icon"
+        },
+        {
+          "id": "W-RUN-CONTROLS.recovery-progress",
+          "term": "element-w-run-controls-recovery-progress"
+        },
+        {
+          "id": "W-RUN-CONTROLS.recovery-icon",
+          "term": "element-w-run-controls-recovery-icon"
+        },
+        {
+          "id": "W-RUN-CONTROLS.takeover",
+          "term": "element-w-run-controls-takeover"
+        },
+        {
+          "id": "W-RUN-CONTROLS.confirmation",
+          "term": "element-w-run-controls-confirmation"
         }
       ],
       "states": [
         "state-error",
         "state-idle",
         "state-interrupted",
-        "state-failed"
+        "state-failed",
+        "state-waiting",
+        "state-recovering"
       ],
       "implementation": [
         {
@@ -1901,6 +1924,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) checkStoppedTurn(",
+          "purpose": "Bounded question-only recovery, durable attention and text fallback with original authority retained."
         }
       ],
       "assertions": [
@@ -1911,7 +1939,12 @@
         "UI-KEYBOARD-ATTENTION",
         "UI-DIRTY-CLEANUP",
         "UI-AXE-CORE",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-ANSWER-CONFIRMATION",
+        "UI-ANSWER-REFRESH",
+        "UI-RESPONSE-CONFIRMATION",
+        "UI-QUESTION-RECOVERY",
+        "RUN-QUESTION-RECOVERY"
       ],
       "gaps": [
         {
@@ -1931,6 +1964,15 @@
           "owner": "ui-specification-maintainer",
           "reason": "An assembled dirty-refusal fixture asserts interrupted status, retained file/history/draft and explicit same-run/thread Resume. Pending-request staleness and independent client races still lack focused assertions.",
           "next_verification": "Arrange pending requests during cleanup and concurrent client interaction; assert stale-request rejection and retained-session boundaries."
+        },
+        {
+          "version": 1,
+          "id": "gap-ui-w-run-controls-recovery-host-01",
+          "kind": "unverified-behavior",
+          "severity": "P1",
+          "owner": "ui-specification-maintainer",
+          "reason": "Recovery progress, takeover, fallback controls and five-second response confirmation have fixture coverage only; the merged binary has no installed-host or assistive-technology acceptance.",
+          "next_verification": "On an approved installation, observe actual provider recovery and response confirmation, inspect manual accessibility and retained drafts, and retain dated nonsecret evidence tied to the installed binary."
         }
       ],
       "suites": [
@@ -1938,9 +1980,9 @@
         "browser",
         "go"
       ],
-      "element_description": "**status**, **profile-name**, **workspace**, conditional **run-error** alert; **interrupt**, **resume**, **cleanup** buttons.",
-      "state_description": "Interrupt exists when a turn identity exists; Resume for interrupted/failed; Cleanup for idle/interrupted/failed.",
-      "interactions": "Performs explicit run actions and refreshes snapshot on success or failure while preserving action errors. Dirty cleanup retains workspace/history/draft and shows interrupted state; explicit Resume continues that run. No cleanup confirmation dialog is implemented."
+      "element_description": "**status**, **profile-name**, **workspace**, conditional **run-error** alert; **interrupt**, **resume**, **cleanup** buttons. Decorative waiting/recovery icons, readable recovery-progress, takeover, and owning-run confirmation.",
+      "state_description": "Interrupt exists when a turn identity exists; Resume for interrupted/failed; Cleanup for idle/interrupted/failed. Waiting uses a clock; recovery uses a circular arrow and readable stage/attempt text. Icons are decorative and inherit theme colors. Successful answers show ✓ Answer sent, other forms ✓ Response sent for five seconds from delivery success; polling cannot extend it and reopening cannot recreate it.",
+      "interactions": "Performs explicit run actions and refreshes snapshot on success or failure while preserving action errors. Dirty cleanup retains workspace/history/draft and shows interrupted state; explicit Resume continues that run. No cleanup confirmation dialog is implemented. Take over interrupts question recovery. Successful responses select their owner; failed or uncertain calls never confirm or replay. Refresh failure after success has separate shell feedback."
     },
     {
       "id": "W-ATTENTION-NOTICE",
@@ -1948,7 +1990,8 @@
       "terms": [
         "ui-w-attention-notice",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "contains": [],
       "elements": [
@@ -1963,6 +2006,10 @@
         {
           "id": "W-ATTENTION-NOTICE.continuing-label",
           "term": "element-w-attention-notice-continuing-label"
+        },
+        {
+          "id": "W-ATTENTION-NOTICE.waiting-icon",
+          "term": "element-w-attention-notice-waiting-icon"
         }
       ],
       "states": [
@@ -2010,6 +2057,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) checkStoppedTurn(",
+          "purpose": "Bounded question-only recovery, durable attention and text fallback with original authority retained."
         }
       ],
       "assertions": [
@@ -2018,7 +2070,8 @@
         "INPUT-VALIDATION",
         "RUN-RECOVERY",
         "RUN-RECOVERY-2",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-QUESTION-RECOVERY"
       ],
       "gaps": [
         {
@@ -2037,7 +2090,7 @@
         "go"
       ],
       "element_description": "Whole-notice **answer** button; **blocking-label** or **continuing-label**.",
-      "state_description": "Repeated for pending requests belonging to the selected run.",
+      "state_description": "Repeated for pending requests belonging to the selected run. Blocking and textual fallback notices show a decorative clock beside Waiting for your answer.",
       "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent."
     },
     {
@@ -2046,7 +2099,8 @@
       "terms": [
         "ui-w-transcript",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "contains": [],
       "elements": [
@@ -2123,12 +2177,19 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) checkStoppedTurn(",
+          "purpose": "Bounded question-only recovery, durable attention and text fallback with original authority retained."
         }
       ],
       "assertions": [
         "UI-TRIAGE",
         "UI-ASSEMBLED",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-ANSWER-CONFIRMATION",
+        "UI-QUESTION-RECOVERY"
       ],
       "gaps": [
         {
@@ -2145,9 +2206,9 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**heading**, **live-region**, repeated **block-label** and **block-text**; **waiting**, **loading-more**, **restart-history**.",
+      "element_description": "**heading**, **live-region**, repeated **block-label** and **block-text**; **waiting**, **loading-more**, **restart-history**. Heading is Technical transcript. Automatic inputs are labelled Question recovery; real user replies retain You.",
       "state_description": "Displays conversation, commands/output, summary, plan, changes and run errors when present. Reads history in pages, retaining up to 1,000 events in the view.",
-      "interactions": "Additional pages load automatically. \u201cView history from the beginning\u201d resets the displayed cursor/events when the retained-event threshold is reached; it does not restart the task."
+      "interactions": "Additional pages load automatically. “View history from the beginning” resets the displayed cursor/events when the retained-event threshold is reached; it does not restart the task. Fallback inspection selects the owning Agents pane and its technical transcript. Agent text including UI_ANSWER_OK remains literal transcript content and never creates application status."
     },
     {
       "id": "W-MESSAGE",
@@ -2220,7 +2281,9 @@
         "UI-TRIAGE",
         "UI-ASSEMBLED",
         "UI-DIRTY-CLEANUP",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-ANSWER-CONFIRMATION",
+        "UI-QUESTION-RECOVERY"
       ],
       "gaps": [
         {
@@ -2237,9 +2300,9 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**text** \u201cMessage agent\u201d textarea; **send** button.",
-      "state_description": "Send is disabled while submitting, for blank/whitespace text, or unless status is idle/running/waiting.",
-      "interactions": "Sends follow-up or current-turn steering on the selected run. Success clears text; failure preserves it and shows shell error feedback."
+      "element_description": "**text** “Message agent” textarea; **send** button.",
+      "state_description": "Send is disabled while submitting, for blank/whitespace text, or unless status is idle/running/waiting. Send is also disabled while recovery is active; answer the request or take over first.",
+      "interactions": "Sends follow-up or current-turn steering on the selected run. Success clears text; failure preserves it and shows shell error feedback. Drafts stay with their run across navigation and fallback inspection. Successful sends clear only the unchanged submitted draft; failed/uncertain sends retain text."
     },
     {
       "id": "W-DIALOG-FRAME",
@@ -2605,7 +2668,8 @@
       "terms": [
         "ui-w-questions",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "contains": [],
       "elements": [
@@ -2628,6 +2692,10 @@
         {
           "id": "W-QUESTIONS.submit-answer",
           "term": "element-w-questions-submit-answer"
+        },
+        {
+          "id": "W-QUESTIONS.dismiss",
+          "term": "element-w-questions-dismiss"
         }
       ],
       "states": [
@@ -2668,6 +2736,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) checkStoppedTurn(",
+          "purpose": "Bounded question-only recovery, durable attention and text fallback with original authority retained."
         }
       ],
       "assertions": [
@@ -2678,7 +2751,13 @@
         "RUN-RECOVERY-2",
         "UI-KEYBOARD-ATTENTION",
         "UI-AXE-CORE",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-ANSWER-CONFIRMATION",
+        "UI-ANSWER-FAILURE",
+        "UI-ANSWER-REFRESH",
+        "UI-QUESTION-RECOVERY",
+        "UI-FALLBACK-ANSWER",
+        "RUN-QUESTION-RECOVERY"
       ],
       "gaps": [
         {
@@ -2696,9 +2775,9 @@
         "browser",
         "go"
       ],
-      "element_description": "Repeated **question** legend; **options** radio labels/descriptions; conditional **answer-text** or **secret-answer** input; **submit-answer**.",
+      "element_description": "Repeated **question** legend; **options** radio labels/descriptions; conditional **answer-text** or **secret-answer** input; **submit-answer**. Textual fallbacks also have No reply needed.",
       "state_description": "Text input appears for no options or an Other-enabled question; secret text uses a password field. No radio choice is automatically selected. Submit disabled while busy or any question lacks a value.",
-      "interactions": "Sends one response containing all questions. Success refreshes and closes the dialog; stale/invalid responses remain an inline error."
+      "interactions": "Submits all question answers once. Success closes the dialog, opens the owning agent and confirms for five seconds; failed or uncertain delivery shows existing error feedback without replay. No reply needed dismisses only a pending text fallback and never answers or authorizes work."
     },
     {
       "id": "W-APPROVAL",
@@ -2771,7 +2850,8 @@
         "INPUT-VALIDATION",
         "RUN-RECOVERY",
         "RUN-RECOVERY-2",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-RESPONSE-CONFIRMATION"
       ],
       "gaps": [
         {
@@ -3046,7 +3126,8 @@
       "terms": [
         "ui-w-policy-settings",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "question-recovery"
       ],
       "contains": [],
       "elements": [
@@ -3073,6 +3154,10 @@
         {
           "id": "W-POLICY-SETTINGS.save",
           "term": "element-w-policy-settings-save"
+        },
+        {
+          "id": "W-POLICY-SETTINGS.question-helper-model",
+          "term": "element-w-policy-settings-question-helper-model"
         }
       ],
       "states": [],
@@ -3111,12 +3196,18 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) checkStoppedTurn(",
+          "purpose": "Bounded question-only recovery, durable attention and text fallback with original authority retained."
         }
       ],
       "assertions": [
         "UI-SETTINGS",
         "API-UI",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "RUN-QUESTION-HELPER"
       ],
       "gaps": [
         {
@@ -3134,7 +3225,7 @@
         "browser",
         "go"
       ],
-      "element_description": "**priority-labels** text area, **assessment-prompt** text area, **notifications** checkbox, **jira-url**, **jira-email**, **save**.",
+      "element_description": "**priority-labels** text area, **assessment-prompt** text area, **notifications** checkbox, **jira-url**, **jira-email**, **save**. Optional question-helper-model input defaults to the task model when empty.",
       "state_description": "Label mapping is entered as structured text and must parse; policy fields are local drafts until Save. Jira fields existing in UI do not mean Jira is enabled for this pilot.",
       "interactions": "Save changes policy/configuration, invalidating dependent assessments. The notifications checkbox is not a subscription-management UI and cannot make an unsupported host subscribe."
     },
@@ -3734,7 +3825,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -3757,7 +3848,7 @@
         "tooling",
         "go"
       ],
-      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** \u201cConnect Code Factory\u201d, **deny** \u201cCancel\u201d.",
+      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”.",
       "state_description": "Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages.",
       "interactions": "Allow or Deny consumes the request and redirects to its registered host callback. No credential field."
     },
@@ -5575,7 +5666,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6202,7 +6293,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6385,7 +6476,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-NAVIGATION` \u2192 one embedded `PAGE-*`",
+      "endpoint_description": "`W-NAVIGATION` → one embedded `PAGE-*`",
       "trigger": "Inbox/Agents/Settings click.",
       "interactions": "Navigates. Keeps shell selections/search/filter; remounts page-local components.",
       "from": [
@@ -6468,7 +6559,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-INBOX-QUERY` \u2192 `P-INBOX-LIST`",
+      "endpoint_description": "`W-INBOX-QUERY` → `P-INBOX-LIST`",
       "trigger": "Search text and filter value.",
       "interactions": "Selects visible rows locally. The selected detail may remain visible even if its row no longer matches.",
       "from": [
@@ -6552,7 +6643,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ITEM-ROW[itemId]` \u2192 `P-ITEM-DETAIL`",
+      "endpoint_description": "`W-ITEM-ROW[itemId]` → `P-ITEM-DETAIL`",
       "trigger": "Click a row; item ID.",
       "interactions": "Selects and loads detail; the displayed revision is marked read. This can change unread indicators in the list.",
       "from": [
@@ -6635,7 +6726,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-INBOX-EMPTY` \u2192 `PAGE-SETTINGS`",
+      "endpoint_description": "`W-INBOX-EMPTY` → `PAGE-SETTINGS`",
       "trigger": "Add repository click.",
       "interactions": "Navigates without saving settings or automatically focusing a field.",
       "from": [
@@ -6729,7 +6820,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS` \u2192 persisted item state \u2192 shared snapshot indicators; detail history is a separately retained read.",
+      "endpoint_description": "`W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read.",
       "trigger": "Unread, acknowledge New or record action; item ID.",
       "interactions": "Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged.",
       "from": [
@@ -6809,7 +6900,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-PRIORITY` \u2192 item priority \u2192 list/detail",
+      "endpoint_description": "`W-PRIORITY` → item priority → list/detail",
       "trigger": "Save override or clear override; item ID and value.",
       "interactions": "Submits then refreshes; does not modify provider labels.",
       "from": [
@@ -6899,7 +6990,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-RELATIONSHIPS` \u2192 selected item's relationships/context",
+      "endpoint_description": "`W-RELATIONSHIPS` → selected item's relationships/context",
       "trigger": "Add submits `source` and `target`; Remove submits `source`, `target` and `remove: true`.",
       "interactions": "Submits local Add/Remove, then refreshes selected relationships without clearing unrelated drafts. A late earlier response cannot replace later selected detail.",
       "from": [
@@ -6980,7 +7071,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS.launch` \u2192 `D-LAUNCH`",
+      "endpoint_description": "`W-ITEM-ACTIONS.launch` → `D-LAUNCH`",
       "trigger": "Selected item entry.",
       "interactions": "Opens editor using current profiles and skills. No process starts.",
       "from": [
@@ -7060,7 +7151,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-EDITOR.profile` \u2192 its editable fields",
+      "endpoint_description": "`W-LAUNCH-EDITOR.profile` → its editable fields",
       "trigger": "Select a profile.",
       "interactions": "Replaces prompt/model/effort/skill drafts; keeps the current base draft.",
       "from": [
@@ -7144,7 +7235,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-EDITOR.review` \u2192 `P-LAUNCH-REVIEW`",
+      "endpoint_description": "`W-LAUNCH-EDITOR.review` → `P-LAUNCH-REVIEW`",
       "trigger": "Item, profile, edited prompt/model/effort/skills/base.",
       "interactions": "Submits preparation and shows a durable prepared snapshot. Failure retains the editor and its drafts with a dialog-local alert; no Start occurs.",
       "from": [
@@ -7226,7 +7317,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.edit` \u2192 `P-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.edit` → `P-LAUNCH-EDITOR`",
       "trigger": "Edit launch click.",
       "interactions": "Returns to the editor. The preceding prepared record is retained, not modified/deleted.",
       "from": [
@@ -7319,7 +7410,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.start` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.start` → `PAGE-AGENTS`/`P-RUN-DETAIL`",
       "trigger": "Prepared run ID.",
       "interactions": "Busy disables Start during a request. Received success selects the run; lost/error response retains review with a dialog-local alert. Retrying an already accepted run rejects; inspect that same retained run.",
       "from": [
@@ -7405,7 +7496,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-RUN-ROW[runId]` \u2192 `P-RUN-DETAIL`",
+      "endpoint_description": "`W-RUN-ROW[runId]` → `P-RUN-DETAIL`",
       "trigger": "Click a run row.",
       "interactions": "Selects run, pending requests and transcript context. Does not resume it.",
       "from": [
@@ -7505,7 +7596,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-RUN-CONTROLS` \u2192 selected run \u2192 Agents widgets",
+      "endpoint_description": "`W-RUN-CONTROLS` → selected run → Agents widgets",
       "trigger": "Interrupt, Resume or Cleanup; selected run ID.",
       "interactions": "Submits an explicit action, refreshing snapshot on success or failure. Cleanup retires/stales the retained session before dirty refusal; the interrupted UI retains work/history/draft and requires explicit Resume.",
       "from": [
@@ -7593,7 +7684,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-MESSAGE` \u2192 selected run \u2192 `W-TRANSCRIPT`",
+      "endpoint_description": "`W-MESSAGE` → selected run → `W-TRANSCRIPT`",
       "trigger": "Message text and displayed current-turn context.",
       "interactions": "Submits idle follow-up or active steering. Stale active-turn responses fail; success clears the message draft.",
       "from": [
@@ -7677,7 +7768,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` \u2192 `D-ATTENTION`",
+      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` → `D-ATTENTION`",
       "trigger": "Notice click; request ID belonging to the selected run.",
       "interactions": "Opens that request without answering.",
       "from": [
@@ -7761,7 +7852,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-NAVIGATION.needs-attention` \u2192 Agents and optional `D-ATTENTION`",
+      "endpoint_description": "`W-NAVIGATION.needs-attention` → Agents and optional `D-ATTENTION`",
       "trigger": "Current pending-request list.",
       "interactions": "Navigates to Agents; opens its first pending request if present. It does not automatically change selected run.",
       "from": [
@@ -7828,7 +7919,8 @@
         "INPUT-VALIDATION",
         "RUN-RECOVERY",
         "RUN-RECOVERY-2",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-QUESTION-RECOVERY"
       ],
       "gaps": [
         {
@@ -7846,15 +7938,16 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-DIALOG-FRAME.open-chat` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`",
+      "endpoint_description": "`W-DIALOG-FRAME.open-chat` → `PAGE-AGENTS`/`P-RUN-DETAIL`; textual fallback inspection also selects W-TRANSCRIPT.",
       "trigger": "Current attention's owning run ID.",
-      "interactions": "Closes attention, selects its run and navigates to Agents. No answer is submitted.",
+      "interactions": "Closes attention, selects its run and navigates to Agents. No answer is submitted. Text fallback uses Inspect technical transcript and preserves the owning run draft.",
       "from": [
         "W-DIALOG-FRAME.open-chat"
       ],
       "to": [
         "PAGE-AGENTS",
-        "P-RUN-DETAIL"
+        "P-RUN-DETAIL",
+        "W-TRANSCRIPT"
       ],
       "connection_type": "connection-selects",
       "external_boundary": false
@@ -7914,7 +8007,12 @@
         "RUN-RECOVERY",
         "RUN-RECOVERY-2",
         "UI-KEYBOARD-ATTENTION",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-ANSWER-CONFIRMATION",
+        "UI-ANSWER-FAILURE",
+        "UI-ANSWER-REFRESH",
+        "UI-RESPONSE-CONFIRMATION",
+        "UI-FALLBACK-ANSWER"
       ],
       "gaps": [
         {
@@ -7932,9 +8030,9 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` \u2192 request/run state",
+      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state",
       "trigger": "Response matched to current request ID.",
-      "interactions": "Submits once through live request validation. Success refreshes/ closes; errors remain inside attention.",
+      "interactions": "Submits once through request identity validation. Success closes attention, selects the owner and starts a five-second local confirmation independently of refresh. Failed/uncertain submissions never confirm or replay; refresh failure after success is reported separately.",
       "from": [
         "W-QUESTIONS",
         "W-APPROVAL",
@@ -8022,7 +8120,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "Launch/attention close control \u2192 underlying page",
+      "endpoint_description": "Launch/attention close control → underlying page",
       "trigger": "Close click or Escape inside the active dialog.",
       "interactions": "Dismisses only that dialog and restores its connected opener when permitted. No attention answer or interrupt is sent.",
       "from": [
@@ -8104,7 +8202,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` \u2192 repository summary / sync inputs",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` → repository summary / sync inputs",
       "trigger": "Repository ID, checkout and default base.",
       "interactions": "Submits and refreshes settings/health. Inbox items arrive through background synchronization, not an implied immediate import.",
       "from": [
@@ -8186,7 +8284,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` \u2192 profile and launch skill choices",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` → profile and launch skill choices",
       "trigger": "Draft checkout or fallback root.",
       "interactions": "Loads/discovers skills and refreshes shared choices without saving the repository first.",
       "from": [
@@ -8268,7 +8366,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-POLICY-SETTINGS` \u2192 config / priority assessment inputs",
+      "endpoint_description": "`W-POLICY-SETTINGS` → config / priority assessment inputs",
       "trigger": "Parsed label mapping, policy, notification setting, optional tenant/email.",
       "interactions": "Submits configuration; later background assessment can update priority displays. Does not create a host subscription.",
       "from": [
@@ -8356,7 +8454,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-JIRA-CREDENTIAL` \u2192 private credential store",
+      "endpoint_description": "`W-JIRA-CREDENTIAL` → private credential store",
       "trigger": "Dedicated password-field submission.",
       "interactions": "Saves a nonempty token through the authenticated app tool and clears the reusable password field on success. Stored value is not supplied back to a widget. This is separate from the temporary local setup form and its expiry/single-use checks.",
       "from": [
@@ -8439,7 +8537,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-PROFILE-SETTINGS` \u2192 future `W-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-PROFILE-SETTINGS` → future `W-LAUNCH-EDITOR`",
       "trigger": "Saved profile draft.",
       "interactions": "Refreshes available/default launch settings; existing prepared snapshots stay unchanged.",
       "from": [
@@ -8522,7 +8620,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-SKILL-SETTINGS` \u2192 profile/launch skill choices",
+      "endpoint_description": "`W-SKILL-SETTINGS` → profile/launch skill choices",
       "trigger": "Managed skill name/instructions.",
       "interactions": "Refreshes shared skills; immutable prepared skill snapshots stay unchanged.",
       "from": [
@@ -8600,7 +8698,7 @@
       "suites": [
         "tooling"
       ],
-      "endpoint_description": "`W-DIAGNOSTICS` \u2192 its result display",
+      "endpoint_description": "`W-DIAGNOSTICS` → its result display",
       "trigger": "Check connection click.",
       "interactions": "Reads health, no repair or page transition.",
       "from": [
@@ -8697,7 +8795,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
+      "endpoint_description": "Shared updated state → Inbox/Agents/Settings summaries, shell counts",
       "trigger": "Successful polling or action refresh.",
       "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts.",
       "from": [
@@ -8785,7 +8883,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "History pages \u2192 `W-TRANSCRIPT`",
+      "endpoint_description": "History pages → `W-TRANSCRIPT`",
       "trigger": "Selected run and current history cursor; optional reset to beginning.",
       "interactions": "Refreshes display only. Resetting history does not resume/replay agent work.",
       "from": [
@@ -8835,7 +8933,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "Package page links \u2192 artifacts / external host setup",
+      "endpoint_description": "Package page links → artifacts / external host setup",
       "trigger": "Download or follow documented setup instructions.",
       "interactions": "External. Missing registered app mapping can make browser download fail; it does not silently create a connection.",
       "from": [
@@ -8863,7 +8961,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -8886,7 +8984,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "External host \u2192 `PAGE-OWNER-CONSENT` \u2192 registered host callback",
+      "endpoint_description": "External host → `PAGE-OWNER-CONSENT` → registered host callback",
       "trigger": "Valid private request; Allow or Deny.",
       "interactions": "External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL.",
       "from": [
@@ -8970,7 +9068,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ELICITATION.open-authorization` \u2192 external authorization page",
+      "endpoint_description": "`W-ELICITATION.open-authorization` → external authorization page",
       "trigger": "Request-supplied URL opened through host.",
       "interactions": "External. Continue reports the user's completion decision; it does not independently prove external success.",
       "from": [
@@ -9018,7 +9116,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` \u2192 alternate local transport session",
+      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` → alternate local transport session",
       "trigger": "Single-use private setup input.",
       "interactions": "Submits and removes form on success; does not navigate into Settings or activate Jira.",
       "from": [
@@ -9066,7 +9164,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-BROWSER-LAB` controls \u2192 isolated browser \u2192 screenshot/location",
+      "endpoint_description": "`W-BROWSER-LAB` controls → isolated browser → screenshot/location",
       "trigger": "Explicit lab navigation/click/key/scroll operations.",
       "interactions": "Developer utility feedback loop; never an Inbox/Agents page transition.",
       "from": [
@@ -9074,6 +9172,92 @@
       ],
       "to": [
         "PAGE-BROWSER-LAB"
+      ],
+      "connection_type": "connection-submits",
+      "external_boundary": false
+    },
+    {
+      "id": "C-QUESTION-RECOVERY",
+      "kind": "connection",
+      "terms": [
+        "ui-c-question-recovery",
+        "question-recovery"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Factory(",
+          "purpose": "Recovery records bind stage and attempt progress to the owning run and its recovered question."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) DismissQuestion(",
+          "purpose": "Durable dismissal and question recovery state."
+        }
+      ],
+      "assertions": [
+        "UI-QUESTION-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser"
+      ],
+      "endpoint_description": "Recovery records bind stage and attempt progress to the owning run and its recovered question.",
+      "trigger": "Owning recovery or attention identity.",
+      "interactions": "Recovery records bind stage and attempt progress to the owning run and its recovered question.",
+      "from": [
+        "W-RUN-CONTROLS.recovery-progress"
+      ],
+      "to": [
+        "W-QUESTIONS",
+        "W-RUN-CONTROLS"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false
+    },
+    {
+      "id": "C-DISMISS-QUESTION",
+      "kind": "connection",
+      "terms": [
+        "ui-c-dismiss-question",
+        "question-recovery"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Factory(",
+          "purpose": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) DismissQuestion(",
+          "purpose": "Durable dismissal and question recovery state."
+        }
+      ],
+      "assertions": [
+        "UI-QUESTION-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser"
+      ],
+      "endpoint_description": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
+      "trigger": "Owning recovery or attention identity.",
+      "interactions": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
+      "from": [
+        "W-QUESTIONS.dismiss"
+      ],
+      "to": [
+        "D-ATTENTION",
+        "P-RUN-DETAIL"
       ],
       "connection_type": "connection-submits",
       "external_boundary": false
@@ -9471,6 +9655,54 @@
       "path": "internal/transport/ui_resource_test.go",
       "anchor": "func TestUIResourceContentIdentityAndCompatibility(",
       "assertion": "Actual in-memory MCP SDK asserts deterministic full-content SHA256 URI; same bytes stable and revised bytes changed; one current resource/tools/output-template/HTML match; exact legacy read alias unadvertised; unknown/previous hash/query variants reject; empty CSP domains remain."
+    },
+    {
+      "id": "UI-ANSWER-CONFIRMATION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "test(\"answer confirmation expires despite polling, stays with its run and never alters transcript text\"",
+      "assertion": "Successful question answer opens the owner; five-second confirmation survives navigation, expires despite polling, disappears on reload, preserves per-run drafts and literal UI_ANSWER_OK agent text."
+    },
+    {
+      "id": "UI-ANSWER-FAILURE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "`${failure} answers retain error feedback without confirmation or replay`",
+      "assertion": "Failed and uncertain answer calls show feedback without confirmation or automatic replay."
+    },
+    {
+      "id": "UI-ANSWER-REFRESH",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "test(\"successful answer keeps confirmation when the following refresh fails\"",
+      "assertion": "Successful delivery closes the dialog and confirms the owner even if refresh fails; the refresh error is separate."
+    },
+    {
+      "id": "UI-RESPONSE-CONFIRMATION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "test(\"approval responses use Response sent and keep other run attention\"",
+      "assertion": "An approval response uses Response sent and preserves another run request."
+    },
+    {
+      "id": "UI-QUESTION-RECOVERY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "`recovery icons, fallback controls and keyboard navigation at narrow width in ${theme}`",
+      "assertion": "390px light/dark fixtures assert clock and circular-arrow SVGs hidden from assistive technology, recovery label and attempt bound, takeover, recovery input label, draft preservation, fallback inspection/dismissal, keyboard controls and scoped WCAG scans."
+    },
+    {
+      "id": "UI-FALLBACK-ANSWER",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "test(\"text fallback submits its answer through the owning request\"",
+      "assertion": "Text fallback sends its form answer exactly through its owning attention identity and shows Answer sent."
+    },
+    {
+      "id": "RUN-QUESTION-RECOVERY",
+      "path": "internal/app/questions_test.go",
+      "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
+      "assertion": "First/second native repair success and two-attempt text fallback retain thread/worktree, reject duplicates, restore task mode and classify internal input separately."
+    },
+    {
+      "id": "RUN-QUESTION-HELPER",
+      "path": "internal/app/questions_test.go",
+      "anchor": "func TestQuestionHelperIsolationAndModelSelection(",
+      "assertion": "Helper uses an ephemeral read-only thread without approvals/apps and selects the configured helper model or task model."
     }
   ],
   "source_map": [
@@ -9700,7 +9932,7 @@
       "path": "internal/gateway/gateway.go",
       "anchor": "func (g *Gateway) Private(",
       "entities": "`PAGE-OWNER-CONSENT`, `P-OWNER-CONSENT`, `W-OWNER-CONSENT`, `C-CONSENT`.",
-      "detail": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
+      "detail": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
       "anchors": [
         "func (g *Gateway) Private("
       ],
@@ -10547,7 +10779,9 @@
             "C-CONSENT",
             "C-EXTERNAL-AUTH",
             "C-TUNNEL-KEY",
-            "C-BROWSER-LAB"
+            "C-BROWSER-LAB",
+            "C-QUESTION-RECOVERY",
+            "C-DISMISS-QUESTION"
           ],
           "fields": [
             "endpoint_description",
@@ -10556,7 +10790,7 @@
           ],
           "headers": [
             "ID",
-            "From \u2192 to",
+            "From → to",
             "Trigger and carried context",
             "Result/type"
           ]

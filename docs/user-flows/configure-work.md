@@ -25,10 +25,11 @@ Invalid repository identifiers, unsupported permission choices and incomplete pr
 - **S2** Profiles and skills can be saved and selected; unsupported profile choices, unsupported skill names and a missing required skill header are rejected.
 - **S3** Changing assessment policy invalidates cached priority assessments.
 
+The optional question helper model defaults to the task model. It affects only isolated question analysis and does not change the original task model, mode or publishing authority.
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation).
+Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [question-recovery](../glossary/README.md#question-recovery).
 UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE).
 
 ## Flow diagram
@@ -76,12 +77,14 @@ flowchart TD
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration
 - [internal/web/embed.go](../../internal/web/embed.go) — Embedded UI build and host-fixture configuration
+- [internal/app/questions.go](../../internal/app/questions.go) — Bounded recovery and durable text/structured question answer claims; preserve authority and redaction. (`func (m *Manager) answerSynthetic(`)
 
 ## Test references
 
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("plugin settings accept repository and secure credential without echo"`; S1. UI saves a repository through the host fixture.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("plugin settings accept repository and secure credential without echo"`; S1, S3. UI saves a repository through the host fixture. Optional helper-model input starts empty and sends the configured override in save_settings.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestAssessmentCacheAndInvalidation(`; S3. Policy changes rerun inference.
 - [internal/app/real_codex_test.go](../../internal/app/real_codex_test.go) — `func TestRealCodexInteractiveLifecycle(`; S2. Opt-in real lifecycle saves a profile/skill and observes skill loading; skipped in default fixture verification.
+- [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestQuestionHelperIsolationAndModelSelection(`; S3. Optional helper model selects explicit override or task model with an isolated read-only helper.
 
 ## Verification and gaps
 

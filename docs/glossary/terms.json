@@ -2955,6 +2955,98 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The browser lab connection within the application interface."
+    },
+    {
+      "id": "question-recovery",
+      "name": "Question recovery",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A bounded effort to recover an unanswered human question while preserving the original task and authority."
+    },
+    {
+      "id": "state-recovering",
+      "name": "Recovering",
+      "aliases": [],
+      "category": "state",
+      "definition": "A pending human question is being checked or restated before task continuation."
+    },
+    {
+      "id": "element-w-run-controls-waiting-icon",
+      "name": "waiting-icon",
+      "aliases": [],
+      "category": "element",
+      "definition": "The decorative clock beside a readable waiting status.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-recovery-progress",
+      "name": "recovery-progress",
+      "aliases": [],
+      "category": "element",
+      "definition": "The readable status of question recovery and its bounded attempts.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-recovery-icon",
+      "name": "recovery-icon",
+      "aliases": [],
+      "category": "element",
+      "definition": "The decorative circular arrow beside recovery progress.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-takeover",
+      "name": "takeover",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control that stops question recovery for owner takeover.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-confirmation",
+      "name": "confirmation",
+      "aliases": [],
+      "category": "element",
+      "definition": "The temporary acknowledgement of a successful response in its owning run.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-attention-notice-waiting-icon",
+      "name": "waiting-icon",
+      "aliases": [],
+      "category": "element",
+      "definition": "The decorative clock beside a readable waiting request label.",
+      "scope": "ui-w-attention-notice"
+    },
+    {
+      "id": "element-w-questions-dismiss",
+      "name": "dismiss",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control that dismisses a textual question without replying or granting authority.",
+      "scope": "ui-w-questions"
+    },
+    {
+      "id": "element-w-policy-settings-question-helper-model",
+      "name": "question-helper-model",
+      "aliases": [],
+      "category": "element",
+      "definition": "The optional model used to check stopped task questions, with an empty value meaning the task model.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "ui-c-question-recovery",
+      "name": "Question recovery data connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between question recovery progress and its owning question and run."
+    },
+    {
+      "id": "ui-c-dismiss-question",
+      "name": "Question dismissal connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The local dismissal connection for a textual question."
     }
   ]
 }

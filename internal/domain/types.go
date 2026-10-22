@@ -118,13 +118,14 @@ type Profile struct {
 	Publishing string   `json:"publishing"`
 }
 type Config struct {
-	ID               string         `json:"id"`
-	PriorityLabels   map[string]int `json:"priorityLabels"`
-	AssessmentPrompt string         `json:"assessmentPrompt"`
-	PolicyVersion    string         `json:"policyVersion"`
-	JiraURL          string         `json:"jiraUrl"`
-	JiraEmail        string         `json:"jiraEmail"`
-	Notifications    bool           `json:"notifications"`
+	ID                  string         `json:"id"`
+	PriorityLabels      map[string]int `json:"priorityLabels"`
+	AssessmentPrompt    string         `json:"assessmentPrompt"`
+	PolicyVersion       string         `json:"policyVersion"`
+	JiraURL             string         `json:"jiraUrl"`
+	JiraEmail           string         `json:"jiraEmail"`
+	Notifications       bool           `json:"notifications"`
+	QuestionHelperModel string         `json:"questionHelperModel,omitempty"`
 }
 type Run struct {
 	ID       string    `json:"id"`
@@ -142,14 +143,18 @@ type Run struct {
 	Created  time.Time `json:"created"`
 }
 type Attention struct {
-	ID        string          `json:"id"`
-	RunID     string          `json:"runId"`
-	RequestID json.RawMessage `json:"requestId"`
-	Method    string          `json:"method"`
-	Params    json.RawMessage `json:"params"`
-	Blocking  bool            `json:"blocking"`
-	Status    string          `json:"status"`
-	Created   time.Time       `json:"created"`
+	ID         string          `json:"id"`
+	RunID      string          `json:"runId"`
+	RequestID  json.RawMessage `json:"requestId,omitempty"`
+	Method     string          `json:"method"`
+	Params     json.RawMessage `json:"params"`
+	Blocking   bool            `json:"blocking"`
+	Status     string          `json:"status"`
+	Created    time.Time       `json:"created"`
+	Origin     string          `json:"origin,omitempty"`
+	TurnID     string          `json:"turnId,omitempty"`
+	ItemID     string          `json:"itemId,omitempty"`
+	RecoveryID string          `json:"recoveryId,omitempty"`
 }
 type Event struct {
 	Seq    int64           `json:"seq"`
@@ -165,6 +170,19 @@ type InboxEntry struct {
 	Priority       *int       `json:"priority"`
 	PrioritySource string     `json:"prioritySource"`
 	Assessment     Assessment `json:"assessment"`
+}
+
+// Recovery is an at-most-two-attempt dialogue with an existing Codex thread.
+// It contains no user answers or process request IDs.
+type QuestionRecovery struct {
+	ID           string `json:"id"`
+	RunID        string `json:"runId"`
+	SourceTurnID string `json:"sourceTurnId"`
+	Stage        string `json:"stage"`
+	Attempts     int    `json:"attempts"`
+	Question     string `json:"question"`
+	OriginalMode string `json:"originalMode"`
+	RepairTurnID string `json:"repairTurnId,omitempty"`
 }
 
 func Defaults() Config {
