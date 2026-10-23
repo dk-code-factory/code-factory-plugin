@@ -77,7 +77,7 @@ func TestHostedPackageIsCompleteBoundToHostAndChecksummed(t *testing.T) {
 				}
 				files[file.Name] = b
 			}
-			for _, path := range []string{"plugin.json", "mcp.json", ".mcp.json", ".codex-plugin/plugin.json", "skills/code-factory/SKILL.md", "skills/code-factory-setup/SKILL.md", "assets/logo.svg", "SHA256SUMS"} {
+			for _, path := range []string{"plugin.json", "mcp.json", ".mcp.json", ".codex-plugin/plugin.json", "skills/code-factory/SKILL.md", "skills/code-factory-setup/SKILL.md", "skills/code-factory-admin/SKILL.md", "assets/logo.svg", "SHA256SUMS"} {
 				if len(files[path]) == 0 {
 					t.Fatal("missing plugin component", path)
 				}

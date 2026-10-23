@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "0ea484ec511b94b1ec48c72812e853318f4fc06a",
-  "fingerprint": "c346dfcf97f972edd827570cc8993f3ecc59c15880fcdf11603773e2385ab50e",
+  "base": "605b4753ac9055cc660dc7e0da3b2dd7e3f0680b",
+  "fingerprint": "1da6e8c7ba622026705564fc4109377f4a70927d4bf69bf1854d14fcd8f920ca",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "The layered registry dependency direction, stable gap IDs and pinned adoption policy remain unchanged. New behavior is declared with code and actual test assertions.",
-    "implementation": "Reviewed new source mappings, scenario S4 graphs, widget instances, element terms and console endpoints. No consuming specification backlinks were added to glossary definitions and no adoption exception was extended.",
-    "tests": "Deterministic render/validate and mapped tooling suites exercise the new registries. The runner inputs already include internal/web source trees so the new helper/provider files invalidate prior verification."
+    "description": "The layered registry/runner contract is unchanged. Added admin vocabulary, scoped elements, two displayed panes, typed data/submission connections, automatic-review scenarios and exact assertions retain dependency direction and all pinned historical adoption rules.",
+    "implementation": "Compared registry changes and rendered owned blocks against the guide. No reconciliation runner, schema, required maintenance skill, adoption base/list or execution environment override changed. The new bundled admin skill is product content, not an added maintenance-role exception.",
+    "tests": "Full schema/render/reference/alias/freshness/cochange regression suites run against all affected subjects. Direct new UI contracts have owned implementation and meaningful tests; unchanged consumers receive structural decisions. No receipt is copied from another comparison or edited by hand."
   },
   "verification": [
     {
@@ -33,17 +33,17 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.267
+      "seconds": 24.555
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "eda109a59a180cc9b4530550926e5156a284df4b2dd72f72b2681ecf25d90e12",
-    "term:coverage-gap": "bcd05eeb6004f419797a2b2abadb762985f7afc678cf09202831864f160d777d",
-    "term:entity": "60534fa759d5253fcc60814d4a3d558d517154f4a4a95082b311f9662f151899",
-    "term:glossary": "8ed413536af7cb0a4d60609c8fad107e3a72134975e124bf67d5f88e102fd795",
-    "term:known-limitation": "a56ceea6242a28bc37d3ba4fc27a3591f1e38984157b8654f53cebbb98267344",
-    "term:reconciliation": "0dc00bb874708de4ecde1bae2a1525219e227d024a7ca2d3cce01765b448a95e",
-    "term:unverified-behavior": "e4df6d16d740be72910c3a0796f2cc32640d43121a60657bed150ed6263b3c4f",
-    "term:verification": "5beffe3f9480d0e136e0c6df3a1d44707c28ccae245a39496086982f26a54814"
+    "flow:maintain-flow-contracts": "d5d4fe6f226c5468595b5b36cc6d8456f5a669992b36b695cc46a77f5a232b72",
+    "term:coverage-gap": "a3504c24eb19ff7026995ac1fc7f9dcd4bd2fd27059a503e0398140497040097",
+    "term:entity": "49e68125cfe1620fb6d85e4d1568558bd8992a060a1f4f0883eec4796e6a2bd6",
+    "term:glossary": "99a61c851894adad5866e106bdb65402d0d9292d68e9e41397a39402863f2645",
+    "term:known-limitation": "7f3f34fc40eebd3f423c3f74c44c039192178c47ce60c1994966f80318349b19",
+    "term:reconciliation": "d24d613669c2af0cee3a99a6049fdcccb41d77ddb4740383e9659e4b9a58521f",
+    "term:unverified-behavior": "d0f015609cde739351b50d608c8dd4b1bc9d7f386c9985eb714b5cb1de7062bb",
+    "term:verification": "557228d74fff5c089a0d5fb9835cf966cf657ff8aaf62c0530b836098ea94e79"
   }
 }

@@ -37,7 +37,7 @@ existing working connection rather than creating another.
 Record the registered remote app ID shown by its plugin page. Run
 `code-factory link-plugin --app-id OBSERVED`; then upload the linked browser ZIP
 from `/code-factory/plugin-browser.zip` through **Add → Upload plugin archive**
-and install it. The browser package contains both skills and the required app
+and install it. The browser package contains all three skills and the required app
 reference. The portable `/code-factory/plugin.zip` is a separate artifact with
 MCP launch configuration for compatible local plugin hosts. A cloud `Plugin_...`
 package ID cannot replace the remote `asdk_app_...` connection ID.
@@ -52,7 +52,7 @@ custom connections and event-triggered tasks. Follow the
 
 Open the embedded inbox and configure only the dedicated private pilot repository. Working tracks launched work until its GitHub completion; Issues includes linked PR information; My PRs and Review PRs follow GitHub author/reviewer identity. Each queue retains its query and Back context. Item selection opens the conversation without starting an agent.
 
-Choose a pipeline, review its mode, permissions and publishing authority, and explicitly Start. Each pipeline is one retained Codex session. New run and prepared proposals remain under Item details. Follow up by sending a message; inactive work restores its original thread and workspace. Interrupt remains explicit and cleanup refuses dirty worktrees.
+For manual work, choose a pipeline, review its mode, permissions and publishing authority, and explicitly Start. System defaults can instead opt into automatically starting eligible requested PR reviews; queue-only is the default, and repository policy can inherit or override it. Review/implementation pipeline defaults and additional repository review instructions are configured in Settings. Automatic reviews wait for current work, use read-only/ask authority and are durably claimed once per observed request/head. Each pipeline is one retained Codex session. New run and prepared proposals remain under Item details. Follow up by sending a message; inactive work restores its original thread and workspace. Interrupt remains explicit and cleanup refuses dirty worktrees.
 
 Messages lists native, structured-message and recovered textual questions and approvals. Answer the displayed form. If a stopped agent fails to produce a form, the helper gets at most two question-only repair attempts before offering a free-text answer and Open session console. The console shows the same session's technical activity and retains its draft. Take over session cancels further repair. Unknown delivery is never retried automatically; inspect the console first.
 
@@ -149,3 +149,12 @@ daemon smoke test. Use the explicit `make test-real-provider` target for real mo
 `python3 scripts/test_systemd.py` separately tests the package under isolated Ubuntu
 with a real user systemd manager and fixture provider executables. The container has
 no Go or Node. Neither fixtures nor real Codex alone establish Work acceptance.
+
+## Plugin administration
+
+Settings → Plugins & skills lists observed installed plugins, versions, enabled
+state, update availability and maintenance operations. Sources, explicit installs/
+updates/removals and periodic metadata-check cadence are configurable through the
+widget, owner tools and bundled admin skill. See [the administration guide](plugin.md#repository-monitoring-and-plugin-administration). No plugin update is
+automatically installed. Unknown remote version metadata stays unknown, and
+failed or interrupted operations require inventory inspection before a retry.

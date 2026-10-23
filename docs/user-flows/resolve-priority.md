@@ -25,6 +25,8 @@ The picker starts from the saved override for the selected item. Choosing a prio
 - **S2** An unchanged assessment is reused; changing policy invalidates it.
 - **S3** Context changes invalidate assessments; assessment failure and retry remain visible and background work yields to manual work.
 
+Background priority inference yields while plugin maintenance owns provider configuration. This coordination does not change priority precedence, assessment policy or the inferred result schema.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -72,6 +74,8 @@ flowchart TD
 - [go.sum](../../go.sum) — Shared domain, persistence, transport or dependency contract
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
+- [internal/app/plugins.go](../../internal/app/plugins.go) — Durable pinned-CLI plugin lifecycle and exclusive runtime/maintenance boundary. (`func (m *Manager) PluginAction(`)
+- [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
 
 ## Test references
 
@@ -79,6 +83,7 @@ flowchart TD
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestAssessmentCacheAndInvalidation(`; S2. Reuse and policy invalidation.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S1. Stored overrides initialize including P0; all priorities and automatic submit immediately for the selected item.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("failed immediate priority saves restore the saved value with an inline error"`; S1. Rejected saves restore the previous picker and show exact local feedback.
+- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginMaintenanceDefersInferenceAndRejectsUnavailableSkills(`; S2. Background inference defers while plugin state is changing; unavailable selected skills cannot be prepared.
 
 ## Verification and gaps
 

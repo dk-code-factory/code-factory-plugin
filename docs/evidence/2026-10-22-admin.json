@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-22",
+  "checked_utc": "2026-10-23T03:23:08.945132+00:00",
+  "source_baseline": "605b4753ac9055cc660dc7e0da3b2dd7e3f0680b",
+  "implementation_branch": "feat/admin-plugins",
+  "installed_version": "0.1.0-2c910ee0442b",
+  "source_verification": {
+    "specs_check": "passed",
+    "branch_ci": {
+      "argv": [
+        "make",
+        "ci",
+        "FLOW_BASE=605b4753ac9055cc660dc7e0da3b2dd7e3f0680b"
+      ],
+      "exit_code": 0
+    },
+    "browser_tests": 74,
+    "go_race_suite": "passed",
+    "reviewed_specification_subjects": 17,
+    "isolated_pinned_codex_plugin_install": {
+      "codex": "0.161.0",
+      "plugin_version": "0.2.3",
+      "skills": 3,
+      "result": "passed"
+    },
+    "isolated_marketplace_update_probe": "Installed 1.0.0; changed source manifest to 1.1.0; explicit add installed 1.1.0 without real authentication or model use."
+  },
+  "installation": {
+    "release_checksum_verified": true,
+    "extracted_checksums_verified": true,
+    "upgrade_exit": 0,
+    "stable_launcher_version": "0.1.0-2c910ee0442b",
+    "provider_paths_unchanged": true,
+    "full_tailscale_config_unchanged": true,
+    "retained_runs_unchanged": true,
+    "prepared_review_test_preserved": true,
+    "codex_plugin_choices_unchanged": true,
+    "active_agent_runs": 0
+  },
+  "live_admin": {
+    "fresh_installed_plugin_work_chat": true,
+    "tools_refreshed": true,
+    "view": "settings",
+    "connection": "Connected",
+    "alerts": [],
+    "observed_utc": "2026-10-23T03:17:15.393Z",
+    "inline_javascript_sha256": "04d4177731fb956700529bbddbf2874148ff8f971e5d2fdfa8de9908716d44e9",
+    "javascript_matches_release": true,
+    "system_review_policy": "queue-only",
+    "repository_review_override": "inherit (effective queue-only)",
+    "plugin_check_cadence": "manual",
+    "installed_plugins": 6,
+    "catalog_plugins": 7622,
+    "discovered_skills": 30,
+    "operations": [
+      {
+        "action": "refresh",
+        "created": "2026-10-23T03:15:38.028523879Z",
+        "finished": "2026-10-23T03:15:42.016175552Z",
+        "id": "7189f59a2392d6afe606c826617cb426",
+        "status": "succeeded",
+        "target": ""
+      }
+    ],
+    "third_party_plugin_mutations": 0,
+    "repository_or_system_policies_saved": false,
+    "observed_controls": [
+      "Repository monitoring and last-poll state",
+      "Nullable automatic-review override",
+      "Repository review/implementation pipelines",
+      "Additional repository review prompt",
+      "Plugin inventory, source/ref and lifecycle actions",
+      "System review/implementation defaults",
+      "Metadata check cadence",
+      "Installed/enabled/available version status",
+      "Skill selection guidance and operation result"
+    ]
+  },
+  "browser_package": {
+    "served_version": "0.2.3",
+    "served_skills": 3,
+    "registered_app_mapping_preserved": true,
+    "existing_cloud_package_version": "0.2.2",
+    "existing_cloud_package_skills": 2,
+    "cloud_package_replaced": false,
+    "note": "The fresh admin widget uses the existing refreshed MCP connection. The new bundled admin skill is included in the hosted 0.2.3 ZIP; the existing private cloud package was preserved."
+  },
+  "public_connection": {
+    "at": "2026-10-23T03:08:29Z",
+    "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+    "checks": [
+      {
+        "name": "public TLS ingress 199.38.181.54",
+        "status": "passed"
+      },
+      {
+        "name": "public TLS ingress 209.177.145.137",
+        "status": "passed"
+      },
+      {
+        "name": "OAuth discovery and unauthenticated MCP challenge",
+        "status": "passed"
+      },
+      {
+        "name": "private application state and approval unavailable publicly",
+        "status": "passed"
+      },
+      {
+        "name": "public OAuth client registration",
+        "status": "passed"
+      },
+      {
+        "name": "real owner-only Tailscale consent and OAuth PKCE exchange",
+        "status": "passed"
+      },
+      {
+        "name": "MCP initialize, tools/list, open_factory and embedded UI resource",
+        "status": "passed"
+      },
+      {
+        "name": "refresh rotation and replay rejection",
+        "status": "passed"
+      },
+      {
+        "name": "ephemeral test credentials revoked",
+        "status": "passed"
+      }
+    ],
+    "workAcceptance": "unverified: this test does not operate a signed-in ChatGPT session",
+    "result": "passed"
+  },
+  "independent_sdk": {
+    "at": "2026-10-23T03:09:10.766Z",
+    "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+    "sdk": "@modelcontextprotocol/client 2.3.1",
+    "mode": "public-ingress",
+    "checks": [
+      {
+        "name": "public TLS ingress 209.177.145.137",
+        "status": "passed",
+        "remoteAddress": "209.177.145.137"
+      },
+      {
+        "name": "public TLS ingress 199.38.181.54",
+        "status": "passed",
+        "remoteAddress": "199.38.181.54"
+      },
+      {
+        "name": "SDK OAuth discovery, DCR and PKCE setup",
+        "status": "passed"
+      },
+      {
+        "name": "real owner consent and SDK OAuth PKCE token exchange",
+        "status": "passed"
+      },
+      {
+        "name": "SDK transport negotiation",
+        "status": "passed",
+        "server": "code-factory"
+      },
+      {
+        "name": "SDK tool discovery and open_factory",
+        "status": "passed",
+        "toolCount": 29
+      },
+      {
+        "name": "SDK embedded UI resource",
+        "status": "passed"
+      },
+      {
+        "name": "test access and refresh credentials revoked",
+        "status": "passed"
+      }
+    ],
+    "workAcceptance": "unverified: SDK test does not operate a signed-in ChatGPT session",
+    "publicIngress": "verified from this machine using every public DNS IP",
+    "result": "passed",
+    "testClientRegistrationCreated": true
+  },
+  "limits": [
+    "Installed remote catalog latest-version metadata is unavailable from the pinned stable CLI; update status remains Unknown rather than inferred current.",
+    "No third-party plugin was installed, removed or executed on the live installation; the owner chooses a plugin/skill before that test.",
+    "No live automatic PR review was triggered; all default policies remain queue-only.",
+    "No new-build one-hour soak, host callback, coordinated login or full manual accessibility acceptance."
+  ]
+}

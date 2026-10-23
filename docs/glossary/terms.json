@@ -3661,6 +3661,384 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The text question dismissal connection within the application interface."
+    },
+    {
+      "id": "codex-plugin",
+      "name": "Codex plugin",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An installed or available Codex extension containing skills, tools or hooks from a chosen source."
+    },
+    {
+      "id": "plugin-marketplace",
+      "name": "Plugin marketplace",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A local, Git-backed or remote catalog from which Codex plugins are selected."
+    },
+    {
+      "id": "plugin-inventory",
+      "name": "Plugin inventory",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The last observed plugin installation, enablement and version state."
+    },
+    {
+      "id": "plugin-maintenance",
+      "name": "Plugin maintenance",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An explicit operation that observes or changes Codex plugin state."
+    },
+    {
+      "id": "review-policy",
+      "name": "Review policy",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The effective system default or repository override controlling whether requested reviews are queued or started automatically."
+    },
+    {
+      "id": "repository-review-prompt",
+      "name": "Repository review prompt",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Owner-defined repository instructions appended to a generic review prompt."
+    },
+    {
+      "id": "review-request-claim",
+      "name": "Review request claim",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A durable association between a review-request episode, pull-request head and one retained review run."
+    },
+    {
+      "id": "ui-w-plugin-admin",
+      "name": "Codex plugin admin widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The plugin inventory and maintenance controls in the administration interface."
+    },
+    {
+      "id": "element-w-plugin-admin-inventory",
+      "name": "inventory",
+      "aliases": [],
+      "category": "element",
+      "definition": "The inventory control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-search",
+      "name": "search",
+      "aliases": [],
+      "category": "element",
+      "definition": "The search control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-available",
+      "name": "available",
+      "aliases": [],
+      "category": "element",
+      "definition": "The available control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-previous",
+      "name": "previous",
+      "aliases": [],
+      "category": "element",
+      "definition": "The previous control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-next",
+      "name": "next",
+      "aliases": [],
+      "category": "element",
+      "definition": "The next control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-refresh",
+      "name": "refresh",
+      "aliases": [],
+      "category": "element",
+      "definition": "The refresh control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-check-updates",
+      "name": "check-updates",
+      "aliases": [],
+      "category": "element",
+      "definition": "The check updates control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-discover-skills",
+      "name": "discover-skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The discover skills control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-plugin-selector",
+      "name": "plugin-selector",
+      "aliases": [],
+      "category": "element",
+      "definition": "The plugin selector control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-install",
+      "name": "install",
+      "aliases": [],
+      "category": "element",
+      "definition": "The install control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-update",
+      "name": "update",
+      "aliases": [],
+      "category": "element",
+      "definition": "The update control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-remove",
+      "name": "remove",
+      "aliases": [],
+      "category": "element",
+      "definition": "The remove control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-marketplace-source",
+      "name": "marketplace-source",
+      "aliases": [],
+      "category": "element",
+      "definition": "The marketplace source control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-marketplace-ref",
+      "name": "marketplace-ref",
+      "aliases": [],
+      "category": "element",
+      "definition": "The marketplace ref control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-add-marketplace",
+      "name": "add-marketplace",
+      "aliases": [],
+      "category": "element",
+      "definition": "The add marketplace control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-remove-marketplace",
+      "name": "remove-marketplace",
+      "aliases": [],
+      "category": "element",
+      "definition": "The remove marketplace control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-operation-status",
+      "name": "operation-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The operation status control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-error",
+      "name": "error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The error control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-skills",
+      "name": "skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The skills control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "ui-w-system-defaults",
+      "name": "System review defaults widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The system-level defaults for review processing and plugin metadata checks."
+    },
+    {
+      "id": "element-w-system-defaults-auto-review",
+      "name": "auto-review",
+      "aliases": [],
+      "category": "element",
+      "definition": "The auto review setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-review-pipeline",
+      "name": "review-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review pipeline setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-implementation-pipeline",
+      "name": "implementation-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The implementation pipeline setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-plugin-check-interval",
+      "name": "plugin-check-interval",
+      "aliases": [],
+      "category": "element",
+      "definition": "The plugin check interval setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-save",
+      "name": "save",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-save-result",
+      "name": "save-result",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save result setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "ui-p-plugin-admin",
+      "name": "Plugin administration pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The plugin administration pane within the settings page."
+    },
+    {
+      "id": "ui-p-system-defaults",
+      "name": "System defaults pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The system defaults pane within the settings page."
+    },
+    {
+      "id": "element-w-repository-settings-edit-repository",
+      "name": "edit-repository",
+      "aliases": [],
+      "category": "element",
+      "definition": "The edit repository control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-last-poll",
+      "name": "last-poll",
+      "aliases": [],
+      "category": "element",
+      "definition": "The last poll control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-paused",
+      "name": "paused",
+      "aliases": [],
+      "category": "element",
+      "definition": "The paused control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-auto-review",
+      "name": "auto-review",
+      "aliases": [],
+      "category": "element",
+      "definition": "The auto review control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-review-pipeline",
+      "name": "review-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review pipeline control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-implementation-pipeline",
+      "name": "implementation-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The implementation pipeline control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-review-prompt",
+      "name": "review-prompt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review prompt control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-poll",
+      "name": "poll",
+      "aliases": [],
+      "category": "element",
+      "definition": "The poll control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-review-error",
+      "name": "review-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review error control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-skill-directory",
+      "name": "skill-directory",
+      "aliases": [],
+      "category": "element",
+      "definition": "The skill directory control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "ui-c-plugin-maintenance",
+      "name": "Plugin maintenance connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between owner plugin-management choices and observed operation state."
+    },
+    {
+      "id": "ui-c-review-policy",
+      "name": "Review policy connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between inherited review policy and eligible requested-review work."
+    },
+    {
+      "id": "ui-c-repository-review-prompt",
+      "name": "Repository review prompt connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between owner repository review instructions and the prepared review prompt."
     }
   ]
 }

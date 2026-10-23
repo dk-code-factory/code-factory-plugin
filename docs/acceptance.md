@@ -1,5 +1,29 @@
 # Work acceptance gate
 
+## Public connection interruption and recovery · 2026-10-22
+
+The [connection recovery record](evidence/2026-10-22-connection-recovery.json)
+observed installed **0.1.0-ebf7a6cdd84a** with healthy local services and tailnet
+HTTPS but failed TLS on both public Funnel peers. The existing signed-in widget
+showed Reconnecting and a connection-interrupted alert. Scoped reapplication,
+restun and socket rebind did not restore public access. After one Tailscale service
+restart, one peer recovered before both passed; the precise upstream cause and
+causal effect of restart remain unproven.
+
+The restart briefly loaded an older Web handler set missing two unrelated routes.
+Both exact handlers were restored from the pre-restart snapshot; complete Serve
+ports, handlers and Funnel settings match the original configuration. App daemon
+and gateway PIDs, installed binary and authentication were preserved, and no agent
+work, app-service restart, plugin deployment or desktop logout was performed.
+
+Both public peers passed fresh verified TLS, full raw OAuth/PKCE/MCP/tool/resource
+checks and an independent SDK lifecycle; ephemeral test credentials were revoked.
+The original widget automatically returned to Connected with no alert and remained
+on Working without reload or another sign-in. This is bounded connection recovery
+evidence only. Existing host callback, new-build soak, login and manual
+accessibility gaps remain open.
+
+
 Status: **workbench and bounded question-recovery smoke verified; full pilot readiness blocked**
 (2026-10-22).
 
@@ -978,3 +1002,58 @@ is running on Serve port 8445 with a separate local profile. The user must sign
 in and explicitly confirm before the agent inspects or automates that session.
 Actual ChatGPT creation, app ID, plugin tool availability and Work acceptance
 remain unverified.
+
+## Repository and Codex plugin administration source checks · 2026-10-22
+
+The admin feature uses system defaults and nullable repository overrides for
+queue-only/automatic review, role-specific pipeline defaults and extra repository
+review instructions. Queue-only remains the default. Durable per-head/request
+claims, fresh provider state and read-only/ask profiles guard automatic review;
+policy and target are revalidated at Start. Paused repositories are not polled.
+
+The complete Go race suite and 74 browser tests passed. New browser checks cover
+both themes at 390px, system/repository inheritance and prompt retention, role
+defaults, plugin-skill selection and disabled skills, observed plugin versions,
+explicit update/install/remove/source/ref payloads and uncertain-operation drafts
+without replay. Scoped automated accessibility scans cover both new admin surfaces.
+Go fixtures cover polling/restart/request deduplication, stale or invalid targets,
+changed policies, durable plugin operations, malformed inventory, safe literal
+arguments, retained previous state, secret-output suppression, exclusive plugin/
+agent/inference work, selected skill bundles and metadata-only scheduled checks.
+
+A real pinned Codex 0.161.0 CLI installed the rebuilt plugin version 0.2.3 in an
+isolated temporary CODEX_HOME, verifying all three bundled skills. An isolated
+local marketplace probe also verified explicit update from 1.0.0 to 1.1.0. No
+production plugin was installed or removed by these checks and no authentication
+was copied. Installed remote catalog release versions remain explicitly Unknown
+when the stable CLI does not expose them; local/Git manifests supply comparisons.
+
+Reviewed specification records and branch CI are recorded separately after they
+run. These source/isolated-CLI results do not establish deployed admin-widget,
+third-party plugin OAuth/MCP/hook behavior or full model lifecycle acceptance.
+Existing callback, soak, coordinated login and manual accessibility gaps remain.
+
+## Installed admin widget · 2026-10-22
+
+Build **0.1.0-2c910ee0442b** is installed from a checksummed release; reviewed
+reconciliation, `make specs-check` and full branch CI against `605b475` passed.
+The [admin evidence](evidence/2026-10-22-admin.json) records 74 browser tests,
+Go race checks, isolated pinned-CLI installation of all three plugin skills,
+and bounded actual-host admin-widget verification. Fresh Work Settings loaded
+the exact release JavaScript, remained Connected with no alerts and displayed
+repository/system policy controls, custom review instructions, six installed
+plugins and 30 skills after a successful read-only inventory refresh.
+
+Provider paths, full Tailscale routes, all retained runs and the prepared pilot
+PR-review snapshot are unchanged. No agent, third-party plugin installation or
+policy change was started by the live check. Defaults remain queue-only, repo
+inheritance and manual metadata checks. Full raw public OAuth/MCP and independent
+SDK checks passed both ingress peers and revoked ephemeral credentials.
+
+Hosted package 0.2.3 includes the new admin skill and preserves the registered app
+mapping. The existing private cloud package is still 0.2.2 (two skills); it was
+not replaced. The admin widget/tools work through its refreshed connection, and
+the new admin skill is available in the rebuilt 0.2.3 ZIP. Remote catalog update
+versions remain explicitly Unknown when the stable provider does not expose them.
+No live third-party skill execution or automatic-request launch, new-build soak,
+callback, login or full manual accessibility acceptance is claimed.

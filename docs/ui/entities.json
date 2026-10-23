@@ -2620,7 +2620,8 @@
         "UI-DRAFT-LAUNCHES",
         "UI-START-UNKNOWN",
         "UI-START-CONFIRMED",
-        "UI-READABLE-APPROVALS"
+        "UI-READABLE-APPROVALS",
+        "ADMIN-PLUGIN-GATE"
       ],
       "gaps": [
         {
@@ -2647,7 +2648,7 @@
         "browser"
       ],
       "element_description": "**profile**, **mode**, **workspace**, **branch-and-base**, **permissions**, **publishing**, **skills**, **prepared-prompt**; **edit**, **start**, conditional **check-status**.",
-      "state_description": "Default launch opens this prepared review directly. Profile/task/mode/permissions/publishing come from the prepared snapshot. Start and Edit disable while submitting or while acceptance remains unverified.",
+      "state_description": "Default launch opens this prepared review directly. Profile/task/mode/permissions/publishing come from the prepared snapshot. Start and Edit disable while submitting or while acceptance remains unverified. The prepared prompt includes repository review instructions and the pinned PR head. Automatic reviews retain the same snapshot but use an owner-enabled policy instead of per-run Start.",
       "interactions": "Explicit Start is required. A failed or lost response reads the same run: accepted work opens in Agents, still-prepared work permits another explicit Start, unavailable status leaves Check start status. Draft reopening reuses the same snapshot. Closing retains prepared records."
     },
     {
@@ -3018,7 +3019,9 @@
       "terms": [
         "ui-w-repository-settings",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "review-policy",
+        "repository-review-prompt"
       ],
       "contains": [],
       "elements": [
@@ -3049,6 +3052,46 @@
         {
           "id": "W-REPOSITORY-SETTINGS.save-result",
           "term": "element-w-repository-settings-save-result"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.edit-repository",
+          "term": "element-w-repository-settings-edit-repository"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.last-poll",
+          "term": "element-w-repository-settings-last-poll"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.paused",
+          "term": "element-w-repository-settings-paused"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.auto-review",
+          "term": "element-w-repository-settings-auto-review"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.review-pipeline",
+          "term": "element-w-repository-settings-review-pipeline"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.implementation-pipeline",
+          "term": "element-w-repository-settings-implementation-pipeline"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.review-prompt",
+          "term": "element-w-repository-settings-review-prompt"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.poll",
+          "term": "element-w-repository-settings-poll"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.review-error",
+          "term": "element-w-repository-settings-review-error"
+        },
+        {
+          "id": "W-REPOSITORY-SETTINGS.skill-directory",
+          "term": "element-w-repository-settings-skill-directory"
         }
       ],
       "states": [
@@ -3090,6 +3133,21 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function RepositoryAdmin(",
+          "purpose": "Repository polling, override inheritance, role defaults and appended owner review instructions."
+        },
+        {
+          "path": "internal/app/review_requests.go",
+          "anchor": "func (a *App) ProcessReviewRequests(",
+          "purpose": "Per-request/head claims, policy checks, fresh sync requirements and automatic launch."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) SaveRepository(",
+          "purpose": "Save monitoring settings while retaining provider checkpoints."
         }
       ],
       "assertions": [
@@ -3099,7 +3157,10 @@
         "UI-SETTINGS-FEEDBACK",
         "UI-SETTINGS-EDITORS",
         "UI-SETTINGS-SEPARATE",
-        "UI-SETTINGS-CONCURRENT"
+        "UI-SETTINGS-CONCURRENT",
+        "UI-ADMIN-REPO",
+        "ADMIN-REVIEW-POLICY",
+        "ADMIN-REVIEW-ELIGIBILITY"
       ],
       "gaps": [
         {
@@ -3117,9 +3178,9 @@
         "browser",
         "go"
       ],
-      "element_description": "Repeated **repository-summary**; **repository** required input, **checkout**, **default-base**, **save**, **discover-skills**. **save-result** beside each form.",
-      "state_description": "Checkout/base optional. Summary shows checkout or managed clone plus error/Connected. Saving disables the form; success or an exact error appears beside it; failed inputs remain.",
-      "interactions": "Repositories opens initially and focuses the first input when none is configured. Saving stays in the dedicated settings view, refreshes the summary and displays Saved; discovery has independent feedback."
+      "element_description": "Repeated **repository-summary**; **repository** required input, **checkout**, **default-base**, **save**, **discover-skills**. **save-result** beside each form. Edit existing repository, last successful poll, pause monitoring, tri-state review policy, inherited role pipelines, additional review prompt, poll now, review-error and skill-discovery directory.",
+      "state_description": "No repository focuses its identifier input. Existing records show polling status/errors and effective automatic/queue policy. Null review policy inherits the system; false queues and true opts into automatic review. Form feedback remains scoped to retained inputs. Pause prevents new polling and automatic launches.",
+      "interactions": "Save monitoring settings without resetting checkpoints; Poll repositories now performs a provider poll and honors explicitly enabled auto-review policies. Extra owner review text appends to the generic review prompt. Opening/settings saving alone does not start agents; opted-in review requests launch after a successful poll."
     },
     {
       "id": "W-POLICY-SETTINGS",
@@ -3340,13 +3401,20 @@
           "path": "web/src/main.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
+        },
+        {
+          "path": "internal/app/plugins.go",
+          "anchor": "func (m *Manager) discoverAdminSkills(",
+          "purpose": "Discover skills after maintenance and retain unavailable state for missing bundles."
         }
       ],
       "assertions": [
         "UI-SETTINGS",
         "API-UI",
         "API-UI-CONTENT",
-        "UI-SETTINGS-EDITORS"
+        "UI-SETTINGS-EDITORS",
+        "UI-ADMIN-PIPELINE",
+        "ADMIN-PLUGIN-SKILLS"
       ],
       "gaps": [
         {
@@ -3365,7 +3433,7 @@
         "go"
       ],
       "element_description": "**existing-profile** select; **new**; **name**, **prompt-template**, **model**, **effort**; **mode**, **sandbox**, **approval**, **publishing** selectors; repeated **default-skills**; **save**. **save-result** beside each form.",
-      "state_description": "Mode: Default/Plan. Sandbox: read-only/workspace-write/danger-full-access. Approval: on-request/untrusted/never. Publishing: ask/authorized. Effort is free text here. Name required. Saving disables the form; success or an exact error appears beside it; failed inputs remain.",
+      "state_description": "Mode: Default/Plan. Sandbox: read-only/workspace-write/danger-full-access. Approval: on-request/untrusted/never. Publishing: ask/authorized. Effort is free text here. Name required. Saving disables the form; success or an exact error appears beside it; failed inputs remain. Discovered plugin and standalone skills can be selected for any review or implementation profile; disabled/missing skills are shown disabled and cannot be newly prepared.",
       "interactions": "New replaces the draft with profile defaults; selection loads an existing profile. Save persists for future preparation, not already-prepared snapshots."
     },
     {
@@ -5870,7 +5938,9 @@
         "P-POLICIES",
         "P-PROFILES",
         "P-SKILLS",
-        "P-DIAGNOSTICS"
+        "P-DIAGNOSTICS",
+        "P-PLUGIN-ADMIN",
+        "P-SYSTEM-DEFAULTS"
       ],
       "elements": [],
       "states": [],
@@ -5994,7 +6064,7 @@
         "go"
       ],
       "purpose": "Configure repositories, priorities, profiles, skills and diagnostics in an independent view.",
-      "composition": "One compact column of relevant repository/policy/profile/skill/diagnostic disclosures; no integration placeholder.",
+      "composition": "One compact column of relevant repository/policy/profile/skill/diagnostic disclosures; no integration placeholder. Plugin/skill administration and system defaults are independent disclosures.",
       "interactions": "Opened through the dedicated open_settings tool/resource. No Inbox/Agents navigation; saving remains here with local progress/success/error feedback. It does not replace an already-open task view."
     },
     {
@@ -7281,7 +7351,8 @@
         "API-UI-CONTENT",
         "UI-DRAFT-LAUNCHES",
         "UI-START-UNKNOWN",
-        "UI-START-CONFIRMED"
+        "UI-START-CONFIRMED",
+        "ADMIN-PLUGIN-GATE"
       ],
       "gaps": [
         {
@@ -7571,7 +7642,8 @@
         "UI-TRIAGE",
         "UI-ASSEMBLED",
         "API-UI-CONTENT",
-        "UI-WAKE-MESSAGE"
+        "UI-WAKE-MESSAGE",
+        "ADMIN-PLUGIN-GATE"
       ],
       "gaps": [
         {
@@ -9613,7 +9685,8 @@
         "UI-CHAT-CONFIRMED",
         "UI-CHAT-LATE",
         "UI-CHAT-PREPARE-ERROR",
-        "UI-PIPELINE"
+        "UI-PIPELINE",
+        "UI-ADMIN-PIPELINE"
       ],
       "gaps": [
         {
@@ -9632,7 +9705,7 @@
       ],
       "element_description": "Prefilled editable **message**, profile/mode/permissions/publishing **authority**, explicit **start**, **check-status** and inline **error**. Selectable pipeline with displayed mode and authority.",
       "state_description": "Per-item draft, busy, prepared retry and uncertain states persist across navigation. Start is disabled while busy/unknown. Implementation is the default for issues/My PRs and PR review for Review PRs; unavailable defaults require selection. Changing a pipeline invalidates an old prepared proposal and retains an edited prompt.",
-      "interactions": "Start prepares the visible message once and starts the retained proposal. Changed authority requires another explicit Start. Lost responses read that run before offering retry; late results do not navigate another item."
+      "interactions": "Start prepares the visible message once and starts the retained proposal. Changed authority requires another explicit Start. Lost responses read that run before offering retry; late results do not navigate another item. Initial role choices use the repository override or system default. Preparation appends the configured repository review instructions for the selected review pipeline."
     },
     {
       "id": "C-START-CHAT",
@@ -9657,7 +9730,8 @@
         "UI-CHAT-AUTHORITY",
         "UI-CHAT-CONFIRMED",
         "UI-CHAT-LATE",
-        "UI-CHAT-PREPARE-ERROR"
+        "UI-CHAT-PREPARE-ERROR",
+        "ADMIN-PLUGIN-GATE"
       ],
       "gaps": [],
       "suites": [
@@ -9948,6 +10022,467 @@
       "endpoint_description": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
       "trigger": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
       "interactions": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval."
+    },
+    {
+      "id": "W-PLUGIN-ADMIN",
+      "kind": "widget",
+      "terms": [
+        "ui-w-plugin-admin",
+        "coverage-gap",
+        "unverified-behavior",
+        "codex-plugin",
+        "plugin-marketplace",
+        "plugin-inventory",
+        "plugin-maintenance"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-PLUGIN-ADMIN.inventory",
+          "term": "element-w-plugin-admin-inventory"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.search",
+          "term": "element-w-plugin-admin-search"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.available",
+          "term": "element-w-plugin-admin-available"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.previous",
+          "term": "element-w-plugin-admin-previous"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.next",
+          "term": "element-w-plugin-admin-next"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.refresh",
+          "term": "element-w-plugin-admin-refresh"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.check-updates",
+          "term": "element-w-plugin-admin-check-updates"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.discover-skills",
+          "term": "element-w-plugin-admin-discover-skills"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.plugin-selector",
+          "term": "element-w-plugin-admin-plugin-selector"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.install",
+          "term": "element-w-plugin-admin-install"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.update",
+          "term": "element-w-plugin-admin-update"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.remove",
+          "term": "element-w-plugin-admin-remove"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.marketplace-source",
+          "term": "element-w-plugin-admin-marketplace-source"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.marketplace-ref",
+          "term": "element-w-plugin-admin-marketplace-ref"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.add-marketplace",
+          "term": "element-w-plugin-admin-add-marketplace"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.remove-marketplace",
+          "term": "element-w-plugin-admin-remove-marketplace"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.operation-status",
+          "term": "element-w-plugin-admin-operation-status"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.error",
+          "term": "element-w-plugin-admin-error"
+        },
+        {
+          "id": "W-PLUGIN-ADMIN.skills",
+          "term": "element-w-plugin-admin-skills"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function PluginAdmin(",
+          "purpose": "Plugin inventory, marketplace sources, explicit maintenance operations and status polling."
+        },
+        {
+          "path": "internal/app/plugins.go",
+          "anchor": "func (m *Manager) PluginAction(",
+          "purpose": "Pinned CLI operations, durable status, version observations and exclusive maintenance gates."
+        },
+        {
+          "path": "internal/domain/admin.go",
+          "anchor": "type PluginInventory struct",
+          "purpose": "Typed plugin inventory and durable operation observations."
+        }
+      ],
+      "assertions": [
+        "UI-ADMIN-PLUGINS",
+        "UI-ADMIN-UNCERTAIN",
+        "ADMIN-PLUGINS",
+        "ADMIN-PLUGIN-RECOVERY",
+        "ADMIN-PLUGIN-GATE"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-plugin-admin-remote-version-01",
+          "kind": "known-limitation",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "The pinned stable CLI does not expose available versions for installed remote-catalog plugins. Local/Git source manifests are compared; remote update state remains explicitly unknown.",
+          "next_verification": "Adopt an officially supported provider interface for remote release metadata when available; never infer current status from the installed version."
+        },
+        {
+          "version": 1,
+          "id": "gap-ui-plugin-admin-live-01",
+          "kind": "unverified-behavior",
+          "severity": "P1",
+          "owner": "ui-specification-maintainer",
+          "reason": "Automated fixtures and isolated CLI checks do not establish installed-host interaction, arbitrary plugin OAuth/tool/hook behavior or manual accessibility.",
+          "next_verification": "Observe the deployed admin widget, a user-selected plugin and its skill in an approved private pilot; retain separate authentication, manual accessibility and model-execution evidence."
+        }
+      ],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "element_description": "Installed/available plugin rows, enabled state, observed versions and update status; marketplace sources and refs; search/pagination; explicit refresh, update check, discovery, install, update and removal controls; operation status and errors.",
+      "state_description": "Cached inventory is readable without installation. Queued/running maintenance disables mutations. Failed and uncertain operations preserve previous observations and drafts; unknown remote update/authentication readiness remains explicit.",
+      "interactions": "Read-only status polling uses the host bridge. Management returns one durable operation; uncertain calls never replay automatically. Update checks refresh metadata without installing a release. Agent work and maintenance cannot start concurrently."
+    },
+    {
+      "id": "W-SYSTEM-DEFAULTS",
+      "kind": "widget",
+      "terms": [
+        "ui-w-system-defaults",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-SYSTEM-DEFAULTS.auto-review",
+          "term": "element-w-system-defaults-auto-review"
+        },
+        {
+          "id": "W-SYSTEM-DEFAULTS.review-pipeline",
+          "term": "element-w-system-defaults-review-pipeline"
+        },
+        {
+          "id": "W-SYSTEM-DEFAULTS.implementation-pipeline",
+          "term": "element-w-system-defaults-implementation-pipeline"
+        },
+        {
+          "id": "W-SYSTEM-DEFAULTS.plugin-check-interval",
+          "term": "element-w-system-defaults-plugin-check-interval"
+        },
+        {
+          "id": "W-SYSTEM-DEFAULTS.save",
+          "term": "element-w-system-defaults-save"
+        },
+        {
+          "id": "W-SYSTEM-DEFAULTS.save-result",
+          "term": "element-w-system-defaults-save-result"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function SystemReviewSettings(",
+          "purpose": "System auto-review, role defaults and metadata-check cadence."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) SaveConfig(",
+          "purpose": "Persist and validate system defaults."
+        },
+        {
+          "path": "internal/app/review_requests.go",
+          "anchor": "func autoReviewEnabled(",
+          "purpose": "Repository overrides take precedence over the system default."
+        }
+      ],
+      "assertions": [
+        "UI-ADMIN-REPO",
+        "UI-ADMIN-PIPELINE",
+        "ADMIN-PLUGIN-SKILLS",
+        "ADMIN-REVIEW-POLICY",
+        "ADMIN-REVIEW-ELIGIBILITY"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "element_description": "System review-request policy, default review and implementation pipelines, plugin-check interval and save feedback.",
+      "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins.",
+      "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review requires a read-only profile with ask-before-publishing authority."
+    },
+    {
+      "id": "P-PLUGIN-ADMIN",
+      "kind": "pane",
+      "terms": [
+        "ui-p-plugin-admin",
+        "coverage-gap",
+        "unverified-behavior",
+        "codex-plugin",
+        "plugin-marketplace",
+        "plugin-inventory",
+        "plugin-maintenance"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function PluginAdmin(",
+          "purpose": "Plugin inventory, marketplace sources, explicit maintenance operations and status polling."
+        },
+        {
+          "path": "internal/app/plugins.go",
+          "anchor": "func (m *Manager) PluginAction(",
+          "purpose": "Pinned CLI operations, durable status, version observations and exclusive maintenance gates."
+        },
+        {
+          "path": "internal/domain/admin.go",
+          "anchor": "type PluginInventory struct",
+          "purpose": "Typed plugin inventory and durable operation observations."
+        }
+      ],
+      "assertions": [
+        "UI-ADMIN-PLUGINS",
+        "ADMIN-PLUGINS"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "composition": "`W-PLUGIN-ADMIN`",
+      "context": "A collapsed settings disclosure independent of task conversations."
+    },
+    {
+      "id": "P-SYSTEM-DEFAULTS",
+      "kind": "pane",
+      "terms": [
+        "ui-p-system-defaults",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function SystemReviewSettings(",
+          "purpose": "System auto-review, role defaults and metadata-check cadence."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) SaveConfig(",
+          "purpose": "Persist and validate system defaults."
+        },
+        {
+          "path": "internal/app/review_requests.go",
+          "anchor": "func autoReviewEnabled(",
+          "purpose": "Repository overrides take precedence over the system default."
+        }
+      ],
+      "assertions": [
+        "UI-ADMIN-REPO",
+        "ADMIN-PLUGIN-SKILLS"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "composition": "`W-SYSTEM-DEFAULTS`",
+      "context": "A collapsed settings disclosure independent of task conversations."
+    },
+    {
+      "id": "C-PLUGIN-MAINTENANCE",
+      "kind": "connection",
+      "terms": [
+        "ui-c-plugin-maintenance",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function PluginAdmin(",
+          "purpose": "Plugin inventory, marketplace sources, explicit maintenance operations and status polling."
+        },
+        {
+          "path": "internal/app/plugins.go",
+          "anchor": "func (m *Manager) PluginAction(",
+          "purpose": "Pinned CLI operations, durable status, version observations and exclusive maintenance gates."
+        },
+        {
+          "path": "internal/domain/admin.go",
+          "anchor": "type PluginInventory struct",
+          "purpose": "Typed plugin inventory and durable operation observations."
+        }
+      ],
+      "assertions": [
+        "UI-ADMIN-PLUGINS",
+        "UI-ADMIN-UNCERTAIN",
+        "ADMIN-PLUGINS",
+        "ADMIN-PLUGIN-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "endpoint_description": "Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay.",
+      "trigger": "Explicit owner configuration or management choice; opted-in successful repository polls.",
+      "interactions": "Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay.",
+      "from": [
+        "W-PLUGIN-ADMIN.install",
+        "W-PLUGIN-ADMIN.update",
+        "W-PLUGIN-ADMIN.remove",
+        "W-PLUGIN-ADMIN.refresh"
+      ],
+      "to": [
+        "W-PLUGIN-ADMIN.inventory",
+        "W-PLUGIN-ADMIN.operation-status"
+      ],
+      "connection_type": "connection-submits",
+      "external_boundary": false
+    },
+    {
+      "id": "C-REVIEW-POLICY",
+      "kind": "connection",
+      "terms": [
+        "ui-c-review-policy",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function RepositoryAdmin(",
+          "purpose": "Repository polling, override inheritance, role defaults and appended owner review instructions."
+        },
+        {
+          "path": "internal/app/review_requests.go",
+          "anchor": "func (a *App) ProcessReviewRequests(",
+          "purpose": "Per-request/head claims, policy checks, fresh sync requirements and automatic launch."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) SaveRepository(",
+          "purpose": "Save monitoring settings while retaining provider checkpoints."
+        }
+      ],
+      "assertions": [
+        "UI-ADMIN-REPO",
+        "UI-ADMIN-PIPELINE",
+        "ADMIN-REVIEW-POLICY",
+        "ADMIN-REVIEW-ELIGIBILITY"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "endpoint_description": "Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once.",
+      "trigger": "Explicit owner configuration or management choice; opted-in successful repository polls.",
+      "interactions": "Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once.",
+      "from": [
+        "W-REPOSITORY-SETTINGS.auto-review",
+        "W-SYSTEM-DEFAULTS.auto-review"
+      ],
+      "to": [
+        "W-WORK-STATUS",
+        "W-REPOSITORY-SETTINGS.review-error"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false
+    },
+    {
+      "id": "C-REPOSITORY-REVIEW-PROMPT",
+      "kind": "connection",
+      "terms": [
+        "ui-c-repository-review-prompt",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/admin.tsx",
+          "anchor": "export function RepositoryAdmin(",
+          "purpose": "Repository polling, override inheritance, role defaults and appended owner review instructions."
+        },
+        {
+          "path": "internal/app/review_requests.go",
+          "anchor": "func (a *App) ProcessReviewRequests(",
+          "purpose": "Per-request/head claims, policy checks, fresh sync requirements and automatic launch."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) SaveRepository(",
+          "purpose": "Save monitoring settings while retaining provider checkpoints."
+        }
+      ],
+      "assertions": [
+        "UI-ADMIN-REPO",
+        "ADMIN-REVIEW-POLICY"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "endpoint_description": "Append owner repository instructions to the generic review prompt during immutable launch preparation.",
+      "trigger": "Explicit owner configuration or management choice; opted-in successful repository polls.",
+      "interactions": "Append owner repository instructions to the generic review prompt during immutable launch preparation.",
+      "from": [
+        "W-REPOSITORY-SETTINGS.review-prompt"
+      ],
+      "to": [
+        "W-LAUNCH-REVIEW.prepared-prompt"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false
     }
   ],
   "instances": [
@@ -10250,6 +10785,18 @@
       "type": "W-QUESTION-RECOVERY",
       "pane": "P-RUN-DETAIL",
       "repeat": "one per displayed retained session"
+    },
+    {
+      "id": "P-PLUGIN-ADMIN/W-PLUGIN-ADMIN",
+      "type": "W-PLUGIN-ADMIN",
+      "pane": "P-PLUGIN-ADMIN",
+      "repeat": "one per displayed settings view"
+    },
+    {
+      "id": "P-SYSTEM-DEFAULTS/W-SYSTEM-DEFAULTS",
+      "type": "W-SYSTEM-DEFAULTS",
+      "pane": "P-SYSTEM-DEFAULTS",
+      "repeat": "one per displayed settings view"
     }
   ],
   "assertions": [
@@ -10720,6 +11267,66 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "an uncertain textual reply can be dismissed without advancing",
       "assertion": "No reply needed closes only textual attention and sends no answer, message or launch."
+    },
+    {
+      "id": "UI-ADMIN-REPO",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "admin system and repository review policies retain inheritance and extra prompts",
+      "assertion": "Both themes at 390px assert queue-only defaults, system opt-in, repo queue/inherit overrides, persisted extra review text, manual poll without explicit UI Start and scoped axe scans."
+    },
+    {
+      "id": "UI-ADMIN-PLUGINS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "plugin admin tracks installs, versions and explicit updates",
+      "assertion": "Both themes assert installed/enabled status, old/available versions, metadata-only check, explicit keyboard update, install/remove targets, marketplace/ref payloads, narrow layout and scoped axe scans."
+    },
+    {
+      "id": "UI-ADMIN-UNCERTAIN",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "uncertain plugin mutations preserve drafts and never replay automatically",
+      "assertion": "An uncertain management response displays feedback, retains the selector and submits only once after polling."
+    },
+    {
+      "id": "UI-ADMIN-PIPELINE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "repository review pipeline overrides system defaults and plugin skills remain selectable",
+      "assertion": "The requested-PR conversation selects its repository pipeline over the system default without launching; a discovered plugin skill is selectable in a profile and an unavailable skill is disabled."
+    },
+    {
+      "id": "ADMIN-PLUGINS",
+      "path": "internal/app/plugins_test.go",
+      "anchor": "func TestPluginInventoryInstallUpdateAndRemoval(",
+      "assertion": "Pinned-provider fixture asserts discovery, actual installed version, metadata-only newer version detection, explicit update/removal and positional argument separation."
+    },
+    {
+      "id": "ADMIN-PLUGIN-RECOVERY",
+      "path": "internal/app/plugins_test.go",
+      "anchor": "func TestPluginRestartAndMalformedInventoryRetainObservedState(",
+      "assertion": "Malformed/null inventory preserves prior installed observations; interrupted operations become uncertain without replay."
+    },
+    {
+      "id": "ADMIN-PLUGIN-GATE",
+      "path": "internal/app/plugins_test.go",
+      "anchor": "func TestPluginMaintenanceCannotRaceStartsOrAcceptInjectedArguments(",
+      "assertion": "Management cannot race start/message/answer or active work; malformed selectors and credential-bearing sources reject without creating a worktree."
+    },
+    {
+      "id": "ADMIN-PLUGIN-SKILLS",
+      "path": "internal/app/plugins_test.go",
+      "anchor": "func TestSelectedDiscoveredSkillKeepsItsBundleAndAutomaticChecksDoNotInstall(",
+      "assertion": "Discovery and launch preserve skill text/support files/executable modes; scheduled checks refresh metadata without an install command."
+    },
+    {
+      "id": "ADMIN-REVIEW-POLICY",
+      "path": "internal/app/review_requests_test.go",
+      "anchor": "func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(",
+      "assertion": "System defaults queue; enabled inherited policy starts one pinned read-only review with appended repo text, survives duplicate polls/restart and accepts a new request episode."
+    },
+    {
+      "id": "ADMIN-REVIEW-ELIGIBILITY",
+      "path": "internal/app/review_requests_test.go",
+      "anchor": "func TestRepositoryQueueOverridePauseDraftAndStaleRequestsDoNotStart(",
+      "assertion": "Queue override, pause, draft, old sync, absent request, sync error and unsafe review profile cannot launch automatically."
     }
   ],
   "source_map": [
@@ -11630,7 +12237,9 @@
             "W-POLICY-SETTINGS",
             "W-PROFILE-SETTINGS",
             "W-SKILL-SETTINGS",
-            "W-DIAGNOSTICS"
+            "W-DIAGNOSTICS",
+            "W-PLUGIN-ADMIN",
+            "W-SYSTEM-DEFAULTS"
           ],
           "fields": [
             "element_description",
@@ -11734,7 +12343,9 @@
             "P-POLICIES",
             "P-PROFILES",
             "P-SKILLS",
-            "P-DIAGNOSTICS"
+            "P-DIAGNOSTICS",
+            "P-PLUGIN-ADMIN",
+            "P-SYSTEM-DEFAULTS"
           ],
           "fields": [
             "composition",
@@ -11932,7 +12543,10 @@
             "C-START-CHAT",
             "C-SESSION-CONSOLE",
             "C-PIPELINE-SELECT",
-            "C-TEXT-DISMISS"
+            "C-TEXT-DISMISS",
+            "C-PLUGIN-MAINTENANCE",
+            "C-REVIEW-POLICY",
+            "C-REPOSITORY-REVIEW-PROMPT"
           ],
           "fields": [
             "endpoint_description",

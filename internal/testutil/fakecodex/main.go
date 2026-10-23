@@ -6,11 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "plugin" {
+		pluginCLI()
+		return
+	}
 	if len(os.Args) > 1 && os.Args[1] == "--version" {
 		fmt.Println("codex-cli 0.161.0")
 		return
@@ -67,7 +72,11 @@ func main() {
 			if mode == "slow" {
 				time.Sleep(150 * time.Millisecond)
 			}
-			reply(map[string]any{"data": []any{}})
+			if root := os.Getenv("CF_FAKE_SKILL_ROOT"); root != "" {
+				reply(map[string]any{"data": []any{map[string]any{"skills": []any{map[string]any{"name": "fixture-plugin-skill", "path": filepath.Join(root, "SKILL.md"), "enabled": true}}}}})
+			} else {
+				reply(map[string]any{"data": []any{}})
+			}
 		case "turn/start":
 			turnNumber++
 			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || mode == "async-question" {
@@ -156,5 +165,66 @@ func main() {
 				reply(map[string]any{})
 			}
 		}
+	}
+}
+
+func pluginCLI() {
+	root := os.Getenv("CF_FAKE_PLUGIN_ROOT")
+	if record := os.Getenv("CF_PLUGIN_RECORD"); record != "" {
+		f, err := os.OpenFile(record, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		if err != nil {
+			os.Exit(5)
+		}
+		_ = json.NewEncoder(f).Encode(os.Args[1:])
+		_ = f.Close()
+	}
+	if os.Getenv("CF_PLUGIN_SLOW") != "" {
+		time.Sleep(400 * time.Millisecond)
+	}
+	args := os.Args[2:]
+	if len(args) == 0 {
+		os.Exit(2)
+	}
+	reply := func(v any) { _ = json.NewEncoder(os.Stdout).Encode(v) }
+	if args[0] == "marketplace" {
+		if args[1] == "list" {
+			reply(map[string]any{"marketplaces": []any{map[string]any{"name": "fixture", "root": root, "marketplaceSource": map[string]string{"sourceType": "local"}}}})
+		} else {
+			reply(map[string]string{"marketplaceName": "fixture"})
+		}
+		return
+	}
+	installed, _ := os.ReadFile(filepath.Join(root, "installed"))
+	version := strings.TrimSpace(string(installed))
+	var manifest struct{ Version string }
+	data, _ := os.ReadFile(filepath.Join(root, ".codex-plugin/plugin.json"))
+	_ = json.Unmarshal(data, &manifest)
+	switch args[0] {
+	case "list":
+		if os.Getenv("CF_PLUGIN_BAD_JSON") != "" {
+			fmt.Print(`{"installed":null,"available":null}`)
+			return
+		}
+		row := map[string]any{"pluginId": "fixture@fixture", "name": "fixture", "marketplaceName": "fixture", "version": manifest.Version, "installed": version != "", "enabled": version != "", "source": map[string]string{"source": "local", "path": root}, "installPolicy": "AVAILABLE", "authPolicy": "ON_USE"}
+		installedRows, available := []any{}, []any{}
+		if version != "" {
+			row["version"] = version
+			installedRows = append(installedRows, row)
+		} else {
+			available = append(available, row)
+		}
+		reply(map[string]any{"installed": installedRows, "available": available})
+	case "add":
+		_ = os.WriteFile(filepath.Join(root, "installed"), []byte(manifest.Version), 0600)
+		if os.Getenv("CF_PLUGIN_UNCERTAIN") != "" {
+			fmt.Fprint(os.Stderr, "private-plugin-secret-value")
+			os.Exit(4)
+		}
+		reply(map[string]string{"pluginId": "fixture@fixture", "version": manifest.Version, "installedPath": root})
+	case "remove":
+		_ = os.Remove(filepath.Join(root, "installed"))
+		reply(map[string]string{"pluginId": "fixture@fixture"})
+	default:
+		os.Exit(2)
 	}
 }

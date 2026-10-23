@@ -36,7 +36,7 @@ class CompletePluginTests(unittest.TestCase):
         interface = manifest['extensions']['com.openai']['interface']
         for field in ('composerIcon', 'logo'):
             self.assertTrue((ROOT / 'plugin' / interface[field]).is_file())
-        for name in ('code-factory', 'code-factory-setup'):
+        for name in ('code-factory', 'code-factory-setup', 'code-factory-admin'):
             self.assertTrue((ROOT / 'plugin/skills' / name / 'SKILL.md').is_file())
 
     def test_zip_is_self_contained_deterministic_and_contains_no_host_state(self):
@@ -93,6 +93,7 @@ class BrowserPackageTests(unittest.TestCase):
                 self.assertEqual(mapping['apps']['code-factory'], {'id': 'asdk_app_fixture', 'required': True})
                 self.assertIn('skills/code-factory/SKILL.md', bundle.namelist())
                 self.assertIn('skills/code-factory-setup/SKILL.md', bundle.namelist())
+                self.assertIn('skills/code-factory-admin/SKILL.md', bundle.namelist())
 
     def test_package_id_cannot_be_used_as_registered_server_id(self):
         from package_plugin import build

@@ -1,0 +1,184 @@
+{
+  "date": "2026-10-22",
+  "checked_utc": "2026-10-22T15:49:55.316905+00:00",
+  "installed_version": "0.1.0-ebf7a6cdd84a",
+  "user_report": "It fails to connect.",
+  "initial": {
+    "local_daemon": "Authenticated diagnostics passed; no failed checks",
+    "app_services": "Both active with unchanged PIDs since 08:27:51 America/Santo_Domingo",
+    "live_code_factory_runs": 0,
+    "tailnet_gateway_health_http": 200,
+    "tailscale_backend": "Running; Online true; Health empty",
+    "public_ingress": [
+      {
+        "name": "public TLS ingress 199.38.181.54",
+        "status": "failed",
+        "errorType": "SSLEOFError"
+      },
+      {
+        "name": "public TLS ingress 209.177.145.137",
+        "status": "failed",
+        "errorType": "SSLEOFError"
+      },
+      {
+        "name": "connection test stopped",
+        "status": "failed",
+        "errorType": "CheckFailure"
+      }
+    ],
+    "browser": {
+      "connection": "Reconnecting…",
+      "alert": "Connection interrupted. Retrying automatically.",
+      "same_existing_page": true
+    },
+    "tailscale_log": "Recent PollNetMap control-connection resets observed; precise cause unproven"
+  },
+  "actions": [
+    {
+      "action": "Reapplied only the existing /code-factory Funnel handler",
+      "result": "Exact Serve config unchanged; both public TLS probes still failed"
+    },
+    {
+      "action": "One restun and one network socket rebind",
+      "result": "Both public TLS probes still failed"
+    },
+    {
+      "action": "One tailscaled system-service restart using existing authentication",
+      "result": "App daemon/gateway PIDs unchanged. Startup restored an older Web handler set missing two unrelated mechanic-helper routes; restored both exact previously observed handlers, then compared every route/port/Funnel setting to the original snapshot."
+    }
+  ],
+  "preservation": {
+    "full_serve_config_matches_original": true,
+    "code_factory_binary_unchanged": true,
+    "app_services_not_restarted": true,
+    "browser_not_reloaded": true,
+    "authentication_not_replaced": true,
+    "no_agent_work_started": true,
+    "no_ACL_changes": true,
+    "no_Funnel_or_Serve_reset": true,
+    "no_desktop_logout": true
+  },
+  "recovery": {
+    "sequence": "Both ingress peers failed, then one recovered, then both passed after propagation. The existing widget automatically reconnected; exact upstream cause and causal effect of restart unproven.",
+    "public_oauth_mcp": {
+      "at": "2026-10-22T15:49:08Z",
+      "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+      "checks": [
+        {
+          "name": "public TLS ingress 199.38.181.54",
+          "status": "passed"
+        },
+        {
+          "name": "public TLS ingress 209.177.145.137",
+          "status": "passed"
+        },
+        {
+          "name": "OAuth discovery and unauthenticated MCP challenge",
+          "status": "passed"
+        },
+        {
+          "name": "private application state and approval unavailable publicly",
+          "status": "passed"
+        },
+        {
+          "name": "public OAuth client registration",
+          "status": "passed"
+        },
+        {
+          "name": "real owner-only Tailscale consent and OAuth PKCE exchange",
+          "status": "passed"
+        },
+        {
+          "name": "MCP initialize, tools/list, open_factory and embedded UI resource",
+          "status": "passed"
+        },
+        {
+          "name": "refresh rotation and replay rejection",
+          "status": "passed"
+        },
+        {
+          "name": "ephemeral test credentials revoked",
+          "status": "passed"
+        }
+      ],
+      "workAcceptance": "unverified: this test does not operate a signed-in ChatGPT session",
+      "result": "passed"
+    },
+    "browser": {
+      "observed_utc": "2026-10-22T15:49:29.421Z",
+      "connection": "Connected",
+      "alerts": [],
+      "selected_navigation": "Working",
+      "existing_view_preserved": true
+    },
+    "fresh_per_peer_health": [
+      {
+        "ip": "199.38.181.54",
+        "http": 200,
+        "seconds": 0.497
+      },
+      {
+        "ip": "209.177.145.137",
+        "http": 200,
+        "seconds": 0.493
+      }
+    ],
+    "independent_sdk": {
+      "at": "2026-10-22T15:49:28.342Z",
+      "endpoint": "https://dkropachev-ai-rig.tail62c9f9.ts.net/code-factory/mcp",
+      "sdk": "@modelcontextprotocol/client 2.3.1",
+      "mode": "public-ingress",
+      "checks": [
+        {
+          "name": "public TLS ingress 199.38.181.54",
+          "status": "passed",
+          "remoteAddress": "199.38.181.54"
+        },
+        {
+          "name": "public TLS ingress 209.177.145.137",
+          "status": "passed",
+          "remoteAddress": "209.177.145.137"
+        },
+        {
+          "name": "SDK OAuth discovery, DCR and PKCE setup",
+          "status": "passed"
+        },
+        {
+          "name": "real owner consent and SDK OAuth PKCE token exchange",
+          "status": "passed"
+        },
+        {
+          "name": "SDK transport negotiation",
+          "status": "passed",
+          "server": "code-factory"
+        },
+        {
+          "name": "SDK tool discovery and open_factory",
+          "status": "passed",
+          "toolCount": 26
+        },
+        {
+          "name": "SDK embedded UI resource",
+          "status": "passed"
+        },
+        {
+          "name": "test access and refresh credentials revoked",
+          "status": "passed"
+        }
+      ],
+      "workAcceptance": "unverified: SDK test does not operate a signed-in ChatGPT session",
+      "publicIngress": "verified from this machine using every public DNS IP",
+      "result": "passed",
+      "testClientRegistrationCreated": true
+    }
+  },
+  "upstream_context": {
+    "url": "https://github.com/tailscale/tailscale/issues/21114",
+    "interpretation": "Reports describe similar public TLS failure with healthy tailnet state after control reconnect. Similarity does not establish this incident's root cause."
+  },
+  "limits": [
+    "Bounded connection recovery check, not a new one-hour soak",
+    "No new recovery-feature deployment or model/agent lifecycle acceptance",
+    "Real host event callbacks, coordinated login and manual accessibility remain separate"
+  ]
+}

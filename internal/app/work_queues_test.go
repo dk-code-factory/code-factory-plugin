@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestInboxDetectsPullRequestsInBothDirectionsAndExternalEvidence(t *testing.T) {
@@ -121,5 +123,85 @@ func TestSyncPublishesAuthenticatedViewerAndTeamFailures(t *testing.T) {
 	}
 	if viewer.Login != "other" || len(viewer.Teams) != 0 {
 		t.Fatal("identity reused previous account", viewer)
+	}
+}
+
+func TestPausedRepositorySkipsProviderPollingAndRetainsPolicy(t *testing.T) {
+	a, ctx := fixture(t)
+	var repoCalls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/user" {
+			fmt.Fprint(w, `{"login":"me"}`)
+			return
+		}
+		repoCalls.Add(1)
+		fmt.Fprint(w, `[]`)
+	}))
+	defer server.Close()
+	a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	repo := domain.Repository{ID: "org/repo", Paused: true, ReviewProfileID: "review", ReviewPrompt: "Check API compatibility"}
+	if err := a.SaveRepository(ctx, repo); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Sync(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if repoCalls.Load() != 0 {
+		t.Fatal("paused repository was polled")
+	}
+	var retained domain.Repository
+	_ = a.Store.Get(ctx, "repository", repo.ID, &retained)
+	if !retained.Paused || retained.ReviewPrompt != repo.ReviewPrompt || !retained.LastSync.IsZero() {
+		t.Fatal("paused repository policy or checkpoint changed")
+	}
+}
+
+func TestFailedPollCannotOverwriteConcurrentRepositoryPolicyChanges(t *testing.T) {
+	a, ctx := fixture(t)
+	entered, release := make(chan struct{}), make(chan struct{})
+	var enteredOnce, releaseOnce sync.Once
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/user" {
+			fmt.Fprint(w, `{"login":"me"}`)
+			return
+		}
+		if r.URL.Path == "/repos/org/repo/issues" {
+			enteredOnce.Do(func() { close(entered) })
+			<-release
+			w.WriteHeader(403)
+			fmt.Fprint(w, `{"message":"Access denied"}`)
+			return
+		}
+		fmt.Fprint(w, `[]`)
+	}))
+	defer server.Close()
+	defer releaseOnce.Do(func() { close(release) })
+	a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	repo := domain.Repository{ID: "org/repo"}
+	if err := a.SaveRepository(ctx, repo); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- a.Sync(ctx) }()
+	select {
+	case <-entered:
+	case <-time.After(8 * time.Second):
+		t.Fatal("provider poll did not reach fixture")
+	}
+	v := true
+	repo.AutoReview = &v
+	repo.Paused = true
+	repo.ReviewPrompt = "Owner changed monitoring while the old poll was in flight."
+	if err := a.SaveRepository(ctx, repo); err != nil {
+		t.Fatal(err)
+	}
+	releaseOnce.Do(func() { close(release) })
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	var current domain.Repository
+	_ = a.Store.Get(ctx, "repository", repo.ID, &current)
+	if !current.Paused || current.AutoReview == nil || !*current.AutoReview || current.ReviewPrompt != repo.ReviewPrompt || current.Error == "" || !current.LastSync.IsZero() {
+		t.Fatal("failed poll overwrote owner policy or checkpoint", current)
 	}
 }

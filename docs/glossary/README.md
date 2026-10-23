@@ -3380,4 +3380,347 @@ The pipeline selection connection within the application interface.
 `ui-c-text-dismiss` · ui-connection
 
 The text question dismissal connection within the application interface.
+
+<a id="codex-plugin"></a>
+## Codex plugin
+
+`codex-plugin` · domain
+
+An installed or available Codex extension containing skills, tools or hooks from a chosen source.
+
+<a id="plugin-marketplace"></a>
+## Plugin marketplace
+
+`plugin-marketplace` · domain
+
+A local, Git-backed or remote catalog from which Codex plugins are selected.
+
+<a id="plugin-inventory"></a>
+## Plugin inventory
+
+`plugin-inventory` · domain
+
+The last observed plugin installation, enablement and version state.
+
+<a id="plugin-maintenance"></a>
+## Plugin maintenance
+
+`plugin-maintenance` · domain
+
+An explicit operation that observes or changes Codex plugin state.
+
+<a id="review-policy"></a>
+## Review policy
+
+`review-policy` · domain
+
+The effective system default or repository override controlling whether requested reviews are queued or started automatically.
+
+<a id="repository-review-prompt"></a>
+## Repository review prompt
+
+`repository-review-prompt` · domain
+
+Owner-defined repository instructions appended to a generic review prompt.
+
+<a id="review-request-claim"></a>
+## Review request claim
+
+`review-request-claim` · domain
+
+A durable association between a review-request episode, pull-request head and one retained review run.
+
+<a id="ui-w-plugin-admin"></a>
+## Codex plugin admin widget
+
+`ui-w-plugin-admin` · ui-widget
+
+The plugin inventory and maintenance controls in the administration interface.
+
+<a id="element-w-plugin-admin-inventory"></a>
+## inventory
+
+`element-w-plugin-admin-inventory` · element · scope: ui-w-plugin-admin
+
+The inventory control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-search"></a>
+## search
+
+`element-w-plugin-admin-search` · element · scope: ui-w-plugin-admin
+
+The search control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-available"></a>
+## available
+
+`element-w-plugin-admin-available` · element · scope: ui-w-plugin-admin
+
+The available control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-previous"></a>
+## previous
+
+`element-w-plugin-admin-previous` · element · scope: ui-w-plugin-admin
+
+The previous control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-next"></a>
+## next
+
+`element-w-plugin-admin-next` · element · scope: ui-w-plugin-admin
+
+The next control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-refresh"></a>
+## refresh
+
+`element-w-plugin-admin-refresh` · element · scope: ui-w-plugin-admin
+
+The refresh control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-check-updates"></a>
+## check-updates
+
+`element-w-plugin-admin-check-updates` · element · scope: ui-w-plugin-admin
+
+The check updates control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-discover-skills"></a>
+## discover-skills
+
+`element-w-plugin-admin-discover-skills` · element · scope: ui-w-plugin-admin
+
+The discover skills control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-plugin-selector"></a>
+## plugin-selector
+
+`element-w-plugin-admin-plugin-selector` · element · scope: ui-w-plugin-admin
+
+The plugin selector control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-install"></a>
+## install
+
+`element-w-plugin-admin-install` · element · scope: ui-w-plugin-admin
+
+The install control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-update"></a>
+## update
+
+`element-w-plugin-admin-update` · element · scope: ui-w-plugin-admin
+
+The update control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-remove"></a>
+## remove
+
+`element-w-plugin-admin-remove` · element · scope: ui-w-plugin-admin
+
+The remove control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-marketplace-source"></a>
+## marketplace-source
+
+`element-w-plugin-admin-marketplace-source` · element · scope: ui-w-plugin-admin
+
+The marketplace source control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-marketplace-ref"></a>
+## marketplace-ref
+
+`element-w-plugin-admin-marketplace-ref` · element · scope: ui-w-plugin-admin
+
+The marketplace ref control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-add-marketplace"></a>
+## add-marketplace
+
+`element-w-plugin-admin-add-marketplace` · element · scope: ui-w-plugin-admin
+
+The add marketplace control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-remove-marketplace"></a>
+## remove-marketplace
+
+`element-w-plugin-admin-remove-marketplace` · element · scope: ui-w-plugin-admin
+
+The remove marketplace control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-operation-status"></a>
+## operation-status
+
+`element-w-plugin-admin-operation-status` · element · scope: ui-w-plugin-admin
+
+The operation status control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-error"></a>
+## error
+
+`element-w-plugin-admin-error` · element · scope: ui-w-plugin-admin
+
+The error control or observed value in Codex plugin administration.
+
+<a id="element-w-plugin-admin-skills"></a>
+## skills
+
+`element-w-plugin-admin-skills` · element · scope: ui-w-plugin-admin
+
+The skills control or observed value in Codex plugin administration.
+
+<a id="ui-w-system-defaults"></a>
+## System review defaults widget
+
+`ui-w-system-defaults` · ui-widget
+
+The system-level defaults for review processing and plugin metadata checks.
+
+<a id="element-w-system-defaults-auto-review"></a>
+## auto-review
+
+`element-w-system-defaults-auto-review` · element · scope: ui-w-system-defaults
+
+The auto review setting or result in system review defaults.
+
+<a id="element-w-system-defaults-review-pipeline"></a>
+## review-pipeline
+
+`element-w-system-defaults-review-pipeline` · element · scope: ui-w-system-defaults
+
+The review pipeline setting or result in system review defaults.
+
+<a id="element-w-system-defaults-implementation-pipeline"></a>
+## implementation-pipeline
+
+`element-w-system-defaults-implementation-pipeline` · element · scope: ui-w-system-defaults
+
+The implementation pipeline setting or result in system review defaults.
+
+<a id="element-w-system-defaults-plugin-check-interval"></a>
+## plugin-check-interval
+
+`element-w-system-defaults-plugin-check-interval` · element · scope: ui-w-system-defaults
+
+The plugin check interval setting or result in system review defaults.
+
+<a id="element-w-system-defaults-save"></a>
+## save
+
+`element-w-system-defaults-save` · element · scope: ui-w-system-defaults
+
+The save setting or result in system review defaults.
+
+<a id="element-w-system-defaults-save-result"></a>
+## save-result
+
+`element-w-system-defaults-save-result` · element · scope: ui-w-system-defaults
+
+The save result setting or result in system review defaults.
+
+<a id="ui-p-plugin-admin"></a>
+## Plugin administration pane
+
+`ui-p-plugin-admin` · ui-pane
+
+The plugin administration pane within the settings page.
+
+<a id="ui-p-system-defaults"></a>
+## System defaults pane
+
+`ui-p-system-defaults` · ui-pane
+
+The system defaults pane within the settings page.
+
+<a id="element-w-repository-settings-edit-repository"></a>
+## edit-repository
+
+`element-w-repository-settings-edit-repository` · element · scope: ui-w-repository-settings
+
+The edit repository control or value for repository monitoring.
+
+<a id="element-w-repository-settings-last-poll"></a>
+## last-poll
+
+`element-w-repository-settings-last-poll` · element · scope: ui-w-repository-settings
+
+The last poll control or value for repository monitoring.
+
+<a id="element-w-repository-settings-paused"></a>
+## paused
+
+`element-w-repository-settings-paused` · element · scope: ui-w-repository-settings
+
+The paused control or value for repository monitoring.
+
+<a id="element-w-repository-settings-auto-review"></a>
+## auto-review
+
+`element-w-repository-settings-auto-review` · element · scope: ui-w-repository-settings
+
+The auto review control or value for repository monitoring.
+
+<a id="element-w-repository-settings-review-pipeline"></a>
+## review-pipeline
+
+`element-w-repository-settings-review-pipeline` · element · scope: ui-w-repository-settings
+
+The review pipeline control or value for repository monitoring.
+
+<a id="element-w-repository-settings-implementation-pipeline"></a>
+## implementation-pipeline
+
+`element-w-repository-settings-implementation-pipeline` · element · scope: ui-w-repository-settings
+
+The implementation pipeline control or value for repository monitoring.
+
+<a id="element-w-repository-settings-review-prompt"></a>
+## review-prompt
+
+`element-w-repository-settings-review-prompt` · element · scope: ui-w-repository-settings
+
+The review prompt control or value for repository monitoring.
+
+<a id="element-w-repository-settings-poll"></a>
+## poll
+
+`element-w-repository-settings-poll` · element · scope: ui-w-repository-settings
+
+The poll control or value for repository monitoring.
+
+<a id="element-w-repository-settings-review-error"></a>
+## review-error
+
+`element-w-repository-settings-review-error` · element · scope: ui-w-repository-settings
+
+The review error control or value for repository monitoring.
+
+<a id="element-w-repository-settings-skill-directory"></a>
+## skill-directory
+
+`element-w-repository-settings-skill-directory` · element · scope: ui-w-repository-settings
+
+The skill directory control or value for repository monitoring.
+
+<a id="ui-c-plugin-maintenance"></a>
+## Plugin maintenance connection
+
+`ui-c-plugin-maintenance` · ui-connection
+
+The connection between owner plugin-management choices and observed operation state.
+
+<a id="ui-c-review-policy"></a>
+## Review policy connection
+
+`ui-c-review-policy` · ui-connection
+
+The connection between inherited review policy and eligible requested-review work.
+
+<a id="ui-c-repository-review-prompt"></a>
+## Repository review prompt connection
+
+`ui-c-repository-review-prompt` · ui-connection
+
+The connection between owner repository review instructions and the prepared review prompt.
 <!-- /specs:terms -->

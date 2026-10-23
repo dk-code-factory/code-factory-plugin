@@ -48,6 +48,8 @@ The list expresses logical composition, not required component boundaries.
 | `P-PROFILES` | `W-PROFILE-SETTINGS` | One editable profile and its default skills; connects to future launch preparation. |
 | `P-SKILLS` | `W-SKILL-SETTINGS` | One managed skill draft and the currently known managed skills. |
 | `P-DIAGNOSTICS` | `W-DIAGNOSTICS` | Explicitly requested health results and provider authorization guidance. |
+| `P-PLUGIN-ADMIN` | `W-PLUGIN-ADMIN` | A collapsed settings disclosure independent of task conversations. |
+| `P-SYSTEM-DEFAULTS` | `W-SYSTEM-DEFAULTS` | A collapsed settings disclosure independent of task conversations. |
 <!-- /specs:panes-3 -->
 
 These five relevant panes share the Settings page's local draft lifetime. They are collapsible sections with Repositories initially open; saves remain in Settings with independent form feedback.

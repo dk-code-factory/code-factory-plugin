@@ -17,7 +17,7 @@ The owner has opened the separate connected Settings view. Repository access is 
 
 ## Alternatives and recovery
 
-Settings is independent of the task UI and has no Inbox/Agents navigation. Saving does not replace an already-open task view or reset its drafts. Settings is one compact column. Other relevant sections start collapsed. Each saving form disables its controls and shows saving, success or failure beside its retained values. Unused disabled integration forms are omitted; Jira remains disabled in the pilot backend. Empty or duplicate priority labels are rejected inline. Invalid repository identifiers, unsupported permission choices and incomplete profiles are rejected. Unsupported skill names and a missing required skill header are rejected; saving a skill does not establish that its complete content is valid. Editing settings does not launch work or rewrite a previously prepared launch.
+Settings is independent of the task UI and has no Inbox/Agents navigation. Saving does not replace an already-open task view or reset its drafts. Settings is one compact column. Other relevant sections start collapsed. Each saving form disables its controls and shows saving, success or failure beside its retained values. Unused disabled integration forms are omitted; Jira remains disabled in the pilot backend. Empty or duplicate priority labels are rejected inline. Invalid repository identifiers, unsupported permission choices and incomplete profiles are rejected. Unsupported skill names and a missing required skill header are rejected; saving a skill does not establish that its complete content is valid. Editing settings does not immediately launch work or rewrite a prepared launch. An explicitly enabled automatic-review policy can launch eligible reviews on a later successful repository poll.
 
 ## Scenarios
 
@@ -25,11 +25,14 @@ Settings is independent of the task UI and has no Inbox/Agents navigation. Savin
 - **S2** Profiles and skills can be saved and selected; unsupported profile choices, unsupported skill names and a missing required skill header are rejected.
 - **S3** Changing assessment policy invalidates cached priority assessments.
 
+- **S4** System defaults queue review requests. A repository inherits or overrides queue/automatic behavior and role pipelines, can pause monitoring, and adds owner review instructions to its generic prompt. Last poll, sync errors and review-policy errors remain visible. Older cached forms preserve omitted monitoring/default fields; explicit inheritance or empty extra prompt clears only the chosen value.
+- **S5** Admin widget, plugin tools and bundled admin skill observe installed/available Codex plugins, enabled state, versions, update status and durable operations. The owner adds sources and explicitly installs, updates or removes plugins. Scheduled metadata checks never install updates. Uncertain operations retain observations and never replay. Discovered plugin/standalone skills remain selectable for future review and implementation profiles; unavailable skills cannot be newly prepared. Unknown remote-catalog version or authentication readiness remains explicit.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation).
-UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS).
+Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [codex-plugin](../glossary/README.md#codex-plugin), [plugin-marketplace](../glossary/README.md#plugin-marketplace), [plugin-inventory](../glossary/README.md#plugin-inventory), [plugin-maintenance](../glossary/README.md#plugin-maintenance), [review-policy](../glossary/README.md#review-policy), [repository-review-prompt](../glossary/README.md#repository-review-prompt).
+UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT).
 
 ## Flow diagram
 
@@ -42,6 +45,9 @@ flowchart TD
     N4["Reject invalid settings"]
     N5["Correct draft without launching work"]
     N6(["Settings available to future work"])
+    N7["Set system defaults, repository overrides and extra review instructions #40;S4#41;"]
+    N8["Observe plugins or submit one explicit maintenance operation #40;S5#41;"]
+    N9(["Uncertain or failed result retains observed state without replay"])
     N0 -->|"accepted"| N1
     N1 --> N2
     N2 --> N3
@@ -51,6 +57,11 @@ flowchart TD
     N4 --> N5
     N5 -->|"retry"| N0
     N3 -->|"accepted"| N6
+    N0 -->|"review configuration"| N7
+    N7 -->|"saved policy"| N6
+    N0 -->|"plugin management"| N8
+    N8 -->|"observed success"| N6
+    N8 -->|"failed or uncertain"| N9
 ```
 
 ## Implementation references
@@ -77,6 +88,11 @@ flowchart TD
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration
 - [internal/web/embed.go](../../internal/web/embed.go) — Embedded UI build and host-fixture configuration
 - [internal/web/embed.go](../../internal/web/embed.go) — Configuration opens through its own bridged document entry. (`func SettingsHTML(`)
+- [internal/app/plugins.go](../../internal/app/plugins.go) — Durable pinned-CLI plugin lifecycle and exclusive runtime/maintenance boundary. (`func (m *Manager) PluginAction(`)
+- [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
+- [internal/app/review_requests.go](../../internal/app/review_requests.go) — Resolve inherited review policies, fresh requests, durable claims and pinned automatic launches. (`func (a *App) ProcessReviewRequests(`)
+- [web/src/admin.tsx](../../web/src/admin.tsx) — Repository/global review policy and plugin-admin settings. (`export function RepositoryAdmin(`)
+- [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Bundled administration skill exposes the same owner tool controls. (`name: code-factory-admin`)
 
 ## Test references
 
@@ -89,6 +105,15 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `separate settings can save while the inbox view retains its item and agent drafts`; S1, S2. Independent documents preserve main task context/drafts while settings save shared data.
 - [internal/transport/ui_resource_test.go](../../internal/transport/ui_resource_test.go) — `func TestSettingsResourceIsIndependentFromInboxAndLegacyAlias(`; S1. Settings/inbox identities, bindings, bodies and legacy aliases remain separate.
 - [internal/web/embed_test.go](../../internal/web/embed_test.go) — `func TestSettingsDocumentHasIndependentEntry(`; S1. Settings document root selects only the configuration surface.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `admin system and repository review policies retain inheritance and extra prompts`; S4. Both themes at 390px assert queue-only defaults, system opt-in, repo queue/inherit overrides, persisted extra review text, manual poll without explicit UI Start and scoped axe scans.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `plugin admin tracks installs, versions and explicit updates`; S5. Both themes assert installed/enabled status, old/available versions, metadata-only check, explicit keyboard update, install/remove targets, marketplace/ref payloads, narrow layout and scoped axe scans.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `uncertain plugin mutations preserve drafts and never replay automatically`; S5. An uncertain management response displays feedback, retains the selector and submits only once after polling.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `repository review pipeline overrides system defaults and plugin skills remain selectable`; S2. The requested-PR conversation selects its repository pipeline over the system default without launching; a discovered plugin skill is selectable in a profile and an unavailable skill is disabled.
+- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginInventoryInstallUpdateAndRemoval(`; S5. Pinned-provider fixture asserts discovery, actual installed version, metadata-only newer version detection, explicit update/removal and positional argument separation.
+- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginRestartAndMalformedInventoryRetainObservedState(`; S5. Malformed/null inventory preserves prior installed observations; interrupted operations become uncertain without replay.
+- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestSelectedDiscoveredSkillKeepsItsBundleAndAutomaticChecksDoNotInstall(`; S5. Discovery and launch preserve skill text/support files/executable modes; scheduled checks refresh metadata without an install command.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(`; S4. System defaults queue; enabled inherited policy starts one pinned read-only review with appended repo text, survives duplicate polls/restart and accepts a new request episode.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestRepositoryQueueOverridePauseDraftAndStaleRequestsDoNotStart(`; S4. Queue override, pause, draft, old sync, absent request, sync error and unsafe review profile cannot launch automatically.
 
 ## Verification and gaps
 

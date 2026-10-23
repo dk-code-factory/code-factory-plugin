@@ -22,6 +22,7 @@ import type {
   QuestionRecovery,
 } from "./types";
 import "./style.css";
+import { PluginAdmin, RepositoryAdmin, SystemReviewSettings } from "./admin";
 
 function latestRun(runs: Run[], itemId: string) {
   const retained = runs
@@ -338,11 +339,17 @@ function Factory() {
         .sort((a, b) => Date.parse(b.created) - Date.parse(a.created)) ?? [];
     const existing = runs.find((r) => r.status !== "prepared");
     const prepared = runs.find((r) => r.status === "prepared");
+    const repository = snap?.repositories.find(
+      (r) => r.id === entry.item.repository,
+    );
+    const review = tab === "Review";
+    const defaultProfile = review
+      ? repository?.reviewProfileId || snap?.config.reviewProfileId || "review"
+      : repository?.implementationProfileId ||
+        snap?.config.implementationProfileId ||
+        "implement";
     const profile =
-      prepared?.profile ??
-      snap?.profiles.find(
-        (p) => p.id === (tab === "Review" ? "review" : "implement"),
-      );
+      prepared?.profile ?? snap?.profiles.find((p) => p.id === defaultProfile);
     setChatDrafts((old) =>
       old[entry.item.id]
         ? old
@@ -1564,7 +1571,16 @@ function Launch({
   started: (run: Run) => void;
 }) {
   const [profileId, setProfileId] = useState(
-    initialRun?.profile.id ?? snap.profiles[0]?.id ?? "",
+    initialRun?.profile.id ??
+      (entry?.item.kind === "pr"
+        ? snap.repositories.find((r) => r.id === entry.item.repository)
+            ?.reviewProfileId ||
+          snap.config.reviewProfileId ||
+          "review"
+        : snap.repositories.find((r) => r.id === entry?.item.repository)
+            ?.implementationProfileId ||
+          snap.config.implementationProfileId ||
+          "implement"),
   );
   const p =
     snap.profiles.find((p) => p.id === profileId) ?? initialRun?.profile;
@@ -2507,10 +2523,8 @@ function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
       priority,
     })),
   );
-  const [repo, setRepo] = useState("");
-  const [checkout, setCheckout] = useState("");
-  const [base, setBase] = useState("");
   const [profile, setProfile] = useState<Profile>(snap.profiles[0]);
+  const [skillDirectory, setSkillDirectory] = useState("/");
   const [skillName, setSkillName] = useState("");
   const [skillContent, setSkillContent] = useState(
     "---\nname: my-skill\ndescription: Explain when this skill applies.\n---\n\n",
@@ -2523,51 +2537,32 @@ function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
     <div className="settings">
       <details className="settings-section" open>
         <summary>Repositories</summary>
-        {snap.repositories.map((r) => (
-          <p key={r.id}>
-            {r.id} · {r.checkout || "Managed clone"} · {r.error || "Connected"}
-          </p>
-        ))}
-        <SaveForm
-          save={async () => {
-            await save("save_repository", { id: repo, checkout, base });
-            setRepo("");
-            setCheckout("");
-            setBase("");
-          }}
-        >
+        <RepositoryAdmin snap={snap} save={save} />
+        <SaveForm save={() => save("discover_skills", { cwd: skillDirectory })}>
           <label>
-            GitHub repository
+            Skill discovery directory
             <input
-              placeholder="owner/repository"
-              autoFocus={snap.repositories.length === 0}
+              value={skillDirectory}
+              onChange={(e) => setSkillDirectory(e.target.value)}
               required
-              value={repo}
-              onChange={(e) => setRepo(e.target.value)}
             />
           </label>
-          <label>
-            Existing checkout (optional)
-            <input
-              placeholder="/home/you/projects/repository"
-              value={checkout}
-              onChange={(e) => setCheckout(e.target.value)}
-            />
-          </label>
-          <label>
-            Default base (optional)
-            <input
-              placeholder="HEAD"
-              value={base}
-              onChange={(e) => setBase(e.target.value)}
-            />
-          </label>
-          <button>Save repository</button>
-        </SaveForm>
-        <SaveForm
-          save={() => save("discover_skills", { cwd: checkout || "/" })}
-        >
           <button>Discover local skills</button>
+        </SaveForm>
+      </details>
+      <details className="settings-section">
+        <summary>Plugins & skills</summary>
+        <PluginAdmin skills={snap.skills} />
+      </details>
+      <details className="settings-section">
+        <summary>System defaults</summary>
+        <SaveForm save={() => save("save_settings", { ...config })}>
+          <SystemReviewSettings
+            config={config}
+            profiles={snap.profiles}
+            change={setConfig}
+          />
+          <button>Save system defaults</button>
         </SaveForm>
       </details>
       <details className="settings-section">
@@ -2815,6 +2810,7 @@ function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
               <label className="check" key={s.id}>
                 <input
                   type="checkbox"
+                  disabled={s.disabled}
                   checked={(profile.skills ?? []).includes(s.id)}
                   onChange={(e) =>
                     setProfile({
@@ -2826,6 +2822,7 @@ function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
                   }
                 />
                 {s.name}
+                {s.disabled ? " · disabled or unavailable" : ""}
               </label>
             ))}
           </fieldset>

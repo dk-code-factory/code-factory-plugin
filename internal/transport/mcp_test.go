@@ -109,7 +109,7 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 		metadata := tool["_meta"].(map[string]any)
 		expectedURI := ResourceURI
 		switch tool["name"] {
-		case "open_settings", "get_settings", "save_settings", "save_repository", "save_profile", "set_jira_credential", "discover_skills", "save_skill", "diagnostics":
+		case "read_plugin_admin", "manage_codex_plugins", "sync_repositories", "open_settings", "get_settings", "save_settings", "save_repository", "save_profile", "set_jira_credential", "discover_skills", "save_skill", "diagnostics":
 			expectedURI = SettingsResourceURI
 		}
 		if metadata["ui"].(map[string]any)["resourceUri"] != expectedURI {
@@ -135,13 +135,67 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 		t.Fatal(res)
 	}
 	for name, args := range map[string]map[string]any{
-		"save_repository": {"id": "pilot/local", "checkout": "", "base": "main"},
+		"save_repository": {"id": "pilot/local", "checkout": "", "base": "main", "autoReview": nil, "reviewPrompt": "Check repository-specific invariants."},
 		"save_skill":      {"name": "pilot-skill", "content": "---\nname: pilot-skill\ndescription: Read-only pilot.\n---\n\nInspect only.\n"},
 	} {
 		result := request("tools/call", map[string]any{"name": name, "arguments": args}, true, "2026-07-28")
 		if result["isError"] == true {
 			t.Fatalf("UI settings input rejected: %s: %v", name, result)
 		}
+	}
+	var monitored domain.Repository
+	if err := db.Get(ctx, "repository", "pilot/local", &monitored); err != nil {
+		t.Fatal(err)
+	}
+	enabled := true
+	monitored.AutoReview = &enabled
+	monitored.ReviewPrompt = "Keep owner review instructions"
+	monitored.ReviewProfileID = "review"
+	if err := a.SaveRepository(ctx, monitored); err != nil {
+		t.Fatal(err)
+	}
+	legacyRepo := request("tools/call", map[string]any{"name": "save_repository", "arguments": map[string]any{"id": "pilot/local", "checkout": "/tmp/pilot-legacy"}}, true, "2026-07-28")
+	if legacyRepo["isError"] == true {
+		t.Fatal(legacyRepo)
+	}
+	if err := db.Get(ctx, "repository", "pilot/local", &monitored); err != nil {
+		t.Fatal(err)
+	}
+	if monitored.AutoReview == nil || !*monitored.AutoReview || monitored.ReviewPrompt != "Keep owner review instructions" || monitored.ReviewProfileID != "review" {
+		t.Fatal("older widget overwrote monitoring fields")
+	}
+	inherit := request("tools/call", map[string]any{"name": "save_repository", "arguments": map[string]any{"id": "pilot/local", "autoReview": nil, "reviewPrompt": ""}}, true, "2026-07-28")
+	if inherit["isError"] == true {
+		t.Fatal(inherit)
+	}
+	monitored = domain.Repository{}
+	_ = db.Get(ctx, "repository", "pilot/local", &monitored)
+	if monitored.AutoReview != nil || monitored.ReviewPrompt != "" || monitored.Checkout != "/tmp/pilot-legacy" {
+		t.Fatal("explicit inheritance/clearing was lost")
+	}
+	config, _ := a.Config(ctx)
+	config.AutoReview = true
+	config.ReviewProfileID = "review"
+	config.PluginCheckMinutes = 60
+	if err := a.SaveConfig(ctx, config); err != nil {
+		t.Fatal(err)
+	}
+	legacyConfig := map[string]any{"id": "settings", "priorityLabels": config.PriorityLabels, "assessmentPrompt": config.AssessmentPrompt, "notifications": config.Notifications, "policyVersion": config.PolicyVersion, "jiraUrl": config.JiraURL, "jiraEmail": config.JiraEmail}
+	savedSettings := request("tools/call", map[string]any{"name": "save_settings", "arguments": legacyConfig}, true, "2026-07-28")
+	if savedSettings["isError"] == true {
+		t.Fatal(savedSettings)
+	}
+	config, _ = a.Config(ctx)
+	if !config.AutoReview || config.ReviewProfileID != "review" || config.PluginCheckMinutes != 60 {
+		t.Fatal("older settings form overwrote system review defaults")
+	}
+	admin := request("tools/call", map[string]any{"name": "read_plugin_admin", "arguments": map[string]any{}}, true, "2026-07-28")
+	if admin["isError"] == true || admin["structuredContent"] == nil {
+		t.Fatal("admin inventory read failed", admin)
+	}
+	invalid := request("tools/call", map[string]any{"name": "manage_codex_plugins", "arguments": map[string]any{"action": "install", "target": "--config=invalid"}}, true, "2026-07-28")
+	if invalid["isError"] != true {
+		t.Fatal("plugin selector injection accepted")
 	}
 	catalog := request("events/list", nil, true, "2026-07-28")
 	if len(catalog["events"].([]any)) != 3 {

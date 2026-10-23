@@ -46,6 +46,8 @@ export interface Profile {
   publishing: string;
 }
 export interface Skill {
+  disabled?: boolean;
+  description?: string;
   id: string;
   name: string;
   path: string;
@@ -53,6 +55,12 @@ export interface Skill {
   managed: boolean;
 }
 export interface Repository {
+  paused?: boolean;
+  autoReview?: boolean | null;
+  reviewProfileId?: string;
+  implementationProfileId?: string;
+  reviewPrompt?: string;
+  reviewError?: string;
   id: string;
   checkout: string;
   base: string;
@@ -124,6 +132,10 @@ export interface Entry {
   };
 }
 export interface Config {
+  autoReview?: boolean;
+  reviewProfileId?: string;
+  implementationProfileId?: string;
+  pluginCheckMinutes?: number;
   id: string;
   priorityLabels: Record<string, number>;
   assessmentPrompt: string;

@@ -111,10 +111,39 @@ type CredentialInput struct {
 	Token string `json:"token"`
 }
 type RepositoryInput struct {
-	ID       string `json:"id"`
-	Checkout string `json:"checkout,omitempty"`
-	Base     string `json:"base,omitempty"`
+	fields                  map[string]json.RawMessage
+	AutoReview              *bool  `json:"autoReview,omitempty"`
+	ReviewPrompt            string `json:"reviewPrompt,omitempty"`
+	Paused                  bool   `json:"paused,omitempty"`
+	ReviewProfileID         string `json:"reviewProfileId,omitempty"`
+	ImplementationProfileID string `json:"implementationProfileId,omitempty"`
+	ID                      string `json:"id"`
+	Checkout                string `json:"checkout,omitempty"`
+	Base                    string `json:"base,omitempty"`
 }
+
+// Presence-aware updates preserve settings from older cached widgets. Null is an
+// explicit repository inheritance choice, while an omitted field is unchanged.
+func (in *RepositoryInput) UnmarshalJSON(b []byte) error {
+	type plain RepositoryInput
+	if err := json.Unmarshal(b, (*plain)(in)); err != nil {
+		return err
+	}
+	return json.Unmarshal(b, &in.fields)
+}
+
+type SettingsInput struct {
+	domain.Config
+	fields map[string]json.RawMessage
+}
+
+func (in *SettingsInput) UnmarshalJSON(b []byte) error {
+	if err := json.Unmarshal(b, &in.Config); err != nil {
+		return err
+	}
+	return json.Unmarshal(b, &in.fields)
+}
+
 type SaveSkillInput struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
@@ -132,8 +161,8 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 	if name == "open_factory" || name == "open_settings" {
 		meta["openai/outputTemplate"] = resourceURI
 	}
-	openWorld := name == "start_run" || name == "send_message" || name == "answer_request"
-	destructive := name == "cleanup_run"
+	openWorld := name == "start_run" || name == "send_message" || name == "answer_request" || name == "manage_codex_plugins"
+	destructive := name == "cleanup_run" || name == "manage_codex_plugins"
 	mcp.AddTool(s, &mcp.Tool{Name: name, Description: desc, Meta: meta, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, OpenWorldHint: ptr(openWorld), DestructiveHint: ptr(destructive)}}, func(ctx context.Context, _ *mcp.CallToolRequest, in I) (*mcp.CallToolResult, map[string]any, error) {
 		v, e := f(ctx, in)
 		if e != nil {
@@ -172,10 +201,57 @@ func New(a *app.App, ev *events.Service) *Server {
 		return nil, a.UserAction(ctx, in.ID, in.Action, in.Revision, in.Priority)
 	})
 	bind(m, settingsURI, "get_settings", "Read configuration without credentials.", false, true, func(ctx context.Context, _ Empty) (any, error) { return a.Config(ctx) })
-	bind(m, settingsURI, "save_settings", "Save priority, assessment, Jira tenant and notification settings.", false, false, func(ctx context.Context, in domain.Config) (any, error) { return nil, a.SaveConfig(ctx, in) })
-	bind(m, settingsURI, "save_repository", "Configure a GitHub owner/repository and optional existing local checkout.", false, false, func(ctx context.Context, in RepositoryInput) (any, error) {
-		return nil, a.SaveRepository(ctx, domain.Repository{ID: in.ID, Checkout: in.Checkout, Base: in.Base})
+	bind(m, settingsURI, "save_settings", "Save system review/pipeline defaults, plugin check cadence, priorities and notifications. Omitted new admin fields are preserved.", false, false, func(ctx context.Context, in SettingsInput) (any, error) {
+		old, err := a.Config(ctx)
+		if err != nil {
+			return nil, err
+		}
+		c := in.Config
+		if _, ok := in.fields["autoReview"]; !ok {
+			c.AutoReview = old.AutoReview
+		}
+		if _, ok := in.fields["reviewProfileId"]; !ok {
+			c.ReviewProfileID = old.ReviewProfileID
+		}
+		if _, ok := in.fields["implementationProfileId"]; !ok {
+			c.ImplementationProfileID = old.ImplementationProfileID
+		}
+		if _, ok := in.fields["pluginCheckMinutes"]; !ok {
+			c.PluginCheckMinutes = old.PluginCheckMinutes
+		}
+		return nil, a.SaveConfig(ctx, c)
 	})
+	bind(m, settingsURI, "read_plugin_admin", "Read cached Codex plugin, marketplace, version and operation status without installing anything.", false, true, func(ctx context.Context, in app.PluginAdminInput) (any, error) { return a.Runs.PluginState(ctx, in) })
+	bind(m, settingsURI, "manage_codex_plugins", "Manage Codex plugins: refresh, check-updates, discover-skills, add-marketplace, install, update or remove. Mutations require explicit user choice. Returns a durable operation; poll read_plugin_admin and never replay uncertain operations.", false, false, func(ctx context.Context, in app.PluginAction) (any, error) { return a.Runs.PluginAction(ctx, in) })
+	bind(m, settingsURI, "save_repository", "Configure repository monitoring, role pipelines and additional review instructions. Omitted fields are preserved; null autoReview explicitly inherits the system default.", false, false, func(ctx context.Context, in RepositoryInput) (any, error) {
+		r := domain.Repository{ID: in.ID}
+		if err := a.Store.Get(ctx, "repository", in.ID, &r); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return nil, err
+		}
+		if _, ok := in.fields["checkout"]; ok {
+			r.Checkout = in.Checkout
+		}
+		if _, ok := in.fields["base"]; ok {
+			r.Base = in.Base
+		}
+		if _, ok := in.fields["paused"]; ok {
+			r.Paused = in.Paused
+		}
+		if _, ok := in.fields["reviewProfileId"]; ok {
+			r.ReviewProfileID = in.ReviewProfileID
+		}
+		if _, ok := in.fields["implementationProfileId"]; ok {
+			r.ImplementationProfileID = in.ImplementationProfileID
+		}
+		if _, ok := in.fields["autoReview"]; ok {
+			r.AutoReview = in.AutoReview
+		}
+		if _, ok := in.fields["reviewPrompt"]; ok {
+			r.ReviewPrompt = in.ReviewPrompt
+		}
+		return nil, a.SaveRepository(ctx, r)
+	})
+	bind(m, settingsURI, "sync_repositories", "Poll configured repositories now. Repositories opted into automatic review may launch their selected review pipeline.", false, false, func(ctx context.Context, _ Empty) (any, error) { return nil, a.Sync(ctx) })
 	bind(m, settingsURI, "save_profile", "Create or edit a launch profile, prompt, permissions, skills and publishing authority.", false, false, func(ctx context.Context, in domain.Profile) (any, error) { return nil, a.SaveProfile(ctx, in) })
 	bind(m, settingsURI, "set_jira_credential", "Store a Jira API token from the secure UI. Never return the credential.", true, false, func(ctx context.Context, in CredentialInput) (any, error) {
 		if strings.TrimSpace(in.Token) == "" {

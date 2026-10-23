@@ -238,6 +238,10 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 		if old.PR != nil && old.PR.Error == "" && time.Since(old.PR.SyncedAt) < SyncInterval/2 {
 			continue
 		}
+		var repository domain.Repository
+		if a.Store.Get(ctx, "repository", parts[0], &repository) == nil && repository.Paused {
+			continue
+		}
 		fresh, err := a.GitHub.PullRequest(ctx, parts[0], number)
 		if err != nil {
 			if old.ID == "" {

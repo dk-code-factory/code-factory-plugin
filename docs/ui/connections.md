@@ -64,6 +64,9 @@ for a clickable navigation control.
 | `C-SESSION-CONSOLE` | Conversation presentation to the same session console. | View session console, or Open session console from a textual fallback. | Switches presentation without launching or resuming another process. |
 | `C-PIPELINE-SELECT` | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. |
 | `C-TEXT-DISMISS` | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. |
+| `C-PLUGIN-MAINTENANCE` | Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay. | Explicit owner configuration or management choice; opted-in successful repository polls. | Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay. |
+| `C-REVIEW-POLICY` | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once. | Explicit owner configuration or management choice; opted-in successful repository polls. | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once. |
+| `C-REPOSITORY-REVIEW-PROMPT` | Append owner repository instructions to the generic review prompt during immutable launch preparation. | Explicit owner configuration or management choice; opted-in successful repository polls. | Append owner repository instructions to the generic review prompt during immutable launch preparation. |
 <!-- /specs:connections-0 -->
 
 ## Navigation overview
@@ -127,6 +130,9 @@ flowchart LR
     N114["W-NEW-CHAT"]
     N118["W-SESSION-CONSOLE"]
     N111["P-WAITING-QUEUE"]
+    N123["W-PLUGIN-ADMIN"]
+    N124["W-SYSTEM-DEFAULTS"]
+    N116["W-WORK-STATUS"]
     N2 -->|"C-NAVIGATE"| N63
     N2 -->|"C-NAVIGATE"| N109
     N2 -->|"C-NAVIGATE"| N110
@@ -213,6 +219,19 @@ flowchart LR
     N25 -->|"C-TEXT-DISMISS"| N104
     N25 -->|"C-TEXT-DISMISS"| N19
     N25 -->|"C-TEXT-DISMISS"| N111
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
+    N28 -->|"C-REVIEW-POLICY"| N116
+    N28 -->|"C-REVIEW-POLICY"| N28
+    N124 -->|"C-REVIEW-POLICY"| N116
+    N124 -->|"C-REVIEW-POLICY"| N28
+    N28 -->|"C-REPOSITORY-REVIEW-PROMPT"| N24
 ```
 <!-- /specs:connections -->
 

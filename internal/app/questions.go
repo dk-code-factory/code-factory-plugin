@@ -288,6 +288,8 @@ func (m *Manager) questionCheck(ctx context.Context, model, text string) (bool, 
 }
 
 func (m *Manager) checkStoppedTurn(s *session, turnID, text string) {
+	m.adminGate.RLock()
+	defer m.adminGate.RUnlock()
 	text = questionContext(text)
 	s.mu.Lock()
 	if s.retired || s.run.Status != "idle" || s.run.TurnID != "" || s.lastCompletedTurn != turnID || hasPendingQuestions(s) {
@@ -514,6 +516,8 @@ func (m *Manager) fallbackLocked(s *session, r *domain.QuestionRecovery) {
 }
 
 func (m *Manager) continueAfterRepair(s *session, r *domain.QuestionRecovery) {
+	m.adminGate.RLock()
+	defer m.adminGate.RUnlock()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.retired || s.recovery != r || r.Stage != "answered" || s.run.TurnID != "" || s.run.Status != "idle" {

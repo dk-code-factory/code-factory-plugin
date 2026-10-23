@@ -10,7 +10,7 @@ the focused Issues, My PRs, Review PRs and Messages tabs. Item selection opens i
 configuration view. Names may carry a host namespace;
 use the tools actually exposed by the installed plugin.
 
-Opening or listing an item never starts work. For a launch request, prepare the
+Opening or listing an item never starts work. Repository polling can start reviews only when the owner has explicitly enabled the system/repository automatic-review policy; queue-only is the default. For a launch request, prepare the
 profile, prompt, model, effort, skills, base and workspace, then present the
 prepared snapshot before calling `start_run` when authorized. Use a read-only
 profile for investigation; Plan mode supports interactive Codex questions.

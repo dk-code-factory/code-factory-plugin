@@ -21,15 +21,16 @@ import (
 )
 
 type Manager struct {
-	app      *App
-	ctx      context.Context
-	Binary   string
-	mu       sync.Mutex
-	answerMu sync.Mutex
-	live     map[string]*session
-	wg       sync.WaitGroup
-	closing  bool
-	cancel   context.CancelFunc
+	adminGate sync.RWMutex
+	app       *App
+	ctx       context.Context
+	Binary    string
+	mu        sync.Mutex
+	answerMu  sync.Mutex
+	live      map[string]*session
+	wg        sync.WaitGroup
+	closing   bool
+	cancel    context.CancelFunc
 }
 type session struct {
 	mu                sync.Mutex
@@ -54,6 +55,9 @@ func NewManager(ctx context.Context, a *App, binary string) *Manager {
 	return &Manager{app: a, ctx: ctx, cancel: cancel, Binary: binary, live: map[string]*session{}}
 }
 func (m *Manager) Recover(ctx context.Context) error {
+	if err := m.recoverPluginOperations(ctx); err != nil {
+		return err
+	}
 	m.mu.Lock()
 	if m.closing {
 		m.ctx, m.cancel = context.WithCancel(ctx)
@@ -134,6 +138,10 @@ func (m *Manager) Close() {
 	m.wg.Wait()
 }
 func (m *Manager) busy() bool {
+	if !m.adminGate.TryRLock() {
+		return true
+	}
+	defer m.adminGate.RUnlock()
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for _, s := range m.live {
@@ -158,6 +166,10 @@ type LaunchInput struct {
 }
 
 func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, error) {
+	if !m.adminGate.TryRLock() {
+		return domain.Run{}, fmt.Errorf("plugin maintenance in progress; try again when it finishes")
+	}
+	defer m.adminGate.RUnlock()
 	var item domain.Item
 	var p domain.Profile
 	var repo domain.Repository
@@ -185,12 +197,25 @@ func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, erro
 	if prompt == "" {
 		prompt = strings.NewReplacer("{{title}}", item.Title, "{{body}}", item.Body, "{{url}}", item.URL).Replace(p.Prompt)
 	}
+	config, err := m.app.Config(ctx)
+	if err != nil {
+		return domain.Run{}, err
+	}
+	if item.Kind == "pr" && (p.ID == reviewProfileID(config, repo) || p.ID == "review") {
+		prompt += "\nReview target: " + item.URL + "\nPinned PR head: " + item.Head + "\nCompare this head with the pull request's target branch; report evidence-backed findings."
+		if strings.TrimSpace(repo.ReviewPrompt) != "" {
+			extra := "\nRepository review instructions:\n" + repo.ReviewPrompt
+			if !strings.Contains(prompt, extra) {
+				prompt += extra
+			}
+		}
+	}
 	if p.Publishing == "ask" {
 		prompt += "\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems."
 	} else {
 		prompt += "\nPublishing authority: publishing is authorized when needed to fulfill the task, subject to stricter local and managed policies."
 	}
-	r := domain.Run{ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
+	r := domain.Run{ReviewPromptSnapshot: repo.ReviewPrompt, ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
 	r.Branch = "code-factory/" + r.ID
 	r.Worktree = filepath.Join(m.app.DataDir, "worktrees", r.ID)
 	r.Base = in.Base
@@ -212,6 +237,9 @@ func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, erro
 		if e := m.app.Store.Get(ctx, "skill", id, &s); e != nil {
 			return r, e
 		}
+		if s.Disabled {
+			return r, fmt.Errorf("selected skill is disabled or unavailable: %s", s.Name)
+		}
 		var e error
 		s, e = snapshotSkill(s)
 		if e != nil {
@@ -222,6 +250,10 @@ func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, erro
 	return r, m.app.Store.Put(ctx, "run", r.ID, r, "")
 }
 func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run, error) {
+	if !m.adminGate.TryRLock() {
+		return domain.Run{}, fmt.Errorf("plugin maintenance in progress; try again when it finishes")
+	}
+	defer m.adminGate.RUnlock()
 	r, _, err := m.start(ctx, id, resume, "")
 	return r, err
 }
@@ -243,6 +275,11 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 	err := m.app.Store.Write(ctx, func(t *store.Tx) error {
 		if e := t.Get("run", id, &r); e != nil {
 			return e
+		}
+		if r.AutomaticReview && !resume {
+			if err := validateAutomaticStart(t, r); err != nil {
+				return err
+			}
 		}
 		if (!resume && r.Status != "prepared") || (resume && r.Status != "interrupted" && r.Status != "failed") {
 			return fmt.Errorf("run cannot start from %s", r.Status)
@@ -742,6 +779,10 @@ func (m *Manager) get(id string) (*session, error) {
 	return s, nil
 }
 func (m *Manager) Message(ctx context.Context, id, text, expected string) error {
+	if !m.adminGate.TryRLock() {
+		return fmt.Errorf("plugin maintenance in progress; try again when it finishes")
+	}
+	defer m.adminGate.RUnlock()
 	return m.message(ctx, id, text, expected, true)
 }
 func (m *Manager) message(ctx context.Context, id, text, expected string, routeQuestion bool) error {
@@ -862,6 +903,10 @@ func (m *Manager) Interrupt(ctx context.Context, id string) error {
 	return s.client.Call(ctx, "turn/interrupt", map[string]string{"threadId": s.run.ThreadID, "turnId": s.run.TurnID}, nil)
 }
 func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage) error {
+	if !m.adminGate.TryRLock() {
+		return fmt.Errorf("plugin maintenance in progress; try again when it finishes")
+	}
+	defer m.adminGate.RUnlock()
 	var a domain.Attention
 	if e := m.app.Store.Get(ctx, "attention", id, &a); e != nil {
 		return e
@@ -1107,7 +1152,12 @@ func (m *Manager) DiscoverSkills(ctx context.Context, cwd string) ([]domain.Skil
 		return nil, e
 	}
 	var result struct {
-		Data []struct{ Skills []struct{ Name, Path string } }
+		Data []struct {
+			Skills []struct {
+				Name, Path, Description string
+				Enabled                 *bool
+			}
+		}
 	}
 	if e = c.Call(ctx, "skills/list", map[string]any{"cwds": []string{cwd}, "forceReload": true}, &result); e != nil {
 		return nil, e
@@ -1115,7 +1165,7 @@ func (m *Manager) DiscoverSkills(ctx context.Context, cwd string) ([]domain.Skil
 	out := []domain.Skill{}
 	for _, entry := range result.Data {
 		for _, v := range entry.Skills {
-			s := domain.Skill{ID: v.Path, Name: v.Name, Path: v.Path}
+			s := domain.Skill{ID: v.Path, Name: v.Name, Path: v.Path, Description: v.Description, Disabled: v.Enabled != nil && !*v.Enabled}
 			if e = m.app.Store.Put(ctx, "skill", s.ID, s, ""); e != nil {
 				return nil, e
 			}

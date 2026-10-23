@@ -19,12 +19,13 @@ import (
 )
 
 type App struct {
-	providerMu sync.Mutex
-	Store      *store.Store
-	Vault      *store.Vault
-	GitHub     *providers.GitHub
-	Runs       *Manager
-	DataDir    string
+	autoReviewMu sync.Mutex
+	providerMu   sync.Mutex
+	Store        *store.Store
+	Vault        *store.Vault
+	GitHub       *providers.GitHub
+	Runs         *Manager
+	DataDir      string
 }
 
 func ID() string {
@@ -62,6 +63,17 @@ func (a *App) Config(ctx context.Context) (domain.Config, error) {
 	return c, e
 }
 func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
+	for _, id := range []string{c.ReviewProfileID, c.ImplementationProfileID} {
+		if id != "" {
+			var p domain.Profile
+			if err := a.Store.Get(ctx, "profile", id, &p); err != nil {
+				return fmt.Errorf("default pipeline is unavailable")
+			}
+		}
+	}
+	if c.PluginCheckMinutes < 0 || c.PluginCheckMinutes > 10080 || c.PluginCheckMinutes > 0 && c.PluginCheckMinutes < 15 {
+		return fmt.Errorf("plugin update checks must be manual (0) or 15–10080 minutes")
+	}
 	if c.JiraURL != "" && !providers.ValidJiraURL(c.JiraURL) {
 		return fmt.Errorf("Jira URL must be an HTTPS atlassian.net tenant")
 	}
@@ -84,10 +96,24 @@ func (a *App) SaveRepository(ctx context.Context, r domain.Repository) error {
 	if !repoPattern.MatchString(r.ID) || strings.Contains(r.ID, "..") || strings.HasPrefix(r.Base, "-") {
 		return fmt.Errorf("invalid repository or base")
 	}
+	for _, id := range []string{r.ReviewProfileID, r.ImplementationProfileID} {
+		if id != "" {
+			var p domain.Profile
+			if err := a.Store.Get(ctx, "profile", id, &p); err != nil {
+				return fmt.Errorf("repository pipeline is unavailable")
+			}
+		}
+	}
 	var old domain.Repository
 	if e := a.Store.Get(ctx, "repository", r.ID, &old); e == nil {
 		old.Checkout = r.Checkout
 		old.Base = r.Base
+		old.Paused = r.Paused
+		old.AutoReview = r.AutoReview
+		old.ReviewPrompt = r.ReviewPrompt
+		old.ReviewError = ""
+		old.ReviewProfileID = r.ReviewProfileID
+		old.ImplementationProfileID = r.ImplementationProfileID
 		r = old
 	} else if !errors.Is(e, store.ErrNotFound) {
 		return e
@@ -360,6 +386,9 @@ func (a *App) Sync(ctx context.Context) error {
 	}
 	teamsChecked := false
 	for _, r := range repos {
+		if r.Paused {
+			continue
+		}
 		if time.Now().Before(r.RetryAt) {
 			continue
 		}
@@ -372,7 +401,18 @@ func (a *App) Sync(ctx context.Context) error {
 			if errors.As(err, &rate) {
 				r.RetryAt = rate.Until
 			}
-			if e = a.Store.Put(ctx, "repository", r.ID, r, "sync.error"); e != nil {
+			if e = a.Store.Write(ctx, func(t *store.Tx) error {
+				var current domain.Repository
+				if err := t.Get("repository", r.ID, &current); err != nil {
+					return err
+				}
+				current.Error = r.Error
+				current.RetryAt = r.RetryAt
+				if err := t.Put("repository", r.ID, current); err != nil {
+					return err
+				}
+				return t.Event("sync.error", r.ID, map[string]string{"error": r.Error})
+			}); e != nil {
 				return e
 			}
 			continue
@@ -399,6 +439,9 @@ func (a *App) Sync(ctx context.Context) error {
 			return e
 		}
 	}
+	if a.Runs != nil {
+		return a.ProcessReviewRequests(ctx)
+	}
 	return nil
 }
 
@@ -417,6 +460,9 @@ func (a *App) syncLoop(ctx context.Context, ticks <-chan time.Time) {
 		_ = a.Sync(ctx)
 		_ = a.RefreshPullRequests(ctx)
 		_ = a.RefreshJira(ctx)
+		if a.Runs != nil {
+			a.Runs.maybeCheckPlugins(ctx)
+		}
 		select {
 		case <-ctx.Done():
 			return

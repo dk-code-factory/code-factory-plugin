@@ -8,14 +8,20 @@ import (
 )
 
 type Repository struct {
-	ID       string    `json:"id"`
-	Checkout string    `json:"checkout"`
-	Base     string    `json:"base"`
-	LastSync time.Time `json:"lastSync"`
-	LastFull time.Time `json:"lastFull"`
-	Error    string    `json:"error"`
-	RetryAt  time.Time `json:"retryAt"`
-	Imported bool      `json:"imported"`
+	AutoReview              *bool     `json:"autoReview,omitempty"`
+	ReviewPrompt            string    `json:"reviewPrompt,omitempty"`
+	ReviewError             string    `json:"reviewError,omitempty"`
+	Paused                  bool      `json:"paused,omitempty"`
+	ReviewProfileID         string    `json:"reviewProfileId,omitempty"`
+	ImplementationProfileID string    `json:"implementationProfileId,omitempty"`
+	ID                      string    `json:"id"`
+	Checkout                string    `json:"checkout"`
+	Base                    string    `json:"base"`
+	LastSync                time.Time `json:"lastSync"`
+	LastFull                time.Time `json:"lastFull"`
+	Error                   string    `json:"error"`
+	RetryAt                 time.Time `json:"retryAt"`
+	Imported                bool      `json:"imported"`
 }
 type Actor struct {
 	Login string `json:"login"`
@@ -114,13 +120,15 @@ type Ticket struct {
 	Error       string          `json:"error"`
 }
 type Skill struct {
-	ID      string            `json:"id"`
-	Name    string            `json:"name"`
-	Path    string            `json:"path"`
-	Content string            `json:"content"`
-	Modes   map[string]uint32 `json:"modes,omitempty"`
-	Files   map[string]string `json:"files,omitempty"`
-	Managed bool              `json:"managed"`
+	Disabled    bool              `json:"disabled,omitempty"`
+	Description string            `json:"description,omitempty"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Path        string            `json:"path"`
+	Content     string            `json:"content"`
+	Modes       map[string]uint32 `json:"modes,omitempty"`
+	Files       map[string]string `json:"files,omitempty"`
+	Managed     bool              `json:"managed"`
 }
 type Profile struct {
 	Mode       string   `json:"mode,omitempty"`
@@ -135,29 +143,35 @@ type Profile struct {
 	Publishing string   `json:"publishing"`
 }
 type Config struct {
-	ID                  string         `json:"id"`
-	PriorityLabels      map[string]int `json:"priorityLabels"`
-	AssessmentPrompt    string         `json:"assessmentPrompt"`
-	PolicyVersion       string         `json:"policyVersion"`
-	JiraURL             string         `json:"jiraUrl"`
-	JiraEmail           string         `json:"jiraEmail"`
-	Notifications       bool           `json:"notifications"`
-	QuestionHelperModel string         `json:"questionHelperModel,omitempty"`
+	AutoReview              bool           `json:"autoReview,omitempty"`
+	ReviewProfileID         string         `json:"reviewProfileId,omitempty"`
+	ImplementationProfileID string         `json:"implementationProfileId,omitempty"`
+	PluginCheckMinutes      int            `json:"pluginCheckMinutes,omitempty"`
+	ID                      string         `json:"id"`
+	PriorityLabels          map[string]int `json:"priorityLabels"`
+	AssessmentPrompt        string         `json:"assessmentPrompt"`
+	PolicyVersion           string         `json:"policyVersion"`
+	JiraURL                 string         `json:"jiraUrl"`
+	JiraEmail               string         `json:"jiraEmail"`
+	Notifications           bool           `json:"notifications"`
+	QuestionHelperModel     string         `json:"questionHelperModel,omitempty"`
 }
 type Run struct {
-	ID       string    `json:"id"`
-	ItemID   string    `json:"itemId"`
-	Profile  Profile   `json:"profile"`
-	Prompt   string    `json:"prompt"`
-	Skills   []Skill   `json:"skills"`
-	Worktree string    `json:"worktree"`
-	Branch   string    `json:"branch"`
-	Base     string    `json:"base"`
-	ThreadID string    `json:"threadId"`
-	TurnID   string    `json:"turnId"`
-	Status   string    `json:"status"`
-	Error    string    `json:"error"`
-	Created  time.Time `json:"created"`
+	AutomaticReview      bool      `json:"automaticReview,omitempty"`
+	ReviewPromptSnapshot string    `json:"reviewPromptSnapshot,omitempty"`
+	ID                   string    `json:"id"`
+	ItemID               string    `json:"itemId"`
+	Profile              Profile   `json:"profile"`
+	Prompt               string    `json:"prompt"`
+	Skills               []Skill   `json:"skills"`
+	Worktree             string    `json:"worktree"`
+	Branch               string    `json:"branch"`
+	Base                 string    `json:"base"`
+	ThreadID             string    `json:"threadId"`
+	TurnID               string    `json:"turnId"`
+	Status               string    `json:"status"`
+	Error                string    `json:"error"`
+	Created              time.Time `json:"created"`
 }
 type Attention struct {
 	ID         string          `json:"id"`

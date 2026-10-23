@@ -1,5 +1,31 @@
 # Continue development through the real Chrome session
 
+## Public connection recovery · 2026-10-22
+
+Installed **0.1.0-ebf7a6cdd84a** showed Reconnecting with a connection-interrupted
+alert while local authenticated diagnostics and tailnet HTTPS remained healthy.
+Fresh TLS connections to both public Funnel ingress addresses closed before HTTP.
+Reapplying only the existing Code Factory handler preserved the exact route set
+but did not recover access; one restun and socket rebind also did not recover it.
+One Tailscale daemon restart renewed the control session. Recovery was partial
+before both public peers and the existing widget recovered; the precise upstream
+cause and causal contribution of the restart remain unproven.
+
+Before any shared Tailscale restart, privately snapshot the complete current Serve
+configuration. This restart loaded an older handler set that omitted two unrelated
+mechanic-helper handlers. Both were restored from the observed snapshot, and the
+complete ports/handlers/Funnel configuration was verified exactly equal afterward.
+Do not reset Serve/Funnel, disable all of 443, or assume configured routes survive
+a restart unchanged. Avoid repeated restarts when public edges need propagation.
+
+The [recovery evidence](evidence/2026-10-22-connection-recovery.json) records passing
+raw public OAuth/MCP and independent SDK checks on both ingress peers, with all
+ephemeral credentials revoked. The same signed-in widget automatically returned
+to Connected without reload or sign-in. App services and binary were unchanged;
+no agent work or deployment was performed. This bounded recovery does not replace
+soak, event callbacks, coordinated login or manual accessibility acceptance.
+
+
 This runbook records the working arrangement on this computer as of
 **2026-10-22**. Verify live state before changing it. The agent runs commands and
 browser tests; the owner supplies initial sign-in and consent for the selected
@@ -238,7 +264,7 @@ to Chrome. Use the browser controller below.
 
 | Item | Current value |
 | --- | --- |
-| Last verified installed daemon | `0.1.0-ebf7a6cdd84a` (bounded native question, follow-up and form-recovery smoke; earlier full soak/CSP evidence remains version-bound) |
+| Last verified installed daemon | `0.1.0-2c910ee0442b` (bounded admin widget/inventory smoke; native question and full lifecycle evidence remain tied to earlier builds) |
 | Complete browser package | `0.2.2` |
 | Stable launcher | `~/.local/bin/code-factory` |
 | Versioned releases | `~/.local/lib/code-factory` |
@@ -667,3 +693,49 @@ References: [official OpenAI testing flow](https://developers.openai.com/plugins
 [official MCP Events tests](https://developers.openai.com/plugins/build/mcp-events#test-in-chatgpt),
 [Chrome owner-approved auto-connect](https://developer.chrome.com/docs/devtools/agents/use-cases/auto-connect),
 [GNOME remote login](https://help.gnome.org/gnome-help/remote-login.html).
+
+## Admin monitoring and Codex plugin controls · 2026-10-22
+
+The admin feature adds system review defaults, repository policy/pipeline overrides,
+appended repository review instructions and explicit plugin maintenance through
+Settings, owner tools and the bundled admin skill. Queue-only remains the default;
+plugin update checks never install releases automatically. Refer to
+[plugin administration](plugin.md#repository-monitoring-and-plugin-administration)
+for configuration fields, update-status limits and durable operation behavior.
+
+Use the private pilot only for browser and model acceptance. Do not enable auto
+review on unrelated repositories for testing. Before deployment check live runs,
+retain the prepared PR-review test and existing drafts, and preserve provider
+authentication, plugin choices and the full Tailscale route set. Plugin refresh
+is sufficient for read-only inventory checks; installing arbitrary third-party
+plugins requires the owner's actual choice. Do not replay uncertain operations
+or claim a remote plugin is current when its release metadata is unavailable.
+
+Source verification and any installed-version observations are recorded separately
+in acceptance. New-build callbacks, soak, login and manual accessibility remain
+open until actually observed.
+
+## Installed admin widget · 2026-10-22
+
+Build **0.1.0-2c910ee0442b** is installed from a checksummed release; reviewed
+reconciliation, `make specs-check` and full branch CI against `605b475` passed.
+The [admin evidence](evidence/2026-10-22-admin.json) records 74 browser tests,
+Go race checks, isolated pinned-CLI installation of all three plugin skills,
+and bounded actual-host admin-widget verification. Fresh Work Settings loaded
+the exact release JavaScript, remained Connected with no alerts and displayed
+repository/system policy controls, custom review instructions, six installed
+plugins and 30 skills after a successful read-only inventory refresh.
+
+Provider paths, full Tailscale routes, all retained runs and the prepared pilot
+PR-review snapshot are unchanged. No agent, third-party plugin installation or
+policy change was started by the live check. Defaults remain queue-only, repo
+inheritance and manual metadata checks. Full raw public OAuth/MCP and independent
+SDK checks passed both ingress peers and revoked ephemeral credentials.
+
+Hosted package 0.2.3 includes the new admin skill and preserves the registered app
+mapping. The existing private cloud package is still 0.2.2 (two skills); it was
+not replaced. The admin widget/tools work through its refreshed connection, and
+the new admin skill is available in the rebuilt 0.2.3 ZIP. Remote catalog update
+versions remain explicitly Unknown when the stable provider does not expose them.
+No live third-party skill execution or automatic-request launch, new-build soak,
+callback, login or full manual accessibility acceptance is claimed.
