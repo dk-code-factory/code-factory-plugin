@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -203,5 +204,137 @@ func TestFailedPollCannotOverwriteConcurrentRepositoryPolicyChanges(t *testing.T
 	_ = a.Store.Get(ctx, "repository", repo.ID, &current)
 	if !current.Paused || current.AutoReview == nil || !*current.AutoReview || current.ReviewPrompt != repo.ReviewPrompt || current.Error == "" || !current.LastSync.IsZero() {
 		t.Fatal("failed poll overwrote owner policy or checkpoint", current)
+	}
+}
+
+func TestSyncImportsOtherRepositoryWhileOneIsBlocked(t *testing.T) {
+	a, ctx := fixture(t)
+	blocked := make(chan struct{})
+	release := make(chan struct{})
+	var once sync.Once
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/user":
+			fmt.Fprint(w, `{"login":"me"}`)
+		case "/repos/a/slow/issues":
+			close(blocked)
+			select {
+			case <-release:
+			case <-r.Context().Done():
+				return
+			}
+			fmt.Fprint(w, `[]`)
+		case "/repos/z/fast/pulls":
+			fmt.Fprint(w, `[{"number":7,"state":"open","user":{"login":"other"}}]`)
+		case "/repos/z/fast/pulls/7":
+			fmt.Fprint(w, `{"head":{"sha":"abc","ref":"feature"},"requested_reviewers":[{"login":"me"}]}`)
+		case "/repos/z/fast/commits/abc/check-runs":
+			fmt.Fprint(w, `{"total_count":0,"check_runs":[]}`)
+		default:
+			fmt.Fprint(w, `[]`)
+		}
+	}))
+	defer server.Close()
+	defer once.Do(func() { close(release) })
+	a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	for _, id := range []string{"a/slow", "z/fast"} {
+		if err := a.SaveRepository(ctx, domain.Repository{ID: id}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	done := make(chan error, 1)
+	go func() { done <- a.Sync(ctx) }()
+	select {
+	case <-blocked:
+	case <-time.After(5 * time.Second):
+		t.Fatal("slow sync did not enter")
+	}
+	waitFor(t, func() bool {
+		entries, err := a.Inbox(ctx, "open")
+		if err != nil {
+			return false
+		}
+		for _, e := range entries {
+			if e.Item.ID == "z/fast#7" && ContainsQueue(e, "review") {
+				return true
+			}
+		}
+		return false
+	})
+	var slow domain.Repository
+	if err := a.Store.Get(ctx, "repository", "a/slow", &slow); err != nil || slow.Imported {
+		t.Fatal("blocked checkpoint advanced", err)
+	}
+	once.Do(func() { close(release) })
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors(t *testing.T) {
+	a, ctx := fixture(t)
+	var block atomic.Bool
+	block.Store(true)
+	entered := make(chan struct{}, 1)
+	var mu sync.Mutex
+	order := []string{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "/pulls/") {
+			mu.Lock()
+			order = append(order, r.URL.Path)
+			mu.Unlock()
+			if strings.HasSuffix(r.URL.Path, "/1") && block.Load() {
+				entered <- struct{}{}
+				<-r.Context().Done()
+				return
+			}
+			n := "1"
+			if strings.HasSuffix(r.URL.Path, "/2") {
+				n = "2"
+			}
+			fmt.Fprintf(w, `{"number":%s,"state":"open","head":{"sha":"abc"}}`, n)
+		} else if strings.HasSuffix(r.URL.Path, "/check-runs") {
+			fmt.Fprint(w, `{"total_count":0,"check_runs":[]}`)
+		} else {
+			fmt.Fprint(w, `[]`)
+		}
+	}))
+	defer server.Close()
+	a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	old := domain.Item{ID: "o/r#1", Repository: "o/r", Number: 1, Kind: "pr", State: "open", PR: &domain.PullRequest{ID: "o/r#1", Head: "retained", SyncedAt: time.Now().Add(-time.Hour)}}
+	if err := a.Store.Put(ctx, "linked-pr", old.ID, old, ""); err != nil {
+		t.Fatal(err)
+	}
+	for n := 1; n <= 2; n++ {
+		link := domain.Relationship{Manual: true, ID: fmt.Sprint(n), Source: "owner/repo#1", Target: fmt.Sprintf("o/r#%d", n), Evidence: fmt.Sprintf("https://github.com/o/r/pull/%d", n)}
+		if err := a.Store.Put(ctx, "relationship", link.ID, link, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	limited, cancel := context.WithCancel(ctx)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- a.RefreshPullRequests(limited) }()
+	select {
+	case <-entered:
+	case <-time.After(5 * time.Second):
+		t.Fatal("reference fetch did not enter")
+	}
+	cancel()
+	if err := <-done; err != context.Canceled {
+		t.Fatal("cancellation did not yield", err)
+	}
+	var retained domain.Item
+	if err := a.Store.Get(ctx, "linked-pr", old.ID, &retained); err != nil || retained.PR.Head != "retained" || retained.PR.Error != "" {
+		t.Fatal("budget cancellation replaced successful metadata", err)
+	}
+	block.Store(false)
+	if err := a.RefreshPullRequests(ctx); err != nil {
+		t.Fatal(err)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(order) < 2 || order[1] != "/repos/o/r/pulls/2" {
+		t.Fatal("next pass did not advance past blocked reference", order)
 	}
 }

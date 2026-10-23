@@ -188,8 +188,26 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	tracked := map[string]bool{}
+	for _, r := range runs {
+		if r.Status != "prepared" {
+			tracked[r.ItemID] = true
+		}
+	}
+	focuses, err := store.List[detailFocus](ctx, a.Store, "github-detail-focus")
+	if err != nil {
+		return err
+	}
+	for _, focus := range focuses {
+		if time.Since(focus.SeenAt) < providers.GitHubDetailTTL {
+			tracked[focus.ID] = true
+		}
+	}
 	wanted := map[string]bool{}
 	for _, l := range links {
+		if !l.Manual && !strings.HasPrefix(l.ID, "run:") && !tracked[l.Source] && !tracked[l.Target] {
+			continue
+		}
 		for _, id := range []string{l.Source, l.Target} {
 			var item domain.Item
 			if a.Store.Get(ctx, "item", id, &item) == nil && item.Kind == "pr" {
@@ -211,10 +229,20 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
+	start := sort.SearchStrings(ids, a.prRefreshAfter)
+	if start < len(ids) && ids[start] == a.prRefreshAfter {
+		start++
+	}
+	ids = append(ids[start:], ids[:start]...)
+	processed := 0
 	for _, id := range ids {
+		if processed >= 2 {
+			break
+		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		a.prRefreshAfter = id
 		parts := strings.SplitN(id, "#", 2)
 		if len(parts) != 2 || !repoPattern.MatchString(parts[0]) {
 			continue
@@ -235,20 +263,28 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 		if old.PR != nil && time.Now().Before(old.PR.RetryAt) {
 			continue
 		}
-		if old.PR != nil && old.PR.Error == "" && time.Since(old.PR.SyncedAt) < SyncInterval/2 {
+		if old.PR != nil && old.PR.Error == "" && time.Since(old.PR.SyncedAt) < providers.GitHubDetailTTL {
 			continue
 		}
 		var repository domain.Repository
-		if a.Store.Get(ctx, "repository", parts[0], &repository) == nil && repository.Paused {
-			continue
+		if a.Store.Get(ctx, "repository", parts[0], &repository) == nil {
+			if repository.Paused {
+				continue
+			}
+
 		}
+		processed++
 		fresh, err := a.GitHub.PullRequest(ctx, parts[0], number)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		if err != nil {
 			if old.ID == "" {
 				old = domain.Item{ID: id, Repository: parts[0], Number: number, Kind: "pr", URL: fmt.Sprintf("https://github.com/%s/pull/%d", parts[0], number), State: "unknown"}
 			}
 			p := summary(old)
 			p.Error = err.Error()
+			p.RetryAt = time.Now().Add(providers.GitHubDetailTTL)
 			var rate *providers.RateLimitError
 			if errors.As(err, &rate) {
 				p.RetryAt = rate.Until
@@ -257,6 +293,9 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 			if err = a.Store.Put(ctx, kind, id, old, "pr.changed"); err != nil {
 				return err
 			}
+			continue
+		}
+		if fresh.ReviewObservedAt.Before(old.ReviewObservedAt) {
 			continue
 		}
 		fresh.Activity = old.Activity

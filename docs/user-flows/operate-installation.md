@@ -108,6 +108,7 @@ flowchart TD
 - [scripts/test_browser_control.mjs](../../scripts/test_browser_control.mjs) — `test('argument parsing is deterministic and cannot mutate inputs or later calls'`; S4. Option parsing is deterministic, read-only and isolated from prior result mutation. Pure argument fixtures do not attach Chrome, read profiles or establish host acceptance.
 - [internal/transport/ui_resource_test.go](../../internal/transport/ui_resource_test.go) — `func TestUIResourceContentIdentityAndCompatibility(`; S1. Actual SDK fixture asserts stable same-content and changed-content UI identity, matching current tool/resource metadata and exact HTML; only the original exact URI reads current content unadvertised, while unknown/previous hashes and query variants reject. CSP domains stay empty. This does not prove host refresh or installed UI acceptance.
 - [internal/gateway/proxy_diagnostics_test.go](../../internal/gateway/proxy_diagnostics_test.go) — `func TestProxyDiagnosticsClassifyWithoutLeakingRequestOrError(`; S1. Failure categories contain no raw request/error details and preserve 502 behavior.
+- [internal/setup/github_diagnostics_test.go](../../internal/setup/github_diagnostics_test.go) — `func TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence(`; S1. Diagnostics use local credentials without a GitHub API probe and align freshness/paused/deferred status with periodic reconciliation.
 
 ## Verification and gaps
 

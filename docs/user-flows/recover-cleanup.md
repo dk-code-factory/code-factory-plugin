@@ -29,6 +29,8 @@ Closing the view or transport does not stop work. Process loss makes live RPC ID
 
 Plugin maintenance also survives view closure. Startup marks queued/running operations uncertain without replay; a failed/null inventory response retains the previous observations. Refreshing actual provider state precedes any user-chosen retry. Existing run recovery and cleanup do not remove plugin installation history.
 
+- **S5** Private scratch and refreshed review indexes remain scoped to the retained run across recovery. Successful explicit cleanup removes that scratch along with its clean workspace; dirty cleanup preserves both. The owner’s original private settings and retained conversation history remain intact.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -48,6 +50,8 @@ flowchart TD
     N6(["Cleaned workspace with retained history"])
     N7["Retire retained session, stale pending requests and mark interrupted"]
     N8["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
+    N9["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
+    N10(["Sandbox initialization failed#59; retained work and authority preserved"])
     N0 -->|"send message"| N1
     N1 --> N2
     N0 -->|"cleanup stopped work"| N3
@@ -58,6 +62,9 @@ flowchart TD
     N3 -->|"before attempting workspace removal"| N7
     N0 -->|"additional workbench path"| N8
     N8 -->|"resolved or explicit recovery"| N5
+    N0 -->|"authorized bounded task start or continuation"| N9
+    N9 -->|"valid policy#59; retain scoped work"| N5
+    N9 -->|"invalid policy#59; fail before provider launch"| N10
 ```
 
 ## Implementation references
@@ -74,6 +81,8 @@ flowchart TD
 - [internal/app/questions.go](../../internal/app/questions.go) — Durable native/message/text question routing, bounded form repair, redaction and retained continuation. (`func (m *Manager) answerSynthetic(`)
 - [internal/app/plugins.go](../../internal/app/plugins.go) — Durable pinned-CLI plugin lifecycle and exclusive runtime/maintenance boundary. (`func (m *Manager) PluginAction(`)
 - [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
+- [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
+- [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 
 ## Test references
 
@@ -89,6 +98,10 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `text fallback opens the same session console`; S4. Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch.
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(`; S4. Lost question IDs are stale but retained textual continuation remains; lost approvals never become textual authorization.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginRestartAndMalformedInventoryRetainObservedState(`; S1. Startup marks in-flight plugin operations uncertain; malformed inventory retains prior observations without replay.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S5. Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S5. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S5. Invalid sandbox fails before app-server launch without an unrestricted fallback.
+- [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S5. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
 
 ## Verification and gaps
 

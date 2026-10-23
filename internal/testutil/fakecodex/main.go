@@ -12,6 +12,18 @@ import (
 )
 
 func main() {
+	if path := os.Getenv("CF_FAKE_ARGS_RECORD"); path != "" && len(os.Args) > 1 && os.Args[1] == "app-server" {
+		b, _ := json.Marshal(os.Args[1:])
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		if err != nil {
+			os.Exit(5)
+		}
+		_, err = f.Write(append(b, '\n'))
+		_ = f.Close()
+		if err != nil {
+			os.Exit(5)
+		}
+	}
 	if len(os.Args) > 1 && os.Args[1] == "plugin" {
 		pluginCLI()
 		return

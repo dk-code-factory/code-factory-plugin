@@ -14,6 +14,7 @@ The owner has opened the separate connected Settings view. Repository access is 
 2. Expand Priorities & notifications to edit label/priority rows, the assessment policy and the optional question helper model.
 3. Create or edit work profiles, including prompts, model settings, permissions and publishing authority.
 4. Discover local skills or save managed skill content, then select skills for future launches.
+5. Inspect cached GitHub API usage and choose the application request budget, quota reserve and review-notification interval.
 
 ## Alternatives and recovery
 
@@ -28,11 +29,13 @@ Settings is independent of the task UI and has no Inbox/Agents navigation. Savin
 - **S4** System defaults queue review requests. A repository inherits or overrides queue/automatic behavior and role pipelines, can pause monitoring, and adds owner review instructions to its generic prompt. Last poll, sync errors and review-policy errors remain visible. Older cached forms preserve omitted monitoring/default fields; explicit inheritance or empty extra prompt clears only the chosen value.
 - **S5** Admin widget, plugin tools and bundled admin skill observe installed/available Codex plugins, enabled state, versions, update status and durable operations. The owner adds sources and explicitly installs, updates or removes plugins. Scheduled metadata checks never install updates. Uncertain operations retain observations and never replay. Discovered plugin/standalone skills remain selectable for future review and implementation profiles; unavailable skills cannot be newly prepared. Unknown remote-catalog version or authentication readiness remains explicit.
 
+- **S6** The owner saves a bounded application GitHub request budget, reserve and notification interval without triggering a repository poll. Usage displays cached counts and observed quotas. Budget-only edits preserve priority assessments. Omitted fields from older forms retain their values; independent skill/agent GitHub usage is identified separately.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [codex-plugin](../glossary/README.md#codex-plugin), [plugin-marketplace](../glossary/README.md#plugin-marketplace), [plugin-inventory](../glossary/README.md#plugin-inventory), [plugin-maintenance](../glossary/README.md#plugin-maintenance), [review-policy](../glossary/README.md#review-policy), [repository-review-prompt](../glossary/README.md#repository-review-prompt).
-UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT).
+Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [codex-plugin](../glossary/README.md#codex-plugin), [plugin-marketplace](../glossary/README.md#plugin-marketplace), [plugin-inventory](../glossary/README.md#plugin-inventory), [plugin-maintenance](../glossary/README.md#plugin-maintenance), [review-policy](../glossary/README.md#review-policy), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification).
+UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE).
 
 ## Flow diagram
 
@@ -48,6 +51,7 @@ flowchart TD
     N7["Set system defaults, repository overrides and extra review instructions #40;S4#41;"]
     N8["Observe plugins or submit one explicit maintenance operation #40;S5#41;"]
     N9(["Uncertain or failed result retains observed state without replay"])
+    N10["Save API request budget, reserve and review-notification interval#59; inspect cached usage #40;S6#41;"]
     N0 -->|"accepted"| N1
     N1 --> N2
     N2 --> N3
@@ -62,6 +66,9 @@ flowchart TD
     N0 -->|"plugin management"| N8
     N8 -->|"observed success"| N6
     N8 -->|"failed or uncertain"| N9
+    N0 -->|"API usage settings"| N10
+    N10 -->|"valid settings saved"| N6
+    N10 -->|"invalid limits"| N4
 ```
 
 ## Implementation references
@@ -93,6 +100,7 @@ flowchart TD
 - [internal/app/review_requests.go](../../internal/app/review_requests.go) — Resolve inherited review policies, fresh requests, durable claims and pinned automatic launches. (`func (a *App) ProcessReviewRequests(`)
 - [web/src/admin.tsx](../../web/src/admin.tsx) — Repository/global review policy and plugin-admin settings. (`export function RepositoryAdmin(`)
 - [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Bundled administration skill exposes the same owner tool controls. (`name: code-factory-admin`)
+- [internal/app/github_usage.go](../../internal/app/github_usage.go) — Bind system budget settings to private durable accounting and carry over existing cooldowns. (`func (a *App) EnableGitHubUsage(`)
 
 ## Test references
 
@@ -114,6 +122,9 @@ flowchart TD
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestSelectedDiscoveredSkillKeepsItsBundleAndAutomaticChecksDoNotInstall(`; S5. Discovery and launch preserve skill text/support files/executable modes; scheduled checks refresh metadata without an install command.
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(`; S4. System defaults queue; enabled inherited policy starts one pinned read-only review with appended repo text, survives duplicate polls/restart and accepts a new request episode.
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestRepositoryQueueOverridePauseDraftAndStaleRequestsDoNotStart(`; S4. Queue override, pause, draft, old sync, absent request, sync error and unsafe review profile cannot launch automatically.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `GitHub usage settings show cached quota and save budget without polling`; S6. Both narrow themes save limits and display cached usage without polling GitHub.
+- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestIndexPreservesHistoryInvalidatesChangedHeadAndBudgetEditsKeepAssessmentPolicy(`; S3, S6. Budget-only edits do not invalidate all priority assessments; cheap index retains history and invalidates old-head metadata.
+- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestInvalidAPIBudgetCannotOverwriteSavedPolicy(`; S6. Rejected out-of-range limits cannot replace saved API or assessment policy.
 
 ## Verification and gaps
 

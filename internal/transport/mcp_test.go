@@ -104,9 +104,21 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	}
 	tools := request("tools/list", nil, true, "2026-07-28")["tools"].([]any)
 	found := false
+	reviewFound := false
 	for _, v := range tools {
 		tool := v.(map[string]any)
 		metadata := tool["_meta"].(map[string]any)
+		if tool["name"] == "prepare_pr_review" {
+			reviewFound = true
+			vis := metadata["ui"].(map[string]any)["visibility"].([]any)
+			if len(vis) != 2 || vis[0] != "model" || vis[1] != "app" || !strings.Contains(tool["description"].(string), "start_run") {
+				t.Fatal("PR review workflow is not discoverable to the model", tool)
+			}
+			schema := tool["inputSchema"].(map[string]any)
+			if required := schema["required"].([]any); len(required) != 1 || required[0] != "itemId" {
+				t.Fatal("PR review requires only the synchronized itemId", schema)
+			}
+		}
 		expectedURI := ResourceURI
 		switch tool["name"] {
 		case "read_plugin_admin", "manage_codex_plugins", "sync_repositories", "open_settings", "get_settings", "save_settings", "save_repository", "save_profile", "set_jira_credential", "discover_skills", "save_skill", "diagnostics":
@@ -127,8 +139,8 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 			found = true
 		}
 	}
-	if !found {
-		t.Fatal("missing credential tool")
+	if !found || !reviewFound {
+		t.Fatal("missing credential or PR review tool")
 	}
 	res := request("tools/call", map[string]any{"name": "read_snapshot", "arguments": map[string]any{}}, true, "2026-07-28")
 	if res["isError"] == true || res["structuredContent"] == nil {
@@ -177,6 +189,10 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	config.AutoReview = true
 	config.ReviewProfileID = "review"
 	config.PluginCheckMinutes = 60
+	config.GitHubRequestsPerHour = 120
+	reserve := 42
+	config.GitHubReserve = &reserve
+	config.GitHubPollSeconds = 300
 	if err := a.SaveConfig(ctx, config); err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +202,7 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 		t.Fatal(savedSettings)
 	}
 	config, _ = a.Config(ctx)
-	if !config.AutoReview || config.ReviewProfileID != "review" || config.PluginCheckMinutes != 60 {
+	if !config.AutoReview || config.ReviewProfileID != "review" || config.PluginCheckMinutes != 60 || config.GitHubRequestsPerHour != 120 || config.GitHubReserve == nil || *config.GitHubReserve != 42 || config.GitHubPollSeconds != 300 {
 		t.Fatal("older settings form overwrote system review defaults")
 	}
 	admin := request("tools/call", map[string]any{"name": "read_plugin_admin", "arguments": map[string]any{}}, true, "2026-07-28")
@@ -263,9 +279,85 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 		t.Fatal("settings configuration data missing")
 	}
 
+	pr := domain.Item{ID: "pilot/local#8", Repository: monitored.ID, Kind: "pr", Head: strings.Repeat("b", 40), URL: "https://github.com/pilot/local/pull/8", Title: "Review fixture"}
+	if err := db.Put(ctx, "item", pr.ID, pr, ""); err != nil {
+		t.Fatal(err)
+	}
+	prepared := request("tools/call", map[string]any{"name": "prepare_pr_review", "arguments": map[string]any{"itemId": pr.ID}}, true, "2026-07-28")
+	if prepared["isError"] == true {
+		t.Fatal("PR review preparation rejected", prepared)
+	}
+	run := prepared["structuredContent"].(map[string]any)["data"].(map[string]any)
+	if run["status"] != "prepared" || run["base"] != pr.Head || run["profile"].(map[string]any)["id"] != "review" {
+		t.Fatal("PR review did not return the prepared configured pipeline", run)
+	}
+	badReview := request("tools/call", map[string]any{"name": "prepare_pr_review", "arguments": map[string]any{"itemId": "pilot/local#7"}}, true, "2026-07-28")
+	if badReview["isError"] != true {
+		t.Fatal("non-PR preparation accepted")
+	}
 	legacy := request("initialize", map[string]any{"protocolVersion": "2025-11-25", "capabilities": map[string]any{}, "clientInfo": map[string]string{"name": "compat-test", "version": "1"}}, true, "2025-11-25")
 	if legacy["protocolVersion"] != "2025-11-25" {
 		t.Fatal("legacy adapter", legacy)
 	}
 	request("tools/list", nil, true, "2025-11-25")
+}
+
+func TestDashboardSummariesOmitHistoryAndKeepFullItemDetail(t *testing.T) {
+	ctx := context.Background()
+	db, err := store.Open(filepath.Join(t.TempDir(), "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	a := &app.App{Store: db}
+	if err := a.Init(ctx); err != nil {
+		t.Fatal(err)
+	}
+	i := domain.Item{ID: "o/r#1", Repository: "o/r", Number: 1, Kind: "pr", Title: "Requested review", State: "open", Body: "Review context", Head: "abc", ReviewRequests: []string{"me"}, Activity: []domain.Activity{{ID: "comment:1", Body: strings.Repeat("history", 100000)}}, Checks: json.RawMessage(`{"large":"` + strings.Repeat("checks", 100000) + `"}`)}
+	i.PR = &domain.PullRequest{ID: i.ID, CI: "success", Checks: []domain.Check{{Name: strings.Repeat("full check", 100000)}}}
+	i.Revision = i.ContentRevision()
+	linked := domain.Item{ID: "other/repo#2", Kind: "pr", PR: &domain.PullRequest{ID: "other/repo#2", CI: "success", Checks: i.PR.Checks}}
+	if err := db.Put(ctx, "linked-pr", linked.ID, linked, ""); err != nil {
+		t.Fatal(err)
+	}
+	link := domain.Relationship{ID: "linked", Source: i.ID, Target: linked.ID, Evidence: "https://github.com/other/repo/pull/2"}
+	if err := db.Put(ctx, "relationship", link.ID, link, ""); err != nil {
+		t.Fatal(err)
+	}
+	for kind, value := range map[string]any{"item": i, "user": domain.UserState{ID: i.ID}, "identity": domain.GitHubViewer{Login: "me"}} {
+		id := i.ID
+		if kind == "identity" {
+			id = "github"
+		}
+		if err := db.Put(ctx, kind, id, value, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	s := &Server{App: a}
+	snap, err := s.snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(snap)
+	if err != nil || len(b) > 30000 {
+		t.Fatal("dashboard carried item history", len(b), err)
+	}
+	entry := snap["inbox"].([]domain.InboxEntry)[0]
+	if !app.ContainsQueue(entry, "review") || entry.Item.Body != i.Body || entry.Item.Revision != i.Revision || entry.Item.Head != i.Head {
+		t.Fatal("summary lost review or launch context")
+	}
+	if len(entry.Item.PR.Checks) != 0 || entry.Item.PR.CI != "success" || len(entry.LinkedPullRequests) != 1 || len(entry.LinkedPullRequests[0].Checks) != 0 {
+		t.Fatal("summary retained full check lists or lost status")
+	}
+	detail, err := s.detail(ctx, i.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	full := detail.(map[string]any)["item"].(domain.Item)
+	if len(full.PR.Checks) != 1 || full.PR.Checks[0].Name != i.PR.Checks[0].Name || detail.(map[string]any)["linkedPullRequests"].([]domain.PullRequest)[0].Checks[0].Name != i.PR.Checks[0].Name {
+		t.Fatal("full PR checks were truncated")
+	}
+	if len(full.Activity) != 1 || full.Activity[0].Body != i.Activity[0].Body || !bytes.Equal(full.Checks, i.Checks) {
+		t.Fatal("full detail was truncated")
+	}
 }

@@ -19,13 +19,14 @@ import (
 )
 
 type App struct {
-	autoReviewMu sync.Mutex
-	providerMu   sync.Mutex
-	Store        *store.Store
-	Vault        *store.Vault
-	GitHub       *providers.GitHub
-	Runs         *Manager
-	DataDir      string
+	autoReviewMu   sync.Mutex
+	providerMu     sync.Mutex
+	prRefreshAfter string
+	Store          *store.Store
+	Vault          *store.Vault
+	GitHub         *providers.GitHub
+	Runs           *Manager
+	DataDir        string
 }
 
 func ID() string {
@@ -63,6 +64,16 @@ func (a *App) Config(ctx context.Context) (domain.Config, error) {
 	return c, e
 }
 func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
+	if c.GitHubRequestsPerHour != 0 && (c.GitHubRequestsPerHour < 60 || c.GitHubRequestsPerHour > 5000) {
+		return fmt.Errorf("GitHub budget must be 60–5000 requests per hour")
+	}
+	if c.GitHubReserve != nil && (*c.GitHubReserve < 0 || *c.GitHubReserve > 5000) {
+		return fmt.Errorf("GitHub reserve must be 0–5000")
+	}
+	if c.GitHubPollSeconds != 0 && (c.GitHubPollSeconds < 60 || c.GitHubPollSeconds > 3600) {
+		return fmt.Errorf("GitHub polling must be 60–3600 seconds")
+	}
+
 	for _, id := range []string{c.ReviewProfileID, c.ImplementationProfileID} {
 		if id != "" {
 			var p domain.Profile
@@ -86,7 +97,14 @@ func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
 		return fmt.Errorf("assessment prompt required")
 	}
 	c.ID = "settings"
-	c.PolicyVersion = ID()
+	old, err := a.Config(ctx)
+	if err != nil {
+		return err
+	}
+	c.PolicyVersion = old.PolicyVersion
+	if old.AssessmentPrompt != c.AssessmentPrompt || string(raw(old.PriorityLabels)) != string(raw(c.PriorityLabels)) {
+		c.PolicyVersion = ID()
+	}
 	return a.Store.Put(ctx, "config", c.ID, c, "config.changed")
 }
 
@@ -257,6 +275,9 @@ func (a *App) UserAction(ctx context.Context, id, kind, revision string, priorit
 	})
 }
 func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.Item, user string, checkpoint time.Time, full bool) error {
+	return a.importItems(ctx, r, items, user, &checkpoint, full)
+}
+func (a *App) importItems(ctx context.Context, r domain.Repository, items []domain.Item, user string, checkpoint *time.Time, full bool) error {
 	previousLinks, err := store.List[domain.Relationship](ctx, a.Store, "relationship")
 	if err != nil {
 		return err
@@ -269,6 +290,37 @@ func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.It
 				return e
 			}
 			created := errors.Is(e, store.ErrNotFound)
+			if i.SummaryOnly {
+				if i.Kind == "pr" && old.ReviewObservedAt.After(i.ReviewObservedAt) {
+					continue
+				}
+				i.SummaryOnly = false
+				if !created {
+					i.Activity = old.Activity
+					i.DetailSyncedAt = old.DetailSyncedAt
+					if i.Head != old.Head || i.Updated.After(old.Updated) || i.State != old.State {
+						i.DetailSyncedAt = time.Time{}
+					}
+					i.ClosingIssues = old.ClosingIssues
+				}
+				if i.Kind == "pr" {
+					i.PR = &domain.PullRequest{ID: i.ID, Title: i.Title, URL: i.URL, State: i.State, Draft: i.Draft, Head: i.Head, CI: "unknown", ReviewDecision: "unknown", Checks: []domain.Check{}, Error: "PR details have not been refreshed"}
+					if !created && old.Head == i.Head {
+						i.Checks = old.Checks
+						if old.PR != nil {
+							p := *old.PR
+							p.Title = i.Title
+							p.State = i.State
+							p.Draft = i.Draft
+							i.PR = &p
+							if i.DetailSyncedAt.IsZero() || time.Since(p.SyncedAt) > providers.GitHubDetailTTL {
+								i.PR.Error = "PR details need refreshing"
+							}
+						}
+					}
+				}
+			}
+
 			if i.PR != nil {
 				copy := *i.PR
 				i.PR = &copy
@@ -328,16 +380,22 @@ func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.It
 				}
 			}
 		}
+		if checkpoint == nil {
+			return t.Event("item.detail", r.ID, map[string]any{"repository": r.ID})
+		}
 		var current domain.Repository
 		if e := t.Get("repository", r.ID, &current); e != nil {
 			return e
 		}
-		current.LastSync = checkpoint
-		if full {
-			current.LastFull = checkpoint
+		if checkpoint.After(current.LastSync) {
+			current.LastSync = *checkpoint
+		}
+		if full && checkpoint.After(current.LastFull) {
+			current.LastFull = *checkpoint
 		}
 		current.Imported = true
 		current.Error = ""
+		current.SyncFailures = 0
 		current.RetryAt = time.Time{}
 		if e := t.Put("repository", r.ID, current); e != nil {
 			return e
@@ -345,7 +403,8 @@ func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.It
 		return t.Event("sync.completed", r.ID, map[string]any{"repository": r.ID, "at": checkpoint})
 	})
 }
-func (a *App) Sync(ctx context.Context) error {
+func (a *App) Sync(ctx context.Context) error { return a.sync(ctx, false) }
+func (a *App) sync(ctx context.Context, dueOnly bool) error {
 	a.providerMu.Lock()
 	defer a.providerMu.Unlock()
 	repos, e := store.List[domain.Repository](ctx, a.Store, "repository")
@@ -355,11 +414,24 @@ func (a *App) Sync(ctx context.Context) error {
 	if len(repos) == 0 {
 		return nil
 	}
+	if dueOnly {
+		selected := repos[:0]
+		for _, r := range repos {
+			if !r.Paused && (r.LastSync.IsZero() || time.Since(r.LastSync) >= 15*time.Minute) {
+				selected = append(selected, r)
+			}
+		}
+		repos = selected
+		if len(repos) == 0 {
+			return a.SyncNotifications(ctx)
+		}
+	}
 	user, e := a.GitHub.User(ctx)
 	if e != nil {
 		for _, r := range repos {
-			r.Error = e.Error()
-			_ = a.Store.Put(ctx, "repository", r.ID, r, "sync.error")
+			if err := a.saveSyncError(ctx, r.ID, e); err != nil {
+				return err
+			}
 		}
 		return e
 	}
@@ -384,60 +456,74 @@ func (a *App) Sync(ctx context.Context) error {
 	if err := saveViewer(); err != nil {
 		return err
 	}
-	teamsChecked := false
-	for _, r := range repos {
+	var teamsOnce sync.Once
+	var teamErr error
+	syncRepo := func(r domain.Repository) error {
 		if r.Paused {
-			continue
+			return nil
 		}
-		if time.Now().Before(r.RetryAt) {
-			continue
+		derivedLimit := strings.HasPrefix(r.Error, "Code Factory GitHub budget") || strings.HasPrefix(r.Error, "GitHub request reserve")
+		if time.Now().Before(r.RetryAt) && (dueOnly || !derivedLimit) {
+			return nil
 		}
 		at := time.Now().UTC()
 		full := !r.Imported || time.Since(r.LastFull) > time.Hour
-		items, err := a.GitHub.Sync(ctx, r, full)
-		if err != nil {
-			r.Error = err.Error()
-			var rate *providers.RateLimitError
-			if errors.As(err, &rate) {
-				r.RetryAt = rate.Until
-			}
-			if e = a.Store.Write(ctx, func(t *store.Tx) error {
-				var current domain.Repository
-				if err := t.Get("repository", r.ID, &current); err != nil {
-					return err
-				}
-				current.Error = r.Error
-				current.RetryAt = r.RetryAt
-				if err := t.Put("repository", r.ID, current); err != nil {
-					return err
-				}
-				return t.Event("sync.error", r.ID, map[string]string{"error": r.Error})
-			}); e != nil {
-				return e
-			}
-			continue
+		items, observed, err := a.GitHub.SyncIndex(ctx, r, full)
+		if !observed.IsZero() && observed.Before(at) {
+			at = observed
 		}
-		if !teamsChecked {
-			for _, item := range items {
-				if len(item.ReviewTeams) == 0 {
-					continue
-				}
-				teamsChecked = true
+		if err != nil {
+			return a.saveSyncError(ctx, r.ID, err)
+		}
+
+		for _, item := range items {
+			if len(item.ReviewTeams) == 0 {
+				continue
+			}
+			teamsOnce.Do(func() {
 				teams, err := a.GitHub.Teams(ctx)
 				viewer.Teams = teams
 				viewer.TeamError = ""
 				if err != nil {
 					viewer.TeamError = "Team review requests unavailable: " + err.Error()
 				}
-				if err := saveViewer(); err != nil {
-					return err
-				}
-				break
+				teamErr = saveViewer()
+			})
+			if teamErr != nil {
+				return teamErr
 			}
+			break
 		}
-		if e = a.Import(ctx, r, items, user, at, full); e != nil {
+		if e := a.Import(ctx, r, items, user, at, full); e != nil {
 			return e
 		}
+		return nil
+	}
+	// An initial import in a large repository must not hold up every other
+	// repository. Each provider sync has four workers, for at most twelve
+	// concurrent enrichment requests across these three repository workers.
+	jobs := make(chan domain.Repository)
+	var workers sync.WaitGroup
+	var firstErr error
+	var failed sync.Once
+	for worker := 0; worker < min(3, len(repos)); worker++ {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			for repo := range jobs {
+				if err := syncRepo(repo); err != nil {
+					failed.Do(func() { firstErr = err })
+				}
+			}
+		}()
+	}
+	for _, repo := range repos {
+		jobs <- repo
+	}
+	close(jobs)
+	workers.Wait()
+	if firstErr != nil {
+		return firstErr
 	}
 	if a.Runs != nil {
 		return a.ProcessReviewRequests(ctx)
@@ -457,8 +543,12 @@ func (a *App) syncLoop(ctx context.Context, ticks <-chan time.Time) {
 		if ctx.Err() != nil {
 			return
 		}
-		_ = a.Sync(ctx)
-		_ = a.RefreshPullRequests(ctx)
+		_ = a.sync(ctx, true)
+		// Reference backfill yields to the next repository poll and resumes from
+		// its last attempted PR, rather than restarting a large reference list.
+		references, cancel := context.WithTimeout(ctx, 10*time.Second)
+		_ = a.RefreshPullRequests(references)
+		cancel()
 		_ = a.RefreshJira(ctx)
 		if a.Runs != nil {
 			a.Runs.maybeCheckPlugins(ctx)

@@ -11,13 +11,13 @@ At least one accessible repository is configured.
 ## Main flow
 
 1. Import open issues and pull requests as the initial baseline.
-2. Refresh automatically and include subsequent discoveries and item changes.
-3. Include pull-request reviews, checks, commits and references in item detail.
+2. Read review-notification hints on the configured interval without marking GitHub notifications read. Reconcile repository summaries periodically and when the owner explicitly polls. New repositories receive an initial baseline; each repository retains independent successful progress.
+3. Refresh full reviews, checks, commits and references for selected or tracked work within the request budget; keep saved information available when refresh is deferred.
 4. Keep previously synchronized closed or merged history available when viewing all items.
 
 ## Alternatives and recovery
 
-Authentication and provider errors remain visible. Failed refreshes retain their last successful progress. Rate limits delay retries, and access recovery permits later refreshes.
+Authentication and provider errors remain visible. Failed refreshes retain their last successful progress. Reference backfill yields to repository polling and resumes with other references on its next pass. Rate limits delay retries, and access recovery permits later refreshes.
 
 ## Scenarios
 
@@ -29,11 +29,16 @@ Authentication and provider errors remain visible. Failed refreshes retain their
 
 - **S5** Repository monitoring displays its last successful poll and failures, supports a manual poll and can pause. System and repository policy determines whether current user/team review requests remain queued or start a read-only review after fresh synchronization. Durable request/head claims prevent duplicate polls or restart from repeating launches; stale provider state cannot authorize a new review.
 
+- **S6** Repository summary discovery does not fetch every item’s full history. Requests are serialized and bounded; failures retain successful progress, and reference backfill yields between passes.
+
+- **S7** Read and unread review notifications identify changed PRs only in configured active repositories. Unchanged hints are deduplicated across polling/restart; unsuccessful batches retain the notification cursor. Periodic repository reconciliation covers missing notifications.
+- **S8** Scheduled, manual and selected-detail reads share a persistent rolling request budget and reported-quota reserve. Conditional responses, server polling intervals and primary/secondary cooldowns are respected across restart. Deferred reads retain records/checkpoints, and cached freshness cannot authorize stale automatic review.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [repository](../glossary/README.md#repository), [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item), [state-new](../glossary/README.md#state-new), [state-unread](../glossary/README.md#state-unread), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [working-queue](../glossary/README.md#working-queue), [implementation-relationship](../glossary/README.md#implementation-relationship), [review-policy](../glossary/README.md#review-policy), [review-request-claim](../glossary/README.md#review-request-claim), [repository-review-prompt](../glossary/README.md#repository-review-prompt).
-UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [P-INBOX-QUERY](../ui/README.md#P-INBOX-QUERY), [P-INBOX-LIST](../ui/README.md#P-INBOX-LIST), [P-ITEM-DETAIL](../ui/README.md#P-ITEM-DETAIL), [W-INBOX-QUERY](../ui/README.md#W-INBOX-QUERY), [W-SYNC-HEALTH](../ui/README.md#W-SYNC-HEALTH), [W-ITEM-ROW](../ui/README.md#W-ITEM-ROW), [W-INBOX-EMPTY](../ui/README.md#W-INBOX-EMPTY), [W-ITEM-OVERVIEW](../ui/README.md#W-ITEM-OVERVIEW), [W-ITEM-ACTIONS](../ui/README.md#W-ITEM-ACTIONS), [W-ITEM-HISTORY](../ui/README.md#W-ITEM-HISTORY), [C-FILTER](../ui/README.md#C-FILTER), [C-SELECT-ITEM](../ui/README.md#C-SELECT-ITEM), [C-ITEM-STATE](../ui/README.md#C-ITEM-STATE), [W-RELATIONSHIPS](../ui/README.md#W-RELATIONSHIPS), [W-TICKET-CONTEXT](../ui/README.md#W-TICKET-CONTEXT), [W-PR-EVIDENCE](../ui/README.md#W-PR-EVIDENCE), [C-LINK](../ui/README.md#C-LINK), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [PAGE-WORKING](../ui/README.md#PAGE-WORKING), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT).
+Glossary: [repository](../glossary/README.md#repository), [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item), [state-new](../glossary/README.md#state-new), [state-unread](../glossary/README.md#state-unread), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [working-queue](../glossary/README.md#working-queue), [implementation-relationship](../glossary/README.md#implementation-relationship), [review-policy](../glossary/README.md#review-policy), [review-request-claim](../glossary/README.md#review-request-claim), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification).
+UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [P-INBOX-QUERY](../ui/README.md#P-INBOX-QUERY), [P-INBOX-LIST](../ui/README.md#P-INBOX-LIST), [P-ITEM-DETAIL](../ui/README.md#P-ITEM-DETAIL), [W-INBOX-QUERY](../ui/README.md#W-INBOX-QUERY), [W-SYNC-HEALTH](../ui/README.md#W-SYNC-HEALTH), [W-ITEM-ROW](../ui/README.md#W-ITEM-ROW), [W-INBOX-EMPTY](../ui/README.md#W-INBOX-EMPTY), [W-ITEM-OVERVIEW](../ui/README.md#W-ITEM-OVERVIEW), [W-ITEM-ACTIONS](../ui/README.md#W-ITEM-ACTIONS), [W-ITEM-HISTORY](../ui/README.md#W-ITEM-HISTORY), [C-FILTER](../ui/README.md#C-FILTER), [C-SELECT-ITEM](../ui/README.md#C-SELECT-ITEM), [C-ITEM-STATE](../ui/README.md#C-ITEM-STATE), [W-RELATIONSHIPS](../ui/README.md#W-RELATIONSHIPS), [W-TICKET-CONTEXT](../ui/README.md#W-TICKET-CONTEXT), [W-PR-EVIDENCE](../ui/README.md#W-PR-EVIDENCE), [C-LINK](../ui/README.md#C-LINK), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [PAGE-WORKING](../ui/README.md#PAGE-WORKING), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE).
 
 ## Flow diagram
 
@@ -48,6 +53,9 @@ flowchart TD
     N6["Track launched work and show independent linked PR lifecycle, review and current-head CI#59; merged implementation links complete issues without changing their GitHub state. #40;S4#41;"]
     N7["Fresh eligible request uses opted-in policy and one durable head/request claim #40;S5#41;"]
     N8(["Queue only or changed/stale/paused policy#59; no automatic launch"])
+    N9["Keep per-repository progress#59; bound reference work and serialize actual GitHub requests #40;S6#41;"]
+    N10["Read review-notification hints without marking read#59; reconcile repositories periodically #40;S7#41;"]
+    N11["Shared request budget, reserve or cooldown defers reads and retains saved state #40;S8#41;"]
     N0 --> N1
     N1 -->|"success"| N2
     N0 -->|"provider failure"| N3
@@ -60,6 +68,13 @@ flowchart TD
     N0 -->|"repository poll"| N7
     N7 -->|"valid read-only review claim"| N5
     N7 -->|"not eligible, already claimed or policy changed"| N8
+    N0 -->|"independent repository polling"| N9
+    N9 -->|"another repository succeeds"| N5
+    N9 -->|"failed item enrichment"| N3
+    N0 -->|"scheduled discovery"| N10
+    N10 -->|"configured changed PR fetched"| N5
+    N10 -->|"budget or provider delay"| N11
+    N11 -->|"retain checkpoint and retry later"| N3
 ```
 
 ## Implementation references
@@ -77,6 +92,9 @@ flowchart TD
 - [internal/app/work.go](../../internal/app/work.go) — Server queue membership and linked PR/work projections. (`func (a *App) projectWork(`)
 - [internal/providers/pull_requests.go](../../internal/providers/pull_requests.go) — Read-only authoritative PR review/CI/development links with current-head and freshness checks. (`func (g *GitHub) EnrichPullRequest(`)
 - [internal/app/review_requests.go](../../internal/app/review_requests.go) — Resolve inherited review policies, fresh requests, durable claims and pinned automatic launches. (`func (a *App) ProcessReviewRequests(`)
+- [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — Durable shared request budget/reserve, pacing and resource cooldowns with bounded credential-scoped cache. (`func (g *GitHub) beginRequest(`)
+- [internal/providers/github_notifications.go](../../internal/providers/github_notifications.go) — Read-only notification hints, pagination and validated targets. (`func (g *GitHub) ReviewNotifications(`)
+- [internal/app/github_usage.go](../../internal/app/github_usage.go) — Persist notification cadence/cursor, deduplicate updated targets and preserve scoped queue behavior. (`func (a *App) SyncNotifications(`)
 
 ## Test references
 
@@ -94,6 +112,19 @@ flowchart TD
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestNewPRHeadGetsOneNewReviewAndExtraPromptIsNotDuplicated(`; S5. A changed head receives one new review, while repeated preparation does not duplicate repository instruction blocks.
 - [internal/app/work_queues_test.go](../../internal/app/work_queues_test.go) — `func TestPausedRepositorySkipsProviderPollingAndRetainsPolicy(`; S5. Paused monitoring makes no repository-provider calls and retains policy and the untouched checkpoint.
 - [internal/app/work_queues_test.go](../../internal/app/work_queues_test.go) — `func TestFailedPollCannotOverwriteConcurrentRepositoryPolicyChanges(`; S3, S5. An old failed provider poll records its error without overwriting concurrently edited monitoring policy or advancing the checkpoint.
+- [internal/providers/github_test.go](../../internal/providers/github_test.go) — `func TestSyncEnrichmentHasBoundedParallelismAndCancelsOnFailure(`; S2, S3, S6. Four independent items hydrate concurrently; the worker bound holds and a failed worker returns no partial repository.
+- [internal/app/work_queues_test.go](../../internal/app/work_queues_test.go) — `func TestSyncImportsOtherRepositoryWhileOneIsBlocked(`; S5, S6. A requested PR enters the fast repository review queue while another repository remains blocked and its checkpoint stays untouched.
+- [internal/app/work_queues_test.go](../../internal/app/work_queues_test.go) — `func TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors(`; S3, S6. A canceled reference backfill yields without replacing successful metadata with a false error; the next pass advances to another reference.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubSharedBudgetSurvivesRestartSerializesAndFailsClosed(`; S8. Serialize actual requests, preserve rolling counts after restart and fail closed when accounting is unavailable.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubPersistentConditionalCacheAuthIsolationAnd304RateObservation(`; S2, S8. Preserve conditional cache across restart/auth scopes and observe fresh 304 quota headers.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubSecondaryCooldownBlocksRESTAndGraphQLAcrossRestart(`; S3, S8. Secondary 403 and HTTP-200 GraphQL rate errors block both request paths after restart.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestIndexCallCountDoesNotGrowWithPRHistory(`; S6, S7. One hundred requested PRs need two listing calls, independent of history size.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestNotificationConditionalReadsHonorPollIntervalAcrossCursorChanges(`; S7, S8. Last-Modified persists and X-Poll-Interval applies even after the since cursor changes.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubRedirectsAreBudgetedAndNeverForwardAuthenticationOffOrigin(`; S3, S8. Same-origin redirect hops consume the shared budget and cross-origin redirect targets receive no request.
+- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestNotificationReviewHintsAreScopedReadOnlyAndRestartSafe(`; S5, S7. Notification reads retain read threads, fetch only configured changed PRs, skip duplicate hints, retain failed cursors and queue without launching.
+- [internal/domain/types_test.go](../../internal/domain/types_test.go) — `func TestItemFreshnessKeepsLegacyContentRevision(`; S1, S2. Operational freshness does not invalidate legacy revisions or consume unread state.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestRateHeadersStopRequestsEvenWhenErrorBodyIsTruncated(`; S3, S8. Rate headers establish a global cooldown before an incomplete error body can hide them.
+- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestCachedPRObservationCannotBorrowFreshRepositoryAuthority(`; S5, S8. A cached PR observation cannot become eligible by borrowing a newer repository checkpoint.
 
 ## Verification and gaps
 

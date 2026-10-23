@@ -8,6 +8,7 @@ import (
 )
 
 type Repository struct {
+	SyncFailures            int       `json:"syncFailures,omitempty"`
 	AutoReview              *bool     `json:"autoReview,omitempty"`
 	ReviewPrompt            string    `json:"reviewPrompt,omitempty"`
 	ReviewError             string    `json:"reviewError,omitempty"`
@@ -41,6 +42,10 @@ type GitHubViewer struct {
 }
 
 type Item struct {
+	SummaryOnly      bool      `json:"-"`
+	DetailSyncedAt   time.Time `json:"detailSyncedAt,omitempty"`
+	ReviewObservedAt time.Time `json:"reviewObservedAt,omitempty"`
+
 	ID             string          `json:"id"`
 	Repository     string          `json:"repository"`
 	Number         int             `json:"number"`
@@ -67,6 +72,9 @@ type Item struct {
 
 func (i Item) ContentRevision() string {
 	i.Revision = ""
+	i.DetailSyncedAt = time.Time{}
+	i.ReviewObservedAt = time.Time{}
+	i.SummaryOnly = false
 	if i.PR != nil {
 		copy := *i.PR
 		copy.SyncedAt = time.Time{}
@@ -74,7 +82,15 @@ func (i Item) ContentRevision() string {
 		copy.RetryAt = time.Time{}
 		i.PR = &copy
 	}
-	b, _ := json.Marshal(i)
+	// Operational freshness must not change content identity, including for
+	// records created before these fields existed. Explicit outer fields shadow
+	// the time.Time members (whose zero values are not omitted by encoding/json).
+	type itemContent Item
+	b, _ := json.Marshal(struct {
+		itemContent
+		DetailSyncedAt   *time.Time `json:"detailSyncedAt,omitempty"`
+		ReviewObservedAt *time.Time `json:"reviewObservedAt,omitempty"`
+	}{itemContent: itemContent(i)})
 	h := sha256.Sum256(b)
 	return hex.EncodeToString(h[:])
 }
@@ -143,6 +159,10 @@ type Profile struct {
 	Publishing string   `json:"publishing"`
 }
 type Config struct {
+	GitHubRequestsPerHour int  `json:"githubRequestsPerHour,omitempty"`
+	GitHubReserve         *int `json:"githubReserve,omitempty"`
+	GitHubPollSeconds     int  `json:"githubPollSeconds,omitempty"`
+
 	AutoReview              bool           `json:"autoReview,omitempty"`
 	ReviewProfileID         string         `json:"reviewProfileId,omitempty"`
 	ImplementationProfileID string         `json:"implementationProfileId,omitempty"`

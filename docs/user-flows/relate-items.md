@@ -27,6 +27,8 @@ Removing a local relationship preserves independently discovered evidence. Missi
 
 - **S4** Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.
 
+- **S5** Incidental discovered references do not trigger broad GitHub scans. Recently selected, tracked or explicitly linked PRs refresh within the shared API budget, with backoff for inaccessible targets. Changed linked metadata refreshes selected full detail without another read action or launch.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -44,6 +46,7 @@ flowchart TD
     N4["Show unavailable ticket error"]
     N5(["Related context retained without upstream edits"])
     N6["Track launched work and show independent linked PR lifecycle, review and current-head CI#59; merged implementation links complete issues without changing their GitHub state. #40;S4#41;"]
+    N7["Refresh recently selected, tracked or explicit references within the shared budget #40;S5#41;"]
     N0 -->|"add"| N1
     N0 -->|"inspect ticket"| N3
     N1 -->|"remove local link"| N2
@@ -54,6 +57,8 @@ flowchart TD
     N4 --> N5
     N0 -->|"additional workbench path"| N6
     N6 -->|"resolved or explicit recovery"| N5
+    N0 -->|"linked PR information"| N7
+    N7 -->|"saved or deferred state retained"| N5
 ```
 
 ## Implementation references
@@ -70,6 +75,7 @@ flowchart TD
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/app/work.go](../../internal/app/work.go) — Server queue membership and linked PR/work projections. (`func (a *App) projectWork(`)
 - [internal/providers/pull_requests.go](../../internal/providers/pull_requests.go) — Read-only authoritative PR review/CI/development links with current-head and freshness checks. (`func (g *GitHub) EnrichPullRequest(`)
+- [internal/app/github_usage.go](../../internal/app/github_usage.go) — Read full selected detail on demand and identify recently selected sources for bounded link refresh. (`func (a *App) RefreshItemDetail(`)
 
 ## Test references
 
@@ -81,6 +87,8 @@ flowchart TD
 - [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestWorkingTracksSessionsUntilGitHubCompletion(`; S4. Working completion follows explicit implementation links; references do not complete an issue.
 - [internal/providers/pull_requests_test.go](../../internal/providers/pull_requests_test.go) — `func TestPullRequestMetadataPaginationCurrentHeadAndRevision(`; S4. Metadata pagination, status reruns, current head and stable semantic revisions.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Working and linked PR monitoring follow server projections`; S4. Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch.
+- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestIncidentalReferencesDoNotScanUntilSelectedAndErrorsBackOff(`; S4, S5. Incidental cross-references cause no scan until the source is selected; inaccessible targets back off without adding repository monitoring.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `linked PR changes refresh full selected details without consuming another read or launch`; S4, S5. Changed linked metadata refreshes full selected CI details without a duplicate displayed read or agent launch.
 
 ## Verification and gaps
 

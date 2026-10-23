@@ -667,9 +667,8 @@ func (m *Manager) recordPullReferences(run domain.Run, text string) {
 		l := domain.Relationship{ID: "run:" + run.ID + ":" + match[1] + "#" + match[2], Source: run.ItemID, Target: match[1] + "#" + match[2], Kind: "reference", Evidence: match[0]}
 		_ = m.app.Store.Put(m.ctx, "relationship", l.ID, l, "relationship.changed")
 	}
-	if m.app.GitHub != nil {
-		_ = m.app.RefreshPullRequests(m.ctx)
-	}
+	// The scheduled reference worker owns GitHub reads; message delivery never
+	// triggers an eager scan of every discovered link.
 }
 
 // Dismissing a textual fallback only clears local attention. It cannot answer a

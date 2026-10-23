@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-23",
+  "sourceBaseline": "59d662f305d17a0277ee3a7a836bb9c9937acf78",
+  "packageVersion": "0.2.4",
+  "verification": {
+    "focusedApplicationAndMCP": "passed",
+    "applicationAndTransportRace": "passed",
+    "portableAndBrowserPackaging": "passed",
+    "specsCheck": "passed",
+    "fullCI": {
+      "argv": [
+        "make",
+        "ci",
+        "FLOW_BASE=59d662f305d17a0277ee3a7a836bb9c9937acf78"
+      ],
+      "exitCode": 0
+    },
+    "browserFixtureTests": 80,
+    "reviewedSpecificationSubjects": 16
+  },
+  "installation": {
+    "version": "0.1.0-ead7ae360111",
+    "retainedRuns": 14,
+    "runsUnchanged": true,
+    "providerPathsUnchanged": true,
+    "fullTailscaleConfigUnchanged": true,
+    "registeredAppMappingUnchanged": true,
+    "tools": 30,
+    "preparePRReviewVisible": [
+      "model",
+      "app"
+    ],
+    "packageVersion": "0.2.4",
+    "services": [
+      "active",
+      "active"
+    ],
+    "archiveChecksumVerified": true,
+    "extractedChecksumsVerified": true,
+    "upgradeExit": 0,
+    "cloudPackageVersionObserved": "0.2.2",
+    "cloudPackageReplaced": false
+  },
+  "limits": [
+    "Fresh Work tool discovery passed; actual model-led PR review/preparation and external publication remain unexercised in this check.",
+    "No live PR review or publishing is authorized merely by changing discovery instructions.",
+    "Existing callback, soak, login and manual accessibility gaps remain open."
+  ],
+  "verifiedAt": "2026-10-23T12:42:19.286439+00:00",
+  "hostVerification": {
+    "at": "2026-10-23T12:46:06.106362+00:00",
+    "existingConnectionToolsRefreshed": true,
+    "freshInstalledPluginWorkChat": true,
+    "conversation": "6adb5689-36a0-83ea-afe2-35cf80a32a42",
+    "cloudPackageVersion": "0.2.2",
+    "firstProbe": "With all tool calls prohibited, the model could not enumerate schemas; this did not test lazy tool discovery.",
+    "discoveryAllowedProbe": "Passed: model discovered the actual Code Factory tools and correctly named the required arguments and pipeline precedence.",
+    "observedTools": {
+      "mcp__codex_apps__code_factory_list_inbox": [
+        "queue",
+        "state"
+      ],
+      "mcp__codex_apps__code_factory_prepare_pr_review": [
+        "itemId"
+      ],
+      "mcp__codex_apps__code_factory_start_run": [
+        "id",
+        "resume"
+      ]
+    },
+    "modelIdentifiedRepositorySystemBuiltInPrecedence": true,
+    "modelIdentifiedPinnedHeadSkillsModelAndRepositoryPrompt": true,
+    "preparedOrStartedRuns": 0,
+    "allPriorRunsUnchanged": true,
+    "claimLimit": "Verifies discoverability in a fresh Work chat. No actual model-led PR review, GitHub publication or new lifecycle acceptance was performed."
+  }
+}

@@ -146,6 +146,7 @@ flowchart TD
     N124["W-SYSTEM-DEFAULTS"]
     N125["P-PLUGIN-ADMIN"]
     N126["P-SYSTEM-DEFAULTS"]
+    N130["W-GITHUB-USAGE"]
     N0 --> N38
     N0 --> N39
     N0 --> N40
@@ -348,6 +349,9 @@ flowchart TD
     I51["P-SYSTEM-DEFAULTS/W-SYSTEM-DEFAULTS"]
     N126 --> I51
     I51 -.->|"type"| N124
+    I52["P-SYSTEM-DEFAULTS/W-GITHUB-USAGE"]
+    N126 --> I52
+    I52 -.->|"type"| N130
 ```
 <!-- /specs:containment -->
 
@@ -428,6 +432,7 @@ No installed UI, authentication, service or browser-session change is implied.
 | `P-RUN-DETAIL/W-QUESTION-RECOVERY` | `W-QUESTION-RECOVERY` | `P-RUN-DETAIL` | one per displayed retained session |
 | `P-PLUGIN-ADMIN/W-PLUGIN-ADMIN` | `W-PLUGIN-ADMIN` | `P-PLUGIN-ADMIN` | one per displayed settings view |
 | `P-SYSTEM-DEFAULTS/W-SYSTEM-DEFAULTS` | `W-SYSTEM-DEFAULTS` | `P-SYSTEM-DEFAULTS` | one per displayed settings view |
+| `P-SYSTEM-DEFAULTS/W-GITHUB-USAGE` | `W-GITHUB-USAGE` | `P-SYSTEM-DEFAULTS` | one per displayed settings view |
 <!-- /specs:instances -->
 
 ## Canonical entity names
@@ -565,4 +570,6 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="C-PLUGIN-MAINTENANCE"></a>`C-PLUGIN-MAINTENANCE` | connection | [Plugin maintenance connection](../glossary/README.md#ui-c-plugin-maintenance), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="C-REVIEW-POLICY"></a>`C-REVIEW-POLICY` | connection | [Review policy connection](../glossary/README.md#ui-c-review-policy), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="C-REPOSITORY-REVIEW-PROMPT"></a>`C-REPOSITORY-REVIEW-PROMPT` | connection | [Repository review prompt connection](../glossary/README.md#ui-c-repository-review-prompt), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
+| <a id="W-GITHUB-USAGE"></a>`W-GITHUB-USAGE` | widget | [GitHub API usage](../glossary/README.md#ui-w-github-usage), [GitHub request budget](../glossary/README.md#github-request-budget), [GitHub request reserve](../glossary/README.md#github-request-reserve), [GitHub review notification](../glossary/README.md#github-review-notification), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
+| <a id="C-GITHUB-USAGE"></a>`C-GITHUB-USAGE` | connection | [GitHub usage settings connection](../glossary/README.md#ui-c-github-usage), [GitHub request budget](../glossary/README.md#github-request-budget), [GitHub request reserve](../glossary/README.md#github-request-reserve), [GitHub review notification](../glossary/README.md#github-review-notification) |
 <!-- /specs:terminology -->

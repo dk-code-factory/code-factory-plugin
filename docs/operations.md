@@ -50,13 +50,13 @@ custom connections and event-triggered tasks. Follow the
 
 ## Daily use
 
-Open the embedded inbox and configure only the dedicated private pilot repository. Working tracks launched work until its GitHub completion; Issues includes linked PR information; My PRs and Review PRs follow GitHub author/reviewer identity. Each queue retains its query and Back context. Item selection opens the conversation without starting an agent.
+Open the embedded inbox and configure monitored repositories in Settings. Use the dedicated private pilot repository for synthetic browser/model acceptance. Working tracks launched work until its GitHub completion; Issues includes linked PR information; My PRs and Review PRs follow GitHub author/reviewer identity. Each queue retains its query and Back context. Item selection opens the conversation without starting an agent.
 
 For manual work, choose a pipeline, review its mode, permissions and publishing authority, and explicitly Start. System defaults can instead opt into automatically starting eligible requested PR reviews; queue-only is the default, and repository policy can inherit or override it. Review/implementation pipeline defaults and additional repository review instructions are configured in Settings. Automatic reviews wait for current work, use read-only/ask authority and are durably claimed once per observed request/head. Each pipeline is one retained Codex session. New run and prepared proposals remain under Item details. Follow up by sending a message; inactive work restores its original thread and workspace. Interrupt remains explicit and cleanup refuses dirty worktrees.
 
 Messages lists native, structured-message and recovered textual questions and approvals. Answer the displayed form. If a stopped agent fails to produce a form, the helper gets at most two question-only repair attempts before offering a free-text answer and Open session console. The console shows the same session's technical activity and retains its draft. Take over session cancels further repair. Unknown delivery is never retried automatically; inspect the console first.
 
-PR lifecycle, review approval and current-head CI are independent. Linked implementation PRs can complete issue work on merge without changing the issue on GitHub. Incidental references cannot. Inaccessible or stale PR information remains visibly unknown. Sync runs every 30 seconds and visible UI refreshes through the host bridge; neither closing the UI nor GitHub completion stops a run.
+PR lifecycle, review approval and current-head CI are independent. Linked implementation PRs can complete issue work on merge without changing the issue on GitHub. Incidental references cannot. Inaccessible or stale PR information remains visibly unknown. GitHub review-notification checks default to two minutes, with repository summary reconciliation every 15 minutes and an initial baseline for new repositories. Full histories/checks refresh only for selected or tracked work and bounded explicit references. Visible UI refreshes through the host bridge; neither closing the UI nor GitHub completion stops a run. Dashboard reads use summaries and load full history/check lists only for the selected item. A GitHub rate limit preserves imported rows and delays retries; do not force repeated manual polls during its cooldown.
 
 ## Diagnostics and evidence
 
@@ -158,3 +158,75 @@ updates/removals and periodic metadata-check cadence are configurable through th
 widget, owner tools and bundled admin skill. See [the administration guide](plugin.md#repository-monitoring-and-plugin-administration). No plugin update is
 automatically installed. Unknown remote version metadata stays unknown, and
 failed or interrupted operations require inventory inspection before a retry.
+
+## GitHub request budget
+
+Use **Settings → System defaults → GitHub API usage** for the shared rolling-hour
+allowance, reported-quota reserve and notification interval. Defaults are
+600 requests/hour, 100 reported quota units reserved, and 120 seconds. REST
+quota is reported in requests and GraphQL quota in points; the local allowance
+counts HTTP request attempts. See [GitHub’s GraphQL quota documentation](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api). Manual polls
+obey the same budget and server cooldowns. Limits, conditional cache and recorded
+attempts survive service restart; raising a limit does not erase prior usage.
+
+The gate serializes REST/GraphQL requests, reads quota headers instead of polling
+`/rate_limit`, and persists safe credential-scoped validators. Failed repository
+reads back off; paused/deferred monitoring is distinct from a missing provider.
+Diagnostics check local GitHub credential availability without `gh auth status`.
+Managed clones use Git transport and the existing credential helper instead of
+an API repository lookup. No global authentication configuration is replaced.
+
+Notification GET includes read threads and never marks them read/done. Changed
+configured PRs are fetched once per observed notification update; periodic lists
+cover absent notifications. Saved details and unread state survive deferred reads.
+Do not force repeated polls during a server cooldown. Independent plugin/skill/
+agent commands and other GitHub clients are outside the daemon cap. The optional,
+disabled alternate-tunnel installer has one explicit unauthenticated release
+lookup when its client is absent; it is not a background poll of this pilot.
+
+See the [quota-controls record](evidence/2026-10-23-github-api-usage.json) for the
+installed version and actual checks; callback, soak, login and manual accessibility
+acceptance remain separate.
+
+## Bounded review command sandbox · 2026-10-23
+
+Read-only and workspace-write tasks now use an invocation-local native permission
+profile in pinned Codex 0.161.0. Source permissions, private writable scratch and
+network access are independent. Reviews cannot change their source checkout or
+Git metadata; implementations can change their own checkout. Required executables,
+selected-repository Git metadata, installed skills and existing GitHub auth
+configuration remain readable. Unrelated owner files are excluded.
+
+The enforced command proxy allows `api.github.com`, `github.com`,
+`raw.githubusercontent.com`, `objects.githubusercontent.com`,
+`codeload.github.com`, `api.openai.com`, `chatgpt.com` and `auth.openai.com`.
+Other destinations, localhost and private-network access remain blocked. Temporary
+artifacts and isolated review clones belong under `TMPDIR`. Skill data indexes for
+repository rules and PR decisions are bounded per-run copies under `XDG_DATA_HOME`;
+refreshing them cannot modify the owner's original settings. Resume preserves the
+run cache and reselects the same process-local policy. Explicit clean cleanup
+removes scratch. No global Codex config, authentication or Tailscale change is
+required, and initialization failure never falls back to full access.
+
+The policy governs sandboxed commands. Codex service/control traffic, MCP servers,
+apps and browser tools retain their separate controls. A destination allowlist
+does not filter HTTP methods or grant publishing authority: the profile's approval
+and publishing rules remain applicable. Existing explicitly selected full-access
+profiles remain a separate owner choice. Agent/skill GitHub commands still use
+GitHub independently of the daemon's request budget.
+
+The [sandbox evidence](evidence/2026-10-23-review-sandbox.json) separates fixture
+checks, real pinned-provider command-only checks and installation observations.
+Native tests verify GitHub TLS without an HTTP API request, denied other/private
+destinations, blocked direct localhost access, read-only review files, protected
+Git metadata, workspace-only implementation edits, inaccessible unrelated files,
+unchanged host files and persistent private scratch. They also verify existing
+GitHub authentication and local reviewer configuration without printing tokens.
+Linux may provide private synthetic parent directories inside the namespace;
+writes there are checked against the unchanged owner host files. These command
+checks do not establish a full model-led third-party review pipeline or close
+callback, soak, login, nested runtime or accessibility acceptance gaps.
+
+Shell temp settings include both `TMPDIR` and zsh `TMPPREFIX`; otherwise heredoc
+creation can fail despite a writable scratch directory. Installed-version checks
+and the initial-candidate failure are retained in the sandbox evidence.

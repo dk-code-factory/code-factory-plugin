@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-23",
+  "sourceBaseline": "59d662f305d17a0277ee3a7a836bb9c9937acf78",
+  "provider": "0.161.0",
+  "nativeCommandChecks": {
+    "filesystemAndDomainEnforcement": "passed",
+    "githubAuthAndReviewerConfiguration": "passed",
+    "modelTurns": 0,
+    "githubAPIHTTPRequests": 0,
+    "note": "Native Linux synthetic parent-directory writes are private to the sandbox; tests assert original host files unchanged.",
+    "shellHeredocPrivateScratch": "passed",
+    "implementationHostWritePersistence": "passed",
+    "outsideHostFileUnchanged": true,
+    "githubAPIRequests": 0
+  },
+  "fixtureVerification": {
+    "focusedRace": "passed",
+    "specsCheck": "passed",
+    "reconciledSubjects": 17,
+    "browserFixtureTests": 80,
+    "fullCI": {
+      "argv": [
+        "make",
+        "ci",
+        "FLOW_BASE=59d662f305d17a0277ee3a7a836bb9c9937acf78"
+      ],
+      "exitCode": 0
+    },
+    "packagingInstallerAndCompiledSmoke": "passed"
+  },
+  "installation": {
+    "version": "0.1.0-16c572cbc34d",
+    "archiveSHA256": "512c99304a38a2e46f1b5c58e46e5bd63cbb6496b3be289e06d4be72116142b9",
+    "upgradeExit": 0,
+    "retainedRuns": 15,
+    "runsUnchanged": true,
+    "providerPathsUnchanged": true,
+    "routesUnchanged": true,
+    "registeredMappingUnchanged": true,
+    "globalCodexConfigUnchanged": true,
+    "original14RunsUnchangedAfterPilot": true
+  },
+  "limits": [
+    "Full model-led review with selected third-party skills and nested runtimes remains separate.",
+    "MCP/apps/browser and model service connections have separate controls.",
+    "Domain filtering does not enforce HTTP read-only methods or replace publishing authority.",
+    "Agent/skill API requests remain separate from the daemon shared request cap."
+  ],
+  "verifiedAt": "2026-10-23T13:43:26.014361+00:00",
+  "livePilot": {
+    "version": "0.1.0-16c572cbc34d",
+    "runId": "730ec65385586a01415b14b73e7caea5",
+    "repository": "dkropachev/code-factory-pilot-20261019",
+    "model": "gpt-6.1-sol",
+    "sandbox": "read-only",
+    "positiveChecks": {
+      "git_read": true,
+      "github_auth": true,
+      "source_read_only": true,
+      "scratch_writable": true,
+      "unrelated_file_blocked": true,
+      "github_tls": true
+    },
+    "finalMarker": "CF_SANDBOX_LIVE_OK",
+    "ordinaryExecutionWithoutEscalation": true,
+    "deniedOtherDomainObserved": true,
+    "denialPresentation": "Codex reports a denied domain as a command failure and withholds combined results, so allowed operations were verified separately.",
+    "githubAPIHTTPRequests": 0,
+    "cleanup": "Only the two owned pilot workspaces/scratch were cleaned; original 14 runs remain unchanged.",
+    "firstCandidate": "The earlier ae837b3a0687 pilot stopped on zsh heredoc temp creation. Added private TMPPREFIX and a pinned-provider heredoc regression; the final model-backed heredoc check passed."
+  },
+  "completedAt": "2026-10-23T13:50:25.869587+00:00",
+  "finalHealth": {
+    "services": {
+      "code-factory.service": "active",
+      "code-factory-gateway.service": "active"
+    },
+    "version": "0.1.0-16c572cbc34d",
+    "binariesMatchFinalCIPackage": {
+      "code-factory.service": true,
+      "code-factory-gateway.service": true
+    },
+    "original14RunsUnchanged": true,
+    "retainedRuns": 16,
+    "activeRuns": 0,
+    "globalCodexConfigUnchanged": true,
+    "tailscaleRoutesUnchanged": true,
+    "registeredMappingUnchanged": true
+  }
+}

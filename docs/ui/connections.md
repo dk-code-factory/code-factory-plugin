@@ -28,7 +28,7 @@ for a clickable navigation control.
 | `C-NAVIGATE` | `W-NAVIGATION` → one embedded `PAGE-*` | Working, Issues, My PRs, Review PRs or Messages tab. | Navigates between four task queues with independent query state; configuration remains a separate document. |
 | `C-FILTER` | `W-INBOX-QUERY` → `P-INBOX-LIST` | Search text and filter value. | Applies per-tab kind/ownership/review membership, filter and query. Pending issues exclude linked PRs; lists sort by priority then update time. |
 | `C-SELECT-ITEM` | Work row → item conversation | Click a row; item ID. | Loads and marks the displayed item revision read, continues the newest retained conversation or shows a prefilled first message. Never starts or prepares on selection. |
-| `C-ITEM-STATE` | `W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read. | Unread, acknowledge New or record action; item ID. | Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. |
+| `C-ITEM-STATE` | `W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read. | Unread, acknowledge New or record action; item ID. | Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. A deferred provider refresh leaves the displayed saved information unread until a successful retry. |
 | `C-PRIORITY` | `W-PRIORITY.override` → local priority state and displayed item | Picker change; automatic clears the override. | Saves immediately, disables during submission and restores the saved value with inline error on failure. |
 | `C-LINK` | `W-RELATIONSHIPS` → selected item's relationships/context | Add submits `source` and `target`; Remove submits `source`, `target` and `remove: true`. | Submits local Add/Remove, then refreshes selected relationships without clearing unrelated drafts. A late earlier response cannot replace later selected detail. |
 | `C-LAUNCH-OPEN` | `W-ITEM-ACTIONS.launch` → `D-LAUNCH` | Selected item entry. | New run under Item details prepares an optional proposal and opens its durable review. No workspace/process starts until Start. |
@@ -50,7 +50,7 @@ for a clickable navigation control.
 | `C-PROFILE-SAVE` | `W-PROFILE-SETTINGS` → future `W-LAUNCH-EDITOR` | Saved profile draft. | Refreshes available/default launch settings; existing prepared snapshots stay unchanged. |
 | `C-SKILL-SAVE` | `W-SKILL-SETTINGS` → profile/launch skill choices | Managed skill name/instructions. | Refreshes shared skills; immutable prepared skill snapshots stay unchanged. |
 | `C-DIAGNOSE` | `W-DIAGNOSTICS` → its result display | Check connection click. | Shows local Checking feedback and then health results or an exact local error. No repair or page transition. |
-| `C-STATE-REFRESH` | Shared updated state → Inbox/Agents/Settings summaries, shell counts | Successful polling or action refresh. | Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. |
+| `C-STATE-REFRESH` | Shared updated state → Inbox/Agents/Settings summaries, shell counts | Successful polling or action refresh. | Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. |
 | `C-TRANSCRIPT` | History pages → `W-TRANSCRIPT` | Selected run and current history cursor; optional reset to beginning. | Refreshes display only. Resetting history does not resume/replay agent work. |
 | `C-PACKAGE` | Package page links → artifacts / external host setup | Download or follow documented setup instructions. | External package downloads and OAuth connection guidance. Only a valid observed registration enables the primary browser package. Portable downloads stay advanced; no connection is fabricated. |
 | `C-CONSENT` | External host → `PAGE-OWNER-CONSENT` → registered host callback | Valid private request; Allow or Deny. | External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL. |
@@ -67,6 +67,7 @@ for a clickable navigation control.
 | `C-PLUGIN-MAINTENANCE` | Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay. | Explicit owner configuration or management choice; opted-in successful repository polls. | Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay. |
 | `C-REVIEW-POLICY` | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once. | Explicit owner configuration or management choice; opted-in successful repository polls. | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once. |
 | `C-REPOSITORY-REVIEW-PROMPT` | Append owner repository instructions to the generic review prompt during immutable launch preparation. | Explicit owner configuration or management choice; opted-in successful repository polls. | Append owner repository instructions to the generic review prompt during immutable launch preparation. |
+| `C-GITHUB-USAGE` | Owner usage settings → persisted request limits and cached accounting | Save system defaults or read cached Settings. | Validates and persists bounded request budget/reserve/poll interval; omitted fields from older clients retain their saved values. Budget-only changes preserve assessment policy identity. |
 <!-- /specs:connections-0 -->
 
 ## Navigation overview
@@ -116,6 +117,7 @@ flowchart LR
     N32["W-DIAGNOSTICS"]
     N0["S-FACTORY"]
     N65["PAGE-SETTINGS"]
+    N130["W-GITHUB-USAGE"]
     N33["W-PACKAGE-OVERVIEW"]
     N34["W-CONNECTION-GUIDE"]
     N68["PAGE-PACKAGE"]
@@ -188,6 +190,7 @@ flowchart LR
     N0 -->|"C-STATE-REFRESH"| N65
     N0 -->|"C-STATE-REFRESH"| N2
     N0 -->|"C-STATE-REFRESH"| N117
+    N0 -->|"C-STATE-REFRESH"| N130
     N20 -->|"C-TRANSCRIPT"| N20
     N33 -->|"C-PACKAGE"| N68
     N34 -->|"C-PACKAGE"| N68
@@ -232,6 +235,14 @@ flowchart LR
     N124 -->|"C-REVIEW-POLICY"| N116
     N124 -->|"C-REVIEW-POLICY"| N28
     N28 -->|"C-REPOSITORY-REVIEW-PROMPT"| N24
+    N130 -->|"C-GITHUB-USAGE"| N130
+    N130 -->|"C-GITHUB-USAGE"| N28
+    N130 -->|"C-GITHUB-USAGE"| N130
+    N130 -->|"C-GITHUB-USAGE"| N28
+    N130 -->|"C-GITHUB-USAGE"| N130
+    N130 -->|"C-GITHUB-USAGE"| N28
+    N124 -->|"C-GITHUB-USAGE"| N130
+    N124 -->|"C-GITHUB-USAGE"| N28
 ```
 <!-- /specs:connections -->
 

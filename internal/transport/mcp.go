@@ -92,6 +92,9 @@ type StartInput struct {
 	ID     string `json:"id"`
 	Resume bool   `json:"resume,omitempty"`
 }
+type PRReviewInput struct {
+	ItemID string `json:"itemId"`
+}
 type MessageInput struct {
 	ID           string `json:"id"`
 	Text         string `json:"text"`
@@ -174,7 +177,7 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 func ptr[T any](v T) *T { return &v }
 func New(a *app.App, ev *events.Service) *Server {
 	s := &Server{App: a, Events: ev}
-	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. Use prepare_launch, review the snapshot, then start_run only when requested. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
+	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. To run a PR review pipeline: find the PR itemId with list_inbox, call prepare_pr_review, inspect the returned profile, skills, prompt and authority, then call start_run with the returned run id when authorized. prepare_pr_review resolves repository then system review defaults automatically. Use prepare_launch for other or customized launches. An explicit request to run a review authorizes starting the matching prepared review; ask only if authority or scope needs clarification. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
 	s.MCP = m
 	uri := registerUIResource(m, web.HTML)
 	settingsURI := registerSettingsUIResource(m, web.SettingsHTML())
@@ -194,14 +197,14 @@ func New(a *app.App, ev *events.Service) *Server {
 				out = append(out, entry)
 			}
 		}
-		return out, nil
+		return inboxSummaries(out), nil
 	})
 	bind(m, uri, "read_item", "Read item detail. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
 	bind(m, uri, "item_action", "Mark displayed revision read, unread, acknowledge, record action, or override priority.", false, false, func(ctx context.Context, in UserAction) (any, error) {
 		return nil, a.UserAction(ctx, in.ID, in.Action, in.Revision, in.Priority)
 	})
 	bind(m, settingsURI, "get_settings", "Read configuration without credentials.", false, true, func(ctx context.Context, _ Empty) (any, error) { return a.Config(ctx) })
-	bind(m, settingsURI, "save_settings", "Save system review/pipeline defaults, plugin check cadence, priorities and notifications. Omitted new admin fields are preserved.", false, false, func(ctx context.Context, in SettingsInput) (any, error) {
+	bind(m, settingsURI, "save_settings", "Save GitHub request budget (60–5000/hour), reserve (0–5000), notification interval (60–3600s), review/pipeline defaults, plugin check cadence, priorities and notifications. Omitted new admin fields are preserved.", false, false, func(ctx context.Context, in SettingsInput) (any, error) {
 		old, err := a.Config(ctx)
 		if err != nil {
 			return nil, err
@@ -215,6 +218,15 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		if _, ok := in.fields["implementationProfileId"]; !ok {
 			c.ImplementationProfileID = old.ImplementationProfileID
+		}
+		if _, ok := in.fields["githubRequestsPerHour"]; !ok {
+			c.GitHubRequestsPerHour = old.GitHubRequestsPerHour
+		}
+		if _, ok := in.fields["githubReserve"]; !ok {
+			c.GitHubReserve = old.GitHubReserve
+		}
+		if _, ok := in.fields["githubPollSeconds"]; !ok {
+			c.GitHubPollSeconds = old.GitHubPollSeconds
 		}
 		if _, ok := in.fields["pluginCheckMinutes"]; !ok {
 			c.PluginCheckMinutes = old.PluginCheckMinutes
@@ -262,11 +274,15 @@ func New(a *app.App, ev *events.Service) *Server {
 	bind(m, uri, "set_relationship", "Add or remove a local item relationship; never changes GitHub or Jira.", false, false, func(ctx context.Context, in LinkInput) (any, error) {
 		return nil, a.Link(ctx, domain.Relationship{Source: in.Source, Target: in.Target, Evidence: in.Evidence}, in.Remove)
 	})
-	bind(m, uri, "prepare_launch", "Prepare an editable, durable launch snapshot. Does not start an agent.", false, false, func(ctx context.Context, in app.LaunchInput) (any, error) {
+	bind(m, uri, "prepare_pr_review", "Prepare the configured PR review pipeline for a synchronized PR. Pass itemId from list_inbox (not a URL). Resolves repository reviewProfileId, then system default, then review; retains selected skills, model, pinned PR head and repository review prompt. Requires read-only and ask-before-publishing authority. Does not start work or call GitHub. Inspect the returned run, then use start_run with its id when the user requested a review. Use read_run/list_runs to check uncertain starts; never automatically replay them.", false, false, func(ctx context.Context, in PRReviewInput) (any, error) {
+		r, e := a.Runs.PreparePRReview(ctx, in.ItemID)
+		return publicRun(r), e
+	})
+	bind(m, uri, "prepare_launch", "Prepare an editable, durable launch snapshot using itemId and profileId. For a PR's configured review pipeline prefer prepare_pr_review; use this tool for investigation, implementation or explicit custom choices. Does not start an agent; inspect the result then call start_run with its id when authorized.", false, false, func(ctx context.Context, in app.LaunchInput) (any, error) {
 		r, e := a.Runs.Prepare(ctx, in)
 		return publicRun(r), e
 	})
-	bind(m, uri, "start_run", "Start a prepared launch or explicitly resume an interrupted run. Returns immediately.", false, false, func(ctx context.Context, in StartInput) (any, error) {
+	bind(m, uri, "start_run", "Start the prepared PR review pipeline or other launch using the id returned by prepare_pr_review/prepare_launch. An explicit user request to run that review authorizes Start after inspecting its snapshot. Returns immediately; monitor with read_run. On an uncertain result inspect that same run before any explicit retry. Also supports explicit resume of an interrupted run.", false, false, func(ctx context.Context, in StartInput) (any, error) {
 		r, e := a.Runs.Start(ctx, in.ID, in.Resume)
 		return publicRun(r), e
 	})
@@ -339,6 +355,27 @@ func New(a *app.App, ev *events.Service) *Server {
 	registerEvents(m, ev)
 	return s
 }
+
+// Full activity and raw check payloads are available through read_item. They
+// can be many megabytes across a repository and do not belong in every poll.
+func inboxSummaries(entries []domain.InboxEntry) []domain.InboxEntry {
+	for i := range entries {
+		entries[i].Item.Activity = []domain.Activity{}
+		entries[i].Item.Checks = nil
+		if pr := entries[i].Item.PR; pr != nil {
+			copy := *pr
+			copy.Checks = []domain.Check{}
+			entries[i].Item.PR = &copy
+		}
+		linked := append([]domain.PullRequest(nil), entries[i].LinkedPullRequests...)
+		for n := range linked {
+			linked[n].Checks = []domain.Check{}
+		}
+		entries[i].LinkedPullRequests = linked
+	}
+	return entries
+}
+
 func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 	cursor := s.App.Store.Latest(ctx)
 	inbox, e := s.App.Inbox(ctx, "all")
@@ -377,7 +414,7 @@ func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 		return nil, err
 	}
 	config, e := s.App.Config(ctx)
-	return map[string]any{"viewer": viewer, "inbox": inbox, "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "questionRecoveries": recoveries, "skills": skills, "config": config, "cursor": cursor}, e
+	return map[string]any{"viewer": viewer, "inbox": inboxSummaries(inbox), "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "questionRecoveries": recoveries, "skills": skills, "config": config, "cursor": cursor}, e
 }
 
 // The model-visible settings entry does not disclose unrelated task/run contents.
@@ -396,10 +433,19 @@ func (s *Server) settingsSnapshot(ctx context.Context) (map[string]any, error) {
 		return nil, err
 	}
 	config, err := s.App.Config(ctx)
-	return map[string]any{"repositories": repos, "profiles": profiles, "skills": skills, "config": config, "cursor": cursor, "inbox": []any{}, "runs": []any{}, "attention": []any{}}, err
+	if err != nil {
+		return nil, err
+	}
+	usage, err := s.App.GitHubStatus(ctx)
+	return map[string]any{"githubUsage": usage, "repositories": repos, "profiles": profiles, "skills": skills, "config": config, "cursor": cursor, "inbox": []any{}, "runs": []any{}, "attention": []any{}}, err
 }
 
 func (s *Server) detail(ctx context.Context, id string) (any, error) {
+	refreshError := ""
+	if err := s.App.RefreshItemDetail(ctx, id); err != nil {
+		refreshError = "Could not refresh details; showing saved information. " + err.Error()
+	}
+
 	var item domain.Item
 	if e := s.App.Store.Get(ctx, "item", id, &item); e != nil {
 		return nil, e
@@ -429,7 +475,7 @@ func (s *Server) detail(ctx context.Context, id string) (any, error) {
 	}
 	for _, entry := range entries {
 		if entry.Item.ID == id {
-			return map[string]any{"item": item, "user": state, "relationships": out, "tickets": tickets, "linkedPullRequests": entry.LinkedPullRequests, "work": entry.Work, "queues": entry.Queues}, nil
+			return map[string]any{"refreshError": refreshError, "item": item, "user": state, "relationships": out, "tickets": tickets, "linkedPullRequests": entry.LinkedPullRequests, "work": entry.Work, "queues": entry.Queues}, nil
 		}
 	}
 	return map[string]any{"item": item, "user": state, "relationships": out, "tickets": tickets}, nil

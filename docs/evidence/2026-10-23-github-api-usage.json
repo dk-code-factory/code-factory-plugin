@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-23",
+  "at": "2026-10-23T06:04:14.524890+00:00",
+  "version": "0.1.0-e6423eaeb939",
+  "sourceBaseline": "59d662f305d17a0277ee3a7a836bb9c9937acf78",
+  "scope": "Code Factory daemon GitHub API reads, read-only GitHub notification intake, cached admin accounting and installed Work settings. Independent clients are outside the application cap.",
+  "audit": {
+    "controlled": [
+      "REST provider reads and every pagination/redirect hop",
+      "Owned GraphQL queries",
+      "Initial/manual/periodic repository discovery",
+      "Read-only review notifications and targeted request refresh",
+      "Selected-item detail and bounded tracked/explicit-reference metadata"
+    ],
+    "removedUnbudgetedLookups": [
+      "Diagnostics use local gh auth token instead of gh auth status",
+      "Managed clone uses Git transport with gh auth git-credential instead of gh repo clone",
+      "Agent message delivery records references without synchronously scanning all links"
+    ],
+    "separate": [
+      "Arbitrary plugins, agent commands, skills and other clients use GitHub independently. The reserve responds to GitHub-reported remaining quota, not a claim to control those clients.",
+      "Optional explicit installation of the disabled alternate tunnel client performs one unauthenticated release-metadata lookup when absent. It is not a background poll or part of the daemon authenticated quota; this pilot continues to use Tailscale."
+    ]
+  },
+  "effectiveDefaults": {
+    "requestsPerRollingHour": 600,
+    "reportedQuotaReserve": 100,
+    "notificationPollSeconds": 120,
+    "repositoryReconciliationSeconds": 900,
+    "metadataFreshnessSeconds": 900,
+    "requestSerialization": 1,
+    "minimumRequestSpacingSeconds": 1,
+    "privateCacheMaxBytes": 67108864,
+    "conditionalCacheMaxAgeSeconds": 86400,
+    "quotaUnits": {
+      "REST": "requests",
+      "GraphQL": "points",
+      "applicationCap": "HTTP request attempts"
+    }
+  },
+  "correctness": [
+    "Reserve attempts durably before sending; restart cannot restore uncertain consumption. Conditional HTTP requests count conservatively against the local cap, cached reads do not.",
+    "Observe response quota headers before reading bodies. Honor primary reset, secondary Retry-After/exponential backoff, HTTP-200 GraphQL rate errors and endpoint X-Poll-Interval even when a cursor changes.",
+    "Persist credential-scoped ETag/Last-Modified bodies/pagination and bounded GraphQL snapshots. Exclude raw tokens, authorization headers and cookies from cache/accounting output.",
+    "Notification GET uses all=true, preserves read/unread state, follows pages and filters configured active repositories before target fetches. Persist cursor and per-thread timestamps; failed batches retain progress.",
+    "Routine index imports do not fan out into per-item reviews/comments/commits/checks. Selected/tracked/explicit references refresh within the same gate and inaccessible references back off.",
+    "Preserve legacy content revisions when only operational freshness changes. Stale cached PR facts cannot borrow a newer repository checkpoint or replace newer saved facts.",
+    "Budget-only settings preserve priority-assessment policy identity; older settings clients preserve omitted fields. Deferred selected details remain unread until successful retry."
+  ],
+  "fixtures": {
+    "browserTests": 80,
+    "goRace": "passed",
+    "specsCheck": "passed",
+    "ci": {
+      "command": "make ci FLOW_BASE=59d662f305d17a0277ee3a7a836bb9c9937acf78",
+      "result": "passed"
+    },
+    "reconciledSubjects": 16,
+    "representativeAssertions": [
+      "TestIndexCallCountDoesNotGrowWithPRHistory: 100 requested PRs, two listing calls, no history fan-out",
+      "TestGitHubSharedBudgetSurvivesRestartSerializesAndFailsClosed",
+      "TestGitHubPersistentConditionalCacheAuthIsolationAnd304RateObservation",
+      "TestGitHubSecondaryCooldownBlocksRESTAndGraphQLAcrossRestart",
+      "TestRateHeadersStopRequestsEvenWhenErrorBodyIsTruncated",
+      "TestNotificationConditionalReadsHonorPollIntervalAcrossCursorChanges",
+      "TestNotificationReviewHintsAreScopedReadOnlyAndRestartSafe",
+      "TestCachedPRObservationCannotBorrowFreshRepositoryAuthority",
+      "TestItemFreshnessKeepsLegacyContentRevision",
+      "TestManagedCloneUsesGitTransportAndCredentialHelperWithoutAPILookup",
+      "TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence"
+    ]
+  },
+  "installed": {
+    "at": "2026-10-23T05:52:41.008227+00:00",
+    "requestsLastHour": 92,
+    "priorRecentRequests": 91,
+    "priorRequestsPreserved": true,
+    "observedLimits": [
+      {
+        "resource": "core",
+        "Remaining": 4932,
+        "Reset": "2026-10-23T02:24:47-04:00"
+      },
+      {
+        "resource": "graphql",
+        "Remaining": 4969,
+        "Reset": "2026-10-23T02:35:56-04:00"
+      }
+    ],
+    "retainedRuns": 12,
+    "runsUnchanged": true,
+    "runtimeUnchanged": true,
+    "routesUnchanged": true,
+    "health": {
+      "status": "verified",
+      "version": "0.1.0-e6423eaeb939"
+    },
+    "notificationError": "",
+    "notificationLastAttempt": "2026-10-23T05:52:36.009387944Z"
+  },
+  "actualWork": {
+    "chatPath": "/c/6adad103-3aa4-83ea-bde1-382c74b4d135",
+    "view": "Settings / System defaults / GitHub API usage",
+    "connection": "Connected",
+    "budget": 600,
+    "reserve": 100,
+    "notificationPollSeconds": 120,
+    "cachedDisplayedRequests": 91,
+    "cachedRESTRemaining": 4932,
+    "cachedGraphQLRemaining": 4969,
+    "alerts": [],
+    "moduleBytes": 492689,
+    "moduleSHA256": "9511ea2ceefd5514da2507f8e4d85999697cdd692036838ba01a43ead180e76b",
+    "matchesRelease": true,
+    "configurationSavedDuringAcceptance": false,
+    "agentsStarted": 0
+  },
+  "boundedLiveSample": {
+    "at": "2026-10-23T05:19:41Z",
+    "accountedRequests": 31,
+    "since": "2026-10-23T04:50:46Z",
+    "note": "Private daemon accounting sample; standalone GitHub API quota probes were not used."
+  },
+  "limits": [
+    "Accounting begins when this implementation is enabled; earlier unaccounted calls are not reconstructed.",
+    "The display is a cached Settings snapshot; independent plugin/skill/agent/client requests are not counted in the daemon cap.",
+    "No synthetic review request or production PR action was created. Live notification reads succeeded, but a newly delivered pilot review-notification event and automatic/model/skill review launch remain separate acceptance.",
+    "Existing host callbacks, one-hour soak, coordinated login and complete manual accessibility gaps remain open."
+  ]
+}

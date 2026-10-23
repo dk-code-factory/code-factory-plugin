@@ -113,7 +113,7 @@ func (a *App) ProcessReviewRequests(ctx context.Context) error {
 			continue
 		}
 		repo, ok := byRepo[item.Repository]
-		if !ok || repo.Paused || repo.Error != "" || repo.LastSync.IsZero() || time.Since(repo.LastSync) > 2*SyncInterval {
+		if !ok || repo.Paused || repo.Error != "" || !reviewFresh(config, repo, item) {
 			continue
 		}
 		active := requestedReview(item, viewer)
@@ -253,8 +253,16 @@ func validateAutomaticStart(t *store.Tx, run domain.Run) error {
 	if err := t.Get("profile", run.Profile.ID, &profile); err != nil {
 		return err
 	}
-	if repo.Paused || repo.Error != "" || time.Since(repo.LastSync) > 2*SyncInterval || !autoReviewEnabled(config, repo) || !requestedReview(item, viewer) || item.Head != run.Base || repo.ReviewPrompt != run.ReviewPromptSnapshot || reviewProfileID(config, repo) != run.Profile.ID || string(raw(profile)) != string(raw(run.Profile)) || profile.Sandbox != "read-only" || profile.Publishing != "ask" {
+	if repo.Paused || repo.Error != "" || !reviewFresh(config, repo, item) || !autoReviewEnabled(config, repo) || !requestedReview(item, viewer) || item.Head != run.Base || repo.ReviewPrompt != run.ReviewPromptSnapshot || reviewProfileID(config, repo) != run.Profile.ID || string(raw(profile)) != string(raw(run.Profile)) || profile.Sandbox != "read-only" || profile.Publishing != "ask" {
 		return fmt.Errorf("automatic review policy or target changed; inspect the retained launch")
 	}
 	return nil
+}
+
+func reviewFresh(_ domain.Config, repo domain.Repository, item domain.Item) bool {
+	observed := item.ReviewObservedAt
+	if observed.IsZero() {
+		observed = repo.LastSync
+	}
+	return !observed.IsZero() && time.Since(observed) <= 2*SyncInterval
 }

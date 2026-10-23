@@ -3723,4 +3723,69 @@ The connection between inherited review policy and eligible requested-review wor
 `ui-c-repository-review-prompt` · ui-connection
 
 The connection between owner repository review instructions and the prepared review prompt.
+
+<a id="github-request-budget"></a>
+## GitHub request budget
+
+`github-request-budget` · domain
+
+The maximum HTTP requests sent directly to the GitHub API by Code Factory during the preceding hour, including conditional requests.
+
+<a id="github-request-reserve"></a>
+## GitHub request reserve
+
+`github-request-reserve` · domain
+
+The threshold at or below which reported remaining GitHub quota causes Code Factory to defer further requests.
+
+<a id="github-review-notification"></a>
+## GitHub review notification
+
+`github-review-notification` · domain
+
+A GitHub notification associated with a requested pull-request review.
+
+<a id="ui-w-github-usage"></a>
+## GitHub API usage
+
+`ui-w-github-usage` · ui-widget
+
+The GitHub request-budget, reserve, polling and cached quota controls.
+
+<a id="ui-c-github-usage"></a>
+## GitHub usage settings connection
+
+`ui-c-github-usage` · ui-connection
+
+The connection between owner GitHub usage choices and bounded application requests.
+
+<a id="element-w-github-usage-budget"></a>
+## budget
+
+`element-w-github-usage-budget` · element · scope: ui-w-github-usage
+
+The maximum application API requests allowed per hour.
+
+<a id="element-w-github-usage-reserve"></a>
+## reserve
+
+`element-w-github-usage-reserve` · element · scope: ui-w-github-usage
+
+The amount of reported GitHub quota reserved for other work.
+
+<a id="element-w-github-usage-poll-interval"></a>
+## poll-interval
+
+`element-w-github-usage-poll-interval` · element · scope: ui-w-github-usage
+
+The interval between scheduled review-notification checks.
+
+<a id="element-w-github-usage-usage"></a>
+## request-statistics
+
+`element-w-github-usage-usage` · element · scope: ui-w-github-usage
+
+The cached application request count, observed remaining quota and deferral information.
+
+Aliases: usage.
 <!-- /specs:terms -->

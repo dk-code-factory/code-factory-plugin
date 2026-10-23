@@ -132,6 +132,9 @@ export interface Entry {
   };
 }
 export interface Config {
+ githubRequestsPerHour?: number;
+ githubReserve?: number;
+ githubPollSeconds?: number;
   autoReview?: boolean;
   reviewProfileId?: string;
   implementationProfileId?: string;
@@ -145,7 +148,13 @@ export interface Config {
   notifications: boolean;
   questionHelperModel?: string;
 }
+export interface GitHubUsage {
+ notificationError?:string;
+ requestsLastHour:number; budget:number; reserve:number; nextRequest:string;
+ restRemaining?:number;restReset:string;graphqlRemaining?:number;graphqlReset:string;
+}
 export interface Snapshot {
+ githubUsage?:GitHubUsage;
   viewer?: { login: string; teams: string[] | null; teamError?: string };
   cursor: number;
   inbox: Entry[];
@@ -170,6 +179,7 @@ export interface EventPage {
   hasMore: boolean;
 }
 export interface Detail {
+ refreshError?: string;
   item: Item;
   user: UserState;
   linkedPullRequests?: PullRequest[];

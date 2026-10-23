@@ -233,6 +233,9 @@ func run() error {
 	if e = a.Init(ctx); e != nil {
 		return e
 	}
+	if e = a.EnableGitHubUsage(ctx); e != nil {
+		return e
+	}
 	if e = a.Runs.Recover(ctx); e != nil {
 		return e
 	}

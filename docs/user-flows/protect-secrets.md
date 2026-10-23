@@ -29,6 +29,8 @@ The temporary local tunnel setup form requires verified reachability and valid o
 
 Codex plugin management uses literal CLI arguments, bounded output and process-group cancellation. Credential-bearing marketplace URLs and selector/option injection are rejected. Arbitrary provider stdout/stderr is never copied into operation errors or journal entries; generic status preserves uncertain outcomes without replay. Existing Codex/GitHub authentication is reused without readback.
 
+- **S5** Bounded command execution cannot read unrelated owner files or change shared authentication and skill settings. Existing GitHub authentication is readable only where needed. Refreshable private review indexes use isolated per-run copies; scratch paths and native permission configuration contain no exported credentials. Network permission is independent of filesystem writes. Existing publishing and approval authority remains in effect.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -48,6 +50,8 @@ flowchart TD
     N6(["Private value withheld from ordinary output"])
     N7["Reusable Jira password input requires a nonempty token"]
     N8["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
+    N9["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
+    N10(["Sandbox initialization failed#59; retained work and authority preserved"])
     N0 -->|"valid local setup or secret-answer submission"| N1
     N0 -->|"local setup: invalid origin, expired or reused form"| N4
     N4 --> N5
@@ -61,6 +65,9 @@ flowchart TD
     N7 -->|"empty token rejected#59; correct input"| N0
     N0 -->|"additional workbench path"| N8
     N8 -->|"resolved or explicit recovery"| N6
+    N0 -->|"authorized bounded task start or continuation"| N9
+    N9 -->|"valid policy#59; retain scoped work"| N6
+    N9 -->|"invalid policy#59; fail before provider launch"| N10
 ```
 
 ## Implementation references
@@ -94,6 +101,8 @@ flowchart TD
 - [internal/app/questions.go](../../internal/app/questions.go) — Durable native/message/text question routing, bounded form repair, redaction and retained continuation. (`func (m *Manager) answerSynthetic(`)
 - [internal/app/plugins.go](../../internal/app/plugins.go) — Durable pinned-CLI plugin lifecycle and exclusive runtime/maintenance boundary. (`func (m *Manager) PluginAction(`)
 - [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
+- [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
+- [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 
 ## Test references
 
@@ -110,6 +119,12 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `text fallback opens the same session console`; S4. Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch.
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(`; S4. Lost question IDs are stale but retained textual continuation remains; lost approvals never become textual authorization.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginUncertainDeliveryIsObservedWithoutReplay(`; S2. A command may install and then fail; state is observed without replay and private provider stderr never enters operation errors or journal.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubPersistentConditionalCacheAuthIsolationAnd304RateObservation(`; S1. Credential scopes do not share cached data/limits; raw tokens and cookies are excluded from persisted cache.
+- [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestEmptyLocalCredentialCannotFallBackToAnonymousAPI(`; S1. Empty local credential output fails before any anonymous API request.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S5. Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S5. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S5. Invalid sandbox fails before app-server launch without an unrestricted fallback.
+- [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S5. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
 
 ## Verification and gaps
 

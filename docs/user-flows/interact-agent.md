@@ -33,6 +33,8 @@ Automatic recovery exchanges appear as technical activity under Details or in th
 
 During explicit plugin maintenance, a new Start, message or answer is temporarily refused rather than delivered against changing plugin state. The caller retains its draft and receives the maintenance error. Maintenance is itself refused while agent work is active; question repair and continuation share the same boundary.
 
+- **S5** Restoring an inactive bounded task reapplies its invocation-local filesystem and network profile before the submitted turn. It preserves the same workspace, scratch, private indexes and original approval/publishing authority. A legacy sandbox override cannot discard the scoped policy; invalid initialization fails without starting an unrestricted replacement.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -51,6 +53,8 @@ flowchart TD
     N5["Send a message to restore inactive retained work"]
     N6(["Retained same-run conversation"])
     N7["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
+    N8["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
+    N9(["Sandbox initialization failed#59; retained work and authority preserved"])
     N0 -->|"idle"| N1
     N0 -->|"active"| N2
     N0 -->|"interrupt"| N3
@@ -63,6 +67,9 @@ flowchart TD
     N0 -->|"inactive message"| N5
     N0 -->|"additional workbench path"| N7
     N7 -->|"resolved or explicit recovery"| N6
+    N0 -->|"authorized bounded task start or continuation"| N8
+    N8 -->|"valid policy#59; retain scoped work"| N6
+    N8 -->|"invalid policy#59; fail before provider launch"| N9
 ```
 
 ## Implementation references
@@ -91,6 +98,8 @@ flowchart TD
 - [internal/app/questions.go](../../internal/app/questions.go) — Durable native/message/text question routing, bounded form repair, redaction and retained continuation. (`func (m *Manager) answerSynthetic(`)
 - [internal/app/plugins.go](../../internal/app/plugins.go) — Durable pinned-CLI plugin lifecycle and exclusive runtime/maintenance boundary. (`func (m *Manager) PluginAction(`)
 - [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
+- [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
+- [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 
 ## Test references
 
@@ -112,6 +121,10 @@ flowchart TD
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(`; S4. Async questions survive restart and concurrent answers have one claimant.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `text fallback opens the same session console`; S4. Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginMaintenanceCannotRaceStartsOrAcceptInjectedArguments(`; S1, S2. Start, message and answer are refused during maintenance, preserving unsubmitted input semantics and worktree absence.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S5. Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S5. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S5. Invalid sandbox fails before app-server launch without an unrestricted fallback.
+- [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S5. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
 
 ## Verification and gaps
 

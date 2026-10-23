@@ -4,11 +4,117 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(t *testing.T) {
+	a, pr := reviewFixture(t)
+	ctx := a.Runs.ctx
+	config, _ := a.Config(ctx)
+	var repo domain.Repository
+	_ = a.Store.Get(ctx, "repository", pr.Repository, &repo)
+	skill := domain.Skill{Name: "review-check", Content: "---\nname: review-check\ndescription: Check review evidence.\n---\nInspect correctness.\n"}
+	if err := a.Runs.SaveSkill(ctx, skill); err != nil {
+		t.Fatal(err)
+	}
+	for _, choice := range []string{"fallback", "system", "repository"} {
+		t.Run(choice, func(t *testing.T) {
+			want := "review"
+			if choice != "fallback" {
+				want = choice + "-review"
+				p := domain.Profile{ID: want, Name: want, Prompt: "Review {{title}} using the chosen pipeline.", Skills: []string{"managed:review-check"}, Model: "configured-model", Effort: "high", Mode: "plan", Sandbox: "read-only", Approval: "on-request", Publishing: "ask"}
+				if err := a.SaveProfile(ctx, p); err != nil {
+					t.Fatal(err)
+				}
+				if choice == "system" {
+					config.ReviewProfileID = want
+				} else {
+					repo.ReviewProfileID = want
+				}
+			}
+			if err := a.SaveConfig(ctx, config); err != nil {
+				t.Fatal(err)
+			}
+			if err := a.SaveRepository(ctx, repo); err != nil {
+				t.Fatal(err)
+			}
+			run, err := a.Runs.PreparePRReview(ctx, pr.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if run.Status != "prepared" || run.Profile.ID != want || run.Base != pr.Head || run.AutomaticReview || run.ThreadID != "" || !strings.Contains(run.Prompt, pr.URL) || !strings.Contains(run.Prompt, pr.Head) || strings.Count(run.Prompt, repo.ReviewPrompt) != 1 {
+				t.Fatal("review defaults, pinned target or preparation boundary lost", run)
+			}
+			if choice != "fallback" && (run.Profile.Model != "configured-model" || run.Profile.Effort != "high" || run.Profile.Mode != "plan") {
+				t.Fatal("selected profile choices were overwritten")
+			}
+			if choice != "fallback" && (len(run.Skills) != 1 || run.Skills[0].Content != skill.Content || len(run.Skills[0].Files) != 1) {
+				t.Fatal("configured review skill was not snapshotted")
+			}
+			if _, err := os.Stat(run.Worktree); !os.IsNotExist(err) {
+				t.Fatalf("preparation created a workspace: %v", err)
+			}
+			if claimCount(t, a) != 0 {
+				t.Fatal("manual preparation claimed an automatic review")
+			}
+			if choice == "fallback" {
+				if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+					t.Fatal(err)
+				}
+				waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", run.ID, &run); return run.Status == "idle" })
+				if _, err := a.Runs.Start(ctx, run.ID, false); err == nil {
+					t.Fatal("repeated Start was accepted")
+				}
+			}
+		})
+	}
+}
+
+func TestPreparePRReviewRejectsInvalidTargetsAndUnsafePipelines(t *testing.T) {
+	for _, mode := range []string{"issue", "missing-head", "missing-item", "missing-profile", "write-profile", "publishing-profile", "disabled-skill"} {
+		t.Run(mode, func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			ctx := a.Runs.ctx
+			var p domain.Profile
+			_ = a.Store.Get(ctx, "profile", "review", &p)
+			switch mode {
+			case "issue":
+				pr.Kind = "issue"
+			case "missing-head":
+				pr.Head = ""
+			case "missing-profile":
+				var repo domain.Repository
+				_ = a.Store.Get(ctx, "repository", pr.Repository, &repo)
+				repo.ReviewProfileID = "unavailable"
+				_ = a.Store.Put(ctx, "repository", repo.ID, repo, "")
+			case "write-profile":
+				p.Sandbox = "workspace-write"
+			case "publishing-profile":
+				p.Publishing = "automatic"
+			case "disabled-skill":
+				p.Skills = []string{"disabled"}
+				_ = a.Store.Put(ctx, "skill", "disabled", domain.Skill{ID: "disabled", Name: "Disabled", Disabled: true}, "")
+			}
+			_ = a.Store.Put(ctx, "profile", p.ID, p, "")
+			_ = a.Store.Put(ctx, "item", pr.ID, pr, "")
+			if mode == "missing-item" {
+				pr.ID = "unavailable#999"
+			}
+			before, _ := store.List[domain.Run](ctx, a.Store, "run")
+			if _, err := a.Runs.PreparePRReview(ctx, pr.ID); err == nil {
+				t.Fatal("invalid PR review preparation accepted")
+			}
+			after, _ := store.List[domain.Run](ctx, a.Store, "run")
+			if len(before) != len(after) || claimCount(t, a) != 0 {
+				t.Fatal("rejected preparation persisted work")
+			}
+		})
+	}
+}
 
 func reviewFixture(t *testing.T) (*App, domain.Item) {
 	t.Helper()

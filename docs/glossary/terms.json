@@ -4039,6 +4039,75 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The connection between owner repository review instructions and the prepared review prompt."
+    },
+    {
+      "id": "github-request-budget",
+      "name": "GitHub request budget",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The maximum HTTP requests sent directly to the GitHub API by Code Factory during the preceding hour, including conditional requests."
+    },
+    {
+      "id": "github-request-reserve",
+      "name": "GitHub request reserve",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The threshold at or below which reported remaining GitHub quota causes Code Factory to defer further requests."
+    },
+    {
+      "id": "github-review-notification",
+      "name": "GitHub review notification",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A GitHub notification associated with a requested pull-request review."
+    },
+    {
+      "id": "ui-w-github-usage",
+      "name": "GitHub API usage",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The GitHub request-budget, reserve, polling and cached quota controls."
+    },
+    {
+      "id": "ui-c-github-usage",
+      "name": "GitHub usage settings connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between owner GitHub usage choices and bounded application requests."
+    },
+    {
+      "id": "element-w-github-usage-budget",
+      "name": "budget",
+      "aliases": [],
+      "category": "element",
+      "definition": "The maximum application API requests allowed per hour.",
+      "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "element-w-github-usage-reserve",
+      "name": "reserve",
+      "aliases": [],
+      "category": "element",
+      "definition": "The amount of reported GitHub quota reserved for other work.",
+      "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "element-w-github-usage-poll-interval",
+      "name": "poll-interval",
+      "aliases": [],
+      "category": "element",
+      "definition": "The interval between scheduled review-notification checks.",
+      "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "element-w-github-usage-usage",
+      "name": "request-statistics",
+      "aliases": [
+        "usage"
+      ],
+      "category": "element",
+      "definition": "The cached application request count, observed remaining quota and deferral information.",
+      "scope": "ui-w-github-usage"
     }
   ]
 }

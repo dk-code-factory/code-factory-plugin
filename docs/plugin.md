@@ -1,8 +1,8 @@
 # Code Factory plugin
 
-The complete private plugin is `dist/code-factory-plugin-0.2.3.zip`. Its root
+The complete private plugin is `dist/code-factory-plugin-0.2.4.zip`. Its root
 contains a portable `plugin.json`, portable `mcp.json`, Codex compatibility
-manifests, SVG branding, an onboarding skill and a daily Code Factory skill.
+manifests, SVG branding, onboarding, daily-work and administration skills.
 It bundles the Tailscale HTTPS endpoint and discovers OAuth from the server's
 protected-resource metadata. No client secret or local owner token ships.
 
@@ -87,9 +87,28 @@ under development and are not used for installation.
 
 ## Repository monitoring and plugin administration
 
+For a manual review, ask Code Factory to run the configured review pipeline for
+the PR. The model-visible `prepare_pr_review` tool accepts the synchronized PR's
+`itemId` from `list_inbox`. It resolves repository, system and built-in review
+defaults in that order and returns the prepared run, including its selected
+skills/model, pinned head, repository instructions and authority. Preparation
+does not contact GitHub, create a workspace or start an agent. After inspecting
+the snapshot, the assistant uses `start_run` with its returned `id` under the
+owner's review request; results/status come from `read_run`. Queue-only monitoring
+still permits explicitly requested manual review. Unsafe or unavailable pipelines
+return an error rather than silently substituting one. Posting findings to GitHub
+requires separate publishing authority.
+
+Plugin 0.2.4 adds this recipe and a PR-review starter prompt. Existing cloud
+packages retain their uploaded skill text; refreshing the existing connection's
+tools exposes the new server instructions and tool even before replacing the
+uploaded package. The older generic `prepare_launch` path remains supported.
+
 Open Code Factory settings with `open_settings`. Add `owner/repository` under
 Repositories; GitHub access is taken from the existing account. Configured
-repositories are polled every 30 seconds. Review PRs shows requests addressed to
+review notifications are checked every two minutes by default and repository
+summaries reconcile every 15 minutes. Notification reads preserve their GitHub
+read/unread state. Review PRs shows requests addressed to
 that user or their teams. Last-poll and access errors are visible; a repository
 can be edited or paused, and Poll repositories now requests a fresh sync.
 
@@ -137,3 +156,25 @@ Admin tools preserve new monitoring fields when older cached widgets omit them.
 For repository policy, an explicit `autoReview: null` means inherit; an omitted
 field leaves the existing override unchanged. An empty reviewPrompt explicitly
 clears the extra instructions.
+
+## GitHub API allowance
+
+In **Settings → System defaults → GitHub API usage**, set the shared application
+budget (60–5000 request attempts/hour), reported-quota reserve (0–5000), and
+notification interval (60–3600 seconds). Defaults are 600, 100 and 120 seconds.
+REST remaining quota uses requests; GraphQL remaining quota uses points. The
+reserve applies to each reported quota, while the local allowance counts HTTP
+request attempts.
+Legacy zero/unset budget or interval values use those defaults; an unset reserve
+uses 100. The counter is a cached Settings snapshot and reads no quota endpoint.
+
+All daemon REST/GraphQL reads, manual polls and selected details use one persistent
+serialized gate. Request attempts, including conditional requests, count against
+the local allowance; cached reads do not. GitHub reset/Retry-After/polling headers
+and conditional validators are honored. Normal polling imports summaries rather
+than every PR's reviews, comments, commits and checks. Full details refresh for
+selected/tracked work; unavailable details retain saved content and explicit Retry.
+
+Plugins, skills, agent commands and other clients use GitHub independently of this
+cap. Inspect their usage separately before increasing the allowance. Refer to
+[the API-usage evidence](evidence/2026-10-23-github-api-usage.json) for verified scope.

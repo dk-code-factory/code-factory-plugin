@@ -3970,3 +3970,105 @@ test("repository review pipeline overrides system defaults and plugin skills rem
     )
     .toEqual(["plugin-skill"]);
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`review queues from multiple repositories load full details from compact snapshots in ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 820 });
+    const snapshot = initial();
+    snapshot.inbox = ["owner/first", "owner/second"].map((repository, index) => {
+      const entry = structuredClone(snapshot.inbox[0]);
+      entry.item = {
+        ...entry.item,
+        id: `${repository}#${index + 1}`,
+        repository,
+        number: index + 1,
+        kind: "pr",
+        title: `Review from repository ${index + 1}`,
+        author: "other",
+        head: `head-${index + 1}`,
+        reviewRequests: ["alex"],
+        activity: [],
+      };
+      entry.queues = ["review"];
+      return entry;
+    });
+    const { ui, calls } = await host(page, {
+      snapshot,
+      theme,
+      readItem: async (detail) => ({
+        ...detail,
+        item: {
+          ...detail.item,
+          activity: [{ id: "comment:1", kind: "comment", author: "reviewer", body: "Full history is available on demand.", url: "" }],
+          checks: { result: "Full checks retained" },
+          pr: { id:detail.item.id,title:detail.item.title,url:detail.item.url,state:"open",draft:false,head:detail.item.head,reviewDecision:"none",ci:"success",syncedAt:new Date().toISOString(),checks:[{name:"Full current-head check",status:"completed",conclusion:"success",url:""}] },
+        },
+      }),
+    });
+    await ui.getByRole("button", { name: "Review PRs", exact: true }).click();
+    await expect(ui.getByRole("region", { name: "Items" }).getByRole("button")).toHaveCount(2);
+    expect(calls.filter((c) => c.name === "read_item")).toHaveLength(0);
+    await ui.getByRole("button", { name: /Review from repository 2/ }).click();
+    await expect(ui.getByRole("heading", { name: "Review from repository 2" })).toBeVisible();
+    await ui.getByRole("region",{name:"PR monitoring",exact:true}).getByText("CI checks",{exact:true}).click();
+    await expect(ui.getByText(/Full current-head check/)).toBeVisible();
+    await ui.getByText("Item details", { exact: true }).click();
+    await ui.getByText("Activity", { exact: true }).click();
+    await expect(ui.getByText("Full history is available on demand.", { exact: true })).toBeVisible();
+    await ui.getByText("Checks", { exact: true }).click();
+    await expect(ui.getByText(/Full checks retained/)).toBeVisible();
+    expect(calls.filter((c) => ["prepare_launch", "start_run"].includes(c.name))).toHaveLength(0);
+    expect(calls.filter((c) => c.name === "read_item").every((c) => c.arguments.id === "owner/second#2")).toBe(true);
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
+  test(`GitHub usage settings show cached quota and save budget without polling in ${theme}`, async ({page})=>{
+    await page.setViewportSize({width:390,height:820});
+    const snapshot=initial();snapshot.githubUsage={requestsLastHour:12,budget:600,reserve:100,nextRequest:"",restRemaining:1200,restReset:"",graphqlRemaining:2400,graphqlReset:""};
+    const {ui,calls}=await host(page,{snapshot,theme,surface:"settings"});
+    await ui.getByText("System defaults",{exact:true}).click();
+    const usage=ui.getByRole("group",{name:"GitHub API usage"});
+    await expect(usage).toContainText("12 / 600 requests");
+    await expect(usage).toContainText("REST remaining: 1200");
+    await usage.getByLabel("Request budget per hour",{exact:true}).fill("120");
+    await usage.getByLabel("Keep GitHub requests in reserve",{exact:true}).fill("200");
+    await usage.getByLabel("Review notification poll interval",{exact:true}).selectOption("300");
+    await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
+    await expect.poll(()=>calls.filter(c=>c.name==="save_settings").length).toBe(1);
+    expect(calls.find(c=>c.name==="save_settings")!.arguments).toMatchObject({githubRequestsPerHour:120,githubReserve:200,githubPollSeconds:300});
+    expect(calls.some(c=>["sync_repositories","read_item","start_run","prepare_launch"].includes(c.name))).toBe(false);
+    await expect(ui.locator("body")).toHaveJSProperty("scrollWidth",await ui.locator("body").evaluate(e=>e.clientWidth));
+    await scanOwnedApp(page,`github-budget-${theme}`);
+  });
+}
+
+test("a deferred detail refresh retains saved information and unread state until a successful retry",async({page})=>{
+  let deferred=true;
+  const {ui,calls}=await host(page,{readItem:async detail=>({...detail,refreshError:deferred?"Could not refresh details; showing saved information. GitHub request reserve reached.":""})});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByRole("alert")).toContainText("showing saved information");
+  await expect(ui.getByRole("heading",{name:"Fix reconnect regression",exact:true})).toBeVisible();
+  expect(calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read")).toHaveLength(0);
+  deferred=false;await ui.getByRole("button",{name:"Retry detail refresh",exact:true}).click();
+  await expect(ui.getByRole("alert")).toHaveCount(0);
+  await expect.poll(()=>calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read").length).toBe(1);
+  expect(calls.some(c=>["prepare_launch","start_run"].includes(c.name))).toBe(false);
+});
+
+test("linked PR changes refresh full selected details without consuming another read or launch",async({page})=>{
+ const snapshot=initial();
+ snapshot.inbox[0].linkedPullRequests=[{id:"owner/repo#2",title:"Linked implementation",url:"https://github.com/owner/repo/pull/2",state:"open",draft:false,head:"abc",reviewDecision:"approved",ci:"success",syncedAt:new Date().toISOString(),checks:[{name:"Initial CI",status:"completed",conclusion:"success",url:""}]}];
+ const {ui,calls,state}=await host(page,{snapshot,readItem:async detail=>({...detail,linkedPullRequests:structuredClone(snapshot.inbox[0].linkedPullRequests)})});
+ await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+ const linked=ui.getByRole("region",{name:"Linked pull requests",exact:true});
+ await expect(linked).toContainText("success");
+ snapshot.inbox[0].linkedPullRequests![0].ci="failure";
+ snapshot.inbox[0].linkedPullRequests![0].checks=[{name:"Latest CI",status:"completed",conclusion:"failure",url:""}];
+ state.cursor++;
+ await expect(linked).toContainText("failure");
+ await linked.getByText("CI checks",{exact:true}).click();
+ await expect(linked.getByText(/Latest CI/)).toBeVisible();
+ expect(calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read")).toHaveLength(1);
+ expect(calls.some(c=>["prepare_launch","start_run"].includes(c.name))).toBe(false);
+});

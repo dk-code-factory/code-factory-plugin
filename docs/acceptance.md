@@ -1,5 +1,65 @@
 # Work acceptance gate
 
+## GitHub API quota controls · 2026-10-23
+
+Installed **0.1.0-e6423eaeb939** replaces broad per-PR polling with read-only
+GitHub notification hints and periodic lightweight repository reconciliation.
+The default shared application allowance is **600 HTTP attempts per rolling
+hour**, with a **100 reported quota units reserved**. Notification checks default
+to **two minutes**; repository reconciliation runs every **15 minutes**. System
+Settings exposes these values and cached accounting. Manual polls and selected
+reads share the serialized persistent gate; cache hits make no API request.
+
+The [API-usage record](evidence/2026-10-23-github-api-usage.json) separates 80 passing
+browser fixtures, Go race checks, fresh layered-spec records and full CI against
+`59d662f` from actual installed Work observation. A 100-PR fixture imports using
+two list calls without per-PR history reads. Fixtures cover restart-preserved
+budgets/validators, reported reserves, primary/secondary and GraphQL cooldowns,
+truncated-body headers, notification polling/cursor changes and deduplication,
+authentication-safe redirects, private Git transport and legacy revision identity.
+
+The actual Settings widget was Connected with no alerts, showed 600/100/120-second
+controls and cached quota, and loaded the exact release JavaScript. The final
+update preserved all 91 still-recent recorded requests (92 after the next daemon
+read), all 12 retained runs, runtime/provider configuration and complete Tailscale
+routes. A bounded earlier sample recorded 31 application requests in 29 minutes.
+Notification reads succeeded using existing credentials; no GitHub notification
+read state, repository policy, agent run or plugin installation was changed.
+
+The cap covers the daemon's own API reads. Plugins, skills, agent commands and
+other clients remain independent; their usage must be assessed separately. The
+reserve uses GitHub's reported remaining quota. Earlier unaccounted calls are not
+reconstructed, and the admin counter is a cached Settings snapshot. No new pilot
+notification was manufactured and no production PR action was performed. Actual
+new-event intake, model/automatic/skill review execution, callbacks, soak, login
+and complete manual accessibility remain separate acceptance checks.
+
+## Repository review listing recovery · 2026-10-23
+
+Installed **0.1.0-9a17c48411d7** fixes sequential repository/enrichment work and
+oversized dashboard reads. Three repository workers use at most four item workers
+each; reference backfill yields after ten seconds and resumes on its next pass.
+A failed enrichment keeps the repository checkpoint. Shared reads omit bulk
+activity/raw checks and full PR check lists; selected-item detail retains them.
+
+The [recovery evidence](evidence/2026-10-23-repository-review-recovery.json) separates
+76 passing browser fixtures, Go race tests, fresh specification records and full
+CI against `59d662f` from actual Work observation. The original snapshot was
+33,954,766 bytes; the final installed snapshot was approximately 3.8 MB. After
+Refresh tools, the real Review PRs view was Connected and displayed **two**
+`scylladb/gocql` requests and **nine** `scylladb/python-driver` requests, with the
+exact release JavaScript. All 12 retained runs, including the prepared pilot
+review, runtime/provider configuration and complete Tailscale routes were preserved.
+No agent was started or repository policy changed. Both public peers passed raw
+OAuth/MCP and independent SDK checks; ephemeral credentials were revoked.
+
+Initial imports and repeated daemon warmups exhausted the GitHub REST budget.
+Imported rows remain visible with a rate-limit alert; the two added repositories
+retry after **2026-10-23 04:23:28 UTC / 00:23:28 local**. Successful fresh polling
+after that reset remains unverified. Do not force repeated manual polls or change
+authentication to bypass the cooldown. Existing callback, automatic/model/skill
+launch, soak, coordinated login and manual accessibility gaps remain separate.
+
 ## Public connection interruption and recovery · 2026-10-22
 
 The [connection recovery record](evidence/2026-10-22-connection-recovery.json)
@@ -1057,3 +1117,88 @@ the new admin skill is available in the rebuilt 0.2.3 ZIP. Remote catalog update
 versions remain explicitly Unknown when the stable provider does not expose them.
 No live third-party skill execution or automatic-request launch, new-build soak,
 callback, login or full manual accessibility acceptance is claimed.
+
+## Discoverable manual PR review · 2026-10-23
+
+The model-visible `prepare_pr_review` tool selects repository, system and built-in
+review defaults, retains selected skills/model, pins the PR head and appends the
+repository prompt. It prepares read-only/ask work without GitHub reads, a workspace
+or an agent start. The daily skill now spells out discovery, preparation, snapshot
+inspection, authorized `start_run`, monitoring and uncertain-start recovery; it
+also documents the older generic-launch path. Package 0.2.4 includes the updated
+skills and a PR review starter prompt.
+
+Refresh tools on the existing registered connection after deployment, then use a
+fresh Work conversation. Refreshing tools exposes the server recipe and dedicated
+preparation tool; replacing the uploaded cloud archive is separately necessary
+to replace its bundled skill text. Preserve existing cloud mapping and sessions.
+Queue-only monitoring permits a requested manual review; posting to GitHub still
+requires its publishing authority. Do not enable automatic policy as a workaround.
+
+Focused application and MCP fixtures cover pipeline precedence, pinned target,
+profile/skill retention, explicit-only Start, repeated Start rejection, unsafe
+profiles and invalid targets. See the [review discoverability evidence](evidence/2026-10-23-pr-review-discoverability.json)
+for version-bound verification and installation results. Existing real-host
+callback, soak, login and accessibility gaps remain open; fixtures alone do not
+establish that a conversational model chose the intended tool.
+
+Build **0.1.0-ead7ae360111** is installed from the checksummed release after
+`make specs-check` and full CI against `59d662f` passed (80 browser fixtures, Go
+race, packaging, installer recovery and compiled smoke). Local authenticated
+discovery exposes all 30 tools, including model-visible `prepare_pr_review`.
+All 14 retained runs, provider paths, registered app mapping and complete Tailscale
+configuration are unchanged; both services are active. The installed source/hosted
+bundle is 0.2.4. The existing uploaded cloud package remains 0.2.2; tool refresh
+updates server capabilities without replacing its bundled skills. The evidence
+record separates this installation check from conversational tool-choice checks.
+
+## Bounded review command sandbox · 2026-10-23
+
+Read-only and workspace-write tasks now use an invocation-local native permission
+profile in pinned Codex 0.161.0. Source permissions, private writable scratch and
+network access are independent. Reviews cannot change their source checkout or
+Git metadata; implementations can change their own checkout. Required executables,
+selected-repository Git metadata, installed skills and existing GitHub auth
+configuration remain readable. Unrelated owner files are excluded.
+
+The enforced command proxy allows `api.github.com`, `github.com`,
+`raw.githubusercontent.com`, `objects.githubusercontent.com`,
+`codeload.github.com`, `api.openai.com`, `chatgpt.com` and `auth.openai.com`.
+Other destinations, localhost and private-network access remain blocked. Temporary
+artifacts and isolated review clones belong under `TMPDIR`. Skill data indexes for
+repository rules and PR decisions are bounded per-run copies under `XDG_DATA_HOME`;
+refreshing them cannot modify the owner's original settings. Resume preserves the
+run cache and reselects the same process-local policy. Explicit clean cleanup
+removes scratch. No global Codex config, authentication or Tailscale change is
+required, and initialization failure never falls back to full access.
+
+The policy governs sandboxed commands. Codex service/control traffic, MCP servers,
+apps and browser tools retain their separate controls. A destination allowlist
+does not filter HTTP methods or grant publishing authority: the profile's approval
+and publishing rules remain applicable. Existing explicitly selected full-access
+profiles remain a separate owner choice. Agent/skill GitHub commands still use
+GitHub independently of the daemon's request budget.
+
+The [sandbox evidence](evidence/2026-10-23-review-sandbox.json) separates fixture
+checks, real pinned-provider command-only checks and installation observations.
+Native tests verify GitHub TLS without an HTTP API request, denied other/private
+destinations, blocked direct localhost access, read-only review files, protected
+Git metadata, workspace-only implementation edits, inaccessible unrelated files,
+unchanged host files and persistent private scratch. They also verify existing
+GitHub authentication and local reviewer configuration without printing tokens.
+Linux may provide private synthetic parent directories inside the namespace;
+writes there are checked against the unchanged owner host files. These command
+checks do not establish a full model-led third-party review pipeline or close
+callback, soak, login, nested runtime or accessibility acceptance gaps.
+
+Installed **0.1.0-16c572cbc34d** passed a real `gpt-6.1-sol` check through the
+private pilot run: Git and existing GitHub auth read, source write denial,
+unrelated-file read denial, writable scratch and GitHub TLS all succeeded
+without escalation. A forbidden domain was separately observed blocked. Native
+checks also cover direct localhost/private destinations and protected Git
+metadata. Shell `TMPDIR` and zsh `TMPPREFIX` both use private scratch; the first
+candidate exposed a heredoc-temp failure, now covered by a regression test.
+Only the two owned pilot test workspaces/scratch were cleaned. Original 14 runs,
+global Codex configuration, provider paths, registered mapping and Tailscale
+routes remain unchanged. Full PR review and third-party nested-runtime acceptance
+remain separate from this bounded model-backed command check.

@@ -4,25 +4,20 @@ import (
 	"bytes"
 	"codefactory/internal/domain"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
-	"time"
 )
+
+type githubHeadContext struct{}
 
 // graph only accepts application-owned queries, never mutations or source text.
 func (g *GitHub) graph(ctx context.Context, query string, variables any, out any) error {
-	g.mu.Lock()
-	retry := g.graphRetryAt
-	g.mu.Unlock()
-	if time.Now().Before(retry) {
-		return &RateLimitError{Until: retry}
-	}
 	token, err := g.Token(ctx)
 	if err != nil {
 		return err
@@ -37,25 +32,55 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
-	res, err := g.Client.Do(req)
+	if g.Managed() {
+		g.requestMu.Lock()
+		defer g.requestMu.Unlock()
+	}
+	key := fmt.Sprintf("graphql:%x:%x", sha256.Sum256([]byte(token)), sha256.Sum256(append(b, []byte(fmt.Sprint(ctx.Value(githubHeadContext{})))...)))
+	cached, ok, err := g.cached(ctx, key)
+	if err != nil {
+		return fmt.Errorf("GitHub cache unavailable")
+	}
+	if g.Managed() && ok && cached.Until.After(g.now()) {
+		noteRead(ctx, cached.CheckedAt)
+		return json.Unmarshal(cached.Body, out)
+	}
+	// Retain an in-memory hint for clients without attached durable accounting.
+	g.mu.Lock()
+	retry := g.graphRetryAt
+	g.mu.Unlock()
+	if g.now().Before(retry) {
+		return &RateLimitError{Until: retry}
+	}
+	if err = g.beginRequest(ctx, token, "graphql", "/graphql"); err != nil {
+		return err
+	}
+	res, err := g.httpClient().Do(req)
 	if err != nil {
 		return fmt.Errorf("GitHub metadata connection failed")
 	}
 	defer res.Body.Close()
+	if err = g.observe(ctx, token, "graphql", "/graphql", res.Header); err != nil {
+		return fmt.Errorf("GitHub request budget unavailable")
+	}
 	rateLimit := func() error {
-		until := time.Now().Add(time.Minute)
-		if n, err := strconv.ParseInt(res.Header.Get("X-RateLimit-Reset"), 10, 64); err == nil {
-			until = time.Unix(n, 0)
+		rate := g.rateLimited(ctx, token, "graphql", res.Header)
+		var limited *RateLimitError
+		if errors.As(rate, &limited) {
+			g.mu.Lock()
+			g.graphRetryAt = limited.Until
+			g.mu.Unlock()
 		}
-		if n, err := strconv.Atoi(res.Header.Get("Retry-After")); err == nil {
-			until = time.Now().Add(time.Duration(n) * time.Second)
-		}
-		g.mu.Lock()
-		g.graphRetryAt = until
-		g.mu.Unlock()
-		return &RateLimitError{Until: until}
+		return rate
 	}
 	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("Retry-After") != "" || res.Header.Get("X-RateLimit-Remaining") == "0") {
+		return rateLimit()
+	}
+	body, err := io.ReadAll(io.LimitReader(res.Body, (16<<20)+1))
+	if err != nil || len(body) > 16<<20 {
+		return fmt.Errorf("GitHub metadata unavailable")
+	}
+	if res.StatusCode == 403 && rateBody(body) {
 		return rateLimit()
 	}
 	if res.StatusCode != http.StatusOK {
@@ -65,26 +90,41 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 		Data   json.RawMessage
 		Errors []struct {
 			Type       string
+			Message    string
 			Extensions struct{ Code string }
 		}
 	}
-	if err = json.NewDecoder(io.LimitReader(res.Body, 16<<20)).Decode(&result); err != nil {
+	if err = json.Unmarshal(body, &result); err != nil {
 		return fmt.Errorf("GitHub metadata unavailable")
 	}
 	for _, e := range result.Errors {
-		if e.Type == "RATE_LIMITED" || e.Extensions.Code == "RATE_LIMITED" || res.Header.Get("X-RateLimit-Remaining") == "0" {
+		if e.Type == "RATE_LIMITED" || e.Extensions.Code == "RATE_LIMITED" || strings.Contains(strings.ToLower(e.Message), "rate limit") || res.Header.Get("X-RateLimit-Remaining") == "0" {
 			return rateLimit()
 		}
 	}
 	if len(result.Errors) > 0 || len(result.Data) == 0 || string(result.Data) == "null" {
 		return fmt.Errorf("GitHub metadata unavailable")
 	}
-	return json.Unmarshal(result.Data, out)
+	if err = json.Unmarshal(result.Data, out); err != nil {
+		return fmt.Errorf("GitHub metadata unavailable")
+	}
+	noteRead(ctx, g.now())
+	if err = g.requestSucceeded(ctx); err != nil {
+		return fmt.Errorf("GitHub request budget unavailable")
+	}
+	if g.Managed() {
+		if err = g.remember(ctx, key, cacheEntry{Body: result.Data, Header: http.Header{}, CheckedAt: g.now(), Until: g.now().Add(GitHubDetailTTL)}); err != nil {
+			return fmt.Errorf("GitHub cache unavailable")
+		}
+	}
+	return nil
 }
 
 // EnrichPullRequest reads authoritative review state and development links. A
 // partial failure remains visible independently of the REST item checkpoint.
 func (g *GitHub) EnrichPullRequest(ctx context.Context, item *domain.Item) {
+	ctx, observed := observeReads(ctx, g.now())
+	ctx = context.WithValue(ctx, githubHeadContext{}, item.Head)
 	p := domain.PullRequest{ID: item.ID, Title: item.Title, URL: item.URL, State: item.State, Draft: item.Draft, Head: item.Head, ReviewDecision: "unknown", CI: "unknown", Checks: checksFromREST(item.Checks)}
 	parts := strings.SplitN(item.Repository, "/", 2)
 	if len(parts) != 2 {
@@ -173,7 +213,7 @@ func (g *GitHub) EnrichPullRequest(ctx context.Context, item *domain.Item) {
 				}
 			}
 			item.ClosingIssues = closings
-			p.SyncedAt = time.Now().UTC()
+			p.SyncedAt = *observed
 			item.PR = &p
 			return
 		}
@@ -230,6 +270,7 @@ func checksFromREST(raw json.RawMessage) []domain.Check {
 
 // PullRequest reads only this PR; it never imports or configures its repository.
 func (g *GitHub) PullRequest(ctx context.Context, repo string, number int) (domain.Item, error) {
+	ctx, observed := observeReads(ctx, g.now())
 	var pr struct {
 		ghIssue
 		Draft, Merged      bool
@@ -289,6 +330,7 @@ func (g *GitHub) PullRequest(ctx context.Context, repo string, number int) (doma
 	}
 	item.Checks, _ = json.Marshal(map[string]any{"checks": checks.Runs, "statuses": statuses})
 	g.EnrichPullRequest(ctx, &item)
+	item.ReviewObservedAt = *observed
 	item.Revision = item.ContentRevision()
 	return item, nil
 }

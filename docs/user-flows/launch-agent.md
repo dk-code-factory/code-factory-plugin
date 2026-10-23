@@ -29,7 +29,11 @@ Leaving the initial conversation retains its message and busy/uncertain state pe
 
 - **S5** A fresh requested PR can launch automatically only under an owner-enabled inherited/repository policy. It uses the configured read-only review pipeline, asks before publishing, pins the current head, appends owner repository instructions and claims the request/head once. Queue-only, paused/stale/failed polls, drafts, other active agent work, unsafe profiles and changed policy do not launch. Restart never replays a claimed request. A newly observed request episode or new head can receive a new review. Manual launches keep their explicit Start behavior.
 
+- **S6** The owner can request a manual PR review through the assistant. Preparation resolves repository, system and built-in review defaults in that order and retains the selected model, skills, pinned head and repository instructions. The assistant inspects the read-only, ask-before-publishing proposal and starts it under the owner's review request. Proposal-only requests retain unstarted work. Invalid targets, missing heads, unavailable profiles/skills or unsafe review authority return errors without preparing work. Preparation uses synchronized state without provider requests or workspace creation. An uncertain Start is checked against the same retained run before an explicit retry; manual review does not require enabling automatic monitoring.
+
 Review/implementation defaults resolve repository overrides before system defaults. Plugin maintenance excludes concurrent agent start, message/answer delivery and automatic question/inference work; rejected submissions retain their ordinary drafts. Prepared skills retain content/support files and executable modes across later plugin changes.
+
+- **S7** Bounded tasks use independent source and network permissions. Reviews keep the source and Git metadata read-only; implementation can write its own checkout. Private scratch permits temporary review checkouts and artifacts. Network commands use a destination allowlist for GitHub and Codex services, with other hosts and local/private endpoints blocked. Only required tools, selected-repository metadata, skills and authentication configuration are readable; unrelated owner files are unavailable. Sandbox initialization failure stops the run without broadening authority. Explicit full-access profiles remain an owner choice, never a fallback.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -51,6 +55,10 @@ flowchart TD
     N7["Select a pipeline before explicit Start, retaining an edited first message and reviewing the selected authority. #40;S4#41;"]
     N8["Fresh eligible request uses opted-in policy and one durable head/request claim #40;S5#41;"]
     N9(["Queue only or changed/stale/paused policy#59; no automatic launch"])
+    N10["Resolve the configured PR review pipeline and inspect its pinned proposal #40;S6#41;"]
+    N11(["Invalid PR or unsafe/unavailable review pipeline#59; no prepared work"])
+    N12["Keep source access bounded, private scratch writable and network destinations scoped #40;S7#41;"]
+    N13(["Sandbox initialization failed#59; retained work and authority preserved"])
     N0 --> N1
     N0 -->|"customize a separate proposal"| N5
     N5 -->|"reviewed Start"| N1
@@ -68,6 +76,13 @@ flowchart TD
     N0 -->|"repository poll"| N8
     N8 -->|"valid read-only review claim"| N3
     N8 -->|"not eligible, already claimed or policy changed"| N9
+    N0 -->|"owner requests PR review through assistant"| N10
+    N10 -->|"inspect snapshot#59; request authorizes review"| N1
+    N10 -->|"proposal only#59; no start requested"| N6
+    N10 -->|"invalid target or pipeline"| N11
+    N0 -->|"authorized bounded task start or continuation"| N12
+    N12 -->|"valid policy#59; retain scoped work"| N3
+    N12 -->|"invalid policy#59; fail before provider launch"| N13
 ```
 
 ## Implementation references
@@ -99,6 +114,10 @@ flowchart TD
 - [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
 - [internal/app/review_requests.go](../../internal/app/review_requests.go) — Resolve inherited review policies, fresh requests, durable claims and pinned automatic launches. (`func (a *App) ProcessReviewRequests(`)
 - [web/src/admin.tsx](../../web/src/admin.tsx) — Repository/global review policy and plugin-admin settings. (`export function RepositoryAdmin(`)
+- [internal/app/runs.go](../../internal/app/runs.go) — Prepare the effective PR review pipeline through shared preparation, retaining pinned target and authority without starting work. (`func (m *Manager) PreparePRReview(`)
+- [plugin/skills/code-factory/SKILL.md](../../plugin/skills/code-factory/SKILL.md) — Explicit conversational PR review recipe, generic-launch compatibility and uncertain-start recovery.
+- [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
+- [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 
 ## Test references
 
@@ -122,6 +141,14 @@ flowchart TD
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestSelectedDiscoveredSkillKeepsItsBundleAndAutomaticChecksDoNotInstall(`; S3. Selected discovered skill retains its full bundle and executable modes.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `repository review pipeline overrides system defaults and plugin skills remain selectable`; S4. Repository role choice overrides the system; plugin skills can be selected and missing skills are disabled.
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestNewPRHeadGetsOneNewReviewAndExtraPromptIsNotDuplicated(`; S5. A changed head receives one new review, while repeated preparation does not duplicate repository instruction blocks.
+- [internal/app/clone_test.go](../../internal/app/clone_test.go) — `func TestManagedCloneUsesGitTransportAndCredentialHelperWithoutAPILookup(`; S2. Authenticated local smart-HTTP clone uses the credential helper and succeeds while any gh repository/API lookup is disabled.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(`; S6. Repository/system/built-in resolution retains model, mode, pinned head and repository prompt; no workspace before explicit Start, and repeated Start rejected.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewRejectsInvalidTargetsAndUnsafePipelines(`; S6. Invalid item, missing head/profile, write/publishing authority and unavailable skills reject without persisting work.
+- [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S6. MCP catalog exposes model-visible PR review preparation with only itemId required and follow-on start_run guidance; wire call returns pinned prepared run.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S7. Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S7. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S7. Invalid sandbox fails before app-server launch without an unrestricted fallback.
+- [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S7. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
 
 ## Verification and gaps
 
@@ -130,5 +157,6 @@ Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-launch-agent-s2-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Assembled lost-response recovery/busy-click assertions retain exactly one daemon run. Concurrent Start requests from independent clients still lack a dedicated race assertion. Next verification: Send independent concurrent Start requests for one prepared run; assert exactly one accepted transition, rejection of others and no duplicate workspace/process.
 - **S3** — `gap-flow-launch-agent-s3-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Immutable skill-bundle edit-after-prepare coverage is missing; skill loading is exercised only in the opt-in real-provider test. Next verification: Prepare a run, edit its source profile and skill files, and assert that prepared values and copied skill content remain unchanged; distinguish this fixture from opt-in provider loading.
 - **S1** — `gap-flow-launch-agent-s1-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Default review and Close after preparation plus durable draft reopening are covered. Close during in-flight preparation and after unreviewed Edit remain unverified. Next verification: Gate preparation, close during its response and after unreviewed Edit; assert no implicit Start, retained prepared records and unchanged reviewed snapshots.
+- **S7** — `gap-flow-launch-agent-s7-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Pinned-provider command-only filesystem, TLS and credential/helper probes are recorded separately. A full model-led review using every third-party reviewer skill, nested CLI and connector transport is not established by fixture/native command checks. Next verification: Run an owner-selected review skill end to end against the dedicated private pilot and separately verify each nested runtime or connector boundary without changing production repositories.
 
 <!-- /flow-references -->

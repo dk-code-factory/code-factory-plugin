@@ -417,6 +417,10 @@ func TestScheduledSyncRecoversCredentialsAndFindsNewItems(t *testing.T) {
 		t.Fatal("revocation advanced checkpoint")
 	}
 	revoked.Store(false)
+	repo.RetryAt = time.Now().Add(-time.Second)
+	if err := a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+		t.Fatal(err)
+	}
 	ticks <- time.Now()
 	waitFor(t, func() bool {
 		_ = a.Store.Get(ctx, "repository", "owner/repo", &repo)
@@ -427,6 +431,10 @@ func TestScheduledSyncRecoversCredentialsAndFindsNewItems(t *testing.T) {
 		t.Fatal("baseline state", entries, e)
 	}
 	number.Store(2)
+	repo.LastSync = time.Now().Add(-16 * time.Minute)
+	if err := a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+		t.Fatal(err)
+	}
 	ticks <- time.Now()
 	waitFor(t, func() bool { entries, _ = a.Inbox(ctx, "open"); return len(entries) == 2 })
 	found := false
@@ -656,7 +664,7 @@ func TestMessageRestoresRetainedSessionWithOneSubmittedTurn(t *testing.T) {
 	if err = json.Unmarshal([]byte(lines[3]), &turn); err != nil {
 		t.Fatal(err)
 	}
-	if resume.Method != "thread/resume" || string(resume.Params["threadId"]) != string(raw(original.ThreadID)) || string(resume.Params["cwd"]) != string(raw(original.Worktree)) || string(resume.Params["sandbox"]) != string(raw(original.Profile.Sandbox)) {
+	if resume.Method != "thread/resume" || string(resume.Params["threadId"]) != string(raw(original.ThreadID)) || string(resume.Params["cwd"]) != string(raw(original.Worktree)) || len(resume.Params["sandbox"]) != 0 {
 		t.Fatalf("wrong resume parameters: %s", lines[2])
 	}
 	var input []struct{ Type, Text string }

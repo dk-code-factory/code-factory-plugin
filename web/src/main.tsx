@@ -1277,6 +1277,7 @@ function ItemDetail({
     setDetailVersion((version) => version + 1);
     return true;
   }
+  const linkedRevision=JSON.stringify(entry?.linkedPullRequests?.map(pr=>[pr.id,pr.head,pr.state,pr.reviewDecision,pr.ci,pr.error,pr.syncedAt]));
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
@@ -1308,15 +1309,15 @@ function ItemDetail({
       alive = false;
       clearTimeout(timer);
     };
-  }, [id, entry?.item.revision, detailVersion]);
+  }, [id, entry?.item.revision, linkedRevision, detailVersion]);
   useEffect(() => {
-    if (detail?.item.id === id)
+    if (detail?.item.id === id && !detail.refreshError)
       void action("item_action", {
         id,
         action: "read",
         revision: detail.item.revision,
       });
-  }, [detail?.item.id, detail?.item.revision, id, action]);
+  }, [detail?.item.id, detail?.item.revision, detail?.refreshError, id, action]);
   if (!detail || detail.item.id !== id || !entry)
     return (
       <>
@@ -1338,6 +1339,7 @@ function ItemDetail({
   const summary = i.body.split(/\n\s*\n/)[0].slice(0, 600);
   return (
     <>
+      {detail.refreshError && <p role="alert">{detail.refreshError} <button onClick={()=>setDetailVersion(v=>v+1)}>Retry detail refresh</button></p>}
       {loadError && (
         <p role={loadError.retrying ? "status" : "alert"}>
           {loadError.message}
@@ -1358,15 +1360,15 @@ function ItemDetail({
           </p>
         )}
       </section>
-      {entry.item.pr && (
+      {(i.pr ?? entry.item.pr) && (
         <section aria-label="PR monitoring">
-          <PullRequestInfo pr={entry.item.pr} />
+          <PullRequestInfo pr={(i.pr ?? entry.item.pr)!} />
         </section>
       )}
-      {!!entry.linkedPullRequests?.length && (
+      {!!(detail.linkedPullRequests ?? entry.linkedPullRequests)?.length && (
         <section aria-label="Linked pull requests">
           <h2>Linked pull requests</h2>
-          {entry.linkedPullRequests.map((pr) => (
+          {(detail.linkedPullRequests ?? entry.linkedPullRequests)!.map((pr) => (
             <PullRequestInfo key={pr.id} pr={pr} linked />
           ))}
         </section>
@@ -2558,6 +2560,7 @@ function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
         <summary>System defaults</summary>
         <SaveForm save={() => save("save_settings", { ...config })}>
           <SystemReviewSettings
+            usage={snap.githubUsage}
             config={config}
             profiles={snap.profiles}
             change={setConfig}

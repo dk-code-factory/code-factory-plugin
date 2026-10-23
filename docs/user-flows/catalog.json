@@ -557,7 +557,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -676,6 +677,11 @@
           "path": "plugin/skills/code-factory-admin/SKILL.md",
           "anchor": "name: code-factory-admin",
           "purpose": "Bundled administration skill exposes the same owner tool controls."
+        },
+        {
+          "path": "internal/app/github_usage.go",
+          "anchor": "func (a *App) EnableGitHubUsage(",
+          "purpose": "Bind system budget settings to private durable accounting and carry over existing cooldowns."
         }
       ],
       "tests": [
@@ -824,6 +830,31 @@
             "S4"
           ],
           "purpose": "Queue override, pause, draft, old sync, absent request, sync error and unsafe review profile cannot launch automatically."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "GitHub usage settings show cached quota and save budget without polling",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Both narrow themes save limits and display cached usage without polling GitHub."
+        },
+        {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestIndexPreservesHistoryInvalidatesChangedHeadAndBudgetEditsKeepAssessmentPolicy(",
+          "scenarios": [
+            "S3",
+            "S6"
+          ],
+          "purpose": "Budget-only edits do not invalidate all priority assessments; cheap index retains history and invalidates old-head metadata."
+        },
+        {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestInvalidAPIBudgetCannotOverwriteSavedPolicy(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Rejected out-of-range limits cannot replace saved API or assessment policy."
         }
       ],
       "suites": [
@@ -865,7 +896,9 @@
         "P-SYSTEM-DEFAULTS",
         "C-PLUGIN-MAINTENANCE",
         "C-REVIEW-POLICY",
-        "C-REPOSITORY-REVIEW-PROMPT"
+        "C-REPOSITORY-REVIEW-PROMPT",
+        "W-GITHUB-USAGE",
+        "C-GITHUB-USAGE"
       ],
       "terms": [
         "repository",
@@ -879,7 +912,10 @@
         "plugin-inventory",
         "plugin-maintenance",
         "review-policy",
-        "repository-review-prompt"
+        "repository-review-prompt",
+        "github-request-budget",
+        "github-request-reserve",
+        "github-review-notification"
       ],
       "graph": {
         "start": "n0",
@@ -930,6 +966,11 @@
             "id": "plugin_unknown",
             "label": "Uncertain or failed result retains observed state without replay",
             "terminal": true
+          },
+          {
+            "id": "github_budget",
+            "label": "Save API request budget, reserve and review-notification interval; inspect cached usage",
+            "scenario": "S6"
           }
         ],
         "edges": [
@@ -1002,6 +1043,21 @@
             "from": "plugin_admin",
             "to": "plugin_unknown",
             "label": "failed or uncertain"
+          },
+          {
+            "from": "n0",
+            "to": "github_budget",
+            "label": "API usage settings"
+          },
+          {
+            "from": "github_budget",
+            "to": "n6",
+            "label": "valid settings saved"
+          },
+          {
+            "from": "github_budget",
+            "to": "n4",
+            "label": "invalid limits"
           }
         ]
       }
@@ -1015,7 +1071,10 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6",
+        "S7",
+        "S8"
       ],
       "implementation": [
         {
@@ -1073,6 +1132,21 @@
           "path": "internal/app/review_requests.go",
           "anchor": "func (a *App) ProcessReviewRequests(",
           "purpose": "Resolve inherited review policies, fresh requests, durable claims and pinned automatic launches."
+        },
+        {
+          "path": "internal/providers/github_usage.go",
+          "anchor": "func (g *GitHub) beginRequest(",
+          "purpose": "Durable shared request budget/reserve, pacing and resource cooldowns with bounded credential-scoped cache."
+        },
+        {
+          "path": "internal/providers/github_notifications.go",
+          "anchor": "func (g *GitHub) ReviewNotifications(",
+          "purpose": "Read-only notification hints, pagination and validated targets."
+        },
+        {
+          "path": "internal/app/github_usage.go",
+          "anchor": "func (a *App) SyncNotifications(",
+          "purpose": "Persist notification cadence/cursor, deduplicate updated targets and preserve scoped queue behavior."
         }
       ],
       "tests": [
@@ -1189,6 +1263,123 @@
             "S5"
           ],
           "purpose": "An old failed provider poll records its error without overwriting concurrently edited monitoring policy or advancing the checkpoint."
+        },
+        {
+          "path": "internal/providers/github_test.go",
+          "anchor": "func TestSyncEnrichmentHasBoundedParallelismAndCancelsOnFailure(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S6"
+          ],
+          "purpose": "Four independent items hydrate concurrently; the worker bound holds and a failed worker returns no partial repository."
+        },
+        {
+          "path": "internal/app/work_queues_test.go",
+          "anchor": "func TestSyncImportsOtherRepositoryWhileOneIsBlocked(",
+          "scenarios": [
+            "S5",
+            "S6"
+          ],
+          "purpose": "A requested PR enters the fast repository review queue while another repository remains blocked and its checkpoint stays untouched."
+        },
+        {
+          "path": "internal/app/work_queues_test.go",
+          "anchor": "func TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors(",
+          "scenarios": [
+            "S3",
+            "S6"
+          ],
+          "purpose": "A canceled reference backfill yields without replacing successful metadata with a false error; the next pass advances to another reference."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestGitHubSharedBudgetSurvivesRestartSerializesAndFailsClosed(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Serialize actual requests, preserve rolling counts after restart and fail closed when accounting is unavailable."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestGitHubPersistentConditionalCacheAuthIsolationAnd304RateObservation(",
+          "scenarios": [
+            "S2",
+            "S8"
+          ],
+          "purpose": "Preserve conditional cache across restart/auth scopes and observe fresh 304 quota headers."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestGitHubSecondaryCooldownBlocksRESTAndGraphQLAcrossRestart(",
+          "scenarios": [
+            "S3",
+            "S8"
+          ],
+          "purpose": "Secondary 403 and HTTP-200 GraphQL rate errors block both request paths after restart."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestIndexCallCountDoesNotGrowWithPRHistory(",
+          "scenarios": [
+            "S6",
+            "S7"
+          ],
+          "purpose": "One hundred requested PRs need two listing calls, independent of history size."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestNotificationConditionalReadsHonorPollIntervalAcrossCursorChanges(",
+          "scenarios": [
+            "S7",
+            "S8"
+          ],
+          "purpose": "Last-Modified persists and X-Poll-Interval applies even after the since cursor changes."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestGitHubRedirectsAreBudgetedAndNeverForwardAuthenticationOffOrigin(",
+          "scenarios": [
+            "S3",
+            "S8"
+          ],
+          "purpose": "Same-origin redirect hops consume the shared budget and cross-origin redirect targets receive no request."
+        },
+        {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestNotificationReviewHintsAreScopedReadOnlyAndRestartSafe(",
+          "scenarios": [
+            "S5",
+            "S7"
+          ],
+          "purpose": "Notification reads retain read threads, fetch only configured changed PRs, skip duplicate hints, retain failed cursors and queue without launching."
+        },
+        {
+          "path": "internal/domain/types_test.go",
+          "anchor": "func TestItemFreshnessKeepsLegacyContentRevision(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Operational freshness does not invalidate legacy revisions or consume unread state."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestRateHeadersStopRequestsEvenWhenErrorBodyIsTruncated(",
+          "scenarios": [
+            "S3",
+            "S8"
+          ],
+          "purpose": "Rate headers establish a global cooldown before an incomplete error body can hide them."
+        },
+        {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestCachedPRObservationCannotBorrowFreshRepositoryAuthority(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "A cached PR observation cannot become eligible by borrowing a newer repository checkpoint."
         }
       ],
       "suites": [
@@ -1230,7 +1421,9 @@
         "W-REPOSITORY-SETTINGS",
         "W-SYSTEM-DEFAULTS",
         "C-REVIEW-POLICY",
-        "C-REPOSITORY-REVIEW-PROMPT"
+        "C-REPOSITORY-REVIEW-PROMPT",
+        "W-GITHUB-USAGE",
+        "C-GITHUB-USAGE"
       ],
       "terms": [
         "repository",
@@ -1244,7 +1437,10 @@
         "implementation-relationship",
         "review-policy",
         "review-request-claim",
-        "repository-review-prompt"
+        "repository-review-prompt",
+        "github-request-budget",
+        "github-request-reserve",
+        "github-review-notification"
       ],
       "graph": {
         "start": "n0",
@@ -1291,6 +1487,21 @@
             "id": "queue_review",
             "label": "Queue only or changed/stale/paused policy; no automatic launch",
             "terminal": true
+          },
+          {
+            "id": "independent",
+            "label": "Keep per-repository progress; bound reference work and serialize actual GitHub requests",
+            "scenario": "S6"
+          },
+          {
+            "id": "notifications",
+            "label": "Read review-notification hints without marking read; reconcile repositories periodically",
+            "scenario": "S7"
+          },
+          {
+            "id": "request_budget",
+            "label": "Shared request budget, reserve or cooldown defers reads and retains saved state",
+            "scenario": "S8"
           }
         ],
         "edges": [
@@ -1353,6 +1564,41 @@
             "from": "auto_review",
             "to": "queue_review",
             "label": "not eligible, already claimed or policy changed"
+          },
+          {
+            "from": "n0",
+            "to": "independent",
+            "label": "independent repository polling"
+          },
+          {
+            "from": "independent",
+            "to": "n5",
+            "label": "another repository succeeds"
+          },
+          {
+            "from": "independent",
+            "to": "n3",
+            "label": "failed item enrichment"
+          },
+          {
+            "from": "n0",
+            "to": "notifications",
+            "label": "scheduled discovery"
+          },
+          {
+            "from": "notifications",
+            "to": "n5",
+            "label": "configured changed PR fetched"
+          },
+          {
+            "from": "notifications",
+            "to": "request_budget",
+            "label": "budget or provider delay"
+          },
+          {
+            "from": "request_budget",
+            "to": "n3",
+            "label": "retain checkpoint and retry later"
           }
         ]
       }
@@ -1365,7 +1611,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -1604,6 +1851,49 @@
             "S4"
           ],
           "purpose": "Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestDashboardSummariesOmitHistoryAndKeepFullItemDetail(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Megabyte item history and own/linked check lists are absent from the shared snapshot; reviewer membership, body, head and revision remain, and selected-item reads retain exact full content."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "review queues from multiple repositories load full details from compact snapshots",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Both narrow themes display requested PRs from two repositories using compact summaries and fetch full activity/checks only after selection without preparing or starting work."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a deferred detail refresh retains saved information and unread state until a successful retry",
+          "scenarios": [
+            "S2",
+            "S5"
+          ],
+          "purpose": "Cached information remains available; deferred refresh does not mark read before explicit successful retry."
+        },
+        {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestIndexPreservesHistoryInvalidatesChangedHeadAndBudgetEditsKeepAssessmentPolicy(",
+          "scenarios": [
+            "S3",
+            "S5"
+          ],
+          "purpose": "Cheap index preserves full history and cannot reuse current-head status for a changed PR head."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "linked PR changes refresh full selected details without consuming another read or launch",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Latest linked PR metadata refreshes selected full detail without replaying read or launch actions."
         }
       ],
       "suites": [
@@ -1693,6 +1983,11 @@
             "id": "workbench_s4",
             "label": "Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.",
             "scenario": "S4"
+          },
+          {
+            "id": "deferred_detail",
+            "label": "Show saved information and Retry; deferred refresh leaves item unread",
+            "scenario": "S5"
           }
         ],
         "edges": [
@@ -1745,6 +2040,16 @@
             "from": "workbench_s4",
             "to": "n5",
             "label": "resolved or explicit recovery"
+          },
+          {
+            "from": "n1",
+            "to": "deferred_detail",
+            "label": "provider read deferred"
+          },
+          {
+            "from": "deferred_detail",
+            "to": "n1",
+            "label": "retry after budget permits"
           }
         ]
       }
@@ -2005,7 +2310,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -2058,6 +2364,11 @@
           "path": "internal/providers/pull_requests.go",
           "anchor": "func (g *GitHub) EnrichPullRequest(",
           "purpose": "Read-only authoritative PR review/CI/development links with current-head and freshness checks."
+        },
+        {
+          "path": "internal/app/github_usage.go",
+          "anchor": "func (a *App) RefreshItemDetail(",
+          "purpose": "Read full selected detail on demand and identify recently selected sources for bounded link refresh."
         }
       ],
       "tests": [
@@ -2125,6 +2436,24 @@
             "S4"
           ],
           "purpose": "Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch."
+        },
+        {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestIncidentalReferencesDoNotScanUntilSelectedAndErrorsBackOff(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Incidental cross-references cause no scan until the source is selected; inaccessible targets back off without adding repository monitoring."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "linked PR changes refresh full selected details without consuming another read or launch",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Changed linked metadata refreshes full selected CI details without a duplicate displayed read or agent launch."
         }
       ],
       "suites": [
@@ -2194,6 +2523,11 @@
             "id": "workbench_s4",
             "label": "Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.",
             "scenario": "S4"
+          },
+          {
+            "id": "bounded_links",
+            "label": "Refresh recently selected, tracked or explicit references within the shared budget",
+            "scenario": "S5"
           }
         ],
         "edges": [
@@ -2246,6 +2580,16 @@
             "from": "workbench_s4",
             "to": "n5",
             "label": "resolved or explicit recovery"
+          },
+          {
+            "from": "n0",
+            "to": "bounded_links",
+            "label": "linked PR information"
+          },
+          {
+            "from": "bounded_links",
+            "to": "n5",
+            "label": "saved or deferred state retained"
           }
         ]
       }
@@ -2259,7 +2603,9 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6",
+        "S7"
       ],
       "implementation": [
         {
@@ -2377,6 +2723,23 @@
           "path": "web/src/admin.tsx",
           "anchor": "export function RepositoryAdmin(",
           "purpose": "Repository/global review policy and plugin-admin settings."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) PreparePRReview(",
+          "purpose": "Prepare the effective PR review pipeline through shared preparation, retaining pinned target and authority without starting work."
+        },
+        {
+          "path": "plugin/skills/code-factory/SKILL.md",
+          "purpose": "Explicit conversational PR review recipe, generic-launch compatibility and uncertain-start recovery."
+        },
+        {
+          "path": "internal/app/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/codex/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
         }
       ],
       "tests": [
@@ -2544,6 +2907,70 @@
             "S5"
           ],
           "purpose": "A changed head receives one new review, while repeated preparation does not duplicate repository instruction blocks."
+        },
+        {
+          "path": "internal/app/clone_test.go",
+          "anchor": "func TestManagedCloneUsesGitTransportAndCredentialHelperWithoutAPILookup(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Authenticated local smart-HTTP clone uses the credential helper and succeeds while any gh repository/API lookup is disabled."
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Repository/system/built-in resolution retains model, mode, pinned head and repository prompt; no workspace before explicit Start, and repeated Start rejected."
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestPreparePRReviewRejectsInvalidTargetsAndUnsafePipelines(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Invalid item, missing head/profile, write/publishing authority and unavailable skills reject without persisting work."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestAuthenticatedMCPDiscoveryToolsAndUI(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "MCP catalog exposes model-visible PR review preparation with only itemId required and follow-on start_run guidance; wire call returns pinned prepared run."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestTaskSandboxRetainsIsolationAcrossSessionWake(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestSandboxSkillDataIsPrivateBoundedAndRetained(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestInvalidTaskSandboxFailsWithoutProviderFallback(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Invalid sandbox fails before app-server launch without an unrestricted fallback."
+        },
+        {
+          "path": "internal/codex/sandbox_test.go",
+          "anchor": "func TestTaskSandboxPolicyAndInvalidRoots(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
         }
       ],
       "suites": [
@@ -2580,6 +3007,16 @@
           "owner": "user-flow-maintainer",
           "reason": "Default review and Close after preparation plus durable draft reopening are covered. Close during in-flight preparation and after unreviewed Edit remain unverified.",
           "next_verification": "Gate preparation, close during its response and after unreviewed Edit; assert no implicit Start, retained prepared records and unchanged reviewed snapshots."
+        },
+        {
+          "version": 1,
+          "id": "gap-flow-launch-agent-s7-01",
+          "scenario": "S7",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "user-flow-maintainer",
+          "reason": "Pinned-provider command-only filesystem, TLS and credential/helper probes are recorded separately. A full model-led review using every third-party reviewer skill, nested CLI and connector transport is not established by fixture/native command checks.",
+          "next_verification": "Run an owner-selected review skill end to end against the dedicated private pilot and separately verify each nested runtime or connector boundary without changing production repositories."
         }
       ],
       "ui": [
@@ -2670,6 +3107,26 @@
             "id": "queue_review",
             "label": "Queue only or changed/stale/paused policy; no automatic launch",
             "terminal": true
+          },
+          {
+            "id": "manual_review",
+            "label": "Resolve the configured PR review pipeline and inspect its pinned proposal",
+            "scenario": "S6"
+          },
+          {
+            "id": "manual_error",
+            "label": "Invalid PR or unsafe/unavailable review pipeline; no prepared work",
+            "terminal": true
+          },
+          {
+            "id": "bounded_sandbox",
+            "label": "Keep source access bounded, private scratch writable and network destinations scoped",
+            "scenario": "S7"
+          },
+          {
+            "id": "sandbox_refused",
+            "label": "Sandbox initialization failed; retained work and authority preserved",
+            "terminal": true
           }
         ],
         "edges": [
@@ -2755,6 +3212,41 @@
             "from": "auto_review",
             "to": "queue_review",
             "label": "not eligible, already claimed or policy changed"
+          },
+          {
+            "from": "draft",
+            "to": "manual_review",
+            "label": "owner requests PR review through assistant"
+          },
+          {
+            "from": "manual_review",
+            "to": "start",
+            "label": "inspect snapshot; request authorizes review"
+          },
+          {
+            "from": "manual_review",
+            "to": "retained",
+            "label": "proposal only; no start requested"
+          },
+          {
+            "from": "manual_review",
+            "to": "manual_error",
+            "label": "invalid target or pipeline"
+          },
+          {
+            "from": "draft",
+            "to": "bounded_sandbox",
+            "label": "authorized bounded task start or continuation"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "accepted",
+            "label": "valid policy; retain scoped work"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "sandbox_refused",
+            "label": "invalid policy; fail before provider launch"
           }
         ]
       }
@@ -2767,7 +3259,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -2870,6 +3363,14 @@
           "path": "internal/domain/admin.go",
           "anchor": "type PluginOperation struct",
           "purpose": "Typed plugin operation and inventory persistence."
+        },
+        {
+          "path": "internal/app/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/codex/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
         }
       ],
       "tests": [
@@ -3017,6 +3518,38 @@
             "S2"
           ],
           "purpose": "Start, message and answer are refused during maintenance, preserving unsubmitted input semantics and worktree absence."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestTaskSandboxRetainsIsolationAcrossSessionWake(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestSandboxSkillDataIsPrivateBoundedAndRetained(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestInvalidTaskSandboxFailsWithoutProviderFallback(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Invalid sandbox fails before app-server launch without an unrestricted fallback."
+        },
+        {
+          "path": "internal/codex/sandbox_test.go",
+          "anchor": "func TestTaskSandboxPolicyAndInvalidRoots(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
         }
       ],
       "suites": [
@@ -3103,6 +3636,16 @@
             "id": "workbench_s4",
             "label": "Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.",
             "scenario": "S4"
+          },
+          {
+            "id": "bounded_sandbox",
+            "label": "Keep source access bounded, private scratch writable and network destinations scoped",
+            "scenario": "S5"
+          },
+          {
+            "id": "sandbox_refused",
+            "label": "Sandbox initialization failed; retained work and authority preserved",
+            "terminal": true
           }
         ],
         "edges": [
@@ -3165,6 +3708,21 @@
             "from": "workbench_s4",
             "to": "n6",
             "label": "resolved or explicit recovery"
+          },
+          {
+            "from": "n0",
+            "to": "bounded_sandbox",
+            "label": "authorized bounded task start or continuation"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "n6",
+            "label": "valid policy; retain scoped work"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "sandbox_refused",
+            "label": "invalid policy; fail before provider launch"
           }
         ]
       }
@@ -3638,7 +4196,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -3692,6 +4251,14 @@
           "path": "internal/domain/admin.go",
           "anchor": "type PluginOperation struct",
           "purpose": "Typed plugin operation and inventory persistence."
+        },
+        {
+          "path": "internal/app/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/codex/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
         }
       ],
       "tests": [
@@ -3792,6 +4359,38 @@
             "S1"
           ],
           "purpose": "Startup marks in-flight plugin operations uncertain; malformed inventory retains prior observations without replay."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestTaskSandboxRetainsIsolationAcrossSessionWake(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestSandboxSkillDataIsPrivateBoundedAndRetained(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestInvalidTaskSandboxFailsWithoutProviderFallback(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Invalid sandbox fails before app-server launch without an unrestricted fallback."
+        },
+        {
+          "path": "internal/codex/sandbox_test.go",
+          "anchor": "func TestTaskSandboxPolicyAndInvalidRoots(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
         }
       ],
       "suites": [
@@ -3897,6 +4496,16 @@
             "id": "workbench_s4",
             "label": "Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.",
             "scenario": "S4"
+          },
+          {
+            "id": "bounded_sandbox",
+            "label": "Keep source access bounded, private scratch writable and network destinations scoped",
+            "scenario": "S5"
+          },
+          {
+            "id": "sandbox_refused",
+            "label": "Sandbox initialization failed; retained work and authority preserved",
+            "terminal": true
           }
         ],
         "edges": [
@@ -3949,6 +4558,21 @@
             "from": "workbench_s4",
             "to": "n5",
             "label": "resolved or explicit recovery"
+          },
+          {
+            "from": "n0",
+            "to": "bounded_sandbox",
+            "label": "authorized bounded task start or continuation"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "n5",
+            "label": "valid policy; retain scoped work"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "sandbox_refused",
+            "label": "invalid policy; fail before provider launch"
           }
         ]
       }
@@ -4618,7 +5242,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -4742,6 +5367,14 @@
           "path": "internal/domain/admin.go",
           "anchor": "type PluginOperation struct",
           "purpose": "Typed plugin operation and inventory persistence."
+        },
+        {
+          "path": "internal/app/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/codex/sandbox.go",
+          "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
         }
       ],
       "tests": [
@@ -4848,6 +5481,54 @@
             "S2"
           ],
           "purpose": "A command may install and then fail; state is observed without replay and private provider stderr never enters operation errors or journal."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestGitHubPersistentConditionalCacheAuthIsolationAnd304RateObservation(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Credential scopes do not share cached data/limits; raw tokens and cookies are excluded from persisted cache."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestEmptyLocalCredentialCannotFallBackToAnonymousAPI(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Empty local credential output fails before any anonymous API request."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestTaskSandboxRetainsIsolationAcrossSessionWake(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestSandboxSkillDataIsPrivateBoundedAndRetained(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestInvalidTaskSandboxFailsWithoutProviderFallback(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Invalid sandbox fails before app-server launch without an unrestricted fallback."
+        },
+        {
+          "path": "internal/codex/sandbox_test.go",
+          "anchor": "func TestTaskSandboxPolicyAndInvalidRoots(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
         }
       ],
       "suites": [
@@ -4941,6 +5622,16 @@
             "id": "workbench_s4",
             "label": "Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.",
             "scenario": "S4"
+          },
+          {
+            "id": "bounded_sandbox",
+            "label": "Keep source access bounded, private scratch writable and network destinations scoped",
+            "scenario": "S5"
+          },
+          {
+            "id": "sandbox_refused",
+            "label": "Sandbox initialization failed; retained work and authority preserved",
+            "terminal": true
           }
         ],
         "edges": [
@@ -5008,6 +5699,21 @@
             "from": "workbench_s4",
             "to": "n6",
             "label": "resolved or explicit recovery"
+          },
+          {
+            "from": "n0",
+            "to": "bounded_sandbox",
+            "label": "authorized bounded task start or continuation"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "n6",
+            "label": "valid policy; retain scoped work"
+          },
+          {
+            "from": "bounded_sandbox",
+            "to": "sandbox_refused",
+            "label": "invalid policy; fail before provider launch"
           }
         ]
       }
@@ -5290,6 +5996,14 @@
             "S1"
           ],
           "purpose": "Failure categories contain no raw request/error details and preserve 502 behavior."
+        },
+        {
+          "path": "internal/setup/github_diagnostics_test.go",
+          "anchor": "func TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Diagnostics use local credentials without a GitHub API probe and align freshness/paused/deferred status with periodic reconciliation."
         }
       ],
       "suites": [

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "605b4753ac9055cc660dc7e0da3b2dd7e3f0680b",
-  "fingerprint": "65ace7d8f22ead2af882e459e2fa18fe432ee2404796ac9f45e8f2ef18cd0abd",
+  "base": "59d662f305d17a0277ee3a7a836bb9c9937acf78",
+  "fingerprint": "b26b70e13576c31e0586af43446667748fbba41e5d9d2d03fa19821ed66a14aa",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Host subscriptions/challenge/delivery/filtering/refresh/unsubscribe behavior remains unchanged. New plugin/review operation records emit ordinary local journal events; those records are not a delivered host notification and do not close callback acceptance.",
-    "implementation": "Verified no events-service or callback transport implementation changed. Admin UI reads operation state through the MCP Apps bridge, and automatic review is triggered by successful provider polling under owner policy rather than by an invented host callback.",
-    "tests": "Existing subscription verification/retry/dedup/expiry and callback safety tests rerun in fixture mode. Plugin status and review-trigger tests establish only local persisted observations and work, preserving the actual-host callback and subscription gaps."
+    "kind": "refactor",
+    "description": "Incremental cursor semantics, callback authorization and notification subscriptions remain accurate.",
+    "implementation": "Concurrent imports still emit monotonic store events inside atomic per-repository transactions. Snapshot captures its cursor before reads, so a later event causes a future refresh rather than being consumed prematurely.",
+    "tests": "Existing cursor/event/subscription tests remain applicable and rerun; no host callback or one-hour soak gap is closed by fixture or provider polling results."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 5.598
+      "seconds": 7.206
     },
     {
       "command": [
@@ -44,16 +44,16 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.555
+      "seconds": 24.822
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "545555930a36268966b5c3cf017a67bcacd71ac1a6ff89ab91134992e261e3b2",
-    "term:attention-request": "29c78db63cb84b283aeffc23a474c3574ee99dfad51bd5fcf611ec820b3cdd6d",
-    "term:coverage-gap": "a3504c24eb19ff7026995ac1fc7f9dcd4bd2fd27059a503e0398140497040097",
-    "term:host": "10f1289aadf4e159708956878556cd89c210ff604e97cd2617f96676a50fb818",
-    "term:known-limitation": "7f3f34fc40eebd3f423c3f74c44c039192178c47ce60c1994966f80318349b19",
-    "term:subscription": "64cb4b21ce12f921ac503ced965f971ab146dfd072a639dd3a6434ca546fa4f9",
-    "term:unverified-behavior": "d0f015609cde739351b50d608c8dd4b1bc9d7f386c9985eb714b5cb1de7062bb"
+    "flow:receive-notifications": "2a631eb376229fd2a02b62689497ba68d195f85fd1093dbf10a57701f6272a60",
+    "term:attention-request": "3acb2214de7f6de6495f0dbfb94b9734e93188dc76fc27e40c51c4d9e51f541b",
+    "term:coverage-gap": "9c7239f78f0c596f97ea7ae7092b0e5aab6153f853707b69a24743168a583ba8",
+    "term:host": "2bbbd37feb366a43bbad219937cc10477008b760c3ba206a2c018e134307668b",
+    "term:known-limitation": "8eb1b4687fe86277352aaf701b72dbf6256ec409a87fbadcbf282af9a6737252",
+    "term:subscription": "c30e2fed2d0d4877f0308a3f63a5369278d1cf0f6536a0b0d6cb4a4ef498c7fa",
+    "term:unverified-behavior": "42650423ef6ac5d06399e4d6250744c0504a9ce5a5a7f039dcbaf2fd8fc649a3"
   }
 }

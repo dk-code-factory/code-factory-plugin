@@ -1,0 +1,147 @@
+{
+  "date": "2026-10-23",
+  "observedAt": "2026-10-23T04:08:50.415403+00:00",
+  "installedVersion": "0.1.0-9a17c48411d7",
+  "sourceBaseline": "59d662f305d17a0277ee3a7a836bb9c9937acf78",
+  "scope": "Read-only diagnosis of owner-configured repository monitoring and actual installed Work review listing; fixtures remain separate from host observation.",
+  "findings": [
+    "Initial sequential full enrichment delayed gocql import about five minutes and python-driver import about ten minutes; linked-reference backfill then delayed subsequent polls.",
+    "The initial shared snapshot measured 33954766 bytes after both imports. The first reduction measured 9043517 bytes; normalized linked check lists still dominated that response.",
+    "A first Work open_factory attempt returned Transport closed. After final compaction and Refresh tools, a repeated read-only open_factory opened the actual inbox. The exact host transport failure mechanism is unproven."
+  ],
+  "changes": [
+    "Three independent repository workers with four enrichment workers each; per-repository atomic checkpoints and cancellation on enrichment failure.",
+    "Reference backfill uses a ten-second scheduled budget, rotates attempted targets and does not replace successful metadata with cancellation errors. Healthy monitored open PRs avoid redundant reference enrichment.",
+    "Shared snapshots/listings omit bulk activity, raw checks and own/linked full check lists. Selected-item reads retain full content and the UI uses those full records for existing CI disclosures."
+  ],
+  "fixtures": {
+    "browserTests": 76,
+    "goRace": "passed",
+    "specsCheck": "passed",
+    "branchCI": {
+      "command": "make ci FLOW_BASE=59d662f305d17a0277ee3a7a836bb9c9937acf78",
+      "result": "passed"
+    },
+    "reconciledSubjects": 15,
+    "newAssertions": [
+      "TestSyncEnrichmentHasBoundedParallelismAndCancelsOnFailure",
+      "TestSyncImportsOtherRepositoryWhileOneIsBlocked",
+      "TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors",
+      "TestDashboardSummariesOmitHistoryAndKeepFullItemDetail",
+      "review queues from multiple repositories load full details from compact snapshots"
+    ]
+  },
+  "installed": {
+    "health": {
+      "status": "verified",
+      "version": "0.1.0-9a17c48411d7"
+    },
+    "snapshotBytes": 3824183,
+    "snapshotSeconds": 0.61,
+    "records": 447,
+    "reviewRequests": {
+      "scylladb/python-driver": 9,
+      "scylladb/gocql": 2
+    },
+    "retainedRunCount": 12,
+    "runsUnchanged": true,
+    "routesUnchanged": true,
+    "runtimeUnchanged": true
+  },
+  "actualWork": {
+    "chatPath": "/c/6adad103-3aa4-83ea-bde1-382c74b4d135",
+    "view": "Review PRs",
+    "connection": "Connected",
+    "visibleRows": 11,
+    "repositoryCounts": {
+      "scylladb/gocql": 2,
+      "scylladb/python-driver": 9
+    },
+    "moduleBytes": 490246,
+    "moduleSHA256": "7a91376024bafbc9d1a099c73631b3ebe441b57a2a50935bd9d544df80ccdb72",
+    "matchesReleaseModule": true,
+    "newAgentRuns": 0,
+    "repositoryPolicyChanges": 0
+  },
+  "publicTransport": {
+    "rawResult": "passed",
+    "rawChecks": [
+      {
+        "name": "public TLS ingress 199.38.181.54",
+        "status": "passed"
+      },
+      {
+        "name": "public TLS ingress 209.177.145.137",
+        "status": "passed"
+      },
+      {
+        "name": "OAuth discovery and unauthenticated MCP challenge",
+        "status": "passed"
+      },
+      {
+        "name": "private application state and approval unavailable publicly",
+        "status": "passed"
+      },
+      {
+        "name": "public OAuth client registration",
+        "status": "passed"
+      },
+      {
+        "name": "real owner-only Tailscale consent and OAuth PKCE exchange",
+        "status": "passed"
+      },
+      {
+        "name": "MCP initialize, tools/list, open_factory and embedded UI resource",
+        "status": "passed"
+      },
+      {
+        "name": "refresh rotation and replay rejection",
+        "status": "passed"
+      },
+      {
+        "name": "ephemeral test credentials revoked",
+        "status": "passed"
+      }
+    ],
+    "sdkResult": "passed",
+    "sdkChecks": [
+      {
+        "name": "public TLS ingress 199.38.181.54",
+        "status": "passed"
+      },
+      {
+        "name": "public TLS ingress 209.177.145.137",
+        "status": "passed"
+      },
+      {
+        "name": "SDK OAuth discovery, DCR and PKCE setup",
+        "status": "passed"
+      },
+      {
+        "name": "real owner consent and SDK OAuth PKCE token exchange",
+        "status": "passed"
+      },
+      {
+        "name": "SDK transport negotiation",
+        "status": "passed"
+      },
+      {
+        "name": "SDK tool discovery and open_factory",
+        "status": "passed"
+      },
+      {
+        "name": "SDK embedded UI resource",
+        "status": "passed"
+      },
+      {
+        "name": "test access and refresh credentials revoked",
+        "status": "passed"
+      }
+    ],
+    "ephemeralCredentials": "revoked"
+  },
+  "remaining": [
+    "GitHub REST budget was exhausted after initial imports and repeated daemon warmups. Both added repositories retain imported data and retry after 2026-10-23T04:23:28Z (00:23:28 America/Santo_Domingo); successful polling after that reset is not yet verified.",
+    "This bounded actual-host listing does not establish automatic review launch, model/third-party skill execution, callback subscriptions, one-hour soak, coordinated login or full manual accessibility acceptance."
+  ]
+}

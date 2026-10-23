@@ -10,7 +10,9 @@ Code Factory installation and its pinned Codex provider.
 Read current settings, profiles and repository configuration before editing them.
 Add repositories as `owner/repository` with `save_repository`; preserve unrelated
 fields and checkpoints. The signed-in GitHub account needs repository access.
-Polling occurs every 30 seconds, or use `sync_repositories`. Review PRs is for
+Notifications are checked at the configured `githubPollSeconds` interval (120
+seconds by default); repository indexes reconcile every 15 minutes. Manual
+`sync_repositories` also respects the shared GitHub budget and cooldown. Review PRs is for
 requests addressed to that user or their teams; it is not all open PRs.
 
 System `autoReview` defaults to false (queue only). A repository's nullable
@@ -22,6 +24,13 @@ prompt. `paused` stops monitoring. Explain the effective policy before saving an
 automatic-review choice. Automatic reviews use a read-only profile with publishing
 set to ask, and never post reviews or implement changes on their own. Request/head
 claims prevent duplicate launches across polls and restarts.
+
+For an explicitly requested manual PR review, use the daily Code Factory skill's
+`list_inbox` → `prepare_pr_review` → `start_run` sequence. The preparation tool
+resolves these configured review defaults automatically and returns a durable
+snapshot with the PR head, selected skills and repository prompt. Queue-only
+monitoring does not prevent an authorized manual review. Do not enable automatic
+review merely to start one requested review.
 
 Use `read_plugin_admin` for cached installed/available plugins, enabled state,
 installed/available versions, marketplace names, and durable operation status.

@@ -11,7 +11,7 @@ At least one repository has synchronized items.
 ## Main flow
 
 1. Open Issues, defaulting to open issues including those with linked pull requests, sorted by priority with unknown priorities last. My PRs shows open pull requests authored by the authenticated account; Review PRs shows open requests to that account or its teams. Each tab retains its own search and filters. No matches offers Clear filters. Repository/number links open the original source independently.
-2. Select an item to open its conversation immediately with item information and a source-description summary. Continue the newest retained run or see a prefilled editable first message; the list is replaced. Full description, activity, priority, checks and relationships are in Item details below chat.
+2. Select an item to open its conversation immediately with item information and a source-description summary. Continue the newest retained run or see a prefilled editable first message; the list is replaced. Full description, activity, priority, checks and relationships are in Item details below chat. Dashboard refreshes carry summaries; full activity and raw checks are fetched only for the selected item.
 3. Mark the displayed version read, or use Actions to mark unread, acknowledge New or record an action.
 4. Continue receiving unread indications for later changes even after earlier actions.
 
@@ -26,6 +26,8 @@ Listing items and opening their external GitHub links do not mark them read. A f
 - **S3** Focused queues apply pending/author/reviewer membership and priority order. Selecting an item opens its conversation with context; Back restores that queue. Listing, source links and selection never start work.
 
 - **S4** Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.
+
+- **S5** When a provider refresh is deferred, saved item details remain visible with an explicit Retry action. The item is not marked read until a successful refresh can present its displayed version; retrying never launches work.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -44,6 +46,7 @@ flowchart TD
     N4["Old displayed revision cannot consume newer changes #40;S2#41;"]
     N5(["Triage state retained"])
     N6["Track launched work and show independent linked PR lifecycle, review and current-head CI#59; merged implementation links complete issues without changing their GitHub state. #40;S4#41;"]
+    N7["Show saved information and Retry#59; deferred refresh leaves item unread #40;S5#41;"]
     N0 --> N1
     N1 --> N2
     N2 -->|"later change"| N3
@@ -54,6 +57,8 @@ flowchart TD
     N1 -->|"Back restores search, filter, scroll and row focus"| N0
     N0 -->|"additional workbench path"| N6
     N6 -->|"resolved or explicit recovery"| N5
+    N1 -->|"provider read deferred"| N7
+    N7 -->|"retry after budget permits"| N1
 ```
 
 ## Implementation references
@@ -100,6 +105,11 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `read tool errors are not mistaken for retryable transport errors`; S3. Tool-result errors containing Connection failed are not transport failures: item read is attempted once and explicit Retry remains.
 - [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestWorkingTracksSessionsUntilGitHubCompletion(`; S4. Working completion follows explicit implementation links; references do not complete an issue.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Working and linked PR monitoring follow server projections`; S4. Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch.
+- [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestDashboardSummariesOmitHistoryAndKeepFullItemDetail(`; S3. Megabyte item history and own/linked check lists are absent from the shared snapshot; reviewer membership, body, head and revision remain, and selected-item reads retain exact full content.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `review queues from multiple repositories load full details from compact snapshots`; S3. Both narrow themes display requested PRs from two repositories using compact summaries and fetch full activity/checks only after selection without preparing or starting work.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a deferred detail refresh retains saved information and unread state until a successful retry`; S2, S5. Cached information remains available; deferred refresh does not mark read before explicit successful retry.
+- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestIndexPreservesHistoryInvalidatesChangedHeadAndBudgetEditsKeepAssessmentPolicy(`; S3, S5. Cheap index preserves full history and cannot reuse current-head status for a changed PR head.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `linked PR changes refresh full selected details without consuming another read or launch`; S3, S4. Latest linked PR metadata refreshes selected full detail without replaying read or launch actions.
 
 ## Verification and gaps
 
