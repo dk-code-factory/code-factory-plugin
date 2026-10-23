@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-da432a0dedd0",
+  "host": "Actual signed-in ChatGPT Work in existing approved persistent pilot profile",
+  "chatPath": "/c/6adbb16c-b21c-83ea-840c-d0e7c48c334c",
+  "runId": "459eed8a79bfb04a09d6d43979748ae2",
+  "target": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/8",
+  "head": "73ab96d83c6c2370a18df03fbb6980533fdb14b1",
+  "profile": "pilot-pr-review",
+  "sdkVersion": "local 1.1.18",
+  "reviewers": [
+    "code-review-ad on Codex",
+    "code-review-matpocock on Codex"
+  ],
+  "authority": {
+    "mode": "default",
+    "sandbox": "read-only",
+    "approval": "on-request",
+    "publishing": "ask"
+  },
+  "checks": [
+    "Explicit prepare-only natural-language request in fresh Work chat returned one prepared proposal.",
+    "Read-only owner corroboration: prepared, no thread, proposed workspace absent on disk.",
+    "Existing separate Work iframe received the externally prepared proposal in Work history / Draft launches.",
+    "Reopened that exact run in Launch agent dialog: same run-id workspace suffix, profile, head, skill and authority; no second preparation or start.",
+    "Distinct unsent PR7 and PR8 conversation drafts each survived switching away and returning."
+  ],
+  "unverified": [
+    "Settings change after preparation is a separate remaining frozen-choice variant."
+  ],
+  "publication": "None",
+  "unsafeProfileVariant": {
+    "installedVersion": "0.1.0-8688bdadc40e",
+    "action": "Actual Settings temporarily selected existing workspace-write Implementation profile only for pilot repository; autoReview stayed false. Actual ChatGPT Work prepare-only request called prepare_pr_review.",
+    "actualError": "PR review pipeline \"implement\" must be read-only with ask-before-publishing authority; configure it in open_settings",
+    "outcome": "INVALID_ARGUMENT; no new run, workspace, reviewer, publication or automatic fallback.",
+    "frozenExistingRuns": "Both existing clean/defect runs retained pilot-pr-review, read-only and their original threads during policy change.",
+    "restoration": "Actual Settings Save restored pilot-pr-review; owner snapshot confirms false autoReview."
+  },
+  "preparedFreezeVariant": {
+    "proposal": "a6e50160749b5fe1090b358061dc754e",
+    "pinnedHead": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+    "before": "Prepared through actual Work with pilot-pr-review/default/read-only/on-request/ask and SDK1.1.18; no workspace/thread.",
+    "change": "Actual pilot-only Settings override saved pilot-pr-review-plan; autoReview remained false.",
+    "browserAssertion": "Reopened exact proposal in pre-existing Work iframe; dialog retained Pilot PR review, mode default, original SHA and ordered-review prompt. It did not adopt Plan profile or prepare/start again.",
+    "cleanup": "Closed without start; restored pilot-pr-review through Settings and verified persisted repository policy."
+  }
+}

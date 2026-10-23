@@ -21,7 +21,7 @@ Invalid packages or occupied ports fail without replacing a healthy installation
 
 ## Scenarios
 
-- **S1** Fresh/rerun installation and failed upgrade preserve private state. Explicit rollback recovers an interruption after release activation but before the change is finalized, restoring the compatible snapshot and archiving newer state.
+- **S1** Fresh/rerun installation and failed upgrade preserve private state. Application and task commands use the recorded provider programs without replacing global programs; prior provider command selections remain available for compatible rollback. Explicit rollback recovers an interruption after release activation but before the change is finalized, restoring the compatible snapshot and archiving newer state.
 - **S2** Rollback restores compatible state and transport profile while archiving newer state.
 - **S3** Uninstall/reinstall retain data and mapping; shared routes and unrelated services are preserved.
 - **S4** Diagnostics expose version-bound verified/failed/unverified evidence, including outstanding host acceptance.
@@ -84,6 +84,7 @@ flowchart TD
 - [scripts/browser_options.mjs](../../scripts/browser_options.mjs) — Pure explicit attachment options retain privacy flags, reject unsafe/ambiguous endpoints and never echo rejected credential-bearing URL values. (`export function parseBrowserOptions(`)
 - [internal/transport/mcp.go](../../internal/transport/mcp.go) — Advertises the embedded UI under a full-content SHA256 URI and binds all tool/output-template references to it, retaining only an unadvertised exact legacy-read alias. (`func registerUIResource(`)
 - [internal/gateway/proxy_diagnostics.go](../../internal/gateway/proxy_diagnostics.go) — Fixed safe upstream failure classes, preserving request secrecy and HTTP behavior. (`func proxyError(`)
+- [internal/commandenv/providers.go](../../internal/commandenv/providers.go) — Generate private versioned command launchers for exactly the recorded provider executables, quote paths literally and preserve prior launcher sets for rollback. (`func Prepare(`)
 
 ## Test references
 
@@ -109,6 +110,9 @@ flowchart TD
 - [internal/transport/ui_resource_test.go](../../internal/transport/ui_resource_test.go) — `func TestUIResourceContentIdentityAndCompatibility(`; S1. Actual SDK fixture asserts stable same-content and changed-content UI identity, matching current tool/resource metadata and exact HTML; only the original exact URI reads current content unadvertised, while unknown/previous hashes and query variants reject. CSP domains stay empty. This does not prove host refresh or installed UI acceptance.
 - [internal/gateway/proxy_diagnostics_test.go](../../internal/gateway/proxy_diagnostics_test.go) — `func TestProxyDiagnosticsClassifyWithoutLeakingRequestOrError(`; S1. Failure categories contain no raw request/error details and preserve 502 behavior.
 - [internal/setup/github_diagnostics_test.go](../../internal/setup/github_diagnostics_test.go) — `func TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence(`; S1. Diagnostics use local credentials without a GitHub API probe and align freshness/paused/deferred status with periodic reconciliation.
+- [internal/commandenv/providers_test.go](../../internal/commandenv/providers_test.go) — `func TestSelectedProvidersWinWithoutGlobalReplacement(`; S1. Selected executables win over conflicting fallback commands, unusual paths and literal arguments are preserved, and previous launcher versions remain unchanged.
+- [internal/commandenv/providers_test.go](../../internal/commandenv/providers_test.go) — `func TestUnavailableProvidersNeverFallBack(`; S1. Missing or relative selected providers fail instead of invoking an older system fallback.
+- [internal/commandenv/providers_test.go](../../internal/commandenv/providers_test.go) — `func TestProviderDirectoryRejectsEscapingSymlinks(`; S1. A replaced launcher symlink cannot overwrite an outside owner file.
 
 ## Verification and gaps
 

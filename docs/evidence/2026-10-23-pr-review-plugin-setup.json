@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-16c572cbc34d",
+  "scope": "Actual installed-plugin Work setup, before PR review execution.",
+  "chatPath": "/c/6adb80b0-4a1c-83e9-bc70-c1afd5dfdcec",
+  "plugins": [
+    {
+      "id": "code-review-ad@code-review-ad",
+      "installed": true,
+      "enabled": true,
+      "installedVersion": "1.0.7"
+    },
+    {
+      "id": "code-review-matpocock@code-review-matpocock",
+      "installed": true,
+      "enabled": true,
+      "installedVersion": "1.0.0"
+    },
+    {
+      "id": "dk-workflows@dk-workflows",
+      "installed": true,
+      "enabled": true,
+      "installedVersion": "1.1.17"
+    }
+  ],
+  "operations": [
+    {
+      "id": "141a144c2f14adaff8f22e537f612b0b",
+      "action": "discover-skills",
+      "target": "",
+      "status": "succeeded",
+      "created": "2026-10-23T15:49:43.473109876Z",
+      "finished": "2026-10-23T15:49:48.859242368Z"
+    },
+    {
+      "id": "a805b67528988dffe7ca8b66b19b9d58",
+      "action": "install",
+      "target": "code-review-matpocock@code-review-matpocock",
+      "status": "succeeded",
+      "created": "2026-10-23T15:49:14.793577702Z",
+      "finished": "2026-10-23T15:49:26.170387075Z"
+    },
+    {
+      "id": "03f5000f0559aee962d44eec14eee3b6",
+      "action": "install",
+      "target": "code-review-ad@code-review-ad",
+      "status": "succeeded",
+      "created": "2026-10-23T15:48:47.971720522Z",
+      "finished": "2026-10-23T15:48:55.520802874Z"
+    },
+    {
+      "id": "6d14e6de76561d1139566d9f0e54f06b",
+      "action": "install",
+      "target": "dk-workflows@dk-workflows",
+      "status": "succeeded",
+      "created": "2026-10-23T15:48:24.882249428Z",
+      "finished": "2026-10-23T15:48:33.813603499Z"
+    },
+    {
+      "id": "ae1de48b0e32fb9fbdea364786d58e7b",
+      "action": "add-marketplace",
+      "target": "https://github.com/dk-code-factory/code-review-matpocock",
+      "status": "succeeded",
+      "created": "2026-10-23T15:47:57.994899472Z",
+      "finished": "2026-10-23T15:48:03.863717534Z"
+    },
+    {
+      "id": "b264e86b9141653ae40b6375f90dfc24",
+      "action": "add-marketplace",
+      "target": "https://github.com/dk-code-factory/code-review-ad",
+      "status": "succeeded",
+      "created": "2026-10-23T15:47:25.775985174Z",
+      "finished": "2026-10-23T15:47:34.236652393Z"
+    },
+    {
+      "id": "a421426fa653abf76c2a8f6af31180f2",
+      "action": "add-marketplace",
+      "target": "https://github.com/dk-code-factory/dk-workflows",
+      "status": "succeeded",
+      "created": "2026-10-23T15:46:05.107446786Z",
+      "finished": "2026-10-23T15:47:16.375178679Z"
+    },
+    {
+      "id": "8f8636f08c2158cbe909c7d6e7b0ee2e",
+      "action": "refresh",
+      "target": "",
+      "status": "succeeded",
+      "created": "2026-10-23T15:44:07.599240741Z",
+      "finished": "2026-10-23T15:45:36.179997796Z"
+    }
+  ],
+  "observedBrowserResult": "Work reported all three installed with actual versions and discovered skills. Local read corroborates installed/enabled state and all eight distinct succeeded durable operations.",
+  "reviewRunsStarted": 0,
+  "limitations": [
+    "This establishes administration setup, not real reviewer execution, package replacement or PR acceptance."
+  ],
+  "snapshotRepair": {
+    "installedVersion": "0.1.0-67e47c0c81dc",
+    "focusedTests": "passed",
+    "specsReconciliation": "passed",
+    "browserFixtures": 80,
+    "goRace": "passed",
+    "specificationTests": 201,
+    "flowTests": 20,
+    "packagingInstallerAndSmoke": "passed",
+    "staticChecks": "passed",
+    "original16RunsUnchanged": true,
+    "runtimeAndMappingUnchanged": true,
+    "fullTailscaleRoutesUnchanged": true
+  },
+  "browserPackage": {
+    "id": "Plugin_89dd894a227481919ae7e682fe34c77f",
+    "displayName": "Code Factory PR E2E",
+    "version": "0.2.4",
+    "apps": 1,
+    "skills": 3,
+    "connected": true,
+    "originalPackagePreserved": true,
+    "remoteAppId": "asdk_app_6ad792b279348191b76d3443615b66e0",
+    "reasonForDistinctName": "Existing code-factory name returned HTTP 400; the observed package UI exposes no update/edit control. The pilot copy changes only package name/display name and retains the same code, skill contents/assets and remote connection."
+  },
+  "pilotProfile": {
+    "id": "pilot-pr-review",
+    "skill": "dk-workflows:dk-pr-review",
+    "sandbox": "read-only",
+    "publishing": "ask",
+    "approval": "on-request",
+    "reviewers": [
+      {
+        "skill": "code-review-ad:code-review-ad",
+        "host": "codex"
+      },
+      {
+        "skill": "code-review-matpocock:code-review-matpocock",
+        "host": "codex"
+      }
+    ],
+    "reviewerScope": "repository",
+    "automaticReview": false
+  }
+}

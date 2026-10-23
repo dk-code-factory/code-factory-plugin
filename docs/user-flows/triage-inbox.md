@@ -11,7 +11,7 @@ At least one repository has synchronized items.
 ## Main flow
 
 1. Open Issues, defaulting to open issues including those with linked pull requests, sorted by priority with unknown priorities last. My PRs shows open pull requests authored by the authenticated account; Review PRs shows open requests to that account or its teams. Each tab retains its own search and filters. No matches offers Clear filters. Repository/number links open the original source independently.
-2. Select an item to open its conversation immediately with item information and a source-description summary. Continue the newest retained run or see a prefilled editable first message; the list is replaced. Full description, activity, priority, checks and relationships are in Item details below chat. Dashboard refreshes carry summaries; full activity and raw checks are fetched only for the selected item.
+2. Select an item to open its conversation immediately with item information and a source-description summary drawn from its first substantive paragraph, skipping Markdown-only headings while retaining the original full description. Continue the newest retained run or see a prefilled editable first message; the list is replaced. Full description, activity, priority, checks and relationships are in Item details below chat. Dashboard refreshes carry summaries; full activity and raw checks are fetched only for the selected item.
 3. Mark the displayed version read, or use Actions to mark unread, acknowledge New or record an action.
 4. Continue receiving unread indications for later changes even after earlier actions.
 
@@ -110,6 +110,7 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a deferred detail refresh retains saved information and unread state until a successful retry`; S2, S5. Cached information remains available; deferred refresh does not mark read before explicit successful retry.
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestIndexPreservesHistoryInvalidatesChangedHeadAndBudgetEditsKeepAssessmentPolicy(`; S3, S5. Cheap index preserves full history and cannot reuse current-head status for a changed PR head.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `linked PR changes refresh full selected details without consuming another read or launch`; S3, S4. Latest linked PR metadata refreshes selected full detail without replaying read or launch actions.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Markdown issue headings do not replace the useful conversation summary`; S3. Skip Markdown-only headings in the compact source summary, retain full body and assert that reading never prepares/starts work.
 
 ## Verification and gaps
 

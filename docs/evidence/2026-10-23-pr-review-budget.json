@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-22fdcb37f451",
+  "actualBrowser": {
+    "surface": "Existing signed-in ChatGPT Work Settings iframe",
+    "observedUsage": {
+      "requestsLastHour": 317,
+      "budget": 600,
+      "reserve": 100,
+      "restRemaining": 4892,
+      "graphqlRemaining": 4831
+    },
+    "independentUsageExplanation": "UI states budget covers Code Factory reads; plugins, skills and agent commands use GitHub independently.",
+    "savedReview": "Existing clean PR result remains accessible in retained conversation after service recovery."
+  },
+  "cachedReadCorroboration": {
+    "before": 326,
+    "after": 326,
+    "cachedReads": 10,
+    "kind": "Read-only owner corroboration, not browser outage injection"
+  },
+  "negativeCoverage": {
+    "layer": "Isolated HTTP provider/application and assembled browser fixtures; no real GitHub outage induced",
+    "providerAssertions": "Secondary cooldown is REST/GraphQL shared and restart-safe; unavailable PR metadata unknown with retry time; budget/reserve accounting durable and fail-closed.",
+    "browserAssertions": "a deferred detail refresh retains saved information and unread state until a successful retry: deferred alert shown, saved title retained, no read action; successful Retry clears alert and marks displayed revision read exactly once, without launch.",
+    "separation": "Opening fresh PR detail can legitimately consume provider requests; only cached snapshot/run reads are asserted request-free. Shared production account quota/auth untouched."
+  }
+}

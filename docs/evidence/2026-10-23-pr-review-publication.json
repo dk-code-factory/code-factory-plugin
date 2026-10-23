@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-e1895a838fb8",
+  "host": "Explicit COMMENT-only request in actual ChatGPT Work and native DK workflow, existing run",
+  "runId": "2025eb3754a624276f18cb6c021fc0c9",
+  "review": {
+    "id": 5635316603,
+    "url": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/7#pullrequestreview-5635316603",
+    "state": "COMMENTED",
+    "head": "bf59c750f6e63a561df1b5a33d752512b7ebf800",
+    "author": "dkropachev",
+    "bodyEmpty": true
+  },
+  "comments": [
+    {
+      "id": 4364923201,
+      "url": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/7#discussion_r4364923201",
+      "path": "capacity.py",
+      "line": 5,
+      "side": "RIGHT",
+      "bodySHA256": "4a5a310167ee94e0886dc562961a17881d0a559fc2846bc6db1dabc021bec3e2"
+    }
+  ],
+  "reviewCount": 1,
+  "inlineCount": 1,
+  "privateArtifacts": "Exact payload, pre-publication review/pending snapshots and verification retained privately",
+  "noReviewerRerunOrSourceChange": true,
+  "otherVerdicts": "Blocked, no second authorized account",
+  "scopeChangeOrdering": "Publication was verified by the native workflow before the independently authored scope clarification. REST review-comment endpoint omits line/side, so independent anchor verification uses GraphQL thread metadata.",
+  "reopenCheck": {
+    "reviewIdsUnchanged": [
+      5635316603,
+      5635349884
+    ],
+    "originalStandaloneCommentReview": 5635316603,
+    "syntheticFeedbackReplyReview": 5635349884,
+    "noDuplicateReview": true,
+    "note": "GitHub gives the separately authored feedback reply its own review metadata object. It is linked to the original comment and is not another standalone finding review."
+  }
+}

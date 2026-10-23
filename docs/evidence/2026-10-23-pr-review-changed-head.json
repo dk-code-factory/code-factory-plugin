@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-22fdcb37f451",
+  "actualBrowser": "Same approved profile, fresh natural ChatGPT Work request plus embedded final report",
+  "runId": "2025eb3754a624276f18cb6c021fc0c9",
+  "previousHead": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+  "head": "bf59c750f6e63a561df1b5a33d752512b7ebf800",
+  "sessionFile": "912a925e328f46d9813a00aa9ee4f58e.json",
+  "sessionId": "0a281249c17a4161ae59a7929d73524b",
+  "artifactCanonicalSHA256": "557ee30a67844e7ac805b7034f3f8f70d9a3ecd723ada3c270ce374b2227b962",
+  "executed": [
+    "code-review-ad:code-review-ad@codex",
+    "code-review-matpocock:code-review-matpocock@codex"
+  ],
+  "reused": [],
+  "skipped": [],
+  "findingCount": 3,
+  "distinctFindings": [
+    {
+      "path": "capacity.py",
+      "line": 5,
+      "severity": "Major",
+      "description": "Unsolicited stdout remains; boundary error fixed"
+    }
+  ],
+  "nativePasses": [
+    {
+      "root": {
+        "event": "native.root",
+        "thread_id": "01a16af7-baee-7711-953c-791ea219fc54",
+        "reviewer": "code-review-ad",
+        "status": "completed"
+      },
+      "children": [
+        {
+          "event": "native.agent",
+          "thread_id": "01a16af8-60d2-7902-be27-7b136f3715c0",
+          "parent_thread_id": "01a16af7-baee-7711-953c-791ea219fc54",
+          "root_thread_id": "01a16af7-baee-7711-953c-791ea219fc54",
+          "status": "completed",
+          "roleHints": [
+            "Toolkit"
+          ]
+        },
+        {
+          "event": "native.agent",
+          "thread_id": "01a16af8-73ea-76f0-817d-1439dd75c772",
+          "parent_thread_id": "01a16af7-baee-7711-953c-791ea219fc54",
+          "root_thread_id": "01a16af7-baee-7711-953c-791ea219fc54",
+          "status": "completed",
+          "roleHints": [
+            "Standards"
+          ]
+        },
+        {
+          "event": "native.agent",
+          "thread_id": "01a16af8-871d-7c72-b97a-e3c84273a305",
+          "parent_thread_id": "01a16af7-baee-7711-953c-791ea219fc54",
+          "root_thread_id": "01a16af7-baee-7711-953c-791ea219fc54",
+          "status": "completed",
+          "roleHints": [
+            "Spec"
+          ]
+        }
+      ]
+    },
+    {
+      "root": {
+        "event": "native.root",
+        "thread_id": "01a16af9-ba28-7463-a3f9-9598191d3cab",
+        "reviewer": "code-review-matpocock",
+        "status": "completed"
+      },
+      "children": [
+        {
+          "event": "native.agent",
+          "thread_id": "01a16afa-54d1-7891-b5b0-0ba76e5ecc9d",
+          "parent_thread_id": "01a16af9-ba28-7463-a3f9-9598191d3cab",
+          "root_thread_id": "01a16af9-ba28-7463-a3f9-9598191d3cab",
+          "status": "completed",
+          "roleHints": [
+            "Standards"
+          ]
+        },
+        {
+          "event": "native.agent",
+          "thread_id": "01a16afa-7973-7f03-bec8-6803e6bfac17",
+          "parent_thread_id": "01a16af9-ba28-7463-a3f9-9598191d3cab",
+          "root_thread_id": "01a16af9-ba28-7463-a3f9-9598191d3cab",
+          "status": "completed",
+          "roleHints": [
+            "Spec"
+          ]
+        }
+      ]
+    }
+  ],
+  "oldPreparedRun": "a6e50160749b5fe1090b358061dc754e",
+  "staleResult": "Host observed retained old-head result/draft against verified live head and declined to treat old result as current; no stale publication request was made. Native publication guard fixture coverage is separate.",
+  "sourcePreserved": true,
+  "noPublicationAtReviewCompletion": true
+}

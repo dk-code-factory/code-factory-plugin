@@ -987,7 +987,8 @@
         "UI-CONNECT-TOOL-ERROR",
         "UI-CONNECT-HOST-WRAP",
         "UI-CONNECT-HOST-MUTATION",
-        "UI-DETAIL-DEFERRED"
+        "UI-DETAIL-DEFERRED",
+        "UI-ITEM-SUMMARY-MARKDOWN"
       ],
       "gaps": [
         {
@@ -1007,7 +1008,7 @@
       ],
       "element_description": "**loading**, **title** once, compact **id**/**state** and optional PR **kind**, nonempty **body**. Local **read-error** feedback and a **retry** button for nontransport failures.",
       "state_description": "Item summary and context on the conversation page. Transient loading failures retry with bounded backoff while Back remains available; stale responses are ignored. Tool/business failures require explicit Retry loading item.",
-      "interactions": "Shows the matching item title, identifier and a source-description excerpt above chat; full description is available in Item details. A successful matching read clears its own failure before the displayed revision is marked read. A deferred provider refresh retains saved information and offers Retry without marking it read until a successful refresh."
+      "interactions": "Shows the matching item title, identifier and the first substantive source-description paragraph above chat, skipping Markdown-only headings; full description is available in Item details. A successful matching read clears its own failure before the displayed revision is marked read. A deferred provider refresh retains saved information and offers Retry without marking it read until a successful refresh."
     },
     {
       "id": "W-ITEM-ACTIONS",
@@ -8724,7 +8725,8 @@
         "API-COMPACT-INBOX",
         "UI-COMPACT-REVIEW",
         "UI-GITHUB-USAGE",
-        "UI-LINKED-DETAIL-REFRESH"
+        "UI-LINKED-DETAIL-REFRESH",
+        "UI-READ-FRESHNESS"
       ],
       "gaps": [
         {
@@ -8753,7 +8755,7 @@
       ],
       "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
       "trigger": "Successful polling or action refresh.",
-      "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately.",
+      "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. Known read calls carry a unique freshness marker so host reuse of an earlier response cannot freeze an empty journal page or saved snapshot. This marker does not change server state, source authority or mutation replay rules.",
       "from": [
         "S-FACTORY"
       ],
@@ -11580,6 +11582,18 @@
       "path": "internal/setup/github_diagnostics_test.go",
       "anchor": "TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence",
       "assertion": "Diagnostics perform only local GitHub credential lookup, expose no credential value, accept recent periodic reconciliation and distinguish paused/deferred monitoring from failure."
+    },
+    {
+      "id": "UI-ITEM-SUMMARY-MARKDOWN",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "Markdown issue headings do not replace the useful conversation summary",
+      "assertion": "Conversation summary skips consecutive Markdown-only heading paragraphs, shows meaningful issue text, retains the original full description and never prepares/starts work."
+    },
+    {
+      "id": "UI-READ-FRESHNESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "fresh read markers observe external changes after a host memoizes an empty journal page",
+      "assertion": "A host memoizes identical snapshot/journal arguments; after an empty journal reply, two external updates appear automatically, using distinct read markers and no launch/message mutation."
     }
   ],
   "source_map": [

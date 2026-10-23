@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-b7acba63551a",
+  "cleanedRun": "0d44383d6c336a6a829e77a9107b1a7a",
+  "cleanedRunThreadRetained": true,
+  "cleanWorktreeAndScratchRemoved": true,
+  "dirtyRefusal": "Fresh isolated application assertion retains unsaved file; sealed-directory test preserves external symlink targets and shared-file permissions.",
+  "auditRestoration": {
+    "campaignAuditDropInRemoved": true,
+    "auditEnabledInService": false,
+    "daemonRestartedOnlyWhenInactive": true,
+    "gatewayRestarted": false
+  },
+  "original16RunsUnchanged": true,
+  "originalProfilesAndGlobalConfigUnchanged": true,
+  "nonpilotRepositoryPoliciesUnchanged": true,
+  "mappingTunnelConfigAndCompleteRoutesUnchanged": true,
+  "recordedProviderPathsUnchanged": true,
+  "noActiveRuns": true,
+  "intentionalAdditions": [
+    "Installed pilot package0.2.4 and native DK local1.1.18 compatibility, AD1.0.7 and Matt1.0.0",
+    "Repository-only ordered reviewer bindings and pilot-pr-review / pilot-pr-review-plan profiles",
+    "Pilot issue6, PR7 changed-head/scope fixture and clean PR8",
+    "Verified result/artifact/history retention; one standalone COMMENT and two explicit same-thread feedback/reply comments"
+  ],
+  "pilotAutomaticReview": false,
+  "callbacksSoakLoginManualAccessibility": "Remain open; this campaign does not close them."
+}

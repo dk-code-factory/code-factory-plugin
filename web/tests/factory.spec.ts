@@ -80,6 +80,7 @@ async function host(
   options: {
     snapshot?: Snapshot;
     initializeFailures?: number;
+    memoizeReads?: boolean;
     transportFault?: (name: string, args: Record<string, unknown>) => boolean;
     toolError?: { name: string; message: string };
     readItem?: (detail: Detail) => Promise<Detail>;
@@ -526,7 +527,7 @@ async function host(
   await page.route("**/host", (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
+      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>const readCache=new Map();window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{const key=JSON.stringify(m.params);if(${options.memoizeReads ?? false}&&['read_snapshot','read_changes'].includes(m.params.name)){if(readCache.has(key))result=readCache.get(key);else{result=await window.hostCall(m.params);readCache.set(key,structuredClone(result))}}else result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
     }),
   );
   await page.goto("/host");
@@ -4071,4 +4072,35 @@ test("linked PR changes refresh full selected details without consuming another 
  await expect(linked.getByText(/Latest CI/)).toBeVisible();
  expect(calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read")).toHaveLength(1);
  expect(calls.some(c=>["prepare_launch","start_run"].includes(c.name))).toBe(false);
+});
+
+test("Markdown issue headings do not replace the useful conversation summary", async ({ page }) => {
+  const snapshot = initial();
+  const paragraph = "The PR capacity helper must clamp exhausted capacity to zero.";
+  snapshot.inbox[0].item.body = `## Issue\n\n### Context\n\n${paragraph}\n\n## Scope\n\nNo persistence changes.`;
+  const { ui, calls } = await host(page, { snapshot });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  const summary = ui.getByRole("region", { name: "Item summary", exact: true });
+  await expect(summary).toHaveText(paragraph);
+  await showItemDetails(ui);
+  await ui.getByText("Full description", { exact: true }).click();
+  await expect(ui.getByText("Full description", { exact: true }).locator("..")).toContainText("## Issue");
+  await expect(ui.getByText("Full description", { exact: true }).locator("..")).toContainText("No persistence changes.");
+  expect(calls.some((c) => ["prepare_launch", "start_run"].includes(c.name))).toBe(false);
+});
+
+
+test("fresh read markers observe external changes after a host memoizes an empty journal page", async ({ page }) => {
+  const { ui, calls, state } = await host(page, { memoizeReads: true });
+  await expect.poll(() => calls.filter(c => c.name === "read_changes").length).toBeGreaterThan(0);
+  state.inbox[0].item.title = "Externally updated pilot review";
+  state.cursor++;
+  await expect(ui.getByRole("button", { name: /Externally updated pilot review/ })).toBeVisible();
+  state.inbox[0].item.title = "Second external review update";
+  state.cursor++;
+  await expect(ui.getByRole("button", { name: /Second external review update/ })).toBeVisible();
+  const reads = calls.filter(c => ["read_changes", "read_snapshot"].includes(c.name));
+  expect(new Set(reads.map(c => c.arguments.freshness)).size).toBe(reads.length);
+  expect(reads.every(c => typeof c.arguments.freshness === "string" && c.arguments.freshness.length > 0)).toBe(true);
+  expect(calls.some(c => ["prepare_launch", "start_run", "send_message"].includes(c.name))).toBe(false);
 });

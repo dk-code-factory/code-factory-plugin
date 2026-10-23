@@ -1,0 +1,16 @@
+{
+  "upstreamRepository": "https://github.com/dk-code-factory/dk-workflows",
+  "upstreamRevision": "18edf9c7c31e7309e26062e1a069fe038ffe001d",
+  "upstreamVersion": "1.1.17",
+  "localVersion": "1.1.18",
+  "distribution": "Local pilot compatibility build; not an upstream release",
+  "patchSHA256": "7cd556719273054e61ba77024a374dc97fc52281013588e9814d3e8f643b731c",
+  "verification": [
+    "Focused same/fork head-identity regression passed for empty/missing nameWithOwner, canonical owner/name and missing/invalid head metadata.",
+    "Actual private pilot PR #7 reviewer lookup returned both requested repository-scoped Codex bindings; lifecycle entry and completion succeeded.",
+    "Actual installed package contains the fix; native bounded lifecycle, registry and existing-authentication check passed against installed 1.1.18 with metadata-file-only marketplace access."
+  ],
+  "installation": "Installed and enabled as local 1.1.18 through the actual embedded Code Factory admin UI. Registered source replacement and update operations succeeded; old 1.1.17 skill is unavailable.",
+  "upstreamMutation": false,
+  "installedCacheEditedManually": false
+}

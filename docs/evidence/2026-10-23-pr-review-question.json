@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-fc72c4705f0c",
+  "host": "Actual signed-in ChatGPT Work browser, existing approved persistent pilot profile",
+  "cases": [
+    "PR-08 Stop variant",
+    "PR-10 pending-question page reload"
+  ],
+  "runId": "40ad8712b7a83adccd3b536f6f3386a5",
+  "threadId": "01a16a1f-6b6a-76b3-aae1-1d828548cd3f",
+  "target": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/8",
+  "authority": {
+    "mode": "plan",
+    "sandbox": "read-only",
+    "approval": "on-request",
+    "publishing": "ask"
+  },
+  "observations": [
+    "Explicit embedded UI Start created native Review scope Continue/Stop question.",
+    "Messages listed exactly the owning clean PR question.",
+    "Reloaded only the campaign Work chat with the question pending; same run/thread and question returned in Messages.",
+    "Selected Stop and Answer in the actual native form.",
+    "Real agent final: Review stopped. No reviewers run; nothing published.",
+    "After incremental update: Connected, Messages has no pending count, no attention dialog, work Inactive."
+  ],
+  "result": "passed bounded variants",
+  "remaining": [
+    "Continue answer followed by actual two-reviewer completion",
+    "scoped transient read-reply fault recovery"
+  ],
+  "observedAt": "2026-10-23T19:02:17.215813+00:00",
+  "readRecovery": {
+    "installedVersion": "0.1.0-da432a0dedd0",
+    "kind": "Controlled browser-only incoming read-reply probe, not a real transport outage",
+    "scope": "Only campaign iframe paged cursor/events/hasMore read replies; no mutation reply intercepted",
+    "injected": 3,
+    "injectedResult": "McpServerError: Connection failed",
+    "observedAfter": "Connected, no alerts, 29 later successful matching read replies",
+    "cleanup": "Both campaign-only message listeners removed and private probe objects deleted",
+    "limitation": "Candidate response interceptions did not produce an observable UI failure. Connected/later reads alone do not prove injection or recovery.",
+    "result": "unverified probe; excluded from acceptance"
+  },
+  "continueVariant": {
+    "runId": "40ad8712b7a83adccd3b536f6f3386a5",
+    "threadId": "01a16a1f-6b6a-76b3-aae1-1d828548cd3f",
+    "questionId": "e2425d0735fbdbacf390b8d47c782b12",
+    "action": "Fresh native scope question answered Continue using the actual embedded form after service recovery.",
+    "observed": "Question cleared; real Codex continued through current-head/issue/rules/Decisions and review preparation. Preparation honestly reported missing code-mode companion; no full reviewer completion was claimed."
+  },
+  "realTransportRecovery": {
+    "installedVersion": "0.1.0-b8585721e11b",
+    "action": "Stopped only owned gateway for35seconds with automatic finally restart; no live runs or plugin operations.",
+    "observed": [
+      "Same foreground Work iframe initially Connected/no errors",
+      "During outage: visible ProtocolError: Internal error read alerts and Reconnecting\u2026",
+      "After automatic restart/backoff: Connected and no alerts; same PR conversation/history; no sign-in or mutation replay"
+    ],
+    "daemonPIDPreserved": true,
+    "probeCleanup": "All campaign message listeners, timers, observer nodes and scripts removed. Earlier response probes remain excluded from acceptance."
+  }
+}

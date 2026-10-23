@@ -103,7 +103,10 @@ func run() error {
 		}
 		return setup.InstallRelease(ctx, *dir, *source, *address)
 	}
+	var providerBin string
+	var providerPaths map[string]string
 	if r, err := setup.ReadRuntime(*dir); err == nil {
+		providerBin, providerPaths = r.ProviderBin, r.Paths
 		if err = os.Setenv("PATH", r.Path); err != nil {
 			return err
 		}
@@ -230,6 +233,8 @@ func run() error {
 	}
 	a := &app.App{Store: s, Vault: vault, GitHub: providers.NewGitHub(), DataDir: *dir}
 	a.Runs = app.NewManager(ctx, a, *binary)
+	a.Runs.ProviderBin = providerBin
+	a.Runs.ProviderPaths = providerPaths
 	if e = a.Init(ctx); e != nil {
 		return e
 	}

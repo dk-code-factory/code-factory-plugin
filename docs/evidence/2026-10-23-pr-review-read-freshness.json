@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-b7acba63551a",
+  "host": "Actual signed-in ChatGPT Work and MCP Apps iframe in same approved pilot profile",
+  "module": {
+    "htmlSHA256": "658dfafa52eb1011619ba50ae7ab2e139ecb25cce9a0eff9a58ef6903f44c6cd",
+    "moduleSHA256": "7f2fb2434f8ea2dce73713d0225ce46ef662e1613f17bdc7a74b688e5b6d7c3b",
+    "moduleBytes": 492793
+  },
+  "observedFailure": {
+    "widget": "Retained pre-repair observer",
+    "symptom": "Repeated empty read_changes at15833 despite newer daemon events and cleaned status; actual view remained interrupted",
+    "ownerCorroboration": "Same cursor returned200 events with more=true",
+    "cause": "Host-side response reuse inferred from behavior; exact host implementation not established"
+  },
+  "repair": "Fresh crypto UUID marker for known reads with matching optional MCP input schema; server ignores marker for state/pagination; mutations unchanged and never automatically replayed.",
+  "fixtureProof": "Memoizing host after an empty journal response observes two successive external updates without reload/launch. Authenticated MCP accepts markers, reads leave journal unchanged and next event returns from same cursor.",
+  "installedProof": {
+    "actualModuleMatches": true,
+    "cleanedRun": "0d44383d6c336a6a829e77a9107b1a7a",
+    "cleanedStatusVisible": true,
+    "cleanupControlAbsent": true,
+    "historyRetained": true,
+    "updatedPRScopeVisible": true,
+    "externalNewRun": "6faee2c5a1053d5cbbbc476b96a8418d",
+    "newDraftThenRunningObservedAutomaticallyInExistingView": true,
+    "snapshotCursors": [
+      26250,
+      26281
+    ],
+    "noReloadOrDuplicateStartInObserver": true
+  },
+  "probeCleanup": "Metadata-only listeners removed. Raw diagnostic timed out and is not successful acceptance evidence.",
+  "verification": "82 browser fixtures, Go race/static, packaging/installer/smoke passed. Generated final specification receipts are kept separately; the earlier receipt attempt rejected concurrent campaign-evidence input drift."
+}

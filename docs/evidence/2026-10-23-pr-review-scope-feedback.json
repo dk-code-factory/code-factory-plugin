@@ -1,0 +1,158 @@
+{
+  "sessionId": "20e50f53012149c0a8e0225e7fe92251",
+  "artifactCanonicalSHA256": "bc61e14f7628561e05b5472f316565abc4dc8513d645c94c65f91f1356859cdd",
+  "identityBefore": {
+    "base": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+    "head": "bf59c750f6e63a561df1b5a33d752512b7ebf800",
+    "pr_url": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/7",
+    "preparation_id": "3307399777f990ab2b7bd5063e94e64e8011aaea0115a2db6883ce07d516bd80",
+    "reviewers": [
+      "code-review-ad:code-review-ad@codex",
+      "code-review-matpocock:code-review-matpocock@codex"
+    ],
+    "rules_text": "03967caa9ba554b9e9bab926164ef7967555a35b19b319aff652c45cccef54d9",
+    "scope": "fedae78744192eb3e300fa7cd27f373b2edfa9a5d7073eb71c1e08c9b74c5a7d",
+    "scope_text": "0920c47a637f915029aec5444e6ce49cf6c67b9d65cfe28040ea9e1210a572bc",
+    "tree": "0608f136bfb565bb1f583c8ef99637e539efece7"
+  },
+  "identityAfter": {
+    "base": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+    "head": "bf59c750f6e63a561df1b5a33d752512b7ebf800",
+    "pr_url": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/7",
+    "preparation_id": "59f8e83ed3babad9ac35805aaebe1aff41d03317abe7eabf5226081e325d7a2e",
+    "reviewers": [
+      "code-review-ad:code-review-ad@codex",
+      "code-review-matpocock:code-review-matpocock@codex"
+    ],
+    "rules_text": "4fd28952c452db3e5ec14a1a3debe6e1369f02c19c90895c12c3701dd9307d5c",
+    "scope": "8fbccf3f5c3e1e271b03de7fee868e2dde1e6e0170683e6f9eb0b3cb6c9b3c92",
+    "scope_text": "1c7970d0bd0b1dff914f34a5f631d6c4ebbf6429cfd1d5f157d3761f8a2f448d",
+    "tree": "0608f136bfb565bb1f583c8ef99637e539efece7"
+  },
+  "findings": [
+    {
+      "line": 5,
+      "path": "capacity.py",
+      "severity": "Major"
+    },
+    {
+      "line": 5,
+      "path": "capacity.py",
+      "severity": "Major"
+    },
+    {
+      "line": 4,
+      "path": "capacity.py",
+      "severity": "Minor"
+    },
+    {
+      "line": 4,
+      "path": "capacity.py",
+      "severity": "Minor"
+    }
+  ],
+  "executed": [
+    "code-review-ad:code-review-ad@codex",
+    "code-review-matpocock:code-review-matpocock@codex"
+  ],
+  "reused": [],
+  "skipped": [],
+  "nativePasses": [
+    {
+      "root": {
+        "event": "native.root",
+        "thread_id": "01a16b11-9dc0-7ac3-be9e-f50fc939c0c9",
+        "reviewer": "code-review-matpocock",
+        "status": "completed"
+      },
+      "children": [
+        {
+          "event": "native.agent",
+          "thread_id": "01a16b12-26e8-7e00-8289-1133460e27b5",
+          "parent_thread_id": "01a16b11-9dc0-7ac3-be9e-f50fc939c0c9",
+          "root_thread_id": "01a16b11-9dc0-7ac3-be9e-f50fc939c0c9",
+          "status": "completed",
+          "roleHints": [
+            "Standards"
+          ]
+        },
+        {
+          "event": "native.agent",
+          "thread_id": "01a16b12-42d6-7a73-9081-c1261b62fbb5",
+          "parent_thread_id": "01a16b11-9dc0-7ac3-be9e-f50fc939c0c9",
+          "root_thread_id": "01a16b11-9dc0-7ac3-be9e-f50fc939c0c9",
+          "status": "completed",
+          "roleHints": [
+            "Spec"
+          ]
+        }
+      ]
+    },
+    {
+      "root": {
+        "event": "native.root",
+        "thread_id": "01a16b0f-3396-7092-975b-91561832cf65",
+        "reviewer": "code-review-ad",
+        "status": "completed"
+      },
+      "children": [
+        {
+          "event": "native.agent",
+          "thread_id": "01a16b0f-e1f8-7d41-adef-5934c4b645dc",
+          "parent_thread_id": "01a16b0f-3396-7092-975b-91561832cf65",
+          "root_thread_id": "01a16b0f-3396-7092-975b-91561832cf65",
+          "status": "completed",
+          "roleHints": [
+            "Toolkit"
+          ]
+        },
+        {
+          "event": "native.agent",
+          "thread_id": "01a16b10-1b1d-72a1-9227-151b53a121de",
+          "parent_thread_id": "01a16b0f-3396-7092-975b-91561832cf65",
+          "root_thread_id": "01a16b0f-3396-7092-975b-91561832cf65",
+          "status": "completed",
+          "roleHints": [
+            "Standards"
+          ]
+        },
+        {
+          "event": "native.agent",
+          "thread_id": "01a16b10-544c-7370-8f3b-1d3ccb973f4d",
+          "parent_thread_id": "01a16b0f-3396-7092-975b-91561832cf65",
+          "root_thread_id": "01a16b0f-3396-7092-975b-91561832cf65",
+          "status": "completed",
+          "roleHints": [
+            "Spec"
+          ]
+        }
+      ]
+    }
+  ],
+  "sourcePreserved": true,
+  "decisionsVerified": true,
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-b7acba63551a",
+  "host": "Fresh actual Work69 and existing embedded observer68, same approved signed-in profile",
+  "runId": "6faee2c5a1053d5cbbbc476b96a8418d",
+  "head": "bf59c750f6e63a561df1b5a33d752512b7ebf800",
+  "scopeBodySHA256Before": "27f80b7ef66172d05037c38259f96aca5190508883e127b624c06da3c73dcd85",
+  "scopeBodySHA256After": "2f462c35c98a20e3a259a0b9e8ff13e74ca9114848130e411f1314621c07db91",
+  "ownerChoice": "Explicit synthetic test choice: Keep remaining_capacity in capacity.py; add no dependencies. Retained locally before reviewers; no Decisions publication.",
+  "feedback": "One unresolved stdout thread with original finding and identifiable synthetic owner feedback, paginated current context read. No second actor or external consensus claimed.",
+  "preparationRecovery": "First attempt rejected invalid Decisions envelope before reviewers; corrected verified context and new preparation passed ready.",
+  "result": "Both ordered reviewers complete, no reused/skipped; existing stdout Major at5 and new missing labelled negative values Minor at4. Arithmetic remains fixed.",
+  "browserFinalObserved": true,
+  "sameHeadChangedContext": true,
+  "oldCompletionNotReused": true,
+  "noPublicationDuringReview": true,
+  "stalePublicationPreflight": {
+    "runId": "b6928a61b66fe18062b560adc2426652",
+    "reviewedHead": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+    "liveHead": "bf59c750f6e63a561df1b5a33d752512b7ebf800",
+    "result": "STALE_HEAD",
+    "artifactUnchanged": true,
+    "publicationAttempted": false,
+    "host": "Actual Work50 continuation of original native run using installed DK post-review pre-publication checks only"
+  }
+}

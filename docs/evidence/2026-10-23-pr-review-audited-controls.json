@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-f22d82141908",
+  "host": "Actual signed-in ChatGPT Work fresh natural review requests in the same approved persistent pilot browser profile",
+  "digest": "SDK canonical JSON SHA256, not raw bytes",
+  "controls": [
+    {
+      "runId": "b6928a61b66fe18062b560adc2426652",
+      "head": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+      "base": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+      "sessionFile": "84d484bf6bcf4cba9a994fdcbbdf2ecb.json",
+      "sessionId": "c8594c5e458942579d4084e694b4b6c5",
+      "artifactCanonicalSHA256": "8e615e426fa73f22eb9ac6ee4a15564ad0d8b3523c9f838340835e7f5109cff0",
+      "executed": [
+        "code-review-ad:code-review-ad@codex",
+        "code-review-matpocock:code-review-matpocock@codex"
+      ],
+      "reused": [],
+      "skipped": [],
+      "findingCount": 4,
+      "distinctFindingLines": [
+        [
+          "capacity.py",
+          5
+        ],
+        [
+          "capacity.py",
+          6
+        ]
+      ],
+      "nativePasses": [
+        {
+          "provider": "code-review-matpocock",
+          "root": "01a16ae2-24ba-7401-bae0-91aec5c6c180",
+          "status": "completed",
+          "completedRoles": [
+            "Spec",
+            "Standards"
+          ],
+          "children": [
+            {
+              "id": "01a16ae2-c69f-7a40-8947-7b033f09c2b0",
+              "parent": "01a16ae2-24ba-7401-bae0-91aec5c6c180",
+              "task": "/root/standards",
+              "state": "completed"
+            },
+            {
+              "id": "01a16ae2-e761-7980-ba04-92f96bac14dc",
+              "parent": "01a16ae2-24ba-7401-bae0-91aec5c6c180",
+              "task": "/root/spec",
+              "state": "completed"
+            }
+          ]
+        },
+        {
+          "provider": "code-review-ad",
+          "root": "01a16ae0-213f-7603-a20b-9d416d2421fd",
+          "status": "completed",
+          "completedRoles": [
+            "Spec",
+            "Standards",
+            "Toolkit"
+          ],
+          "children": [
+            {
+              "id": "01a16ae0-ef23-7ab3-b84d-77f862d0f9d8",
+              "parent": "01a16ae0-213f-7603-a20b-9d416d2421fd",
+              "task": "/root/standards",
+              "state": "completed"
+            },
+            {
+              "id": "01a16ae1-1d7c-7803-96c7-7c76b1b50319",
+              "parent": "01a16ae0-213f-7603-a20b-9d416d2421fd",
+              "task": "/root/spec",
+              "state": "completed"
+            },
+            {
+              "id": "01a16ae0-bfe0-78c1-abe7-e5f26366b7a8",
+              "parent": "01a16ae0-213f-7603-a20b-9d416d2421fd",
+              "task": "/root/toolkit",
+              "state": "completed"
+            }
+          ]
+        }
+      ],
+      "sourcePreserved": true
+    },
+    {
+      "runId": "25549003f12962c9f61f01cd7ff1680e",
+      "head": "73ab96d83c6c2370a18df03fbb6980533fdb14b1",
+      "base": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+      "sessionFile": "5f9dc2daebd94798b029662227f86bd2.json",
+      "sessionId": "26fef2a5ce3b44ba98de927cd228af10",
+      "artifactCanonicalSHA256": "07bf89f9c72512dea034a18399f593a3d30f7825b7ae03c8a7bd5a3440d6f74f",
+      "executed": [
+        "code-review-ad:code-review-ad@codex",
+        "code-review-matpocock:code-review-matpocock@codex"
+      ],
+      "reused": [],
+      "skipped": [],
+      "findingCount": 0,
+      "distinctFindingLines": [],
+      "nativePasses": [
+        {
+          "provider": "code-review-ad",
+          "root": "01a16ae1-c178-7be2-8a5e-201c7b5b7265",
+          "status": "completed",
+          "completedRoles": [
+            "Spec",
+            "Standards",
+            "Toolkit"
+          ],
+          "children": [
+            {
+              "id": "01a16ae2-af11-7d90-a92a-5edf0c4aabea",
+              "parent": "01a16ae1-c178-7be2-8a5e-201c7b5b7265",
+              "task": "/root/standards",
+              "state": "completed"
+            },
+            {
+              "id": "01a16ae2-6f86-76c1-bcfc-0f42f73a81dc",
+              "parent": "01a16ae1-c178-7be2-8a5e-201c7b5b7265",
+              "task": "/root/toolkit",
+              "state": "completed"
+            },
+            {
+              "id": "01a16ae2-ef7c-7f20-aad0-26448231e4f6",
+              "parent": "01a16ae1-c178-7be2-8a5e-201c7b5b7265",
+              "task": "/root/spec",
+              "state": "completed"
+            }
+          ]
+        },
+        {
+          "provider": "code-review-matpocock",
+          "root": "01a16ae3-abde-7113-ae88-21fd143a21f4",
+          "status": "completed",
+          "completedRoles": [
+            "Spec",
+            "Standards"
+          ],
+          "children": [
+            {
+              "id": "01a16ae4-4cdd-7192-810d-d027db86abd6",
+              "parent": "01a16ae3-abde-7113-ae88-21fd143a21f4",
+              "task": "/root/spec",
+              "state": "completed"
+            },
+            {
+              "id": "01a16ae4-2f4d-7a83-b296-92b96182ddc2",
+              "parent": "01a16ae3-abde-7113-ae88-21fd143a21f4",
+              "task": "/root/standards",
+              "state": "completed"
+            }
+          ]
+        }
+      ],
+      "sourcePreserved": true
+    }
+  ],
+  "traceReaderCorrection": "Forked native files contain child header followed by inherited parent headers. Verification uses the first authoritative session_meta, current terminal state and actual parent/root linkage. Production projection correction has fixture and actual full-history-fork checks; first f22d Mat traces omitted children but own raw native metadata confirms them.",
+  "noPublication": true
+}

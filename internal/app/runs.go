@@ -5,12 +5,10 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/jsonschema-go/jsonschema"
-	"io/fs"
 	"net/url"
 	"os"
 	"os/exec"
@@ -21,16 +19,18 @@ import (
 )
 
 type Manager struct {
-	adminGate sync.RWMutex
-	app       *App
-	ctx       context.Context
-	Binary    string
-	mu        sync.Mutex
-	answerMu  sync.Mutex
-	live      map[string]*session
-	wg        sync.WaitGroup
-	closing   bool
-	cancel    context.CancelFunc
+	adminGate     sync.RWMutex
+	app           *App
+	ctx           context.Context
+	Binary        string
+	ProviderBin   string
+	ProviderPaths map[string]string
+	mu            sync.Mutex
+	answerMu      sync.Mutex
+	live          map[string]*session
+	wg            sync.WaitGroup
+	closing       bool
+	cancel        context.CancelFunc
 }
 type session struct {
 	mu                sync.Mutex
@@ -271,7 +271,12 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 		}
 		r.Skills = append(r.Skills, s)
 	}
-	return r, m.app.Store.Put(ctx, "run", r.ID, r, "")
+	return r, m.app.Store.Write(ctx, func(t *store.Tx) error {
+		if err := t.Put("run", r.ID, r); err != nil {
+			return err
+		}
+		return t.Event("run.prepared", r.ID, map[string]string{"id": r.ID, "status": r.Status})
+	})
 }
 func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run, error) {
 	if !m.adminGate.TryRLock() {
@@ -456,31 +461,12 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	}
 	for index, skill := range r.Skills {
 		root := filepath.Join(m.app.DataDir, "snapshots", r.ID, fmt.Sprint(index))
-		if e := os.MkdirAll(root, 0700); e != nil {
-			m.fail(s, e)
+		path, err := materializeSkill(root, skill)
+		if err != nil {
+			m.fail(s, err)
 			return
 		}
-		for rel, encoded := range skill.Files {
-			b, e := base64.StdEncoding.DecodeString(encoded)
-			if e != nil {
-				m.fail(s, e)
-				return
-			}
-			p := filepath.Join(root, rel)
-			if e = os.MkdirAll(filepath.Dir(p), 0700); e != nil {
-				m.fail(s, e)
-				return
-			}
-			mode := os.FileMode(0600)
-			if skill.Modes[rel]&0111 != 0 {
-				mode = 0700
-			}
-			if e = os.WriteFile(p, b, mode); e != nil {
-				m.fail(s, e)
-				return
-			}
-		}
-		r.Skills[index].Path = filepath.Join(root, "SKILL.md")
+		r.Skills[index].Path = path
 	}
 	if saved, e := m.app.Vault.Get(ctx, "run-redactions:"+r.ID); e == nil {
 		var secrets []string
@@ -523,7 +509,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		// A legacy sandbox override would discard the independently scoped native
 		// filesystem/network profile selected for this process, including on resume.
 		delete(params, "sandbox")
-		params["developerInstructions"] = params["developerInstructions"].(string) + " Code Factory provides a bounded native permissions profile. Network commands may reach GitHub and Codex service domains through its proxy; other hosts and local/private networks require separate approval. Use TMPDIR for review artifacts, temporary checkouts and caches. The original checkout and Git metadata are read-only during reviews; do not replace this policy or publish without authority. Private skill indexes use per-run copies under XDG_DATA_HOME."
+		params["developerInstructions"] = params["developerInstructions"].(string) + " Code Factory provides a bounded native permissions profile. Network commands may reach GitHub and Codex service domains through its proxy; other hosts and local/private networks require separate approval. Use TMPDIR for review artifacts, temporary checkouts and caches. The original checkout and Git metadata are read-only during reviews; do not replace this policy or publish without authority. Private skill indexes use per-run copies under XDG_DATA_HOME. Keep the supplied PATH so commands use the recorded provider executables instead of older system copies."
 	}
 	if r.Profile.Model != "" {
 		params["model"] = r.Profile.Model
@@ -1131,51 +1117,6 @@ func validateAnswer(a domain.Attention, b json.RawMessage) error {
 	}
 	return nil
 }
-func snapshotSkill(s domain.Skill) (domain.Skill, error) {
-	root := filepath.Dir(s.Path)
-	files := map[string]string{}
-	modes := map[string]uint32{}
-	total := 0
-	e := filepath.WalkDir(root, func(p string, d fs.DirEntry, e error) error {
-		if e != nil {
-			return e
-		}
-		if d.Type()&os.ModeSymlink != 0 {
-			return fmt.Errorf("skill bundles may not contain symlinks")
-		}
-		if d.IsDir() {
-			return nil
-		}
-		info, e := d.Info()
-		if e != nil {
-			return e
-		}
-		if !info.Mode().IsRegular() {
-			return fmt.Errorf("invalid skill file")
-		}
-		total += int(info.Size())
-		if total > 5<<20 {
-			return fmt.Errorf("skill bundle exceeds 5 MiB")
-		}
-		b, e := os.ReadFile(p)
-		if e != nil {
-			return e
-		}
-		rel, e := filepath.Rel(root, p)
-		if e != nil {
-			return e
-		}
-		files[rel] = base64.StdEncoding.EncodeToString(b)
-		modes[rel] = uint32(info.Mode().Perm())
-		if rel == "SKILL.md" {
-			s.Content = string(b)
-		}
-		return nil
-	})
-	s.Files = files
-	s.Modes = modes
-	return s, e
-}
 func (m *Manager) DiscoverSkills(ctx context.Context, cwd string) ([]domain.Skill, error) {
 	c, e := codex.Start(ctx, m.Binary, nil, nil)
 	if e != nil {
@@ -1278,11 +1219,15 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 	if e := m.app.Store.Put(ctx, "run", id, r, "run.state"); e != nil {
 		return e
 	}
-	if _, e := command(ctx, r.Worktree, "worktree", "remove", r.Worktree); e != nil {
+	if _, e := os.Lstat(r.Worktree); e == nil {
+		if _, e := command(ctx, r.Worktree, "worktree", "remove", r.Worktree); e != nil {
+			return e
+		}
+	} else if !os.IsNotExist(e) {
 		return e
 	}
 	r.Status = "cleaned"
-	if err := os.RemoveAll(filepath.Join(m.app.DataDir, "scratch", r.ID)); err != nil {
+	if err := removeRunScratch(m.app.DataDir, r.ID); err != nil {
 		return err
 	}
 	return m.app.Store.Put(ctx, "run", id, r, "run.state")

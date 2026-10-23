@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-b7acba63551a",
+  "host": "Distinct explicit reply instruction through actual Work69, installed DK reply workflow, same run/thread after safe daemon restart",
+  "runId": "6faee2c5a1053d5cbbbc476b96a8418d",
+  "threadId": "PRRT_kwDOVP_yyM6vzHHH",
+  "originalComment": 4364923201,
+  "reply": {
+    "id": 4365054839,
+    "url": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/7#discussion_r4365054839",
+    "author": "dkropachev",
+    "inReplyTo": 4364923201,
+    "bodySHA256": "c452650a4b9a73d42b7b085d64c6e69ba23a400170d8c7d62127f289a49ee496"
+  },
+  "exactMatchingReplyCount": 1,
+  "threadComments": 3,
+  "unresolved": true,
+  "headUnchanged": "bf59c750f6e63a561df1b5a33d752512b7ebf800",
+  "descriptionSHA256": "2f462c35c98a20e3a259a0b9e8ff13e74ca9114848130e411f1314621c07db91",
+  "sourceAndReviewersUnchanged": true,
+  "recovery": "GitHub wraps inline replies in review metadata. Guard uncertainty was reconciled against exact remote reply; no duplicate retry. Host continuation raced an active turn and was rejected safely; the original turn completed the one authorized reply."
+}

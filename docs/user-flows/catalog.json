@@ -682,6 +682,11 @@
           "path": "internal/app/github_usage.go",
           "anchor": "func (a *App) EnableGitHubUsage(",
           "purpose": "Bind system budget settings to private durable accounting and carry over existing cooldowns."
+        },
+        {
+          "path": "internal/app/skill_snapshots.go",
+          "anchor": "func snapshotSkill(",
+          "purpose": "Freeze a selected plugin package and its relative skill entrypoint; materialize bounded retained files with traversal confinement and standalone compatibility."
         }
       ],
       "tests": [
@@ -855,6 +860,30 @@
             "S6"
           ],
           "purpose": "Rejected out-of-range limits cannot replace saved API or assessment policy."
+        },
+        {
+          "path": "internal/app/skill_snapshots_test.go",
+          "anchor": "func TestPluginSkillSnapshotKeepsPackageResourcesAndRetainedEntrypoint(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Package-level lifecycle/procedure resources and executable helpers retain relative paths and original content after installed source deletion and repeated materialization."
+        },
+        {
+          "path": "internal/app/skill_snapshots_test.go",
+          "anchor": "func TestSkillSnapshotRejectsEscapesLinksMissingEntryAndOversize(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Manifest escapes, wrong skills directory, symlinks, missing entrypoints and oversized bundles fail instead of producing incomplete snapshots."
+        },
+        {
+          "path": "internal/app/skill_snapshots_test.go",
+          "anchor": "func TestRetainedSkillRejectsTraversalAndPreservesStandaloneCompatibility(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Retained entry/file traversal and outbound symlinks cannot escape snapshot roots; legacy standalone SKILL.md remains usable."
         }
       ],
       "suites": [
@@ -1894,6 +1923,14 @@
             "S4"
           ],
           "purpose": "Latest linked PR metadata refreshes selected full detail without replaying read or launch actions."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "Markdown issue headings do not replace the useful conversation summary",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Skip Markdown-only headings in the compact source summary, retain full body and assert that reading never prepares/starts work."
         }
       ],
       "suites": [
@@ -2740,6 +2777,41 @@
         {
           "path": "internal/codex/sandbox.go",
           "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/app/skill_snapshots.go",
+          "anchor": "func snapshotSkill(",
+          "purpose": "Freeze a selected plugin package and its relative skill entrypoint; materialize bounded retained files with traversal confinement and standalone compatibility."
+        },
+        {
+          "path": "internal/commandenv/providers.go",
+          "anchor": "func Prepare(",
+          "purpose": "Generate private versioned command launchers for exactly the recorded provider executables, quote paths literally and preserve prior launcher sets for rollback."
+        },
+        {
+          "path": "internal/commandenv/providers.go",
+          "anchor": "func PrepareCodex(",
+          "purpose": "Retain an invocation-local child Codex launcher with literal configuration arguments, exact executable selection and confinement against escaping symlinks."
+        },
+        {
+          "path": "internal/app/sandbox.go",
+          "anchor": "func (m *Manager) childProviderOverrides(",
+          "purpose": "Read effective native server identities without model work and disable ambient MCP connections and apps only for command-launched nested Codex providers."
+        },
+        {
+          "path": "internal/app/sandbox.go",
+          "anchor": "func (m *Manager) nativeRegistrySnapshot(",
+          "purpose": "Capture authoritative native installed-plugin metadata outside writable task scratch once; retain it across continuation and reject malformed or linked snapshots."
+        },
+        {
+          "path": "internal/commandenv/providers.go",
+          "anchor": "func CodexCompanion(",
+          "purpose": "Expose only the regular executable companion from the selected pinned Codex distribution; a different installation cannot substitute its code execution host."
+        },
+        {
+          "path": "internal/app/native_context.go",
+          "anchor": "func prepareNativeContext(",
+          "purpose": "Keep durable native child sessions, writer locks and nonsecret installation state in task-private storage, with read-only references to existing owner authentication/configuration and no owner-history access."
         }
       ],
       "tests": [
@@ -2971,6 +3043,142 @@
             "S7"
           ],
           "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
+        },
+        {
+          "path": "internal/app/skill_snapshots_test.go",
+          "anchor": "func TestPluginSkillSnapshotKeepsPackageResourcesAndRetainedEntrypoint(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Package-level lifecycle/procedure resources and executable helpers retain relative paths and original content after installed source deletion and repeated materialization."
+        },
+        {
+          "path": "internal/app/skill_snapshots_test.go",
+          "anchor": "func TestSkillSnapshotRejectsEscapesLinksMissingEntryAndOversize(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Manifest escapes, wrong skills directory, symlinks, missing entrypoints and oversized bundles fail instead of producing incomplete snapshots."
+        },
+        {
+          "path": "internal/app/skill_snapshots_test.go",
+          "anchor": "func TestRetainedSkillRejectsTraversalAndPreservesStandaloneCompatibility(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Retained entry/file traversal and outbound symlinks cannot escape snapshot roots; legacy standalone SKILL.md remains usable."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestPinnedWorkflowLifecyclePersistsAcrossSandboxCommands(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Opt-in real pinned-provider command check: actual DK entry retains its router/runtime into private state, a separate command reads/completes it and host state persists. No model calls; skipped by fixture gate."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestMarketplaceMetadataDoesNotGrantOwnerDirectories(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Configured local/home marketplace roots yield only their manifest files; malformed/relative roots fail and no containing owner directory becomes readable."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestSelectedProvidersWinWithoutGlobalReplacement(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Selected executables win over conflicting fallback commands, unusual paths and literal arguments are preserved, and previous launcher versions remain unchanged."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestUnavailableProvidersNeverFallBack(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Missing or relative selected providers fail instead of invoking an older system fallback."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestProviderDirectoryRejectsEscapingSymlinks(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "A replaced launcher symlink cannot overwrite an outside owner file."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestChildCodexOverridesRemainLiteralAndVersioned(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Literal unusual server names cannot execute shell code; changed child configuration retains prior launchers; escaping launcher symlinks cannot alter outside files."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestNativePluginInventoryRetainsValidatedPrivateSnapshot(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Registry metadata has private permissions, survives provider unavailability without requery, and rejects malformed data and symlinks."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestChildCodexUsesOnlyItsDistributionCompanion(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Selected executable companion receives literal arguments; non-executable files and symlinks are rejected."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestChildProviderUsesVerifiedInventoryAndRequiresOuterRestrictions(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Native inventory requires its exact digest with no live fallback; supported child invocation requires enforced process restrictions, other argument shapes keep their original sandbox."
+        },
+        {
+          "path": "internal/app/native_context_test.go",
+          "anchor": "func TestNativeContextReferencesOwnerWithoutCopyingAuthentication(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Authentication/configuration remain reference links rather than copies; restored context retains sessions, rejects changed references and preserves owner fixture bytes."
+        },
+        {
+          "path": "internal/app/native_context_test.go",
+          "anchor": "func TestNativeContextRejectsEscapingStateAndSharedWritableFile(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Escaping state links cannot create owner directories, and a hard-linked writable installation-state file cannot modify another owner file."
+        },
+        {
+          "path": "internal/codex/sandbox_test.go",
+          "anchor": "func TestPrivateNativeContextCannotBroadenWritableScope(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Context references stay read-only, native session directories stay writable and source stays read-only; extra writable roots outside private scratch are rejected."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestChildAuditRetainsOnlyNativeExecutionMetadata(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Optional native traces retain IDs/status/known roles with private permissions while excluding prompt/message/command/URL content."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestChildAuditProjectsOnlyItsOwnCompletedDelegates(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "V2 metadata projection identifies the actual provider and completed descendant roles, rejects unrelated root contexts and excludes creator/account/content fields."
         }
       ],
       "suites": [
@@ -4259,6 +4467,11 @@
         {
           "path": "internal/codex/sandbox.go",
           "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/app/cleanup.go",
+          "anchor": "func removeRunScratch(",
+          "purpose": "Confine removal to one run; make sealed scratch directories removable without chmod of files or following owner references. Missing worktree permits an explicit retry after partial cleanup."
         }
       ],
       "tests": [
@@ -4391,6 +4604,23 @@
             "S5"
           ],
           "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
+        },
+        {
+          "path": "internal/app/cleanup_test.go",
+          "anchor": "func TestRunScratchCleanupSealedDirectoriesPreservesExternalReferences(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Sealed directories are removed; symlink targets and shared hard-linked file contents/modes stay intact; missing scratch is idempotent and escaping ID rejected."
+        },
+        {
+          "path": "internal/app/cleanup_test.go",
+          "anchor": "func TestCleanupRetriesScratchFailureAfterWorktreeWasRemoved(",
+          "scenarios": [
+            "S3",
+            "S5"
+          ],
+          "purpose": "Injected scratch failure leaves interrupted record after worktree removal; explicit retry removes remaining sealed scratch, marks cleaned and retains original thread."
         }
       ],
       "suites": [
@@ -4506,6 +4736,16 @@
             "id": "sandbox_refused",
             "label": "Sandbox initialization failed; retained work and authority preserved",
             "terminal": true
+          },
+          {
+            "id": "n11",
+            "label": "Remove only the run scratch, including sealed workflow directories",
+            "scenario": "S5"
+          },
+          {
+            "id": "n12",
+            "label": "Interrupted cleanup retains history; explicitly retry remaining scratch removal",
+            "terminal": true
           }
         ],
         "edges": [
@@ -4540,11 +4780,6 @@
             "label": ""
           },
           {
-            "from": "n7",
-            "to": "n6",
-            "label": "clean"
-          },
-          {
             "from": "n3",
             "to": "n7",
             "label": "before attempting workspace removal"
@@ -4573,6 +4808,26 @@
             "from": "bounded_sandbox",
             "to": "sandbox_refused",
             "label": "invalid policy; fail before provider launch"
+          },
+          {
+            "from": "n7",
+            "to": "n11",
+            "label": "clean workspace removed"
+          },
+          {
+            "from": "n11",
+            "to": "n6",
+            "label": "scratch removed; preserve external references"
+          },
+          {
+            "from": "n11",
+            "to": "n12",
+            "label": "scratch removal fails"
+          },
+          {
+            "from": "n0",
+            "to": "n11",
+            "label": "explicit retry after workspace already removed"
           }
         ]
       }
@@ -4817,6 +5072,23 @@
             "S4"
           ],
           "purpose": "Presentation switch reveals technical output and preserves the same draft and session."
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Each preparation advances the incremental event cursor with its own prepared run, while retaining no workspace/thread before explicit Start."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"fresh read markers observe external changes after a host memoizes an empty journal page\"",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Host memoizes identical reads after empty journal response; two external changes still appear without reload, launch or message, using distinct read markers."
         }
       ],
       "suites": [
@@ -5529,6 +5801,22 @@
             "S5"
           ],
           "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestPinnedWorkflowLifecyclePersistsAcrossSandboxCommands(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Opt-in pinned-provider commands resolve real installed reviewer identities and check existing Codex authentication without emitting credentials, while DK lifecycle/router state persists privately across commands."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestMarketplaceMetadataDoesNotGrantOwnerDirectories(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Configured local/home marketplace roots yield only their manifest files; malformed/relative roots fail and no containing owner directory becomes readable."
         }
       ],
       "suites": [
@@ -5824,6 +6112,11 @@
           "path": "internal/gateway/proxy_diagnostics.go",
           "anchor": "func proxyError(",
           "purpose": "Fixed safe upstream failure classes, preserving request secrecy and HTTP behavior."
+        },
+        {
+          "path": "internal/commandenv/providers.go",
+          "anchor": "func Prepare(",
+          "purpose": "Generate private versioned command launchers for exactly the recorded provider executables, quote paths literally and preserve prior launcher sets for rollback."
         }
       ],
       "tests": [
@@ -6004,6 +6297,30 @@
             "S1"
           ],
           "purpose": "Diagnostics use local credentials without a GitHub API probe and align freshness/paused/deferred status with periodic reconciliation."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestSelectedProvidersWinWithoutGlobalReplacement(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Selected executables win over conflicting fallback commands, unusual paths and literal arguments are preserved, and previous launcher versions remain unchanged."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestUnavailableProvidersNeverFallBack(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Missing or relative selected providers fail instead of invoking an older system fallback."
+        },
+        {
+          "path": "internal/commandenv/providers_test.go",
+          "anchor": "func TestProviderDirectoryRejectsEscapingSymlinks(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A replaced launcher symlink cannot overwrite an outside owner file."
         }
       ],
       "suites": [

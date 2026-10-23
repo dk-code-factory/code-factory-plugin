@@ -136,6 +136,7 @@ type Ticket struct {
 	Error       string          `json:"error"`
 }
 type Skill struct {
+	EntryPath   string            `json:"entryPath,omitempty"`
 	Disabled    bool              `json:"disabled,omitempty"`
 	Description string            `json:"description,omitempty"`
 	ID          string            `json:"id"`

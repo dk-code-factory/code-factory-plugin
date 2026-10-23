@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-67e47c0c81dc",
+  "chatPath": "/c/6adb8586-d3c4-83e9-83a8-c1023c0cf041",
+  "runId": "0d44383d6c336a6a829e77a9107b1a7a",
+  "threadId": "01a16984-8fa2-7642-9f51-1fa582c421e7",
+  "requestedHead": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+  "result": "incomplete",
+  "reviewers": {
+    "code-review-ad": "not started",
+    "code-review-matpocock": "not started"
+  },
+  "observedBrowserFailure": "Lifecycle entry returned a retained runtime whose router and completion script were unavailable to the subsequent command. Agent attempted completion, explicitly reported incomplete/unassessed rather than clean, and retained a failure artifact.",
+  "sourceCheckoutUnchanged": true,
+  "failureArtifactSHA256": "102d6c86baa5484a6af06e28475e3899a832d656c19f791c4c04eed3be7d28dd",
+  "repairVerification": {
+    "nativeCrossCommandLifecycle": "passed against pinned provider: actual DK entry, retained router and completion persisted across two commands under private XDG_STATE_HOME; no model calls",
+    "preparedEventRegression": "passed",
+    "markdownSummaryBrowserRegression": "passed",
+    "installedBrowserRerun": "running: actual embedded Send message continued the original retained run and thread after upgrade",
+    "installedRepairVersion": "0.1.0-aff495347694",
+    "nativeInstalledReviewersAndExistingAuth": "passed without credential values being emitted or copied"
+  }
+}

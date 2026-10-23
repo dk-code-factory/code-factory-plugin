@@ -4,6 +4,7 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"strings"
@@ -42,9 +43,18 @@ func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(t *testing.T) {
 			if err := a.SaveRepository(ctx, repo); err != nil {
 				t.Fatal(err)
 			}
+			before := a.Store.Latest(ctx)
 			run, err := a.Runs.PreparePRReview(ctx, pr.ID)
 			if err != nil {
 				t.Fatal(err)
+			}
+			events, eventErr := a.Store.Events(ctx, before, 10)
+			if eventErr != nil || len(events) != 1 || events[0].Kind != "run.prepared" || events[0].Entity != run.ID {
+				t.Fatalf("prepared review event is missing: count=%d error=%v", len(events), eventErr)
+			}
+			var change map[string]string
+			if err := json.Unmarshal(events[0].Data, &change); err != nil || len(change) != 2 || change["id"] != run.ID || change["status"] != "prepared" || len(events[0].Data) > 256 {
+				t.Fatal("prepared update exposes private bundle data or lacks compact identity; bytes", len(events[0].Data))
 			}
 			if run.Status != "prepared" || run.Profile.ID != want || run.Base != pr.Head || run.AutomaticReview || run.ThreadID != "" || !strings.Contains(run.Prompt, pr.URL) || !strings.Contains(run.Prompt, pr.Head) || strings.Count(run.Prompt, repo.ReviewPrompt) != 1 {
 				t.Fatal("review defaults, pinned target or preparation boundary lost", run)

@@ -1,5 +1,157 @@
 # Work acceptance gate
 
+## Completed PR review campaign · 2026-10-23
+
+The [18-case ledger](e2e/pr-review-results.json) records **16 passed and 2 blocked**.
+Genuine incoming Review PR membership and request-driven automatic review remain
+blocked because the owner confirmed there is no second test account. Non-author
+APPROVE/REQUEST_CHANGES variants are also blocked; the explicit COMMENT case passed.
+All executable cases used the same approved persistent pilot Chrome profile and
+private pilot repository. Existing sign-in and authentication were reused.
+
+[Audited defect and clean controls](evidence/2026-10-23-pr-review-audited-controls.json)
+completed both ordered Codex reviewers through DK workflows: AD's independent
+Toolkit/Standards/Spec and Matt Pocock's independent Standards/Spec agents. The
+[changed-head](evidence/2026-10-23-pr-review-changed-head.json) review dropped the
+fixed arithmetic defect. A [same-head scope/feedback review](evidence/2026-10-23-pr-review-scope-feedback.json)
+used new context/preparation fingerprints and found the newly required error-value
+contract alongside the existing stdout objection, with both reviewers fresh.
+Original-head native publication preflight returned STALE_HEAD without a mutation.
+
+[COMMENT publication](evidence/2026-10-23-pr-review-publication.json) produced one
+current-head, correctly anchored inline finding with an empty review body.
+A later [explicit reply](evidence/2026-10-23-pr-review-reply.json) was posted exactly
+once inside that unresolved thread after retained-session service recovery.
+GitHub's review wrapper for replies was reconciled without a duplicate retry.
+Source, PR body and thread resolution stayed unchanged during those workflow steps;
+the separately authored scope clarification and synthetic feedback are identified.
+
+Installed **0.1.0-b7acba63551a** repairs full plugin-resource snapshots, selected
+native providers/delegation state, prepared-view updates, Markdown summaries,
+[read freshness](evidence/2026-10-23-pr-review-read-freshness.json) and
+[sealed scratch cleanup/retry](evidence/2026-10-23-pr-review-cleanup.json).
+The actual module hash matches the installed release. An existing view received a
+new proposal and running state automatically, and cleaned history lost its cleanup
+control. The temporary audit drop-in is removed. All original 16 runs, profiles,
+global settings, unrelated repository policies, recorded provider paths, mapping
+and complete Tailscale routes match their private baseline. Pilot automatic review
+is false; the installed integration, two pilot profiles and fixtures remain available.
+
+DK **local 1.1.18** is a compatibility build from upstream 1.1.17, with its
+[private-head patch/provenance](e2e/patches/dk-workflows-private-pr-head.json)
+retained; it is not an upstream release. AD is 1.0.7 and Matt Pocock 1.0.0.
+82 browser fixtures, Go race/static checks, packaging, installer recovery and smoke
+passed. Final reviewed specification evidence lives in `docs/specs/reconciliations/`;
+require `make specs-check` for the current comparison. [Failure](evidence/2026-10-23-pr-review-failure-matrix.json)
+and [quota](evidence/2026-10-23-pr-review-budget.json) records distinguish isolated
+provider/SDK/assembled-browser failures from actual ChatGPT controls. Shared quota
+was not exhausted and global authentication was not revoked. Host event callbacks,
+one-hour soak, coordinated login cycle and manual accessibility remain open.
+Earlier entries preserve failed attempts and intermediate deployment evidence.
+
+## First completed defect review and retained discussion · 2026-10-23
+
+Both actual configured Codex reviewers completed against the seeded defect PR;
+[canonical result/checkpoint hashes](evidence/2026-10-23-pr-review-defect-result.json)
+were independently verified. Each reported the seeded stdout and arithmetic errors
+at the correct lines; neither was skipped/reused, and the source remained clean.
+Internal Toolkit/Standards/Spec and Matt-axis trace verification remains pending for
+that first aggregate. Clean-control AD completed with no findings; Matt was interrupted
+by a blocked required native content host, so that control remains incomplete.
+
+The [actual embedded discussion](evidence/2026-10-23-pr-review-discussion.json)
+answered the boundary/stdout question, retained its draft through navigation, and
+continued the same run/thread/workspace after a native UI Interrupt. No extra review
+or publication occurred. Actual scoped gateway outage recovery is recorded separately
+in the question evidence; unobservable reply probes were excluded from acceptance.
+
+Private native contexts, exact model metadata/companion access and scoped traces
+now pass an actual independent native-agent command probe, including unchanged source,
+unrelated-file/direct-local denial and pinned selected gh inside the delegate.
+Read-only owner auth/configuration references, scratch-only state permissions and
+metadata privacy/isolation have meaningful fixture checks. Full browser reviewer
+passes on the repaired release, publication, changed head/scope and remaining case
+variants still need execution. The no-second-account decision continues to block
+incoming/automatic request events and non-author verdicts. General callbacks, soak,
+login-cycle and accessibility gaps remain open.
+
+## PR review bounded browser results · 2026-10-23
+
+The [campaign ledger](e2e/pr-review-results.json) now records passing installed
+connection and prepare-only cases, with exact proposal reopening across two Work
+views. Preparation created no workspace/thread. [Browser evidence](evidence/2026-10-23-pr-review-preparation.json)
+also records distinct per-PR drafts, frozen authority through a temporary repository
+policy change, and actual INVALID_ARGUMENT rejection of a workspace-write review
+profile with no new run. The pilot's read-only profile and false automatic-review
+policy were restored through Settings.
+
+The [native-question evidence](evidence/2026-10-23-pr-review-question.json) records
+a real Plan question in Messages, page reload with that question pending, Stop
+selection/Answer, Codex acknowledgement and cleared attention. Browser reply probes counted candidate read replies but produced no observable
+failure state; they do not establish transient-read recovery. All probe listeners
+and injected nodes were removed. Continue reached actual review preparation, which
+reported a nested-provider dependency failure; full review completion remains pending.
+
+Runtime checks now preserve selected providers and disable ambient MCP connections
+and apps only for nested CLI review processes. Existing native login and installed
+AD/Matt Pocock identities remain accessible. A separately opted-in actual child
+model returned its exact marker under the bounded command policy after allowing
+the observed exact Codex feature-service host. Command smoke and isolated SDK
+failure fixtures remain distinct from full model-led reviewer acceptance; both
+full review controls have preserved incomplete results so far. Genuine incoming
+requests, automatic launches from those requests and non-author verdict variants
+remain blocked by the owner's explicit no-second-account decision.
+
+## PR review campaign readiness execution · 2026-10-23
+
+The [first actual review attempt](evidence/2026-10-23-pr-review-first-run.json)
+remained correctly incomplete: both reviewers were unstarted after lifecycle
+runtime retention failed across command namespaces. The original source checkout
+was unchanged. Repairs for private persistent state, read-only native registry/
+auth access, prepared-draft updates and Markdown summaries are installed as
+**0.1.0-aff495347694**, with passing 81 browser fixtures, Go race, all 17 reviewed
+spec subjects, packaging, installer recovery, compiled smoke and an actual native
+cross-command lifecycle/registry/auth check. Existing original runs/config/routes
+are preserved. The repaired installed browser review is still pending; this is
+not a successful two-reviewer acceptance result. The owner explicitly confirmed
+no second test account, so genuine incoming requests, automatic launches from
+those requests and non-author verdict variants remain blocked.
+
+
+[Setup evidence](evidence/2026-10-23-pr-review-plugin-setup.json) records actual
+Work-driven installation and discovery of DK workflows 1.1.17, AD 1.0.7 and Matt
+Pocock 1.0.0. Source repair preserves plugin package resources/relative skill
+entrypoints across retained restoration and rejects invalid paths/links/bounds.
+Reviewed reconciliation, 80 browser fixtures, Go race tests, 20 flow/201 spec
+checks, packaging, installer recovery and compiled smoke passed. The checksummed
+**0.1.0-67e47c0c81dc** release is installed; all 16 original runs, provider/runtime,
+registered mapping and full Tailscale routes are unchanged.
+
+The current 0.2.4 complete browser bundle is installed as **Code Factory PR E2E**
+with Apps 1 / Skills 3 and the existing connected remote app. Upload under the old
+name explicitly failed as a duplicate; a distinct pilot package preserves the
+existing 0.2.2 package and chats. Pilot-only review configuration selects both
+Codex reviewers in order and keeps automatic review off. Pilot issue #6 and
+PRs #7/#8 provide deterministic defect/clean controls. These readiness results
+are not yet acceptance of real nested reviewer execution, publication, incoming
+review notifications or the entire [18-case campaign](e2e/pr-review-results.json).
+
+
+## PR review campaign planning · 2026-10-23
+
+The [PR review browser plan](e2e/pr-review.md) and
+[case ledger](e2e/pr-review-results.json) define 18 planned use cases, including
+two real reviewers through DK workflows, clean/defective controls, human input,
+retained continuation, failures, changed heads, explicit publication and recovery.
+Read-only preflight attached the approved pilot browser, observed the existing
+connected complete package still at 0.2.2, and found 16 retained runs with none
+active. Cached CLI inventory does not yet establish installation of the requested
+three dependencies. Source inspection identified the skill-directory-only snapshot
+boundary against package-level resources used by these plugins. Readiness work
+and a real second actor for incoming review requests are explicit plan dependencies.
+No PR review case, new installation or full nested-review runtime is accepted by
+this preparation record. Existing real-host acceptance gaps remain open.
+
 ## GitHub API quota controls · 2026-10-23
 
 Installed **0.1.0-e6423eaeb939** replaces broad per-PR polling with read-only

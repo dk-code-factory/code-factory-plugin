@@ -75,7 +75,13 @@ export async function call<T>(
   for (let attempt = 0; ; attempt++) {
     try {
       await connect();
-      const result = await app.callServerTool({ name, arguments: args });
+      // Some hosts memoize identical read arguments, including an empty journal
+      // page. A fresh read must reach the server even when its cursor is unchanged.
+      // Mutation arguments stay exact and are never automatically repeated.
+      const readArgs = retryableReads.has(name)
+        ? { ...args, freshness: crypto.randomUUID() }
+        : args;
+      const result = await app.callServerTool({ name, arguments: readArgs });
       if (result.isError)
         throw new ToolError(
           result.content?.map((c) => ("text" in c ? c.text : "")).join("\n") ||

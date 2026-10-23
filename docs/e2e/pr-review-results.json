@@ -1,0 +1,887 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-23T15:30:46.905822+00:00",
+  "plan": "pr-review.md",
+  "status": "completed",
+  "repository": "dkropachev/code-factory-pilot-20261019",
+  "executionMode": "existing approved persistent pilot Chrome profile; actual ChatGPT Work plus embedded Code Factory UI",
+  "preparationObservations": [
+    {
+      "kind": "browser",
+      "observation": "Existing complete Code Factory plugin is connected and displays version 0.2.2, Apps 1 and Skills 2; observed from a new campaign tab. No PR review run was started."
+    },
+    {
+      "kind": "local-owner-read",
+      "observation": "16 retained runs and no queued, starting, running or waiting run at preflight. No pilot review profile override was configured."
+    },
+    {
+      "kind": "cached-inventory",
+      "observation": "Last recorded plugin inventory lacks dk-workflows, code-review-ad and code-review-matpocock; fresh inventory is required."
+    },
+    {
+      "kind": "source-inspection",
+      "observation": "Skill snapshot copies only the selected skill directory; requested native plugin skills reference package-level sibling resources. Full package snapshot support requires implementation and verification."
+    }
+  ],
+  "cases": [
+    {
+      "id": "PR-01",
+      "title": "Connect and recognize the installed review integration",
+      "status": "passed",
+      "readinessDependencies": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "attempts": [
+        {
+          "status": "running",
+          "observation": "Fresh installed 0.2.4 pilot-plugin Work chat rendered Connected; actual module SHA256 9511ea2ceefd5514da2507f8e4d85999697cdd692036838ba01a43ead180e76b equals installed/source release. No run started.",
+          "packageId": "Plugin_89dd894a227481919ae7e682fe34c77f"
+        },
+        {
+          "status": "passed",
+          "variant": "Actual installed pilot plugin Work and separate Settings",
+          "observation": "Apps1/Skills3 complete pilot package Connected; current iframe module hash matches source/installed release, separate Settings remains available while pilot PR drafts survive.",
+          "moduleSHA256": "1995968962c17e64a8750a7246cde29d6cdd9a2278e94103bd35c1bf870833e5"
+        }
+      ],
+      "evidence": []
+    },
+    {
+      "id": "PR-02",
+      "title": "Find the right PR and inspect full context",
+      "status": "blocked",
+      "readinessDependencies": [
+        "R7",
+        "R8"
+      ],
+      "attempts": [
+        {
+          "status": "running",
+          "observation": "My PRs search filtered to the pilot repo shows PRs #7 and #8. Selected #7 full body, exact pinned head, separate open/review-none/CI-none state observed. Its Markdown-heading-only summary needs repair.",
+          "head": "d46fd715eaccf53ab3a9a72669058bcbfac6c637"
+        },
+        {
+          "status": "passed",
+          "variant": "Own PR full context, navigation and useful summary",
+          "observation": "Actual My PRs pilot search/detail showed both fixture PRs, full descriptions, linked issue, head and separate review/check state; meaningful Markdown summary repair verified."
+        },
+        {
+          "status": "blocked",
+          "variant": "Genuine incoming review-request membership",
+          "reason": "Owner confirmed no second authorized account; do not manufacture request."
+        }
+      ],
+      "evidence": []
+    },
+    {
+      "id": "PR-03",
+      "title": "Prepare a review without starting it",
+      "status": "passed",
+      "readinessDependencies": [
+        "R4",
+        "R6",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "failed",
+          "chatPath": "/c/6adb8586-d3c4-83e9-83a8-c1023c0cf041",
+          "observation": "Fresh installed-plugin Work request prepared and described the correct configured review without start. Local read corroborates pinned head, authority and missing workspace/thread. UI draft reopening remains to verify.",
+          "checks": {
+            "id": "0d44383d6c336a6a829e77a9107b1a7a",
+            "status": "prepared",
+            "workspaceAbsent": true,
+            "threadAbsent": true,
+            "profile": "pilot-pr-review",
+            "sandbox": "read-only",
+            "publishing": "ask",
+            "head": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+            "entryPath": "codex/skills/dk-pr-review/SKILL.md"
+          },
+          "failure": "Proposal and no-start checks passed, but an existing iframe did not receive the externally prepared draft."
+        },
+        {
+          "status": "running",
+          "runId": "c645af77e59badf11d959bb4f530df48",
+          "sdkVersion": "local 1.1.18",
+          "head": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+          "workspaceAbsent": true,
+          "modeCaveat": "Fresh preparation tab opened in Chat mode; do not count that as Work acceptance. Reopen/inspect the saved proposal through the existing real Work iframe, and rerun Work creation after compact-event deployment.",
+          "workReopenVerified": true
+        },
+        {
+          "status": "passed",
+          "runId": "459eed8a79bfb04a09d6d43979748ae2",
+          "variant": "Fresh Work prepare-only and cross-view reopen",
+          "observation": "Exact proposal reopened from existing iframe without another preparation; no thread/workspace/start."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-preparation.json"
+      ]
+    },
+    {
+      "id": "PR-04",
+      "title": "Launch the configured review in natural language",
+      "status": "passed",
+      "readinessDependencies": [
+        "R4",
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "runId": "0d44383d6c336a6a829e77a9107b1a7a",
+          "chatPath": "/c/6adb8586-d3c4-83e9-83a8-c1023c0cf041",
+          "observation": "Actual Work instruction started exactly the inspected proposal once; real native thread and isolated workspace were created. No duplicate proposal or automatic policy change."
+        },
+        {
+          "status": "passed",
+          "variant": "Fresh natural Work launch on repaired native runtime",
+          "installedVersion": "0.1.0-f22d82141908",
+          "runId": "b6928a61b66fe18062b560adc2426652",
+          "threadId": "01a16adb-f318-7e80-b7be-51e59548e170",
+          "observation": "Actual Work50 natural request listed synchronized PR, prepared and inspected matching readonly/ask snapshot, then started it without a second authorization. Exactly one new defect run/workspace; prior runs and stale-head draft preserved."
+        }
+      ],
+      "evidence": [],
+      "scope": "Launch semantics passed on first installed attempt; this does not claim reviewer completion."
+    },
+    {
+      "id": "PR-05",
+      "title": "Run AD and Matt Pocock through DK and receive useful findings",
+      "status": "passed",
+      "readinessDependencies": [
+        "R4",
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "failed",
+          "installedVersion": "0.1.0-67e47c0c81dc",
+          "runId": "0d44383d6c336a6a829e77a9107b1a7a",
+          "observation": "Actual embedded conversation shows lifecycle retention/router unavailable, completion attempted and failed, both reviewers not started, base unpinned, no clean-review conclusion. Failure artifact retained in private scratch.",
+          "privateFailureArtifact": "scratch/0d44383d6c336a6a829e77a9107b1a7a/tmp/pr-7-review-blocked/status.json"
+        },
+        {
+          "status": "failed",
+          "version": "0.1.0-aff495347694",
+          "runId": "0d44383d6c336a6a829e77a9107b1a7a",
+          "observation": "Actual embedded Send message explicitly requests a fresh DK review invocation on the repaired runtime, continuing the same retained run/thread after upgrade.",
+          "threadId": "01a16984-8fa2-7642-9f51-1fa582c421e7",
+          "failure": "Lifecycle retention is repaired and completes. Configured reviewer discovery fails because gh returns an empty headRepository.nameWithOwner; actual headRepositoryOwner.login and headRepository.name are present."
+        },
+        {
+          "status": "running",
+          "stage": "local SDK compatibility repair installation",
+          "observation": "Focused regression and actual pilot head-identity lookup pass in a local 1.1.18 compatibility checkout. Reviewable patch/provenance saved. Browser automatic approval first misclassified the new local source replacement as already completed; native configuration still showed the original Git snapshot. Clarified exact authorized replacement through the same browser flow.",
+          "upstreamChanged": false,
+          "cacheEditedManually": false,
+          "patch": "patches/dk-workflows-private-pr-head.patch"
+        },
+        {
+          "status": "failed",
+          "version": "0.1.0-3f7730983153",
+          "sdkVersion": "local 1.1.18",
+          "runId": "c645af77e59badf11d959bb4f530df48",
+          "chatPath": "/c/6adba127-0d40-83ea-933a-348e4e7b9afd",
+          "observation": "Actual connected Work iframe reopened the durable 1.1.18 proposal, showed pinned head/branch, read-only/on-request/ask authority, selected SDK skill and unchanged reviewer prompt; workspace was absent before explicit UI Start. Start agent clicked once.",
+          "failure": "Local 1.1.18 successfully resolves reviewers; context pinning fails because installed gh rejects baseRefOid in gh pr view --json. Neither reviewer started; no validated base/head pair or clean conclusion."
+        },
+        {
+          "status": "passed",
+          "variant": "Actual two-provider defect aggregate and immutable artifacts",
+          "runId": "c645af77e59badf11d959bb4f530df48",
+          "head": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+          "artifactCanonicalSHA256": "2ec772230a1b419642047287e74dacf0a7497ff3f4e28f316abc5e173b5cfcb5",
+          "observation": "Both configured reviewers completed, neither reused/skipped, both verified seeded stdout/off-by-one defects; source checkout clean. Internal independent-pass tracing remains a separate pending assertion."
+        },
+        {
+          "status": "passed",
+          "variant": "Actual repaired Work review with both providers and native independent-pass proof",
+          "runId": "b6928a61b66fe18062b560adc2426652",
+          "installedVersion": "0.1.0-f22d82141908",
+          "observation": "Both configured reviewers complete, neither reused/skipped; immutable result/checkpoints verified. Native AD Toolkit/Standards/Spec and Matt Standards/Spec each completed as distinct children. Defect control has the seeded findings at lines5/6; clean control has zero findings; original checkouts clean."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-defect-result.json",
+        "docs/evidence/2026-10-23-pr-review-audited-controls.json"
+      ]
+    },
+    {
+      "id": "PR-06",
+      "title": "Receive a completed clean review",
+      "status": "passed",
+      "readinessDependencies": [
+        "R4",
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "failed",
+          "variant": "Plan clean control before native content-host repair",
+          "runId": "40ad8712b7a83adccd3b536f6f3386a5",
+          "observation": "AD completed validated empty findings; Matt started but required Codex content host was blocked, so no complete clean review claimed."
+        },
+        {
+          "status": "running",
+          "variant": "Fresh natural default clean control with repaired native context",
+          "runId": "25549003f12962c9f61f01cd7ff1680e",
+          "head": "73ab96d83c6c2370a18df03fbb6980533fdb14b1",
+          "installedVersion": "0.1.0-f22d82141908"
+        },
+        {
+          "status": "passed",
+          "variant": "Actual repaired Work review with both providers and native independent-pass proof",
+          "runId": "25549003f12962c9f61f01cd7ff1680e",
+          "installedVersion": "0.1.0-f22d82141908",
+          "observation": "Both configured reviewers complete, neither reused/skipped; immutable result/checkpoints verified. Native AD Toolkit/Standards/Spec and Matt Standards/Spec each completed as distinct children. Defect control has the seeded findings at lines5/6; clean control has zero findings; original checkouts clean."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-audited-controls.json"
+      ]
+    },
+    {
+      "id": "PR-07",
+      "title": "Honor pipeline overrides and keep review targets isolated",
+      "status": "passed",
+      "readinessDependencies": [
+        "R6",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Two PR conversation drafts",
+          "observation": "Distinct unsent clean/defect PR drafts restored on return, with correct titles and retained profile; no message sent."
+        },
+        {
+          "status": "passed",
+          "variant": "Existing snapshots retain authority after repository policy change",
+          "observation": "Temporary pilot repository override changed to implement; already prepared/started runs retained pilot-pr-review and read-only authority and their threads. Settings restored pilot-pr-review."
+        },
+        {
+          "status": "passed",
+          "variant": "Unstarted proposal freezes choices before later Settings change",
+          "runId": "a6e50160749b5fe1090b358061dc754e",
+          "observation": "Existing Work dialog retained original Default profile, skill/prompt/head and authority while pilot override changed to Plan. Closed without Start; original override restored."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-preparation.json"
+      ]
+    },
+    {
+      "id": "PR-08",
+      "title": "Answer a real review question in the embedded UI",
+      "status": "passed",
+      "readinessDependencies": [
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Plan scope question / Stop",
+          "runId": "40ad8712b7a83adccd3b536f6f3386a5",
+          "threadId": "01a16a1f-6b6a-76b3-aae1-1d828548cd3f",
+          "observation": "Native scope question answered Stop through Messages; actual Codex acknowledged stop and no reviewers/publication; attention cleared."
+        },
+        {
+          "status": "passed",
+          "variant": "Fresh native Continue after retained-thread recovery",
+          "runId": "40ad8712b7a83adccd3b536f6f3386a5",
+          "observation": "Actual form delivered Continue once and cleared attention; real scope-selected review advanced through evidence/preparation before separate nested-runtime failure. Reviewer completion remains PR-06."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-question.json"
+      ]
+    },
+    {
+      "id": "PR-09",
+      "title": "Discuss findings and continue the same review",
+      "status": "passed",
+      "readinessDependencies": [
+        "R5",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Finding discussion, draft navigation, explicit native Interrupt and same-thread continuation",
+          "runId": "c645af77e59badf11d959bb4f530df48",
+          "observation": "Correct boundary/stdout explanation; real pending question interrupted via native button; one continuation restored same thread/workspace/history and21-run count with no reviewer rerun."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-discussion.json"
+      ]
+    },
+    {
+      "id": "PR-10",
+      "title": "Recover a page reload and a transient read failure",
+      "status": "passed",
+      "readinessDependencies": [
+        "R1",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Page reload with native question pending",
+          "runId": "40ad8712b7a83adccd3b536f6f3386a5",
+          "observation": "Same retained run/thread and question recovered in signed-in Work; answer delivered once; no Start replay."
+        },
+        {
+          "status": "failed",
+          "variant": "Scoped transient read-reply failure",
+          "injectedFailures": 3,
+          "laterSuccessfulReads": 29,
+          "observation": "Probe counted candidate replies but no actual UI failure was observed. It is excluded from recovery acceptance; a real gateway-only outage is being exercised instead."
+        },
+        {
+          "status": "passed",
+          "variant": "Actual scoped gateway outage and automatic read recovery",
+          "observation": "35-second gateway-only outage produced Reconnecting/read alerts; automatic service restore and backoff returned same widget to Connected/no alerts without sign-in or mutation replay."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-question.json",
+        "docs/evidence/2026-10-23-pr-review-read-freshness.json"
+      ]
+    },
+    {
+      "id": "PR-11",
+      "title": "Handle a changed head or changed review scope",
+      "status": "passed",
+      "readinessDependencies": [
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "running",
+          "variant": "Changed branch head with stale draft and completed results retained",
+          "previousHead": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+          "newCommit": "bf59c75",
+          "change": "Fix only boundary calculation; stdout violation remains. Two fixture unit tests pass."
+        },
+        {
+          "status": "passed",
+          "variant": "Changed head, stale snapshots and fresh exact-head review",
+          "runId": "2025eb3754a624276f18cb6c021fc0c9",
+          "observation": "Both reviewers/five native passes completed fresh; only stdout remains. Old draft unstarted and attributed to old head; old artifact not accepted as current. Changed scope is separate pending variant."
+        },
+        {
+          "status": "running",
+          "variant": "Same head with changed scope and selected owner choice",
+          "runId": "6faee2c5a1053d5cbbbc476b96a8418d",
+          "observation": "Fresh Work69 prepared/inspected/started one readonly run on unchanged head; existing Work68 automatically observed new prepared/running row. Current body adds labelled error values and current unresolved feedback is read; both fresh reviewers requested."
+        },
+        {
+          "status": "passed",
+          "variant": "Same-head changed scope/Decisions, fresh review and stale publication preflight",
+          "runId": "6faee2c5a1053d5cbbbc476b96a8418d",
+          "observation": "Both fresh reviewers/five native passes complete; old/current session identities share head but scope/preparation differ. New error-values finding appears; existing stdout remains, arithmetic fixed. Original-head native DK preflight returns STALE_HEAD without mutation/artifact change."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-changed-head.json",
+        "docs/evidence/2026-10-23-pr-review-scope-feedback.json"
+      ]
+    },
+    {
+      "id": "PR-12",
+      "title": "Reject unavailable, unsafe or incomplete review paths",
+      "status": "passed",
+      "readinessDependencies": [
+        "R3",
+        "R6",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Actual browser unsafe review profile",
+          "observation": "prepare_pr_review rejected workspace-write repository review profile with INVALID_ARGUMENT, zero new runs; original read-only pilot profile restored."
+        },
+        {
+          "status": "passed",
+          "variant": "Isolated SDK failure/result/session fixtures",
+          "observation": "203 tests and12 subtests passed across DK review, bindings, command-result and executor suites; partial provider failures retain incomplete state/checkpoints. Separate from actual reviewer execution."
+        },
+        {
+          "status": "passed",
+          "variant": "Bounded preparation/provider/result negative matrix",
+          "observation": "Actual unsafe-profile/native failures plus isolated missing reviewer, missing evidence, partial/invalid result, cooldown and budget assertions; both successful live reviewers subsequently verified. No false clean result."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-preparation.json",
+        "docs/evidence/2026-10-23-pr-review-failure-matrix.json"
+      ]
+    },
+    {
+      "id": "PR-13",
+      "title": "Publish only the explicitly selected completed review",
+      "status": "passed",
+      "readinessDependencies": [
+        "R9"
+      ],
+      "attempts": [
+        {
+          "status": "blocked",
+          "variant": "Non-author APPROVE / REQUEST_CHANGES",
+          "reason": "Owner confirmed no second authorized account. COMMENT variant continues separately."
+        },
+        {
+          "status": "running",
+          "variant": "Explicit pilot-only COMMENT instruction through actual Work",
+          "runId": "2025eb3754a624276f18cb6c021fc0c9",
+          "observation": "One deduplicated inline stdout finding, empty review-level body, immediate head/provenance checks and remote receipt verification requested; other external actions excluded."
+        },
+        {
+          "status": "passed",
+          "variant": "Actual native COMMENT publication and exact remote receipt",
+          "reviewId": 5635316603,
+          "observation": "Exactly one COMMENTED review, empty body, one stdout inline at capacity.py5RIGHT, correct current head/author. Native verification and independent GraphQL anchor corroboration passed. Reopening results must still be checked for no duplicate."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-publication.json"
+      ]
+    },
+    {
+      "id": "PR-14",
+      "title": "Read feedback and reconcile settled decisions",
+      "status": "passed",
+      "readinessDependencies": [
+        "R7",
+        "R9"
+      ],
+      "attempts": [
+        {
+          "status": "running",
+          "variant": "Identifiable synthetic owner feedback and changed description scope",
+          "observation": "Pilot-only feedback reply added to actual stdout thread. It explicitly identifies synthetic owner feedback, no second actor. PR7-only scope adds labelled actual negative input values; issue6/PR8 unchanged."
+        },
+        {
+          "status": "passed",
+          "variant": "Current discussion/Decisions in fresh review and explicit exactly-once reply",
+          "runId": "6faee2c5a1053d5cbbbc476b96a8418d",
+          "replyId": 4365054839,
+          "observation": "Current unresolved thread/owner feedback and explicit local choice incorporated before both fresh reviewers; new scope finding appears. Later separate requested reply posted once in same thread, exact body/author/parent verified; head/body unchanged and thread unresolved. Added review-wrapper uncertainty reconciled without retry."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-scope-feedback.json",
+        "docs/evidence/2026-10-23-pr-review-reply.json"
+      ]
+    },
+    {
+      "id": "PR-15",
+      "title": "Intake a real incoming request and optionally review automatically",
+      "status": "blocked",
+      "readinessDependencies": [
+        "R8"
+      ],
+      "attempts": [
+        {
+          "status": "blocked",
+          "reason": "Owner confirmed no second authorized account; genuine incoming request and automatic launch acceptance unavailable."
+        }
+      ],
+      "evidence": [],
+      "blocker": "User confirmed no second authorized account. Synthetic local requests cannot supply real event acceptance."
+    },
+    {
+      "id": "PR-16",
+      "title": "Respect request budgets and show unknown provider facts",
+      "status": "passed",
+      "readinessDependencies": [
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Cached Settings accounting observation",
+          "installedVersion": "0.1.0-da432a0dedd0",
+          "observation": "Separate actual Settings iframe shows 266/600 requests, reserve100, REST4596/GraphQL4535, a deferred retry time and explicit explanation that independent plugin/skill/agent requests are outside daemon budget. No defaults saved or manual poll forced."
+        },
+        {
+          "status": "passed",
+          "variant": "Isolated provider cooldown, durable budgets and unknown metadata",
+          "observation": "Existing meaningful HTTP-provider/application assertions freshly passed; this is fixture coverage, not a manufactured live GitHub outage."
+        },
+        {
+          "status": "passed",
+          "variant": "Actual Settings accounting and cached-read corroboration",
+          "observation": "Same signed-in browser displays317/600 budget, reserve100, separate REST/GraphQL remaining and independent skill usage explanation. Ten cached owner snapshot/run reads retained326 count. Deferred detail/cooldown behavior is separately identified fixture coverage, not a live GitHub outage."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-failure-matrix.json",
+        "docs/evidence/2026-10-23-pr-review-budget.json"
+      ]
+    },
+    {
+      "id": "PR-17",
+      "title": "Recover the same review after a safe service interruption",
+      "status": "passed",
+      "readinessDependencies": [
+        "R1",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Gateway-only restart with own scope question pending",
+          "observation": "Daemon PID and same run/thread/question preserved; actual signed-in widget Connected without alerts."
+        },
+        {
+          "status": "passed",
+          "variant": "Daemon upgrade and stale-question exclusion",
+          "observation": "Same retained thread/workspace/history preserved; browser excluded old dialog. Local protocol stale answer rejected without continuation. Explicit UI Send requested fresh question."
+        },
+        {
+          "status": "passed",
+          "variant": "Same-thread fresh question and continuation after daemon loss",
+          "observation": "UI Send restored same run/thread, created a distinct native question, UI Continue cleared it and real review preparation resumed. Exact dependency failure remained visible rather than false completion."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-runtime-recovery.json"
+      ]
+    },
+    {
+      "id": "PR-18",
+      "title": "Finish work without losing evidence or changing unrelated state",
+      "status": "passed",
+      "readinessDependencies": [
+        "R1",
+        "R7"
+      ],
+      "attempts": [
+        {
+          "status": "passed",
+          "variant": "Actual scoped cleanup failure and repaired retry",
+          "runId": "0d44383d6c336a6a829e77a9107b1a7a",
+          "installedVersion": "0.1.0-e1895a838fb8",
+          "observation": "Stopped clean worktree removal initially succeeded but sealed runtime scratch failed; installed confined-removal/retry repair and explicitly retried same UI action. State cleaned, worktree/scratch absent, original thread/history retained."
+        },
+        {
+          "status": "passed",
+          "variant": "Final restoration and preservation",
+          "observation": "No live runs/plugin operations; temporary audit drop-in removed and daemon restarted safely, same retained run then completed explicit reply. Original16 runs/profiles/global config/nonpilot policies/mapping/provider paths/full routes unchanged. Added pilot integration/fixtures retained intentionally; automatic review false."
+        }
+      ],
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-cleanup.json"
+      ]
+    }
+  ],
+  "limitations": [
+    "Genuine incoming review requests, their automatic launch and non-author verdict variants remain blocked by the owner-confirmed absence of a second account.",
+    "General real host callbacks/subscriptions, one-hour soak, coordinated login cycle and manual accessibility acceptance remain open.",
+    "SDK1.1.18 is a documented local compatibility build, not an upstream release."
+  ],
+  "observedChatGPTPackageVersion": "0.2.2",
+  "inspectedDependencies": [
+    {
+      "repository": "dk-code-factory/dk-workflows",
+      "revision": "18edf9c7c31e7309e26062e1a069fe038ffe001d",
+      "version": "1.1.17"
+    },
+    {
+      "repository": "dk-code-factory/code-review-ad",
+      "revision": "5900df7e96463f0fc68a5c3c0d5e0dcfdf36cd95",
+      "version": "1.0.7"
+    },
+    {
+      "repository": "dk-code-factory/code-review-matpocock",
+      "revision": "4a7254304ed8984a8028e577863c238ce24b0055",
+      "version": "1.0.0"
+    }
+  ],
+  "readiness": {
+    "R1": {
+      "status": "passed",
+      "observation": "Fresh owner read: 16 retained runs, no active work; existing pilot browser attached without sign-in."
+    },
+    "R3": {
+      "status": "passed",
+      "chatPath": "/c/6adb80b0-4a1c-83e9-bc70-c1afd5dfdcec",
+      "plugins": [
+        {
+          "id": "code-review-ad@code-review-ad",
+          "installed": true,
+          "enabled": true,
+          "installedVersion": "1.0.7"
+        },
+        {
+          "id": "code-review-matpocock@code-review-matpocock",
+          "installed": true,
+          "enabled": true,
+          "installedVersion": "1.0.0"
+        },
+        {
+          "id": "dk-workflows@dk-workflows",
+          "installed": true,
+          "enabled": true,
+          "installedVersion": "local1.1.18 compatibility",
+          "initialInstalledVersion": "1.1.17"
+        }
+      ],
+      "evidence": "../evidence/2026-10-23-pr-review-plugin-setup.json"
+    },
+    "R4": {
+      "status": "passed",
+      "installedVersion": "0.1.0-67e47c0c81dc",
+      "verification": "Reviewed reconciliation passed: 80 browser fixtures, all Go race packages, 20 flow and 201 specification tests, packaging, installer recovery and compiled smoke. make check and specs-check passed. Checksummed release installed; original 16 runs, runtime/mapping and full Tailscale routes unchanged."
+    },
+    "R8": {
+      "status": "blocked",
+      "observation": "Pilot collaborators list and both available GitHub connections identify only dkropachev. Genuine incoming-request and non-author verdict variants need another authorized test actor.",
+      "nextAction": "Keep real incoming-request, automatic-review and non-author approval/request-changes variants blocked; continue all independent cases.",
+      "userDecision": "No second account; record these cases as blocked. Received during execution."
+    },
+    "R2": {
+      "status": "passed",
+      "packageVersion": "0.2.4",
+      "packageId": "Plugin_89dd894a227481919ae7e682fe34c77f",
+      "displayName": "Code Factory PR E2E",
+      "registeredAppId": "asdk_app_6ad792b279348191b76d3443615b66e0",
+      "observation": "Actual plugin detail shows Installed, Connected, Apps 1 and Skills 3 including admin and updated PR review recipe. Supported upload rejected duplicate code-factory name with explicit HTTP 400. A distinctly named pilot copy preserves original package/conversations and reuses the same existing remote app. Only package name/display name differ from the verified source bundle."
+    },
+    "R7": {
+      "status": "passed",
+      "issue": "https://github.com/dkropachev/code-factory-pilot-20261019/issues/6",
+      "baseBranch": "e2e/pr-review-20261023-base",
+      "baseCommit": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+      "defectPR": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/7",
+      "cleanPR": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/8",
+      "oracles": {
+        "defect": {
+          "variant": "defect",
+          "base": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+          "head": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+          "oracleExit": 1,
+          "oracle": "Boundary cases: (5,0)=5, (5,4)=1, (5,5)=0, (5,8)=0, (0,0)=0; negative inputs raise ValueError. Defect fixture deliberately adds one and emits library stdout."
+        },
+        "clean": {
+          "variant": "clean",
+          "base": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+          "head": "73ab96d83c6c2370a18df03fbb6980533fdb14b1",
+          "oracleExit": 0,
+          "oracle": "Boundary cases: (5,0)=5, (5,4)=1, (5,5)=0, (5,8)=0, (0,0)=0; negative inputs raise ValueError. Defect fixture deliberately adds one and emits library stdout."
+        }
+      }
+    },
+    "R6": {
+      "status": "passed",
+      "observation": "Pilot profile now references the verified installed local DK 1.1.18 skill; saved through actual Work and corroborated locally. Original failed 1.1.17 snapshot remains unchanged; automatic review remains false.",
+      "chatPath": "/c/6adb80b0-4a1c-83e9-bc70-c1afd5dfdcec",
+      "preservationVerified": "System configuration, all original profiles and every nonpilot repository policy are unchanged."
+    },
+    "R5": {
+      "status": "passed",
+      "observation": "Both original defect/clean controls completed both real reviewers and all five independent native passes. Later changed-head and same-head changed-scope reviews completed fresh on repaired installed runtime. Source/read/network bounds, canonical artifacts/checkpoints and actual embedded reports verified.",
+      "evidence": [
+        "docs/evidence/2026-10-23-pr-review-audited-controls.json",
+        "docs/evidence/2026-10-23-pr-review-changed-head.json",
+        "docs/evidence/2026-10-23-pr-review-scope-feedback.json"
+      ]
+    },
+    "R9": {
+      "status": "passed",
+      "observation": "Distinct actual Work requests authorized only one current-head COMMENT and later one existing-thread reply. Exact remote receipts, empty review body, head/line/identity and no duplicate verified. Other verdicts blocked by R8."
+    }
+  },
+  "observedIssues": [
+    {
+      "id": "PR-E2E-SUMMARY-01",
+      "status": "verified-fixed",
+      "stage": "PR-02 selected PR conversation",
+      "symptom": "With a standard Markdown PR body beginning ## Issue, the compact conversation summary displays only the heading ## Issue instead of useful context. Full description remains available.",
+      "nextAction": "Fix summary extraction to skip Markdown-only headings and verify through browser plus a meaningful fixture.",
+      "installedRerun": "Actual fresh 0.1.0-aff495347694 iframe shows the substantive issue paragraph; module SHA256 1995968962c17e64a8750a7246cde29d6cdd9a2278e94103bd35c1bf870833e5 matches the release."
+    },
+    {
+      "id": "PR-E2E-PREPARE-EVENT-02",
+      "status": "verified-fixed",
+      "stage": "PR-03 retained draft reopening",
+      "symptom": "PreparePRReview persists a prepared run without a change event. Existing dashboard still showed No work history after the actual Work request had prepared it.",
+      "verification": "Fresh actual Work prepare-only proposal reopened in existing other iframe, no workspace/start."
+    },
+    {
+      "id": "PR-E2E-LIFECYCLE-STATE-03",
+      "status": "verified-fixed",
+      "stage": "R5 / PR-05 native DK lifecycle entry",
+      "symptom": "Actual agent correctly reported incomplete review: lifecycle entry returned a runtime under the default owner state path, but the next command could not find its router/completion script. Both reviewers remained unstarted.",
+      "cause": "XDG_STATE_HOME was not redirected to persistent writable private scratch; native sandbox synthetic parent writes do not persist between command namespaces.",
+      "verification": "Cross-command native lifecycle passed; both fresh full reviewer controls completed."
+    },
+    {
+      "id": "PR-E2E-DK-HEAD-IDENTITY-04",
+      "status": "verified-fixed",
+      "owner": "DK workflows integration",
+      "stage": "R5 / PR-05 reviewer discovery",
+      "symptom": "Installed DK repository_scope.identities requires gh headRepository.nameWithOwner, which is empty on this private pilot PR. Native gh supplies headRepositoryOwner.login and headRepository.name correctly. Both reviewers remain unstarted.",
+      "verification": "Installed local compatibility1.1.18 resolved private head identity; both fresh controls completed."
+    },
+    {
+      "id": "PR-E2E-SOURCE-REPLACE-05",
+      "status": "recovered",
+      "stage": "DK local compatibility source installation",
+      "observation": "Conversational source call failed before a durable operation. The actual embedded source form created operation 5bfcebb6abc8918e7bafa3c752c5a613, which ended uncertain and preserved its draft. Read-only native reconciliation proved the old Git source was still active and the requested local source was not registered.",
+      "nextAction": "Replace only the named DK marketplace registration via its explicit Remove/Add UI controls, reconciling each native outcome; preserve other plugins and never blindly repeat the uncertain addition.",
+      "recovery": "Explicit UI removal of the old registration, followed by local registration and DK update, succeeded. State was reconciled between actions; no uncertain operation was blindly replayed."
+    },
+    {
+      "id": "PR-E2E-PREPARE-PAYLOAD-06",
+      "status": "verified-fixed",
+      "stage": "prepared-change event audit",
+      "observation": "The new prepared event used Store.Put payload semantics, which serialized the full skill bundle. It must be a compact signal just like ordinary run-state events.",
+      "verification": "Compact id/status transaction regression and actual cross-view durable proposal passed."
+    },
+    {
+      "id": "PR-E2E-DK-BASE-OID-07",
+      "status": "verified-fixed",
+      "owner": "Code Factory provider command selection",
+      "stage": "R5 / PR-05 context pinning",
+      "observation": "Actual installed Work run with local 1.1.18 reaches context pinning, where gh 2.86 rejects baseRefOid as a JSON selector.",
+      "rootCause": "Actual Work diagnostic chose /usr/bin/gh 2.46.0; configured /home/dkropachev/.local/bin/gh 2.86.0 was not exposed. A shared directory at the front of runtime PATH shadowed recorded provider choices.",
+      "repair": "Private versioned launchers select exact recorded executables, sandbox exposes those launchers and selected target files, and command PATH is preserved. No global binary replacement or extra SDK adapter.",
+      "verification": "Private provider launchers selected recorded gh2.86; both fresh controls pinned base/head and completed."
+    },
+    {
+      "id": "PR-E2E-DOCS-NETWORK-08",
+      "status": "verified-fixed",
+      "stage": "Decisions analysis dependency",
+      "observation": "Actual Work run passed context pinning, then requested whole-command escalation for public developers.openai.com access. The escalation was cancelled in the real native approval form.",
+      "repair": "Allow only developers.openai.com and learn.chatgpt.com as exact documentation destinations; source/Git scopes and all other network exclusions remain.",
+      "verification": "Exact documentation domains allowed; bounded tests and both full controls completed."
+    },
+    {
+      "id": "PR-E2E-SEALED-CLEANUP-09",
+      "status": "verified-fixed",
+      "stage": "PR-18 stopped clean workspace cleanup",
+      "symptom": "Actual browser cleanup removed clean worktree but read-only DK runtime directories blocked scratch removal, leaving interrupted state.",
+      "repair": "Confined directory permission repair without following owner references or chmod of files; explicit retry skips already removed workspace and completes remaining cleanup.",
+      "verification": "New sealed-directory/external-reference/shared-file-mode and partial-removal retry tests passed; all17 reviewed specs and fixture verification passed. Installed retry pending safe deployment.",
+      "installedRerun": "Actual browser retry on e189 succeeded; owner corroborates cleaned/worktree absent/scratch absent/original thread retained."
+    },
+    {
+      "id": "PR-E2E-READ-FRESHNESS-10",
+      "status": "verified-fixed",
+      "stage": "PR-18 status after cleanup / background state updates",
+      "observation": "Actual stable widget repeatedly received empty read_changes cursor15833 while owner same-cursor read returned200 newer events; retained status stayed interrupted after backend cleaned. Exact host-side caching cause remains an inference.",
+      "repair": "Unique freshness marker for explicitly known reads and optional MCP input fields; mutation args/replay rules unchanged.",
+      "verification": "Memoizing-host fixture passes two external updates after an empty journal response; authenticated MCP schema/read-no-write assertions pass. Full reviewed checks running; installed new module rerun pending.",
+      "diagnosticProbe": "Bounded metadata-only listener removed; manual raw bridge diagnostic timed out and established no successful read.",
+      "installedRerun": "Fresh actual module hash matched; cleaned history/no cleanup button and revised body shown. Existing view automatically received new scope review as prepared then running, without reload."
+    }
+  ],
+  "initialInstalledDaemonVersion": "0.1.0-16c572cbc34d",
+  "installedDaemonVersion": "0.1.0-b7acba63551a",
+  "sourceBaseRevision": "92b6fc4",
+  "sourceState": "Implementation and dated execution evidence tracked together; installed content identified by release hash.",
+  "latestRepairDeployment": {
+    "version": "0.1.0-b7acba63551a",
+    "scope": "Complete native resources/runtime, useful summary/prepared event, sealed cleanup and fresh read markers",
+    "verification": {
+      "browserFixtures": 82,
+      "goRaceStatic": "passed",
+      "packagingInstallerSmoke": "passed",
+      "specificationReceipts": "Generated docs/specs/reconciliations retain exact inputs and executed fixture results; require make specs-check for the selected comparison."
+    },
+    "actualBrowser": "Current exact module verified; prepared/running external updates, cleaned history and changed-scope full review/reply passed."
+  },
+  "localSdkCompatibility": {
+    "upstreamRevision": "18edf9c7c31e7309e26062e1a069fe038ffe001d",
+    "upstreamVersion": "1.1.17",
+    "installedLocalVersion": "1.1.18",
+    "notAnUpstreamRelease": true,
+    "patch": "patches/dk-workflows-private-pr-head.patch",
+    "provenance": "patches/dk-workflows-private-pr-head.json",
+    "successfulOperations": [
+      "5f4dd3c278b9d66944a447052c7c4e39",
+      "bb6c17393c69dc23cb47861ceef814f0",
+      "9ee136cd35694fb6564606f99df08e8d"
+    ],
+    "nativeBoundedCheck": "passed against installed local 1.1.18",
+    "upstreamChanged": false,
+    "installedCacheEditedManually": false
+  },
+  "providerCommandRepair": {
+    "version": "0.1.0-fc72c4705f0c",
+    "configuredExecutablePathsUnchanged": true,
+    "globalProgramsReplaced": false,
+    "runtimePathChangedIntentionally": true,
+    "nativeLoginShellAndVersionCheck": "passed",
+    "units": "selected-vs-fallback, quoted paths, unavailable programs, prior selection preservation, symlink escapes passed",
+    "fixturesAndReconciliation": "all 17 subjects, 81 browser fixtures, Go race, packaging/installer/smoke passed"
+  },
+  "documentationDomainRepair": {
+    "installedVersion": "0.1.0-da432a0dedd0",
+    "allowedDomains": [
+      "developers.openai.com",
+      "learn.chatgpt.com"
+    ],
+    "verification": [
+      "Exact pinned Codex task sandbox tests passed with actual TLS to both hosts and continued unrelated/private network denial",
+      "All 17 affected spec subjects reconciled; make specs-check passed",
+      "Checksummed release upgrade completed; both user services active",
+      "Original 16 retained runs, registered-app mapping and complete Tailscale routes verified unchanged"
+    ],
+    "result": "Installed and verified by both full live controls."
+  },
+  "childProviderIsolationRepair": {
+    "installedVersion": "0.1.0-8688bdadc40e",
+    "cause": "Nested codex exec inherited ambient configured MCP servers; forbidden Atlassian initialization aborted Decisions context before either reviewer.",
+    "change": "For selected packaged skills in bounded tasks, exact-binary child launcher receives apps=false and a TOML server table disabling ambient MCP entries. Existing login and native plugin registry remain available; global config is unchanged.",
+    "verification": [
+      "Focused commandenv/app tests passed",
+      "Actual pinned Codex packaged-workflow command check passed: lifecycle across commands, both reviewer identities, existing login and all nested MCP servers disabled",
+      "81 browser fixtures, Go race/static checks, packaging/installer and all 17 reconciliations passed",
+      "make specs-check and verified-checksum upgrade passed; daemon and gateway active"
+    ],
+    "browserAcceptance": "Both full live controls complete, with native independent-pass evidence."
+  },
+  "latestRuntimeRecoveryEvidence": "docs/evidence/2026-10-23-pr-review-runtime-recovery.json",
+  "nativeNestedAdapter": {
+    "installedVersion": "0.1.0-aae6e13c1539",
+    "registry": "Authoritative native CLI installed inventory retained once per run outside writable scratch; exact plugin-list request reads its hash-verified snapshot; other commands unchanged.",
+    "companion": "Exact regular codex-code-mode-host beside selected pinned executable; never another global installation.",
+    "externalBoundary": "Supported SDK invocation inside an already enforced read-only task uses that outer filesystem/network boundary instead of nesting bwrap. NoNewPrivs/seccomp required; workspace-write tasks and other argv shapes are not rewritten. No retry outside the task sandbox.",
+    "verification": "Actual nested model executed scratch command and returned exact marker; denied source write, unrelated synthetic read and direct localhost access; host source unchanged. Unit/race,81browser,all17spec subjects,package/installer/smoke andspecs-check passed.",
+    "fullReviewers": "Both fresh original-head controls complete; both reviewers and all independent native passes verified in audited-controls evidence."
+  },
+  "latestNativeRepairEvidence": "docs/evidence/2026-10-23-pr-review-runtime-recovery.json",
+  "completedAt": "2026-10-23T23:30:57.110305+00:00",
+  "summary": {
+    "passed": 16,
+    "blocked": 2,
+    "failed": 0,
+    "blockedCases": [
+      "PR-02 genuine incoming Review PR membership variant",
+      "PR-15 authentic incoming request / automatic review"
+    ],
+    "blockedAdditionalVariants": [
+      "PR-13 non-author APPROVE / REQUEST_CHANGES"
+    ],
+    "userDecision": "No second account; record these cases as blocked",
+    "scope": "All executable PR-review cases finished; isolated negative quota/provider/SDK/browser fixtures are explicitly separated from actual ChatGPT Work acceptance."
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-aae6e13c1539",
+  "host": "Actual existing signed-in ChatGPT Work and Code Factory iframe",
+  "runId": "c645af77e59badf11d959bb4f530df48",
+  "threadId": "01a169f1-6fc6-7002-9c20-8f2c972354ee",
+  "head": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+  "base": "04e319d13ab2bc4ea8f779a6da3e7d6ac21d704f",
+  "sessionStatus": "completed",
+  "reviewSessionId": "2844d452ba46453bb35e432594bd72d2",
+  "artifactCanonicalSHA256": "2ec772230a1b419642047287e74dacf0a7497ff3f4e28f316abc5e173b5cfcb5",
+  "digestAlgorithm": "SDK canonical JSON digest, sort_keys=True and ensure_ascii=False; not raw file bytes",
+  "executedReviewers": [
+    "code-review-ad:code-review-ad@codex",
+    "code-review-matpocock:code-review-matpocock@codex"
+  ],
+  "reusedReviewers": [],
+  "skippedReviewers": [],
+  "reviewers": [
+    {
+      "binding": "code-review-ad:code-review-ad@codex",
+      "status": "completed",
+      "checkpointSHA256": "f707d5ac38da58a4802ff6f4f0259479625e08238af6be92a21ae0b52a573e85",
+      "findings": [
+        {
+          "path": "capacity.py",
+          "line": 6,
+          "severity": "Major",
+          "message": "The added +1 overstates remaining capacity: (5, 0) returns 6 instead of 5, and (5, 5) returns 1 instead of 0. This violates the specification and reports available capacity when the limit is exhausted."
+        },
+        {
+          "path": "capacity.py",
+          "line": 5,
+          "severity": "Major",
+          "message": "Every nonnegative call prints to stdout; for example, (5, 8) emits \"capacity limit: 5\\n\". This violates AGENTS.md's silent-library requirement and pollutes the caller's output independently of the returned value."
+        }
+      ]
+    },
+    {
+      "binding": "code-review-matpocock:code-review-matpocock@codex",
+      "status": "completed",
+      "checkpointSHA256": "a138da998c0c2ed3071c16eaaea7818419bd4f49d57c380cc05c284a75c7d10b",
+      "findings": [
+        {
+          "path": "capacity.py",
+          "line": 5,
+          "severity": "Major",
+          "message": "Standards: AGENTS.md:8-11 requires silent capacity helpers. Every nonnegative call prints a diagnostic to stdout, polluting the caller's output protocol."
+        },
+        {
+          "path": "capacity.py",
+          "line": 6,
+          "severity": "Major",
+          "message": "Spec: docs/capacity-spec.md:4-6 requires max(0, limit - used). The added +1 makes (5, 0) return 6 and exhausted inputs (5, 5) and (0, 0) return 1, overstating available capacity."
+        }
+      ]
+    }
+  ],
+  "browserReport": "Actual embedded conversation reported both reviewers complete, two distinct Major defects at capacity.py5/6, correct head/base, no publication, lifecycle finalized.",
+  "sourcePreserved": true,
+  "remainingProofGap": "First completed aggregate has no native internal-agent trace. Independent Toolkit/Standards/Spec and Matt axes remain to verify through opt-in metadata-only tracing; PR-05 remains running.",
+  "latestIndependentPassProgress": {
+    "installedVersion": "0.1.0-f22d82141908",
+    "runId": "b6928a61b66fe18062b560adc2426652",
+    "ADroot": "01a16ae0-213f-7603-a20b-9d416d2421fd",
+    "nativeCompletedChildren": [
+      {
+        "role": "Toolkit",
+        "id": "01a16ae0-bfe0-78c1-abe7-e5f26366b7a8"
+      },
+      {
+        "role": "Standards",
+        "id": "01a16ae0-ef23-7ab3-b84d-77f862d0f9d8"
+      },
+      {
+        "role": "Spec",
+        "id": "01a16ae1-1d7c-7803-96c7-7c76b1b50319"
+      }
+    ],
+    "source": "Private native session metadata projected only for this invocation and matched to actual AD procedure prefix; each direct child completed.",
+    "remaining": "Matt axes and final two-reviewer contract still pending in fresh run."
+  }
+}

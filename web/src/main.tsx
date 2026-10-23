@@ -1336,7 +1336,11 @@ function ItemDetail({
       </>
     );
   const i = detail.item;
-  const summary = i.body.split(/\n\s*\n/)[0].slice(0, 600);
+  const summaryParagraph = i.body
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.replace(/^ {0,3}#{1,6}(?:[ \t]+.*)?$/gm, "").trim())
+    .find(Boolean) ?? "";
+  const summary = summaryParagraph.slice(0, 600);
   return (
     <>
       {detail.refreshError && <p role="alert">{detail.refreshError} <button onClick={()=>setDetailVersion(v=>v+1)}>Retry detail refresh</button></p>}
@@ -1356,7 +1360,7 @@ function ItemDetail({
         {i.body && (
           <p className="body">
             {summary}
-            {i.body.split(/\n\s*\n/)[0].length > 600 ? "…" : ""}
+            {summaryParagraph.length > 600 ? "…" : ""}
           </p>
         )}
       </section>

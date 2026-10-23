@@ -142,9 +142,28 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	if !found || !reviewFound {
 		t.Fatal("missing credential or PR review tool")
 	}
-	res := request("tools/call", map[string]any{"name": "read_snapshot", "arguments": map[string]any{}}, true, "2026-07-28")
+	res := request("tools/call", map[string]any{"name": "read_snapshot", "arguments": map[string]any{"freshness": "view-first"}}, true, "2026-07-28")
 	if res["isError"] == true || res["structuredContent"] == nil {
 		t.Fatal(res)
+	}
+	after := db.Latest(ctx)
+	readChanges := func(marker string) map[string]any {
+		result := request("tools/call", map[string]any{"name": "read_changes", "arguments": map[string]any{"after": after, "limit": 1, "freshness": marker}}, true, "2026-07-28")
+		if result["isError"] == true {
+			t.Fatal("fresh read rejected", result)
+		}
+		return result["structuredContent"].(map[string]any)["data"].(map[string]any)
+	}
+	if len(readChanges("empty")["events"].([]any)) != 0 || db.Latest(ctx) != after {
+		t.Fatal("read marker changed the journal")
+	}
+	if err := db.Write(ctx, func(tx *store.Tx) error {
+		return tx.Event("fixture.external", "fixture", map[string]string{"status": "changed"})
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if page := readChanges("after-external-change"); len(page["events"].([]any)) != 1 || page["cursor"].(float64) <= float64(after) {
+		t.Fatal("fresh read lost unchanged-cursor external change", page)
 	}
 	for name, args := range map[string]map[string]any{
 		"save_repository": {"id": "pilot/local", "checkout": "", "base": "main", "autoReview": nil, "reviewPrompt": "Check repository-specific invariants."},

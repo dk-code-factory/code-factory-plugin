@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "59d662f305d17a0277ee3a7a836bb9c9937acf78",
-  "fingerprint": "72a153e19303e6da306961e81f255efab63d789510ffc848fd7d53a22df306d9",
+  "base": "92b6fc484b9c16a3552098ceec871c339787e3d1",
+  "fingerprint": "a273284b536ea039ddaece8c5e472db35275f0cad71e57669cac64a2bc052c28",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "The contributor maintenance contract and enforcement rules remain accurate. New sandbox provider/test files and the changed fake-provider recorder are indirect inputs of the tooling cache regression; they require fresh operational verification without changing adoption policy or runner behavior.",
-    "implementation": "Reviewed declared tooling inputs for internal/codex and internal/testutil, plus the existing test that copies those packages to expose cached Go verification. The sandbox additions change copied source contents; no specs runner, canonical schema, reconciliation policy or process lifecycle implementation is modified.",
-    "tests": "The ordinary fixture command retains CODE_FACTORY_REAL_CODEX=0, so new pinned-provider acceptance tests skip rather than starting real models. Rerun all tooling tests, including the isolated Go cache regression and suite-input freshness checks; this evidence supplements already-fresh product/UI records against the identical pinned 59d662f baseline."
+    "kind": "structure",
+    "description": "Contributor reconciliation behavior remains accurate; the new summary, prepared-update and opt-in lifecycle assertions are mapped into their existing owning contracts and retain real-host gaps.",
+    "implementation": "Catalog and UI assertion inventories gain precise test anchors; no specification parser, fingerprint policy, adoption list or verifier runner changed. Mixed UI decisions cover every direct contract without adoption exceptions.",
+    "tests": "Fresh tooling suites execute all user-flow and test_specs modules. Snapshot/boundary regressions remain product tests; their success is not treated as a change to the specification gate or live host acceptance."
   },
   "verification": [
     {
@@ -33,17 +33,17 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.822
+      "seconds": 25.263
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "8c5de9d858472c1889dd66dc0607356b709dfa42f04b95e6afda3ffb6a90c1ca",
-    "term:coverage-gap": "9c7239f78f0c596f97ea7ae7092b0e5aab6153f853707b69a24743168a583ba8",
-    "term:entity": "9ee3ebd45219562fe6fd958121dc1848093ca8b42c4c1e6b4761afec333ddc17",
-    "term:glossary": "fb768267ebc89a6fe07586f938962382165f839f61de079ef7afb8ebc6ed41f4",
-    "term:known-limitation": "8eb1b4687fe86277352aaf701b72dbf6256ec409a87fbadcbf282af9a6737252",
-    "term:reconciliation": "a4bc5396efcc713d465bd52ea7c6b9fa7e943a98bf24a0f16f7a4b70cb4bc0a8",
-    "term:unverified-behavior": "42650423ef6ac5d06399e4d6250744c0504a9ce5a5a7f039dcbaf2fd8fc649a3",
-    "term:verification": "f280936fdbdc8284b34833fd42b6811febfffd01a3487323a05f4b632eeb8b4c"
+    "flow:maintain-flow-contracts": "88dce2b0dc8264e44419c5e1f4e4f2a41c6c6945a2ea4f7f701446f30cb6d1fe",
+    "term:coverage-gap": "2a656673009821e88b69f26dfa043b082830d0d885899b8ca140e49e2ec2638d",
+    "term:entity": "1dc0be75fdccc675d12a02bcdd6489ed6b090dd6f4407514d4c759f54493e566",
+    "term:glossary": "c0ab5aa919bd2a83710332818729c1089928a34f851cca7715ac15f91ebc5675",
+    "term:known-limitation": "0df7869c1519f94ae4a1f66c601ea0fef0e45aeaab76a7265ac80fda8b122806",
+    "term:reconciliation": "7dabd6972d99b15dc28c13b932a8002166c2d05c53c32c37602dcda2c4aa3a63",
+    "term:unverified-behavior": "d79632563b467476ec1665879f93430ddb22648f12230e00856fbc4ab46612b1",
+    "term:verification": "1552d0c4db801e4ca3b085e10002f2eaa6a31a2a6f6448bfb5bd4493326ddbd8"
   }
 }

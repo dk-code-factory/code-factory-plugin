@@ -13,7 +13,9 @@ import (
 // owner's Codex configuration or replaces filesystem isolation with escalation.
 type TaskSandbox struct {
 	ID, Mode, Workspace, Scratch string
+	CommandPath                  string
 	Readable                     []string
+	WritableScratch              []string
 }
 
 var sandboxID = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
@@ -40,8 +42,15 @@ func (s TaskSandbox) Config() (map[string]any, error) {
 		}
 	}
 	fs[s.Scratch] = "write"
+	for _, path := range s.WritableScratch {
+		rel, err := filepath.Rel(s.Scratch, path)
+		if !filepath.IsAbs(path) || err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return nil, fmt.Errorf("additional writable root is outside private scratch")
+		}
+		fs[path] = "write"
+	}
 	name := "code-factory-" + s.ID
-	return map[string]any{
+	config := map[string]any{
 		"default_permissions":    name,
 		"features.network_proxy": true,
 		"permissions." + name: map[string]any{
@@ -53,6 +62,9 @@ func (s TaskSandbox) Config() (map[string]any, error) {
 					"api.github.com": "allow", "github.com": "allow",
 					"raw.githubusercontent.com": "allow", "objects.githubusercontent.com": "allow", "codeload.github.com": "allow",
 					"api.openai.com": "allow", "chatgpt.com": "allow", "auth.openai.com": "allow",
+					"ab.chatgpt.com":                      "allow",
+					"sdmntprcentralus.oaiusercontent.com": "allow",
+					"developers.openai.com":               "allow", "learn.chatgpt.com": "allow",
 				},
 			},
 		},
@@ -63,10 +75,15 @@ func (s TaskSandbox) Config() (map[string]any, error) {
 			"TEMP":                    filepath.Join(s.Scratch, "tmp"),
 			"XDG_CACHE_HOME":          filepath.Join(s.Scratch, "cache"),
 			"XDG_DATA_HOME":           filepath.Join(s.Scratch, "data"),
+			"XDG_STATE_HOME":          filepath.Join(s.Scratch, "state"),
 			"PYTHONDONTWRITEBYTECODE": "1",
 			"GIT_OPTIONAL_LOCKS":      "0",
 		},
-	}, nil
+	}
+	if s.CommandPath != "" {
+		config["shell_environment_policy.set"].(map[string]any)["PATH"] = s.CommandPath
+	}
+	return config, nil
 }
 
 func (s TaskSandbox) Args() ([]string, error) {

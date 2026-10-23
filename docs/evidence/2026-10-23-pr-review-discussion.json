@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-aae6e13c1539",
+  "host": "Actual existing signed-in ChatGPT Work iframe",
+  "runId": "c645af77e59badf11d959bb4f530df48",
+  "threadId": "01a169f1-6fc6-7002-9c20-8f2c972354ee",
+  "reviewedHead": "d46fd715eaccf53ab3a9a72669058bcbfac6c637",
+  "observations": [
+    "Draft asking for boundary/stdout explanation survived Back to filtered My PRs and reopening exact PR/run.",
+    "First follow-up cited correct head, expected0/actual1 for(5,5), and independent stdout problem; no reviewers rerun.",
+    "A real clarification question7335af361c7b36741af3c400c80c9bdb remained pending, allowing deterministic interruption.",
+    "Clicked actual native browser Interrupt button; owner corroboration observed interrupted with same thread/workspace and unchanged run count21.",
+    "Sent one specific continuation in the same conversation; old clarification skipped, native Codex answered BOTH existing findings at correct head.",
+    "Final idle; draft cleared, no attention dialog; same run count/thread/workspace, clean source."
+  ],
+  "limitations": [
+    "Two earlier short wait attempts completed before Interrupt was observed and are not counted as interruption evidence."
+  ],
+  "publication": "None"
+}

@@ -29,7 +29,7 @@ The temporary local tunnel setup form requires verified reachability and valid o
 
 Codex plugin management uses literal CLI arguments, bounded output and process-group cancellation. Credential-bearing marketplace URLs and selector/option injection are rejected. Arbitrary provider stdout/stderr is never copied into operation errors or journal entries; generic status preserves uncertain outcomes without replay. Existing Codex/GitHub authentication is reused without readback.
 
-- **S5** Bounded command execution cannot read unrelated owner files or change shared authentication and skill settings. Existing GitHub authentication is readable only where needed. Refreshable private review indexes use isolated per-run copies; scratch paths and native permission configuration contain no exported credentials. Network permission is independent of filesystem writes. Existing publishing and approval authority remains in effect.
+- **S5** Bounded command execution cannot read unrelated owner files or change shared authentication and skill settings. Existing GitHub and native Codex authentication and host registry metadata are readable only where needed. Shared credential stores remain read-only and are not copied into scratch or logs. Refreshable private review indexes use isolated per-run copies; scratch paths and native permission configuration contain no exported credentials. Network permission is independent of filesystem writes. Existing publishing and approval authority remains in effect.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -125,6 +125,8 @@ flowchart TD
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S5. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S5. Invalid sandbox fails before app-server launch without an unrestricted fallback.
 - [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S5. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestPinnedWorkflowLifecyclePersistsAcrossSandboxCommands(`; S5. Opt-in pinned-provider commands resolve real installed reviewer identities and check existing Codex authentication without emitting credentials, while DK lifecycle/router state persists privately across commands.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestMarketplaceMetadataDoesNotGrantOwnerDirectories(`; S5. Configured local/home marketplace roots yield only their manifest files; malformed/relative roots fail and no containing owner directory becomes readable.
 
 ## Verification and gaps
 

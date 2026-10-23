@@ -70,13 +70,17 @@ type Server struct {
 	MCP         *mcp.Server
 	lastRequest atomic.Int64
 }
-type Empty struct{}
+type Empty struct {
+	Freshness string `json:"freshness,omitempty" jsonschema:"Unique read request marker to avoid reusing a host-cached response; does not change server state."`
+}
 type IDInput struct {
-	ID string `json:"id"`
+	ID        string `json:"id"`
+	Freshness string `json:"freshness,omitempty" jsonschema:"Use a new marker when reading current state after waiting or a mutation."`
 }
 type Page struct {
-	After int64 `json:"after,omitempty"`
-	Limit int   `json:"limit,omitempty"`
+	After     int64  `json:"after,omitempty"`
+	Limit     int    `json:"limit,omitempty"`
+	Freshness string `json:"freshness,omitempty" jsonschema:"Unique read request marker; ignored by journal pagination."`
 }
 type InboxInput struct {
 	State string `json:"state,omitempty"`
@@ -344,9 +348,10 @@ func New(a *app.App, ev *events.Service) *Server {
 	})
 	bind(m, uri, "read_snapshot", "Read current UI state and a cursor for incremental updates.", true, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
 	type TranscriptInput struct {
-		ID    string `json:"id"`
-		After int64  `json:"after,omitempty"`
-		Limit int    `json:"limit,omitempty"`
+		ID        string `json:"id"`
+		After     int64  `json:"after,omitempty"`
+		Limit     int    `json:"limit,omitempty"`
+		Freshness string `json:"freshness,omitempty" jsonschema:"Unique read request marker; ignored by transcript pagination."`
 	}
 	bind(m, uri, "read_transcript", "Page durable agent output and diffs without loading the entire transcript.", true, true, func(ctx context.Context, in TranscriptInput) (any, error) {
 		return a.Store.RunEvents(ctx, in.ID, in.After, in.Limit)

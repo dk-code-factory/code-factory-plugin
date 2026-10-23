@@ -29,7 +29,7 @@ Closing the view or transport does not stop work. Process loss makes live RPC ID
 
 Plugin maintenance also survives view closure. Startup marks queued/running operations uncertain without replay; a failed/null inventory response retains the previous observations. Refreshing actual provider state precedes any user-chosen retry. Existing run recovery and cleanup do not remove plugin installation history.
 
-- **S5** Private scratch and refreshed review indexes remain scoped to the retained run across recovery. Successful explicit cleanup removes that scratch along with its clean workspace; dirty cleanup preserves both. The owner’s original private settings and retained conversation history remain intact.
+- **S5** Private scratch and refreshed review indexes remain scoped to the retained run across recovery. Successful explicit cleanup removes that scratch, including sealed workflow directories, along with its clean workspace; dirty cleanup preserves both. If scratch removal fails after the workspace is removed, the interrupted record and history remain, and an explicit cleanup retry finishes the remaining removal without requiring the absent workspace. External references and shared file permissions remain intact. The owner’s original private settings and retained conversation history remain intact.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -52,19 +52,24 @@ flowchart TD
     N8["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
     N9["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
     N10(["Sandbox initialization failed#59; retained work and authority preserved"])
+    N11["Remove only the run scratch, including sealed workflow directories #40;S5#41;"]
+    N12(["Interrupted cleanup retains history#59; explicitly retry remaining scratch removal"])
     N0 -->|"send message"| N1
     N1 --> N2
     N0 -->|"cleanup stopped work"| N3
     N2 -->|"later stop and cleanup"| N3
     N7 -->|"dirty"| N4
     N4 --> N5
-    N7 -->|"clean"| N6
     N3 -->|"before attempting workspace removal"| N7
     N0 -->|"additional workbench path"| N8
     N8 -->|"resolved or explicit recovery"| N5
     N0 -->|"authorized bounded task start or continuation"| N9
     N9 -->|"valid policy#59; retain scoped work"| N5
     N9 -->|"invalid policy#59; fail before provider launch"| N10
+    N7 -->|"clean workspace removed"| N11
+    N11 -->|"scratch removed#59; preserve external references"| N6
+    N11 -->|"scratch removal fails"| N12
+    N0 -->|"explicit retry after workspace already removed"| N11
 ```
 
 ## Implementation references
@@ -83,6 +88,7 @@ flowchart TD
 - [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
 - [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
+- [internal/app/cleanup.go](../../internal/app/cleanup.go) — Confine removal to one run; make sealed scratch directories removable without chmod of files or following owner references. Missing worktree permits an explicit retry after partial cleanup. (`func removeRunScratch(`)
 
 ## Test references
 
@@ -102,6 +108,8 @@ flowchart TD
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S5. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S5. Invalid sandbox fails before app-server launch without an unrestricted fallback.
 - [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S5. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
+- [internal/app/cleanup_test.go](../../internal/app/cleanup_test.go) — `func TestRunScratchCleanupSealedDirectoriesPreservesExternalReferences(`; S5. Sealed directories are removed; symlink targets and shared hard-linked file contents/modes stay intact; missing scratch is idempotent and escaping ID rejected.
+- [internal/app/cleanup_test.go](../../internal/app/cleanup_test.go) — `func TestCleanupRetriesScratchFailureAfterWorktreeWasRemoved(`; S3, S5. Injected scratch failure leaves interrupted record after worktree removal; explicit retry removes remaining sealed scratch, marks cleaned and retains original thread.
 
 ## Verification and gaps
 

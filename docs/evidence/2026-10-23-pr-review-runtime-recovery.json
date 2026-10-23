@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-b8585721e11b",
+  "preserved": [
+    "Original16 retained run records exactly unchanged",
+    "Registered app mapping and private transport config hashes unchanged",
+    "Complete Tailscale ports/handlers/Funnel config unchanged",
+    "Existing approved browser sign-in reused"
+  ],
+  "repairs": [
+    "Full package skill snapshots and persistent private lifecycle state",
+    "Exact selected gh2.86.0 and Codex0.161.0 command launchers",
+    "Per-task child Codex overrides disable ambient MCP servers/apps while retaining native plugin discovery and login",
+    "Exact public documentation and observed ab.chatgpt.com destinations allowed, unrelated/private destinations denied"
+  ],
+  "verification": {
+    "fixtures": "81 browser cases, Go race/static checks, packaging/installer/smoke, all17 reviewed subjects and specs-check passed",
+    "nativeTLS": "Both task modes reached GitHub, official documentation and Codex feature host; unrelated/private/direct-local destinations denied; host files unchanged",
+    "actualNestedModel": "Opted-in native packaged-workflow test executed ephemeral Codex model inside the bounded command sandbox and required CF_NESTED_PROVIDER_OK; passed35.79s. Initial command-only check remains separate.",
+    "sdkFixtures": "203 passed and12 subtests passed across isolated DK review, bindings, command-result and executor fixtures; no real reviewer acceptance inferred"
+  },
+  "gatewayRecovery": {
+    "action": "Restarted only code-factory-gateway.service while owned Plan scope question waiting",
+    "observed": "Daemon PID preserved; same run/thread/question, Connected and no alert after recovery; no sign-in"
+  },
+  "daemonRecovery": {
+    "action": "Checksummed new-binary upgrade while only owned Plan scope question waited",
+    "runId": "40ad8712b7a83adccd3b536f6f3386a5",
+    "threadId": "01a16a1f-6b6a-76b3-aae1-1d828548cd3f",
+    "oldQuestion": "ccf9f0147af058d04959bc26f13e66b2",
+    "browserObservation": "Old dialog was excluded before a stale UI Answer could be submitted, even with cursor read replies briefly held. No stale UI answer claimed.",
+    "localProtocolCorroboration": "Explicit answer_request for old question was rejected; same thread remained interrupted, no continuation.",
+    "faultProbe": "Campaign-only reply probe observed40 cursor-based read replies; effective delivery suppression was not established. All listeners/timers and injected nodes removed. Browser stale-dialog exclusion and explicit protocol rejection remain independent observations.",
+    "continuation": "Explicit UI Send requested a fresh native question in the same retained Plan run; outcome pending"
+  },
+  "reviewOutcome": "Both full reviewers have not yet completed. Previous failure artifacts preserved; neither missing result is described as clean.",
+  "latestNativeRepair": {
+    "installedVersion": "0.1.0-f22d82141908",
+    "verification": [
+      "All17 affected spec subjects reconciled;81 browser fixtures;Go race/static checks;package/installer/smoke;specs-check passed",
+      "Real pinned0.161 native child delegated its private command to a distinct completed child, retained proper parent linkage and metadata projection",
+      "Selected gh2.86 remained selected inside delegate; source write, unrelated read and localhost access remained denied",
+      "Private context fixtures preserve owner reference links without copying auth, retain sessions, reject changed/escaping/shared writable state; audit fixtures exclude creator/account/message/command/URL/foreign-root data"
+    ],
+    "runtime": "Task-private native context is read-only at its base, references existing owner auth/config, and has scoped native state dirs. Its nonsecret installation ID references separate single-link private state. Global native credentials/browser profile/executable remain unchanged.",
+    "temporaryAudit": "Scoped runtime service drop-in active only for campaign, remove atPR-18",
+    "currentExecution": "Fresh natural Work defectb692 and clean255 running with actual private metadata traces; full independent-style acceptance pending."
+  }
+}

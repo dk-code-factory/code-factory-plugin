@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-23",
+  "installedVersion": "0.1.0-22fdcb37f451",
+  "liveBrowser": [
+    {
+      "case": "unsafe review authority",
+      "result": "INVALID_ARGUMENT before new run or workspace; pilot repository profile restored"
+    },
+    {
+      "case": "native lifecycle, selected gh, required docs/content host failures",
+      "result": "Actual embedded reports identified stage and incomplete or unstarted reviewers; original artifacts retained; repaired runtime subsequently passed both live controls"
+    }
+  ],
+  "isolatedSdkFixtures": {
+    "reviewBindingsCommandExecutor": "203 tests plus 12 subtests passed",
+    "preparationPublication": "25 tests plus 32 subtests passed with DK_HOST=codex",
+    "missingReviewer": "Installed resolver rejected zero registry matches before model call; only resolver fixture mocked, installed configuration unchanged",
+    "invalidResults": "One bounded correction for malformed analysis, then incomplete; authentication failure is not retried as invalid analysis",
+    "partialFailure": "Retains completed checkpoint/finding; failed and not-started reviewers remain explicit; complete=false",
+    "exhaustionPolicy": "Explicitly exhausted provider may be skipped under SDK policy while another completes. Campaign two-reviewer gate still requires both completed and no skipped providers; no false both-clean conclusion."
+  },
+  "applicationProviderFixtures": {
+    "command": "go test ./internal/providers ./internal/app -run Test(...budget/cooldown/rejection cases...) -count=1",
+    "result": "passed",
+    "assertions": [
+      "Shared budget survives restart and serializes requests; budget-state failure sends no request",
+      "Conditional cache survives restart, observes 304 rate headers, isolates credentials and omits cookies/secrets",
+      "REST and GraphQL secondary-limit cooldown blocks both APIs across restart",
+      "Rate-limited PR metadata remains unknown with nonzero retry time and one request, rather than passing CI",
+      "Changed-head index preserves history while invalidating old checks/review facts",
+      "Selected inaccessible reference backs off, without importing or monitoring its repository",
+      "Unavailable or unsafe preparation rejects before persistence/start"
+    ],
+    "liveBoundary": "No deliberate live quota exhaustion, auth revocation or invented GitHub outage. Controlled failure assertions are isolated HTTP/provider fixtures, distinct from real ChatGPT controls."
+  }
+}

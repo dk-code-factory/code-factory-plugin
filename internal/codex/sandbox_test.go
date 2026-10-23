@@ -11,12 +11,36 @@ import (
 	"time"
 )
 
+func TestPrivateNativeContextCannotBroadenWritableScope(t *testing.T) {
+	scratch := "/private/task"
+	context := scratch + "/state/native-context"
+	policy := TaskSandbox{ID: "native-context", Mode: "read-only", Workspace: "/work", Scratch: scratch, Readable: []string{context}, WritableScratch: []string{context + "/sessions"}}
+	config, err := policy.Config()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fs := config["permissions.code-factory-native-context"].(map[string]any)["filesystem"].(map[string]any)
+	if fs[context] != "read" || fs[context+"/sessions"] != "write" || fs["/work"] != "read" {
+		t.Fatal("native state permissions changed source or reference protection", fs)
+	}
+	for _, outside := range []string{"/owner", "/private/other", "relative"} {
+		policy.WritableScratch = []string{outside}
+		if _, err := policy.Config(); err == nil {
+			t.Fatal("native writable state escaped private scratch", outside)
+		}
+	}
+}
+
 func TestTaskSandboxPolicyAndInvalidRoots(t *testing.T) {
 	for _, mode := range []string{"read-only", "workspace-write"} {
 		s := TaskSandbox{ID: "fixture", Mode: mode, Workspace: "/workspace", Scratch: "/scratch", Readable: []string{"/skills"}}
 		cfg, err := s.Config()
 		if err != nil {
 			t.Fatal(err)
+		}
+		env := cfg["shell_environment_policy.set"].(map[string]any)
+		if env["XDG_STATE_HOME"] != "/scratch/state" {
+			t.Fatal("workflow lifecycle state is not privately persistent", env["XDG_STATE_HOME"])
 		}
 		profile := cfg["permissions.code-factory-fixture"].(map[string]any)
 		fs := profile["filesystem"].(map[string]any)
@@ -29,7 +53,7 @@ func TestTaskSandboxPolicyAndInvalidRoots(t *testing.T) {
 		}
 		network := profile["network"].(map[string]any)
 		domains := network["domains"].(map[string]any)
-		if cfg["features.network_proxy"] != true || network["enabled"] != true || network["allow_local_binding"] != false || domains["api.github.com"] != "allow" || domains["*"] != nil || domains["localhost"] != nil {
+		if cfg["features.network_proxy"] != true || network["enabled"] != true || network["allow_local_binding"] != false || domains["api.github.com"] != "allow" || domains["ab.chatgpt.com"] != "allow" || domains["sdmntprcentralus.oaiusercontent.com"] != "allow" || domains["developers.openai.com"] != "allow" || domains["learn.chatgpt.com"] != "allow" || domains["*"] != nil || domains["localhost"] != nil {
 			t.Fatal("network allowlist is not enforced", cfg)
 		}
 		if mode == "workspace-write" && fs["/workspace/.git"] != "read" {
@@ -130,7 +154,7 @@ for key,path,op in [('readWorkspace',work/'fixture.txt','read'),('writeWorkspace
   path.read_text() if op=='read' else path.write_text('fixture')
   r[key]=True
  except OSError:r[key]=False
-for key,url in [('githubTLS','https://api.github.com'),('otherTLS','https://example.com'),('privateTLS','https://127.0.0.1:8787')]:
+for key,url in [('githubTLS','https://api.github.com'),('codexFlagsTLS','https://ab.chatgpt.com'),('codexContentTLS','https://sdmntprcentralus.oaiusercontent.com'),('developerDocsTLS','https://developers.openai.com'),('learnDocsTLS','https://learn.chatgpt.com'),('otherTLS','https://example.com'),('privateTLS','https://127.0.0.1:8787')]:
  u=urllib.parse.urlsplit(url);proxy=urllib.parse.urlsplit(os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy',''))
  try:
   c=http.client.HTTPSConnection(proxy.hostname,proxy.port,timeout=5);c.set_tunnel(u.hostname,u.port or 443);c.connect();c.close();r[key]=True
@@ -153,7 +177,7 @@ print(json.dumps(r))`
 			if err = json.Unmarshal([]byte(strings.TrimSpace(result.Stdout)), &observed); err != nil {
 				t.Fatal(err, result.Stdout)
 			}
-			if !observed["readWorkspace"] || !observed["writeScratch"] || !observed["githubTLS"] || observed["writeWorkspace"] != (mode == "workspace-write") || observed["readUnrelated"] || observed["writeGit"] || observed["otherTLS"] || observed["privateTLS"] || observed["directLocal"] {
+			if !observed["readWorkspace"] || !observed["writeScratch"] || !observed["githubTLS"] || !observed["codexFlagsTLS"] || !observed["codexContentTLS"] || !observed["developerDocsTLS"] || !observed["learnDocsTLS"] || observed["writeWorkspace"] != (mode == "workspace-write") || observed["readUnrelated"] || observed["writeGit"] || observed["otherTLS"] || observed["privateTLS"] || observed["directLocal"] {
 				t.Fatalf("sandbox boundary failed: %v; %s", observed, result.Stderr)
 			}
 			// The Linux sandbox can materialize inaccessible parent directories in

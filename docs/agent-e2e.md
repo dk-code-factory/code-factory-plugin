@@ -1,5 +1,172 @@
 # Continue development through the real Chrome session
 
+## Completed PR review campaign · 2026-10-23
+
+The [18-case ledger](e2e/pr-review-results.json) records **16 passed and 2 blocked**.
+Genuine incoming Review PR membership and request-driven automatic review remain
+blocked because the owner confirmed there is no second test account. Non-author
+APPROVE/REQUEST_CHANGES variants are also blocked; the explicit COMMENT case passed.
+All executable cases used the same approved persistent pilot Chrome profile and
+private pilot repository. Existing sign-in and authentication were reused.
+
+[Audited defect and clean controls](evidence/2026-10-23-pr-review-audited-controls.json)
+completed both ordered Codex reviewers through DK workflows: AD's independent
+Toolkit/Standards/Spec and Matt Pocock's independent Standards/Spec agents. The
+[changed-head](evidence/2026-10-23-pr-review-changed-head.json) review dropped the
+fixed arithmetic defect. A [same-head scope/feedback review](evidence/2026-10-23-pr-review-scope-feedback.json)
+used new context/preparation fingerprints and found the newly required error-value
+contract alongside the existing stdout objection, with both reviewers fresh.
+Original-head native publication preflight returned STALE_HEAD without a mutation.
+
+[COMMENT publication](evidence/2026-10-23-pr-review-publication.json) produced one
+current-head, correctly anchored inline finding with an empty review body.
+A later [explicit reply](evidence/2026-10-23-pr-review-reply.json) was posted exactly
+once inside that unresolved thread after retained-session service recovery.
+GitHub's review wrapper for replies was reconciled without a duplicate retry.
+Source, PR body and thread resolution stayed unchanged during those workflow steps;
+the separately authored scope clarification and synthetic feedback are identified.
+
+Installed **0.1.0-b7acba63551a** repairs full plugin-resource snapshots, selected
+native providers/delegation state, prepared-view updates, Markdown summaries,
+[read freshness](evidence/2026-10-23-pr-review-read-freshness.json) and
+[sealed scratch cleanup/retry](evidence/2026-10-23-pr-review-cleanup.json).
+The actual module hash matches the installed release. An existing view received a
+new proposal and running state automatically, and cleaned history lost its cleanup
+control. The temporary audit drop-in is removed. All original 16 runs, profiles,
+global settings, unrelated repository policies, recorded provider paths, mapping
+and complete Tailscale routes match their private baseline. Pilot automatic review
+is false; the installed integration, two pilot profiles and fixtures remain available.
+
+DK **local 1.1.18** is a compatibility build from upstream 1.1.17, with its
+[private-head patch/provenance](e2e/patches/dk-workflows-private-pr-head.json)
+retained; it is not an upstream release. AD is 1.0.7 and Matt Pocock 1.0.0.
+82 browser fixtures, Go race/static checks, packaging, installer recovery and smoke
+passed. Final reviewed specification evidence lives in `docs/specs/reconciliations/`;
+require `make specs-check` for the current comparison. [Failure](evidence/2026-10-23-pr-review-failure-matrix.json)
+and [quota](evidence/2026-10-23-pr-review-budget.json) records distinguish isolated
+provider/SDK/assembled-browser failures from actual ChatGPT controls. Shared quota
+was not exhausted and global authentication was not revoked. Host event callbacks,
+one-hour soak, coordinated login cycle and manual accessibility remain open.
+Earlier entries preserve failed attempts and intermediate deployment evidence.
+
+## Native review delegation and tracing · 2026-10-23
+
+The first completed defect aggregate has validated AD and Matt Pocock results on
+head `d46fd715eaccf53ab3a9a72669058bcbfac6c637`, both identifying stdout at line 5
+and off-by-one arithmetic at line 6. Its [evidence](evidence/2026-10-23-pr-review-defect-result.json)
+keeps internal independent-pass tracing explicitly unverified for that attempt.
+The [discussion evidence](evidence/2026-10-23-pr-review-discussion.json) records
+same-thread finding explanation, draft navigation, actual native Interrupt with a
+question pending, and explicit continuation without another review or publication.
+
+The repaired native child launcher uses a task-private Codex state context for
+persistent delegation. Existing authentication/configuration are reference links;
+the context base is read-only. Only sessions, logs, temporary files, shell snapshots
+and writer-lock directories are writable there. The nonsecret installation ID is
+referenced from separate private state. No owner session directory is exposed.
+Selected-provider PATH is enforced again inside native child commands. Compatible
+direct tools and private SQLite state avoid inheriting unrelated experimental
+routing/workflow behavior. These native-client flags do not disable the selected
+DK workflow plugin. Global Codex settings/executable and browser profile are unchanged.
+
+Only the SDK's recognized noninteractive invocation inside an already enforced
+read-only task reuses that outer boundary. The inner CLI uses its externally
+sandboxed execution mode; inherited NoNewPrivs and seccomp are required first.
+The task source, unrelated owner files and local/private endpoints remain protected.
+Other invocation shapes and workspace-write tasks retain their original permissions;
+initialization errors never retry outside the task boundary. Real delegated-command
+checks verify actual child completion, source/read/local-access denial and selected
+gh identity. This separates runtime support from complete reviewer acceptance.
+
+`CODE_FACTORY_NATIVE_CHILD_AUDIT=1` enables task-private, metadata-only traces for
+the campaign. The scoped runtime unit drop-in is recorded in the private continuation
+checkpoint and must be removed at PR-18, followed by a safe daemon reload/restart.
+It stores IDs, completion, known role hints and hashes, excluding creator/account
+fields, prompts, messages, commands and URL content. CLI JSON in pinned 0.161.0 omits
+V2 spawn activity; the trace also projects only descendants of that invocation from
+its own private native sessions. Owner sessions and credentials are not copied into
+evidence. Tracing changes CLI analytics availability; unknown metrics stay unknown.
+Required public Codex content access includes the observed exact host
+`sdmntprcentralus.oaiusercontent.com`; unrelated/private destinations stay denied.
+
+## Current PR review execution · 2026-10-23
+
+Continue from the [campaign ledger](e2e/pr-review-results.json), which records the
+installed daemon version and separates complete cases from passed variants. The
+same approved pilot browser remains signed in. Actual Work preparation now creates
+one durable proposal without a workspace or thread, and a second existing widget
+receives/reopens that same draft. Distinct PR conversation drafts survive navigation.
+The native Plan scope question survived a campaign-page reload; answering Stop in
+Messages reached Codex and cleared attention. See the [preparation evidence](evidence/2026-10-23-pr-review-preparation.json)
+and [question/recovery evidence](evidence/2026-10-23-pr-review-question.json).
+
+The pilot uses the local DK 1.1.18 compatibility build described in the retained
+[patch provenance](e2e/patches/dk-workflows-private-pr-head.json), with installed AD
+1.0.7 and Matt Pocock 1.0.0. Upstream and native installed caches were not edited.
+Exact selected provider launchers preserve gh 2.86.0 and Codex 0.161.0. Bounded
+packaged tasks add an invocation-local child Codex launcher that disables ambient
+MCP connections and apps; existing login and installed reviewer discovery remain
+available. Owner configuration is unchanged. The exact Codex feature service
+`ab.chatgpt.com` is required by the observed nested client. Required OpenAI docs
+hosts are separately allowlisted; unrelated connectors and destinations stay denied.
+An opt-in real nested-model smoke returned its exact requested marker. This is
+not evidence that either full reviewer completed.
+
+A real Work prepare-only request with the pilot temporarily set to the existing
+workspace-write Implementation profile failed with INVALID_ARGUMENT and created
+no work. Existing runs kept their frozen read-only profile. Actual Settings has
+restored `pilot-pr-review`; automatic review remains false. The owner confirmed
+there is no second account: retain genuine incoming requests, automatic launches
+from them and non-author verdict variants as blocked. Do not ask again or invent
+notification evidence. Full reviewer completion/publication and the other pending
+case variants still require execution; callback, soak, login and accessibility gaps
+remain separate.
+
+## PR review browser campaign · 2026-10-23
+
+The first real review started exactly the inspected proposal, then reported both
+reviewers unstarted because its retained lifecycle runtime disappeared between
+sandbox commands. [Failure evidence](evidence/2026-10-23-pr-review-first-run.json)
+keeps that original result. Follow-up repairs announce externally prepared drafts,
+choose useful Markdown body summaries, persist workflow state under private
+`XDG_STATE_HOME`, and expose only required native registry and existing Codex
+account-store paths read-only. Credential contents are not copied or logged.
+**0.1.0-aff495347694** passed 81 browser fixtures, Go race, full reviewed spec
+reconciliation, packaging/installer/smoke and native lifecycle/registry/auth checks.
+It is installed with the original 16 runs, provider/mapping and routes preserved.
+Refresh connection metadata and open a fresh pilot-package view for browser
+reruns; a nested-provider diagnostic alone cannot establish review acceptance.
+
+Execution is now active. [Plugin setup evidence](evidence/2026-10-23-pr-review-plugin-setup.json)
+records browser-driven installation of DK workflows 1.1.17, AD 1.0.7 and Matt
+Pocock 1.0.0, plus verified deployment of **0.1.0-67e47c0c81dc** for complete
+package-resource snapshots. All 16 original runs, provider/mapping and routes
+remain unchanged. The owner-only pilot uses a dedicated read-only/ask profile
+and repository-scoped ordered Codex reviewer bindings; automatic review is off.
+
+Uploading the linked 0.2.4 archive under the existing name returned HTTP 400:
+`A plugin named code-factory already exists.` The observed package management
+view has no update control. A distinct **Code Factory PR E2E** package,
+`Plugin_89dd894a227481919ae7e682fe34c77f`, is now installed with Apps 1 / Skills 3
+and the same existing `asdk_app_6ad792b279348191b76d3443615b66e0` connection.
+Only its package/display names differ; existing 0.2.2 and its chats are preserved.
+Use the explicit pilot package for the campaign, not a bare ambiguous name.
+Pilot issue #6 and PRs #7/#8 are isolated acceptance fixtures. No incoming-request
+or non-author-verdict acceptance is possible with only the currently available
+owner account. Actual nested reviewer execution is still pending in the ledger.
+
+
+The [PR review E2E plan](e2e/pr-review.md) defines 18 user-facing acceptance cases
+for the existing pilot browser profile and dedicated private repository. It couples
+Code Factory with DK workflows and ordered AD / Matt Pocock Codex reviewers.
+The [campaign ledger](e2e/pr-review-results.json) records preparation separately
+from execution and lists current case results. Follow its readiness gates before
+running the full pipeline, including complete plugin resources in skill snapshots,
+bounded nested runtime access and actual installed package/version verification.
+The agent owns execution, repairs and browser reruns. Incoming-request acceptance
+requires a genuinely authorized second actor; publication uses separate explicit
+pilot-only instructions. Existing callback, soak, login and accessibility gaps remain.
+
 ## Public connection recovery · 2026-10-22
 
 Installed **0.1.0-ebf7a6cdd84a** showed Reconnecting with a connection-interrupted
@@ -264,7 +431,7 @@ to Chrome. Use the browser controller below.
 
 | Item | Current value |
 | --- | --- |
-| Last verified installed daemon | `0.1.0-16c572cbc34d` (bounded sandbox and model-backed private-pilot command acceptance; full lifecycle acceptance remains separate) |
+| Last verified installed daemon | `0.1.0-aff495347694` (PR campaign package/state/registry repairs; actual reviewer reruns remain in progress) |
 | Complete browser package | `0.2.2` |
 | Stable launcher | `~/.local/bin/code-factory` |
 | Versioned releases | `~/.local/lib/code-factory` |
