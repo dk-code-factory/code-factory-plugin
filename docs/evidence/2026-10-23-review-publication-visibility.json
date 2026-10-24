@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-23",
+  "sourceBase": "ab0c2188e60af792afddbab49f2799412a7a49d1",
+  "feature": "GitHub-verified posted reviews in PR UI and model-visible plugin tools",
+  "pluginVersion": "0.2.5",
+  "focusedVerification": {
+    "providerAppRace": "passed",
+    "authenticatedMCPRace": "passed",
+    "narrowThemeBrowserFixtures": 2,
+    "scopedAxe": "passed in light and dark"
+  },
+  "fullVerification": {
+    "browserFixtures": 85,
+    "goRace": "passed",
+    "specificationReconciliation": "passed",
+    "packagingInstallerRecoverySmoke": "passed",
+    "goVet": "passed",
+    "typescript": "passed"
+  },
+  "installation": {
+    "at": "2026-10-24T03:39:01.617089+00:00",
+    "installedVersion": "0.1.0-39fb1524b71e",
+    "toolVisibility": [
+      "model",
+      "app"
+    ],
+    "reviewId": "5636533768",
+    "state": "COMMENTED",
+    "head": "be3ab558f3ae5d149ea6615e12221300e023eabf",
+    "receiptPresentInReadRun": true,
+    "snapshotReviewVersionPresent": true,
+    "postedReviews": 9,
+    "inlineComments": 5,
+    "retainedRuns": 29,
+    "registrationAndGatewayAuthUnchanged": {
+      "registered-app.json": true,
+      "gateway-auth.json": true
+    },
+    "installerRewroteRuntime": true,
+    "selectedForkCodexPreserved": "0.163.0",
+    "tailscaleServePreserved": true,
+    "installedPluginVersion": "0.2.5",
+    "installedSkillDocumentsReceiptTool": true,
+    "embeddedUIContainsPostedReviews": true,
+    "embeddedUIHasCurrentContentIdentity": true
+  },
+  "actualWorkUI": {
+    "state": "unverified",
+    "reason": "Approved persistent pilot Chrome had been OOM-killed before this task. Relaunch remained without loopback debugger readiness; no actual Work UI acceptance claimed."
+  },
+  "existingAcceptanceGaps": "preserved",
+  "updatedAt": "2026-10-24T03:39:47.355793+00:00"
+}

@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
@@ -117,6 +118,12 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 			schema := tool["inputSchema"].(map[string]any)
 			if required := schema["required"].([]any); len(required) != 1 || required[0] != "itemId" {
 				t.Fatal("PR review requires only the synchronized itemId", schema)
+			}
+		}
+		if tool["name"] == "read_pr_reviews" {
+			vis := metadata["ui"].(map[string]any)["visibility"].([]any)
+			if len(vis) != 2 || vis[0] != "model" || vis[1] != "app" || !strings.Contains(tool["description"].(string), "receipt") {
+				t.Fatal("publication receipts not discoverable", tool)
 			}
 		}
 		expectedURI := ResourceURI
@@ -231,6 +238,31 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	invalid := request("tools/call", map[string]any{"name": "manage_codex_plugins", "arguments": map[string]any{"action": "install", "target": "--config=invalid"}}, true, "2026-07-28")
 	if invalid["isError"] != true {
 		t.Fatal("plugin selector injection accepted")
+	}
+	publication := domain.PRReviews{ItemID: "pilot/local#99", SyncedAt: time.Now().UTC(), LastAttempt: time.Now().UTC(), Reviews: []domain.PublishedReview{{ID: "9", URL: "https://github.com/pilot/local/pull/99#pullrequestreview-9", State: "COMMENTED", Author: "reviewer", Head: "reviewed-head", Body: "Concrete review", Comments: []domain.ReviewComment{{ID: "10", Path: "a.py", Line: 4, Body: "Verified defect"}}}}}
+	_ = db.Put(ctx, "item", publication.ItemID, domain.Item{ID: publication.ItemID, Repository: "pilot/local", Number: 99, Kind: "pr"}, "")
+	_ = db.Put(ctx, "pr-reviews", publication.ItemID, publication, "")
+	_ = db.Put(ctx, "run", "publication-run", domain.Run{ID: "publication-run", ItemID: publication.ItemID, Status: "idle"}, "")
+	for _, name := range []string{"read_pr_reviews", "read_run"} {
+		id := publication.ItemID
+		if name == "read_run" {
+			id = "publication-run"
+		}
+		result := request("tools/call", map[string]any{"name": name, "arguments": map[string]any{"id": id}}, true, "2026-07-28")
+		b, _ := json.Marshal(result["structuredContent"])
+		if result["isError"] == true || !strings.Contains(string(b), "reviewed-head") || !strings.Contains(string(b), "Verified defect") || !strings.Contains(string(b), "pullrequestreview-9") {
+			t.Fatal("model-visible publication evidence lost", name, result)
+		}
+	}
+	if err := db.Write(ctx, func(tx *store.Tx) error {
+		for _, row := range [][2]string{{"item", publication.ItemID}, {"pr-reviews", publication.ItemID}, {"run", "publication-run"}} {
+			if err := tx.Delete(row[0], row[1]); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
 	}
 	catalog := request("events/list", nil, true, "2026-07-28")
 	if len(catalog["events"].([]any)) != 3 {

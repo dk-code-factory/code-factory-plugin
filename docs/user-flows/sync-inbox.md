@@ -34,10 +34,12 @@ Authentication and provider errors remain visible. Failed refreshes retain their
 - **S7** Read and unread review notifications identify changed PRs only in configured active repositories. Unchanged hints are deduplicated across polling/restart; unsuccessful batches retain the notification cursor. Periodic repository reconciliation covers missing notifications.
 - **S8** Scheduled, manual and selected-detail reads share a persistent rolling request budget and reported-quota reserve. Conditional responses, server polling intervals and primary/secondary cooldowns are respected across restart. Deferred reads retain records/checkpoints, and cached freshness cannot authorize stale automatic review.
 
+- **S9** A PR's posted reviews retain provider receipt links, author, verdict, reviewed commit, submission time, body and inline findings. Pending drafts are excluded. Completed PR turns trigger a read; routine reads share a one-minute cache and the GitHub request budget. Paused repositories and failed reads preserve prior successful observations with visible stale/error feedback; no read starts or publishes work.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [repository](../glossary/README.md#repository), [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item), [state-new](../glossary/README.md#state-new), [state-unread](../glossary/README.md#state-unread), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [working-queue](../glossary/README.md#working-queue), [implementation-relationship](../glossary/README.md#implementation-relationship), [review-policy](../glossary/README.md#review-policy), [review-request-claim](../glossary/README.md#review-request-claim), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification).
+Glossary: [repository](../glossary/README.md#repository), [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item), [state-new](../glossary/README.md#state-new), [state-unread](../glossary/README.md#state-unread), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [working-queue](../glossary/README.md#working-queue), [implementation-relationship](../glossary/README.md#implementation-relationship), [review-policy](../glossary/README.md#review-policy), [review-request-claim](../glossary/README.md#review-request-claim), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification), [published-review](../glossary/README.md#published-review).
 UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [P-INBOX-QUERY](../ui/README.md#P-INBOX-QUERY), [P-INBOX-LIST](../ui/README.md#P-INBOX-LIST), [P-ITEM-DETAIL](../ui/README.md#P-ITEM-DETAIL), [W-INBOX-QUERY](../ui/README.md#W-INBOX-QUERY), [W-SYNC-HEALTH](../ui/README.md#W-SYNC-HEALTH), [W-ITEM-ROW](../ui/README.md#W-ITEM-ROW), [W-INBOX-EMPTY](../ui/README.md#W-INBOX-EMPTY), [W-ITEM-OVERVIEW](../ui/README.md#W-ITEM-OVERVIEW), [W-ITEM-ACTIONS](../ui/README.md#W-ITEM-ACTIONS), [W-ITEM-HISTORY](../ui/README.md#W-ITEM-HISTORY), [C-FILTER](../ui/README.md#C-FILTER), [C-SELECT-ITEM](../ui/README.md#C-SELECT-ITEM), [C-ITEM-STATE](../ui/README.md#C-ITEM-STATE), [W-RELATIONSHIPS](../ui/README.md#W-RELATIONSHIPS), [W-TICKET-CONTEXT](../ui/README.md#W-TICKET-CONTEXT), [W-PR-EVIDENCE](../ui/README.md#W-PR-EVIDENCE), [C-LINK](../ui/README.md#C-LINK), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [PAGE-WORKING](../ui/README.md#PAGE-WORKING), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE).
 
 ## Flow diagram
@@ -56,6 +58,7 @@ flowchart TD
     N9["Keep per-repository progress#59; bound reference work and serialize actual GitHub requests #40;S6#41;"]
     N10["Read review-notification hints without marking read#59; reconcile repositories periodically #40;S7#41;"]
     N11["Shared request budget, reserve or cooldown defers reads and retains saved state #40;S8#41;"]
+    N12["Observe submitted reviews with receipts, findings and explicit freshness #40;S9#41;"]
     N0 --> N1
     N1 -->|"success"| N2
     N0 -->|"provider failure"| N3
@@ -75,6 +78,8 @@ flowchart TD
     N10 -->|"configured changed PR fetched"| N5
     N10 -->|"budget or provider delay"| N11
     N11 -->|"retain checkpoint and retry later"| N3
+    N0 -->|"PR selected or turn completed"| N12
+    N12 -->|"Show provider receipts or retained stale result"| N5
 ```
 
 ## Implementation references
@@ -95,6 +100,9 @@ flowchart TD
 - [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — Durable shared request budget/reserve, pacing and resource cooldowns with bounded credential-scoped cache. (`func (g *GitHub) beginRequest(`)
 - [internal/providers/github_notifications.go](../../internal/providers/github_notifications.go) — Read-only notification hints, pagination and validated targets. (`func (g *GitHub) ReviewNotifications(`)
 - [internal/app/github_usage.go](../../internal/app/github_usage.go) — Persist notification cadence/cursor, deduplicate updated targets and preserve scoped queue behavior. (`func (a *App) SyncNotifications(`)
+- [web/src/reviews.tsx](../../web/src/reviews.tsx) — Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links. (`export function PostedReviews(`)
+- [internal/app/review_publication.go](../../internal/app/review_publication.go) — Durable budgeted review observations, failure retention and post-turn refresh. (`func (a *App) ReadPRReviews(`)
+- [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Read submitted review and inline-comment pages; omit pending drafts. (`func (g *GitHub) PublishedReviews(`)
 
 ## Test references
 
@@ -125,10 +133,14 @@ flowchart TD
 - [internal/domain/types_test.go](../../internal/domain/types_test.go) — `func TestItemFreshnessKeepsLegacyContentRevision(`; S1, S2. Operational freshness does not invalidate legacy revisions or consume unread state.
 - [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestRateHeadersStopRequestsEvenWhenErrorBodyIsTruncated(`; S3, S8. Rate headers establish a global cooldown before an incomplete error body can hide them.
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestCachedPRObservationCannotBorrowFreshRepositoryAuthority(`; S5, S8. A cached PR observation cannot become eligible by borrowing a newer repository checkpoint.
+- [internal/app/review_publication_test.go](../../internal/app/review_publication_test.go) — `func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(`; S9. Completed PR turns refresh actual GitHub receipts; repeated reads respect cadence; failure and pause retain successful receipts and freshness; issues reject.
+- [internal/providers/github_reviews_test.go](../../internal/providers/github_reviews_test.go) — `func TestPublishedReviewsKeepVerdictCommitAndPaginatedInlineEvidence(`; S9. Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `posted reviews show verified verdicts findings and refresh after completion`; S9. Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes.
+- [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S9. Model/app discovery exposes read_pr_reviews; authenticated read_pr_reviews/read_run preserve receipt URL, reviewed head and inline findings.
 
 ## Verification and gaps
 
-Local suites: `go`.
+Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-sync-inbox-s2-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Closed/merged retention and hourly reconciliation are implemented but not exhaustively asserted by the enrichment fixture; full current-version host inbox matrix is open. Next verification: Add retention and hourly-reconciliation fixture assertions, then record the current-version host inbox matrix without treating provider enrichment fixtures as host acceptance.
 

@@ -58,7 +58,7 @@ for a clickable navigation control.
 | `C-TUNNEL-KEY` | `W-LOCAL-TUNNEL-KEY` → alternate local transport session | Single-use private setup input. | Submits and removes form on success; does not navigate into Settings or activate Jira. |
 | `C-BROWSER-LAB` | `W-BROWSER-LAB` controls → isolated browser → screenshot/location | Explicit lab navigation/click/key/scroll operations. | Developer utility feedback loop; never an Inbox/Agents page transition. |
 | `C-BACK` | Conversation Back → originating work or Messages tab | Back action on the record page. | Restores list query, scroll and row focus when the row exists; missing rows leave a usable focus fallback. Ordinary drafts remain keyed to their records. |
-| `C-ITEM-SOURCE` | Owned issue, PR and check links open their original GitHub or CI-provider destination through the host browser. | Activate an item identifier, linked PR identifier or individual CI check link. | Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list. |
+| `C-ITEM-SOURCE` | Owned issue, PR and check links open their original GitHub or CI-provider destination through the host browser. | Activate an item identifier, linked PR identifier or individual CI check link. Activate a posted-review receipt or inline-comment link. | Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list. |
 | `C-OPEN-SETTINGS` | Host open_settings invocation → independent settings document | The settings entry tool advertises its own content-specific resource and output template. | Opens configuration in its own view. The inbox entry and legacy resource remain inbox-only. Both surfaces reuse authenticated bridged tools without owner credentials or direct iframe localhost access. |
 | `C-START-CHAT` | First-message Start → retained run conversation | Explicit Start with the visible message and authority. | Prepares then starts once; verifies the same run after an uncertain response. Preserves per-item draft and recovery state. |
 | `C-SESSION-CONSOLE` | Conversation presentation to the same session console. | View session console, or Open session console from a textual fallback. | Switches presentation without launching or resuming another process. |
@@ -206,10 +206,17 @@ flowchart LR
     N7 -->|"C-ITEM-SOURCE"| N7
     N7 -->|"C-ITEM-SOURCE"| N14
     N7 -->|"C-ITEM-SOURCE"| N14
+    N7 -->|"C-ITEM-SOURCE"| N14
     N14 -->|"C-ITEM-SOURCE"| N7
     N14 -->|"C-ITEM-SOURCE"| N14
     N14 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N14
     N14 -->|"C-ITEM-SOURCE"| N7
+    N14 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N14
+    N14 -->|"C-ITEM-SOURCE"| N7
+    N14 -->|"C-ITEM-SOURCE"| N14
     N14 -->|"C-ITEM-SOURCE"| N14
     N14 -->|"C-ITEM-SOURCE"| N14
     N107 -->|"C-OPEN-SETTINGS"| N65

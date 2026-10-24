@@ -35,6 +35,33 @@ type Activity struct {
 	Updated string `json:"updated"`
 	URL     string `json:"url"`
 }
+
+// PublishedReview is GitHub's observed review, never an agent's publication claim.
+type PublishedReview struct {
+	ID          string          `json:"id"`
+	URL         string          `json:"url"`
+	Author      string          `json:"author"`
+	State       string          `json:"state"`
+	Body        string          `json:"body"`
+	Head        string          `json:"head"`
+	SubmittedAt string          `json:"submittedAt"`
+	Comments    []ReviewComment `json:"comments"`
+}
+type ReviewComment struct {
+	ID     string `json:"id"`
+	URL    string `json:"url"`
+	Author string `json:"author"`
+	Body   string `json:"body"`
+	Path   string `json:"path"`
+	Line   int    `json:"line,omitempty"`
+}
+type PRReviews struct {
+	ItemID      string            `json:"itemId"`
+	Reviews     []PublishedReview `json:"reviews"`
+	SyncedAt    time.Time         `json:"syncedAt"`
+	LastAttempt time.Time         `json:"lastAttempt"`
+	Error       string            `json:"error,omitempty"`
+}
 type GitHubViewer struct {
 	Login     string   `json:"login"`
 	Teams     []string `json:"teams"`

@@ -1433,3 +1433,13 @@ Only the two owned pilot test workspaces/scratch were cleaned. Original 14 runs,
 global Codex configuration, provider paths, registered mapping and Tailscale
 routes remain unchanged. Full PR review and third-party nested-runtime acceptance
 remain separate from this bounded model-backed command check.
+# Posted review visibility · 2026-10-23
+
+Submitted GitHub reviews now have an explicit PR-conversation section and a
+model-visible receipt read tool. Verdicts, authors, reviewed commits, review bodies
+and inline findings remain independent of run completion and GitHub lifecycle/CI.
+Pending drafts are excluded; failed/paused refreshes retain previous successful
+receipts with error/freshness feedback. Plugin 0.2.5 explains receipt verification
+to its daily-use skill. The [dated evidence](evidence/2026-10-23-review-publication-visibility.json)
+separates deterministic source checks from installation and actual Work results.
+Existing real-host callback, soak, login and broader accessibility gaps remain.

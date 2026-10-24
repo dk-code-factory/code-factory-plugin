@@ -23,6 +23,7 @@ import type {
 } from "./types";
 import "./style.css";
 import { PluginAdmin, RepositoryAdmin, SystemReviewSettings } from "./admin";
+import { PostedReviews } from "./reviews";
 
 function latestRun(runs: Run[], itemId: string) {
   const retained = runs
@@ -689,6 +690,7 @@ function Factory() {
                 <ItemDetail
                   key={agentEntry.item.id}
                   id={agentEntry.item.id}
+                  reviewVersion={(snap.reviewVersions?.[agentEntry.item.id] ?? "") + JSON.stringify(snap.runs.filter(r => r.itemId === agentEntry.item.id).map(r => [r.id,r.status,r.turnId]))}
                   entry={agentEntry}
                   action={action}
                   onLaunch={setLaunch}
@@ -1226,6 +1228,7 @@ function NewChat({
 
 function ItemDetail({
   id,
+  reviewVersion,
   entry,
   action,
   onLaunch,
@@ -1236,6 +1239,7 @@ function ItemDetail({
   history,
 }: {
   id: string;
+  reviewVersion: string;
   workStatus: React.ReactNode;
   history: React.ReactNode;
   target: string;
@@ -1377,6 +1381,7 @@ function ItemDetail({
           ))}
         </section>
       )}
+      {i.kind === "pr" && <PostedReviews itemId={i.id} head={i.head} version={reviewVersion} />}
       {conversation}
       <details className="item-details">
         <summary>Item details</summary>

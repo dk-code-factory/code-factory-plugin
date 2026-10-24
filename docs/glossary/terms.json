@@ -4122,6 +4122,45 @@
       "aliases": [],
       "category": "domain",
       "definition": "The recorded repository, revision selection and skill location identifying the origin of an installed standalone skill."
+    },
+    {
+      "id": "published-review",
+      "name": "Published review",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A submitted pull-request assessment identified by a provider receipt, author, verdict and reviewed commit."
+    },
+    {
+      "id": "element-w-pr-evidence-review-receipt",
+      "name": "Review receipt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The provider link identifying a submitted review.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-review-content",
+      "name": "Review content",
+      "aliases": [],
+      "category": "element",
+      "definition": "The text and inline comments belonging to a submitted review.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-review-freshness",
+      "name": "Review freshness",
+      "aliases": [],
+      "category": "element",
+      "definition": "The last successful observation time and any later observation failure for submitted reviews.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-refresh-reviews",
+      "name": "Refresh reviews",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control requesting an observation of submitted reviews.",
+      "scope": "ui-w-pr-evidence"
     }
   ]
 }

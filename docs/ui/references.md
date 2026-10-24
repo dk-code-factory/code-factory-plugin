@@ -39,6 +39,7 @@ Implementation references are independent of the visible entity boundaries.
 | [internal/providers/github.go](../../internal/providers/github.go) — `func (g *GitHub) Teams(` | Review PRs queue | Paginated authenticated membership; failures remain explicit. |
 | [web/src/main.tsx](../../web/src/main.tsx) — `function PullRequestInfo(` | PR monitoring and linked implementation/reference summaries. | Source and check links use the host bridge; independent lifecycle, review, CI and stale/error states. |
 | [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — `func (g *GitHub) UsageStatus(` | `W-GITHUB-USAGE`, `C-GITHUB-USAGE`. | Cached statistics and shared request gate; no independent quota endpoint polling. |
+| [web/src/reviews.tsx](../../web/src/reviews.tsx) — `export function PostedReviews(` | W-PR-EVIDENCE posted review elements and C-ITEM-SOURCE receipt links. | Submitted receipts and findings remain visible with verdict/head/freshness, provider failures retain saved reviews, and links use the host bridge. |
 <!-- /specs:references-sources -->
 
 ## Test reference keys
@@ -149,6 +150,9 @@ These references identify existing assertions and explicit remaining gaps.
 | `UI-ITEM-SUMMARY-MARKDOWN` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Markdown issue headings do not replace the useful conversation summary` | Conversation summary skips consecutive Markdown-only heading paragraphs, shows meaningful issue text, retains the original full description and never prepares/starts work. |
 | `UI-READ-FRESHNESS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `fresh read markers observe external changes after a host memoizes an empty journal page` | A host memoizes identical snapshot/journal arguments; after an empty journal reply, two external updates appear automatically, using distinct read markers and no launch/message mutation. |
 | `UI-FULL-ACCESS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `explicit full-access launch shows never approvals and authorized publishing` | Prepared launch visibly retains full-access/never/authorized authority, starts only on explicit Start, and Settings explains that automatic reviews use the selected authority. |
+| `API-POSTED-REVIEWS` | [internal/app/review_publication_test.go](../../internal/app/review_publication_test.go) — `func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(` | Completed PR turns refresh actual GitHub receipts; repeated reads respect cadence; failure and pause retain successful receipts and freshness; issues reject. |
+| `API-REVIEW-RECEIPTS` | [internal/providers/github_reviews_test.go](../../internal/providers/github_reviews_test.go) — `func TestPublishedReviewsKeepVerdictCommitAndPaginatedInlineEvidence(` | Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded. |
+| `UI-POSTED-REVIEWS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `posted reviews show verified verdicts findings and refresh after completion` | Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes. |
 <!-- /specs:references-assertions -->
 
 ## Entity coverage

@@ -587,10 +587,14 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 func (m *Manager) onMessage(s *session, msg codex.Message) {
 	s.mu.Lock()
 	var after func()
+	var refreshReviewsFor string
 	defer func() {
 		s.mu.Unlock()
 		if after != nil {
 			m.background(after)
+		}
+		if refreshReviewsFor != "" && m.app.GitHub != nil && m.app.GitHub.Managed() {
+			m.background(func() { _, _ = m.app.refreshPRReviews(m.ctx, refreshReviewsFor, true) })
 		}
 	}()
 	if s.retired {
@@ -723,6 +727,9 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 		}
 	}
 	if msg.Method == "turn/completed" {
+		// Refresh actual GitHub receipts after a PR turn. A finished turn alone
+		// never means a review was posted. Keep this off the provider read loop.
+		refreshReviewsFor = s.run.ItemID
 		s.lastCompletedTurn = p.Turn.ID
 		s.completed[p.Turn.ID] = true
 		s.run.TurnID = ""

@@ -1414,7 +1414,8 @@
       "terms": [
         "ui-w-pr-evidence",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "published-review"
       ],
       "contains": [],
       "elements": [
@@ -1457,6 +1458,22 @@
         {
           "id": "W-PR-EVIDENCE.check-link",
           "term": "element-w-pr-evidence-check-link"
+        },
+        {
+          "id": "W-PR-EVIDENCE.review-receipt",
+          "term": "element-w-pr-evidence-review-receipt"
+        },
+        {
+          "id": "W-PR-EVIDENCE.review-content",
+          "term": "element-w-pr-evidence-review-content"
+        },
+        {
+          "id": "W-PR-EVIDENCE.review-freshness",
+          "term": "element-w-pr-evidence-review-freshness"
+        },
+        {
+          "id": "W-PR-EVIDENCE.refresh-reviews",
+          "term": "element-w-pr-evidence-refresh-reviews"
         }
       ],
       "states": [],
@@ -1500,6 +1517,21 @@
           "path": "web/src/main.tsx",
           "anchor": "function PullRequestInfo(",
           "purpose": "Linked summaries and check links above the conversation."
+        },
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function PostedReviews(",
+          "purpose": "Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links."
+        },
+        {
+          "path": "internal/app/review_publication.go",
+          "anchor": "func (a *App) ReadPRReviews(",
+          "purpose": "Durable budgeted review observations, failure retention and post-turn refresh."
+        },
+        {
+          "path": "internal/providers/github_reviews.go",
+          "anchor": "func (g *GitHub) PublishedReviews(",
+          "purpose": "Read submitted review and inline-comment pages; omit pending drafts."
         }
       ],
       "assertions": [
@@ -1510,7 +1542,11 @@
         "API-PR-ROLLUP",
         "API-COMPACT-INBOX",
         "UI-COMPACT-REVIEW",
-        "UI-LINKED-DETAIL-REFRESH"
+        "UI-LINKED-DETAIL-REFRESH",
+        "API-POSTED-REVIEWS",
+        "API-REVIEW-RECEIPTS",
+        "UI-POSTED-REVIEWS",
+        "API-UI"
       ],
       "gaps": [
         {
@@ -1528,9 +1564,9 @@
         "browser",
         "tooling"
       ],
-      "element_description": "PR lifecycle, draft/head, review decision, CI rollup, check disclosure and linked PR summaries with source/check links.",
-      "state_description": "Lifecycle, approval and current-head CI are independent. Unknown/none/stale data do not imply success. Linked summaries distinguish implementation associations from references.",
-      "interactions": "Summaries update in list and item context. Source/check links use the host bridge. Expanding check details never launches work."
+      "element_description": "PR lifecycle, draft/head, review decision, CI rollup, check disclosure and linked PR summaries with source/check links. Posted review receipt links, review bodies and inline comments, observation freshness and Refresh reviews control.",
+      "state_description": "Lifecycle, approval and current-head CI are independent. Unknown/none/stale data do not imply success. Linked summaries distinguish implementation associations from references. Submitted reviews remain visible above the conversation, including author, verdict, reviewed commit and current/earlier-head distinction. Loading, unverified, successfully empty and stale/error observations are separate; a finished run never establishes publication.",
+      "interactions": "Summaries update in list and item context. Source/check links use the host bridge. Expanding check details never launches work. Reading reviews, returning to the PR and completed PR turns refresh provider receipts without publishing or starting work; routine reads share a one-minute cache. Receipt/comment links use the host bridge. Stored reviews include all authors without run attribution."
     },
     {
       "id": "W-ITEM-HISTORY",
@@ -4482,7 +4518,7 @@
         "go"
       ],
       "composition": "`W-ITEM-OVERVIEW`, `W-ITEM-ACTIONS`, `W-PRIORITY`, `W-RELATIONSHIPS`, `W-TICKET-CONTEXT`, `W-PR-EVIDENCE`, `W-ITEM-HISTORY`; contextual Back-only `W-NAVIGATION` instance.",
-      "context": "Item summary above chat and collapsed triage/details below it on PAGE-AGENT."
+      "context": "Item summary above chat and collapsed triage/details below it on PAGE-AGENT. Submitted PR reviews are visible above chat rather than hidden in Activity."
     },
     {
       "id": "P-RUN-LIST",
@@ -9310,12 +9346,18 @@
           "path": "web/src/bridge.ts",
           "anchor": "export async function openLink(",
           "purpose": "Host-mediated browser navigation through MCP Apps."
+        },
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function PostedReviews(",
+          "purpose": "Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links."
         }
       ],
       "assertions": [
         "UI-GITHUB-LINK",
         "UI-GITHUB-LINK-ERROR",
-        "UI-WORKING-MONITOR"
+        "UI-WORKING-MONITOR",
+        "UI-POSTED-REVIEWS"
       ],
       "gaps": [],
       "suites": [
@@ -9323,17 +9365,19 @@
         "browser"
       ],
       "endpoint_description": "Owned issue, PR and check links open their original GitHub or CI-provider destination through the host browser.",
-      "trigger": "Activate an item identifier, linked PR identifier or individual CI check link.",
+      "trigger": "Activate an item identifier, linked PR identifier or individual CI check link. Activate a posted-review receipt or inline-comment link.",
       "interactions": "Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list.",
       "from": [
         "W-ITEM-ROW.source-link",
         "W-PR-EVIDENCE.linked-pr",
-        "W-PR-EVIDENCE.check-link"
+        "W-PR-EVIDENCE.check-link",
+        "W-PR-EVIDENCE.review-receipt"
       ],
       "to": [
         "W-ITEM-ROW.source-link",
         "W-PR-EVIDENCE.linked-pr",
-        "W-PR-EVIDENCE.check-link"
+        "W-PR-EVIDENCE.check-link",
+        "W-PR-EVIDENCE.review-receipt"
       ],
       "connection_type": "connection-external",
       "external_boundary": true
@@ -11603,6 +11647,24 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "explicit full-access launch shows never approvals and authorized publishing",
       "assertion": "Prepared launch visibly retains full-access/never/authorized authority, starts only on explicit Start, and Settings explains that automatic reviews use the selected authority."
+    },
+    {
+      "id": "API-POSTED-REVIEWS",
+      "path": "internal/app/review_publication_test.go",
+      "anchor": "func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(",
+      "assertion": "Completed PR turns refresh actual GitHub receipts; repeated reads respect cadence; failure and pause retain successful receipts and freshness; issues reject."
+    },
+    {
+      "id": "API-REVIEW-RECEIPTS",
+      "path": "internal/providers/github_reviews_test.go",
+      "anchor": "func TestPublishedReviewsKeepVerdictCommitAndPaginatedInlineEvidence(",
+      "assertion": "Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded."
+    },
+    {
+      "id": "UI-POSTED-REVIEWS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "posted reviews show verified verdicts findings and refresh after completion",
+      "assertion": "Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes."
     }
   ],
   "source_map": [
@@ -11916,6 +11978,18 @@
       "anchor": "func (g *GitHub) UsageStatus(",
       "entities": "`W-GITHUB-USAGE`, `C-GITHUB-USAGE`.",
       "detail": "Cached statistics and shared request gate; no independent quota endpoint polling."
+    },
+    {
+      "path": "web/src/reviews.tsx",
+      "anchor": "export function PostedReviews(",
+      "entities": "W-PR-EVIDENCE posted review elements and C-ITEM-SOURCE receipt links.",
+      "detail": "Submitted receipts and findings remain visible with verdict/head/freshness, provider failures retain saved reviews, and links use the host bridge.",
+      "anchors": [
+        "export function PostedReviews("
+      ],
+      "location_labels": [
+        "export function PostedReviews("
+      ]
     }
   ],
   "coverage_groups": [

@@ -204,6 +204,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		return inboxSummaries(out), nil
 	})
 	bind(m, uri, "read_item", "Read item detail. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
+	bind(m, uri, "read_pr_reviews", "Read GitHub-verified posted reviews for a synchronized PR item id: receipt URL, author, verdict, reviewed commit, submitted time, body and inline comments. Includes all authors; does not attribute them to a run. SyncedAt and error distinguish saved/stale data from a successful refresh. Pending drafts and agent publication claims are excluded. Reads are cached for one minute; never posts, retries publication or starts work.", false, true, func(ctx context.Context, in IDInput) (any, error) { return a.ReadPRReviews(ctx, in.ID) })
 	bind(m, uri, "item_action", "Mark displayed revision read, unread, acknowledge, record action, or override priority.", false, false, func(ctx context.Context, in UserAction) (any, error) {
 		return nil, a.UserAction(ctx, in.ID, in.Action, in.Revision, in.Priority)
 	})
@@ -297,7 +298,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return runs, e
 	})
-	bind(m, uri, "read_run", "Read a run snapshot and pending attention requests.", false, true, func(ctx context.Context, in IDInput) (any, error) {
+	bind(m, uri, "read_run", "Read a run snapshot, pending attention and saved postedReviews for its PR. Run completion is not publication proof. Use read_pr_reviews with run.itemId to refresh verified receipts, verdicts and findings; reviews include all authors and are not attributed to this run.", false, true, func(ctx context.Context, in IDInput) (any, error) {
 		var run domain.Run
 		if e := a.Store.Get(ctx, "run", in.ID, &run); e != nil {
 			return nil, e
@@ -319,7 +320,11 @@ func New(a *app.App, ev *events.Service) *Server {
 				runRecoveries = append(runRecoveries, r)
 			}
 		}
-		return map[string]any{"run": publicRun(run), "attention": out, "questionRecoveries": runRecoveries}, e
+		reviews, err := a.SavedPRReviews(ctx, run.ItemID)
+		if err != nil {
+			return nil, err
+		}
+		return map[string]any{"run": publicRun(run), "attention": out, "questionRecoveries": runRecoveries, "postedReviews": reviews}, e
 	})
 	bind(m, uri, "send_message", "Send a message, restoring an inactive retained session when needed. Provide expectedTurn for an active turn to steer safely.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
 		return nil, a.Runs.Message(ctx, in.ID, in.Text, in.ExpectedTurn)
@@ -419,7 +424,15 @@ func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 		return nil, err
 	}
 	config, e := s.App.Config(ctx)
-	return map[string]any{"viewer": viewer, "inbox": inboxSummaries(inbox), "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "questionRecoveries": recoveries, "skills": skills, "config": config, "cursor": cursor}, e
+	if e != nil {
+		return nil, e
+	}
+	reviews, e := store.ListWithout[domain.PRReviews](ctx, s.App.Store, "pr-reviews", "$.reviews")
+	versions := map[string]string{}
+	for _, r := range reviews {
+		versions[r.ItemID] = r.LastAttempt.Format(time.RFC3339Nano)
+	}
+	return map[string]any{"viewer": viewer, "inbox": inboxSummaries(inbox), "repositories": repos, "profiles": profiles, "runs": runs, "attention": atts, "questionRecoveries": recoveries, "skills": skills, "config": config, "reviewVersions": versions, "cursor": cursor}, e
 }
 
 // The model-visible settings entry does not disclose unrelated task/run contents.

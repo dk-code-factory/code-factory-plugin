@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "8a1164a9ab10a9cf1d30570e71b4d6d3c0c33a5c",
-  "fingerprint": "39a10a0e30f78f21af4adeb4ca0a7cab95e69b2ca5f7d1283d4ea3147afaf276",
+  "base": "ab0c2188e60af792afddbab49f2799412a7a49d1",
+  "fingerprint": "acd4e50f4e3afd12414efb76f7d525ddd86042b8a9a4de161264f2d54b253c88",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "Add S5 owner-only managed dependency check/update jobs, active-work exclusion, stable request-ID deduplication, verified Codex activation, GitHub skill backups/local-edit rejection, opt-in legacy migration and uncertain recovery. Existing release rollback/service/route preservation remains; OS prerequisites are explicitly external. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes.",
-    "implementation": "Reviewed private DependencyHandler routing/auth/body bounds, Manager.UpdateDependencies lifecycle/store/gate, configured fork candidate digest and Probe before runtime/provider activation, native plugin observation and deduplicated profile rebinding, GitHub pinned archives/atomic exchange, canonical DK migration and startup restoration of referenced archived skills. App-server provider reads use a lock-protected getter; old auth/global programs and frozen runs are preserved. Git marketplaces are refreshed independently with explicit running/checked/failed results; one renamed or failing source preserves only its own plugins. Cached owner inventory filters uninstalled catalogs and excludes skill contents. The owner explicitly selected dkropachev/codex: latest-release lookup, asset-origin validation, recorded result source and package dependency metadata all use that fork; no stock upstream fallback is allowed. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes.",
-    "tests": "Actual assertions cover repeated-ID no replay, changed-ID requests, active-run and launch exclusion, partial native failures without secret stderr, crash uncertain marking, skill pinned upgrade/backup/provenance plus local-edit conflict, Codex success and failed protocol retention, native migration/profile restore and duplicate-discovery/frozen-run retention. Archive tests reject traversal/links/duplicates/budget failures and verify digest/companions. REST tests assert owner/origin/strict JSON/status; public gateway tests assert no admin route. Full current mapped suites run separately from live upgrade acceptance. TestDependencyMarketplaceFailureDoesNotBlockIndependentPlugins asserts one failed marketplace and another successfully updated plugin with no secret stderr; TestDependencyInventoryExcludesSkillContents asserts installed-only metadata without content leakage. The release test asserts the exact dkropachev/codex metadata URL and rejects an otherwise checksum-valid openai/codex asset. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes."
+    "kind": "structure",
+    "description": "Inspect health, upgrade, roll back and uninstall retains its existing scenarios and authority boundaries; shared domain/transport/build inputs now also carry independent PR-review observations. No existing contract is rewritten to imply publication or close live acceptance gaps.",
+    "implementation": "Reviewed the additive receipt structs and read-only transport tool, metadata-only snapshot versions and after-turn background refresh. Existing launch, answer, cleanup, relationship, priority and credential paths retain their prior transitions; review retrieval makes GET requests only and honors pause and budget.",
+    "tests": "Retain the existing mapped assertions for S1, S2, S3, S4, S5. Fresh common Go/browser/release suites cover shared inputs; new publication assertions establish only submitted receipt visibility, cadence and failure retention, and do not supply unrelated host/soak/login evidence."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.343
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 93.033
+      "seconds": 99.124
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 10.939
+      "seconds": 10.33
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.571
+      "seconds": 2.65
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.687
+      "seconds": 3.412
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.835
+      "seconds": 21.695
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.181
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.161
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.664
+      "seconds": 0.662
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.181
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.224
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,15 +131,15 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.393
+      "seconds": 25.323
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "2086b40d6074f7ca95871fc489ce387f1a0d9ce7c6b8fe6f51799964eb3fdffb",
+    "flow:operate-installation": "64507b0583a1446e97e1ad0dff9c8e39fb3dfb726b944b2571689bdfbce32282",
     "term:connection-refreshes": "ab87051dc19b4f61c0569c0170847df2956181944da0e775798e937d8eccc0f6",
     "term:connection-submits": "87ebe8ee548523b39f3c64eaff217e2e1285dd3012d48640b92763d28729bb95",
     "term:coverage-gap": "c2209335435caaaab7f6f7eece643dc3abfa1a44b65ad2bd177dd304043af7c7",
-    "term:dependency-operation": "a68318228ddb7089ee2ea5e9931b7f6bf6cca04eae20db2d427cb82e17ee824c",
+    "term:dependency-operation": "843dd37f97c003f491bc72e490e008f14bc7a827b61b4a8ba7f8be6018177841",
     "term:element-w-browser-lab-key-controls": "adbef60a4f578fbca946e99c2508c7ae73e4f858ab4bac333c433ae09b74f320",
     "term:element-w-browser-lab-location": "34039a1634667d9f39ab7dbb9432a14e6a6409e58c53b02d66b49b3a88ff5655",
     "term:element-w-browser-lab-message": "a62a446be2870a726c886ac6e700f37b9e802ed5832cfaf0f08f283a474ff3a5",
@@ -158,7 +158,7 @@
     "term:element-w-diagnostics-provider-sign-in-help": "0b2e895a4da760eca679e93d2ce18d192c9e63ad5f9dab1a7e6d11b2354bd8db",
     "term:element-w-diagnostics-timestamp": "65375179e150a15d81d4ae763f1557bc25f982b65c2a7435791120fbc290afbc",
     "term:element-w-diagnostics-version": "7dc0aaa913105ca1b50a94ff722cf67fe3a266af614d8996c671682d2498507c",
-    "term:github-skill-source": "295762558b076bbd7186c34360461f9433b8699df96271b6f7d898efbca589d5",
+    "term:github-skill-source": "2fb610cbc682d66777a917060bc7e4e6817c9cabc26d3eeea8f1d6a3574a9f51",
     "term:owner": "2d998c541e9b6b3a04b984403a400b70da256077eae32e29d9d667ff9e5f5345",
     "term:state-failed": "46b85b7110fb3a9a291a09b510a785a3fc6b5d9c3c2cd27603752979599edb0b",
     "term:state-unverified": "c0fb90ef3e770d4954ff0b46c469275b4b473af76030747d0d7263f870b0e03f",
@@ -172,12 +172,12 @@
     "term:ui-w-diagnostics": "3d741551455ef042a56eae37981e30d1e67a816c98e7d618797f96272ebb5573",
     "term:unverified-behavior": "d8552957dca64a6dcc6c1f2855c5ca0cfb41c2db47e1158d08f2734916e5541e",
     "term:verification": "3f6a50c4bc79ba54cc2c2690c956922d518754daba035f5dfd38fb5988c2c184",
-    "ui:C-BROWSER-LAB": "fc7c74c852bdf8f5c543477ed1a375f7859d3431afa87ef1beaca9a56f30366e",
-    "ui:C-DIAGNOSE": "12cb18ca0e392ca6056c0f16a4bca9de04d0a7ac5cd7081e8cd23bc4ade6c96d",
-    "ui:P-BROWSER-LAB": "a0611b9a7b9f3a971e7b9e00b2e49bd541bf4f73b53faaf21758eaf64db23cdc",
-    "ui:P-DIAGNOSTICS": "0e90243eae4e9d775c01b040d3a02ac1da49df7572d2dc09dab5dab8687e09c7",
-    "ui:PAGE-BROWSER-LAB": "9e4acf9c7c831c1bf3041bb4ec70b7b30f7aa79cb9fda05c0a31b2ebe843729b",
-    "ui:W-BROWSER-LAB": "e2d0ad2045361b492ded4c503bf2a3b29de7b4c7136503cadae46ea4032b58ce",
-    "ui:W-DIAGNOSTICS": "d1bb54244d9f6efa5d47652ffc1ed972a2f892e7608d917db07fc11d0c841797"
+    "ui:C-BROWSER-LAB": "d600bb1648adf8146f961dbf7ae872b83bf374f72a0322b5fec56e2bbb4751e8",
+    "ui:C-DIAGNOSE": "b3fa89fb981812c204c43130cc096ecbc69fed66e2c9c200b418ced2e287af5b",
+    "ui:P-BROWSER-LAB": "35aeb7babdeec73ae0960965ca3d2aa7a4c300ee25a90ff54ca3db986140944a",
+    "ui:P-DIAGNOSTICS": "784b2ec95c11430232fc782b1b25aa9c55ad80c94cbcf920514d281aa9128762",
+    "ui:PAGE-BROWSER-LAB": "8d98188f1fd45367fdc1bc661988e8151a54bd5aecc4da6e36eb4181b41660a5",
+    "ui:W-BROWSER-LAB": "0db4130df070a5c295b405d3c1a2d094e9e019128b6570c029a44607e439e689",
+    "ui:W-DIAGNOSTICS": "5ff63aa9de12f1c364e5efe77a071926e213ae51966cdf134e730e14c7784ca1"
   }
 }

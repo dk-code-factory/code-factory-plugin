@@ -1,5 +1,22 @@
 # Continue development through the real Chrome session
 
+## Posted review visibility · 2026-10-23
+
+The PR conversation includes a visible **Posted reviews** section with actual
+GitHub receipt links, author/verdict, reviewed commit, submission time, body and
+inline comments. Pending drafts are excluded. Current and earlier commits are
+distinct. Failed reads retain the last successful observation with explicit error
+feedback; a completed run never establishes publication by itself.
+
+Plugin 0.2.5 documents the model-visible `read_pr_reviews` tool and saved
+`read_run.postedReviews` observations. Reviews include all authors and are not
+attributed to a particular run. PR turns refresh receipts in the background;
+routine observations share a one-minute cache, the existing request budget and
+pause policy. Source fixtures cover receipt/comment pagination, draft exclusion,
+post-turn refresh, failure retention and both narrow themes with scoped Axe.
+Installed-version and real-host checks are recorded separately in the
+[visibility evidence](evidence/2026-10-23-review-publication-visibility.json).
+
 ## Owner dependency API and fork upgrade · 2026-10-23
 
 Installed **0.1.0-7e6b16d6fee1** exposes the [private dependency administration API](dependency-admin.md)

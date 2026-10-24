@@ -154,6 +154,7 @@ export interface GitHubUsage {
  restRemaining?:number;restReset:string;graphqlRemaining?:number;graphqlReset:string;
 }
 export interface Snapshot {
+  reviewVersions?: Record<string, string>;
  githubUsage?:GitHubUsage;
   viewer?: { login: string; teams: string[] | null; teamError?: string };
   cursor: number;
@@ -165,6 +166,23 @@ export interface Snapshot {
   attention: Attention[];
   questionRecoveries?: QuestionRecovery[];
   config: Config;
+}
+export interface PublishedReview {
+  id: string;
+  url: string;
+  author: string;
+  state: string;
+  body: string;
+  head: string;
+  submittedAt: string;
+  comments: {id: string; url: string; author: string; body: string; path: string; line?: number}[];
+}
+export interface PRReviews {
+  itemId: string;
+  reviews: PublishedReview[];
+  syncedAt: string;
+  lastAttempt: string;
+  error?: string;
 }
 export interface JournalEvent {
   seq: number;

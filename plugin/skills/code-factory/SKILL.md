@@ -39,6 +39,18 @@ To run a PR review pipeline:
    `read_run`/`list_runs`. Never automatically repeat Start or prepare a substitute
    run. Report a missing/unsafe pipeline or missing skill with its actual error.
 
+To check publication, call `read_pr_reviews` with the PR item `id`. It returns
+GitHub-observed receipt URLs, authors, verdicts, reviewed commits, submission
+times, review bodies and inline comments. `read_run.postedReviews` contains the
+saved observation for that run's PR, including reviews by other authors; it does
+not attribute those reviews to the run. Check `syncedAt` and `error` before
+claiming a current result. A completed run, an approval verdict, or an agent's
+claim alone does not establish publication by that run. Report the matching
+receipt URL and verdict; distinguish earlier-head reviews and pending drafts.
+The embedded PR conversation shows the same receipts under Posted reviews.
+On uncertain publication, inspect receipts before any separately authorized
+retry. This read tool never publishes a review.
+
 If an older connected server lacks `prepare_pr_review` but exposes `prepare_launch`,
 use `open_settings` to read repositories, profiles and system defaults
 (`get_settings` returns only system configuration). Resolve

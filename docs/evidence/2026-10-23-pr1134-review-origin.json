@@ -1,0 +1,98 @@
+{
+  "observedDate": "2026-10-23",
+  "pr": "https://github.com/scylladb/python-driver/pull/1134",
+  "runId": "d047d5a187b9598fb02a26eeabd9210a",
+  "reviewedHead": "be3ab558f3ae5d149ea6615e12221300e023eabf",
+  "reviewers": [
+    "code-review-matpocock:code-review-matpocock@current",
+    "code-review-ad:code-review-ad@current"
+  ],
+  "reviewerFindings": [
+    {
+      "severity": "Minor",
+      "path": "tests/integration/standard/test_exit_without_shutdown.py",
+      "line": 79,
+      "message": "Standards: CONTRIBUTING.rst documents Cassandra integration runs, but setup calls Scylla-only tuning methods unconditionally. With CASSANDRA_VERSION set and SCYLLA_VERSION unset, a fresh Cassandra node raises AttributeError before startup, preventing the regression from running. The declared [CCM Node API](https://raw.githubusercontent.com/scylladb/scylla-ccm/master/ccmlib/node.py) lacks both setters.",
+      "fix": "Preserve startup for both server families; restrict shard and memory tuning to Scylla nodes.",
+      "reviewers": [
+        "code-review-matpocock:code-review-matpocock@current"
+      ]
+    },
+    {
+      "severity": "Minor",
+      "path": "tests/integration/standard/test_exit_without_shutdown.py",
+      "line": 79,
+      "message": "With CASSANDRA_VERSION configured and SCYLLA_VERSION unset, use_cluster() creates Cassandra nodes. At the pinned CCM version, set_smp() and set_mem_mb_per_cpu() exist only on ScyllaNode. A fresh or stopped Cassandra node therefore raises AttributeError during module setup, preventing this regression from running.",
+      "fix": "Ensure setup supports both documented server families while preserving Scylla shard and memory settings.",
+      "reviewers": [
+        "code-review-ad:code-review-ad@current"
+      ]
+    }
+  ],
+  "publicationDisposition": [
+    {
+      "severity": "P2",
+      "path": "tests/integration/standard/test_exit_without_shutdown.py",
+      "line": 79,
+      "disposition": "already_reported_not_repeated",
+      "url": "https://github.com/scylladb/python-driver/pull/1134#pullrequestreview-5582561217"
+    }
+  ],
+  "configuredProfileOverride": "A complete review with no actionable findings may publish a brief conclusion.",
+  "nativePostingSkillDefault": "Leave the review-level body empty unless the user explicitly requests a summary; with no findings, report locally and skip a default COMMENT review.",
+  "originalPublication": {
+    "reviewId": 5636533768,
+    "url": "https://github.com/scylladb/python-driver/pull/1134#pullrequestreview-5636533768",
+    "state": "COMMENTED",
+    "submittedAt": "2026-10-24T03:07:07Z",
+    "body": "Review complete; no additional actionable findings. Independently confirmed the Cassandra setup failure already covered in [the existing review](https://github.com/scylladb/python-driver/pull/1134#pullrequestreview-5582561217), so no duplicate inline comment is added. Focused mocked-libev checks passed; real-extension and live-cluster tests were not run locally."
+  },
+  "subsequentGitHubMetadata": [
+    {
+      "databaseId": 5543066899,
+      "state": "COMMENTED",
+      "body": "",
+      "submittedAt": "2026-10-16T04:26:31Z",
+      "updatedAt": "2026-10-16T04:26:31Z",
+      "lastEditedAt": null,
+      "editor": null,
+      "author": {
+        "login": "dkropachev"
+      }
+    },
+    {
+      "databaseId": 5636533768,
+      "state": "COMMENTED",
+      "body": "Look good to me",
+      "submittedAt": "2026-10-24T03:07:07Z",
+      "updatedAt": "2026-10-24T03:17:40Z",
+      "lastEditedAt": "2026-10-24T03:17:40Z",
+      "editor": {
+        "login": "dkropachev"
+      },
+      "author": {
+        "login": "dkropachev"
+      }
+    },
+    {
+      "databaseId": 5636602217,
+      "state": "APPROVED",
+      "body": "",
+      "submittedAt": "2026-10-24T03:17:59Z",
+      "updatedAt": "2026-10-24T03:17:59Z",
+      "lastEditedAt": null,
+      "editor": null,
+      "author": {
+        "login": "dkropachev"
+      }
+    }
+  ],
+  "conclusions": [
+    "Both configured reviewers reported the same Cassandra-only test setup defect already reported by CodeRabbit. The run independently verified it and suppressed another inline report.",
+    "The saved Code Factory profile explicitly permits a clean-review conclusion. This overrides the installed posting skill default and explains the summary-only COMMENT.",
+    "GitHub reports that account dkropachev edited the COMMENT body at 03:17:40Z, after the run verified its original detailed body at 03:07:19Z. The account identity does not identify which person or client performed the edit.",
+    "The later APPROVED review at 03:17:59Z is a separate receipt. The investigated run ended at 03:07:22Z; no approval command appears in that run."
+  ],
+  "configurationChangedByInvestigation": false,
+  "githubMutationsByInvestigation": false
+}

@@ -3802,4 +3802,39 @@ An identified maintenance request with retained per-dependency observations and 
 `github-skill-source` · domain
 
 The recorded repository, revision selection and skill location identifying the origin of an installed standalone skill.
+
+<a id="published-review"></a>
+## Published review
+
+`published-review` · domain
+
+A submitted pull-request assessment identified by a provider receipt, author, verdict and reviewed commit.
+
+<a id="element-w-pr-evidence-review-receipt"></a>
+## Review receipt
+
+`element-w-pr-evidence-review-receipt` · element · scope: ui-w-pr-evidence
+
+The provider link identifying a submitted review.
+
+<a id="element-w-pr-evidence-review-content"></a>
+## Review content
+
+`element-w-pr-evidence-review-content` · element · scope: ui-w-pr-evidence
+
+The text and inline comments belonging to a submitted review.
+
+<a id="element-w-pr-evidence-review-freshness"></a>
+## Review freshness
+
+`element-w-pr-evidence-review-freshness` · element · scope: ui-w-pr-evidence
+
+The last successful observation time and any later observation failure for submitted reviews.
+
+<a id="element-w-pr-evidence-refresh-reviews"></a>
+## Refresh reviews
+
+`element-w-pr-evidence-refresh-reviews` · element · scope: ui-w-pr-evidence
+
+The control requesting an observation of submitted reviews.
 <!-- /specs:terms -->

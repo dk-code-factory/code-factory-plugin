@@ -1140,7 +1140,8 @@
         "S5",
         "S6",
         "S7",
-        "S8"
+        "S8",
+        "S9"
       ],
       "implementation": [
         {
@@ -1213,6 +1214,21 @@
           "path": "internal/app/github_usage.go",
           "anchor": "func (a *App) SyncNotifications(",
           "purpose": "Persist notification cadence/cursor, deduplicate updated targets and preserve scoped queue behavior."
+        },
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function PostedReviews(",
+          "purpose": "Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links."
+        },
+        {
+          "path": "internal/app/review_publication.go",
+          "anchor": "func (a *App) ReadPRReviews(",
+          "purpose": "Durable budgeted review observations, failure retention and post-turn refresh."
+        },
+        {
+          "path": "internal/providers/github_reviews.go",
+          "anchor": "func (g *GitHub) PublishedReviews(",
+          "purpose": "Read submitted review and inline-comment pages; omit pending drafts."
         }
       ],
       "tests": [
@@ -1446,10 +1462,43 @@
             "S8"
           ],
           "purpose": "A cached PR observation cannot become eligible by borrowing a newer repository checkpoint."
+        },
+        {
+          "path": "internal/app/review_publication_test.go",
+          "anchor": "func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Completed PR turns refresh actual GitHub receipts; repeated reads respect cadence; failure and pause retain successful receipts and freshness; issues reject."
+        },
+        {
+          "path": "internal/providers/github_reviews_test.go",
+          "anchor": "func TestPublishedReviewsKeepVerdictCommitAndPaginatedInlineEvidence(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "posted reviews show verified verdicts findings and refresh after completion",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestAuthenticatedMCPDiscoveryToolsAndUI(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Model/app discovery exposes read_pr_reviews; authenticated read_pr_reviews/read_run preserve receipt URL, reviewed head and inline findings."
         }
       ],
       "suites": [
-        "go"
+        "go",
+        "browser"
       ],
       "gaps": [
         {
@@ -1506,7 +1555,8 @@
         "repository-review-prompt",
         "github-request-budget",
         "github-request-reserve",
-        "github-review-notification"
+        "github-review-notification",
+        "published-review"
       ],
       "graph": {
         "start": "n0",
@@ -1568,6 +1618,11 @@
             "id": "request_budget",
             "label": "Shared request budget, reserve or cooldown defers reads and retains saved state",
             "scenario": "S8"
+          },
+          {
+            "id": "posted_reviews",
+            "label": "Observe submitted reviews with receipts, findings and explicit freshness",
+            "scenario": "S9"
           }
         ],
         "edges": [
@@ -1665,6 +1720,16 @@
             "from": "request_budget",
             "to": "n3",
             "label": "retain checkpoint and retry later"
+          },
+          {
+            "from": "n0",
+            "to": "posted_reviews",
+            "label": "PR selected or turn completed"
+          },
+          {
+            "from": "posted_reviews",
+            "to": "n5",
+            "label": "Show provider receipts or retained stale result"
           }
         ]
       }
@@ -4952,7 +5017,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -5042,6 +5108,21 @@
           "path": "internal/web/embed.go",
           "anchor": "func SettingsHTML(",
           "purpose": "Configuration opens through its own bridged document entry."
+        },
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function PostedReviews(",
+          "purpose": "Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links."
+        },
+        {
+          "path": "internal/app/review_publication.go",
+          "anchor": "func (a *App) ReadPRReviews(",
+          "purpose": "Durable budgeted review observations, failure retention and post-turn refresh."
+        },
+        {
+          "path": "internal/providers/github_reviews.go",
+          "anchor": "func (g *GitHub) PublishedReviews(",
+          "purpose": "Read submitted review and inline-comment pages; omit pending drafts."
         }
       ],
       "tests": [
@@ -5201,6 +5282,38 @@
             "S3"
           ],
           "purpose": "Host memoizes identical reads after empty journal response; two external changes still appear without reload, launch or message, using distinct read markers."
+        },
+        {
+          "path": "internal/app/review_publication_test.go",
+          "anchor": "func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Completed PR turns refresh actual GitHub receipts; repeated reads respect cadence; failure and pause retain successful receipts and freshness; issues reject."
+        },
+        {
+          "path": "internal/providers/github_reviews_test.go",
+          "anchor": "func TestPublishedReviewsKeepVerdictCommitAndPaginatedInlineEvidence(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "posted reviews show verified verdicts findings and refresh after completion",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestAuthenticatedMCPDiscoveryToolsAndUI(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Model/app discovery exposes read_pr_reviews; authenticated read_pr_reviews/read_run preserve receipt URL, reviewed head and inline findings."
         }
       ],
       "suites": [
@@ -5253,7 +5366,8 @@
         "S-SETTINGS",
         "C-OPEN-SETTINGS",
         "W-SESSION-CONSOLE",
-        "C-SESSION-CONSOLE"
+        "C-SESSION-CONSOLE",
+        "W-PR-EVIDENCE"
       ],
       "terms": [
         "host",
@@ -5262,7 +5376,8 @@
         "transcript",
         "coverage-gap",
         "unverified-behavior",
-        "session-console"
+        "session-console",
+        "published-review"
       ],
       "graph": {
         "start": "n0",
@@ -5303,6 +5418,11 @@
             "id": "workbench_s4",
             "label": "Switch between concise conversation and full session console without changing the retained session or reply draft.",
             "scenario": "S4"
+          },
+          {
+            "id": "posted_reviews",
+            "label": "Observe submitted reviews with receipts, findings and explicit freshness",
+            "scenario": "S5"
           }
         ],
         "edges": [
@@ -5360,6 +5480,16 @@
             "from": "workbench_s4",
             "to": "n6",
             "label": "resolved or explicit recovery"
+          },
+          {
+            "from": "n0",
+            "to": "posted_reviews",
+            "label": "PR selected or turn completed"
+          },
+          {
+            "from": "posted_reviews",
+            "to": "n6",
+            "label": "Show provider receipts or retained stale result"
           }
         ]
       }

@@ -9,7 +9,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import type { Snapshot, Run, Detail, JournalEvent } from "../src/types";
+import type { Snapshot, Run, Detail, JournalEvent, PRReviews } from "../src/types";
 function initial(): Snapshot {
   return {
     viewer: { login: "alex", teams: [] },
@@ -84,6 +84,7 @@ async function host(
     transportFault?: (name: string, args: Record<string, unknown>) => boolean;
     toolError?: { name: string; message: string };
     readItem?: (detail: Detail) => Promise<Detail>;
+    readReviews?: (id: string) => Promise<PRReviews>;
     failPreparation?: boolean;
     failPriority?: boolean;
     failSave?: boolean;
@@ -187,6 +188,9 @@ async function host(
             cursor: state.cursor,
             hasMore: false,
           };
+          break;
+        case "read_pr_reviews":
+          data = options.readReviews ? await options.readReviews(String(a.id)) : {itemId:String(a.id),reviews:[],syncedAt:new Date().toISOString(),lastAttempt:new Date().toISOString()};
           break;
         case "read_item": {
           const entry = state.inbox.find((entry) => entry.item.id === a.id)!;
@@ -4124,3 +4128,38 @@ test("explicit full-access launch shows never approvals and authorized publishin
   await showSettings(page);
   await expect(ui.getByText(/Automatic reviews use the selected pipeline.s sandbox and publishing/)).toBeVisible();
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`posted reviews show verified verdicts findings and refresh after completion in ${theme}`, async ({page}) => {
+    await page.setViewportSize({width:390,height:820});
+    const snapshot=initial();const entry=snapshot.inbox[0];
+    Object.assign(entry.item,{kind:"pr",head:"current-head",author:"someone",reviewRequests:["alex"]});entry.queues=["review"];
+    let response: PRReviews={itemId:entry.item.id,reviews:[],syncedAt:"0001-01-01T00:00:00Z",lastAttempt:"0001-01-01T00:00:00Z",error:"GitHub temporarily unavailable"};
+    const {ui,calls,state,openedLinks}=await host(page,{snapshot,theme,readReviews:async()=>structuredClone(response)});
+    await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+    const reviews=ui.getByRole("region",{name:"Posted reviews",exact:true});
+    await expect(reviews.getByText("Publication has not been verified.",{exact:true})).toBeVisible();
+    await expect(reviews.getByText("GitHub temporarily unavailable",{exact:true})).toBeVisible();
+    await expect(reviews.getByText(/No posted reviews found/)).toHaveCount(0);
+    response={itemId:entry.item.id,syncedAt:new Date().toISOString(),lastAttempt:new Date().toISOString(),reviews:[
+      {id:"9",url:"https://github.com/owner/repo/pull/1#pullrequestreview-9",author:"alex",state:"COMMENTED",head:"current-head",submittedAt:"2026-10-24T03:00:00Z",body:"Concrete verified review",comments:[{id:"10",url:"https://github.com/owner/repo/pull/1#discussion_r10",author:"alex",path:"lib/reactor.py",line:79,body:"Actionable P2 failure"}]},
+      {id:"8",url:"https://github.com/owner/repo/pull/1#pullrequestreview-8",author:"other",state:"APPROVED",head:"earlier-head",submittedAt:"2026-10-23T03:00:00Z",body:"Earlier approval",comments:[]}
+    ]};
+    state.reviewVersions={[entry.item.id]:response.lastAttempt};state.cursor++;
+    await expect(reviews.getByText("Concrete verified review",{exact:true})).toBeVisible();
+    await expect(reviews.getByText("Actionable P2 failure",{exact:true})).toBeVisible();
+    await expect(reviews).toContainText("COMMENTED");await expect(reviews).toContainText("APPROVED");
+    await expect(reviews).toContainText("Current head");await expect(reviews).toContainText("Earlier head");
+    await reviews.getByRole("link",{name:"Review by alex",exact:true}).click();
+    await reviews.getByRole("link",{name:"lib/reactor.py:79",exact:true}).click();
+    await expect.poll(()=>openedLinks).toEqual([response.reviews[0].url,response.reviews[0].comments[0].url]);
+    response={...response,error:"Could not refresh posted reviews; showing saved information."};
+    await reviews.getByRole("button",{name:"Refresh reviews",exact:true}).click();
+    await expect(reviews.getByRole("alert")).toContainText("showing saved information");
+    await expect(reviews.getByText("Concrete verified review",{exact:true})).toBeVisible();
+    expect(calls.filter(c=>["start_run","prepare_launch","prepare_pr_review"].includes(c.name))).toHaveLength(0);
+    expect(calls.filter(c=>c.name==="read_pr_reviews").every(c=>c.arguments.id===entry.item.id)).toBe(true);
+    await scanOwnedApp(page,`${theme}-posted-reviews`);
+  });
+}

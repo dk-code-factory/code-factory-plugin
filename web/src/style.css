@@ -100,6 +100,13 @@ nav button[aria-current] {
   padding: 6px 0;
   border-bottom: 1px solid var(--line);
 }
+.posted-review {
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--line);
+}
+.posted-review a {
+  color: var(--accent);
+}
 .session-console {
   font-family: monospace;
 }
