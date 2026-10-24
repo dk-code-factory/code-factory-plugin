@@ -248,6 +248,8 @@ func run() error {
 	server := transport.New(a, ev)
 	mux := http.NewServeMux()
 	mux.Handle("/mcp", server.Handler(token))
+	mux.Handle("/admin/dependencies", server.DependencyHandler(token))
+	mux.Handle("/admin/dependencies/", server.DependencyHandler(token))
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+token {
 			http.Error(w, "Unauthorized", 401)

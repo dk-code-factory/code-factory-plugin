@@ -191,7 +191,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		if in.Queue != "" && in.Queue != "all" && in.Queue != "working" && in.Queue != "issues" && in.Queue != "mine" && in.Queue != "review" {
 			return nil, fmt.Errorf("unknown queue")
 		}
-		entries, err := a.Inbox(ctx, in.State)
+		entries, err := a.InboxSummaries(ctx, in.State)
 		if err != nil {
 			return nil, err
 		}
@@ -278,7 +278,7 @@ func New(a *app.App, ev *events.Service) *Server {
 	bind(m, uri, "set_relationship", "Add or remove a local item relationship; never changes GitHub or Jira.", false, false, func(ctx context.Context, in LinkInput) (any, error) {
 		return nil, a.Link(ctx, domain.Relationship{Source: in.Source, Target: in.Target, Evidence: in.Evidence}, in.Remove)
 	})
-	bind(m, uri, "prepare_pr_review", "Prepare the configured PR review pipeline for a synchronized PR. Pass itemId from list_inbox (not a URL). Resolves repository reviewProfileId, then system default, then review; retains selected skills, model, pinned PR head and repository review prompt. Requires read-only and ask-before-publishing authority. Does not start work or call GitHub. Inspect the returned run, then use start_run with its id when the user requested a review. Use read_run/list_runs to check uncertain starts; never automatically replay them.", false, false, func(ctx context.Context, in PRReviewInput) (any, error) {
+	bind(m, uri, "prepare_pr_review", "Prepare the configured PR review pipeline for a synchronized PR. Pass itemId from list_inbox (not a URL). Resolves repository reviewProfileId, then system default, then review; retains selected skills, model, pinned PR head and repository review prompt. Accepts read-only/ask authority or an explicitly configured full-access/never/authorized profile. Does not start work or call GitHub. Inspect the returned run, then use start_run with its id when the user requested a review. Use read_run/list_runs to check uncertain starts; never automatically replay them.", false, false, func(ctx context.Context, in PRReviewInput) (any, error) {
 		r, e := a.Runs.PreparePRReview(ctx, in.ItemID)
 		return publicRun(r), e
 	})
@@ -383,7 +383,7 @@ func inboxSummaries(entries []domain.InboxEntry) []domain.InboxEntry {
 
 func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 	cursor := s.App.Store.Latest(ctx)
-	inbox, e := s.App.Inbox(ctx, "all")
+	inbox, e := s.App.InboxSummaries(ctx, "all")
 	if e != nil {
 		return nil, e
 	}
@@ -486,7 +486,7 @@ func (s *Server) detail(ctx context.Context, id string) (any, error) {
 	return map[string]any{"item": item, "user": state, "relationships": out, "tickets": tickets}, nil
 }
 func (s *Server) diagnostics(ctx context.Context) setup.Diagnostics {
-	return setup.Diagnose(ctx, s.App.DataDir, s.App.Runs.Binary, "", s.App.Store)
+	return setup.Diagnose(ctx, s.App.DataDir, s.App.Runs.CodexBinary(), "", s.App.Store)
 }
 
 func (s *Server) Handler(token string) http.Handler {

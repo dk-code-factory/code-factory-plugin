@@ -1,0 +1,26 @@
+{
+  "capturedAtUTC": "2026-10-24T01:08:57.801442+00:00",
+  "installedVersion": "0.1.0-996a39e0e1e1",
+  "ownerInstruction": "Full AI execution access; do not ask technical permission, ask only when a material answer/decision cannot reasonably be determined.",
+  "profileCount": 6,
+  "sandbox": "danger-full-access",
+  "approval": "never",
+  "publishing": "authorized",
+  "retainedRunGrants": 17,
+  "grantWasExplicitNotAnAutomaticProfileBackfill": true,
+  "taskHistoryWorkspacesModelsAndSkillsRetained": true,
+  "originalBlockedRunResumed": true,
+  "pendingCommandApprovalsAfterResume": 0,
+  "githubDecisionsReadAfterResume": {
+    "exitCode": 0,
+    "networkDenied": false
+  },
+  "automaticReviewIntakeEnabledByThisChange": false,
+  "deployedReviewLookupMilliseconds": [
+    84.0,
+    80.7,
+    79.4
+  ],
+  "reviewPRs": 11,
+  "tests": "Manual and automatic explicit-full profile cases, native startup arguments/private scratch/autonomous instructions, and visible browser full/never/authorized review with exactly one explicit Start."
+}

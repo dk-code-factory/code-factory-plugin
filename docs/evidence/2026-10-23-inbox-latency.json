@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-23",
+  "observedAtUTC": "2026-10-23T23:59:07.798880+00:00",
+  "baselineInstalledVersion": "0.1.0-b7acba63551a",
+  "request": "Find open pull requests awaiting the authenticated user review",
+  "liveCachedReadBefore": {
+    "listInboxReviewSeconds": 1.402,
+    "returnedReviewPRs": 11,
+    "cachedItems": 452,
+    "readRunSeconds": 0.012,
+    "openSettingsSeconds": 0.003
+  },
+  "rootCause": "Per-item user/assessment reads and repeated full relationship decoding during assessment context checks; full item/external history and retained run skill bundles read for summaries. No GitHub/model call is needed for the cached lookup.",
+  "syntheticFixture": {
+    "items": 452,
+    "relationships": 1372,
+    "externalPRs": 265,
+    "runsWithLargeSkillBundles": 27,
+    "realUserDataCopied": false
+  },
+  "beforeBenchmark": {
+    "millisecondsPerFullRead": 965.814321,
+    "bytesAllocatedPerRead": 775297922,
+    "allocationsPerRead": 7599278
+  },
+  "afterBenchmark": {
+    "millisecondsPerFullRead": 68.431286,
+    "millisecondsPerSummaryRead": 27.229475,
+    "bytesAllocatedPerSummaryRead": 6557585,
+    "allocationsPerSummaryRead": 52188
+  },
+  "fix": "Bulk keyed local reads, one ordered relationship index, identical canonical context hash, SQL JSON projection of list-only payloads before Go decoding, and minimal internal run state for work tracking.",
+  "verification": "Focused application/store/transport checks pass; mapped full reconciliation and release verification follow. Performance numbers are synthetic before/after measurements, not claimed as deployed API latency.",
+  "deployment": {
+    "version": "0.1.0-996a39e0e1e1",
+    "ownerAuthorizedRestart": true,
+    "actualReviewLookupMilliseconds": [
+      84.0,
+      80.7,
+      79.4
+    ],
+    "reviewPRs": 11
+  }
+}

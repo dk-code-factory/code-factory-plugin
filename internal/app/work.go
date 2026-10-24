@@ -29,7 +29,7 @@ func ContainsQueue(entry domain.InboxEntry, queue string) bool {
 }
 
 func (a *App) projectWork(ctx context.Context, items []domain.Item, links []domain.Relationship, entries []domain.InboxEntry) error {
-	runs, err := store.List[domain.Run](ctx, a.Store, "run")
+	runs, err := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot")
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (a *App) projectWork(ctx context.Context, items []domain.Item, links []doma
 	if err != nil {
 		return err
 	}
-	external, err := store.List[domain.Item](ctx, a.Store, "linked-pr")
+	external, err := store.ListWithout[domain.Item](ctx, a.Store, "linked-pr", "$.activity", "$.checks", "$.body")
 	if err != nil {
 		return err
 	}

@@ -2630,7 +2630,8 @@
         "UI-START-UNKNOWN",
         "UI-START-CONFIRMED",
         "UI-READABLE-APPROVALS",
-        "ADMIN-PLUGIN-GATE"
+        "ADMIN-PLUGIN-GATE",
+        "UI-FULL-ACCESS"
       ],
       "gaps": [
         {
@@ -3169,7 +3170,8 @@
         "UI-SETTINGS-CONCURRENT",
         "UI-ADMIN-REPO",
         "ADMIN-REVIEW-POLICY",
-        "ADMIN-REVIEW-ELIGIBILITY"
+        "ADMIN-REVIEW-ELIGIBILITY",
+        "UI-FULL-ACCESS"
       ],
       "gaps": [
         {
@@ -10264,7 +10266,8 @@
         "UI-ADMIN-PIPELINE",
         "ADMIN-PLUGIN-SKILLS",
         "ADMIN-REVIEW-POLICY",
-        "ADMIN-REVIEW-ELIGIBILITY"
+        "ADMIN-REVIEW-ELIGIBILITY",
+        "UI-FULL-ACCESS"
       ],
       "gaps": [],
       "suites": [
@@ -10274,7 +10277,7 @@
       ],
       "element_description": "System review-request policy, default review and implementation pipelines, plugin-check interval and save feedback.",
       "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins.",
-      "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review requires a read-only profile with ask-before-publishing authority."
+      "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review honors a configured read-only/ask profile or an explicit full-access/never/authorized profile. Selecting authority does not enable automatic review by itself."
     },
     {
       "id": "P-PLUGIN-ADMIN",
@@ -11594,6 +11597,12 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "fresh read markers observe external changes after a host memoizes an empty journal page",
       "assertion": "A host memoizes identical snapshot/journal arguments; after an empty journal reply, two external updates appear automatically, using distinct read markers and no launch/message mutation."
+    },
+    {
+      "id": "UI-FULL-ACCESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "explicit full-access launch shows never approvals and authorized publishing",
+      "assertion": "Prepared launch visibly retains full-access/never/authorized authority, starts only on explicit Start, and Settings explains that automatic reviews use the selected authority."
     }
   ],
   "source_map": [

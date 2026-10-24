@@ -156,6 +156,87 @@ func TestTaskSandboxRetainsIsolationAcrossSessionWake(t *testing.T) {
 	}
 }
 
+func TestExplicitFullAccessKeepsScratchAndDisablesTechnicalApprovals(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "hold")
+	ownerData := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", ownerData)
+	for _, name := range []string{"codex-repo-rules", "dk-pr-decisions"} {
+		if err := os.MkdirAll(filepath.Join(ownerData, name), 0700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(ownerData, name, "settings.json"), []byte(`{"owner":"fixture"}`), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	argsPath := filepath.Join(t.TempDir(), "args.jsonl")
+	record := filepath.Join(t.TempDir(), "calls.jsonl")
+	t.Setenv("CF_FAKE_ARGS_RECORD", argsPath)
+	t.Setenv("CF_FAKE_RECORD", record)
+	a, ctx := fixture(t)
+	r := prepareRun(t, a, ctx)
+	r.Profile.Sandbox, r.Profile.Approval, r.Profile.Publishing = "danger-full-access", "never", "authorized"
+	if err := a.Store.Put(ctx, "run", r.ID, r, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.Runs.Start(ctx, r.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "running" && r.TurnID != "" })
+	for _, name := range []string{"codex-repo-rules", "dk-pr-decisions"} {
+		target := filepath.Join(a.DataDir, "scratch", r.ID, "data", name, "settings.json")
+		data, err := os.ReadFile(target)
+		if err != nil || string(data) != `{"owner":"fixture"}` {
+			t.Fatal("full-access launch lost existing owner review context", name, err)
+		}
+		if err := os.WriteFile(target, []byte(`{"run":"retained"}`), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := a.Runs.taskSandbox(ctx, r); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"codex-repo-rules", "dk-pr-decisions"} {
+		data, err := os.ReadFile(filepath.Join(a.DataDir, "scratch", r.ID, "data", name, "settings.json"))
+		if err != nil || string(data) != `{"run":"retained"}` {
+			t.Fatal("continuation overwrote retained review context", name, err)
+		}
+		owner, err := os.ReadFile(filepath.Join(ownerData, name, "settings.json"))
+		if err != nil || string(owner) != `{"owner":"fixture"}` {
+			t.Fatal("task changed owner review settings", name, err)
+		}
+	}
+	b, err := os.ReadFile(argsPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "features.network_proxy=false") || !strings.Contains(string(b), filepath.Join(a.DataDir, "scratch", r.ID, "tmp")) || strings.Contains(string(b), "default_permissions=") {
+		t.Fatal("full access inherited bounded network or lost scratch", string(b))
+	}
+	b, err = os.ReadFile(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, line := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		var call struct {
+			Method string
+			Params map[string]any
+		}
+		if err := json.Unmarshal([]byte(line), &call); err != nil {
+			t.Fatal(err)
+		}
+		if call.Method == "thread/start" {
+			found = true
+			if call.Params["sandbox"] != "danger-full-access" || call.Params["approvalPolicy"] != "never" || !strings.Contains(call.Params["developerInstructions"].(string), "Ask the user only for a material decision") {
+				t.Fatal("owner autonomy not forwarded", call.Params)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("missing native thread authority")
+	}
+}
+
 func TestInvalidTaskSandboxFailsWithoutProviderFallback(t *testing.T) {
 	t.Setenv("CF_FAKE_MODE", "hold")
 	argsPath := filepath.Join(t.TempDir(), "provider-args.jsonl")

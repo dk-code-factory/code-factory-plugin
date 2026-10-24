@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "92b6fc484b9c16a3552098ceec871c339787e3d1",
-  "fingerprint": "c118ad9de302dcf7f6c8335b291c56b142df6c497083fb24328d107584852b89",
+  "base": "8a1164a9ab10a9cf1d30570e71b4d6d3c0c33a5c",
+  "fingerprint": "a7332e11a0d5e9f9b551e5ccb82ffe716347c3f89d7c71e8641c7f918fcf0b32",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "refactor",
-    "description": "Host subscription and callback behavior is unchanged; no campaign preparation result closes the open real-host callback gap.",
-    "implementation": "Optional Skill.EntryPath and extracted materialization do not modify event subscription, cursor or callback code.",
-    "tests": "Existing event fixtures remain mapped; no new snapshot assertion is represented as actual host notification delivery."
+    "description": "Notification delivery and provider intake remain unchanged; faster cached summary preparation does not emit notifications, mark items read or call GitHub. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes.",
+    "implementation": "Reviewed App.inbox/InboxSummaries, store.Records/ListWithout, shared assessmentContext and projectWork. Users/assessments/tickets are read once with authoritative storage keys; relationship order and context hashing stay identical. Large history/check and unused run skill fields are projected before Go decoding; ordinary inbox mutation and provider-read semantics retain their prior contracts. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes.",
+    "tests": "New TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions compares full/compact fields, legacy record keys, retained source history and immediate item/ticket invalidation. TestRecordsKeepStorageKeysAndProjectionPreservesSource verifies bound buckets and non-mutating projections. Existing mapped semantic/transport/browser suites are rerun; synthetic BenchmarkInboxRetainedHistory measures latency/allocations separately and establishes no live-provider or accessibility acceptance. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 7.001
+      "seconds": 10.939
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.224
     },
     {
       "command": [
@@ -44,16 +44,16 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.263
+      "seconds": 25.393
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "cbf911fb235bd7cfafefc3edfc1e7f18dec603f4b8df75aedf5eef586586a323",
-    "term:attention-request": "09887dea25781f282ec9461a12cb754e736eda50a0a660fcdaa6cfbfd9077145",
-    "term:coverage-gap": "2a656673009821e88b69f26dfa043b082830d0d885899b8ca140e49e2ec2638d",
-    "term:host": "065807937e6ac2a49e1cae36c9688b2fd9eed93b15d68e11ce67f45266debe53",
-    "term:known-limitation": "0df7869c1519f94ae4a1f66c601ea0fef0e45aeaab76a7265ac80fda8b122806",
-    "term:subscription": "2e3329104aff0798240f51237b0d8910aeaa9361ce3dbc455e8a3502f8081992",
-    "term:unverified-behavior": "d79632563b467476ec1665879f93430ddb22648f12230e00856fbc4ab46612b1"
+    "flow:receive-notifications": "25dfa49f6eda54ab6fabd41aeb1060323ad47bdccc19d94ff84fec9194f24d83",
+    "term:attention-request": "c913804704d8999778b008ee70fc8b34a1132d9eab22398c17202298beba653e",
+    "term:coverage-gap": "c2209335435caaaab7f6f7eece643dc3abfa1a44b65ad2bd177dd304043af7c7",
+    "term:host": "247a926b729a89c1adce1871b67d434e16795ddb8b09e5272f02a11c4386fc50",
+    "term:known-limitation": "e504c8a00fedd8e0d7b84066f6b0bdc408d20491cab83ade556815f02885a606",
+    "term:subscription": "f65121e3f06557b1918ac71aef193258cfe6d4d1b7b819a46c68d2b0c97322b8",
+    "term:unverified-behavior": "d8552957dca64a6dcc6c1f2855c5ca0cfb41c2db47e1158d08f2734916e5541e"
   }
 }

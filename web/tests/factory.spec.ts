@@ -4104,3 +4104,23 @@ test("fresh read markers observe external changes after a host memoizes an empty
   expect(reads.every(c => typeof c.arguments.freshness === "string" && c.arguments.freshness.length > 0)).toBe(true);
   expect(calls.some(c => ["prepare_launch", "start_run", "send_message"].includes(c.name))).toBe(false);
 });
+
+
+test("explicit full-access launch shows never approvals and authorized publishing", async ({ page }) => {
+  const snapshot = initial();
+  snapshot.profiles[0].sandbox = "danger-full-access";
+  snapshot.profiles[0].approval = "never";
+  snapshot.profiles[0].publishing = "authorized";
+  const { ui, calls, state } = await host(page, { snapshot });
+  await openItem(ui, /Fix reconnect regression/);
+  await ui.getByRole("button", { name: "New run", exact: true }).click();
+  const dialog = ui.getByRole("dialog", { name: "Launch agent" });
+  await expect(dialog).toContainText("danger-full-access · never");
+  await expect(dialog).toContainText("Authorized");
+  expect(calls.filter(c => c.name === "start_run")).toHaveLength(0);
+  await dialog.getByRole("button", { name: "Start agent", exact: true }).click();
+  await expect.poll(() => calls.filter(c => c.name === "start_run").length).toBe(1);
+  expect(state.runs[0].profile).toMatchObject({ sandbox: "danger-full-access", approval: "never", publishing: "authorized" });
+  await showSettings(page);
+  await expect(ui.getByText(/Automatic reviews use the selected pipeline.s sandbox and publishing/)).toBeVisible();
+});

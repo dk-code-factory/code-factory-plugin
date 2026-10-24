@@ -161,8 +161,8 @@ func (a *App) ProcessReviewRequests(ctx context.Context) error {
 			continue
 		}
 		var profile domain.Profile
-		if err = a.Store.Get(ctx, "profile", reviewProfileID(config, repo), &profile); err != nil || profile.Sandbox != "read-only" || profile.Publishing != "ask" {
-			a.reviewError(ctx, repo.ID, "Automatic review needs an available read-only pipeline with ask-before-publishing authority.")
+		if err = a.Store.Get(ctx, "profile", reviewProfileID(config, repo), &profile); err != nil || !reviewProfileReady(profile) {
+			a.reviewError(ctx, repo.ID, "Automatic review needs an available read-only/ask pipeline or an explicitly authorized full-access pipeline.")
 			continue
 		}
 		run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: item.ID, ProfileID: profile.ID})
@@ -253,10 +253,15 @@ func validateAutomaticStart(t *store.Tx, run domain.Run) error {
 	if err := t.Get("profile", run.Profile.ID, &profile); err != nil {
 		return err
 	}
-	if repo.Paused || repo.Error != "" || !reviewFresh(config, repo, item) || !autoReviewEnabled(config, repo) || !requestedReview(item, viewer) || item.Head != run.Base || repo.ReviewPrompt != run.ReviewPromptSnapshot || reviewProfileID(config, repo) != run.Profile.ID || string(raw(profile)) != string(raw(run.Profile)) || profile.Sandbox != "read-only" || profile.Publishing != "ask" {
+	if repo.Paused || repo.Error != "" || !reviewFresh(config, repo, item) || !autoReviewEnabled(config, repo) || !requestedReview(item, viewer) || item.Head != run.Base || repo.ReviewPrompt != run.ReviewPromptSnapshot || reviewProfileID(config, repo) != run.Profile.ID || string(raw(profile)) != string(raw(run.Profile)) || !reviewProfileReady(profile) {
 		return fmt.Errorf("automatic review policy or target changed; inspect the retained launch")
 	}
 	return nil
+}
+
+func reviewProfileReady(p domain.Profile) bool {
+	return p.Sandbox == "read-only" && p.Publishing == "ask" ||
+		p.Sandbox == "danger-full-access" && p.Approval == "never" && p.Publishing == "authorized"
 }
 
 func reviewFresh(_ domain.Config, repo domain.Repository, item domain.Item) bool {

@@ -148,6 +148,7 @@ These references identify existing assertions and explicit remaining gaps.
 | `API-GITHUB-LOCAL-DIAGNOSTICS` | [internal/setup/github_diagnostics_test.go](../../internal/setup/github_diagnostics_test.go) — `TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence` | Diagnostics perform only local GitHub credential lookup, expose no credential value, accept recent periodic reconciliation and distinguish paused/deferred monitoring from failure. |
 | `UI-ITEM-SUMMARY-MARKDOWN` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Markdown issue headings do not replace the useful conversation summary` | Conversation summary skips consecutive Markdown-only heading paragraphs, shows meaningful issue text, retains the original full description and never prepares/starts work. |
 | `UI-READ-FRESHNESS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `fresh read markers observe external changes after a host memoizes an empty journal page` | A host memoizes identical snapshot/journal arguments; after an empty journal reply, two external updates appear automatically, using distinct read markers and no launch/message mutation. |
+| `UI-FULL-ACCESS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `explicit full-access launch shows never approvals and authorized publishing` | Prepared launch visibly retains full-access/never/authorized authority, starts only on explicit Start, and Settings explains that automatic reviews use the selected authority. |
 <!-- /specs:references-assertions -->
 
 ## Entity coverage

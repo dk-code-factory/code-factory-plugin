@@ -176,7 +176,7 @@ func (m *Manager) questionCheck(ctx context.Context, model, text string) (bool, 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	messages := make(chan codex.Message, 128)
-	client, err := codex.Start(ctx, m.Binary, nil, func(msg codex.Message) {
+	client, err := codex.Start(ctx, m.CodexBinary(), nil, func(msg codex.Message) {
 		select {
 		case messages <- msg:
 		case <-ctx.Done():

@@ -522,9 +522,9 @@ export function RepositoryAdmin({
             Pause repository monitoring
           </label>
           <p>
-            Automatic reviews use the selected read-only pipeline and require
-            approval before publishing. Polling does not automatically implement
-            changes or post a review. A request is claimed once per PR head and
+            Automatic reviews use the selected pipeline's sandbox and publishing
+            authority. Repository polling launches work only when automatic review
+            is enabled. A request is claimed once per PR head and
             request episode.
           </p>
           <button>Save repository</button>

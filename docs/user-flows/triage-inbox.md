@@ -84,6 +84,7 @@ flowchart TD
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration
 - [internal/web/embed.go](../../internal/web/embed.go) — Embedded UI build and host-fixture configuration
 - [internal/app/work.go](../../internal/app/work.go) — Server queue membership and linked PR/work projections. (`func (a *App) projectWork(`)
+- [internal/app/app.go](../../internal/app/app.go) — Bulk-load keyed user/assessment/ticket state and project list history fields before Go decoding; retain canonical linked-context hashing and full source/detail records. (`func (a *App) InboxSummaries(`)
 
 ## Test references
 
@@ -111,10 +112,13 @@ flowchart TD
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestIndexPreservesHistoryInvalidatesChangedHeadAndBudgetEditsKeepAssessmentPolicy(`; S3, S5. Cheap index preserves full history and cannot reuse current-head status for a changed PR head.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `linked PR changes refresh full selected details without consuming another read or launch`; S3, S4. Latest linked PR metadata refreshes selected full detail without replaying read or launch actions.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Markdown issue headings do not replace the useful conversation summary`; S3. Skip Markdown-only headings in the compact source summary, retain full body and assert that reading never prepares/starts work.
+- [internal/app/inbox_reads_test.go](../../internal/app/inbox_reads_test.go) — `func TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions(`; S1, S2, S3. Full/compact reads agree outside omitted history; legacy embedded IDs do not override storage keys, source history remains intact and linked item/ticket changes invalidate inference immediately.
+- [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestRecordsKeepStorageKeysAndProjectionPreservesSource(`; S1, S2. Bulk reads retain database keys; bound JSON projections omit only requested large fields, scope to requested bucket and do not modify stored records.
+- [internal/app/inbox_bench_test.go](../../internal/app/inbox_bench_test.go) — `func BenchmarkInboxRetainedHistory(`; S3. Synthetic retained-history benchmark at452items/1372links/265externalPRs/27large skill snapshots. Measures full and compact latency/allocations; no user data or provider calls and no flaky timing pass threshold.
 
 ## Verification and gaps
 
-Local suites: `go`, `browser`.
+Local suites: `go`, `browser`, `inbox-performance`.
 Fixture success does not establish real-host acceptance.
 - **S1** — `gap-flow-triage-inbox-s1-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Acknowledge/read/New/action-history independence now has a local browser fixture. Each filter combination and the complete installed-host matrix remain unverified. Next verification: Assert each filter combination and record the current installed-host New/unread/action matrix.
 

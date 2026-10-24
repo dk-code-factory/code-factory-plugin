@@ -170,6 +170,25 @@
         "go.mod",
         "scripts/specs_lib"
       ]
+    },
+    "inbox-performance": {
+      "commands": [
+        [
+          "go",
+          "test",
+          "./internal/app",
+          "-run",
+          "^$",
+          "-bench",
+          "BenchmarkInboxRetainedHistory",
+          "-benchtime=3x"
+        ]
+      ],
+      "inputs": [
+        "internal",
+        "go.mod",
+        "go.sum"
+      ]
     }
   },
   "flows": [
@@ -884,6 +903,24 @@
             "S2"
           ],
           "purpose": "Retained entry/file traversal and outbound symlinks cannot escape snapshot roots; legacy standalone SKILL.md remains usable."
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestPreparePRReviewHonorsExplicitFullAccess(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"explicit full-access launch shows never approvals and authorized publishing\"",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "UI displays explicit full access, never approvals and authorized publishing; opens without Start, starts once on explicit action, and Settings describes selected authority."
         }
       ],
       "suites": [
@@ -1730,6 +1767,11 @@
           "path": "internal/app/work.go",
           "anchor": "func (a *App) projectWork(",
           "purpose": "Server queue membership and linked PR/work projections."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) InboxSummaries(",
+          "purpose": "Bulk-load keyed user/assessment/ticket state and project list history fields before Go decoding; retain canonical linked-context hashing and full source/detail records."
         }
       ],
       "tests": [
@@ -1931,11 +1973,39 @@
             "S3"
           ],
           "purpose": "Skip Markdown-only headings in the compact source summary, retain full body and assert that reading never prepares/starts work."
+        },
+        {
+          "path": "internal/app/inbox_reads_test.go",
+          "anchor": "func TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ],
+          "purpose": "Full/compact reads agree outside omitted history; legacy embedded IDs do not override storage keys, source history remains intact and linked item/ticket changes invalidate inference immediately."
+        },
+        {
+          "path": "internal/store/store_test.go",
+          "anchor": "func TestRecordsKeepStorageKeysAndProjectionPreservesSource(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Bulk reads retain database keys; bound JSON projections omit only requested large fields, scope to requested bucket and do not modify stored records."
+        },
+        {
+          "path": "internal/app/inbox_bench_test.go",
+          "anchor": "func BenchmarkInboxRetainedHistory(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Synthetic retained-history benchmark at452items/1372links/265externalPRs/27large skill snapshots. Measures full and compact latency/allocations; no user data or provider calls and no flaky timing pass threshold."
         }
       ],
       "suites": [
         "go",
-        "browser"
+        "browser",
+        "inbox-performance"
       ],
       "gaps": [
         {
@@ -3179,6 +3249,33 @@
             "S7"
           ],
           "purpose": "V2 metadata projection identifies the actual provider and completed descendant roles, rejects unrelated root contexts and excludes creator/account/content fields."
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestPreparePRReviewHonorsExplicitFullAccess(",
+          "scenarios": [
+            "S5",
+            "S6"
+          ],
+          "purpose": "Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestExplicitFullAccessKeepsScratchAndDisablesTechnicalApprovals(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Native startup receives danger-full-access and approval never, autonomous publishing/decision instructions, private scratch and disabled bounded proxy; no default bounded permission profile leaks into this explicit choice. Existing owner rules and Decisions seed private data even in full-access mode; repeated setup preserves run updates and leaves owner stores unchanged."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"explicit full-access launch shows never approvals and authorized publishing\"",
+          "scenarios": [
+            "S4",
+            "S6",
+            "S7"
+          ],
+          "purpose": "UI displays explicit full access, never approvals and authorized publishing; opens without Start, starts once on explicit action, and Settings describes selected authority."
         }
       ],
       "suites": [
@@ -3335,6 +3432,11 @@
             "id": "sandbox_refused",
             "label": "Sandbox initialization failed; retained work and authority preserved",
             "terminal": true
+          },
+          {
+            "id": "owner_full_access",
+            "label": "Honor explicit full access, never command approvals and authorized task publishing",
+            "scenario": "S7"
           }
         ],
         "edges": [
@@ -3455,6 +3557,16 @@
             "from": "bounded_sandbox",
             "to": "sandbox_refused",
             "label": "invalid policy; fail before provider launch"
+          },
+          {
+            "from": "prepare",
+            "to": "owner_full_access",
+            "label": "owner selected full-access profile"
+          },
+          {
+            "from": "owner_full_access",
+            "to": "accepted",
+            "label": "same retained task; ask only for unresolved material decisions"
           }
         ]
       }
@@ -5515,7 +5627,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -5647,6 +5760,45 @@
         {
           "path": "internal/codex/sandbox.go",
           "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/app/dependencies.go",
+          "purpose": "Serialize identified dependency jobs; stage and probe Codex before activation, update registered plugins and retain uncertain outcomes.",
+          "anchor": "func (m *Manager) UpdateDependencies("
+        },
+        {
+          "path": "internal/app/dependency_skills.go",
+          "purpose": "Register known GitHub origins; pin downloads, detect local edits, retain backups and atomically exchange skill directories.",
+          "anchor": "func (m *Manager) RegisterGitHubSkill("
+        },
+        {
+          "path": "internal/app/dependency_migration.go",
+          "purpose": "Explicitly migrate canonical legacy DK skill duplicates, rebind profiles and recover archived referenced paths after interruption.",
+          "anchor": "func (m *Manager) migrateLegacyDKSkills("
+        },
+        {
+          "path": "internal/dependencies/codex.go",
+          "purpose": "Verify stable dkropachev/codex fork release asset SHA256 and retain full CLI/companion package layout before probing.",
+          "anchor": "func StageCodex("
+        },
+        {
+          "path": "internal/dependencies/files.go",
+          "purpose": "Bound archives and reject traversal, links, duplicate files and special entries; fingerprint installed content.",
+          "anchor": "func Extract("
+        },
+        {
+          "path": "internal/transport/dependencies.go",
+          "purpose": "Private bearer-authenticated owner REST API outside MCP/public/browser routing, with strict JSON input and durable status.",
+          "anchor": "func (s *Server) DependencyHandler("
+        },
+        {
+          "path": "internal/codex/client.go",
+          "purpose": "No-model compatibility probe covering initialize, current account, skills, config and native plugin inventory.",
+          "anchor": "func Probe("
+        },
+        {
+          "path": "docs/dependency-admin.md",
+          "purpose": "Owner dependency API request, recovery, provenance and supported dependency boundaries."
         }
       ],
       "tests": [
@@ -5817,6 +5969,134 @@
             "S5"
           ],
           "purpose": "Configured local/home marketplace roots yield only their manifest files; malformed/relative roots fail and no containing owner directory becomes readable."
+        },
+        {
+          "path": "internal/app/sandbox_test.go",
+          "anchor": "func TestExplicitFullAccessKeepsScratchAndDisablesTechnicalApprovals(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Explicit full-access owner choice disables bounded proxy and forwards full/never/authorized instructions while retaining private scratch; no fallback weakens an invalid bounded profile."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyUpdateIsIdempotentAndKeepsUncertainOutcomes(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Duplicate deliveries do not repeat native changes; partial mutations and restart recovery retain uncertain observations without secret stderr."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyMaintenanceRejectsActiveWorkAndBlocksNewLaunches(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Active work prevents acceptance; maintenance blocks task Start and competing plugin changes."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestGitHubSkillUpgradePreservesBackupRejectsEditsAndUnsafeSource(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Pinned GitHub replacement retains original files and provenance; later local edits and unsafe source paths are rejected."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestCodexActivationUpdatesRecordedProviderAndKeepsPriorRuntime(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Provider switching retains prior runtime and executable while updating recorded and current provider selections."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestCodexUpdateProbesBeforeSwitchAndRetainsProviderOnFailure(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Verified staged candidate must pass protocol/auth/skills/plugins; an incompatible later candidate cannot replace the working provider."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestLegacyDKSkillMigrationRebindsProfilesAndRecoversMissingReferences(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Opt-in legacy migration retains backups, selects current native skills and restores old paths after a crash before profile migration."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestUpdatedPluginProfilesDeduplicateDiscoveryAndKeepPreparedSnapshots(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Repeated discovery roots do not create false ambiguity; new skill IDs update profiles while prepared snapshots remain unchanged."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestDependencyArchivesRejectTraversalLinksDuplicatesAndBudget(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Invalid archive paths, links, duplicates and oversized content are rejected; valid content survives extraction."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestSkillFingerprintSurvivesPrivateCopyAndDetectsEdits(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Owner-private copy permissions keep fingerprints stable; modified content and links invalidate update eligibility."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestCodexDownloadVerifiesDigestAndRetainsCompanions(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "The selected fork package digest and origin are required; companion binaries retain their distribution layout."
+        },
+        {
+          "path": "internal/transport/dependencies_test.go",
+          "anchor": "func TestDependencyAdminRequiresOwnerAndRejectsAmbiguousRequests(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Owner bearer/origin checks and strict JSON protect the API; identified updates are pollable and deduplicated."
+        },
+        {
+          "path": "internal/gateway/dependencies_test.go",
+          "anchor": "func TestDependencyAdminIsAbsentFromPublicGateway(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Plain and prefixed dependency routes remain unavailable through the public OAuth gateway."
+        },
+        {
+          "path": "internal/codex/compatibility_test.go",
+          "anchor": "func TestStableCodexVersionBoundary(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Stable minimum and numeric ordering accept upgrade candidates while rejecting older/prerelease CLI versions."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyMarketplaceFailureDoesNotBlockIndependentPlugins(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A failed renamed/unavailable Git marketplace remains an isolated result while independent plugins still update; failure output stays private."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyInventoryExcludesSkillContents(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Cached owner inventory exposes installed plugin/skill metadata while excluding skill contents and uninstalled catalog entries."
         }
       ],
       "suites": [
@@ -5865,7 +6145,9 @@
         "coverage-gap",
         "unverified-behavior",
         "question-recovery",
-        "session-console"
+        "session-console",
+        "dependency-operation",
+        "github-skill-source"
       ],
       "graph": {
         "start": "n0",
@@ -5919,6 +6201,21 @@
           {
             "id": "sandbox_refused",
             "label": "Sandbox initialization failed; retained work and authority preserved",
+            "terminal": true
+          },
+          {
+            "id": "dependency_admin",
+            "label": "Authenticate owner and inspect or update identified managed dependencies",
+            "scenario": "S6"
+          },
+          {
+            "id": "dependency_observed",
+            "label": "Observe verified per-dependency outcomes; retain backups and existing authentication",
+            "terminal": true
+          },
+          {
+            "id": "dependency_preserved",
+            "label": "Reject busy, invalid or incompatible changes; retain state and inspect uncertain outcomes",
             "terminal": true
           }
         ],
@@ -6002,6 +6299,21 @@
             "from": "bounded_sandbox",
             "to": "sandbox_refused",
             "label": "invalid policy; fail before provider launch"
+          },
+          {
+            "from": "n0",
+            "to": "dependency_admin",
+            "label": "explicit owner dependency maintenance"
+          },
+          {
+            "from": "dependency_admin",
+            "to": "dependency_observed",
+            "label": "authorized idle operation and verified changes"
+          },
+          {
+            "from": "dependency_admin",
+            "to": "dependency_preserved",
+            "label": "unauthorized, active work, local edits, failed probe or interruption"
           }
         ]
       }
@@ -6014,7 +6326,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -6117,6 +6430,45 @@
           "path": "internal/commandenv/providers.go",
           "anchor": "func Prepare(",
           "purpose": "Generate private versioned command launchers for exactly the recorded provider executables, quote paths literally and preserve prior launcher sets for rollback."
+        },
+        {
+          "path": "internal/app/dependencies.go",
+          "purpose": "Serialize identified dependency jobs; stage and probe Codex before activation, update registered plugins and retain uncertain outcomes.",
+          "anchor": "func (m *Manager) UpdateDependencies("
+        },
+        {
+          "path": "internal/app/dependency_skills.go",
+          "purpose": "Register known GitHub origins; pin downloads, detect local edits, retain backups and atomically exchange skill directories.",
+          "anchor": "func (m *Manager) RegisterGitHubSkill("
+        },
+        {
+          "path": "internal/app/dependency_migration.go",
+          "purpose": "Explicitly migrate canonical legacy DK skill duplicates, rebind profiles and recover archived referenced paths after interruption.",
+          "anchor": "func (m *Manager) migrateLegacyDKSkills("
+        },
+        {
+          "path": "internal/dependencies/codex.go",
+          "purpose": "Verify stable dkropachev/codex fork release asset SHA256 and retain full CLI/companion package layout before probing.",
+          "anchor": "func StageCodex("
+        },
+        {
+          "path": "internal/dependencies/files.go",
+          "purpose": "Bound archives and reject traversal, links, duplicate files and special entries; fingerprint installed content.",
+          "anchor": "func Extract("
+        },
+        {
+          "path": "internal/transport/dependencies.go",
+          "purpose": "Private bearer-authenticated owner REST API outside MCP/public/browser routing, with strict JSON input and durable status.",
+          "anchor": "func (s *Server) DependencyHandler("
+        },
+        {
+          "path": "internal/codex/client.go",
+          "purpose": "No-model compatibility probe covering initialize, current account, skills, config and native plugin inventory.",
+          "anchor": "func Probe("
+        },
+        {
+          "path": "docs/dependency-admin.md",
+          "purpose": "Owner dependency API request, recovery, provenance and supported dependency boundaries."
         }
       ],
       "tests": [
@@ -6321,6 +6673,126 @@
             "S1"
           ],
           "purpose": "A replaced launcher symlink cannot overwrite an outside owner file."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyUpdateIsIdempotentAndKeepsUncertainOutcomes(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Duplicate deliveries do not repeat native changes; partial mutations and restart recovery retain uncertain observations without secret stderr."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyMaintenanceRejectsActiveWorkAndBlocksNewLaunches(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Active work prevents acceptance; maintenance blocks task Start and competing plugin changes."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestGitHubSkillUpgradePreservesBackupRejectsEditsAndUnsafeSource(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Pinned GitHub replacement retains original files and provenance; later local edits and unsafe source paths are rejected."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestCodexActivationUpdatesRecordedProviderAndKeepsPriorRuntime(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Provider switching retains prior runtime and executable while updating recorded and current provider selections."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestCodexUpdateProbesBeforeSwitchAndRetainsProviderOnFailure(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Verified staged candidate must pass protocol/auth/skills/plugins; an incompatible later candidate cannot replace the working provider."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestLegacyDKSkillMigrationRebindsProfilesAndRecoversMissingReferences(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Opt-in legacy migration retains backups, selects current native skills and restores old paths after a crash before profile migration."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestUpdatedPluginProfilesDeduplicateDiscoveryAndKeepPreparedSnapshots(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Repeated discovery roots do not create false ambiguity; new skill IDs update profiles while prepared snapshots remain unchanged."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestDependencyArchivesRejectTraversalLinksDuplicatesAndBudget(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Invalid archive paths, links, duplicates and oversized content are rejected; valid content survives extraction."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestSkillFingerprintSurvivesPrivateCopyAndDetectsEdits(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Owner-private copy permissions keep fingerprints stable; modified content and links invalidate update eligibility."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestCodexDownloadVerifiesDigestAndRetainsCompanions(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "The selected fork package digest and origin are required; companion binaries retain their distribution layout."
+        },
+        {
+          "path": "internal/transport/dependencies_test.go",
+          "anchor": "func TestDependencyAdminRequiresOwnerAndRejectsAmbiguousRequests(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Owner bearer/origin checks and strict JSON protect the API; identified updates are pollable and deduplicated."
+        },
+        {
+          "path": "internal/gateway/dependencies_test.go",
+          "anchor": "func TestDependencyAdminIsAbsentFromPublicGateway(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Plain and prefixed dependency routes remain unavailable through the public OAuth gateway."
+        },
+        {
+          "path": "internal/codex/compatibility_test.go",
+          "anchor": "func TestStableCodexVersionBoundary(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Stable minimum and numeric ordering accept upgrade candidates while rejecting older/prerelease CLI versions."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyMarketplaceFailureDoesNotBlockIndependentPlugins(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "A failed renamed/unavailable Git marketplace remains an isolated result while independent plugins still update; failure output stays private."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestDependencyInventoryExcludesSkillContents(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Cached owner inventory exposes installed plugin/skill metadata while excluding skill contents and uninstalled catalog entries."
         }
       ],
       "suites": [
@@ -6372,7 +6844,9 @@
         "owner",
         "verification",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "dependency-operation",
+        "github-skill-source"
       ],
       "graph": {
         "start": "n0",
@@ -6413,6 +6887,21 @@
           {
             "id": "n7",
             "label": "Release activated but interrupted before change is finalized"
+          },
+          {
+            "id": "dependency_admin",
+            "label": "Authenticate owner and inspect or update identified managed dependencies",
+            "scenario": "S5"
+          },
+          {
+            "id": "dependency_observed",
+            "label": "Observe verified per-dependency outcomes; retain backups and existing authentication",
+            "terminal": true
+          },
+          {
+            "id": "dependency_preserved",
+            "label": "Reject busy, invalid or incompatible changes; retain state and inspect uncertain outcomes",
+            "terminal": true
           }
         ],
         "edges": [
@@ -6480,6 +6969,21 @@
             "from": "n2",
             "to": "n3",
             "label": "automatic recovery fails; explicit rollback"
+          },
+          {
+            "from": "n0",
+            "to": "dependency_admin",
+            "label": "explicit owner dependency maintenance"
+          },
+          {
+            "from": "dependency_admin",
+            "to": "dependency_observed",
+            "label": "authorized idle operation and verified changes"
+          },
+          {
+            "from": "dependency_admin",
+            "to": "dependency_preserved",
+            "label": "unauthorized, active work, local edits, failed probe or interruption"
           }
         ]
       }

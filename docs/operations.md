@@ -13,7 +13,7 @@ Unpack the versioned `dist/code-factory-…-linux-amd64.tar.gz` archive and veri
 adjacent SHA256, then its `SHA256SUMS`. From the extracted directory run
 `./code-factory install-dependencies` and `./code-factory install`.
 The installer needs no Go or Node. It reuses Git, authenticated GitHub CLI and
-Codex 0.161.0. Missing provider executables are reported without replacing them.
+stable Codex 0.161.0 or later. Managed Codex updates require a compatibility probe. Missing provider executables are reported without replacing them.
 The tunnel downloader uses the official latest-release metadata and requires a
 matching SHA256 digest. The checksum establishes integrity against that official
 HTTPS source; it is not an independent release signature.
@@ -230,3 +230,10 @@ callback, soak, login, nested runtime or accessibility acceptance gaps.
 Shell temp settings include both `TMPDIR` and zsh `TMPPREFIX`; otherwise heredoc
 creation can fail despite a writable scratch directory. Installed-version checks
 and the initial-candidate failure are retained in the sandbox evidence.
+
+## Dependency updates
+
+Use the [private owner dependency API](dependency-admin.md) to check and update
+Codex, installed plugins and standalone skills with recorded GitHub provenance.
+Operations retain per-dependency outcomes and backups and never replay uncertain
+changes. New runs load updated skill bundles; retained runs keep frozen contents.

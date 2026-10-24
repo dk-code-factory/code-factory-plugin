@@ -10,6 +10,7 @@ import (
 	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -68,7 +69,28 @@ func (t *Tx) Get(kind, id string, out any) error {
 	return decode(t.tx.QueryRowContext(t.ctx, "SELECT data FROM entities WHERE kind=? AND id=?", kind, id), out)
 }
 func (s *Store) List(ctx context.Context, kind string) ([]json.RawMessage, error) {
-	rows, e := s.db.QueryContext(ctx, "SELECT data FROM entities WHERE kind=? ORDER BY id", kind)
+	return s.list(ctx, kind, "data", nil)
+}
+
+// ListWithout removes large fields inside SQLite before transferring/decoding
+// summary records. Paths are bound parameters, never SQL fragments.
+func ListWithout[T any](ctx context.Context, s *Store, kind string, paths ...string) ([]T, error) {
+	if len(paths) == 0 {
+		return List[T](ctx, s, kind)
+	}
+	args := make([]any, len(paths))
+	for i, path := range paths {
+		args[i] = path
+	}
+	rows, err := s.list(ctx, kind, "json_remove(data,"+strings.TrimSuffix(strings.Repeat("?,", len(paths)), ",")+")", args)
+	if err != nil {
+		return nil, err
+	}
+	return decodeList[T](rows)
+}
+
+func (s *Store) list(ctx context.Context, kind, expression string, args []any) ([]json.RawMessage, error) {
+	rows, e := s.db.QueryContext(ctx, "SELECT "+expression+" FROM entities WHERE kind=? ORDER BY id", append(args, kind)...)
 	if e != nil {
 		return nil, e
 	}
@@ -88,15 +110,39 @@ func List[T any](ctx context.Context, s *Store, kind string) ([]T, error) {
 	if e != nil {
 		return nil, e
 	}
+	return decodeList[T](rows)
+}
+
+func decodeList[T any](rows []json.RawMessage) ([]T, error) {
 	out := make([]T, 0, len(rows))
 	for _, b := range rows {
 		var v T
-		if e = json.Unmarshal(b, &v); e != nil {
-			return nil, e
+		if err := json.Unmarshal(b, &v); err != nil {
+			return nil, err
 		}
 		out = append(out, v)
 	}
 	return out, nil
+}
+
+// Records reads a bucket once and keeps the database key authoritative, even for
+// older records whose embedded ID is missing. Decode only the records needed.
+func (s *Store) Records(ctx context.Context, kind string) (map[string]json.RawMessage, error) {
+	rows, err := s.db.QueryContext(ctx, "SELECT id,data FROM entities WHERE kind=?", kind)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]json.RawMessage{}
+	for rows.Next() {
+		var id string
+		var data []byte
+		if err := rows.Scan(&id, &data); err != nil {
+			return nil, err
+		}
+		out[id] = data
+	}
+	return out, rows.Err()
 }
 func (t *Tx) Put(kind, id string, v any) error {
 	b, e := json.Marshal(v)

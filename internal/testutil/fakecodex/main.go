@@ -29,7 +29,11 @@ func main() {
 		return
 	}
 	if len(os.Args) > 1 && os.Args[1] == "--version" {
-		fmt.Println("codex-cli 0.161.0")
+		version := os.Getenv("CF_FAKE_VERSION")
+		if version == "" {
+			version = "0.161.0"
+		}
+		fmt.Println("codex-cli " + version)
 		return
 	}
 	scanner := bufio.NewScanner(os.Stdin)
@@ -85,7 +89,11 @@ func main() {
 				time.Sleep(150 * time.Millisecond)
 			}
 			if root := os.Getenv("CF_FAKE_SKILL_ROOT"); root != "" {
-				reply(map[string]any{"data": []any{map[string]any{"skills": []any{map[string]any{"name": "fixture-plugin-skill", "path": filepath.Join(root, "SKILL.md"), "enabled": true}}}}})
+				name := os.Getenv("CF_FAKE_SKILL_NAME")
+				if name == "" {
+					name = "fixture-plugin-skill"
+				}
+				reply(map[string]any{"data": []any{map[string]any{"skills": []any{map[string]any{"name": name, "path": filepath.Join(root, "SKILL.md"), "enabled": true}}}}})
 			} else {
 				reply(map[string]any{"data": []any{}})
 			}
@@ -200,8 +208,16 @@ func pluginCLI() {
 	reply := func(v any) { _ = json.NewEncoder(os.Stdout).Encode(v) }
 	if args[0] == "marketplace" {
 		if args[1] == "list" {
-			reply(map[string]any{"marketplaces": []any{map[string]any{"name": "fixture", "root": root, "marketplaceSource": map[string]string{"sourceType": "local"}}}})
+			if os.Getenv("CF_PLUGIN_GITMARKETS") != "" {
+				reply(map[string]any{"marketplaces": []any{map[string]any{"name": "unavailable", "root": root, "marketplaceSource": map[string]string{"sourceType": "git"}}, map[string]any{"name": "fixture", "root": root, "marketplaceSource": map[string]string{"sourceType": "git"}}}})
+			} else {
+				reply(map[string]any{"marketplaces": []any{map[string]any{"name": "fixture", "root": root, "marketplaceSource": map[string]string{"sourceType": "local"}}}})
+			}
 		} else {
+			if os.Getenv("CF_PLUGIN_GITMARKETS") != "" && args[len(args)-1] == "unavailable" {
+				fmt.Fprint(os.Stderr, "private-marketplace-secret")
+				os.Exit(3)
+			}
 			reply(map[string]string{"marketplaceName": "fixture"})
 		}
 		return

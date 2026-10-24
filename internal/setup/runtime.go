@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"codefactory/internal/codex"
 	"codefactory/internal/commandenv"
 	"context"
 	"encoding/json"
@@ -78,9 +79,8 @@ func ResolveRuntime(ctx context.Context, dir, listen string) (Runtime, error) {
 	r.Path = strings.Join(dirs, string(os.PathListSeparator))
 	check, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	b, e := exec.CommandContext(check, r.Paths["codex"], "--version").Output()
-	if e != nil || string(b) != "codex-cli 0.161.0\n" {
-		return r, fmt.Errorf("setup blocker: Codex 0.161.0 is required")
+	if _, e := codex.Version(check, r.Paths["codex"]); e != nil {
+		return r, fmt.Errorf("setup blocker: stable Codex 0.161.0 or later is required")
 	}
 	return r, nil
 }

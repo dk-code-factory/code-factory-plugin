@@ -147,7 +147,7 @@ func validMarketplaceSource(s string) bool {
 
 // Never return provider stdout/stderr on failure: third-party messages may contain credentials.
 func (m *Manager) pluginCommand(ctx context.Context, args ...string) ([]byte, error) {
-	cmd := exec.CommandContext(ctx, m.Binary, append([]string{"plugin"}, args...)...)
+	cmd := exec.CommandContext(ctx, m.CodexBinary(), append([]string{"plugin"}, args...)...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pdeathsig: syscall.SIGKILL}
 	cmd.Cancel = func() error { return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) }
 	cmd.WaitDelay = 2 * time.Second
@@ -161,7 +161,7 @@ func (m *Manager) pluginCommand(ctx context.Context, args ...string) ([]byte, er
 }
 
 type boundedOutput struct {
-	dst       *bytes.Buffer
+	dst       io.Writer
 	remaining int
 }
 
@@ -188,7 +188,7 @@ func (m *Manager) runPluginOperation(op domain.PluginOperation, in PluginAction)
 		op.Error = "Operation state could not be recorded. Refresh inventory before retrying."
 		return
 	}
-	_, versionErr := codex.Version(ctx, m.Binary)
+	_, versionErr := codex.Version(ctx, m.CodexBinary())
 	err := versionErr
 	if err == nil {
 		switch in.Action {

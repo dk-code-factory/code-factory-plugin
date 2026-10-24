@@ -3788,4 +3788,18 @@ The interval between scheduled review-notification checks.
 The cached application request count, observed remaining quota and deferral information.
 
 Aliases: usage.
+
+<a id="dependency-operation"></a>
+## Dependency operation
+
+`dependency-operation` · domain
+
+An identified maintenance request with retained per-dependency observations and a lifecycle outcome.
+
+<a id="github-skill-source"></a>
+## GitHub skill source
+
+`github-skill-source` · domain
+
+The recorded repository, revision selection and skill location identifying the origin of an installed standalone skill.
 <!-- /specs:terms -->

@@ -23,10 +23,10 @@ Settings is independent of the task UI and has no Inbox/Agents navigation. Savin
 ## Scenarios
 
 - **S1** Repository settings are accepted and available to subsequent synchronization and launch.
-- **S2** Profiles and skills can be saved and selected; unsupported profile choices, unsupported skill names and a missing required skill header are rejected.
+- **S2** Profiles and skills can be saved and selected, including an explicit full-access/never/authorized choice for autonomous execution and publishing; unsupported profile choices, unsupported skill names and a missing required skill header are rejected.
 - **S3** Changing assessment policy invalidates cached priority assessments.
 
-- **S4** System defaults queue review requests. A repository inherits or overrides queue/automatic behavior and role pipelines, can pause monitoring, and adds owner review instructions to its generic prompt. Last poll, sync errors and review-policy errors remain visible. Older cached forms preserve omitted monitoring/default fields; explicit inheritance or empty extra prompt clears only the chosen value.
+- **S4** System defaults queue review requests. An explicitly configured full-access/never/authorized review pipeline is eligible alongside read-only/ask; selecting permissions does not itself enable automatic review. A repository inherits or overrides queue/automatic behavior and role pipelines, can pause monitoring, and adds owner review instructions to its generic prompt. Last poll, sync errors and review-policy errors remain visible. Older cached forms preserve omitted monitoring/default fields; explicit inheritance or empty extra prompt clears only the chosen value.
 - **S5** Admin widget, plugin tools and bundled admin skill observe installed/available Codex plugins, enabled state, versions, update status and durable operations. The owner adds sources and explicitly installs, updates or removes plugins. Scheduled metadata checks never install updates. Uncertain operations retain observations and never replay. Discovered plugin/standalone skills remain selectable for future review and implementation profiles; unavailable skills cannot be newly prepared. Unknown remote-catalog version or authentication readiness remains explicit.
 
 - **S6** The owner saves a bounded application GitHub request budget, reserve and notification interval without triggering a repository poll. Usage displays cached counts and observed quotas. Budget-only edits preserve priority assessments. Omitted fields from older forms retain their values; independent skill/agent GitHub usage is identified separately.
@@ -129,6 +129,8 @@ flowchart TD
 - [internal/app/skill_snapshots_test.go](../../internal/app/skill_snapshots_test.go) — `func TestPluginSkillSnapshotKeepsPackageResourcesAndRetainedEntrypoint(`; S2. Package-level lifecycle/procedure resources and executable helpers retain relative paths and original content after installed source deletion and repeated materialization.
 - [internal/app/skill_snapshots_test.go](../../internal/app/skill_snapshots_test.go) — `func TestSkillSnapshotRejectsEscapesLinksMissingEntryAndOversize(`; S2. Manifest escapes, wrong skills directory, symlinks, missing entrypoints and oversized bundles fail instead of producing incomplete snapshots.
 - [internal/app/skill_snapshots_test.go](../../internal/app/skill_snapshots_test.go) — `func TestRetainedSkillRejectsTraversalAndPreservesStandaloneCompatibility(`; S2. Retained entry/file traversal and outbound symlinks cannot escape snapshot roots; legacy standalone SKILL.md remains usable.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewHonorsExplicitFullAccess(`; S2, S4. Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("explicit full-access launch shows never approvals and authorized publishing"`; S2, S4. UI displays explicit full access, never approvals and authorized publishing; opens without Start, starts once on explicit action, and Settings describes selected authority.
 
 ## Verification and gaps
 

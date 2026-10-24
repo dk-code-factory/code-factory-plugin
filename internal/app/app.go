@@ -160,9 +160,41 @@ func (a *App) SaveProfile(ctx context.Context, p domain.Profile) error {
 	return a.Store.Put(ctx, "profile", p.ID, p, "profile.changed")
 }
 func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, error) {
-	items, e := store.List[domain.Item](ctx, a.Store, "item")
+	return a.inbox(ctx, state, false)
+}
+
+// InboxSummaries avoids loading historical activity/check blobs for list views.
+// Full detail and assessment inputs continue to use the retained source records.
+func (a *App) InboxSummaries(ctx context.Context, state string) ([]domain.InboxEntry, error) {
+	return a.inbox(ctx, state, true)
+}
+
+func (a *App) inbox(ctx context.Context, state string, compact bool) ([]domain.InboxEntry, error) {
+	var items []domain.Item
+	var e error
+	if compact {
+		items, e = store.ListWithout[domain.Item](ctx, a.Store, "item", "$.activity", "$.checks", "$.pr.checks")
+	} else {
+		items, e = store.List[domain.Item](ctx, a.Store, "item")
+	}
 	if e != nil {
 		return nil, e
+	}
+	users, e := a.Store.Records(ctx, "user")
+	if e != nil {
+		return nil, e
+	}
+	assessments, e := a.Store.Records(ctx, "assessment")
+	if e != nil {
+		return nil, e
+	}
+	tickets, e := a.Store.Records(ctx, "ticket")
+	if e != nil {
+		return nil, e
+	}
+	byID := map[string]domain.Item{}
+	for _, i := range items {
+		byID[i.ID] = i
 	}
 	c, e := a.Config(ctx)
 	if e != nil {
@@ -171,6 +203,10 @@ func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, err
 	links, e := store.List[domain.Relationship](ctx, a.Store, "relationship")
 	if e != nil {
 		return nil, e
+	}
+	outgoing := map[string][]domain.Relationship{}
+	for _, l := range links {
+		outgoing[l.Source] = append(outgoing[l.Source], l)
 	}
 	kinds := map[string]string{}
 	for _, item := range items {
@@ -191,11 +227,11 @@ func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, err
 			continue
 		}
 		var u domain.UserState
-		if e = a.Store.Get(ctx, "user", i.ID, &u); e != nil {
+		if e = decodeInboxRecord(users, i.ID, &u); e != nil {
 			return nil, e
 		}
 		var assess domain.Assessment
-		if e = a.Store.Get(ctx, "assessment", i.ID, &assess); e != nil && !errors.Is(e, store.ErrNotFound) {
+		if e = decodeInboxRecord(assessments, i.ID, &assess); e != nil && !errors.Is(e, store.ErrNotFound) {
 			return nil, e
 		}
 		entry := domain.InboxEntry{HasPullRequest: hasPR[i.ID], Item: i, User: u, Unread: u.ReadRevision != i.Revision, Assessment: assess, PrioritySource: "pending"}
@@ -212,7 +248,17 @@ func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, err
 					}
 				}
 			}
-			if entry.Priority == nil && assess.Status == "complete" && assess.Revision == i.Revision && assess.Policy == c.PolicyVersion && assess.Context == a.AssessmentContext(ctx, i) {
+			if entry.Priority == nil && assess.Status == "complete" && assess.Revision == i.Revision && assess.Policy == c.PolicyVersion && assess.Context == assessmentContext(i, outgoing[i.ID], func(id string) (domain.Item, error) {
+				v, ok := byID[id]
+				if !ok {
+					return v, store.ErrNotFound
+				}
+				return v, nil
+			}, func(id string) (domain.Ticket, error) {
+				var v domain.Ticket
+				err := decodeInboxRecord(tickets, id, &v)
+				return v, err
+			}) {
 				x := assess.Priority
 				entry.Priority = &x
 				entry.PrioritySource = "inference"
@@ -237,6 +283,14 @@ func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, err
 		return out[i].Item.Updated.After(out[j].Item.Updated)
 	})
 	return out, nil
+}
+
+func decodeInboxRecord(rows map[string]json.RawMessage, id string, out any) error {
+	b, ok := rows[id]
+	if !ok {
+		return store.ErrNotFound
+	}
+	return json.Unmarshal(b, out)
 }
 func (a *App) UserAction(ctx context.Context, id, kind, revision string, priority *int) error {
 	return a.Store.Write(ctx, func(t *store.Tx) error {
@@ -618,18 +672,28 @@ func (a *App) AssessmentContext(ctx context.Context, item domain.Item) string {
 	if err != nil {
 		return "unavailable"
 	}
+	return assessmentContext(item, links, func(id string) (domain.Item, error) {
+		var v domain.Item
+		err := a.Store.Get(ctx, "item", id, &v)
+		return v, err
+	}, func(id string) (domain.Ticket, error) {
+		var v domain.Ticket
+		err := a.Store.Get(ctx, "ticket", id, &v)
+		return v, err
+	})
+}
+
+func assessmentContext(item domain.Item, links []domain.Relationship, getItem func(string) (domain.Item, error), getTicket func(string) (domain.Ticket, error)) string {
 	data := []any{item.Revision}
 	for _, l := range links {
 		if l.Source != item.ID {
 			continue
 		}
 		data = append(data, l)
-		var linked domain.Item
-		if a.Store.Get(ctx, "item", l.Target, &linked) == nil {
+		if linked, err := getItem(l.Target); err == nil {
 			data = append(data, linked.Revision)
 		}
-		var ticket domain.Ticket
-		if a.Store.Get(ctx, "ticket", l.Target, &ticket) == nil {
+		if ticket, err := getTicket(l.Target); err == nil {
 			data = append(data, ticket)
 		}
 	}

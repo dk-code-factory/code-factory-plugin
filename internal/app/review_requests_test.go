@@ -5,6 +5,7 @@ import (
 	"codefactory/internal/store"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -78,6 +79,38 @@ func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(t *testing.T) {
 				waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", run.ID, &run); return run.Status == "idle" })
 				if _, err := a.Runs.Start(ctx, run.ID, false); err == nil {
 					t.Fatal("repeated Start was accepted")
+				}
+			}
+		})
+	}
+}
+
+func TestPreparePRReviewHonorsExplicitFullAccess(t *testing.T) {
+	for _, automatic := range []bool{false, true} {
+		t.Run(fmt.Sprint(automatic), func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			ctx := a.Runs.ctx
+			p := domain.Profile{ID: "review", Name: "Autonomous review", Prompt: "Review {{title}}.", Sandbox: "danger-full-access", Approval: "never", Publishing: "authorized"}
+			if err := a.SaveProfile(ctx, p); err != nil {
+				t.Fatal(err)
+			}
+			if automatic {
+				c, _ := a.Config(ctx)
+				c.AutoReview = true
+				if err := a.SaveConfig(ctx, c); err != nil {
+					t.Fatal(err)
+				}
+				if err := a.ProcessReviewRequests(ctx); err != nil {
+					t.Fatal(err)
+				}
+				claims, _ := store.List[reviewClaim](ctx, a.Store, "review-claim")
+				if len(claims) != 1 {
+					t.Fatal("explicit full-access automatic profile rejected")
+				}
+			} else {
+				r, err := a.Runs.PreparePRReview(ctx, pr.ID)
+				if err != nil || r.Profile.Sandbox != p.Sandbox || r.Profile.Approval != "never" || r.Profile.Publishing != "authorized" {
+					t.Fatal("owner authority was replaced or rejected", err)
 				}
 			}
 		})

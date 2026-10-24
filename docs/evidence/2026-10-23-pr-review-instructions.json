@@ -1,0 +1,67 @@
+{
+  "at": "2026-10-24T01:28:48.126104+00:00",
+  "installedVersion": "0.1.0-cb5f1c36fd04",
+  "operation": "owner-configured review profile prompt and skills",
+  "profileId": "review",
+  "promptFile": "docs/e2e/pr-review-instructions.md",
+  "promptSHA256": "be04ca28d67ded9905e2f1e6f89ae713a8d31d9aa69a5d16cd73e84f1c3e03a8",
+  "skills": [
+    {
+      "name": "dk-workflows:dk-pr-review",
+      "version": "local 1.1.18"
+    },
+    {
+      "name": "dk-pr-post-review",
+      "source": "standalone owner skill"
+    }
+  ],
+  "authority": {
+    "sandbox": "danger-full-access",
+    "approval": "never",
+    "publishing": "authorized"
+  },
+  "verification": {
+    "savedProfileExactReadback": true,
+    "otherProfilesPreserved": true,
+    "repositoryPoliciesPreserved": true,
+    "systemSettingsPreserved": true,
+    "specificationCheckExit": 0,
+    "browserFixturesPassed": 83,
+    "goRaceAndInstallerPackagingSmoke": "passed via specification reconciliation"
+  },
+  "existingRunPolicy": "Prepared and retained run snapshots are unchanged; retrigger uses a fresh run.",
+  "retrigger": {
+    "itemId": "scylladb/python-driver#1134",
+    "priorRunId": "135809e3a2db720d9b1032e9c02407fd",
+    "runId": "f9c68a8d260db610bd18dc9e81777c32",
+    "head": "be3ab558f3ae5d149ea6615e12221300e023eabf",
+    "preparedAt": "2026-10-24T01:29:07.565470+00:00",
+    "status": "running",
+    "skills": [
+      "dk-workflows:dk-pr-review",
+      "dk-pr-post-review"
+    ],
+    "startAcceptedAt": "2026-10-24T01:29:07.593393+00:00",
+    "pendingAttention": 0,
+    "threadId": "01a16b86-a85e-7da0-ae58-9f8fcadfa649",
+    "observedAt": "2026-10-24T01:33:37.853614+00:00",
+    "workflowEntryObserved": true,
+    "agentAcknowledgedReviewVerifyAndPublish": true,
+    "resumedAfterUpgradeAt": "2026-10-24T01:37:29.070007+00:00",
+    "preservedThreadId": "01a16b86-a85e-7da0-ae58-9f8fcadfa649"
+  },
+  "launchContextRepair": {
+    "observedFailure": "Full-access startup returned before seeding existing owner rules and Decisions into private XDG data; native reviewer lookup was empty.",
+    "liveRecovery": "Seeded the two existing owner stores into this stopped/waiting run, supplied the already-settled reviewer choice, and continued the same thread.",
+    "confirmedReviewers": [
+      "code-review-matpocock:code-review-matpocock@codex",
+      "code-review-ad:code-review-ad@codex"
+    ],
+    "codeFix": "Initialize private review stores before selecting bounded/full-access execution.",
+    "regressionTest": "TestExplicitFullAccessKeepsScratchAndDisablesTechnicalApprovals verifies both initial stores, retained run changes, and unchanged owner data.",
+    "focusedTestExit": 0,
+    "preparedRelease": "0.1.0-cb5f1c36fd04",
+    "deployed": true,
+    "deployedAt": "2026-10-24T01:37:29.069747+00:00"
+  }
+}

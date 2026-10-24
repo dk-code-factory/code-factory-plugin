@@ -91,6 +91,11 @@ func (s TaskSandbox) Args() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	return ConfigArgs(config)
+}
+
+// ConfigArgs encodes invocation-local configuration without shell interpolation.
+func ConfigArgs(config map[string]any) ([]string, error) {
 	keys := make([]string, 0, len(config))
 	for key := range config {
 		keys = append(keys, key)

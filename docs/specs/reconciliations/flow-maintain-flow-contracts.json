@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "92b6fc484b9c16a3552098ceec871c339787e3d1",
-  "fingerprint": "a273284b536ea039ddaece8c5e472db35275f0cad71e57669cac64a2bc052c28",
+  "base": "8a1164a9ab10a9cf1d30570e71b4d6d3c0c33a5c",
+  "fingerprint": "370a5bbce8201ef0f70e846cf2f549348d82aaac301acb47219d584e13ab90cb",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Contributor reconciliation behavior remains accurate; the new summary, prepared-update and opt-in lifecycle assertions are mapped into their existing owning contracts and retain real-host gaps.",
-    "implementation": "Catalog and UI assertion inventories gain precise test anchors; no specification parser, fingerprint policy, adoption list or verifier runner changed. Mixed UI decisions cover every direct contract without adoption exceptions.",
-    "tests": "Fresh tooling suites execute all user-flow and test_specs modules. Snapshot/boundary regressions remain product tests; their success is not treated as a change to the specification gate or live host acceptance."
+    "kind": "refactor",
+    "description": "Existing specification tooling/adoption policies remain; behavior catalogs gain dependency maintenance scenarios and two canonical glossary terms without reversing foundation links. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes.",
+    "implementation": "Reviewed new S5 operate-installation and S6 protect-secrets graph branches, explicit source/assertion anchors and retained stable gap IDs. Registries render through existing tooling; no runner/adoption policy or generated block is hand-edited. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes.",
+    "tests": "Current mapped tooling/render/schema/coverage tests execute all new declared source and assertion inputs. New backend acceptance is separate from fixture/model/real-host gaps. Owner runtime instructions now name dkropachev/codex and the verified dependency API instead of the retired exact 0.161.0 pin; this documents the already implemented and tested source/activation policy without changing specification adoption or execution recipes."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.224
     },
     {
       "command": [
@@ -33,17 +33,17 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.263
+      "seconds": 25.393
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "88dce2b0dc8264e44419c5e1f4e4f2a41c6c6945a2ea4f7f701446f30cb6d1fe",
-    "term:coverage-gap": "2a656673009821e88b69f26dfa043b082830d0d885899b8ca140e49e2ec2638d",
-    "term:entity": "1dc0be75fdccc675d12a02bcdd6489ed6b090dd6f4407514d4c759f54493e566",
-    "term:glossary": "c0ab5aa919bd2a83710332818729c1089928a34f851cca7715ac15f91ebc5675",
-    "term:known-limitation": "0df7869c1519f94ae4a1f66c601ea0fef0e45aeaab76a7265ac80fda8b122806",
-    "term:reconciliation": "7dabd6972d99b15dc28c13b932a8002166c2d05c53c32c37602dcda2c4aa3a63",
-    "term:unverified-behavior": "d79632563b467476ec1665879f93430ddb22648f12230e00856fbc4ab46612b1",
-    "term:verification": "1552d0c4db801e4ca3b085e10002f2eaa6a31a2a6f6448bfb5bd4493326ddbd8"
+    "flow:maintain-flow-contracts": "d16f32ee88fda3b12b98862b2477769487242a0a647c4e028df0b5ef7e666541",
+    "term:coverage-gap": "c2209335435caaaab7f6f7eece643dc3abfa1a44b65ad2bd177dd304043af7c7",
+    "term:entity": "1ca0b36dd970437e6c2c510dd7d0bdf85e3a187cf4e460c04bd382af9dcec409",
+    "term:glossary": "87da555613b5d165c451b48f97ae805db7641f91a4628555af79a7b8aa4be634",
+    "term:known-limitation": "e504c8a00fedd8e0d7b84066f6b0bdc408d20491cab83ade556815f02885a606",
+    "term:reconciliation": "d902880c08d1ddcf963a459c327710832324c0b847041e39c6a6c9f114e83375",
+    "term:unverified-behavior": "d8552957dca64a6dcc6c1f2855c5ca0cfb41c2db47e1158d08f2734916e5541e",
+    "term:verification": "3f6a50c4bc79ba54cc2c2690c956922d518754daba035f5dfd38fb5988c2c184"
   }
 }

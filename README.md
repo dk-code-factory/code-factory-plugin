@@ -17,7 +17,7 @@ For the selected Tailscale route, follow [the Tailscale setup guide](docs/tailsc
 
 Install the release and its persistent private package at `~/.local/lib/code-factory/plugin` (the repository marketplace is `.agents/plugins/marketplace.json`) and invoke its `code-factory-setup` skill with Work local computer access. The skill performs installation, provider sign-in checks, tunnel configuration and connection verification. Repository, priority, profile, skill and Jira settings are managed inside the embedded UI.
 
-Onboarding requires Linux with a working user systemd session, an installed and authenticated Codex **0.161.0**, Git, existing GitHub CLI authentication, an OpenAI Secure MCP Tunnel with a restricted runtime key, owner-only access to its workspace/organization associations, and a Work host supporting MCP Apps and MCP Events. The setup skill opens a short-lived local password form for the runtime key. Jira has a separate password field in plugin settings.
+Onboarding requires Linux with a working user systemd session, an installed and authenticated stable Codex **0.161.0 or later**, Git, existing GitHub CLI authentication, an OpenAI Secure MCP Tunnel with a restricted runtime key, owner-only access to its workspace/organization associations, and a Work host supporting MCP Apps and MCP Events. Later Codex versions require compatibility verification before managed activation. Pilot dependency updates use the owner fork at https://github.com/dkropachev/codex. The setup skill opens a short-lived local password form for the runtime key. Jira has a separate password field in plugin settings.
 
 The tunnel is deliberately configured with a stdio command pointing at `code-factory mcp`; this proxy reads the local owner token and calls the authenticated loopback daemon. Cloud callers never receive the token. Everyone allowed to use that tunnel has the owner's application access: a shared workspace needs a separate authenticated identity boundary before use. Do not connect this single-user service to an unrestricted shared tunnel.
 
@@ -100,3 +100,7 @@ State lives under `$XDG_DATA_HOME/code-factory` or `~/.local/share/code-factory`
 The Go SDK handles MCP `2026-07-28` and legacy `2025-11-25`/`2025-06-18` tools/resources. Events extends discovery and adds custom methods without coupling the domain to Work. Legacy compatibility does not constitute a delivered Claude plugin. Claude Channels and desktop packaging are later adapters.
 
 See [operations.md](docs/operations.md) for setup, daily use, diagnostics, upgrade, recovery and uninstall. See [acceptance.md](docs/acceptance.md) for the real-host release gate and [DESIGN.md](DESIGN.md) for invariants and recovery behavior.
+
+The [private dependency administration API](docs/dependency-admin.md) checks and
+updates Codex, installed plugins and GitHub-installed skills through identified,
+recoverable owner operations.

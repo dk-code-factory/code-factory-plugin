@@ -67,9 +67,9 @@ func Diagnose(ctx context.Context, dir, binary, address string, s *store.Store) 
 	defer cancel()
 	status := codex.Inspect(check, binary)
 	if status.Compatible && status.Authenticated {
-		add("provider.codex", Verified, "Codex 0.161.0 authenticated; real task acceptance is separate")
+		add("provider.codex", Verified, status.Version+" authenticated; real task acceptance is separate")
 	} else {
-		add("provider.codex", Failed, "Codex 0.161.0 compatibility or authentication check failed")
+		add("provider.codex", Failed, "Codex compatibility or authentication check failed")
 	}
 	if token, err := exec.CommandContext(check, "gh", "auth", "token", "--hostname", "github.com").Output(); err == nil && len(bytes.TrimSpace(token)) > 0 {
 		add("provider.github", Verified, "GitHub CLI credential available locally; repository access is checked during budgeted synchronization")

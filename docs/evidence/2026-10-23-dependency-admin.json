@@ -1,0 +1,113 @@
+{
+  "at": "2026-10-24T02:47:24.964813+00:00",
+  "installedDaemonVersion": "0.1.0-7e6b16d6fee1",
+  "api": "owner-only loopback /admin/dependencies",
+  "operationId": "owner-fork-dependency-upgrade-20261023",
+  "operationStatus": "succeeded",
+  "codex": {
+    "repository": "https://github.com/dkropachev/codex",
+    "tag": "rust-v0.163.0",
+    "version": "0.163.0",
+    "releaseArchiveSHA256": "db3779bb19a8045d28cd2e75f4e54183d63585f23fbf40fdec744cc5d71aab2a",
+    "installedBinarySHA256": "0d8d9cf2617de57395a741661bc7e8110823750fea8163a9c7bff2b66cf972cc",
+    "matchesIndependentlyVerifiedForkPackage": true,
+    "existingAuthenticationProbePassed": true,
+    "globalExecutablePreserved": true
+  },
+  "plugins": [
+    {
+      "id": "caveman@caveman",
+      "version": "4.0.1",
+      "status": "observed"
+    },
+    {
+      "id": "code-review-ad@code-review-ad",
+      "version": "1.0.7",
+      "status": "current"
+    },
+    {
+      "id": "code-review-matpocock@code-review-matpocock",
+      "version": "1.0.0",
+      "status": "current"
+    },
+    {
+      "id": "dk-workflows@dk-workflows",
+      "version": "1.1.18",
+      "status": "current"
+    },
+    {
+      "id": "openai-templates@openai-curated-remote",
+      "version": "0.1.1",
+      "status": "observed"
+    },
+    {
+      "id": "pages@openai-curated-remote",
+      "version": "0.1.25",
+      "status": "observed"
+    },
+    {
+      "id": "plugin-management@openai-curated-remote",
+      "version": "0.1.0",
+      "status": "observed"
+    },
+    {
+      "id": "sites@openai-curated-remote",
+      "version": "1.1.2",
+      "status": "observed"
+    },
+    {
+      "id": "work-pets@openai-curated-remote",
+      "version": "0.1.6",
+      "status": "observed"
+    }
+  ],
+  "legacySkillsMigrated": 14,
+  "oldSkillFilesBackedUp": true,
+  "unknownStandaloneSourcesPreserved": true,
+  "cavemanMarketplaceRepair": {
+    "old": "caveman-repo",
+    "current": "caveman",
+    "supportedNativeOperations": true
+  },
+  "stockUpstreamCandidate": {
+    "version": "0.164.0",
+    "activated": false,
+    "disposition": "Rejected before owner clarified required fork; final updater rejects this source.",
+    "temporaryDistributionRemoved": true
+  },
+  "checks": {
+    "browserFixturesPassed": 83,
+    "goRace": "passed",
+    "packagingInstallerSmoke": "passed",
+    "reviewedSpecsCheck": "passed",
+    "unauthenticatedAdminHTTP": 401,
+    "publicAdminRouteFixtureHTTP": 404,
+    "repeatRequestReturnsSameCompletion": true,
+    "statusReadMilliseconds": 8.6,
+    "servicesActive": true,
+    "finalSpecsCheck": "passed",
+    "goVet": "passed",
+    "typescriptCheck": "passed",
+    "diffWhitespaceCheck": "passed"
+  },
+  "review": {
+    "itemId": "scylladb/python-driver#1134",
+    "runId": "d047d5a187b9598fb02a26eeabd9210a",
+    "supersedesRun": "f9c68a8d260db610bd18dc9e81777c32",
+    "head": "be3ab558f3ae5d149ea6615e12221300e023eabf",
+    "status": "running",
+    "pendingAttention": 0,
+    "selectedSkills": [
+      "dk-workflows:dk-pr-review",
+      "dk-workflows:dk-pr-post-review"
+    ],
+    "publishing": "authorized",
+    "completed": false,
+    "postedReviewVerified": false,
+    "nativeCLIVersion": "0.163.0",
+    "threadId": "01a16bce-570e-76d0-a5ab-1eee41145f36",
+    "observedAt": "2026-10-24T03:00:54.726664+00:00",
+    "freshPreparationObserved": true,
+    "configuredReviewerPassesObserved": true
+  }
+}

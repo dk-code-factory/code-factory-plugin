@@ -4108,6 +4108,20 @@
       "category": "element",
       "definition": "The cached application request count, observed remaining quota and deferral information.",
       "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "dependency-operation",
+      "name": "Dependency operation",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An identified maintenance request with retained per-dependency observations and a lifecycle outcome."
+    },
+    {
+      "id": "github-skill-source",
+      "name": "GitHub skill source",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The recorded repository, revision selection and skill location identifying the origin of an installed standalone skill."
     }
   ]
 }

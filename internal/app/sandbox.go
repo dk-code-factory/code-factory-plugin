@@ -19,18 +19,45 @@ import (
 )
 
 func (m *Manager) taskSandbox(ctx context.Context, r domain.Run) ([]string, error) {
-	// Full access remains an explicit existing profile choice, never a fallback
-	// for a bounded sandbox that failed to initialize.
-	if r.Profile.Sandbox == "danger-full-access" {
-		return nil, nil
-	}
 	scratch := filepath.Join(m.app.DataDir, "scratch", r.ID)
 	for _, dir := range []string{"tmp", "cache", "data", "state"} {
 		if err := os.MkdirAll(filepath.Join(scratch, dir), 0700); err != nil {
 			return nil, err
 		}
 	}
-	binary, err := exec.LookPath(m.Binary)
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	data := os.Getenv("XDG_DATA_HOME")
+	if data == "" {
+		data = filepath.Join(home, ".local", "share")
+	}
+	// Every mode uses private XDG data, including explicit full access. Seed the
+	// owner's existing rules and Decisions before selecting execution authority.
+	for _, name := range []string{"codex-repo-rules", "dk-pr-decisions"} {
+		if err := seedSandboxData(filepath.Join(data, name), filepath.Join(scratch, "data", name)); err != nil {
+			return nil, err
+		}
+	}
+	// Explicit full access retains private scratch and selected executables while
+	// omitting the bounded filesystem/network permissions profile.
+	if r.Profile.Sandbox == "danger-full-access" {
+		return codex.ConfigArgs(map[string]any{
+			"features.network_proxy": false,
+			"shell_environment_policy.set": map[string]any{
+				"TMPDIR":    filepath.Join(scratch, "tmp"),
+				"TMPPREFIX": filepath.Join(scratch, "tmp", "zsh"),
+				"TMP":       filepath.Join(scratch, "tmp"), "TEMP": filepath.Join(scratch, "tmp"),
+				"XDG_CACHE_HOME":          filepath.Join(scratch, "cache"),
+				"XDG_DATA_HOME":           filepath.Join(scratch, "data"),
+				"XDG_STATE_HOME":          filepath.Join(scratch, "state"),
+				"PYTHONDONTWRITEBYTECODE": "1",
+				"PATH":                    commandenv.Path(m.ProviderBin, os.Getenv("PATH")),
+			},
+		})
+	}
+	binary, err := exec.LookPath(m.CodexBinary())
 	if err != nil {
 		return nil, fmt.Errorf("sandbox provider executable is unavailable")
 	}
@@ -39,10 +66,6 @@ func (m *Manager) taskSandbox(ctx context.Context, r domain.Run) ([]string, erro
 		return nil, err
 	}
 	gitDir, err := command(ctx, r.Worktree, "rev-parse", "--path-format=absolute", "--git-common-dir")
-	if err != nil {
-		return nil, err
-	}
-	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
@@ -154,15 +177,6 @@ func (m *Manager) taskSandbox(ctx context.Context, r domain.Run) ([]string, erro
 		}
 		roots = append(roots, path)
 	}
-	data := os.Getenv("XDG_DATA_HOME")
-	if data == "" {
-		data = filepath.Join(home, ".local", "share")
-	}
-	for _, name := range []string{"codex-repo-rules", "dk-pr-decisions"} {
-		if err := seedSandboxData(filepath.Join(data, name), filepath.Join(scratch, "data", name)); err != nil {
-			return nil, err
-		}
-	}
 	return (codex.TaskSandbox{ID: r.ID, Mode: r.Profile.Sandbox, Workspace: r.Worktree, Scratch: scratch, Readable: roots, WritableScratch: writableScratch, CommandPath: commandPath}).Args()
 }
 
@@ -234,7 +248,7 @@ func (m *Manager) nativeRegistrySnapshot(ctx context.Context, id string) (string
 func (m *Manager) childProviderOverrides(ctx context.Context, cwd, scratch string) ([]string, error) {
 	check, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
-	client, err := codex.Start(check, m.Binary, nil, nil)
+	client, err := codex.Start(check, m.CodexBinary(), nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("child provider configuration unavailable: %w", err)
 	}

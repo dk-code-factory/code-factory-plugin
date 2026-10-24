@@ -29,9 +29,11 @@ checks. Start new sessions in this project directory so these instructions load.
   Private owner approval: the same hostname on HTTPS port `8444`.
 - Preserve the unrelated public `/` handler on port 443 and private port 8443.
   Use scoped Code Factory paths. Never reset Tailscale or disable all of port 443.
-- Codex provider is pinned to **0.161.0**, with its executable recorded in private
-  `runtime.json`. Reuse GitHub/Codex authentication; do not replace global Codex
-  to match this pin. Jira and the alternate OpenAI tunnel remain disabled.
+- Codex updates must use **https://github.com/dkropachev/codex**, with the selected
+  executable recorded in private `runtime.json`. Use the owner dependency API to
+  verify and activate compatible releases; preserve the global installation and
+  existing GitHub/Codex authentication. Jira and the alternate OpenAI tunnel
+  remain disabled.
 
 ## Browser and credentials
 

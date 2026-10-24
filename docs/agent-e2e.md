@@ -1,5 +1,91 @@
 # Continue development through the real Chrome session
 
+## Owner dependency API and fork upgrade · 2026-10-23
+
+Installed **0.1.0-7e6b16d6fee1** exposes the [private dependency administration API](dependency-admin.md)
+on the loopback daemon, outside public OAuth/MCP and iframe access. Owner request
+`owner-fork-dependency-upgrade-20261023` succeeded across 28 result records.
+Codex now runs **dkropachev/codex 0.163.0**; the installed binary matches the
+independently checksum-verified fork release. Startup, existing authentication,
+skills, config and plugin checks passed. Stock upstream 0.164.0 was rejected
+without activation before the owner clarified the required fork. The final updater
+uses only `dkropachev/codex` and tests reject stock upstream assets.
+
+All nine installed plugins were refreshed. Caveman's renamed marketplace was
+repaired through native management, with Caveman 4.0.1 and Sites 1.1.2 observed.
+DK's local compatibility 1.1.18, AD 1.0.7 and Matt Pocock 1.0.0 remain selected.
+Fourteen legacy workflow/reviewer skill directories were archived with private
+backups and replaced in configured profiles by native plugin skills. Untracked
+local skills and externally managed OS tools remain explicit and preserved.
+The API accepts source registration for standalone GitHub skill updates.
+
+Fresh #1134 run `d047d5a187b9598fb02a26eeabd9210a` is running with native CLI
+0.163.0 and both native DK review/post skills; no approval is pending. Publication
+is authorized, but review completion/publication are not yet established by this
+startup observation. [Evidence](evidence/2026-10-23-dependency-admin.json) separates
+live upgrade/startup from the passing 83 browser fixtures, Go race/static,
+packaging/installer and reviewed specification checks. General real-host,
+accessibility, callback, soak and login acceptance gaps remain open.
+
+## Owner review-and-publish instructions · 2026-10-23
+
+The live standard `review` profile now explicitly invokes
+`$dk-workflows:dk-pr-review`, independently validates every candidate finding and
+its severity, then invokes `$dk-pr-post-review` with publication authorized.
+Both selected skills are retained in new launch snapshots. The exact
+[configured prompt](e2e/pr-review-instructions.md) includes current-head and
+scope/Decisions checks, incomplete-review handling, duplicate prevention and a
+verified publication receipt. Dedicated pilot profiles keep their campaign text.
+
+The owner explicitly requested a new review of `scylladb/python-driver#1134`.
+Fresh run `f9c68a8d260db610bd18dc9e81777c32` was prepared with both skills and
+started on remote head `be3ab558f3ae5d149ea6615e12221300e023eabf`; the earlier run
+is preserved. [Configuration/start evidence](evidence/2026-10-23-pr-review-instructions.json)
+records exact saved-profile readback and retained unrelated settings. An accepted
+start is not evidence of review completion or GitHub publication.
+
+Installed **0.1.0-cb5f1c36fd04** fixes a launch regression: explicit full access
+returned before seeding existing owner reviewer rules and Decisions into private
+data, causing an empty native reviewer configuration. Both execution modes now
+initialize those stores before selecting authority; continuation retains run-local
+updates and leaves owner stores unchanged. The focused regression, 83 browser
+fixtures, Go race/static, packaging, installer and specification checks passed.
+Only #1134 was active; it was interrupted for the upgrade and resumed in the same
+thread with its existing artifacts, both reviewers and publication authorization.
+Both services are active. Review completion/publication remain pending.
+
+## Owner-authorized autonomous access · 2026-10-23
+
+The owner explicitly replaced the earlier pilot read-only/ask policy with full
+AI access. All six stored profiles now use `danger-full-access`, command approval
+`never`, and publishing `authorized`. An explicit recorded maintenance grant applies
+the same authority to 17 retained, uncleaned runs while preserving their history,
+workspaces, models and skills; only the previously blocked review was resumed.
+Routine execution/network/publishing permission prompts are disabled. Agents ask
+only for material decisions or missing information they cannot reasonably resolve.
+Automatic-review intake was not enabled by this permission change.
+
+Installed **0.1.0-996a39e0e1e1** also includes the cached inbox repair. Actual deployed
+review-list reads returned 11 PRs in **79–84 ms**, compared with 1.3–1.4 seconds.
+The original review resumed in its existing thread, with no pending command
+approval, and its GitHub/Decisions read completed successfully. Earlier read-only
+campaign evidence remains historical evidence of the policy used at that time.
+See [the authority record](evidence/2026-10-23-owner-autonomy.json).
+
+## Cached inbox latency repair · 2026-10-23
+
+A live cached review-queue lookup returned 11 PRs in 1.402 seconds. Profiling a
+synthetic copy of the record counts identified repeated relationship decoding,
+per-item state queries and retained history/skill bundles on the read path.
+[Latency evidence](evidence/2026-10-23-inbox-latency.json) records a 966 ms baseline
+with 775 MB allocated per read. Bulk keyed reads and compact database projections
+measure 27 ms and 6.6 MB for summary reads on that fixture. Full source/detail
+records, assessment hashes, queue rules and unread state are preserved.
+
+These are local fixture timings. The later explicit owner grant authorized deployment;
+actual deployed reads now measure 79–84 ms. The existing signed-in browser and
+public routes are preserved.
+
 ## Completed PR review campaign · 2026-10-23
 
 The [18-case ledger](e2e/pr-review-results.json) records **16 passed and 2 blocked**.
