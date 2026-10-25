@@ -31,7 +31,13 @@ func validatePRReviewRun(get func(string, string, any) error, run domain.Run, it
 		return err
 	}
 	if review {
-		if run.ThreadID == "" && run.Base != "" && item.Head != run.Base {
+		// Base is the selected checkout reference, which may be a branch such
+		// as main. New preparations retain the accepted PR head separately.
+		head := run.Base
+		if run.SourceSnapshot != nil && run.SourceSnapshot.Head != "" {
+			head = run.SourceSnapshot.Head
+		}
+		if run.ThreadID == "" && head != "" && item.Head != head {
 			return fmt.Errorf("PR head changed from the pinned review target; prepare a new review")
 		}
 		return validatePRReviewAuthor(get, item)

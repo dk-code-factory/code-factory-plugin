@@ -216,6 +216,8 @@ flowchart TD
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestManualDeferredReviewRevalidatesPinnedHeadAndClosedSource(`; S1, S6. Due manual PR review rejects a changed pinned head or closed source before agent invocation and clears retry authority.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchCancelAndCloseDuringSourceVerification(`; S1. Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchDoesNotRetryProviderExecutionFailures(`; S1. A typed rate-limit error after provider startup remains failed with no retry metadata and exactly the original two provider requests.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredAutomaticLaunchRejectsSupersededRequestEpisode(`; S1, S6. Withdrawal and re-request before the deadline retain distinct claims; restart preserves waiting, only the current request episode starts, and the superseded run stays terminal without agent authority.
+- [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestLegacyReviewHeadStillUsesPinnedBase(`; S1, S6. Absent or empty legacy accepted-head snapshots retain the existing Base pin and reject a changed head.
 
 ## Verification and gaps
 

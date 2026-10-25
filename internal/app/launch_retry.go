@@ -85,6 +85,12 @@ func (m *Manager) recoverDeferredLaunch(ctx context.Context, r domain.Run) error
 // synchronization fails or is not due. startRun serializes and persists the claim
 // before launching, so concurrent polls and startup cannot replay the same run.
 func (m *Manager) RetryDeferredLaunches(ctx context.Context) error {
+	m.app.autoReviewMu.Lock()
+	defer m.app.autoReviewMu.Unlock()
+	// Share the fresh automatic acceptance/start critical section. A retry cannot
+	// take the idle slot between ProcessReviewRequests busy check and Start.
+	m.app.autoReviewMu.Lock()
+	defer m.app.autoReviewMu.Unlock()
 	if !m.adminGate.TryRLock() {
 		return nil
 	}
@@ -92,7 +98,7 @@ func (m *Manager) RetryDeferredLaunches(ctx context.Context) error {
 	if m.app.GitHub == nil || !m.app.GitHub.Managed() {
 		return nil
 	}
-	runs, err := store.List[domain.Run](ctx, m.app.Store, "run")
+	runs, err := store.ListWithout[domain.Run](ctx, m.app.Store, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
 	if err != nil {
 		return err
 	}
@@ -103,6 +109,9 @@ func (m *Manager) RetryDeferredLaunches(ctx context.Context) error {
 		// Disabling or pausing the policy holds accepted work without fetching
 		// source or creating a new automatic review claim.
 		if r.AutomaticReview {
+			if m.busy() {
+				continue
+			}
 			var item domain.Item
 			var repo domain.Repository
 			if err := m.app.Store.Get(ctx, "item", r.ItemID, &item); err != nil {

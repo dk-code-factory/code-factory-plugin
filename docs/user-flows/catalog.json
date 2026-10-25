@@ -1849,6 +1849,40 @@
             "S8"
           ],
           "purpose": "Repeated due budget denial retains the same accepted run/claim and renewed deadline without HTTP or agent invocation."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredAutomaticLaunchRejectsSupersededRequestEpisode(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Withdrawal and re-request before the deadline retain distinct claims; restart preserves waiting, only the current request episode starts, and the superseded run stays terminal without agent authority."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestFreshAutomaticStartAndDeferredRetryShareIdleSlot(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "A fresh accepted automatic claim and due retry share the idle slot; source barriers and real startup calls prove no concurrent agents, no stranded accepted claim and eventual single startup of both."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAutomaticRequestPollSharesAcceptanceCriticalSection(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "The actual request poll updates the persisted request episode only inside the same acceptance section as deferred recovery and creates no duplicate claim."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchPollDoesNotDecodeUnusedRetainedPayloads(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Wrong-shaped unused retained payloads cannot break polling because SQLite omits them before decoding; due candidates are reread with complete profile, skills, prompt and source retained."
         }
       ],
       "suites": [
@@ -4198,6 +4232,59 @@
             "S8"
           ],
           "purpose": "A typed rate-limit error after provider startup remains failed with no retry metadata and exactly the original two provider requests."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredAutomaticLaunchRejectsSupersededRequestEpisode(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Withdrawal and re-request before the deadline retain distinct claims; restart preserves waiting, only the current request episode starts, and the superseded run stays terminal without agent authority."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestFreshAutomaticStartAndDeferredRetryShareIdleSlot(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "A fresh accepted automatic claim and due retry share the idle slot; source barriers and real startup calls prove no concurrent agents, no stranded accepted claim and eventual single startup of both."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAutomaticRequestPollSharesAcceptanceCriticalSection(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "The actual request poll updates the persisted request episode only inside the same acceptance section as deferred recovery and creates no duplicate claim."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchPollDoesNotDecodeUnusedRetainedPayloads(",
+          "scenarios": [
+            "S3",
+            "S8"
+          ],
+          "purpose": "Wrong-shaped unused retained payloads cannot break polling because SQLite omits them before decoding; due candidates are reread with complete profile, skills, prompt and source retained."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestManualPRReviewExplicitBaseKeepsAcceptedHead(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "An explicit main checkout base starts an unchanged accepted PR head, retains the selected base and rejects a changed actual head."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestLegacyReviewHeadStillUsesPinnedBase(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Absent or empty legacy accepted-head snapshots retain the existing Base pin and reject a changed head."
         }
       ],
       "suites": [
@@ -7434,6 +7521,24 @@
             "S1"
           ],
           "purpose": "A typed rate-limit error after provider startup remains failed with no retry metadata and exactly the original two provider requests."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredAutomaticLaunchRejectsSupersededRequestEpisode(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Withdrawal and re-request before the deadline retain distinct claims; restart preserves waiting, only the current request episode starts, and the superseded run stays terminal without agent authority."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestLegacyReviewHeadStillUsesPinnedBase(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Absent or empty legacy accepted-head snapshots retain the existing Base pin and reject a changed head."
         }
       ],
       "suites": [

@@ -27,6 +27,11 @@ type reviewClaim struct {
 	Error  string `json:"error,omitempty"`
 }
 
+func reviewClaimID(itemID, head string, generation int) string {
+	hash := sha256.Sum256(raw([]any{itemID, head, generation}))
+	return hex.EncodeToString(hash[:])
+}
+
 func reviewProfileID(c domain.Config, r domain.Repository) string {
 	if r.ReviewProfileID != "" {
 		return r.ReviewProfileID
@@ -139,8 +144,7 @@ func (a *App) ProcessReviewRequests(ctx context.Context) error {
 		if !active || item.Head == "" || !autoReviewEnabled(config, repo) {
 			continue
 		}
-		hash := sha256.Sum256(raw([]any{item.ID, item.Head, state.Generation}))
-		key := hex.EncodeToString(hash[:])
+		key := reviewClaimID(item.ID, item.Head, state.Generation)
 		var old reviewClaim
 		if err = a.Store.Get(ctx, "review-claim", key, &old); err == nil {
 			continue
@@ -241,6 +245,19 @@ func validateAutomaticStart(t *store.Tx, run domain.Run) error {
 }
 
 func validateAutomaticPolicy(t *store.Tx, run domain.Run, item domain.Item, requireSync bool) error {
+	// The current request episode must still own this accepted run. A new
+	// request on the same head has a different claim and cannot renew old work.
+	var state reviewRequestState
+	if err := t.Get("review-request", item.ID, &state); err != nil {
+		return err
+	}
+	var claim reviewClaim
+	if err := t.Get("review-claim", reviewClaimID(item.ID, state.Head, state.Generation), &claim); err != nil {
+		return err
+	}
+	if !state.Active || state.Head != item.Head || claim.RunID != run.ID || claim.ItemID != item.ID || claim.Head != item.Head {
+		return fmt.Errorf("automatic review request episode changed; inspect the retained launch")
+	}
 	var repo domain.Repository
 	var config domain.Config
 	var viewer domain.GitHubViewer

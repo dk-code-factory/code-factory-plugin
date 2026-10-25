@@ -527,3 +527,61 @@ func TestManualPRReviewRechecksAuthorBeforeStart(t *testing.T) {
 		})
 	}
 }
+
+func TestManualPRReviewExplicitBaseKeepsAcceptedHead(t *testing.T) {
+	for _, changed := range []bool{false, true} {
+		t.Run(fmt.Sprint(changed), func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			ctx := a.Runs.ctx
+			var repo domain.Repository
+			if err := a.Store.Get(ctx, "repository", pr.Repository, &repo); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := command(ctx, repo.Checkout, "rev-parse", "--verify", "main^{commit}"); err != nil {
+				t.Fatal(err)
+			}
+			run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review", Base: "main"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if run.Base != "main" || run.SourceSnapshot == nil || run.SourceSnapshot.Head != pr.Head {
+				t.Fatal("checkout base replaced accepted review head", run)
+			}
+			if changed {
+				pr.Head = "new-head"
+			}
+			if err := a.Store.Put(ctx, "item", pr.ID, pr, ""); err != nil {
+				t.Fatal(err)
+			}
+			_, err = a.Runs.Start(ctx, run.ID, false)
+			if changed {
+				if err == nil || !strings.Contains(err.Error(), "PR head changed") {
+					t.Fatal("changed accepted head was not rejected", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal("custom checkout base rejected unchanged PR head", err)
+			}
+			waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", run.ID, &run); return run.Status == "idle" })
+			if run.Base != "main" || run.ThreadID == "" {
+				t.Fatal("custom checkout was not used", run)
+			}
+		})
+	}
+}
+
+func TestLegacyReviewHeadStillUsesPinnedBase(t *testing.T) {
+	a, pr := reviewFixture(t)
+	for _, snapshot := range []*domain.Item{nil, {Head: ""}} {
+		run := domain.Run{PRReview: true, Base: pr.Head, SourceSnapshot: snapshot}
+		get := func(kind, id string, out any) error { return a.Store.Get(a.Runs.ctx, kind, id, out) }
+		if err := validatePRReviewRun(get, run, pr); err != nil {
+			t.Fatal(err)
+		}
+		run.Base = "other-head"
+		if err := validatePRReviewRun(get, run, pr); err == nil {
+			t.Fatal("legacy accepted-head pin was weakened")
+		}
+	}
+}

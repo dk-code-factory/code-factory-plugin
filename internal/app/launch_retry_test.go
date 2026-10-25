@@ -167,7 +167,7 @@ func (f *launchRetryFixture) expire(t *testing.T) {
 }
 func (f *launchRetryFixture) restart(t *testing.T) {
 	t.Helper()
-	f.a.Runs.Close()
+	waitLaunchRetry(t, f.a.Runs.Close)
 	f.a.Runs = NewManager(context.Background(), f.a, testutil.FakeCodex(t))
 	if err := f.a.Runs.Recover(context.Background()); err != nil {
 		t.Fatal(err)
@@ -238,7 +238,7 @@ func TestDeferredReviewLaunchRespectsDeadlineAndRetriesExactlyOnce(t *testing.T)
 					}
 				}()
 			}
-			wg.Wait()
+			waitLaunchRetry(t, func() { wg.Wait() })
 			f.assertSingleLaunch(t)
 			if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
 				t.Fatal(err)
@@ -293,7 +293,7 @@ func TestDeferredReviewLaunchRetriesWhenRepositorySyncFails(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() { defer close(done); f.a.syncLoop(ctx, make(chan time.Time)) }()
-	t.Cleanup(func() { cancel(); <-done })
+	t.Cleanup(func() { cancel(); waitLaunchRetry(t, func() { <-done }) })
 	f.assertSingleLaunch(t)
 	var repo domain.Repository
 	if err := f.a.Store.Get(ctx, "repository", f.pr.Repository, &repo); err != nil || repo.Error == "" {
@@ -409,7 +409,7 @@ func TestLegacyBudgetReviewFailureRecoveryIsExactAndPreAgentOnly(t *testing.T) {
 	for _, which := range []string{"budget", "reserve", "rate", "permanent", "thread", "turn", "interrupted", "non-review", "agent-error", "lookalike"} {
 		t.Run(which, func(t *testing.T) {
 			f := deferredReviewFixture(t, false)
-			f.a.Runs.Close()
+			waitLaunchRetry(t, f.a.Runs.Close)
 			r := f.run
 			r.Status = "failed"
 			r.ResumePending = false
@@ -581,7 +581,7 @@ func TestDeferredLaunchCancelAndCloseDuringSourceVerification(t *testing.T) {
 				}
 			case "close":
 				closer = make(chan struct{})
-				go func() { f.a.Runs.Close(); close(closer) }()
+				go func() { waitLaunchRetry(t, f.a.Runs.Close); close(closer) }()
 				waitFor(t, func() bool { return f.a.Runs.ctx.Err() != nil })
 			case "disable":
 				c, _ := f.a.Config(context.Background())
@@ -599,7 +599,7 @@ func TestDeferredLaunchCancelAndCloseDuringSourceVerification(t *testing.T) {
 			}
 			close(f.source.currentRelease)
 			if closer != nil {
-				<-closer
+				waitLaunchRetry(t, func() { <-closer })
 			} else {
 				live, err := f.a.Runs.get(f.run.ID)
 				if err != nil {
@@ -697,7 +697,7 @@ func TestDeferredAutomaticLaunchesSerializeAndContinueAfterCompletion(t *testing
 			}
 		}()
 	}
-	wg.Wait()
+	waitLaunchRetry(t, func() { wg.Wait() })
 	var firstRunning, waiting domain.Run
 	waitFor(t, func() bool {
 		_ = f.a.Store.Get(ctx, "run", f.run.ID, &f.run)
@@ -733,4 +733,254 @@ func TestDeferredAutomaticLaunchesSerializeAndContinueAfterCompletion(t *testing
 	if claimCount(t, f.a) != 2 {
 		t.Fatal("retry changed automatic claims")
 	}
+}
+
+// Bound joins as well as assertions: a serialization or shutdown regression must
+// fail locally instead of preventing the test from ever reaching waitFor.
+func waitLaunchRetry(t *testing.T, join func()) {
+	t.Helper()
+	done := make(chan struct{})
+	go func() { defer close(done); join() }()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("launch retry operation did not finish")
+	}
+}
+
+func TestDeferredAutomaticLaunchRejectsSupersededRequestEpisode(t *testing.T) {
+	f := deferredReviewFixture(t, true)
+	ctx := context.Background()
+	oldID := f.run.ID
+	withdrawn := f.pr
+	withdrawn.ReviewRequests = nil
+	importOne(t, f.a, ctx, withdrawn)
+	if err := f.a.ProcessReviewRequests(ctx); err != nil {
+		t.Fatal(err)
+	}
+	importOne(t, f.a, ctx, f.pr)
+	if err := f.a.ProcessReviewRequests(ctx); err != nil {
+		t.Fatal(err)
+	}
+	claims, err := store.List[reviewClaim](ctx, f.a.Store, "review-claim")
+	if err != nil || len(claims) != 2 || claims[0].ID == claims[1].ID || claims[0].RunID == claims[1].RunID {
+		t.Fatal("request episodes did not retain distinct claims", claims, err)
+	}
+	var current domain.Run
+	for _, claim := range claims {
+		if claim.RunID != oldID {
+			if err := f.a.Store.Get(ctx, "run", claim.RunID, &current); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	waitFor(t, func() bool { _ = f.a.Store.Get(ctx, "run", current.ID, &current); return current.Status == "deferred" })
+	// Neither episode may ignore its saved deadline during a daemon restart.
+	f.restart(t)
+	f.assertNoAgent(t)
+	f.expire(t)
+	f.budget.Store(100)
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = f.a.Store.Get(ctx, "run", oldID, &f.run); return f.run.Status == "failed" })
+	if f.run.ResumePending || !f.run.LaunchRetryAt.IsZero() || f.run.ThreadID != "" {
+		t.Fatal("superseded claim retained startup authority", f.run)
+	}
+	f.assertNoAgent(t)
+	current.LaunchRetryAt = time.Now().UTC().Add(-time.Second)
+	if err := f.a.Store.Put(ctx, "run", current.ID, current, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", current.ID, &current)
+		return current.Status == "running" && current.TurnID != ""
+	})
+	if calls := recordedCalls(t, f.record); len(calls) != 2 {
+		t.Fatal("superseded episode executed", len(calls))
+	}
+	before := string(raw(f.run))
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.a.Store.Get(ctx, "run", oldID, &f.run); err != nil || string(raw(f.run)) != before {
+		t.Fatal("terminal superseded run changed", err)
+	}
+}
+
+func TestDeferredLaunchPollDoesNotDecodeUnusedRetainedPayloads(t *testing.T) {
+	f := deferredReviewFixture(t, false)
+	ctx := context.Background()
+	// Wrong-shaped sentinels make a full Run decode fail. SQLite must omit all
+	// saved bundle/context payloads before decoding even when no run is due.
+	retained := map[string]any{"id": "retained", "status": "idle", "skills": "not decoded", "profile": "not decoded", "prompt": []int{1}, "reviewPromptSnapshot": []int{1}, "sourceSnapshot": "not decoded"}
+	if err := f.a.Store.Put(ctx, "run", "retained", retained, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal("poll decoded an unused saved payload", err)
+	}
+	var after map[string]any
+	if err := f.a.Store.Get(ctx, "run", "retained", &after); err != nil || string(raw(after)) != string(raw(retained)) {
+		t.Fatal("projection overwrote a retained record", err)
+	}
+	// A due candidate must be reread in full before its startup is persisted.
+	var saved domain.Run
+	if err := f.a.Store.Get(ctx, "run", f.run.ID, &saved); err != nil {
+		t.Fatal(err)
+	}
+	f.expire(t)
+	f.budget.Store(100)
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", f.run.ID, &f.run)
+		return f.run.Status == "running" && f.run.TurnID != ""
+	})
+	if string(raw(saved.Profile)) != string(raw(f.run.Profile)) || string(raw(saved.Skills)) != string(raw(f.run.Skills)) || saved.Prompt != f.run.Prompt || saved.ReviewPromptSnapshot != f.run.ReviewPromptSnapshot || f.run.SourceSnapshot == nil {
+		t.Fatal("projected candidate lost its accepted payload")
+	}
+}
+
+func TestFreshAutomaticStartAndDeferredRetryShareIdleSlot(t *testing.T) {
+	f := deferredReviewFixture(t, true)
+	ctx := context.Background()
+	other := f.pr
+	other.ID, other.Number, other.URL = "owner/repo#3", 3, "https://github.com/owner/repo/pull/3"
+	importOne(t, f.a, ctx, other)
+	var repo domain.Repository
+	if err := f.a.Store.Get(ctx, "repository", other.Repository, &repo); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := exec.Command("git", "-C", repo.Checkout, "push", "origin", other.Head+":refs/pull/3/head").CombinedOutput(); err != nil {
+		t.Fatalf("local PR head: %s %v", out, err)
+	}
+	f.expire(t)
+	f.budget.Store(100)
+	// This is the fresh ProcessReviewRequests critical section after busy() and
+	// acceptance, before Start. There is no production hook at that internal gap.
+	f.a.autoReviewMu.Lock()
+	locked := true
+	defer func() {
+		if locked {
+			f.a.autoReviewMu.Unlock()
+		}
+	}()
+	if f.a.Runs.busy() {
+		t.Fatal("fixture is not idle")
+	}
+	fresh, err := f.a.Runs.Prepare(ctx, LaunchInput{ItemID: other.ID, ProfileID: "review"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh.AutomaticReview = true
+	state := reviewRequestState{ID: other.ID, Active: true, Head: other.Head, Generation: 1}
+	claim := reviewClaim{ID: reviewClaimID(other.ID, other.Head, state.Generation), ItemID: other.ID, RunID: fresh.ID, Head: other.Head, Status: "claimed"}
+	if err := f.a.Store.Write(ctx, func(tx *store.Tx) error {
+		if err := tx.Put("review-request", state.ID, state); err != nil {
+			return err
+		}
+		if err := tx.Put("review-claim", claim.ID, claim); err != nil {
+			return err
+		}
+		return tx.Put("run", fresh.ID, fresh)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	f.source.currentEntered = make(chan struct{})
+	f.source.currentRelease = make(chan struct{})
+	release := sync.OnceFunc(func() { close(f.source.currentRelease) })
+	defer release()
+	retryDone := make(chan error, 1)
+	go func() { retryDone <- f.a.Runs.RetryDeferredLaunches(ctx) }()
+	// A bounded negative check gives the competing retry an opportunity to enter
+	// the real source barrier; successful behavior is also proved by the startup
+	// and eventual-progress assertions below.
+	select {
+	case <-f.source.currentEntered:
+		t.Error("retry took the idle slot during fresh automatic acceptance")
+	case <-time.After(100 * time.Millisecond):
+	}
+	if _, err := f.a.Runs.Start(ctx, fresh.ID, false); err != nil {
+		t.Fatal("fresh accepted claim was stranded", err)
+	}
+	select {
+	case <-f.source.currentEntered:
+	case <-time.After(3 * time.Second):
+		t.Fatal("fresh accepted review did not reach preflight")
+	}
+	f.a.autoReviewMu.Unlock()
+	locked = false
+	release()
+	waitLaunchRetry(t, func() {
+		if err := <-retryDone; err != nil {
+			t.Error(err)
+		}
+	})
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", fresh.ID, &fresh)
+		return fresh.Status == "running" && fresh.TurnID != ""
+	})
+	if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil || f.run.Status != "deferred" || !f.run.ResumePending {
+		t.Fatal("accepted retry was lost or started concurrently", f.run, err)
+	}
+	if calls := recordedCalls(t, f.record); len(calls) != 2 {
+		t.Fatal("fresh and retry agents overlapped", len(calls))
+	}
+	live, err := f.a.Runs.get(fresh.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.a.Runs.onMessage(live, codex.Message{Method: "turn/completed", Params: raw(map[string]any{"turn": map[string]string{"id": fresh.TurnID, "status": "completed"}})})
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", f.run.ID, &f.run)
+		return f.run.Status == "running" && f.run.TurnID != ""
+	})
+	if calls := recordedCalls(t, f.record); len(calls) != 4 || claimCount(t, f.a) != 2 {
+		t.Fatal("accepted claims did not each execute exactly once", len(calls))
+	}
+}
+
+func TestAutomaticRequestPollSharesAcceptanceCriticalSection(t *testing.T) {
+	f := deferredReviewFixture(t, true)
+	ctx := context.Background()
+	withdrawn := f.pr
+	withdrawn.ReviewRequests = nil
+	importOne(t, f.a, ctx, withdrawn)
+	f.a.autoReviewMu.Lock()
+	locked := true
+	defer func() {
+		if locked {
+			f.a.autoReviewMu.Unlock()
+		}
+	}()
+	done := make(chan error, 1)
+	go func() { done <- f.a.ProcessReviewRequests(ctx) }()
+	select {
+	case err := <-done:
+		t.Fatal("request poll bypassed fresh/retry serialization", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+	var state reviewRequestState
+	if err := f.a.Store.Get(ctx, "review-request", f.pr.ID, &state); err != nil || !state.Active {
+		t.Fatal("request episode changed outside the critical section", state, err)
+	}
+	f.a.autoReviewMu.Unlock()
+	locked = false
+	waitLaunchRetry(t, func() {
+		if err := <-done; err != nil {
+			t.Error(err)
+		}
+	})
+	if err := f.a.Store.Get(ctx, "review-request", f.pr.ID, &state); err != nil || state.Active || claimCount(t, f.a) != 1 {
+		t.Fatal("real request poll did not update the same episode", state, err)
+	}
+	f.assertNoAgent(t)
 }
