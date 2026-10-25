@@ -175,14 +175,19 @@ type InboxEntry struct {
 // Recovery is an at-most-two-attempt dialogue with an existing Codex thread.
 // It contains no user answers or process request IDs.
 type QuestionRecovery struct {
-	ID           string `json:"id"`
-	RunID        string `json:"runId"`
-	SourceTurnID string `json:"sourceTurnId"`
-	Stage        string `json:"stage"`
-	Attempts     int    `json:"attempts"`
-	Question     string `json:"question"`
-	OriginalMode string `json:"originalMode"`
-	RepairTurnID string `json:"repairTurnId,omitempty"`
+	ID               string `json:"id"`
+	RunID            string `json:"runId"`
+	SourceTurnID     string `json:"sourceTurnId"`
+	Stage            string `json:"stage"`
+	Attempts         int    `json:"attempts"`
+	Question         string `json:"question"`
+	SourceText       string `json:"sourceText,omitempty"`
+	Confirmation     string `json:"confirmation,omitempty"`
+	OriginalBlocking *bool  `json:"originalBlocking,omitempty"`
+	DiagnosticError  string `json:"diagnosticError,omitempty"`
+	OriginalMode     string `json:"originalMode"`
+	RepairTurnID     string `json:"repairTurnId,omitempty"`
+	TextAttentionID  string `json:"textAttentionId,omitempty"`
 }
 
 func Defaults() Config {

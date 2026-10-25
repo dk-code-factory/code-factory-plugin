@@ -1944,7 +1944,9 @@
         "UI-ANSWER-REFRESH",
         "UI-RESPONSE-CONFIRMATION",
         "UI-QUESTION-RECOVERY",
-        "RUN-QUESTION-RECOVERY"
+        "RUN-QUESTION-RECOVERY",
+        "UI-CLARIFICATION",
+        "RUN-CLASSIFIER-FAILURE"
       ],
       "gaps": [
         {
@@ -1981,7 +1983,7 @@
         "go"
       ],
       "element_description": "**status**, **profile-name**, **workspace**, conditional **run-error** alert; **interrupt**, **resume**, **cleanup** buttons. Decorative waiting/recovery icons, readable recovery-progress, takeover, and owning-run confirmation.",
-      "state_description": "Interrupt exists when a turn identity exists; Resume for interrupted/failed; Cleanup for idle/interrupted/failed. Waiting uses a clock; recovery uses a circular arrow and readable stage/attempt text. Icons are decorative and inherit theme colors. Successful answers show ✓ Answer sent, other forms ✓ Response sent for five seconds from delivery success; polling cannot extend it and reopening cannot recreate it.",
+      "state_description": "Interrupt exists when a turn identity exists; Resume for interrupted/failed; Cleanup for idle/interrupted/failed. Waiting uses a clock; recovery uses a circular arrow and readable stage/attempt text. Icons are decorative and inherit theme colors. Successful answers show ✓ Answer sent, other forms ✓ Response sent for five seconds from delivery success; polling cannot extend it and reopening cannot recreate it. Clarification displays the shared attempt count and Take over without creating attention; unresolved classification stops progress.",
       "interactions": "Performs explicit run actions and refreshes snapshot on success or failure while preserving action errors. Dirty cleanup retains workspace/history/draft and shows interrupted state; explicit Resume continues that run. No cleanup confirmation dialog is implemented. Take over interrupts question recovery. Successful responses select their owner; failed or uncertain calls never confirm or replay. Refresh failure after success has separate shell feedback."
     },
     {
@@ -2071,7 +2073,10 @@
         "RUN-RECOVERY",
         "RUN-RECOVERY-2",
         "API-UI-CONTENT",
-        "UI-QUESTION-RECOVERY"
+        "UI-QUESTION-RECOVERY",
+        "UI-CLARIFICATION",
+        "UI-NONBLOCKING-TEXT",
+        "RUN-CLASSIFIER-FAILURE"
       ],
       "gaps": [
         {
@@ -2090,7 +2095,7 @@
         "go"
       ],
       "element_description": "Whole-notice **answer** button; **blocking-label** or **continuing-label**.",
-      "state_description": "Repeated for pending requests belonging to the selected run. Blocking and textual fallback notices show a decorative clock beside Waiting for your answer.",
+      "state_description": "Repeated for pending requests belonging to the selected run. Blocking notices show a decorative clock beside Waiting for your answer. Explicitly nonblocking recovered text retains Question · agent continues. Unconfirmed completion or unresolved clarification creates no notice.",
       "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent."
     },
     {
@@ -2283,7 +2288,8 @@
         "UI-DIRTY-CLEANUP",
         "API-UI-CONTENT",
         "UI-ANSWER-CONFIRMATION",
-        "UI-QUESTION-RECOVERY"
+        "UI-QUESTION-RECOVERY",
+        "UI-CLARIFICATION"
       ],
       "gaps": [
         {
@@ -9196,19 +9202,26 @@
           "path": "internal/app/questions.go",
           "anchor": "func (m *Manager) DismissQuestion(",
           "purpose": "Durable dismissal and question recovery state."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) repairQuestion(",
+          "purpose": "Constrained clarification and form recovery share durable attempts and gate text fallback on positive evidence."
         }
       ],
       "assertions": [
-        "UI-QUESTION-RECOVERY"
+        "UI-QUESTION-RECOVERY",
+        "UI-CLARIFICATION",
+        "RUN-CLASSIFIER-FAILURE"
       ],
       "gaps": [],
       "suites": [
         "go",
         "browser"
       ],
-      "endpoint_description": "Recovery records bind stage and attempt progress to the owning run and its recovered question.",
+      "endpoint_description": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
       "trigger": "Owning recovery or attention identity.",
-      "interactions": "Recovery records bind stage and attempt progress to the owning run and its recovered question.",
+      "interactions": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
       "from": [
         "W-RUN-CONTROLS.recovery-progress"
       ],
@@ -9703,6 +9716,24 @@
       "path": "internal/app/questions_test.go",
       "anchor": "func TestQuestionHelperIsolationAndModelSelection(",
       "assertion": "Helper uses an ephemeral read-only thread without approvals/apps and selects the configured helper model or task model."
+    },
+    {
+      "id": "UI-CLARIFICATION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "test(\"clarification progress has no attention badge and stops when unresolved\"",
+      "assertion": "Clarification shows shared attempts and takeover with zero attention badges; unresolved classification stops progress and permits owner messaging."
+    },
+    {
+      "id": "UI-NONBLOCKING-TEXT",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "test(\"nonblocking recovered text question keeps its continuing label\"",
+      "assertion": "A recovered explicitly nonblocking text question retains its continuing label without a waiting notice."
+    },
+    {
+      "id": "RUN-CLASSIFIER-FAILURE",
+      "path": "internal/app/question_classification_test.go",
+      "anchor": "func TestClassifierFailuresClarifyCompletionWithoutAttention(",
+      "assertion": "Classifier startup, disconnect, timeout and invalid results trigger one original-agent clarification; completion creates no attention."
     }
   ],
   "source_map": [

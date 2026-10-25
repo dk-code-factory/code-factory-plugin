@@ -2137,6 +2137,78 @@
             "S1"
           ],
           "purpose": "Per-run drafts and literal transcript survive answer navigation and polling."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestClarificationTakeoverAndAnswerRace(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Locally bounded concurrent owner takeover and native answer preserve the durable claim; cancellation stays reachable on stall and late recovery callbacks cannot recreate questions."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestTakeoverInvalidatesLegacyClassifierCallback(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "An explicit provider gate holds legacy classification pending until takeover completes; the later callback cannot establish a question, with a bounded completion wait and reachable cleanup."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStartupTakeoverCancelsRecoveryBeforeSessionAttachment(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Provider-gated startup checking/clarifying classification remains pending until zero-attempt takeover commits before attachment; released callbacks cannot create attention or reconnect."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStartupTakeoverCancelsAfterSessionAttachment(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "An initialization gate proves one durable claimed attempt with no delivered turn; takeover suppresses late native/async setup callbacks and later explicit continuation can ask a fresh genuine question."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStalledRecoveryTakeoverDoesNotBlockAnotherRunsQuestion(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A blocked-goroutine stack proves takeover reached the session mutex held by gated recovery turn/start before another run starts and presents its genuine question; release lets takeover finish."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestLiveAsyncRecoveryAnswerRestoresOriginalPolicy(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A live async repair-turn answer retires matching duplicate store/session routes, completes the repair and continues with original mode/model/effort/sandbox/approval policy while retaining the durable claim."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestTakeoverAfterClaimPreventsQueuedRepairContinuation(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A live async repair answer is durably claimed; takeover before acknowledgement or before a queued post-acknowledgement continuation finalises that claim and prevents automatic task resumption."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRetiredResumeCannotOverwriteOwnerReplacement(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "An actual successful retained thread/resume response is held at its session lock; a staged lock-owned retirement/replacement transition proves the retired launch cannot overwrite the replacement's running state, turn or identity."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestTakeoverInvalidatesEntireQueuedCompletion(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Takeover during provider-gated historical reconciliation invalidates the entire queued completion callback, preventing the subsequent stopped-turn classifier from creating fresh recovery or attention."
         }
       ],
       "suites": [
@@ -2517,6 +2589,326 @@
             "S4"
           ],
           "purpose": "Text fallback sends its form answer exactly through its owning attention identity and shows Answer sent."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestClassifierFailuresClarifyCompletionWithoutAttention(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Classifier startup, disconnect, timeout, invalid-result and configuration errors trigger original-agent clarification; completion creates no attention."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestClarificationSharesBudgetAndRequiresEvidence(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Native/structured clarification shares two turns with form repair; malformed, failed and disconnected replies exhaust into diagnostics. Observed restarted helper completion delivers no third recovery turn or attention."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartCheckingAutomaticallyClarifiesRetainedThread(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Unfinished legacy checking reconnects only for constrained Plan-mode clarification, preserving thread/worktree/profile and never issuing ordinary Resume."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartClarificationPreservesClaimedAttempt(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Repeated restart during clarification retains its claimed attempt and stops at two without inventing question evidence."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestLegacyCompletionRequestReconcilesWithoutDiscardingRealQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Startup and later successful turn events retire matching obsolete legacy text with resolution events while preserving a confirmed unanswered question."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestClarificationTakeoverAndAnswerRace(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Locally bounded concurrent owner takeover and native answer preserve the durable claim; cancellation stays reachable on stall and late recovery callbacks cannot recreate questions."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"clarification progress has no attention badge and stops when unresolved\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Clarification shows shared attempts and takeover without attention badges; unresolved classification stops progress and permits owner messages."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "test(\"nonblocking recovered text question keeps its continuing label\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Explicit nonblocking recovered text uses the continuing label without a waiting notice."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestUnconfirmedRecoveryNeverMaterializesText(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "All unconfirmed stages refuse text materialization; legacy checking stays unconfirmed even with attempts while actual form repairs retain positive evidence."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestLegacyUnansweredTextQuestionSurvivesReclassification(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Positive legacy reclassification replaces unclassified pending text with the actual confirmed question under a fresh request identity without consuming attempts; old answers/dismissals reject, and dismissal of the current request stays final across restart."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestLegacyClarificationSupersedesOnlyMatchingSynthetic(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Native clarification atomically supersedes only matching legacy text; process loss creates one fresh answerable fallback with retained attempts, delivery and unrelated history, rejecting stale legacy answers and dismissals."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartClaimedRecoveryAnswerDoesNotAskAgain(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Restart resolves an already claimed recovery answer without replay, repeated attention or automatic task continuation."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestTakeoverInvalidatesLegacyClassifierCallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An explicit provider gate holds legacy classification pending until takeover completes; the later callback cannot establish a question, with a bounded completion wait and reachable cleanup."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartNativeEvidencePreservesNonblockingQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A pending native question supplies actual question text, original nonblocking delivery and retained attempts after restart; its superseded text remains historical and a fresh request becomes current."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestClarificationResultRejectsIncompleteOrTrailingDecisions(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Structured clarification rejects missing/null values, empty positive questions, wrong types, unknown fields and trailing content; complete positive and negative decisions remain valid."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestTextFallbackDoesNotReviveFinalOrUnrelatedRequests(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Stale materialization leaves answered/dismissed/resolved attention and identical pending requests unchanged; cancelled/answered/resolved/unconfirmed recovery, live native requests and unrelated identities emit no new events."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestNativeAnswerClaimSurvivesProcessLoss(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Durable native answer claims survive process disconnect and restart between attention claim and recovery write, preserving answered history and attempts without fallback, reconnect or replay."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStartupTakeoverCancelsRecoveryBeforeSessionAttachment(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Provider-gated startup checking/clarifying classification remains pending until zero-attempt takeover commits before attachment; released callbacks cannot create attention or reconnect."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStartupTakeoverCancelsAfterSessionAttachment(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An initialization gate proves one durable claimed attempt with no delivered turn; takeover suppresses late native/async setup callbacks and later explicit continuation can ask a fresh genuine question."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestHistoricalClassifierDoesNotBlockAnotherRunsQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A historical classifier remains stalled while another run independently classifies and presents its genuine unanswered question."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestHistoricalRetirementStillChecksLatestQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Within one run, positively retiring an older pending legacy request still leads to detection and presentation of its latest genuine stopped-text question."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRetainedSetupFailureExhaustsSharedBudget(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Initialize/resume and missing-thread/worktree setup failures consume intended attempts durably before setup, retry only within the shared budget and remain unresolved after exhaustion across repeated startup."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStalledRecoveryTakeoverDoesNotBlockAnotherRunsQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A blocked-goroutine stack proves takeover reached the session mutex held by gated recovery turn/start before another run starts and presents its genuine question; release lets takeover finish."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestSetupFailureStillRechecksLaterSuccessfulWork(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "After retained setup becomes unavailable, later successful owner-directed work still supplies obsolescence evidence, retires the matching legacy request and preserves consumed attempts."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryRetainsSingleRouteAcrossRestart(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An originating async question remains the one pending answer route across restart without a duplicate textual fallback."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryUncertainClaimSurvivesStaleSnapshotAndRestart(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An async answer is claimed against its originating recovery before uncertain delivery; stale awaiting/fallback snapshots and restart cannot reopen the claim or reset attempts."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryRetiresOnlyMatchingDuplicate(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Restart atomically retires only matching persisted duplicate text with payload/events intact, retains async identity/nonblocking delivery/attempts, and rejects stale attention snapshots and late sibling routes."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestOriginatingRecoveryClaimsExcludeSiblingAnswers(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Concurrent async/text sibling answers have one accepted originating claim; other siblings resolve before delivery and restart creates no new attention."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRetainedSetupReusesClaimForLastPermittedTurn(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Successful retained setup reuses its preclaimed last permitted attempt for the actual native clarification turn without double counting or skipping delivery."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartUnavailableSetupUsesRemainingBudget(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An older early-unresolved setup record uses only its one remaining durable attempt after restart; setup failure exhausts the budget without attention or another restart loop."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryTakeoverPreservesGenuineQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A held live clarification receives an async notification injected through onMessage; takeover before or after restart cancels only automatic recovery, preserves the genuine nonblocking request and attempt count, and permits its explicit originating answer. This does not exercise provider async emission."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryDisconnectRetainsOnlyAsyncRoute(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Actual retained-process closure preserves the nonblocking async request as the only pending route immediately before restart, with its attempt count intact."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestLiveAsyncRecoveryAnswerRestoresOriginalPolicy(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A live async repair-turn answer retires matching duplicate store/session routes, completes the repair and continues with original mode/model/effort/sandbox/approval policy while retaining the durable claim."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestTakeoverAfterClaimPreventsQueuedRepairContinuation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A live async repair answer is durably claimed; takeover before acknowledgement or before a queued post-acknowledgement continuation finalises that claim and prevents automatic task resumption."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestCompletedNativeRecoveryPreservesQuestionBesideUnrelatedAttention(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "When a nonblocking native clarification turn completes beside unrelated pending attention, its stale native handle becomes one answerable nonblocking fallback while unrelated requests and consumed attempts remain unchanged."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRetiredResumeCannotOverwriteOwnerReplacement(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An actual successful retained thread/resume response is held at its session lock; a staged lock-owned retirement/replacement transition proves the retired launch cannot overwrite the replacement's running state, turn or identity."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestTakeoverInvalidatesEntireQueuedCompletion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Takeover during provider-gated historical reconciliation invalidates the entire queued completion callback, preventing the subsequent stopped-turn classifier from creating fresh recovery or attention."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRejectedAsyncRecoveryAnswerPreventsQueuedContinuation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A held clarification receives an injected async question; a gated provider rejects its answer steer while a real completion callback waits on the session lock. No original-task continuation is sent, the originating claim remains final with its attempt count, and uncertain attention rejects replay."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestLatestDetectionPreservesActiveHistoricalClarification(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Stages the session boundary after failed historical recheck installs clarification and before queued repair runs; latest detection must retain that recovery pointer and create no competing recovery."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestHistoricalClarificationStillChecksLatestQuestion(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A real fixture process holds historical clarification after a failed helper check; its injected negative clarification result and completion resolve the historical recovery at one attempt before the latest genuine question becomes its own answerable fallback with the original turn identity."
         }
       ],
       "suites": [
@@ -2607,12 +2999,12 @@
           },
           {
             "id": "recover",
-            "label": "Check stopped text in an isolated helper; request native form at most twice",
+            "label": "Classify stopped text; only confirmed questions can require input",
             "scenario": "S4"
           },
           {
             "id": "fallback",
-            "label": "Retain a textual question after repair failure or restart"
+            "label": "Retain a confirmed unanswered question as text with original blocking status"
           },
           {
             "id": "dismiss",
@@ -2634,6 +3026,20 @@
             "id": "noquestion",
             "label": "Ordinary completion has no pending question",
             "terminal": true
+          },
+          {
+            "id": "clarify",
+            "label": "Ask original agent for question-only clarification within the shared two-turn budget",
+            "scenario": "S4"
+          },
+          {
+            "id": "unresolved",
+            "label": "Unresolved classification retains diagnostics without new attention or progress",
+            "terminal": true
+          },
+          {
+            "id": "recheck",
+            "label": "Recheck ambiguous legacy text at startup and after later successful turns"
           }
         ],
         "edges": [
@@ -2695,7 +3101,7 @@
           {
             "from": "recover",
             "to": "fallback",
-            "label": "bounded failure or lost process"
+            "label": "confirmed question and repair failure or process loss"
           },
           {
             "from": "recover",
@@ -2721,6 +3127,56 @@
             "from": "recover",
             "to": "noquestion",
             "label": "no human input needed"
+          },
+          {
+            "from": "recover",
+            "to": "clarify",
+            "label": "classifier failure or unfinished check"
+          },
+          {
+            "from": "clarify",
+            "to": "n1",
+            "label": "valid native question"
+          },
+          {
+            "from": "clarify",
+            "to": "recover",
+            "label": "structured confirmed question; remaining form budget"
+          },
+          {
+            "from": "clarify",
+            "to": "noquestion",
+            "label": "original agent confirms no input needed"
+          },
+          {
+            "from": "clarify",
+            "to": "unresolved",
+            "label": "budget exhausted without confirmation"
+          },
+          {
+            "from": "clarify",
+            "to": "takeover",
+            "label": "owner direction cancels recovery"
+          },
+          {
+            "from": "n0",
+            "to": "recheck",
+            "label": "ambiguous historical synthetic request"
+          },
+          {
+            "from": "recheck",
+            "to": "noquestion",
+            "label": "positive completion-only or superseded decision; retire matching request"
+          },
+          {
+            "from": "recheck",
+            "to": "fallback",
+            "label": "question remains unanswered"
+          },
+          {
+            "from": "recheck",
+            "to": "clarify",
+            "label": "classification failure"
           }
         ]
       }
@@ -2844,6 +3300,158 @@
             "S1"
           ],
           "purpose": "Crash between persisted fallback stage and attention creation is repaired idempotently."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartCheckingAutomaticallyClarifiesRetainedThread(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Unfinished legacy checking reconnects only for constrained Plan-mode clarification, preserving thread/worktree/profile and never issuing ordinary Resume."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartClarificationPreservesClaimedAttempt(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Repeated restart during clarification retains its claimed attempt and stops at two without inventing question evidence."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartClaimedRecoveryAnswerDoesNotAskAgain(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Restart resolves an already claimed recovery answer without replay, repeated attention or automatic task continuation."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestLegacyClarificationSupersedesOnlyMatchingSynthetic(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Native clarification atomically supersedes only matching legacy text; process loss creates one fresh answerable fallback with retained attempts, delivery and unrelated history, rejecting stale legacy answers and dismissals."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestNativeAnswerClaimSurvivesProcessLoss(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Durable native answer claims survive process disconnect and restart between attention claim and recovery write, preserving answered history and attempts without fallback, reconnect or replay."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStartupTakeoverCancelsRecoveryBeforeSessionAttachment(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Provider-gated startup checking/clarifying classification remains pending until zero-attempt takeover commits before attachment; released callbacks cannot create attention or reconnect."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStartupTakeoverCancelsAfterSessionAttachment(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "An initialization gate proves one durable claimed attempt with no delivered turn; takeover suppresses late native/async setup callbacks and later explicit continuation can ask a fresh genuine question."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRetainedSetupFailureExhaustsSharedBudget(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Initialize/resume and missing-thread/worktree setup failures consume intended attempts durably before setup, retry only within the shared budget and remain unresolved after exhaustion across repeated startup."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestSetupFailureStillRechecksLaterSuccessfulWork(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "After retained setup becomes unavailable, later successful owner-directed work still supplies obsolescence evidence, retires the matching legacy request and preserves consumed attempts."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryRetainsSingleRouteAcrossRestart(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "An originating async question remains the one pending answer route across restart without a duplicate textual fallback."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryUncertainClaimSurvivesStaleSnapshotAndRestart(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "An async answer is claimed against its originating recovery before uncertain delivery; stale awaiting/fallback snapshots and restart cannot reopen the claim or reset attempts."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryRetiresOnlyMatchingDuplicate(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Restart atomically retires only matching persisted duplicate text with payload/events intact, retains async identity/nonblocking delivery/attempts, and rejects stale attention snapshots and late sibling routes."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestOriginatingRecoveryClaimsExcludeSiblingAnswers(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Concurrent async/text sibling answers have one accepted originating claim; other siblings resolve before delivery and restart creates no new attention."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRetainedSetupReusesClaimForLastPermittedTurn(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Successful retained setup reuses its preclaimed last permitted attempt for the actual native clarification turn without double counting or skipping delivery."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRestartUnavailableSetupUsesRemainingBudget(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "An older early-unresolved setup record uses only its one remaining durable attempt after restart; setup failure exhausts the budget without attention or another restart loop."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryTakeoverPreservesGenuineQuestion(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A held live clarification receives an async notification injected through onMessage; takeover before or after restart cancels only automatic recovery, preserves the genuine nonblocking request and attempt count, and permits its explicit originating answer. This does not exercise provider async emission."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestAsyncRecoveryDisconnectRetainsOnlyAsyncRoute(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Actual retained-process closure preserves the nonblocking async request as the only pending route immediately before restart, with its attempt count intact."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestCompletedNativeRecoveryPreservesQuestionBesideUnrelatedAttention(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "When a nonblocking native clarification turn completes beside unrelated pending attention, its stale native handle becomes one answerable nonblocking fallback while unrelated requests and consumed attempts remain unchanged."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestRetiredResumeCannotOverwriteOwnerReplacement(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "An actual successful retained thread/resume response is held at its session lock; a staged lock-owned retirement/replacement transition proves the retired launch cannot overwrite the replacement's running state, turn or identity."
         }
       ],
       "suites": [

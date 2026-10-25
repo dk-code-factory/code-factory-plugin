@@ -59,7 +59,7 @@ for a clickable navigation control.
 | `C-EXTERNAL-AUTH` | `W-ELICITATION.open-authorization` → external authorization page | Request-supplied URL opened through host. | External. Continue reports the user's completion decision; it does not independently prove external success. |
 | `C-TUNNEL-KEY` | `W-LOCAL-TUNNEL-KEY` → alternate local transport session | Single-use private setup input. | Submits and removes form on success; does not navigate into Settings or activate Jira. |
 | `C-BROWSER-LAB` | `W-BROWSER-LAB` controls → isolated browser → screenshot/location | Explicit lab navigation/click/key/scroll operations. | Developer utility feedback loop; never an Inbox/Agents page transition. |
-| `C-QUESTION-RECOVERY` | Recovery records bind stage and attempt progress to the owning run and its recovered question. | Owning recovery or attention identity. | Recovery records bind stage and attempt progress to the owning run and its recovered question. |
+| `C-QUESTION-RECOVERY` | Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention. | Owning recovery or attention identity. | Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention. |
 | `C-DISMISS-QUESTION` | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. | Owning recovery or attention identity. | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. |
 <!-- /specs:connections-0 -->
 
