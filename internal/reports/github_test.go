@@ -99,8 +99,14 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 	assets := map[int64][]byte{}
 	comparison := "ahead"
 	tagSHA := sha
+	failurePath := ""
+	closingCommit := map[string]any{"sha": fix, "html_url": "https://github.com/" + owner + "/commit/" + fix, "commit": map[string]string{"message": "Fixes #17"}}
 	g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
 		p := r.URL.Path
+		if p == failurePath {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
 		switch {
 		case strings.HasSuffix(p, "/timeline"):
 			reply(w, timeline)
@@ -108,6 +114,8 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 			reply(w, map[string]any{"merged": true, "merge_commit_sha": fix, "body": "Fixes #17", "html_url": "https://github.com/" + owner + "/pull/21"})
 		case strings.Contains(p, "/compare/"):
 			reply(w, map[string]string{"status": comparison})
+		case strings.HasSuffix(p, "/commits/"+fix):
+			reply(w, closingCommit)
 		case strings.Contains(p, "/commits/"):
 			reply(w, map[string]string{"sha": tagSHA})
 		case strings.Contains(p, "/releases/assets/"):
@@ -127,9 +135,36 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 	if e != nil || len(fixes) != 0 || len(available) != 0 {
 		t.Fatal("closure inferred a fix", fixes, available, e)
 	}
-	timeline = []any{map[string]any{"event": "cross-referenced", "source": map[string]any{"issue": map[string]any{"number": 21, "html_url": "https://github.com/" + owner + "/pull/21", "pull_request": map[string]any{"url": "api"}}}}}
+	closingEvent := map[string]any{"event": "closed", "commit_id": fix, "commit_url": "https://api.github.com/repos/" + owner + "/commits/" + fix}
+	timeline = []any{closingEvent}
 	fixes, available, e = g.Track(ctx, issue, component)
-	if e != nil || len(fixes) != 1 || len(available) != 0 {
+	if e != nil || len(fixes) != 1 || fixes[0].Commit != fix || fixes[0].PR != "" || len(available) != 0 {
+		t.Fatal("verified closing commit without a release was lost", fixes, available, e)
+	}
+	for _, invalid := range []struct {
+		name, event, eventURL, commitSHA, commitURL, message string
+	}{
+		{"manual closure", "closed", "", fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes #17"},
+		{"reference only", "referenced", closingEvent["commit_url"].(string), fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes #17"},
+		{"foreign event", "closed", "https://api.github.com/repos/other/repo/commits/" + fix, fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes #17"},
+		{"wrong identity", "closed", closingEvent["commit_url"].(string), sha, "https://github.com/" + owner + "/commit/" + fix, "Fixes #17"},
+		{"foreign commit", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/other/repo/commit/" + fix, "Fixes #17"},
+		{"unrelated issue", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes #170"},
+		{"ordinary mention", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/" + owner + "/commit/" + fix, "See #17"},
+	} {
+		t.Run(invalid.name, func(t *testing.T) {
+			timeline = []any{map[string]any{"event": invalid.event, "commit_id": fix, "commit_url": invalid.eventURL}}
+			closingCommit = map[string]any{"sha": invalid.commitSHA, "html_url": invalid.commitURL, "commit": map[string]string{"message": invalid.message}}
+			fixes, available, e := g.Track(ctx, issue, component)
+			if e != nil || len(fixes) != 0 || len(available) != 0 {
+				t.Fatal("unverified closing commit accepted", fixes, available, e)
+			}
+		})
+	}
+	closingCommit = map[string]any{"sha": fix, "html_url": "https://github.com/" + owner + "/commit/" + fix, "commit": map[string]string{"message": "Fixes #17"}}
+	timeline = []any{closingEvent, map[string]any{"event": "cross-referenced", "source": map[string]any{"issue": map[string]any{"number": 21, "html_url": "https://github.com/" + owner + "/pull/21", "pull_request": map[string]any{"url": "api"}}}}}
+	fixes, available, e = g.Track(ctx, issue, component)
+	if e != nil || len(fixes) != 1 || fixes[0].PR != "https://github.com/"+owner+"/pull/21" || len(available) != 0 {
 		t.Fatal("merged-but-unreleased state incorrect", fixes, available, e)
 	}
 	p := Provenance{Version: 1, Commit: sha, Components: map[string]ComponentProvenance{component: {Repository: owner, Version: "1.2.0", Commit: sha}}, Fixes: []FixedIssue{{Issue: owner + "#17", Component: component, Commit: fix}}, Files: []Artifact{}}
@@ -162,9 +197,28 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 	}
 	releases = []githubRelease{release}
 	fixes, available, e = g.Track(ctx, issue, component)
-	if e != nil || len(available) != 1 || available[0].ComponentVersion != "1.2.0" || available[0].Prerelease {
+	if e != nil || len(available) != 1 || available[0].ComponentVersion != "1.2.0" || available[0].Prerelease || len(fixes) != 1 || fixes[0].Version != "1.2.0" || fixes[0].PR != "https://github.com/"+owner+"/pull/21" {
 		t.Fatal("verified release lost", fixes, available, e)
 	}
+	for _, endpoint := range []string{"/repos/" + owner + "/releases", "/repos/" + owner + "/releases/assets/3"} {
+		failurePath = endpoint
+		fixes, available, e = g.Track(ctx, issue, component)
+		if e == nil || len(fixes) != 1 || fixes[0].Commit != fix || fixes[0].PR == "" || fixes[0].Version != "" || len(available) != 0 {
+			t.Fatal("release read failure discarded the fix or inferred delivery", endpoint, fixes, available, e)
+		}
+	}
+	broken := release
+	broken.Tag = "v1.3.0"
+	broken.Assets = append(broken.Assets[:0:0], release.Assets...)
+	broken.Assets[2].ID = 99
+	releases = []githubRelease{release, broken}
+	failurePath = "/repos/" + owner + "/releases/assets/99"
+	fixes, available, e = g.Track(ctx, issue, component)
+	if e == nil || len(fixes) != 1 || fixes[0].Version != "1.2.0" || fixes[0].PR == "" || len(available) != 1 || available[0].Version != release.Tag {
+		t.Fatal("later release failure discarded earlier verified delivery", fixes, available, e)
+	}
+	failurePath = ""
+	releases = []githubRelease{release}
 	releases[0].Prerelease = true
 	_, available, e = g.Track(ctx, issue, component)
 	if e != nil || len(available) != 1 || !available[0].Prerelease {

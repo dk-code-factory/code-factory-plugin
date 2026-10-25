@@ -9437,7 +9437,7 @@
       ],
       "element_description": "Search and filters, report selectors, Load more reports and Refresh issues and releases.",
       "state_description": "Empty and filtered lists are explicit; server pagination is bounded. Refresh starts no agent.",
-      "interactions": "Query changes reload reports; selection reads report details; journal updates refresh current state."
+      "interactions": "Query changes reset pagination; journal updates preserve and refresh the loaded range, including pending Load more requests; selection reads report details."
     },
     {
       "id": "W-REPORT-DETAIL",
@@ -10139,13 +10139,13 @@
       "id": "UI-REPORTS-RECOVERY",
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues displays independent closure, prerelease delivery and explicit workflow recovery\"",
-      "assertion": "Separates closure, unknown fix/stable/installed evidence and dependency prerelease; blocks recovery until acknowledged and opens the issue link."
+      "assertion": "Separates closure, unknown fix/stable/installed evidence and dependency prerelease; blocks recovery until acknowledged and asserts the selected report exact GitHub URL reaches the host open-link boundary."
     },
     {
       "id": "UI-REPORTS-PAGE",
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues paginates and filters processing component and version\"",
-      "assertion": "Loads 30 then 32 report rows through server cursor pagination and applies processing, component and version filters to one matching row."
+      "assertion": "Loads 30 then 32 unique report rows, preserves a pending Load more and the loaded range across journal updates, refreshes later-row text, and resets pagination when processing/component/version filters change."
     },
     {
       "id": "UI-REPORTS-NAV-NARROW",

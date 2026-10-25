@@ -141,6 +141,8 @@ type Runtime struct {
 	ControllerErrors int       `json:"controllerErrors"`
 	ResumePending    bool      `json:"resumePending"`
 	ResumeID         string    `json:"resumeId"`
+	ResumeUncertain  bool      `json:"resumeUncertain"`
+	UnusableResult   bool      `json:"unusableResult"`
 	Intent           *Findings `json:"intent,omitempty"`
 	CreateAttempted  bool      `json:"createAttempted"`
 }

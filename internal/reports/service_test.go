@@ -57,11 +57,14 @@ func get(t *testing.T, s *Service, ctx context.Context, id string) Report {
 
 type fakeEngine struct {
 	prepareErr                   error
+	resumeErr                    error
+	completeErr                  error
 	startErr                     bool
 	status                       string
 	findings                     Findings
 	starts, resumes, completions int
 	requests                     []Runtime
+	resumeRequests               []Runtime
 }
 
 func (e *fakeEngine) Prepare(_ context.Context, _ Report, r *Runtime) error {
@@ -87,11 +90,18 @@ func (e *fakeEngine) result() WorkflowState {
 func (e *fakeEngine) Status(context.Context, Runtime, string) (WorkflowState, error) {
 	return e.result(), nil
 }
-func (e *fakeEngine) Resume(context.Context, Runtime, string) (WorkflowState, error) {
+func (e *fakeEngine) Resume(_ context.Context, rt Runtime, _ string) (WorkflowState, error) {
 	e.resumes++
+	e.resumeRequests = append(e.resumeRequests, rt)
+	if e.resumeErr != nil {
+		return WorkflowState{}, e.resumeErr
+	}
 	return e.result(), nil
 }
-func (e *fakeEngine) Complete(context.Context, Runtime) error { e.completions++; return nil }
+func (e *fakeEngine) Complete(context.Context, Runtime) error {
+	e.completions++
+	return e.completeErr
+}
 
 type fakeGitHub struct {
 	createErr                          error
@@ -386,14 +396,21 @@ func TestRefreshSeparatesIssueFixDeliveryAndPreservesSuccessfulState(t *testing.
 	if r.Issue.State != "open" || len(r.Fixes) != 1 || len(r.Releases) != 0 {
 		t.Fatal("merge inferred release or reopen lost", r)
 	}
+	github.releases = []Release{{Repository: DefaultRepository, Version: "1.0.0"}}
+	if e := s.Refresh(ctx, true); e != nil {
+		t.Fatal(e)
+	}
+	lastSuccess := get(t, s, ctx, r.ID).ReleaseSync.LastSuccess
+	github.fixes = []Fix{{Repository: DefaultRepository, Commit: strings.Repeat("a", 40), Version: "1.0.0"}, {Repository: DefaultRepository, Commit: strings.Repeat("b", 40)}}
+	github.releases = []Release{{Repository: DefaultRepository, Version: "1.1.0"}}
 	github.errorRead = &rateLimit{time.Now().Add(time.Hour)}
 	github.errorTrack = errors.New("GitHub unavailable")
 	if e := s.Refresh(ctx, true); e != nil {
 		t.Fatal(e)
 	}
 	r = get(t, s, ctx, r.ID)
-	if r.Issue.State != "open" || len(r.Fixes) != 1 || r.IssueSync.Error == "" || r.ReleaseSync.Error == "" {
-		t.Fatal("last success discarded", r)
+	if r.Issue.State != "open" || len(r.Fixes) != 2 || r.Fixes[0].Version != "1.0.0" || len(r.Releases) != 2 || r.Releases[0].Version != "1.0.0" || r.IssueSync.Error == "" || r.ReleaseSync.Error == "" || !r.ReleaseSync.LastSuccess.Equal(lastSuccess) {
+		t.Fatal("verified partial fixes/releases or last successful availability discarded", r)
 	}
 	before := github.refreshes
 	_ = s.Refresh(ctx, true)
@@ -481,6 +498,112 @@ func TestInterruptedPreparationNeedsLifecycleReconciliation(t *testing.T) {
 	step(t, s, ctx)
 	if engine.starts != 1 {
 		t.Fatal("explicit preparation recovery did not run")
+	}
+}
+
+func TestUncertainResumeLifecycleNeedsAcknowledgedRecovery(t *testing.T) {
+	s, ctx := fixture(t)
+	engine, _ := setupEngine(s)
+	engine.status = "needs_attention"
+	r := submit(t, s, ctx)
+	step(t, s, ctx)
+	in := ResumeInput{ID: r.ID, Reconciled: true, Note: "Inspected effects and completed the stopped lifecycle invocation"}
+	if _, err := s.ResumeReport(ctx, in); err != nil {
+		t.Fatal(err)
+	}
+	engine.resumeErr = &preparationUncertain{}
+	step(t, s, ctx)
+	rt, err := s.runtime(ctx, r.ID)
+	if err != nil || !rt.ResumePending || !rt.ResumeUncertain || get(t, s, ctx, r.ID).Processing != "needs_attention" {
+		t.Fatal("uncertain lifecycle entry not retained", rt, err)
+	}
+	otherObservation := observation()
+	otherObservation.IdempotencyKey = "waiting-for-recovery"
+	other, err := s.Submit(ctx, otherObservation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A restarted service must neither replay the lifecycle entry nor launch the
+	// queued report while the earlier invocation remains unreconciled.
+	restarted := &Service{Store: s.Store, Vault: s.Vault, Dir: s.Dir, Engine: engine, GitHub: s.GitHub}
+	step(t, restarted, ctx)
+	if engine.resumes != 1 || get(t, s, ctx, other.ID).Processing != "queued" {
+		t.Fatal("uncertain entry replayed or sole slot released")
+	}
+	if _, err := restarted.ResumeReport(ctx, ResumeInput{ID: r.ID}); err == nil {
+		t.Fatal("uncertain resume accepted without reconciliation")
+	}
+	if _, err := restarted.ResumeReport(ctx, in); err != nil {
+		t.Fatal(err)
+	}
+	recovered, err := s.runtime(ctx, r.ID)
+	if err != nil || recovered.ResumeID == rt.ResumeID || recovered.ResumeUncertain || recovered.AdmissionID != rt.AdmissionID {
+		t.Fatal("acknowledged recovery did not preserve admission and rotate lifecycle attempt", recovered, err)
+	}
+	engine.resumeErr = nil
+	engine.status = "succeeded"
+	engine.findings.Classification = "explained"
+	step(t, restarted, ctx)
+	if get(t, s, ctx, r.ID).Processing != "complete" || engine.resumes != 2 {
+		t.Fatal("explicit recovery failed")
+	}
+	step(t, restarted, ctx)
+	if engine.starts != 2 {
+		t.Fatal("queued report did not progress after recovery")
+	}
+}
+
+func TestFinalizedUnusableFindingsReleaseSlotAndAllowFreshInvestigation(t *testing.T) {
+	for _, invalid := range []string{"empty summary", "invalid classification"} {
+		t.Run(invalid, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			if invalid == "empty summary" {
+				engine.findings.Summary = " "
+			} else {
+				engine.findings.Classification = "unusable"
+			}
+			r := submit(t, s, ctx)
+			engine.completeErr = errors.New("lifecycle finalization needs recovery")
+			step(t, s, ctx)
+			rt, err := s.runtime(ctx, r.ID)
+			if err != nil || rt.UnusableResult || engine.completions != 1 || get(t, s, ctx, r.ID).Processing != "needs_attention" {
+				t.Fatal("unfinalized invocation was incorrectly released", rt, err)
+			}
+			o := observation()
+			o.IdempotencyKey = "next-report"
+			other, err := s.Submit(ctx, o)
+			if err != nil {
+				t.Fatal(err)
+			}
+			step(t, s, ctx)
+			if engine.starts != 1 || get(t, s, ctx, other.ID).Processing != "queued" {
+				t.Fatal("queued report started before lifecycle finalization")
+			}
+			engine.completeErr = nil
+			if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+				t.Fatal(err)
+			}
+			step(t, s, ctx)
+			rt, err = s.runtime(ctx, r.ID)
+			if err != nil || !rt.UnusableResult || engine.completions != 2 {
+				t.Fatal("unusable result did not finalize after recovery", rt, err)
+			}
+			engine.findings = findings()
+			engine.findings.Classification = "explained"
+			step(t, s, ctx)
+			if get(t, s, ctx, other.ID).Processing != "complete" || engine.starts != 2 || github.creates != 0 {
+				t.Fatal("finalized unusable report blocked queued work")
+			}
+			if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+				t.Fatal(err)
+			}
+			step(t, s, ctx)
+			recovered, err := s.runtime(ctx, r.ID)
+			if err != nil || recovered.Generation != rt.Generation+1 || recovered.AdmissionID == rt.AdmissionID || recovered.UnusableResult || engine.resumes != 0 || engine.starts != 3 || get(t, s, ctx, r.ID).Processing != "complete" {
+				t.Fatal("fresh investigation replayed immutable unusable result", recovered, err)
+			}
+		})
 	}
 }
 

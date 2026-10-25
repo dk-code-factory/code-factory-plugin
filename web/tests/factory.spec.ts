@@ -3,7 +3,13 @@ import AxeBuilder from "@axe-core/playwright";
 import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import type { Snapshot, Run, Detail, IssueReport } from "../src/types";
+import type {
+  Snapshot,
+  Run,
+  Detail,
+  IssueReport,
+  ReportPage,
+} from "../src/types";
 function initial(): Snapshot {
   return {
     cursor: 1,
@@ -73,6 +79,10 @@ async function host(
   options: {
     snapshot?: Snapshot;
     reports?: IssueReport[];
+    listReports?: (
+      result: ReportPage,
+      args: Record<string, unknown>,
+    ) => Promise<ReportPage>;
     readItem?: (detail: Detail) => Promise<Detail>;
     failPreparation?: boolean;
     theme?: "light" | "dark";
@@ -87,6 +97,11 @@ async function host(
   let answered = false;
   let relationships: Detail["relationships"] = [];
   const calls: { name: string; arguments: Record<string, unknown> }[] = [];
+  const openLinks: { url: string }[] = [];
+  await page.exposeFunction("hostOpenLink", (params: { url: string }) => {
+    openLinks.push(params);
+    return {};
+  });
   await page.exposeFunction(
     "hostCall",
     async (p: { name: string; arguments: Record<string, unknown> }) => {
@@ -136,10 +151,13 @@ async function host(
             )
             .sort((a, b) => a.id.localeCompare(b.id));
           const limit = Number(a.limit || 30);
-          data = {
+          const result = {
             items: structuredClone(rows.slice(0, limit)),
             nextCursor: rows.length > limit ? rows[limit - 1].id : "",
           };
+          data = options.listReports
+            ? await options.listReports(result, a)
+            : result;
           break;
         }
         case "get_issue_report":
@@ -374,7 +392,7 @@ async function host(
   await page.route("**/host", (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><iframe title="Code Factory app" src="/" style="width:100%;height:95vh;border:0"></iframe><script>window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){result=await window.hostCall(m.params)}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
+      body: `<!doctype html><iframe title="Code Factory app" src="/" style="width:100%;height:95vh;border:0"></iframe><script>window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){result=await window.hostCall(m.params)}else if(m.method==='ui/open-link'){result=await window.hostOpenLink(m.params)}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
     }),
   );
   await page.goto("/host");
@@ -382,7 +400,7 @@ async function host(
   await expect(
     ui.getByRole("heading", { name: "Repository inbox" }),
   ).toBeVisible();
-  return { ui, state, calls };
+  return { ui, state, calls, openLinks };
 }
 async function tabTo(page: Page, target: Locator) {
   for (let attempt = 0; attempt < 30; attempt++) {
@@ -1710,7 +1728,7 @@ test("reported issues displays independent closure, prerelease delivery and expl
   ];
   report.releases[0].prerelease = true;
   report.releaseSync.error = "GitHub rate limit";
-  const { ui, calls } = await host(page, { reports: [report] });
+  const { ui, calls, openLinks } = await host(page, { reports: [report] });
   await ui
     .getByRole("button", { name: "Reported issues", exact: true })
     .click();
@@ -1739,6 +1757,7 @@ test("reported issues displays independent closure, prerelease delivery and expl
     calls.find((c) => c.name === "resume_issue_report")?.arguments,
   ).toMatchObject({ id: "report-1", reconciled: true });
   await ui.getByRole("button", { name: "Open GitHub issue #17" }).click();
+  await expect.poll(() => openLinks).toEqual([{ url: report.issue.url }]);
 });
 
 test("reported issues paginates and filters processing component and version", async ({
@@ -1751,19 +1770,58 @@ test("reported issues paginates and filters processing component and version", a
   reports[31].component = "plugin";
   reports[31].installedVersion = "1.2.3";
   reports[31].observation.actual = "Final report";
-  const { ui, calls } = await host(page, { reports });
+  let releasePage: (() => void) | undefined;
+  const pendingPage = new Promise<void>((resolve) => {
+    releasePage = resolve;
+  });
+  let delayed = false;
+  const { ui, calls, state } = await host(page, {
+    reports,
+    listReports: async (result, args) => {
+      if (args.cursor && !delayed) {
+        delayed = true;
+        await pendingPage;
+      }
+      return result;
+    },
+  });
   await ui
     .getByRole("button", { name: "Reported issues", exact: true })
     .click();
   const list = ui.getByLabel("Report list", { exact: true });
   await expect(list.getByRole("article")).toHaveCount(30);
+  await list
+    .getByRole("button", { name: "Agents: Stale response" })
+    .first()
+    .click();
+  await expect(
+    ui.getByRole("article", { name: "Report details" }),
+  ).toBeVisible();
   await ui.getByRole("button", { name: "Load more reports" }).click();
+  await expect.poll(() => delayed).toBe(true);
+  const reads = calls.filter((c) => c.name === "get_issue_report").length;
+  state.cursor++;
+  await expect
+    .poll(() => calls.filter((c) => c.name === "get_issue_report").length)
+    .toBeGreaterThan(reads);
+  releasePage!();
   await expect(list.getByRole("article")).toHaveCount(32);
+  reports[31].observation.actual = "Updated final report";
+  state.cursor++;
+  await expect(list).toContainText("Updated final report");
+  await expect(list.getByRole("article")).toHaveCount(32);
+  expect(
+    await list.getByRole("article").locator("p").allTextContents(),
+  ).toEqual(
+    reports.map(
+      (r) => `${r.processing.replaceAll("_", " ")} · ${r.component} · ${r.id}`,
+    ),
+  );
   await ui.getByLabel("Processing", { exact: true }).selectOption("complete");
   await ui.getByLabel("Component", { exact: true }).fill("plugin");
   await ui.getByLabel("Version", { exact: true }).fill("1.2.3");
   await expect(list.getByRole("article")).toHaveCount(1);
-  await expect(list).toContainText("Final report");
+  await expect(list).toContainText("Updated final report");
   await expect
     .poll(() =>
       calls.some(
@@ -1775,4 +1833,11 @@ test("reported issues paginates and filters processing component and version", a
       ),
     )
     .toBeTruthy();
+  await ui.getByLabel("Processing", { exact: true }).selectOption("");
+  await ui.getByLabel("Component", { exact: true }).fill("");
+  await ui.getByLabel("Version", { exact: true }).fill("");
+  await expect(list.getByRole("article")).toHaveCount(30);
+  await expect(
+    ui.getByRole("button", { name: "Load more reports" }),
+  ).toBeEnabled();
 });

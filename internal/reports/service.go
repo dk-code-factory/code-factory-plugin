@@ -275,12 +275,35 @@ func (s *Service) ResumeReport(ctx context.Context, in ResumeInput) (Report, err
 		}
 	}
 	if rt.Admitting || rt.ResumePending {
+		recoveryNote := ""
+		if rt.ResumeUncertain {
+			if !in.Reconciled || !validText(in.Note) {
+				return r, fmt.Errorf("inspect retained resume lifecycle records and complete stopped invocations first; reconciled=true and a note are required")
+			}
+			if e = s.sanitize(ctx, &in.Note); e != nil {
+				return r, e
+			}
+			// The old entry intent remains immutable evidence. An acknowledged
+			// recovery owns a new lifecycle attempt, never replaying that entry.
+			rt.ResumeID = newID()
+			rt.ResumeUncertain = false
+			recoveryNote = in.Note
+		}
 		rt.ControllerErrors = 0
 		if e = s.putRuntime(ctx, r.ID, rt); e != nil {
 			return r, e
 		}
 		return s.update(ctx, r.ID, func(r *Report) error {
 			transition(r, "investigating", "Retrying the retained idempotent controller request")
+			if recoveryNote != "" {
+				r.History = append(r.History, Change{"investigating", time.Now().UTC(), "Explicit lifecycle recovery: " + recoveryNote})
+			}
+			return nil
+		})
+	}
+	if rt.UnusableResult {
+		return s.update(ctx, r.ID, func(r *Report) error {
+			transition(r, "queued", "Starting a fresh investigation after finalized unusable findings")
 			return nil
 		})
 	}
@@ -351,12 +374,12 @@ func (s *Service) Step(ctx context.Context) error {
 	// Unresolved engine effects retain the sole investigation slot.
 	if selected == nil {
 		for _, r := range rows {
-			if r.Processing == "needs_attention" && r.WorkflowID != "" {
-				return nil
-			}
 			rt, e := s.runtime(ctx, r.ID)
 			if e != nil {
 				return e
+			}
+			if r.Processing == "needs_attention" && r.WorkflowID != "" && !rt.UnusableResult {
+				return nil
 			}
 			if rt.Admitting && r.Processing != "complete" {
 				return nil
@@ -474,8 +497,15 @@ func (s *Service) Step(ctx context.Context) error {
 	}
 	if e != nil { // No raw provider output enters the public ledger.
 		rt.ControllerErrors++
+		var uncertain *preparationUncertain
+		if rt.ResumePending && errors.As(e, &uncertain) {
+			rt.ResumeUncertain = true
+		}
 		if err := s.putRuntime(ctx, r.ID, rt); err != nil {
 			return err
+		}
+		if rt.ResumeUncertain {
+			return s.state(ctx, r.ID, "needs_attention", "Resume lifecycle entry uncertain; inspect and complete retained invocations, then explicitly reconcile before resuming")
 		}
 		if rt.ControllerErrors >= 3 {
 			return s.state(ctx, r.ID, "needs_attention", "Workflow controller unavailable; restore prerequisites then resume the retained request")
@@ -516,8 +546,13 @@ func (s *Service) Step(ctx context.Context) error {
 		if e = s.sanitize(ctx, &f); e != nil {
 			return e
 		}
-		if !validText(f.Summary) {
-			return s.state(ctx, r.ID, "needs_attention", "Investigation returned no structured findings")
+		validClassification := f.Classification == "confirmed" || f.Classification == "suspected" || f.Classification == "duplicate" || f.Classification == "insufficient_information" || f.Classification == "explained"
+		if !validText(f.Summary) || !validClassification {
+			rt.UnusableResult = true
+			if e = s.putRuntime(ctx, r.ID, rt); e != nil {
+				return e
+			}
+			return s.state(ctx, r.ID, "needs_attention", "Investigation finalized with unusable findings; resume to start a fresh investigation")
 		}
 		_, e = s.update(ctx, r.ID, func(r *Report) error {
 			r.Findings = &f
@@ -710,6 +745,37 @@ func (s *Service) Refresh(ctx context.Context, force bool) error {
 			_, e = s.update(ctx, r.ID, func(r *Report) error {
 				r.ReleaseSync.LastAttempt = now
 				if err != nil {
+					for _, fix := range fixes {
+						found := false
+						for i := range r.Fixes {
+							retained := &r.Fixes[i]
+							if retained.Repository == fix.Repository && retained.Component == fix.Component && retained.Commit == fix.Commit {
+								if fix.PR != "" {
+									retained.PR = fix.PR
+								}
+								if fix.Version != "" {
+									retained.Version = fix.Version
+								}
+								found = true
+								break
+							}
+						}
+						if !found {
+							r.Fixes = append(r.Fixes, fix)
+						}
+					}
+					for _, release := range releases {
+						found := false
+						for _, retained := range r.Releases {
+							if retained == release {
+								found = true
+								break
+							}
+						}
+						if !found {
+							r.Releases = append(r.Releases, release)
+						}
+					}
 					syncError(&r.ReleaseSync, err, now)
 				} else {
 					r.Fixes = fixes

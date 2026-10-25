@@ -7078,7 +7078,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+          "purpose": "Issue reopen, independent fix identity, partial verified fixes/releases, retained prior availability, error freshness and rate-limit backoff survive failed release reads without starting an agent."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7102,7 +7102,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+          "purpose": "Verified direct closing commits and merged fixes stay independent of release reads; reject foreign or unverified commits, preserve partial discoveries, and enrich fix versions while retaining PR association only with matching published provenance."
         },
         {
           "path": "internal/reports/engine_test.go",
@@ -7111,7 +7111,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+          "purpose": "Real controller and fake provider verify large observations and accumulated evidence through a private immutable prompt file, idempotent admission, explicit uncertain lifecycle recovery, controller restart and deadlines."
         },
         {
           "path": "internal/transport/mcp_test.go",
@@ -7140,7 +7140,7 @@
             "S5",
             "S6"
           ],
-          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+          "purpose": "Rendered independent delivery/recovery controls send the selected report exact GitHub URL through the host open-link boundary."
         },
         {
           "path": "scripts/test_ci.py",
@@ -7180,7 +7180,7 @@
           "scenarios": [
             "S6"
           ],
-          "purpose": "Report list cursor pagination and all three structured filters select the matching ledger row."
+          "purpose": "A pending second page and loaded 32 unique rows survive journal updates, later-row content refreshes, and query changes reset the loaded range while retaining server filters."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7230,6 +7230,23 @@
             "S4"
           ],
           "purpose": "Fake native login-status boundaries distinguish available authentication from actionable Codex and GitHub sign-in prerequisites, without reading real credentials."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestUncertainResumeLifecycleNeedsAcknowledgedRecovery(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Retained uncertain resume entry cannot replay or release the sole slot without acknowledged reconciliation; recovery preserves admission identity, rotates only its lifecycle attempt and lets queued work progress."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestFinalizedUnusableFindingsReleaseSlotAndAllowFreshInvestigation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Empty summaries and invalid classifications hold the slot until lifecycle completion, then allow other reports to progress and explicit recovery to start a fresh investigation generation."
         }
       ],
       "suites": [

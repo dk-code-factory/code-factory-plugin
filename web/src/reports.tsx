@@ -49,46 +49,65 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
   const [note, setNote] = useState("");
   const [reconciled, setReconciled] = useState(false);
   const evidenceKey = useRef(crypto.randomUUID());
-  const request = useRef(0);
+  const [loading, setLoading] = useState(false);
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
-  const load = useCallback(
-    async (next = "") => {
-      const generation = ++request.current;
+  const latestLoad = useRef<(more?: boolean) => Promise<void>>(async () => {});
+  useEffect(() => {
+    let active = true;
+    let inFlight = false;
+    let refreshPending = false;
+    let pages = 1;
+    async function load(more = false) {
+      if (more) pages++;
+      refreshPending = true;
+      if (inFlight) return;
+      inFlight = true;
+      setLoading(true);
       try {
-        const data = await call<ReportPage>("list_issue_reports", {
-          search,
-          status,
-          component,
-          version,
-          cursor: next,
-          limit: 30,
-        });
-        if (generation === request.current) {
-          setPage((old) =>
-            next
-              ? {
-                  items: [...old.items, ...data.items],
-                  nextCursor: data.nextCursor,
-                }
-              : data,
-          );
+        // Journal changes queue a refresh rather than cancelling a pending page.
+        while (active && refreshPending) {
+          refreshPending = false;
+          const items = new Map<string, IssueReport>();
+          let nextCursor = "";
+          for (let i = 0; i < pages; i++) {
+            const data = await call<ReportPage>("list_issue_reports", {
+              search,
+              status,
+              component,
+              version,
+              cursor: nextCursor,
+              limit: 30,
+            });
+            if (!active) return;
+            for (const item of data.items) items.set(item.id, item);
+            nextCursor = data.nextCursor;
+            if (!nextCursor) break;
+          }
+          setPage({ items: [...items.values()], nextCursor });
           setError("");
         }
       } catch (e) {
-        if (generation === request.current) setError(String(e));
+        if (active) setError(String(e));
+      } finally {
+        inFlight = false;
+        if (active) setLoading(false);
       }
-    },
-    [search, status, component, version],
-  );
-  const latestLoad = useRef(load);
-  latestLoad.current = load;
-  useEffect(() => {
+    }
+    latestLoad.current = load;
+    setPage({ items: [], nextCursor: "" });
     void load();
     return () => {
-      request.current++;
+      active = false;
     };
-  }, [load, cursor]);
+  }, [search, status, component, version]);
+  const previousCursor = useRef(cursor);
+  useEffect(() => {
+    if (previousCursor.current !== cursor) {
+      previousCursor.current = cursor;
+      void latestLoad.current();
+    }
+  }, [cursor]);
   useEffect(() => {
     setEvidence("");
     setNote("");
@@ -209,7 +228,10 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
             </article>
           ))}
           {page.nextCursor && (
-            <button onClick={() => void load(page.nextCursor)}>
+            <button
+              disabled={loading}
+              onClick={() => void latestLoad.current(true)}
+            >
               Load more reports
             </button>
           )}

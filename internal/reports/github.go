@@ -290,17 +290,21 @@ type githubRelease struct {
 	} `json:"assets"`
 }
 
+// Track returns verified observations alongside later request errors. Callers
+// must merge those observations with retained evidence when the refresh fails.
 func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string) ([]Fix, []Release, error) {
 	if !allowedRepo(issue.Repository) {
 		return nil, nil, fmt.Errorf("Invalid tracking repository")
 	}
 	fixes := []Fix{}
 	releases := []Release{}
-	// Closure alone never proves a fix. Only a merged closing PR with a concrete
-	// merge commit, or checked fixed-issue provenance, supplies a fix identity.
+	// Closure alone never proves a fix. Verify a closing commit, merged closing
+	// PR, or checked fixed-issue provenance before retaining its identity.
 	timeline, e := listPages[struct {
-		Event  string `json:"event"`
-		Source struct {
+		Event     string `json:"event"`
+		Commit    string `json:"commit_id"`
+		CommitURL string `json:"commit_url"`
+		Source    struct {
 			Issue struct {
 				Number int             `json:"number"`
 				URL    string          `json:"html_url"`
@@ -311,8 +315,37 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 	if e != nil {
 		return nil, nil, e
 	}
-	seen := map[string]bool{}
+	seen := map[string]int{}
+	addFix := func(f Fix) {
+		if i, ok := seen[f.Commit]; ok {
+			if f.PR != "" {
+				fixes[i].PR = f.PR
+			}
+			if fixes[i].Version == "" {
+				fixes[i].Version = f.Version
+			}
+			return
+		}
+		seen[f.Commit] = len(fixes)
+		fixes = append(fixes, f)
+	}
+	ref := regexp.MustCompile(fmt.Sprintf(`(?i)\b(?:fix(?:e[sd])?|close[sd]?|resolve[sd]?)\s+(?:#%d\b|%s#%d\b|https://github\.com/%s/issues/%d\b)`, issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number))
 	for _, event := range timeline {
+		if event.Event == "closed" && commitPattern.MatchString(event.Commit) && event.CommitURL == fmt.Sprintf("https://api.github.com/repos/%s/commits/%s", issue.Repository, event.Commit) {
+			var commit struct {
+				SHA    string `json:"sha"`
+				URL    string `json:"html_url"`
+				Commit struct {
+					Message string `json:"message"`
+				} `json:"commit"`
+			}
+			if e = g.get(ctx, "/repos/"+issue.Repository+"/commits/"+event.Commit, &commit); e != nil {
+				return fixes, releases, e
+			}
+			if commit.SHA == event.Commit && commit.URL == fmt.Sprintf("https://github.com/%s/commit/%s", issue.Repository, event.Commit) && ref.MatchString(commit.Commit.Message) {
+				addFix(Fix{Repository: issue.Repository, Commit: event.Commit, Component: component})
+			}
+		}
 		if event.Event != "cross-referenced" || len(event.Source.Issue.PR) == 0 {
 			continue
 		}
@@ -327,12 +360,10 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 			URL    string `json:"html_url"`
 		}
 		if e = g.get(ctx, fmt.Sprintf("/repos/%s/pulls/%d", issue.Repository, number), &pr); e != nil {
-			return nil, nil, e
+			return fixes, releases, e
 		}
-		ref := fmt.Sprintf(`(?i)\b(?:fix(?:e[sd])?|close[sd]?|resolve[sd]?)\s+(?:#%d\b|%s#%d\b|https://github\.com/%s/issues/%d\b)`, issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number)
-		if pr.Merged && commitPattern.MatchString(pr.Commit) && regexp.MustCompile(ref).MatchString(pr.Body) && !seen[pr.Commit] {
-			fixes = append(fixes, Fix{Repository: issue.Repository, PR: pr.URL, Commit: pr.Commit, Component: component})
-			seen[pr.Commit] = true
+		if pr.Merged && commitPattern.MatchString(pr.Commit) && ref.MatchString(pr.Body) {
+			addFix(Fix{Repository: issue.Repository, PR: pr.URL, Commit: pr.Commit, Component: component})
 		}
 	}
 	repos := []string{issue.Repository}
@@ -342,7 +373,7 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 	for _, repo := range repos {
 		rows, e := listPages[githubRelease](ctx, g, "/repos/"+repo+"/releases")
 		if e != nil {
-			return nil, nil, e
+			return fixes, releases, e
 		}
 		for _, release := range rows {
 			if release.Draft || release.PublishedAt == nil {
@@ -350,7 +381,7 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 			}
 			p, ok, e := g.releaseProvenance(ctx, repo, release)
 			if e != nil {
-				return nil, nil, e
+				return fixes, releases, e
 			}
 			if !ok {
 				continue
@@ -367,15 +398,12 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 					Status string `json:"status"`
 				}
 				if e = g.get(ctx, "/repos/"+issue.Repository+"/compare/"+fixed.Commit+"..."+c.Commit, &comparison); e != nil {
-					return nil, nil, e
+					return fixes, releases, e
 				}
 				if comparison.Status != "ahead" && comparison.Status != "identical" {
 					continue
 				}
-				if !seen[fixed.Commit] {
-					fixes = append(fixes, Fix{Repository: issue.Repository, Commit: fixed.Commit, Component: component, Version: c.Version})
-					seen[fixed.Commit] = true
-				}
+				addFix(Fix{Repository: issue.Repository, Commit: fixed.Commit, Component: component, Version: c.Version})
 				releases = append(releases, Release{Repository: repo, Version: release.Tag, ComponentVersion: c.Version, PublishedAt: *release.PublishedAt, URL: release.URL, Prerelease: release.Prerelease, Commit: fixed.Commit})
 			}
 		}

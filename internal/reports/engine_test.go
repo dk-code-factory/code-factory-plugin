@@ -26,11 +26,16 @@ func TestNativeWorkflowEngineWithFakeProviderAndLifecycle(t *testing.T) {
 	raw, _ := json.Marshal(f)
 	script := `#!/usr/bin/env python3
 import json, os, sys, time
+from pathlib import Path
 if '--version' in sys.argv:
  print('codex-cli 0.161.0'); sys.exit(0)
 if 'login' in sys.argv:
  print('Logged in using ChatGPT'); sys.exit(0)
 prompt = sys.stdin.read()
+if 'Read the complete investigation instructions in investigation-prompt.txt' in prompt:
+ prompt = Path('investigation-prompt.txt').read_text()
+ assert len(prompt) > 150 * 1024
+ assert 'Additional host evidence:' in prompt
 receipt = json.loads(os.environ['DK_UPDATE_MANAGED_RECEIPT'])
 assert receipt['identity']['name'] == 'dk-workflows'
 assert os.environ['DK_UPDATE_PARENT'] == receipt['token']
@@ -53,12 +58,16 @@ print(json.dumps({'type':'turn.completed','usage':{'input_tokens':1,'output_toke
 	}
 	lifecycle := `import json, os, sys
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-with open(os.path.join(root, 'calls'), 'a') as file: file.write(sys.argv[1]+'\n')
+operation = sys.argv[1]
+if operation == 'complete': operation += ' ' + sys.argv[sys.argv.index('--token')+1]
+with open(os.path.join(root, 'calls'), 'a') as file: file.write(operation+'\n')
 if sys.argv[1]=='entry':
+ if os.path.exists(os.path.join(root, 'fail-entry')): sys.exit(1)
  token = 'fixture-token-'+str(open(os.path.join(root, 'calls')).read().splitlines().count('entry'))
  print(json.dumps({'token':token,'runtime_root':root,'completion_script':__file__,'action':'continue','identity':{'name':'dk-workflows','version':'fixture'}}))
 else:
  assert os.environ['DK_UPDATE_PARENT']==sys.argv[sys.argv.index('--token')+1]
+ assert json.loads(os.environ['DK_UPDATE_MANAGED_RECEIPT'])['identity']['name']=='dk-workflows'
  print(json.dumps({'status':'completed','action':'continue'}))
 `
 	if e := os.WriteFile(filepath.Join(root, "scripts/update.py"), []byte(lifecycle), 0600); e != nil {
@@ -70,6 +79,8 @@ else:
 	n := &NativeEngine{Dir: dir, Binary: binary, Codex: provider, SkillRoot: root, Fixture: true}
 	rt := Runtime{Generation: 1, AdmissionID: strings.Repeat("a", 32)}
 	r := Report{ID: rt.AdmissionID, Observation: observation()}
+	r.Observation.ToolEvidence = strings.Repeat("x", 150<<10)
+	r.Additions = []string{strings.Repeat("first-host-evidence-", 5<<10), strings.Repeat("second-host-evidence-", 5<<10)}
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	if e := n.Prepare(ctx, r, &rt); e != nil {
@@ -87,6 +98,15 @@ else:
 	second, e := n.Start(ctx, rt)
 	if e != nil || second.ID != first.ID {
 		t.Fatal("admission was not deduplicated", first, second, e)
+	}
+	retained, e := os.ReadFile(filepath.Join(rt.Workspace, "investigation-prompt.txt"))
+	if e != nil || string(retained) != rt.Prompt || len(retained) < 256<<10 {
+		t.Fatal("large observation and accumulated evidence were not retained intact", len(retained), e)
+	}
+	changed := rt
+	changed.Prompt += "changed admission content"
+	if _, err := n.Start(ctx, changed); err == nil {
+		t.Fatal("changed large prompt reused the immutable admission file")
 	}
 	var state WorkflowState
 	deadline := time.Now().Add(20 * time.Second)
@@ -115,7 +135,7 @@ else:
 		t.Fatal(e)
 	}
 	calls, _ := os.ReadFile(filepath.Join(root, "calls"))
-	if string(calls) != "entry\ncomplete\n" {
+	if string(calls) != "entry\ncomplete fixture-token-1\n" {
 		t.Fatal("lifecycle was not finalized", string(calls))
 	}
 	calls, _ = os.ReadFile(filepath.Join(dir, "provider-calls"))
@@ -128,7 +148,7 @@ else:
 		if e := n.Prepare(ctx, r, &rt); e != nil {
 			t.Fatal(e)
 		}
-		defer n.Complete(context.Background(), rt)
+		defer func() { _ = n.Complete(context.Background(), rt) }()
 		defer command(context.Background(), rt.Workspace, nil, binary, "stop", "--workspace", rt.Workspace)
 		slow := filepath.Join(dir, "slow")
 		if e := os.WriteFile(slow, []byte("slow fixture"), 0600); e != nil {
@@ -157,11 +177,78 @@ else:
 			t.Fatal(e)
 		}
 		rt.ResumeID = "explicit-reconciled-recovery"
+		failure := filepath.Join(root, "fail-entry")
+		if e = os.WriteFile(failure, []byte("lose lifecycle entry response"), 0600); e != nil {
+			t.Fatal(e)
+		}
+		if _, err := n.Resume(ctx, rt, state.ID); err == nil {
+			t.Fatal("lost lifecycle entry receipt accepted")
+		}
+		callsAfterFailure, _ := os.ReadFile(filepath.Join(root, "calls"))
+		if _, err := n.Resume(ctx, rt, state.ID); err == nil {
+			t.Fatal("uncertain lifecycle entry replayed")
+		}
+		callsAfterRetry, _ := os.ReadFile(filepath.Join(root, "calls"))
+		if string(callsAfterRetry) != string(callsAfterFailure) {
+			t.Fatal("retry touched lifecycle before checking the retained entry intent", string(callsAfterRetry))
+		}
+		if e = os.Remove(failure); e != nil {
+			t.Fatal(e)
+		}
+		// The owner has inspected/finalized the uncertain invocation; the service
+		// retains its intent and gives acknowledged recovery a fresh lifecycle ID.
+		rt.ResumeID = "acknowledged-new-lifecycle-attempt"
+		if e = os.WriteFile(slow, []byte("interrupt resumed controller"), 0600); e != nil {
+			t.Fatal(e)
+		}
 		resumed, e := n.Resume(ctx, rt, state.ID)
 		if e != nil || resumed.ID != state.ID {
 			b, _ := os.ReadFile(filepath.Join(rt.Workspace, "boundary-errors.log"))
 			log, _ := os.ReadFile(filepath.Join(rt.Workspace, ".agent-workflow/controller.log"))
 			t.Fatalf("resume failed: %+v %v %s %s", resumed, e, b, log)
+		}
+		// Lose the controller after a successful resume, without completing its
+		// lifecycle. A later recovery must finish that resumed token, not token2.
+		time.Sleep(150 * time.Millisecond)
+		if _, e = command(ctx, rt.Workspace, nil, binary, "stop", "--workspace", rt.Workspace); e != nil {
+			t.Fatal(e)
+		}
+		activePath := filepath.Join(rt.Workspace, "active-lifecycle.json")
+		activeReceipt, err := os.ReadFile(activePath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rt.ResumeID = "second-explicit-recovery"
+		callsBeforeSecond, _ := os.ReadFile(filepath.Join(root, "calls"))
+		if err := privateWrite(activePath, []byte(`{"token":"broken"}`)); err != nil {
+			t.Fatal(err)
+		}
+		if err := n.Complete(ctx, rt); err == nil {
+			t.Fatal("malformed previous active receipt fell back to original token")
+		}
+		if err := os.Remove(activePath); err != nil {
+			t.Fatal(err)
+		}
+		if err := n.Complete(ctx, rt); err == nil {
+			t.Fatal("missing previous active receipt fell back to original token")
+		}
+		callsAfterInvalid, _ := os.ReadFile(filepath.Join(root, "calls"))
+		if string(callsAfterInvalid) != string(callsBeforeSecond) {
+			t.Fatal("invalid previous receipt caused lifecycle effects")
+		}
+		if err := privateWrite(activePath, activeReceipt); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Remove(slow); err != nil {
+			t.Fatal(err)
+		}
+		resumed, e = n.Resume(ctx, rt, state.ID)
+		if e != nil || resumed.ID != state.ID {
+			t.Fatal("second resume failed", resumed, e)
+		}
+		callsAfterSecond, _ := os.ReadFile(filepath.Join(root, "calls"))
+		if string(callsAfterSecond) != string(callsBeforeSecond)+"complete fixture-token-4\nentry\n" {
+			t.Fatal("previous resumed token was not completed before next lifecycle entry", string(callsAfterSecond))
 		}
 		deadline := time.Now().Add(10 * time.Second)
 		for time.Now().Before(deadline) {
@@ -178,7 +265,7 @@ else:
 			t.Fatal(resumed)
 		}
 		providerCalls, _ := os.ReadFile(filepath.Join(dir, "provider-calls"))
-		if !strings.Contains(string(providerCalls), "fixture-token-3\n") {
+		if !strings.Contains(string(providerCalls), "fixture-token-5\n") {
 			t.Fatal("resumed provider did not receive its new lifecycle token", string(providerCalls))
 		}
 	})

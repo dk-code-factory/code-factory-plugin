@@ -234,6 +234,7 @@ func engineEnv(rt Runtime) []string {
 	receipt, _ := json.Marshal(map[string]string{"token": rt.Token, "runtime_root": rt.Root, "completion_script": rt.Completion})
 	path := filepath.Join(rt.Workspace, "lifecycle-receipt.json")
 	if rt.ResumeID != "" {
+		path = filepath.Join(rt.Workspace, "active-lifecycle.json")
 		if _, err := os.Stat(resumeReceipt(rt)); err == nil {
 			path = resumeReceipt(rt)
 		}
@@ -285,7 +286,24 @@ func (n *NativeEngine) Start(ctx context.Context, rt Runtime) (WorkflowState, er
 	if err = activateLifecycle(rt); err != nil {
 		return WorkflowState{}, err
 	}
-	b, e := command(ctx, rt.Workspace, engineEnv(rt), n.binary(), "run", "--workspace", rt.Workspace, "--parallel", "1", "--detach", "--request-id", rt.AdmissionID, "--input", "report_id="+strings.Split(rt.AdmissionID, "-")[0], "--input", "prompt="+rt.Prompt, "workflows/investigate.yml")
+	prompt := rt.Prompt
+	// The installed controller accepts input values only as arguments. Keep large
+	// observations privately in the workspace instead of crossing ARG_MAX. The
+	// immutable file and directive retain the same admission identity on retry.
+	if len(prompt) > 64<<10 {
+		path := filepath.Join(rt.Workspace, "investigation-prompt.txt")
+		retained, err := os.ReadFile(path)
+		if os.IsNotExist(err) {
+			err = privateWrite(path, []byte(prompt))
+		} else if err == nil && string(retained) != prompt {
+			err = fmt.Errorf("retained investigation prompt differs from admission input")
+		}
+		if err != nil {
+			return WorkflowState{}, err
+		}
+		prompt = "Read the complete investigation instructions in investigation-prompt.txt in this workspace, then carry out that task. Return only its structured findings object."
+	}
+	b, e := command(ctx, rt.Workspace, engineEnv(rt), n.binary(), "run", "--workspace", rt.Workspace, "--parallel", "1", "--detach", "--request-id", rt.AdmissionID, "--input", "report_id="+strings.Split(rt.AdmissionID, "-")[0], "--input", "prompt="+prompt, "workflows/investigate.yml")
 	if e != nil {
 		return WorkflowState{}, e
 	}
@@ -305,14 +323,16 @@ func (n *NativeEngine) Resume(ctx context.Context, rt Runtime, id string) (Workf
 	if _, err := os.Stat(resumeReceipt(rt)); os.IsNotExist(err) {
 		// Finalize the stopped invocation before starting another. Completion is
 		// idempotent; a separate intent prevents replay of uncertain lifecycle entry.
-		if err := n.Complete(ctx, rt); err != nil {
-			return WorkflowState{}, err
-		}
 		intent, err := os.OpenFile(resumeReceipt(rt)+".intent", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 		if err != nil {
 			return WorkflowState{}, &preparationUncertain{}
 		}
 		_ = intent.Close()
+		if err := n.Complete(ctx, rt); err != nil {
+			// No entry was attempted; retrying completion remains safe.
+			_ = os.Remove(resumeReceipt(rt) + ".intent")
+			return WorkflowState{}, err
+		}
 		b, err := command(ctx, rt.Workspace, nil, "python3", filepath.Join(rt.Root, "scripts/update.py"), "entry", "--host", "codex")
 		if err != nil {
 			return WorkflowState{}, &preparationUncertain{}
@@ -428,10 +448,12 @@ func activeLifecycle(rt Runtime) (Runtime, error) {
 	}
 	b, err := os.ReadFile(resumeReceipt(rt))
 	if os.IsNotExist(err) {
-		return rt, nil
+		// A fresh resume ID still owes completion of the previously active
+		// invocation, which may itself have been a resumed lifecycle.
+		b, err = os.ReadFile(filepath.Join(rt.Workspace, "active-lifecycle.json"))
 	}
 	if err != nil {
-		return rt, err
+		return rt, &preparationUncertain{}
 	}
 	var receipt struct {
 		Token      string `json:"token"`
