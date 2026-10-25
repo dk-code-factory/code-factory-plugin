@@ -1773,6 +1773,54 @@ test("reported issues displays independent closure, prerelease delivery and expl
   await expect.poll(() => openLinks).toEqual([{ url: report.issue.url }]);
 });
 
+test("reported issues makes detail progress while journal updates continue", async ({
+  page,
+}) => {
+  const report = reportFixture();
+  report.processing = "needs_attention";
+  report.findings!.summary = "Slow detail findings";
+  const pendingReads: (() => void)[] = [];
+  const { ui, state, calls } = await host(page, {
+    reports: [report],
+    readReport: async (result) => {
+      await new Promise<void>((resolve) => {
+        pendingReads.push(resolve);
+      });
+      return result;
+    },
+  });
+  async function journalUpdate() {
+    const lists = calls.filter((c) => c.name === "list_issue_reports").length;
+    state.cursor++;
+    await expect
+      .poll(() => calls.filter((c) => c.name === "list_issue_reports").length)
+      .toBeGreaterThan(lists);
+  }
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  await expect.poll(() => pendingReads.length).toBe(1);
+  // Each response is slower than multiple actual journal polling cycles.
+  await journalUpdate();
+  await journalUpdate();
+  pendingReads[0]();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  await expect(detail).toContainText("Slow detail findings");
+  await expect(detail.getByRole("definition").first()).toHaveText(
+    "needs attention",
+  );
+  await expect(detail.getByLabel("Recovery note")).toBeVisible();
+  await expect.poll(() => pendingReads.length).toBe(2);
+  await journalUpdate();
+  await journalUpdate();
+  await expect(detail).toContainText("Slow detail findings");
+  await expect(detail.getByLabel("Recovery note")).toBeVisible();
+  pendingReads[1]();
+  await expect.poll(() => pendingReads.length).toBe(3);
+  pendingReads[2]();
+});
+
 test("reported issues keeps newer journal details after a delayed mutation read", async ({
   page,
 }) => {

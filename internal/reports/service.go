@@ -237,7 +237,11 @@ func (s *Service) AddEvidence(ctx context.Context, in EvidenceInput) (Report, er
 		}
 		out.Additions = append(out.Additions, in.Text)
 		out.Evidence = append(out.Evidence, Evidence{Origin: "chat:addition", At: time.Now().UTC(), SHA256: hash(in.Text), Bytes: len(in.Text)})
-		if out.Processing == "needs_information" {
+		var rt Runtime
+		if e := t.Get("report-runtime", in.ID, &rt); e != nil && !errors.Is(e, store.ErrNotFound) {
+			return e
+		}
+		if out.Processing == "needs_information" || out.Processing == "filing" && !rt.CreateAttempted {
 			transition(&out, "queued", "Additional information received")
 		}
 		out.Updated = time.Now().UTC()
@@ -432,7 +436,7 @@ func (s *Service) Step(ctx context.Context) error {
 		if s.Engine == nil {
 			return s.state(ctx, r.ID, "blocked", "Install agent-workflow, authenticated Codex and dk-workflows, then resume")
 		}
-		rt = Runtime{Generation: rt.Generation + 1}
+		rt = Runtime{Generation: rt.Generation + 1, AdditionCount: len(r.Additions)}
 		rt.AdmissionID = r.ID
 		if rt.Generation > 1 {
 			rt.AdmissionID = fmt.Sprintf("%s-%d", r.ID, rt.Generation)
@@ -551,30 +555,37 @@ func (s *Service) Step(ctx context.Context) error {
 			return e
 		}
 		validClassification := f.Classification == "confirmed" || f.Classification == "suspected" || f.Classification == "duplicate" || f.Classification == "insufficient_information" || f.Classification == "explained"
-		if !validText(f.Summary) || !validClassification {
-			rt.UnusableResult = true
-			if e = s.putRuntime(ctx, r.ID, rt); e != nil {
+		return s.Store.Write(ctx, func(t *store.Tx) error {
+			var current Report
+			if e := t.Get("issue-report", r.ID, &current); e != nil {
 				return e
 			}
-			return s.state(ctx, r.ID, "needs_attention", "Investigation finalized with unusable findings; resume to start a fresh investigation")
-		}
-		_, e = s.update(ctx, r.ID, func(r *Report) error {
-			r.Findings = &f
-			r.Component = f.Component
+			current.Updated = time.Now().UTC()
+			if len(current.Additions) > rt.AdditionCount {
+				transition(&current, "queued", "New evidence requires a fresh investigation after lifecycle completion")
+				return save(t, current)
+			}
+			if !validText(f.Summary) || !validClassification {
+				rt.UnusableResult = true
+				if e := t.Put("report-runtime", r.ID, rt); e != nil {
+					return e
+				}
+				transition(&current, "needs_attention", "Investigation finalized with unusable findings; resume to start a fresh investigation")
+				return save(t, current)
+			}
+			current.Findings = &f
+			current.Component = f.Component
 			switch f.Classification {
 			case "insufficient_information":
-				transition(r, "needs_information", f.MissingInformation)
+				transition(&current, "needs_information", f.MissingInformation)
 			case "explained":
-				r.Outcome = "explained_behavior"
-				transition(r, "complete", f.Summary)
+				current.Outcome = "explained_behavior"
+				transition(&current, "complete", f.Summary)
 			case "confirmed", "suspected", "duplicate":
-				transition(r, "filing", "Verifying ownership and draft before publication")
-			default:
-				transition(r, "needs_attention", "Invalid investigation classification")
+				transition(&current, "filing", "Verifying ownership and draft before publication")
 			}
-			return nil
+			return save(t, current)
 		})
-		return e
 	default:
 		// Engine uncertainty requires explicit reconciliation before retrying effects.
 		if e = s.Engine.Complete(ctx, rt); e != nil {
@@ -608,25 +619,46 @@ func (s *Service) reconcilePublication(ctx context.Context, r *Report, rt Runtim
 		})
 		return err
 	}
-	return s.finishIssue(ctx, r.ID, *found, "filed")
+	return s.finishIssue(ctx, r.ID, *found, "filed", rt.AdmissionID)
 }
-func (s *Service) finishIssue(ctx context.Context, id string, issue Issue, outcome string) error {
-	_, e := s.update(ctx, id, func(r *Report) error {
+func (s *Service) finishIssue(ctx context.Context, id string, issue Issue, outcome, admissionID string) error {
+	return s.Store.Write(ctx, func(t *store.Tx) error {
+		var r Report
+		var rt Runtime
+		if e := t.Get("issue-report", id, &r); e != nil {
+			return e
+		}
+		if e := t.Get("report-runtime", id, &rt); e != nil && !errors.Is(e, store.ErrNotFound) {
+			return e
+		}
 		r.Issue = &issue
 		r.Outcome = outcome
-		transition(r, "complete", "GitHub issue associated with this observation")
-		return nil
+		r.Updated = time.Now().UTC()
+		if rt.AdmissionID != admissionID {
+			return save(t, r) // A newer generation owns its processing state.
+		}
+		if !rt.CreateAttempted && len(r.Additions) > rt.AdditionCount {
+			transition(&r, "queued", "Known issue retained; new evidence requires a fresh investigation")
+		} else {
+			transition(&r, "complete", "GitHub issue associated with this observation")
+		}
+		return save(t, r)
 	})
-	return e
 }
 func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 	if rt.CreateAttempted {
 		return s.reconcilePublication(ctx, &r, rt)
 	}
+	if r.Issue != nil {
+		return s.finishIssue(ctx, r.ID, *r.Issue, r.Outcome, rt.AdmissionID)
+	}
 	if s.GitHub == nil || r.Findings == nil {
 		return s.state(ctx, r.ID, "blocked", "GitHub adapter or investigation findings unavailable")
 	}
 	f := *r.Findings
+	if e := s.sanitize(ctx, &f); e != nil {
+		return e
+	}
 	if e := s.GitHub.Validate(ctx, f); e != nil {
 		return s.state(ctx, r.ID, "blocked", e.Error())
 	}
@@ -638,7 +670,7 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 		if e != nil {
 			return s.state(ctx, r.ID, "blocked", e.Error())
 		}
-		return s.finishIssue(ctx, r.ID, i, "duplicate")
+		return s.finishIssue(ctx, r.ID, i, "duplicate", rt.AdmissionID)
 	}
 	// Similar titles alone do not establish a duplicate. Reuse requires the
 	// investigator's explicit duplicate disposition and verified issue identity.
@@ -650,16 +682,38 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 		return s.state(ctx, r.ID, "blocked", e.Error())
 	}
 	if existing != nil {
-		return s.finishIssue(ctx, r.ID, *existing, "filed")
+		return s.finishIssue(ctx, r.ID, *existing, "filed", rt.AdmissionID)
 	}
 	// Durable intent AND attempted flag precede the network mutation. Any subsequent
 	// interruption can only search/reconcile; it cannot repeat the POST.
 	claimed := false
+	stale := false
+	var known *Issue
+	knownOutcome := ""
+	admissionID := rt.AdmissionID
 	if e = s.Store.Write(ctx, func(t *store.Tx) error {
 		if e := t.Get("report-runtime", r.ID, &rt); e != nil {
 			return e
 		}
 		if rt.CreateAttempted {
+			return nil
+		}
+		if rt.AdmissionID != admissionID {
+			stale = true
+			return nil
+		}
+		var current Report
+		if e := t.Get("issue-report", r.ID, &current); e != nil {
+			return e
+		}
+		if len(current.Additions) > rt.AdditionCount {
+			stale = true
+			transition(&current, "queued", "New evidence requires investigation before issue creation")
+			current.Updated = time.Now().UTC()
+			return save(t, current)
+		}
+		if current.Issue != nil {
+			known, knownOutcome = current.Issue, current.Outcome
 			return nil
 		}
 		rt.Intent = &f
@@ -668,6 +722,12 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 		return t.Put("report-runtime", r.ID, rt)
 	}); e != nil {
 		return e
+	}
+	if stale {
+		return nil
+	}
+	if known != nil {
+		return s.finishIssue(ctx, r.ID, *known, knownOutcome, admissionID)
 	}
 	if !claimed {
 		return s.reconcilePublication(ctx, &r, rt)
@@ -684,7 +744,7 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 		}
 		return s.state(ctx, r.ID, "needs_attention", "GitHub creation result uncertain; reconcile before resuming")
 	}
-	return s.finishIssue(ctx, r.ID, issue, "filed")
+	return s.finishIssue(ctx, r.ID, issue, "filed", rt.AdmissionID)
 }
 
 // PublishReport is the deterministic post-workflow CLI command. It accepts no

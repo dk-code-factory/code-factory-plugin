@@ -65,9 +65,11 @@ type fakeEngine struct {
 	starts, resumes, completions int
 	requests                     []Runtime
 	resumeRequests               []Runtime
+	preparedReports              []Report
 }
 
-func (e *fakeEngine) Prepare(_ context.Context, _ Report, r *Runtime) error {
+func (e *fakeEngine) Prepare(_ context.Context, report Report, r *Runtime) error {
+	e.preparedReports = append(e.preparedReports, report)
 	r.Workspace = "private"
 	r.Prompt = "immutable input"
 	r.Token = "lifecycle"
@@ -112,16 +114,32 @@ type fakeGitHub struct {
 	issue                              Issue
 	fixes                              []Fix
 	releases                           []Release
+	onValidate, onMarker, onCreate     func()
+	created                            []Findings
 }
 
-func (g *fakeGitHub) Validate(context.Context, Findings) error                   { return g.validateErr }
-func (g *fakeGitHub) FindMarker(context.Context, string, string) (*Issue, error) { return g.found, nil }
+func (g *fakeGitHub) Validate(context.Context, Findings) error {
+	if g.onValidate != nil {
+		g.onValidate()
+	}
+	return g.validateErr
+}
+func (g *fakeGitHub) FindMarker(context.Context, string, string) (*Issue, error) {
+	if g.onMarker != nil {
+		g.onMarker()
+	}
+	return g.found, nil
+}
 func (g *fakeGitHub) ReadIssue(context.Context, string, int) (Issue, error) {
 	g.refreshes++
 	return g.issue, g.errorRead
 }
-func (g *fakeGitHub) Create(context.Context, Findings, string) (Issue, error) {
+func (g *fakeGitHub) Create(_ context.Context, f Findings, _ string) (Issue, error) {
 	g.creates++
+	g.created = append(g.created, f)
+	if g.onCreate != nil {
+		g.onCreate()
+	}
 	if g.createErr != nil {
 		return Issue{}, g.createErr
 	}
@@ -200,7 +218,12 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	}
 	o := observation()
 	o.Errors = "private-jira-secret bearer cloud-token ghp_abcdefghijk password=hunter2 private-owner-token"
-	o.ToolEvidence = `{"Authorization": "Basic ZXhhbXBsZTpwdGVzdA==", "status": 401}`
+	o.Errors += "\nCookie: session=unknown-request-cookie; other=unknown-second-cookie\r\nSet-Cookie: auth=unknown-response-cookie; Secure; HttpOnly\r\nretained-line-evidence"
+	o.Errors += "\n> Cookie: session=unknown-prefixed-request\n< Set-Cookie: session=unknown-prefixed-response; Secure\n2026-10-25T12:00:00Z [http] Cookie: session=unknown-logged-cookie\nretained-prefixed-line"
+	o.ToolEvidence = `{"Authorization": "Basic ZXhhbXBsZTpwdGVzdA==", "Cookie": "session=unknown-json-cookie; other=unknown-json-second", "Set-Cookie": "session=unknown-json-response; Secure", "id_token": "unknown-json-id-token", "headers": {"Cookie": [
+"unknown-json-array-cookie", "unknown-json-array-second"], "Set-Cookie": ["unknown-json-array-response"]}, "status": 401}`
+	o.ToolEvidence += "\n{'id_token': 'unknown-single-id', 'Cookie': 'session=unknown-single-cookie', 'Set-Cookie': ['unknown-single-response', 'unknown-single-array']}\nretained-single-quote-line"
+	o.Errors += "\n{'password': 'unknown-single-password secret-single-suffix', \"password\": \"unknown-double-password secret-double-suffix\"}\nretained-quoted-value-line"
 	o.RunIDs = []string{"run-1", "missing-run"}
 	if err := s.Store.Put(ctx, "item", "repo#1", domain.Item{ID: "repo#1", Revision: "captured-associated-item-revision"}, ""); err != nil {
 		t.Fatal(err)
@@ -211,7 +234,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 		}
 	}
 	if e := s.Store.Write(ctx, func(t *store.Tx) error {
-		return t.Event("run.output", "run-1", map[string]string{"text": "private-jira-secret"})
+		return t.Event("run.output", "run-1", map[string]any{"text": "private-jira-secret\nCookie: session=unknown-event-cookie\nretained-event-line", "headers": map[string]any{"Cookie": []string{"unknown-map-cookie", "unknown-map-second"}, "Set-Cookie": "unknown-map-response"}, "id_token": "unknown-map-id-token"})
 	}); e != nil {
 		t.Fatal(e)
 	}
@@ -232,10 +255,17 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	for _, secret := range []string{"private-jira-secret", "cloud-token", "ghp_abcdefghijk", "hunter2", "private-owner-token", "ZXhhbXBsZTpwdGVzdA==", "unrelated-private-work-must-not-appear", "unrelated-private-sync-must-not-appear"} {
+	secrets := []string{"private-jira-secret", "cloud-token", "ghp_abcdefghijk", "hunter2", "private-owner-token", "ZXhhbXBsZTpwdGVzdA==", "unknown-request-cookie", "unknown-second-cookie", "unknown-response-cookie", "unknown-json-cookie", "unknown-json-second", "unknown-json-response", "unknown-json-id-token", "unknown-json-array-cookie", "unknown-json-array-second", "unknown-json-array-response", "unknown-event-cookie", "unknown-map-cookie", "unknown-map-second", "unknown-map-response", "unknown-map-id-token", "unrelated-private-work-must-not-appear", "unrelated-private-sync-must-not-appear"}
+	secrets = append(secrets, "unknown-prefixed-request", "unknown-prefixed-response", "unknown-logged-cookie")
+	secrets = append(secrets, "unknown-single-id", "unknown-single-cookie", "unknown-single-response", "unknown-single-array")
+	secrets = append(secrets, "unknown-single-password", "secret-single-suffix", "unknown-double-password", "secret-double-suffix")
+	for _, secret := range secrets {
 		if strings.Contains(string(b), secret) {
 			t.Fatal("private evidence leaked", secret)
 		}
+	}
+	if !strings.Contains(string(b), "retained-line-evidence") || !strings.Contains(string(b), "retained-event-line") || !strings.Contains(string(b), "retained-prefixed-line") || !strings.Contains(string(b), "retained-single-quote-line") || !strings.Contains(string(b), "retained-quoted-value-line") {
+		t.Fatal("header redaction swallowed unrelated evidence", string(b))
 	}
 	if !strings.Contains(string(b), "immutable-base") || !strings.Contains(string(b), "Referenced run unavailable") || !strings.Contains(string(b), "captured-associated-item-revision") {
 		t.Fatal("missing scoped evidence or omissions", string(b))
@@ -253,6 +283,141 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 		if event.Kind == "report.changed" && strings.Contains(string(event.Data), "relevant") {
 			t.Fatal("full evidence journaled")
 		}
+	}
+	engine, github := setupEngine(s)
+	engine.findings.Body = "Cookie: session=unknown-draft-cookie\nSet-Cookie: session=unknown-draft-response; Secure\nid_token=unknown-draft-id-token\nretained-draft-line"
+	engine.findings.Body += "\n{'id_token': 'unknown-single-draft-id', 'Cookie': 'session=unknown-single-draft-cookie', 'Set-Cookie': ['unknown-single-draft-response']}"
+	engine.findings.Body += "\n{'password': 'unknown-draft-password secret-draft-suffix'}"
+	if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "redacted-addition", Text: "Cookie: session=unknown-added-cookie\nretained-addition-line"}); err != nil {
+		t.Fatal(err)
+	}
+	step(t, s, ctx)
+	// Re-sanitize a retained draft at publication as well as fresh worker output.
+	if _, err := s.update(ctx, r.ID, func(r *Report) error { r.Findings.Body = engine.findings.Body; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	step(t, s, ctx)
+	if len(github.created) != 1 || strings.Contains(github.created[0].Body, "unknown-") || strings.Contains(github.created[0].Body, "secret-draft-suffix") || !strings.Contains(github.created[0].Body, "retained-draft-line") {
+		t.Fatal("unknown draft credentials reached publication", github.created)
+	}
+	prepared, _ := json.Marshal(engine.preparedReports[0])
+	for _, secret := range append(secrets, "unknown-added-cookie") {
+		if strings.Contains(string(prepared), secret) {
+			t.Fatal("unknown credentials reached investigator input", secret)
+		}
+	}
+}
+
+func TestEvidenceAfterWorkerCompletionRequiresFreshGeneration(t *testing.T) {
+	for _, classification := range []string{"suspected", "insufficient_information", "explained"} {
+		t.Run(classification, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			engine.status = "running"
+			r := submit(t, s, ctx)
+			step(t, s, ctx)
+			engine.status = "succeeded"
+			engine.findings.Classification = classification
+			addition := EvidenceInput{ID: r.ID, IdempotencyKey: "worker-missed-this", Text: "Host response supplied after worker completion"}
+			if _, err := s.AddEvidence(ctx, addition); err != nil {
+				t.Fatal(err)
+			}
+			step(t, s, ctx)
+			if get(t, s, ctx, r.ID).Processing != "queued" || engine.completions != 1 || engine.starts != 1 || github.creates != 0 {
+				t.Fatal("stale findings settled before new evidence or lifecycle was not finalized")
+			}
+			if _, err := s.AddEvidence(ctx, addition); err != nil {
+				t.Fatal(err)
+			}
+			engine.findings.Classification = "explained"
+			step(t, s, ctx)
+			rt, err := s.runtime(ctx, r.ID)
+			if err != nil || rt.Generation != 2 || rt.AdditionCount != 1 || len(engine.preparedReports[1].Additions) != 1 || engine.preparedReports[1].Additions[0] != addition.Text || engine.requests[0].AdmissionID == engine.requests[1].AdmissionID || get(t, s, ctx, r.ID).Processing != "complete" {
+				t.Fatal("fresh generation did not investigate idempotent evidence", rt, err)
+			}
+		})
+	}
+}
+
+func TestEvidencePublicationClaimBoundary(t *testing.T) {
+	for _, phase := range []string{"validate", "marker", "known-marker", "new-generation", "known-marker-new-generation", "claimed", "uncertain-claim"} {
+		t.Run(phase, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			r := submit(t, s, ctx)
+			step(t, s, ctx)
+			inject := func() {
+				if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "publication-race", Text: "New host evidence while publication was pending"}); err != nil {
+					t.Fatal(err)
+				}
+				if strings.Contains(phase, "new-generation") {
+					engine.status = "running"
+					other := &Service{Store: s.Store, Vault: s.Vault, Dir: s.Dir, Engine: engine, GitHub: github}
+					step(t, other, ctx)
+				}
+			}
+			switch phase {
+			case "validate", "new-generation":
+				github.onValidate = inject
+			case "marker", "known-marker", "known-marker-new-generation":
+				github.onMarker = inject
+				if strings.HasPrefix(phase, "known-marker") {
+					github.found = &github.issue
+				}
+			case "claimed", "uncertain-claim":
+				github.onCreate = inject
+				github.uncertain = phase == "uncertain-claim"
+			}
+			step(t, s, ctx)
+			github.onValidate, github.onMarker, github.onCreate = nil, nil, nil
+			current := get(t, s, ctx, r.ID)
+			if phase == "claimed" || phase == "uncertain-claim" {
+				if github.creates != 1 || len(current.Additions) != 1 || engine.starts != 1 {
+					t.Fatal("accepted post-claim evidence repeated an external effect", current)
+				}
+				if phase == "uncertain-claim" {
+					if current.Processing != "needs_attention" {
+						t.Fatal("uncertain publication lost reconciliation state", current)
+					}
+					for range 2 {
+						if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+							t.Fatal(err)
+						}
+					}
+					github.found = &github.issue
+					if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if get(t, s, ctx, r.ID).Processing != "complete" || github.creates != 1 {
+					t.Fatal("claimed publication did not settle once")
+				}
+				return
+			}
+			wantState := "queued"
+			if strings.Contains(phase, "new-generation") {
+				wantState = "investigating"
+			}
+			if current.Processing != wantState || github.creates != 0 || engine.completions != 1 {
+				t.Fatal("unclaimed stale draft settled or created an issue", current)
+			}
+			if strings.HasPrefix(phase, "known-marker") && (current.Issue == nil || current.Issue.Number != 17) {
+				t.Fatal("known issue identity was lost while fresh investigation remained pending", current)
+			}
+			engine.status = "succeeded"
+			step(t, s, ctx)
+			step(t, s, ctx)
+			if get(t, s, ctx, r.ID).Processing != "complete" || len(engine.preparedReports[1].Additions) != 1 {
+				t.Fatal("fresh context did not finish investigation")
+			}
+			wantCreates := 1
+			if strings.HasPrefix(phase, "known-marker") {
+				wantCreates = 0
+			}
+			if github.creates != wantCreates {
+				t.Fatal("publication did not respect known issue/claim identity", github.creates)
+			}
+		})
 	}
 }
 func TestWorkflowLostAdmissionDaemonRestartAndUncertainCreation(t *testing.T) {

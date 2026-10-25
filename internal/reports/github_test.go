@@ -105,7 +105,7 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 	comparison := "ahead"
 	tagSHA := sha
 	failurePath := ""
-	closingCommit := map[string]any{"sha": fix, "html_url": "https://github.com/" + owner + "/commit/" + fix, "commit": map[string]string{"message": "Fixes #17"}}
+	closingCommit := map[string]any{"sha": fix, "html_url": "https://github.com/" + owner + "/commit/" + fix, "commit": map[string]string{"message": "Fixes: #17"}}
 	g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
 		p := r.URL.Path
 		if p == failurePath {
@@ -116,7 +116,7 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 		case strings.HasSuffix(p, "/timeline"):
 			reply(w, timeline)
 		case strings.Contains(p, "/pulls/"):
-			reply(w, map[string]any{"merged": true, "merge_commit_sha": fix, "body": "Fixes #17", "html_url": "https://github.com/" + owner + "/pull/21"})
+			reply(w, map[string]any{"merged": true, "merge_commit_sha": fix, "body": "Resolves: " + owner + "#17", "html_url": "https://github.com/" + owner + "/pull/21"})
 		case strings.Contains(p, "/compare/"):
 			reply(w, map[string]string{"status": comparison})
 		case strings.HasSuffix(p, "/commits/"+fix):
@@ -146,6 +146,13 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 	if e != nil || len(fixes) != 1 || fixes[0].Commit != fix || fixes[0].PR != "" || len(available) != 0 {
 		t.Fatal("verified closing commit without a release was lost", fixes, available, e)
 	}
+	for _, message := range []string{"CLOSED: " + owner + "#17", "resolved: https://github.com/" + owner + "/issues/17"} {
+		closingCommit["commit"] = map[string]string{"message": message}
+		fixes, available, e = g.Track(ctx, issue, component)
+		if e != nil || len(fixes) != 1 || fixes[0].Commit != fix || len(available) != 0 {
+			t.Fatal("supported qualified closing reference was lost", message, fixes, available, e)
+		}
+	}
 	for _, invalid := range []struct {
 		name, event, eventURL, commitSHA, commitURL, message string
 	}{
@@ -154,7 +161,8 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 		{"foreign event", "closed", "https://api.github.com/repos/other/repo/commits/" + fix, fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes #17"},
 		{"wrong identity", "closed", closingEvent["commit_url"].(string), sha, "https://github.com/" + owner + "/commit/" + fix, "Fixes #17"},
 		{"foreign commit", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/other/repo/commit/" + fix, "Fixes #17"},
-		{"unrelated issue", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes #170"},
+		{"unrelated issue", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes: #170"},
+		{"foreign issue", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/" + owner + "/commit/" + fix, "Fixes: other/repo#17"},
 		{"ordinary mention", "closed", closingEvent["commit_url"].(string), fix, "https://github.com/" + owner + "/commit/" + fix, "See #17"},
 	} {
 		t.Run(invalid.name, func(t *testing.T) {
@@ -492,7 +500,27 @@ func TestTrackingNativeWorkflowRelease(t *testing.T) {
 		{"unpublished", func() { release.PublishedAt = nil }, false, true, false},
 		{"duplicate asset", func() { release.Assets = append(release.Assets, release.Assets[0]) }, true, true, false},
 		{"duplicate asset ID", func() { release.Assets[1].ID = release.Assets[0].ID }, true, true, false},
-		{"unexpected uploaded asset", func() { a := release.Assets[0]; a.Name = "unexpected.txt"; release.Assets = append(release.Assets, a) }, true, true, false},
+		{"unexpected uploaded asset", func() {
+			name, b := "unexpected.txt", []byte("otherwise valid unexpected upload")
+			id, digest := int64(len(release.Assets)+1), sha256.Sum256(b)
+			release.Assets = append(release.Assets, githubAsset{ID: id, Name: name, State: "uploaded", Size: int64(len(b)), Digest: "sha256:" + hex.EncodeToString(digest[:])})
+			payloads[name], downloads[id], names[id] = b, b, name
+			// Keep checksums complete so only the native manifest's omission of
+			// this unique, valid upload can reject its inventory.
+			ordered := []string{}
+			for name := range payloads {
+				if name != "SHA256SUMS" {
+					ordered = append(ordered, name)
+				}
+			}
+			sort.Strings(ordered)
+			sums := ""
+			for _, name := range ordered {
+				h := sha256.Sum256(payloads[name])
+				sums += hex.EncodeToString(h[:]) + "  " + name + "\n"
+			}
+			replace("SHA256SUMS", []byte(sums))
+		}, true, true, false},
 		{"unsafe asset", func() { release.Assets[0].Name = "../unsafe" }, true, true, false},
 		{"missing asset digest", func() { release.Assets[0].Digest = "" }, true, true, false},
 		{"mismatched package digest", func() { release.Assets[0].Digest = "sha256:" + strings.Repeat("e", 64) }, true, true, false},
@@ -517,6 +545,7 @@ func TestTrackingNativeWorkflowRelease(t *testing.T) {
 			if test.afterSeal {
 				test.change()
 			}
+			manifestReads := 0
 			g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
 				p := r.URL.Path
 				switch {
@@ -529,7 +558,7 @@ func TestTrackingNativeWorkflowRelease(t *testing.T) {
 					}
 					reply(w, timeline)
 				case strings.Contains(p, "/pulls/"):
-					reply(w, map[string]any{"merged": true, "merge_commit_sha": fix, "body": "Fixes #17", "html_url": "https://github.com/" + repo + "/pull/21"})
+					reply(w, map[string]any{"merged": true, "merge_commit_sha": fix, "body": "Fixes: #17", "html_url": "https://github.com/" + repo + "/pull/21"})
 				case strings.Contains(p, "/compare/"):
 					reply(w, map[string]string{"status": comparison})
 				case strings.Contains(p, "/commits/"):
@@ -539,6 +568,9 @@ func TestTrackingNativeWorkflowRelease(t *testing.T) {
 				case strings.Contains(p, "/releases/assets/"):
 					var id int64
 					fmt.Sscanf(p[strings.LastIndex(p, "/")+1:], "%d", &id)
+					if names[id] == "release-manifest.json" {
+						manifestReads++
+					}
 					if name := names[id]; name != "release-manifest.json" && name != "SHA256SUMS" && name != "dependencies.json" && name != "conformance-evidence.json" {
 						t.Errorf("unexpected archive or auxiliary artifact download: %s", name)
 					}
@@ -549,6 +581,9 @@ func TestTrackingNativeWorkflowRelease(t *testing.T) {
 				}
 			})
 			fixes, releases, err := g.Track(context.Background(), Issue{Repository: repo, Number: 17, State: "closed"}, strings.TrimPrefix(repo, "dk-code-factory/"))
+			if test.name == "unexpected uploaded asset" && manifestReads != 1 {
+				t.Fatal("unexpected upload did not reach native manifest inventory validation", manifestReads, err)
+			}
 			if (len(fixes) == 1) != test.wantFix || (len(releases) == 1) != test.wantRelease {
 				t.Fatal("incorrect independent native fix/delivery state", fixes, releases, err)
 			}

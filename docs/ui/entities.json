@@ -9319,7 +9319,8 @@
         "UI-REPORTS-RECOVERY",
         "UI-REPORTS-PAGE",
         "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER"
+        "UI-REPORTS-SELECTION-ORDER",
+        "UI-REPORTS-DETAIL-PROGRESS"
       ],
       "gaps": [],
       "suites": [
@@ -9395,7 +9396,8 @@
         "UI-REPORTS-INFO",
         "UI-REPORTS-RECOVERY",
         "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER"
+        "UI-REPORTS-SELECTION-ORDER",
+        "UI-REPORTS-DETAIL-PROGRESS"
       ],
       "gaps": [],
       "suites": [
@@ -9412,11 +9414,74 @@
         "ui-w-report-list",
         "issue-report",
         "report-ledger",
+        "report-processing",
         "delivery-evidence"
       ],
       "contains": [],
-      "elements": [],
-      "states": [],
+      "elements": [
+        {
+          "id": "W-REPORT-LIST.heading",
+          "term": "element-w-report-list-heading"
+        },
+        {
+          "id": "W-REPORT-LIST.subtitle",
+          "term": "element-w-report-list-subtitle"
+        },
+        {
+          "id": "W-REPORT-LIST.refresh",
+          "term": "element-w-report-list-refresh"
+        },
+        {
+          "id": "W-REPORT-LIST.error",
+          "term": "element-w-report-list-error"
+        },
+        {
+          "id": "W-REPORT-LIST.search",
+          "term": "element-w-report-list-search"
+        },
+        {
+          "id": "W-REPORT-LIST.processing-filter",
+          "term": "element-w-report-list-processing-filter"
+        },
+        {
+          "id": "W-REPORT-LIST.component-filter",
+          "term": "element-w-report-list-component-filter"
+        },
+        {
+          "id": "W-REPORT-LIST.version-filter",
+          "term": "element-w-report-list-version-filter"
+        },
+        {
+          "id": "W-REPORT-LIST.empty",
+          "term": "element-w-report-list-empty"
+        },
+        {
+          "id": "W-REPORT-LIST.select",
+          "term": "element-w-report-list-select"
+        },
+        {
+          "id": "W-REPORT-LIST.row-processing",
+          "term": "element-w-report-list-row-processing"
+        },
+        {
+          "id": "W-REPORT-LIST.row-component",
+          "term": "element-w-report-list-row-component"
+        },
+        {
+          "id": "W-REPORT-LIST.row-id",
+          "term": "element-w-report-list-row-id"
+        },
+        {
+          "id": "W-REPORT-LIST.load-more",
+          "term": "element-w-report-list-load-more"
+        }
+      ],
+      "states": [
+        "state-loading",
+        "state-empty",
+        "state-ready",
+        "state-error"
+      ],
       "implementation": [
         {
           "path": "web/src/reports.tsx",
@@ -9434,14 +9499,24 @@
         "UI-REPORTS-RECOVERY",
         "UI-REPORTS-PAGE"
       ],
-      "gaps": [],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-w-report-list-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Local browser fixtures assert search/empty results, combined processing/component/version filters, 30-to-32-row pagination and journal refresh. Exhaustive filter combinations, list request failures and report-specific accessibility and installed-host rendering remain unverified.",
+          "next_verification": "Exercise failed list reads and combined filter/pagination variants; run report-specific keyboard/accessibility checks and separately observe the approved installed host."
+        }
+      ],
       "suites": [
         "browser",
         "go"
       ],
-      "element_description": "Search and filters, report selectors, Load more reports and Refresh issues and releases.",
-      "state_description": "Empty and filtered lists are explicit; server pagination is bounded. Refresh starts no agent.",
-      "interactions": "Query changes reset pagination; journal updates preserve and refresh the loaded range, including pending Load more requests; selection reads report details."
+      "element_description": "**heading**, **subtitle**, **refresh** \u201cRefresh issues and releases\u201d; shared **error** alert; **search** \u201cSearch reports\u201d, **processing-filter**, **component-filter**, **version-filter**; **empty** result message; repeated **select** report button, **row-processing**, **row-component**, **row-id**; conditional **load-more** \u201cLoad more reports\u201d.",
+      "state_description": "Rows show independent processing and component identity, with an Unknown component fallback and aria-pressed selection. Zero results show the empty message, including while an initial query is pending. Load more is present only with a next cursor and disabled while loading; refresh is disabled during a mutation. The shared error alert also reports detail, mutation and external-link failures.",
+      "interactions": "Query changes reset pagination through C-REPORT-QUERY. C-REPORT-MORE extends the loaded range; journal updates preserve and refresh it, including a pending Load more request. C-REPORT-SELECT reads the selected report. C-REPORT-REFRESH reads issue and release evidence without starting an agent."
     },
     {
       "id": "W-REPORT-DETAIL",
@@ -9450,11 +9525,146 @@
         "ui-w-report-detail",
         "issue-report",
         "report-ledger",
+        "report-processing",
+        "report-outcome",
         "delivery-evidence"
       ],
       "contains": [],
-      "elements": [],
-      "states": [],
+      "elements": [
+        {
+          "id": "W-REPORT-DETAIL.surface",
+          "term": "element-w-report-detail-surface"
+        },
+        {
+          "id": "W-REPORT-DETAIL.id",
+          "term": "element-w-report-detail-id"
+        },
+        {
+          "id": "W-REPORT-DETAIL.processing",
+          "term": "element-w-report-detail-processing"
+        },
+        {
+          "id": "W-REPORT-DETAIL.outcome",
+          "term": "element-w-report-detail-outcome"
+        },
+        {
+          "id": "W-REPORT-DETAIL.observed",
+          "term": "element-w-report-detail-observed"
+        },
+        {
+          "id": "W-REPORT-DETAIL.expected",
+          "term": "element-w-report-detail-expected"
+        },
+        {
+          "id": "W-REPORT-DETAIL.actual",
+          "term": "element-w-report-detail-actual"
+        },
+        {
+          "id": "W-REPORT-DETAIL.reproduction",
+          "term": "element-w-report-detail-reproduction"
+        },
+        {
+          "id": "W-REPORT-DETAIL.message",
+          "term": "element-w-report-detail-message"
+        },
+        {
+          "id": "W-REPORT-DETAIL.findings",
+          "term": "element-w-report-detail-findings"
+        },
+        {
+          "id": "W-REPORT-DETAIL.missing-information",
+          "term": "element-w-report-detail-missing-information"
+        },
+        {
+          "id": "W-REPORT-DETAIL.open-issue",
+          "term": "element-w-report-detail-open-issue"
+        },
+        {
+          "id": "W-REPORT-DETAIL.issue-state",
+          "term": "element-w-report-detail-issue-state"
+        },
+        {
+          "id": "W-REPORT-DETAIL.closure-reason",
+          "term": "element-w-report-detail-closure-reason"
+        },
+        {
+          "id": "W-REPORT-DETAIL.open-fix",
+          "term": "element-w-report-detail-open-fix"
+        },
+        {
+          "id": "W-REPORT-DETAIL.open-release",
+          "term": "element-w-report-detail-open-release"
+        },
+        {
+          "id": "W-REPORT-DETAIL.linked-fix",
+          "term": "element-w-report-detail-linked-fix"
+        },
+        {
+          "id": "W-REPORT-DETAIL.stable-availability",
+          "term": "element-w-report-detail-stable-availability"
+        },
+        {
+          "id": "W-REPORT-DETAIL.prerelease-availability",
+          "term": "element-w-report-detail-prerelease-availability"
+        },
+        {
+          "id": "W-REPORT-DETAIL.installed-version",
+          "term": "element-w-report-detail-installed-version"
+        },
+        {
+          "id": "W-REPORT-DETAIL.observed-version",
+          "term": "element-w-report-detail-observed-version"
+        },
+        {
+          "id": "W-REPORT-DETAIL.issue-freshness",
+          "term": "element-w-report-detail-issue-freshness"
+        },
+        {
+          "id": "W-REPORT-DETAIL.release-freshness",
+          "term": "element-w-report-detail-release-freshness"
+        },
+        {
+          "id": "W-REPORT-DETAIL.additions",
+          "term": "element-w-report-detail-additions"
+        },
+        {
+          "id": "W-REPORT-DETAIL.evidence",
+          "term": "element-w-report-detail-evidence"
+        },
+        {
+          "id": "W-REPORT-DETAIL.add-evidence",
+          "term": "element-w-report-detail-add-evidence"
+        },
+        {
+          "id": "W-REPORT-DETAIL.recovery-note",
+          "term": "element-w-report-detail-recovery-note"
+        },
+        {
+          "id": "W-REPORT-DETAIL.effects-acknowledgement",
+          "term": "element-w-report-detail-effects-acknowledgement"
+        },
+        {
+          "id": "W-REPORT-DETAIL.resume",
+          "term": "element-w-report-detail-resume"
+        },
+        {
+          "id": "W-REPORT-DETAIL.evidence-history",
+          "term": "element-w-report-detail-evidence-history"
+        },
+        {
+          "id": "W-REPORT-DETAIL.evidence-manifest",
+          "term": "element-w-report-detail-evidence-manifest"
+        },
+        {
+          "id": "W-REPORT-DETAIL.history",
+          "term": "element-w-report-detail-history"
+        }
+      ],
+      "states": [
+        "state-loading",
+        "state-ready",
+        "state-error"
+      ],
       "implementation": [
         {
           "path": "web/src/reports.tsx",
@@ -9465,22 +9675,38 @@
           "path": "web/src/types.ts",
           "anchor": "export interface IssueReport",
           "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        },
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "function Freshness({",
+          "purpose": "Displays the last successful issue/release verification and conditional error/retry feedback, retaining Unknown for absent times."
         }
       ],
       "assertions": [
         "UI-REPORTS-INFO",
         "UI-REPORTS-RECOVERY",
         "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER"
+        "UI-REPORTS-SELECTION-ORDER",
+        "UI-REPORTS-DETAIL-PROGRESS"
       ],
-      "gaps": [],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-w-report-detail-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Local browser fixtures assert information requests and evidence payloads, independent closure/prerelease/Unknown displays, recovery gating and ordered detail responses. Evidence disclosure contents, fix/stable-release link variants, rejected mutations, draft retention across failures and report-specific accessibility and installed-host behavior remain unverified.",
+          "next_verification": "Exercise disclosure contents, stable/fix link variants and failed evidence/recovery requests with retained drafts; separately check report keyboard/accessibility behavior and the approved installed host."
+        }
+      ],
       "suites": [
         "browser",
         "go"
       ],
-      "element_description": "Observation and findings, information request, evidence input, recovery note and acknowledgement, GitHub link and version displays.",
-      "state_description": "Unknown evidence remains Unknown. Processing and outcome are independent of GitHub closure and fix, stable, prerelease and installed versions. Recovery requires effect reconciliation for interrupted workflows. Only the latest detail read for the selected report can update findings, processing and recovery controls; older mutation/journal responses are discarded.",
-      "interactions": "Adding host evidence resumes information requests. Blocked work can retry; interrupted work needs explicit reconciliation; uncertain GitHub creation is searched without another create."
+      "element_description": "**surface** heading, **id**, **processing**, **outcome**, **observed**, **expected**, **actual**, **reproduction**, **message**, conditional **findings** and **missing-information**; **open-issue**, **issue-state**, **closure-reason**; repeated **open-fix**, **open-release**, **linked-fix**, **stable-availability**, **prerelease-availability**, **installed-version**, repeated **observed-version**; **issue-freshness**, **release-freshness**; repeated **additions**, **evidence** input and **add-evidence**; conditional **recovery-note**, **effects-acknowledgement**, **resume**; **evidence-history** disclosure with repeated **evidence-manifest** and **history**.",
+      "state_description": "No detail article is displayed until the selected report is read. Unknown evidence remains Unknown; processing and outcome stay independent of issue closure, fix, stable, prerelease and installed versions. Freshness shows last successful verification and, on error, its retry time. Add evidence requires a nonblank draft and is disabled during a mutation. Resume is shown for blocked, needs attention or needs information; needs attention shows the note and acknowledgement, both required when a workflow ID exists. Evidence/history starts collapsed. Only current selected-report detail reads can update findings, processing and recovery controls; superseded reads are discarded. Journal detail refreshes coalesce while a read is pending, allowing a slow response to display before the queued refresh.",
+      "interactions": "C-REPORT-EVIDENCE appends host observations and can queue information requests. C-REPORT-RECOVER submits the note and acknowledgement for retained work. Successful mutations reread details and the loaded list. Changing selection resets local evidence/recovery drafts. C-REPORT-OPEN-LINK opens retained issue, fix and release URLs through the host; it does not establish external delivery."
     },
     {
       "id": "C-REPORT-SELECT",
@@ -9510,7 +9736,8 @@
         "UI-REPORTS-INFO",
         "UI-REPORTS-RECOVERY",
         "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER"
+        "UI-REPORTS-SELECTION-ORDER",
+        "UI-REPORTS-DETAIL-PROGRESS"
       ],
       "gaps": [],
       "suites": [
@@ -9518,16 +9745,16 @@
         "go"
       ],
       "from": [
-        "W-REPORT-LIST"
+        "W-REPORT-LIST.select"
       ],
       "to": [
         "W-REPORT-DETAIL"
       ],
-      "connection_type": "connection-refreshes",
+      "connection_type": "connection-selects",
       "external_boundary": false,
-      "endpoint_description": "W-REPORT-LIST \u2192 W-REPORT-DETAIL",
+      "endpoint_description": "`W-REPORT-LIST.select` \u2192 `W-REPORT-DETAIL`",
       "trigger": "Report row selection",
-      "interactions": "Read selected report without starting an agent."
+      "interactions": "Reads selected report without starting an agent. Selection and mutation ordering discard superseded details; journal updates queue a refresh behind a pending read so details can progress during ongoing changes."
     },
     {
       "id": "C-REPORT-EVIDENCE",
@@ -9563,15 +9790,16 @@
         "go"
       ],
       "from": [
-        "W-REPORT-DETAIL"
+        "W-REPORT-DETAIL.add-evidence"
       ],
       "to": [
-        "W-REPORT-DETAIL"
+        "W-REPORT-DETAIL",
+        "W-REPORT-LIST"
       ],
-      "connection_type": "connection-refreshes",
+      "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-REPORT-DETAIL \u2192 W-REPORT-DETAIL",
-      "trigger": "Add evidence",
+      "endpoint_description": "`W-REPORT-DETAIL.add-evidence` \u2192 `W-REPORT-DETAIL`, `W-REPORT-LIST`",
+      "trigger": "Add evidence; selected report ID, draft text and retained idempotency key.",
       "interactions": "Append idempotent host observations and queue reports waiting for information."
     },
     {
@@ -9609,15 +9837,16 @@
         "go"
       ],
       "from": [
-        "W-REPORT-DETAIL"
+        "W-REPORT-DETAIL.resume"
       ],
       "to": [
-        "W-REPORT-DETAIL"
+        "W-REPORT-DETAIL",
+        "W-REPORT-LIST"
       ],
-      "connection_type": "connection-refreshes",
+      "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-REPORT-DETAIL \u2192 W-REPORT-DETAIL",
-      "trigger": "Resume or reconcile report",
+      "endpoint_description": "`W-REPORT-DETAIL.resume` \u2192 `W-REPORT-DETAIL`, `W-REPORT-LIST`",
+      "trigger": "Resume or reconcile report; selected report ID, recovery note and effects acknowledgement.",
       "interactions": "Validate recovery prerequisites and acknowledgement before resuming retained work."
     },
     {
@@ -9654,7 +9883,7 @@
         "go"
       ],
       "from": [
-        "W-REPORT-LIST"
+        "W-REPORT-LIST.refresh"
       ],
       "to": [
         "W-REPORT-LIST",
@@ -9662,9 +9891,152 @@
       ],
       "connection_type": "connection-refreshes",
       "external_boundary": false,
-      "endpoint_description": "W-REPORT-LIST \u2192 W-REPORT-LIST and W-REPORT-DETAIL",
+      "endpoint_description": "`W-REPORT-LIST.refresh` \u2192 `W-REPORT-LIST`, `W-REPORT-DETAIL`",
       "trigger": "Refresh issues and releases",
       "interactions": "Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent."
+    },
+    {
+      "id": "C-REPORT-QUERY",
+      "terms": [
+        "ui-c-report-query",
+        "issue-report",
+        "report-ledger",
+        "report-processing"
+      ],
+      "from": [
+        "W-REPORT-LIST.search",
+        "W-REPORT-LIST.processing-filter",
+        "W-REPORT-LIST.component-filter",
+        "W-REPORT-LIST.version-filter"
+      ],
+      "to": [
+        "W-REPORT-LIST"
+      ],
+      "connection_type": "connection-selects",
+      "external_boundary": false,
+      "endpoint_description": "`W-REPORT-LIST.search/processing-filter/component-filter/version-filter` \u2192 `W-REPORT-LIST`",
+      "trigger": "Search or processing/component/version filter changes; current query values.",
+      "interactions": "Loads the matching report subset and resets the loaded range to its first page. Existing selected detail remains independently selected.",
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-PAGE"
+      ],
+      "kind": "connection",
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "suites": [
+        "browser"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "C-REPORT-MORE",
+      "terms": [
+        "ui-c-report-more",
+        "issue-report",
+        "report-ledger"
+      ],
+      "from": [
+        "W-REPORT-LIST.load-more"
+      ],
+      "to": [
+        "W-REPORT-LIST"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false,
+      "endpoint_description": "`W-REPORT-LIST.load-more` \u2192 `W-REPORT-LIST`",
+      "trigger": "Load more reports; current query, next cursor and loaded range.",
+      "interactions": "Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range.",
+      "assertions": [
+        "UI-REPORTS-PAGE"
+      ],
+      "kind": "connection",
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "suites": [
+        "browser"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "C-REPORT-OPEN-LINK",
+      "terms": [
+        "ui-c-report-open-link",
+        "issue-report",
+        "delivery-evidence"
+      ],
+      "from": [
+        "W-REPORT-DETAIL.open-issue",
+        "W-REPORT-DETAIL.open-fix",
+        "W-REPORT-DETAIL.open-release"
+      ],
+      "to": [
+        "W-REPORT-DETAIL"
+      ],
+      "connection_type": "connection-external",
+      "external_boundary": true,
+      "endpoint_description": "`W-REPORT-DETAIL.open-issue/open-fix/open-release` \u2192 external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL`",
+      "trigger": "Open a retained issue, fix or release URL through the host.",
+      "interactions": "Sends the stored URL to the host open-link boundary; a fix without a PR uses its repository/commit URL. Failures use the shared report error alert. Opening a link does not verify issue, fix or release state.",
+      "assertions": [
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-c-report-open-link-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "The local browser fixture asserts the selected issue's exact URL reaches the host open-link boundary. Fix PR/commit and release URLs, failed host opens and installed-host navigation remain unverified.",
+          "next_verification": "Assert exact fix PR/commit and stable/prerelease URLs plus failed opens in the fixture, then separately observe approved installed-host navigation."
+        }
+      ],
+      "kind": "connection",
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "suites": [
+        "browser"
+      ]
     }
   ],
   "instances": [
@@ -10173,6 +10545,12 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues keeps a pending selection read when an older selection mutation finishes\"",
       "assertion": "A mutation finishing for an old report cannot invalidate the pending detail read for the currently selected report."
+    },
+    {
+      "id": "UI-REPORTS-DETAIL-PROGRESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "\"reported issues makes detail progress while journal updates continue\"",
+      "assertion": "Controlled detail reads span multiple confirmed journal/list refresh cycles; releasing a response displays its findings, needs-attention state and Recovery note, preserves them during further updates and starts the queued follow-up read."
     }
   ],
   "source_map": [
@@ -10455,13 +10833,26 @@
       "path": "web/src/reports.tsx",
       "anchor": "export function ReportedIssues(",
       "purpose": "Shared report ledger UI.",
-      "entities": "`PAGE-REPORTS`, `P-REPORT-LIST`, `P-REPORT-DETAIL`, `W-REPORT-LIST`, `W-REPORT-DETAIL`, `C-REPORT-SELECT`, `C-REPORT-EVIDENCE`, `C-REPORT-RECOVER`, `C-REPORT-REFRESH`",
-      "detail": "Queries bounded report pages and reads selected reports; journal refresh, host evidence, explicit recovery and independent delivery/freshness displays.",
+      "entities": "`PAGE-REPORTS`, `P-REPORT-LIST`, `P-REPORT-DETAIL`, `W-REPORT-LIST`, `W-REPORT-DETAIL`, `C-REPORT-SELECT`, `C-REPORT-EVIDENCE`, `C-REPORT-RECOVER`, `C-REPORT-REFRESH`, `C-REPORT-QUERY`, `C-REPORT-MORE`, `C-REPORT-OPEN-LINK`",
+      "detail": "Queries bounded report pages, filters/paginates the loaded range and reads selected reports; coalesced journal detail refresh, ordered mutation reads, host evidence, explicit recovery, independent delivery/freshness displays and host-mediated issue/fix/release links.",
       "anchors": [
         "export function ReportedIssues("
       ],
       "location_labels": [
         "export function ReportedIssues("
+      ]
+    },
+    {
+      "path": "web/src/reports.tsx",
+      "anchor": "function Freshness({",
+      "purpose": "Report verification freshness display.",
+      "entities": "`W-REPORT-DETAIL`",
+      "detail": "Displays the last successful issue/release verification and conditional error/retry feedback, retaining Unknown for absent times.",
+      "anchors": [
+        "function Freshness({"
+      ],
+      "location_labels": [
+        "function Freshness({"
       ]
     }
   ],
@@ -10869,11 +11260,18 @@
         "C-REPORT-SELECT",
         "C-REPORT-EVIDENCE",
         "C-REPORT-RECOVER",
-        "C-REPORT-REFRESH"
+        "C-REPORT-REFRESH",
+        "C-REPORT-QUERY",
+        "C-REPORT-MORE",
+        "C-REPORT-OPEN-LINK"
       ],
       "assertions": [
         "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY"
+        "UI-REPORTS-RECOVERY",
+        "UI-REPORTS-PAGE",
+        "UI-REPORTS-DETAIL-ORDER",
+        "UI-REPORTS-SELECTION-ORDER",
+        "UI-REPORTS-DETAIL-PROGRESS"
       ],
       "gap": {
         "version": 1,
@@ -10881,7 +11279,7 @@
         "kind": "unverified-behavior",
         "severity": "P2",
         "owner": "specification-coordinator",
-        "reason": "Fixture assertions cover report discovery, host evidence and recovery/version displays; installed-host behavior and assistive-technology acceptance remain unverified.",
+        "reason": "Local fixtures cover discovery/search/filter/pagination, host evidence, recovery/version displays, exact issue URL handoff and selected-detail ordering/progress. Disclosure contents, fix/release link variants, failed-operation drafts, installed-host behavior and report-specific assistive-technology acceptance remain unverified.",
         "next_verification": "Observe Reported issues in the approved installed host and perform keyboard/screen-reader acceptance against its actual version."
       }
     }
@@ -11300,7 +11698,10 @@
             "C-REPORT-SELECT",
             "C-REPORT-EVIDENCE",
             "C-REPORT-RECOVER",
-            "C-REPORT-REFRESH"
+            "C-REPORT-REFRESH",
+            "C-REPORT-QUERY",
+            "C-REPORT-MORE",
+            "C-REPORT-OPEN-LINK"
           ],
           "fields": [
             "endpoint_description",

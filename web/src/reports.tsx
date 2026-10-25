@@ -54,6 +54,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
   const latestLoad = useRef<(more?: boolean) => Promise<void>>(async () => {});
+  const latestDetailRefresh = useRef<() => Promise<void>>(async () => {});
   useEffect(() => {
     let active = true;
     let inFlight = false;
@@ -107,6 +108,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
     if (previousCursor.current !== cursor) {
       previousCursor.current = cursor;
       void latestLoad.current();
+      void latestDetailRefresh.current();
     }
   }, [cursor]);
   useEffect(() => {
@@ -130,14 +132,30 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
   }, [selected]);
   useEffect(() => {
     let active = true;
-    void read().catch((e) => {
-      if (active) setError(String(e));
-    });
+    let inFlight = false;
+    let refreshPending = false;
+    async function refresh() {
+      refreshPending = true;
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        while (active && refreshPending) {
+          refreshPending = false;
+          await read();
+        }
+      } catch (e) {
+        if (active) setError(String(e));
+      } finally {
+        inFlight = false;
+      }
+    }
+    latestDetailRefresh.current = refresh;
+    void refresh();
     return () => {
       active = false;
       detailRequest.current++;
     };
-  }, [read, cursor]);
+  }, [read]);
   async function mutate(name: string, args: Record<string, unknown>) {
     const target = selected;
     setBusy(true);

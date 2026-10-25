@@ -65,7 +65,7 @@ func command(ctx context.Context, dir string, env []string, binary string, args 
 	cmd.Stderr = &limitedWriter{Writer: &diagnostics, Remaining: 256 << 10}
 	// Raw provider/lifecycle stderr can contain private paths and is not exposed.
 	if e := cmd.Run(); e != nil {
-		message := credentialPattern.ReplaceAllString(diagnostics.String(), "[redacted]")
+		message := redactCredentialText(diagnostics.String())
 		for _, variable := range os.Environ() {
 			name, value, _ := strings.Cut(variable, "=")
 			if len(value) > 6 && (strings.Contains(name, "TOKEN") || strings.Contains(name, "KEY") || strings.Contains(name, "SECRET") || strings.Contains(name, "PASSWORD")) {

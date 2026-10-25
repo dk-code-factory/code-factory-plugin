@@ -341,7 +341,7 @@ func TestNativeAuthenticationPrerequisitesUseOnlyFakeBoundaries(t *testing.T) {
 	codex := filepath.Join(dir, "codex")
 	github := filepath.Join(dir, "gh")
 	success := []byte("#!/bin/sh\nexit 0\n")
-	failure := []byte("#!/bin/sh\nexit 1\n")
+	failure := []byte("#!/bin/sh\nprintf '%s\\n' '> Cookie: session=unknown-stderr-cookie' '< Set-Cookie: session=unknown-stderr-response; Secure' 'id_token=unknown-stderr-identity' \"{'id_token': 'unknown-stderr-single-id', 'Cookie': 'session=unknown-stderr-single-cookie', 'Set-Cookie': ['unknown-stderr-single-response'], 'password': 'unknown-stderr-password unknown-stderr-suffix'}\" 'retained-boundary-diagnostic' >&2\nexit 1\n")
 	for _, file := range []string{codex, github} {
 		if err := os.WriteFile(file, success, 0700); err != nil {
 			t.Fatal(err)
@@ -356,6 +356,10 @@ func TestNativeAuthenticationPrerequisitesUseOnlyFakeBoundaries(t *testing.T) {
 	}
 	if err := checkAuthentication(ctx, dir, codex, github); err == nil || !strings.Contains(err.Error(), "codex login") {
 		t.Fatal("missing Codex authentication is not actionable", err)
+	}
+	diagnostics, err := os.ReadFile(filepath.Join(dir, "boundary-errors.log"))
+	if err != nil || strings.Contains(string(diagnostics), "unknown-stderr-") || !strings.Contains(string(diagnostics), "retained-boundary-diagnostic") {
+		t.Fatal("command diagnostics retained authentication material or lost adjacent evidence", string(diagnostics), err)
 	}
 	if err := os.WriteFile(codex, success, 0700); err != nil {
 		t.Fatal(err)

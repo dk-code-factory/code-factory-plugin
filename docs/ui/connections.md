@@ -61,10 +61,13 @@ for a clickable navigation control.
 | `C-BROWSER-LAB` | `W-BROWSER-LAB` controls → isolated browser → screenshot/location | Explicit lab navigation/click/key/scroll operations. | Developer utility feedback loop; never an Inbox/Agents page transition. |
 | `C-QUESTION-RECOVERY` | Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention. | Owning recovery or attention identity. | Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention. |
 | `C-DISMISS-QUESTION` | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. | Owning recovery or attention identity. | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. |
-| `C-REPORT-SELECT` | W-REPORT-LIST → W-REPORT-DETAIL | Report row selection | Read selected report without starting an agent. |
-| `C-REPORT-EVIDENCE` | W-REPORT-DETAIL → W-REPORT-DETAIL | Add evidence | Append idempotent host observations and queue reports waiting for information. |
-| `C-REPORT-RECOVER` | W-REPORT-DETAIL → W-REPORT-DETAIL | Resume or reconcile report | Validate recovery prerequisites and acknowledgement before resuming retained work. |
-| `C-REPORT-REFRESH` | W-REPORT-LIST → W-REPORT-LIST and W-REPORT-DETAIL | Refresh issues and releases | Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent. |
+| `C-REPORT-SELECT` | `W-REPORT-LIST.select` → `W-REPORT-DETAIL` | Report row selection | Reads selected report without starting an agent. Selection and mutation ordering discard superseded details; journal updates queue a refresh behind a pending read so details can progress during ongoing changes. |
+| `C-REPORT-EVIDENCE` | `W-REPORT-DETAIL.add-evidence` → `W-REPORT-DETAIL`, `W-REPORT-LIST` | Add evidence; selected report ID, draft text and retained idempotency key. | Append idempotent host observations and queue reports waiting for information. |
+| `C-REPORT-RECOVER` | `W-REPORT-DETAIL.resume` → `W-REPORT-DETAIL`, `W-REPORT-LIST` | Resume or reconcile report; selected report ID, recovery note and effects acknowledgement. | Validate recovery prerequisites and acknowledgement before resuming retained work. |
+| `C-REPORT-REFRESH` | `W-REPORT-LIST.refresh` → `W-REPORT-LIST`, `W-REPORT-DETAIL` | Refresh issues and releases | Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent. |
+| `C-REPORT-QUERY` | `W-REPORT-LIST.search/processing-filter/component-filter/version-filter` → `W-REPORT-LIST` | Search or processing/component/version filter changes; current query values. | Loads the matching report subset and resets the loaded range to its first page. Existing selected detail remains independently selected. |
+| `C-REPORT-MORE` | `W-REPORT-LIST.load-more` → `W-REPORT-LIST` | Load more reports; current query, next cursor and loaded range. | Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range. |
+| `C-REPORT-OPEN-LINK` | `W-REPORT-DETAIL.open-issue/open-fix/open-release` → external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL` | Open a retained issue, fix or release URL through the host. | Sends the stored URL to the host open-link boundary; a fix without a PR uses its repository/commit URL. Failures use the shared report error alert. Opening a link does not verify issue, fix or release state. |
 <!-- /specs:connections-0 -->
 
 ## Navigation overview
@@ -186,9 +189,19 @@ flowchart LR
     N26 -->|"C-DISMISS-QUESTION"| N48
     N114 -->|"C-REPORT-SELECT"| N115
     N115 -->|"C-REPORT-EVIDENCE"| N115
+    N115 -->|"C-REPORT-EVIDENCE"| N114
     N115 -->|"C-REPORT-RECOVER"| N115
+    N115 -->|"C-REPORT-RECOVER"| N114
     N114 -->|"C-REPORT-REFRESH"| N114
     N114 -->|"C-REPORT-REFRESH"| N115
+    N114 -->|"C-REPORT-QUERY"| N114
+    N114 -->|"C-REPORT-QUERY"| N114
+    N114 -->|"C-REPORT-QUERY"| N114
+    N114 -->|"C-REPORT-QUERY"| N114
+    N114 -->|"C-REPORT-MORE"| N114
+    N115 -->|"C-REPORT-OPEN-LINK"| N115
+    N115 -->|"C-REPORT-OPEN-LINK"| N115
+    N115 -->|"C-REPORT-OPEN-LINK"| N115
 ```
 <!-- /specs:connections -->
 

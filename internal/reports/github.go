@@ -384,7 +384,7 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 		seen[f.Commit] = len(fixes)
 		fixes = append(fixes, f)
 	}
-	ref := regexp.MustCompile(fmt.Sprintf(`(?i)\b(?:fix(?:e[sd])?|close[sd]?|resolve[sd]?)\s+(?:#%d\b|%s#%d\b|https://github\.com/%s/issues/%d\b)`, issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number))
+	ref := regexp.MustCompile(fmt.Sprintf(`(?i)\b(?:fix(?:e[sd])?|close[sd]?|resolve[sd]?):?\s+(?:#%d\b|%s#%d\b|https://github\.com/%s/issues/%d\b)`, issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number, regexp.QuoteMeta(issue.Repository), issue.Number))
 	for _, event := range timeline {
 		if event.Event == "closed" && commitPattern.MatchString(event.Commit) && event.CommitURL == fmt.Sprintf("https://api.github.com/repos/%s/commits/%s", issue.Repository, event.Commit) {
 			var commit struct {

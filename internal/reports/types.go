@@ -136,6 +136,7 @@ type Runtime struct {
 	SkillVersion     string    `json:"skillVersion"`
 	Notice           string    `json:"notice"`
 	AdmissionID      string    `json:"admissionId"`
+	AdditionCount    int       `json:"additionCount"` // append-only evidence included in this generation's immutable prompt
 	Admitting        bool      `json:"admitting"`
 	Preparing        bool      `json:"preparing"`
 	ControllerErrors int       `json:"controllerErrors"`

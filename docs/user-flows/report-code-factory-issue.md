@@ -25,9 +25,11 @@ An investigation that finishes with unusable findings retains an actionable repo
 
 An uncertain issue publication retains its reconciliation requirements without holding investigation capacity after its investigation has finalized. Other reports can investigate while that issue identity is recovered; the uncertain creation is never repeated.
 
+Additional evidence accepted before an investigation result settles is considered before the report completes or an unclaimed issue creation begins. Work already using an immutable observation finishes and finalizes before a fresh investigation incorporates missed evidence. Evidence accepted after issue creation has been claimed remains retained while that effect settles or is reconciled once.
+
 Issue closure does not prove a fix; a verified closing commit or merged fix can establish its identity independently of release availability. Published package provenance and fix ancestry must agree before availability is shown. Verified component versions enrich the linked fix. Dependencies retain their own versions, using their checked package evidence and independently verified closing-fix ancestry; attribution to a Code Factory release requires an explicit provenance relationship. Source-only releases without checked package evidence stay Unknown. Issue state refreshes at startup and every five minutes; releases refresh every fifteen minutes. Manual refresh starts no agent. Failed release reads preserve discovered fixes and earlier verified availability, with errors, retry times and freshness. A credential's rate-limit deadline applies across reporting operations and reports, including reopened processes; skipped reads do not claim fresh results.
 
-Journal updates refresh the loaded report range, including a pending request for more reports. Changing query filters resets pagination. Older detail responses cannot replace newer selected-report findings, processing or recovery controls, and a previous selection's completed request cannot suppress the current selection's details. Opening a report's GitHub link sends that report's exact issue destination to the host.
+Journal updates refresh the loaded report range, including a pending request for more reports. Changing query filters resets pagination. Detail reads continue to make progress while journal events arrive; pending refreshes coalesce. Older detail responses cannot replace newer selected-report findings, processing or recovery controls, and a previous selection's completed request cannot suppress the current selection's details. Opening a report's GitHub link sends that report's exact issue destination to the host.
 
 ## Scenarios
 
@@ -42,7 +44,7 @@ Journal updates refresh the loaded report range, including a pending request for
 ## Terminology and UI references
 
 Glossary: [issue-report](../glossary/README.md#issue-report), [report-ledger](../glossary/README.md#report-ledger), [report-processing](../glossary/README.md#report-processing), [report-outcome](../glossary/README.md#report-outcome), [evidence-manifest](../glossary/README.md#evidence-manifest), [delivery-evidence](../glossary/README.md#delivery-evidence), [fixed-issue](../glossary/README.md#fixed-issue), [credential](../glossary/README.md#credential).
-UI entities: [PAGE-REPORTS](../ui/README.md#PAGE-REPORTS), [P-REPORT-LIST](../ui/README.md#P-REPORT-LIST), [P-REPORT-DETAIL](../ui/README.md#P-REPORT-DETAIL), [W-REPORT-LIST](../ui/README.md#W-REPORT-LIST), [W-REPORT-DETAIL](../ui/README.md#W-REPORT-DETAIL), [C-REPORT-SELECT](../ui/README.md#C-REPORT-SELECT), [C-REPORT-EVIDENCE](../ui/README.md#C-REPORT-EVIDENCE), [C-REPORT-RECOVER](../ui/README.md#C-REPORT-RECOVER), [C-REPORT-REFRESH](../ui/README.md#C-REPORT-REFRESH), [W-NAVIGATION](../ui/README.md#W-NAVIGATION), [C-NAVIGATE](../ui/README.md#C-NAVIGATE).
+UI entities: [PAGE-REPORTS](../ui/README.md#PAGE-REPORTS), [P-REPORT-LIST](../ui/README.md#P-REPORT-LIST), [P-REPORT-DETAIL](../ui/README.md#P-REPORT-DETAIL), [W-REPORT-LIST](../ui/README.md#W-REPORT-LIST), [W-REPORT-DETAIL](../ui/README.md#W-REPORT-DETAIL), [C-REPORT-SELECT](../ui/README.md#C-REPORT-SELECT), [C-REPORT-EVIDENCE](../ui/README.md#C-REPORT-EVIDENCE), [C-REPORT-RECOVER](../ui/README.md#C-REPORT-RECOVER), [C-REPORT-REFRESH](../ui/README.md#C-REPORT-REFRESH), [W-NAVIGATION](../ui/README.md#W-NAVIGATION), [C-NAVIGATE](../ui/README.md#C-NAVIGATE), [C-REPORT-QUERY](../ui/README.md#C-REPORT-QUERY), [C-REPORT-MORE](../ui/README.md#C-REPORT-MORE), [C-REPORT-OPEN-LINK](../ui/README.md#C-REPORT-OPEN-LINK).
 
 ## Flow diagram
 
@@ -65,6 +67,7 @@ flowchart TD
     N4 --> N5
     N5 --> N6
     N3 -->|"retain blocked report"| N6
+    N2 -->|"Additional evidence needs investigation before settlement"| N2
 ```
 
 ## Implementation references
@@ -113,7 +116,7 @@ flowchart TD
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestSimilarTitlesDoNotSilentlyMergeDistinctObservations(`; S3. Similar titles alone cannot merge distinct observations; duplicate reuse requires an explicit investigated issue identity.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestRejectedCreationCanResumeWithoutTreatingItAsAnUnknownEffect(`; S4. Definite GitHub rejections recover after correction; ambiguous server/network results never permit a repeated issue creation.
 - [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestHTTPPublicationRejectsKnownFailuresAndRetainsServerUncertainty(`; S4. Definite GitHub rejections recover after correction; ambiguous server/network results never permit a repeated issue creation.
-- [internal/reports/engine_test.go](../../internal/reports/engine_test.go) — `func TestNativeAuthenticationPrerequisitesUseOnlyFakeBoundaries(`; S4. Fake native login-status boundaries distinguish available authentication from actionable Codex and GitHub sign-in prerequisites, without reading real credentials.
+- [internal/reports/engine_test.go](../../internal/reports/engine_test.go) — `func TestNativeAuthenticationPrerequisitesUseOnlyFakeBoundaries(`; S2, S4. Fake native login-status boundaries distinguish authentication prerequisites and verify unknown prefixed cookies/id_token are excluded from private failed-command diagnostics while adjacent evidence is retained.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestUncertainResumeLifecycleNeedsAcknowledgedRecovery(`; S4. Retained uncertain resume entry cannot replay or release the sole slot without acknowledged reconciliation; recovery preserves admission identity, rotates only its lifecycle attempt and lets queued work progress.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestFinalizedUnusableFindingsReleaseSlotAndAllowFreshInvestigation(`; S3, S4. Empty summaries and invalid classifications hold the slot until lifecycle completion, then allow other reports to progress and explicit recovery to start a fresh investigation generation.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestPriorGenerationFindingsDoNotReleaseUncertainPreparation(`; S3, S4. Prior-generation findings cannot release the sole slot while a newly admitted generation retains uncertain lifecycle preparation.
@@ -122,6 +125,9 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues keeps a pending selection read when an older selection mutation finishes"`; S6. A completed old-selection mutation cannot suppress the pending current-selection detail read.
 - [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestTrackingNativeWorkflowRelease(`; S5. Actual native manifest, dependency/conformance metadata and package/checksum inventory establish dependency stable/prerelease delivery only with an independent closing fix and ancestry; malformed, missing or source-only proof stays Unknown.
 - [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestGitHubReportingCooldownSurvivesRestartAndSeparatesCredentials(`; S4, S5. Store-backed credential/endpoint deadlines suppress reporting HTTP across operations, adapters and reopened state; expiry and credential changes are independent, storage failures stop before HTTP and rejected POST retains retry provenance.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestEvidenceAfterWorkerCompletionRequiresFreshGeneration(`; S2, S3, S4. Evidence accepted after worker completion is captured exactly once by a fresh generation after lifecycle finalization, before stale suspected/information/explained findings settle.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestEvidencePublicationClaimBoundary(`; S2, S3, S4. Atomic evidence/admission checks reject stale unclaimed drafts during validation/marker races and preserve known issue identity; durable or uncertain create claims settle once without replay.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues makes detail progress while journal updates continue"`; S4, S6. Per-read delays span ongoing confirmed journal updates while selected findings and recovery controls become visible and remain current before the queued refresh.
 
 ## Verification and gaps
 

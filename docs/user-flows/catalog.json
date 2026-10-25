@@ -7227,9 +7227,10 @@
           "path": "internal/reports/engine_test.go",
           "anchor": "func TestNativeAuthenticationPrerequisitesUseOnlyFakeBoundaries(",
           "scenarios": [
+            "S2",
             "S4"
           ],
-          "purpose": "Fake native login-status boundaries distinguish available authentication from actionable Codex and GitHub sign-in prerequisites, without reading real credentials."
+          "purpose": "Fake native login-status boundaries distinguish authentication prerequisites and verify unknown prefixed cookies/id_token are excluded from private failed-command diagnostics while adjacent evidence is retained."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7298,6 +7299,35 @@
             "S5"
           ],
           "purpose": "Store-backed credential/endpoint deadlines suppress reporting HTTP across operations, adapters and reopened state; expiry and credential changes are independent, storage failures stop before HTTP and rejected POST retains retry provenance."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestEvidenceAfterWorkerCompletionRequiresFreshGeneration(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Evidence accepted after worker completion is captured exactly once by a fresh generation after lifecycle finalization, before stale suspected/information/explained findings settle."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestEvidencePublicationClaimBoundary(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Atomic evidence/admission checks reject stale unclaimed drafts during validation/marker races and preserve known issue identity; durable or uncertain create claims settle once without replay."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues makes detail progress while journal updates continue\"",
+          "scenarios": [
+            "S4",
+            "S6"
+          ],
+          "purpose": "Per-read delays span ongoing confirmed journal updates while selected findings and recovery controls become visible and remain current before the queued refresh."
         }
       ],
       "suites": [
@@ -7329,7 +7359,10 @@
         "C-REPORT-RECOVER",
         "C-REPORT-REFRESH",
         "W-NAVIGATION",
-        "C-NAVIGATE"
+        "C-NAVIGATE",
+        "C-REPORT-QUERY",
+        "C-REPORT-MORE",
+        "C-REPORT-OPEN-LINK"
       ],
       "terms": [
         "issue-report",
@@ -7426,6 +7459,11 @@
             "from": "recover",
             "to": "done",
             "label": "retain blocked report"
+          },
+          {
+            "from": "investigate",
+            "to": "investigate",
+            "label": "Additional evidence needs investigation before settlement"
           }
         ]
       }

@@ -22,8 +22,13 @@ import (
 	"codefactory/internal/store"
 )
 
-var credentialPattern = regexp.MustCompile(`(?i)"?(?:proxy-)?authorization"?\s*[:=]\s*"?(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:gh[pousr]_[a-z0-9_]+|github_pat_[a-z0-9_]+|sk-[a-z0-9_-]{12,})|(?:"?(?:access_token|refresh_token|password|authorization|api[_-]?key|owner[_-]?token|secret)"?\s*[:=]\s*"?)[^\s",}]+`)
-var secretKeyPattern = regexp.MustCompile(`(?i)^(access_token|refresh_token|password|authorization|api[_-]?key|owner[_-]?token|secret)$`)
+var credentialPattern = regexp.MustCompile(`(?i)(?:["']?(?:access_token|refresh_token|id_token|password|(?:proxy-)?authorization|api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')|["']?(?:proxy-)?authorization["']?\s*[:=]\s*["']?(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:gh[pousr]_[a-z0-9_]+|github_pat_[a-z0-9_]+|sk-[a-z0-9_-]{12,})|(?:["']?(?:access_token|refresh_token|id_token|password|authorization|api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*["']?)[^\s"',}]+`)
+var cookiePattern = regexp.MustCompile(`(?i)\b(?:set-cookie|cookie)[ \t]*:[^\r\n]*|["'](?:set-cookie|cookie)["']\s*:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*'|\[(?:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')\s*,?)*\s*\])`)
+var secretKeyPattern = regexp.MustCompile(`(?i)^(access_token|refresh_token|id_token|cookie|set-cookie|password|authorization|api[_-]?key|owner[_-]?token|secret)$`)
+
+func redactCredentialText(text string) string {
+	return credentialPattern.ReplaceAllString(cookiePattern.ReplaceAllString(text, "[redacted]"), "[redacted]")
+}
 
 func (s *Service) sanitize(ctx context.Context, v any) error {
 	b, e := json.Marshal(v)
@@ -54,7 +59,7 @@ func (s *Service) sanitize(ctx context.Context, v any) error {
 	walk = func(v any) any {
 		switch x := v.(type) {
 		case string:
-			return credentialPattern.ReplaceAllString(x, "[redacted]")
+			return redactCredentialText(x)
 		case []any:
 			for i := range x {
 				x[i] = walk(x[i])
