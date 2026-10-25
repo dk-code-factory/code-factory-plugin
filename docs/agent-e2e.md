@@ -14,8 +14,11 @@ stays saved even when later restoration fails.
 The message queue race fixtures cover a blocked agent, caller cancellation,
 concurrent pending submissions, same-thread recovery with zero GitHub requests,
 stale targets and interrupted delivery. Browser fixtures distinguish saved receipt
-from activation and replace queue feedback with uncertainty without replay. These
-fixture results do not establish installed ChatGPT acceptance for this correction.
+from activation and replace queue feedback with uncertainty without replay. Build **0.1.0-1ffefe209b65** is installed locally after full CI passed,
+including 90 browser fixtures. All 35 run records, pending requests, profiles,
+protected files and Tailscale routes match preflight; both services are active.
+The corrected ChatGPT package was uploaded as a separate private draft but was
+not installed. Actual ChatGPT acceptance for this correction remains unverified.
 
 
 ## Fast saved-state tracking installed · 2026-10-25
