@@ -84,6 +84,8 @@ async function host(
       args: Record<string, unknown>,
     ) => Promise<ReportPage>;
     readItem?: (detail: Detail) => Promise<Detail>;
+    readReport?: (report: IssueReport) => Promise<IssueReport>;
+    resumeReport?: (report: IssueReport) => Promise<IssueReport>;
     failPreparation?: boolean;
     theme?: "light" | "dark";
     answerFailure?: "failed" | "uncertain";
@@ -160,9 +162,11 @@ async function host(
             : result;
           break;
         }
-        case "get_issue_report":
-          data = structuredClone(reports.find((r) => r.id === a.id));
+        case "get_issue_report": {
+          const report = structuredClone(reports.find((r) => r.id === a.id)!);
+          data = options.readReport ? await options.readReport(report) : report;
           break;
+        }
         case "add_issue_evidence": {
           const report = reports.find((r) => r.id === a.id)!;
           report.additions.push(String(a.text));
@@ -176,7 +180,10 @@ async function host(
           report.processing = "investigating";
           report.message = "Recovery admitted";
           state.cursor++;
-          data = structuredClone(report);
+          const result = structuredClone(report);
+          data = options.resumeReport
+            ? await options.resumeReport(result)
+            : result;
           break;
         }
         case "refresh_issue_reports":
@@ -1000,9 +1007,12 @@ async function assembledHost(
 ) {
   const calls: ToolCall[] = [];
   const acceptedStarts: Run[] = [];
+  const daemonOrigin = new URL(
+    `http://127.0.0.1:${process.env.CODE_FACTORY_TEST_HOST_PORT ?? "4174"}`,
+  ).origin;
   async function request(p: ToolCall): Promise<ToolResult> {
     calls.push(p);
-    const response = await fetch("http://127.0.0.1:4174/mcp", {
+    const response = await fetch(`${daemonOrigin}/mcp`, {
       method: "POST",
       headers: {
         Authorization:
@@ -1060,7 +1070,10 @@ async function assembledHost(
   );
   const forbidden: string[] = [];
   page.on("request", (r) => {
-    if (r.frame().parentFrame() && /127\.0\.0\.1:4174|localhost/.test(r.url()))
+    if (
+      r.frame().parentFrame() &&
+      (new URL(r.url()).origin === daemonOrigin || /localhost/.test(r.url()))
+    )
       forbidden.push(r.url());
   });
   await page.goto("/assembled-host");
@@ -1758,6 +1771,132 @@ test("reported issues displays independent closure, prerelease delivery and expl
   ).toMatchObject({ id: "report-1", reconciled: true });
   await ui.getByRole("button", { name: "Open GitHub issue #17" }).click();
   await expect.poll(() => openLinks).toEqual([{ url: report.issue.url }]);
+});
+
+test("reported issues keeps newer journal details after a delayed mutation read", async ({
+  page,
+}) => {
+  const report = reportFixture();
+  const state = initial();
+  report.processing = "blocked";
+  let releaseRead!: () => void;
+  const pendingRead = new Promise<void>((resolve) => {
+    releaseRead = resolve;
+  });
+  let delayNext = false;
+  let delayed = false;
+  const { ui } = await host(page, {
+    snapshot: state,
+    reports: [report],
+    resumeReport: async (result) => {
+      // Deliver the journal event only after the mutation read is pending.
+      state.cursor--;
+      return result;
+    },
+    readReport: async (result) => {
+      if (delayNext) {
+        delayNext = false;
+        delayed = true;
+        await pendingRead;
+      }
+      return result;
+    },
+  });
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  await expect(detail.getByRole("definition").first()).toHaveText("blocked");
+  delayNext = true;
+  await detail
+    .getByRole("button", { name: "Resume or reconcile report" })
+    .click();
+  await expect.poll(() => delayed).toBe(true);
+  report.processing = "needs_attention";
+  report.findings!.summary = "Newer journal findings";
+  state.cursor++;
+  await expect(detail).toContainText("Newer journal findings");
+  await expect(detail.getByRole("definition").first()).toHaveText(
+    "needs attention",
+  );
+  await expect(detail.getByLabel("Recovery note")).toBeVisible();
+  releaseRead();
+  await expect(
+    ui.getByRole("button", { name: "Refresh issues and releases" }),
+  ).toBeEnabled();
+  await expect(detail).toContainText("Newer journal findings");
+  await expect(detail.getByRole("definition").first()).toHaveText(
+    "needs attention",
+  );
+  await expect(detail.getByLabel("Recovery note")).toBeVisible();
+});
+
+test("reported issues keeps a pending selection read when an older selection mutation finishes", async ({
+  page,
+}) => {
+  const oldReport = reportFixture();
+  oldReport.processing = "blocked";
+  const selectedReport = reportFixture("report-2");
+  selectedReport.observation.actual = "Selected report response";
+  selectedReport.findings!.summary = "Selected report findings";
+  let releaseMutation!: () => void;
+  let releaseRead!: () => void;
+  const pendingMutation = new Promise<void>((resolve) => {
+    releaseMutation = resolve;
+  });
+  const pendingRead = new Promise<void>((resolve) => {
+    releaseRead = resolve;
+  });
+  let mutationPending = false;
+  let readPending = false;
+  const { ui, calls } = await host(page, {
+    reports: [oldReport, selectedReport],
+    resumeReport: async (result) => {
+      mutationPending = true;
+      await pendingMutation;
+      return result;
+    },
+    readReport: async (result) => {
+      if (result.id === selectedReport.id) {
+        readPending = true;
+        await pendingRead;
+      }
+      return result;
+    },
+  });
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  await expect(detail.getByRole("definition").first()).toHaveText("blocked");
+  const reads = calls.filter((c) => c.name === "get_issue_report").length;
+  await detail
+    .getByRole("button", { name: "Resume or reconcile report" })
+    .click();
+  await expect.poll(() => mutationPending).toBe(true);
+  // Consume the mutation journal event before starting the new selection read.
+  await expect
+    .poll(() => calls.filter((c) => c.name === "get_issue_report").length)
+    .toBeGreaterThan(reads);
+  await ui
+    .getByRole("button", { name: "Agents: Selected report response" })
+    .click();
+  await expect.poll(() => readPending).toBe(true);
+  releaseMutation();
+  await expect(
+    ui.getByRole("button", { name: "Refresh issues and releases" }),
+  ).toBeEnabled();
+  releaseRead();
+  await expect(detail).toContainText("Report report-2");
+  await expect(detail).toContainText("Selected report findings");
+  await expect(detail.getByRole("definition").first()).toHaveText(
+    "needs information",
+  );
+  await expect(
+    detail.getByRole("button", { name: "Resume or reconcile report" }),
+  ).toBeEnabled();
 });
 
 test("reported issues paginates and filters processing component and version", async ({

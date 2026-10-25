@@ -50,6 +50,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
   const [reconciled, setReconciled] = useState(false);
   const evidenceKey = useRef(crypto.randomUUID());
   const [loading, setLoading] = useState(false);
+  const detailRequest = useRef(0);
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
   const latestLoad = useRef<(more?: boolean) => Promise<void>>(async () => {});
@@ -115,24 +116,26 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
     evidenceKey.current = crypto.randomUUID();
     setDetail(undefined);
   }, [selected]);
-  const read = useCallback(
-    async () =>
-      selected
-        ? call<IssueReport>("get_issue_report", { id: selected })
-        : undefined,
-    [selected],
-  );
+  const read = useCallback(async () => {
+    if (!selected || selectedRef.current !== selected) return;
+    const generation = ++detailRequest.current;
+    const updated = await call<IssueReport>("get_issue_report", {
+      id: selected,
+    });
+    if (
+      selectedRef.current === selected &&
+      generation === detailRequest.current
+    )
+      setDetail(updated);
+  }, [selected]);
   useEffect(() => {
     let active = true;
-    void read()
-      .then((r) => {
-        if (active) setDetail(r);
-      })
-      .catch((e) => {
-        if (active) setError(String(e));
-      });
+    void read().catch((e) => {
+      if (active) setError(String(e));
+    });
     return () => {
       active = false;
+      detailRequest.current++;
     };
   }, [read, cursor]);
   async function mutate(name: string, args: Record<string, unknown>) {
@@ -144,8 +147,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
         setEvidence("");
         evidenceKey.current = crypto.randomUUID();
       }
-      const updated = await read();
-      if (selectedRef.current === target) setDetail(updated);
+      await read();
       await latestLoad.current();
       setError("");
     } catch (e) {

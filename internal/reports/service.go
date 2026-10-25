@@ -378,7 +378,11 @@ func (s *Service) Step(ctx context.Context) error {
 			if e != nil {
 				return e
 			}
-			if r.Processing == "needs_attention" && r.WorkflowID != "" && !rt.UnusableResult {
+			// Publication intent is retained only after this generation's workflow
+			// succeeds and its lifecycle completes. An uncertain create therefore
+			// needs reconciliation, but no longer occupies an investigator slot.
+			publicationOnly := rt.CreateAttempted && rt.Intent != nil
+			if r.Processing == "needs_attention" && r.WorkflowID != "" && !rt.UnusableResult && !publicationOnly {
 				return nil
 			}
 			if rt.Admitting && r.Processing != "complete" {
@@ -739,6 +743,10 @@ func (s *Service) Refresh(ctx context.Context, force bool) error {
 			if e != nil {
 				return e
 			}
+			var retry retryError
+			if errors.As(err, &retry) {
+				return nil
+			}
 		}
 		if !now.Before(r.ReleaseSync.RetryAt) && (force || now.Sub(r.ReleaseSync.LastAttempt) >= 15*time.Minute) {
 			fixes, releases, err := s.GitHub.Track(ctx, *r.Issue, r.Component)
@@ -788,6 +796,10 @@ func (s *Service) Refresh(ctx context.Context, force bool) error {
 			})
 			if e != nil {
 				return e
+			}
+			var retry retryError
+			if errors.As(err, &retry) {
+				return nil
 			}
 		}
 	}

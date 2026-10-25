@@ -37,7 +37,7 @@ func ID() string {
 }
 func (a *App) Init(ctx context.Context) error {
 	if a.Reports == nil {
-		a.Reports = &reports.Service{Store: a.Store, Vault: a.Vault, Dir: a.DataDir, Engine: &reports.NativeEngine{Dir: a.DataDir}, GitHub: &reports.GitHubAdapter{Client: a.GitHub}}
+		a.Reports = &reports.Service{Store: a.Store, Vault: a.Vault, Dir: a.DataDir, Engine: &reports.NativeEngine{Dir: a.DataDir}, GitHub: &reports.GitHubAdapter{Client: a.GitHub, Store: a.Store}}
 		if a.Runs != nil {
 			a.Reports.Engine = &reports.NativeEngine{Dir: a.DataDir, Codex: a.Runs.Binary}
 		}

@@ -105,7 +105,7 @@ func (e *fakeEngine) Complete(context.Context, Runtime) error {
 
 type fakeGitHub struct {
 	createErr                          error
-	creates, refreshes                 int
+	creates, refreshes, tracks         int
 	uncertain                          bool
 	found                              *Issue
 	validateErr, errorRead, errorTrack error
@@ -131,6 +131,7 @@ func (g *fakeGitHub) Create(context.Context, Findings, string) (Issue, error) {
 	return g.issue, nil
 }
 func (g *fakeGitHub) Track(context.Context, Issue, string) ([]Fix, []Release, error) {
+	g.tracks++
 	return g.fixes, g.releases, g.errorTrack
 }
 func findings() Findings {
@@ -274,6 +275,26 @@ func TestWorkflowLostAdmissionDaemonRestartAndUncertainCreation(t *testing.T) {
 	if get(t, s, ctx, r.ID).Processing != "needs_attention" || github.creates != 1 {
 		t.Fatal("creation uncertainty lost")
 	}
+	engine.status = "running"
+	o := observation()
+	o.IdempotencyKey = "investigate-after-uncertain-publication"
+	other, e := restarted.Submit(ctx, o)
+	if e != nil {
+		t.Fatal(e)
+	}
+	step(t, restarted, ctx)
+	if engine.starts != 3 || engine.completions != 1 || get(t, s, ctx, other.ID).Processing != "investigating" || github.creates != 1 {
+		t.Fatal("finalized publication uncertainty blocked unrelated investigation or repeated create")
+	}
+	o.IdempotencyKey = "one-investigator-at-a-time"
+	waiting, e := restarted.Submit(ctx, o)
+	if e != nil {
+		t.Fatal(e)
+	}
+	step(t, restarted, ctx)
+	if engine.starts != 3 || get(t, s, ctx, waiting.ID).Processing != "queued" {
+		t.Fatal("publication recovery released an active investigator slot")
+	}
 	for range 3 {
 		if _, e := restarted.ResumeReport(ctx, ResumeInput{ID: r.ID}); e != nil {
 			t.Fatal(e)
@@ -403,7 +424,7 @@ func TestRefreshSeparatesIssueFixDeliveryAndPreservesSuccessfulState(t *testing.
 	lastSuccess := get(t, s, ctx, r.ID).ReleaseSync.LastSuccess
 	github.fixes = []Fix{{Repository: DefaultRepository, Commit: strings.Repeat("a", 40), Version: "1.0.0"}, {Repository: DefaultRepository, Commit: strings.Repeat("b", 40)}}
 	github.releases = []Release{{Repository: DefaultRepository, Version: "1.1.0"}}
-	github.errorRead = &rateLimit{time.Now().Add(time.Hour)}
+	github.errorRead = errors.New("GitHub issue read unavailable")
 	github.errorTrack = errors.New("GitHub unavailable")
 	if e := s.Refresh(ctx, true); e != nil {
 		t.Fatal(e)
@@ -415,12 +436,85 @@ func TestRefreshSeparatesIssueFixDeliveryAndPreservesSuccessfulState(t *testing.
 	before := github.refreshes
 	_ = s.Refresh(ctx, true)
 	if github.refreshes != before {
-		t.Fatal("manual refresh ignored rate limit")
+		t.Fatal("manual refresh ignored retry deadline")
 	}
 	if engine.starts != starts {
 		t.Fatal("refresh started an agent")
 	}
 }
+func TestRefreshRateLimitStopsOtherOperationsAndReports(t *testing.T) {
+	for _, operation := range []string{"issue", "release"} {
+		t.Run(operation, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			for _, key := range []string{"first", "second"} {
+				o := observation()
+				o.IdempotencyKey = key
+				if _, err := s.Submit(ctx, o); err != nil {
+					t.Fatal(err)
+				}
+				step(t, s, ctx)
+				step(t, s, ctx)
+			}
+			github.fixes = []Fix{{Repository: DefaultRepository, Commit: strings.Repeat("a", 40)}}
+			github.releases = []Release{{Repository: DefaultRepository, Version: "1.0.0"}}
+			if err := s.Refresh(ctx, true); err != nil {
+				t.Fatal(err)
+			}
+			page, err := s.List(ctx, ListInput{})
+			if err != nil || len(page.Items) != 2 {
+				t.Fatal(page, err)
+			}
+			before := map[string]Report{}
+			for _, r := range page.Items {
+				before[r.ID] = r
+			}
+			reads, tracks, starts := github.refreshes, github.tracks, engine.starts
+			until := time.Now().Add(time.Hour).UTC()
+			if operation == "issue" {
+				github.errorRead = &rateLimit{until}
+			} else {
+				github.errorTrack = &rateLimit{until}
+			}
+			if err := s.Refresh(ctx, true); err != nil {
+				t.Fatal(err)
+			}
+			wantTracks := tracks
+			if operation == "release" {
+				wantTracks++
+			}
+			if github.refreshes != reads+1 || github.tracks != wantTracks || engine.starts != starts {
+				t.Fatal("rate limit did not stop remaining operations/reports", github.refreshes, github.tracks)
+			}
+			limited := 0
+			for id, old := range before {
+				r := get(t, s, ctx, id)
+				freshness := r.IssueSync
+				if operation == "release" {
+					freshness = r.ReleaseSync
+				}
+				if freshness.Error != "" {
+					limited++
+					if !freshness.RetryAt.Equal(until) {
+						t.Fatal("triggering operation lost rate-limit deadline", freshness)
+					}
+				} else if !r.IssueSync.LastAttempt.Equal(old.IssueSync.LastAttempt) || !r.ReleaseSync.LastAttempt.Equal(old.ReleaseSync.LastAttempt) {
+					t.Fatal("skipped report freshness changed", r)
+				}
+				if len(r.Fixes) != 1 || len(r.Releases) != 1 || r.Releases[0].Version != "1.0.0" || !r.ReleaseSync.LastSuccess.Equal(old.ReleaseSync.LastSuccess) {
+					t.Fatal("rate limit discarded successful delivery evidence", r)
+				}
+				if operation == "issue" && (!r.IssueSync.LastSuccess.Equal(old.IssueSync.LastSuccess) || !r.ReleaseSync.LastAttempt.Equal(old.ReleaseSync.LastAttempt)) {
+					t.Fatal("issue rate limit changed skipped release freshness", r)
+				}
+			}
+			if limited != 1 {
+				t.Fatal("triggering operation freshness was not retained exactly once", limited)
+			}
+		})
+	}
+}
+
 func TestLedgerPaginationSearchAndVersionFilters(t *testing.T) {
 	s, ctx := fixture(t)
 	for i, key := range []string{"a", "b", "c"} {
@@ -498,6 +592,34 @@ func TestInterruptedPreparationNeedsLifecycleReconciliation(t *testing.T) {
 	step(t, s, ctx)
 	if engine.starts != 1 {
 		t.Fatal("explicit preparation recovery did not run")
+	}
+}
+
+func TestPriorGenerationFindingsDoNotReleaseUncertainPreparation(t *testing.T) {
+	s, ctx := fixture(t)
+	engine, _ := setupEngine(s)
+	engine.findings.Classification = "insufficient_information"
+	engine.findings.MissingInformation = "What response did the host display?"
+	r := submit(t, s, ctx)
+	step(t, s, ctx)
+	if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "next-generation", Text: "The host displayed a connection error"}); err != nil {
+		t.Fatal(err)
+	}
+	engine.prepareErr = &preparationUncertain{}
+	step(t, s, ctx)
+	rt, err := s.runtime(ctx, r.ID)
+	if err != nil || rt.Generation != 2 || !rt.Preparing || rt.Intent != nil || rt.CreateAttempted || get(t, s, ctx, r.ID).Findings == nil {
+		t.Fatal("prior findings did not survive into the interrupted generation as expected", rt, err)
+	}
+	o := observation()
+	o.IdempotencyKey = "waiting-after-prior-findings"
+	other, err := s.Submit(ctx, o)
+	if err != nil {
+		t.Fatal(err)
+	}
+	step(t, s, ctx)
+	if engine.starts != 1 || get(t, s, ctx, other.ID).Processing != "queued" {
+		t.Fatal("stale findings released a generation with uncertain lifecycle entry")
 	}
 }
 

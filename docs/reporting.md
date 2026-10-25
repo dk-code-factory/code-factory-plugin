@@ -55,7 +55,13 @@ workflow handles and status history survive daemon and controller restarts.
 Processing, outcome, GitHub closure and delivery are independent. A closed issue
 alone is not a fix; a merged closing PR alone is not a published package. Release
 tracking requires published metadata, uploaded assets, complete checksums, a
-matching tag commit and explicit fixed-issue/component ancestry. Stable releases,
+matching tag commit and verified fix ancestry. Code Factory provenance supplies
+explicit fixed-issue/component associations. Native `agent-workflow` releases use
+an independently verified closing PR or commit, the complete native package and
+checksum inventory, and matching dependency/conformance build declarations.
+Matching source fingerprints corroborate published declarations; reporting does
+not rebuild packages or verify their signatures. Source-only dependency releases
+without checked package evidence remain **Unknown**. Stable releases,
 prereleases and observed installed versions stay distinct. Dependency releases
 belong to their dependency; a Code Factory release must explicitly establish any
 relationship. Unavailable evidence displays **Unknown**. GitHub state refreshes

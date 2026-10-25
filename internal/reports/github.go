@@ -6,29 +6,55 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"codefactory/internal/providers"
+	"codefactory/internal/store"
 )
 
-type GitHubAdapter struct{ Client *providers.GitHub }
+type GitHubAdapter struct {
+	Client *providers.GitHub
+	Store  *store.Store
+}
 type rateLimit struct{ until time.Time }
-type publicationRejected struct{ Reason string }
+type publicationRejected struct {
+	Reason string
+	cause  error
+}
 
 func (e *publicationRejected) Error() string { return e.Reason }
+func (e *publicationRejected) Unwrap() error { return e.cause }
 
 func (e *rateLimit) Error() string {
 	return "GitHub rate limit; retained results will refresh after the retry time"
 }
 func (e *rateLimit) RetryTime() time.Time { return e.until }
+
+const githubCooldownKind = "report-github-rate-limit"
+
+func githubCooldownKey(baseURL, token string) string {
+	h := sha256.Sum256([]byte(baseURL + "\x00" + token))
+	return hex.EncodeToString(h[:])
+}
+
+func reportingRateLimit(method string, until time.Time) error {
+	retry := &rateLimit{until}
+	if method == http.MethodPost {
+		return &publicationRejected{Reason: "GitHub rejected issue creation due to a rate limit; retry after " + until.UTC().Format(time.RFC3339), cause: retry}
+	}
+	return retry
+}
+
 func (g *GitHubAdapter) request(ctx context.Context, method, endpoint string, input any, accept string) ([]byte, error) {
 	var body io.Reader
 	if input != nil {
@@ -48,6 +74,17 @@ func (g *GitHubAdapter) request(ctx context.Context, method, endpoint string, in
 	if e != nil {
 		return nil, e
 	}
+	if g.Store == nil {
+		return nil, fmt.Errorf("Reporting GitHub cooldown storage unavailable")
+	}
+	cooldownID := githubCooldownKey(g.Client.BaseURL, token)
+	var retryAt time.Time
+	if e = g.Store.Get(ctx, githubCooldownKind, cooldownID, &retryAt); e != nil && !errors.Is(e, store.ErrNotFound) {
+		return nil, fmt.Errorf("Reporting GitHub cooldown state unavailable")
+	}
+	if time.Now().Before(retryAt) {
+		return nil, reportingRateLimit(method, retryAt)
+	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Accept", "application/vnd.github+json")
 	if accept != "" {
@@ -60,17 +97,34 @@ func (g *GitHubAdapter) request(ctx context.Context, method, endpoint string, in
 	}
 	defer res.Body.Close()
 	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "") {
-		until := time.Now().Add(time.Minute)
+		now := time.Now().UTC()
+		until := now
 		if sec, e := strconv.ParseInt(res.Header.Get("X-RateLimit-Reset"), 10, 64); e == nil {
-			until = time.Unix(sec, 0)
+			if reset := time.Unix(sec, 0); reset.After(until) {
+				until = reset
+			}
 		}
 		if sec, e := strconv.Atoi(res.Header.Get("Retry-After")); e == nil {
-			until = time.Now().Add(time.Duration(sec) * time.Second)
+			if after := now.Add(time.Duration(sec) * time.Second); after.After(until) {
+				until = after
+			}
 		}
-		if method == http.MethodPost {
-			return nil, &publicationRejected{Reason: "GitHub rejected issue creation due to a rate limit; retry after " + until.UTC().Format(time.RFC3339)}
+		if !until.After(now) {
+			until = now.Add(time.Minute)
 		}
-		return nil, &rateLimit{until}
+		if e = g.Store.Write(ctx, func(t *store.Tx) error {
+			var retained time.Time
+			if e := t.Get(githubCooldownKind, cooldownID, &retained); e != nil && !errors.Is(e, store.ErrNotFound) {
+				return e
+			}
+			if retained.After(until) {
+				until = retained
+			}
+			return t.Put(githubCooldownKind, cooldownID, until)
+		}); e != nil {
+			return nil, fmt.Errorf("GitHub retry deadline could not be retained: %w", reportingRateLimit(method, until))
+		}
+		return nil, reportingRateLimit(method, until)
 	}
 	if method == http.MethodGet && accept == "application/octet-stream" && res.StatusCode == 302 {
 		target, e := url.Parse(res.Header.Get("Location"))
@@ -276,18 +330,19 @@ type Provenance struct {
 	Files      []Artifact                     `json:"files"`
 }
 type githubRelease struct {
-	Tag         string     `json:"tag_name"`
-	URL         string     `json:"html_url"`
-	Draft       bool       `json:"draft"`
-	Prerelease  bool       `json:"prerelease"`
-	PublishedAt *time.Time `json:"published_at"`
-	Assets      []struct {
-		ID     int64  `json:"id"`
-		Name   string `json:"name"`
-		State  string `json:"state"`
-		Size   int64  `json:"size"`
-		Digest string `json:"digest"`
-	} `json:"assets"`
+	Tag         string        `json:"tag_name"`
+	URL         string        `json:"html_url"`
+	Draft       bool          `json:"draft"`
+	Prerelease  bool          `json:"prerelease"`
+	PublishedAt *time.Time    `json:"published_at"`
+	Assets      []githubAsset `json:"assets"`
+}
+type githubAsset struct {
+	ID     int64  `json:"id"`
+	Name   string `json:"name"`
+	State  string `json:"state"`
+	Size   int64  `json:"size"`
+	Digest string `json:"digest"`
 }
 
 // Track returns verified observations alongside later request errors. Callers
@@ -379,6 +434,34 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 			if release.Draft || release.PublishedAt == nil {
 				continue
 			}
+			if repo == "dk-code-factory/agent-workflow" {
+				c, ok, e := g.workflowReleaseProvenance(ctx, repo, release)
+				if e != nil {
+					return fixes, releases, e
+				}
+				if !ok {
+					continue
+				}
+				for _, fix := range fixes {
+					if fix.Repository != repo || fix.Component != component {
+						continue
+					}
+					var comparison struct {
+						Status string `json:"status"`
+					}
+					if e = g.get(ctx, "/repos/"+repo+"/compare/"+fix.Commit+"..."+c.Commit, &comparison); e != nil {
+						return fixes, releases, e
+					}
+					if comparison.Status == "ahead" || comparison.Status == "identical" {
+						addFix(Fix{Repository: repo, Commit: fix.Commit, Component: component, Version: c.Version})
+						releases = append(releases, Release{Repository: repo, Version: release.Tag, ComponentVersion: c.Version, PublishedAt: *release.PublishedAt, URL: release.URL, Prerelease: release.Prerelease, Commit: fix.Commit})
+					}
+				}
+				continue
+			}
+			if repo != DefaultRepository {
+				continue // Source-only dependency releases do not prove checked packages.
+			}
 			p, ok, e := g.releaseProvenance(ctx, repo, release)
 			if e != nil {
 				return fixes, releases, e
@@ -411,6 +494,146 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 	return fixes, releases, nil
 }
 
+func (g *GitHubAdapter) releaseAsset(ctx context.Context, repo string, a githubAsset) ([]byte, error) {
+	if a.State != "uploaded" || a.ID < 1 || a.Size > 16<<20 {
+		return nil, fmt.Errorf("Release evidence asset is unavailable")
+	}
+	b, e := g.request(ctx, "GET", fmt.Sprintf("/repos/%s/releases/assets/%d", repo, a.ID), nil, "application/octet-stream")
+	if e != nil {
+		return nil, e
+	}
+	if int64(len(b)) != a.Size {
+		return nil, fmt.Errorf("Release evidence asset size mismatch")
+	}
+	h := sha256.Sum256(b)
+	if a.Digest != "" && a.Digest != "sha256:"+hex.EncodeToString(h[:]) {
+		return nil, fmt.Errorf("Release asset digest mismatch")
+	}
+	return b, nil
+}
+
+// Native workflow releases declare their package inventory and build identity in
+// small metadata files. Their fix association comes from independent closing
+// evidence in Track, not Code Factory's fixed-issue manifest fields.
+func (g *GitHubAdapter) workflowReleaseProvenance(ctx context.Context, repo string, r githubRelease) (ComponentProvenance, bool, error) {
+	c := ComponentProvenance{Repository: repo}
+	if r.Tag == "" || r.URL != "https://github.com/"+repo+"/releases/tag/"+r.Tag {
+		return c, false, nil
+	}
+	assets := map[string]githubAsset{}
+	assetIDs := map[int64]bool{}
+	names := []string{}
+	cliPackages := 0
+	for _, a := range r.Assets {
+		if _, duplicate := assets[a.Name]; duplicate || assetIDs[a.ID] || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`).MatchString(a.Name) || a.ID < 1 || a.State != "uploaded" || a.Size <= 0 || !regexp.MustCompile(`^sha256:[0-9a-f]{64}$`).MatchString(a.Digest) {
+			return c, false, nil
+		}
+		assets[a.Name] = a
+		assetIDs[a.ID] = true
+		names = append(names, a.Name)
+		if strings.HasPrefix(a.Name, "agent-workflow-") && strings.HasSuffix(a.Name, ".tar.gz") {
+			cliPackages++
+		}
+	}
+	if cliPackages != 4 {
+		return c, false, nil
+	}
+	for _, name := range []string{"release-manifest.json", "SHA256SUMS", "manifest-provenance.jsonl", "dependencies.json", "conformance-evidence.json"} {
+		if _, ok := assets[name]; !ok {
+			return c, false, nil
+		}
+	}
+	var manifest struct {
+		Repository        string            `json:"repository"`
+		Tag               string            `json:"tag"`
+		Commit            string            `json:"commit"`
+		SourceFingerprint string            `json:"source_fingerprint"`
+		Assets            map[string]string `json:"assets"`
+	}
+	b, e := g.releaseAsset(ctx, repo, assets["release-manifest.json"])
+	if e != nil {
+		return c, false, e
+	}
+	if json.Unmarshal(b, &manifest) != nil || manifest.Repository != repo || manifest.Tag != r.Tag || !commitPattern.MatchString(manifest.Commit) || !regexp.MustCompile(`^[0-9a-f]{64}$`).MatchString(manifest.SourceFingerprint) || len(manifest.Assets) != len(assets)-3 {
+		return c, false, nil
+	}
+	for name, digest := range manifest.Assets {
+		a, ok := assets[name]
+		if !ok || name == "release-manifest.json" || name == "SHA256SUMS" || name == "manifest-provenance.jsonl" || a.Digest != "sha256:"+digest {
+			return c, false, nil
+		}
+	}
+	checksum, e := g.releaseAsset(ctx, repo, assets["SHA256SUMS"])
+	if e != nil {
+		return c, false, e
+	}
+	sort.Strings(names)
+	expected := ""
+	for _, name := range names {
+		if name != "SHA256SUMS" {
+			expected += strings.TrimPrefix(assets[name].Digest, "sha256:") + "  " + name + "\n"
+		}
+	}
+	if string(checksum) != expected {
+		return c, false, nil
+	}
+	var dependencies struct {
+		Engine struct {
+			Version string `json:"version"`
+			Commit  string `json:"commit"`
+			Dirty   *bool  `json:"dirty"`
+		} `json:"engine"`
+	}
+	b, e = g.releaseAsset(ctx, repo, assets["dependencies.json"])
+	if e != nil {
+		return c, false, e
+	}
+	if json.Unmarshal(b, &dependencies) != nil || dependencies.Engine.Version == "" || "v"+dependencies.Engine.Version != r.Tag || dependencies.Engine.Commit != manifest.Commit || dependencies.Engine.Dirty == nil || *dependencies.Engine.Dirty {
+		return c, false, nil
+	}
+	var evidence struct {
+		Candidate         string `json:"candidate"`
+		SourceFingerprint string `json:"source_fingerprint"`
+		Reviewed          bool   `json:"reviewed"`
+		Records           []struct {
+			Engine struct {
+				Version           string `json:"version"`
+				Commit            string `json:"commit"`
+				Dirty             string `json:"dirty"`
+				SourceFingerprint string `json:"source_fingerprint"`
+			} `json:"engine"`
+		} `json:"records"`
+	}
+	b, e = g.releaseAsset(ctx, repo, assets["conformance-evidence.json"])
+	if e != nil {
+		return c, false, e
+	}
+	if json.Unmarshal(b, &evidence) != nil || evidence.Candidate != manifest.Commit || evidence.SourceFingerprint != manifest.SourceFingerprint || !evidence.Reviewed || len(evidence.Records) == 0 {
+		return c, false, nil
+	}
+	for _, record := range evidence.Records {
+		if record.Engine.Version != dependencies.Engine.Version || record.Engine.Commit != manifest.Commit || record.Engine.Dirty != "false" || record.Engine.SourceFingerprint != manifest.SourceFingerprint {
+			return c, false, nil
+		}
+	}
+	for _, platform := range []string{"linux-amd64", "linux-arm64", "darwin-amd64", "darwin-arm64"} {
+		if _, ok := assets["agent-workflow-"+dependencies.Engine.Version+"-"+platform+".tar.gz"]; !ok {
+			return c, false, nil
+		}
+	}
+	var tag struct {
+		SHA string `json:"sha"`
+	}
+	if e = g.get(ctx, "/repos/"+repo+"/commits/"+url.PathEscape(r.Tag), &tag); e != nil {
+		return c, false, e
+	}
+	if tag.SHA != manifest.Commit {
+		return c, false, nil
+	}
+	c.Version, c.Commit = dependencies.Engine.Version, manifest.Commit
+	return c, true, nil
+}
+
 // Published metadata and uploaded assets are separate GitHub states. The tag,
 // complete package set, checksums and component commits must all agree.
 func (g *GitHubAdapter) releaseProvenance(ctx context.Context, repo string, r githubRelease) (Provenance, bool, error) {
@@ -430,25 +653,7 @@ func (g *GitHubAdapter) releaseProvenance(ctx context.Context, repo string, r gi
 	if !ok {
 		return p, false, nil
 	}
-	download := func(i int) ([]byte, error) {
-		a := r.Assets[i]
-		if a.State != "uploaded" || a.ID < 1 || a.Size > 16<<20 {
-			return nil, fmt.Errorf("Release evidence asset is unavailable")
-		}
-		b, e := g.request(ctx, "GET", fmt.Sprintf("/repos/%s/releases/assets/%d", repo, a.ID), nil, "application/octet-stream")
-		if e != nil {
-			return nil, e
-		}
-		if int64(len(b)) != a.Size {
-			return nil, fmt.Errorf("Release evidence asset size mismatch")
-		}
-		h := sha256.Sum256(b)
-		if a.Digest != "" && a.Digest != "sha256:"+hex.EncodeToString(h[:]) {
-			return nil, fmt.Errorf("Release asset digest mismatch")
-		}
-		return b, nil
-	}
-	b, e := download(manifest)
+	b, e := g.releaseAsset(ctx, repo, r.Assets[manifest])
 	if e != nil {
 		return p, false, e
 	}
@@ -467,7 +672,7 @@ func (g *GitHubAdapter) releaseProvenance(ctx context.Context, repo string, r gi
 	if tag.SHA != p.Commit {
 		return p, false, nil
 	}
-	checksum, e := download(sums)
+	checksum, e := g.releaseAsset(ctx, repo, r.Assets[sums])
 	if e != nil {
 		return p, false, e
 	}

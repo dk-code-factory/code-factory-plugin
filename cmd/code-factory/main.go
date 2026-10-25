@@ -223,7 +223,7 @@ func run() error {
 		return result
 	}
 	if command == "report-publish" {
-		service := &reports.Service{Store: s, Vault: vault, Dir: *dir, GitHub: &reports.GitHubAdapter{Client: providers.NewGitHub()}}
+		service := &reports.Service{Store: s, Vault: vault, Dir: *dir, GitHub: &reports.GitHubAdapter{Client: providers.NewGitHub(), Store: s}}
 		return service.PublishReport(ctx, *tunnelID)
 	}
 	if command != "serve" {

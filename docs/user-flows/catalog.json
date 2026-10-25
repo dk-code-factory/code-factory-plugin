@@ -7247,6 +7247,57 @@
             "S4"
           ],
           "purpose": "Empty summaries and invalid classifications hold the slot until lifecycle completion, then allow other reports to progress and explicit recovery to start a fresh investigation generation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPriorGenerationFindingsDoNotReleaseUncertainPreparation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Prior-generation findings cannot release the sole slot while a newly admitted generation retains uncertain lifecycle preparation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRefreshRateLimitStopsOtherOperationsAndReports(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Issue/release rate-limit deadlines stop other operations and reports, retain previous delivery evidence and leave skipped operation/row freshness untouched."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues keeps newer journal details after a delayed mutation read\"",
+          "scenarios": [
+            "S4",
+            "S6"
+          ],
+          "purpose": "An older mutation read cannot overwrite newer journal processing, findings or recovery controls for the selected report."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues keeps a pending selection read when an older selection mutation finishes\"",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A completed old-selection mutation cannot suppress the pending current-selection detail read."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestTrackingNativeWorkflowRelease(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Actual native manifest, dependency/conformance metadata and package/checksum inventory establish dependency stable/prerelease delivery only with an independent closing fix and ancestry; malformed, missing or source-only proof stays Unknown."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestGitHubReportingCooldownSurvivesRestartAndSeparatesCredentials(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Store-backed credential/endpoint deadlines suppress reporting HTTP across operations, adapters and reopened state; expiry and credential changes are independent, storage failures stop before HTTP and rejected POST retains retry provenance."
         }
       ],
       "suites": [

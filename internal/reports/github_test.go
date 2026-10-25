@@ -10,11 +10,15 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
+	"sort"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"codefactory/internal/providers"
+	"codefactory/internal/store"
 )
 
 func adapter(t *testing.T, handler http.HandlerFunc) *GitHubAdapter {
@@ -25,7 +29,8 @@ func adapter(t *testing.T, handler http.HandlerFunc) *GitHubAdapter {
 	client.BaseURL = server.URL
 	client.Client = server.Client()
 	client.Token = func(context.Context) (string, error) { return "fixture-token", nil }
-	return &GitHubAdapter{Client: client}
+	s, _ := fixture(t)
+	return &GitHubAdapter{Client: client, Store: s.Store}
 }
 func reply(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -254,7 +259,7 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 		t.Fatal("fix outside release ancestry accepted", available, e)
 	}
 	comparison = "ahead"
-	// Dependency availability belongs to the dependency's own verified release.
+	// Code Factory attribution requires its explicit dependency relationship.
 	owner = "dk-code-factory/agent-workflow"
 	component = "agent-workflow"
 	issue.Repository = owner
@@ -270,23 +275,23 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 	}
 	sums += hex.EncodeToString(h[:]) + "  CI-MANIFEST.json\n"
 	assets[4] = []byte(sums)
-	releases[0].URL = "https://github.com/" + owner + "/releases/tag/v1.2.0"
+	releases[0].URL = "https://github.com/" + DefaultRepository + "/releases/tag/v1.2.0"
 	for i := range releases[0].Assets {
 		a := &releases[0].Assets[i]
 		h := sha256.Sum256(assets[a.ID])
 		a.Size = int64(len(assets[a.ID]))
 		a.Digest = "sha256:" + hex.EncodeToString(h[:])
 	}
-	// The Code Factory repository does not publish the dependency manifest.
+	// The dependency does not publish this Code Factory manifest format.
 	oldHandler := g.Client.Client.Transport
 	g.Client.Client.Transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
-		if strings.Contains(r.URL.Path, "/repos/"+DefaultRepository+"/releases") {
+		if strings.Contains(r.URL.Path, "/repos/"+owner+"/releases") {
 			return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader("[]")), Header: http.Header{}}, nil
 		}
 		return oldHandler.RoundTrip(r)
 	})
 	_, available, e = g.Track(ctx, issue, component)
-	if e != nil || len(available) != 1 || available[0].Repository != owner || available[0].ComponentVersion != "2.0.0" {
+	if e != nil || len(available) != 1 || available[0].Repository != DefaultRepository || available[0].ComponentVersion != "2.0.0" {
 		t.Fatal("dependency delivery misattributed", available, e)
 	}
 }
@@ -308,6 +313,251 @@ func TestHTTPPublicationRejectsKnownFailuresAndRetainsServerUncertainty(t *testi
 			var rejected *publicationRejected
 			if errors.As(err, &rejected) != (status < 500) {
 				t.Fatal("incorrect mutation uncertainty classification", status, err)
+			}
+			var retry retryError
+			if errors.As(err, &retry) != (status == 429) || status == 429 && !retry.RetryTime().After(time.Now()) {
+				t.Fatal("rate-limited rejection lost its retry deadline", status, err)
+			}
+		})
+	}
+}
+
+func TestGitHubReportingCooldownSurvivesRestartAndSeparatesCredentials(t *testing.T) {
+	s, ctx := fixture(t)
+	reset := time.Now().Add(10 * time.Minute).Truncate(time.Second)
+	var requests atomic.Int64
+	g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
+		if requests.Add(1) == 1 {
+			w.Header().Set("Retry-After", "120")
+			w.Header().Set("X-RateLimit-Reset", fmt.Sprint(reset.Unix()))
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		reply(w, map[string]any{"number": 17, "state": "open", "html_url": "https://github.com/" + DefaultRepository + "/issues/17"})
+	})
+	g.Store = s.Store
+	assertLimited := func(err error) {
+		t.Helper()
+		var retry retryError
+		if !errors.As(err, &retry) || !retry.RetryTime().Equal(reset) || requests.Load() != 1 {
+			t.Fatal("credential cooldown did not retain its deadline or suppress HTTP", err, requests.Load())
+		}
+	}
+	_, err := g.ReadIssue(ctx, DefaultRepository, 17)
+	assertLimited(err)
+	_, err = g.ReadIssue(ctx, "dk-code-factory/agent-workflow", 18)
+	assertLimited(err)
+	_, _, err = g.Track(ctx, Issue{Repository: DefaultRepository, Number: 17}, "code-factory")
+	assertLimited(err)
+	_, err = g.Create(ctx, findings(), marker("blocked-publication"))
+	assertLimited(err)
+	var rejected *publicationRejected
+	if !errors.As(err, &rejected) {
+		t.Fatal("locally deferred publication became an uncertain mutation", err)
+	}
+	if err := s.Store.Close(); err != nil {
+		t.Fatal(err)
+	}
+	reopened, err := store.Open(filepath.Join(s.Dir, "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { reopened.Close() })
+	g = &GitHubAdapter{Client: g.Client, Store: reopened}
+	_, err = g.ReadIssue(ctx, DefaultRepository, 17)
+	assertLimited(err)
+	g.Client.Token = func(context.Context) (string, error) { return "different-fixture-token", nil }
+	if _, err := g.ReadIssue(ctx, DefaultRepository, 17); err != nil || requests.Load() != 2 {
+		t.Fatal("independent credential inherited another credential's cooldown", err, requests.Load())
+	}
+	g.Client.Token = func(context.Context) (string, error) { return "fixture-token", nil }
+	if err := reopened.Put(ctx, githubCooldownKind, githubCooldownKey(g.Client.BaseURL, "fixture-token"), time.Now().Add(-time.Second), ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := g.ReadIssue(ctx, DefaultRepository, 17); err != nil || requests.Load() != 3 {
+		t.Fatal("expired cooldown prevented reporting refresh", err, requests.Load())
+	}
+	if err := reopened.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := g.ReadIssue(ctx, DefaultRepository, 17); err == nil || requests.Load() != 3 {
+		t.Fatal("unreadable cooldown state allowed an HTTP request", err, requests.Load())
+	}
+}
+
+func TestTrackingNativeWorkflowRelease(t *testing.T) {
+	sha, fix, fingerprint := strings.Repeat("a", 40), strings.Repeat("b", 40), strings.Repeat("c", 64)
+	var repo, comparison, tagSHA string
+	var manifest, engine, evidence, evidenceEngine map[string]any
+	var payloads map[string][]byte
+	var downloads map[int64][]byte
+	var names map[int64]string
+	var release githubRelease
+	var hasFix bool
+	reset := func() {
+		repo, comparison, tagSHA, hasFix = "dk-code-factory/agent-workflow", "ahead", sha, true
+		manifest = map[string]any{"repository": repo, "tag": "v2.0.0", "commit": sha, "source_fingerprint": fingerprint, "registry": map[string]any{"image": "ghcr.io/" + repo + "-worker", "digest": "sha256:" + fingerprint, "platforms": map[string]string{"amd64": "sha256:" + fingerprint, "arm64": "sha256:" + fingerprint}}}
+		// The native dependency inventory uses a boolean dirty value; conformance
+		// engine records use the CLI's string value and source fingerprint.
+		engine = map[string]any{"version": "2.0.0", "commit": sha, "dirty": false}
+		evidenceEngine = map[string]any{"version": "2.0.0", "commit": sha, "dirty": "false", "source_fingerprint": fingerprint}
+		evidence = map[string]any{"candidate": sha, "source_fingerprint": fingerprint, "reviewed": true, "records": []any{map[string]any{"scenario": "fixture", "engine": evidenceEngine}}}
+		payloads = map[string][]byte{}
+		for _, platform := range []string{"linux-amd64", "linux-arm64", "darwin-amd64", "darwin-arm64"} {
+			name := "agent-workflow-2.0.0-" + platform + ".tar.gz"
+			payloads[name] = []byte("opaque CLI package fixture: " + name)
+		}
+		// Auxiliary native artifacts are inventoried, rather than executed or
+		// interpreted as independent signature, registry or archive verification.
+		for _, name := range []string{"registry.json", "sbom.cdx.json", "vulnerability-summary.json", "worker-linux-amd64.json", "worker-linux-arm64.json", "worker-linux-amd64.tar.gz", "worker-linux-arm64.tar.gz", "conformance-evidence.json.asc", "archive-provenance.jsonl", "image-index-provenance.jsonl", "image-amd64-provenance.jsonl", "image-arm64-provenance.jsonl"} {
+			payloads[name] = []byte("opaque auxiliary fixture: " + name)
+		}
+		published := time.Now().UTC()
+		release = githubRelease{Tag: "v2.0.0", URL: "https://github.com/" + repo + "/releases/tag/v2.0.0", PublishedAt: &published}
+	}
+	seal := func() {
+		payloads["dependencies.json"], _ = json.Marshal(map[string]any{"engine": engine, "go_modules": []any{}, "npm_packages": map[string]any{}})
+		payloads["conformance-evidence.json"], _ = json.Marshal(evidence)
+		inventory := map[string]string{}
+		for name, b := range payloads {
+			h := sha256.Sum256(b)
+			inventory[name] = hex.EncodeToString(h[:])
+		}
+		manifest["assets"] = inventory
+		payloads["release-manifest.json"], _ = json.Marshal(manifest)
+		// The native manifest excludes itself, sums, and this later bundle;
+		// the final sorted checksums cover all files except SHA256SUMS itself.
+		payloads["manifest-provenance.jsonl"] = []byte("opaque manifest bundle fixture")
+		ordered := []string{}
+		for name := range payloads {
+			ordered = append(ordered, name)
+		}
+		sort.Strings(ordered)
+		sums := ""
+		for _, name := range ordered {
+			h := sha256.Sum256(payloads[name])
+			sums += hex.EncodeToString(h[:]) + "  " + name + "\n"
+		}
+		payloads["SHA256SUMS"] = []byte(sums)
+		ordered = append(ordered, "SHA256SUMS")
+		downloads, names = map[int64][]byte{}, map[int64]string{}
+		for i, name := range ordered {
+			b, id := payloads[name], int64(i+1)
+			h := sha256.Sum256(b)
+			release.Assets = append(release.Assets, githubAsset{ID: id, Name: name, State: "uploaded", Size: int64(len(b)), Digest: "sha256:" + hex.EncodeToString(h[:])})
+			downloads[id], names[id] = b, name
+		}
+	}
+	replace := func(name string, b []byte) {
+		for i := range release.Assets {
+			a := &release.Assets[i]
+			if a.Name == name {
+				h := sha256.Sum256(b)
+				a.Size, a.Digest, downloads[a.ID] = int64(len(b)), "sha256:"+hex.EncodeToString(h[:]), b
+			}
+		}
+	}
+	for _, test := range []struct {
+		name        string
+		change      func()
+		afterSeal   bool
+		wantFix     bool
+		wantRelease bool
+	}{
+		{"native stable", func() {}, false, true, true},
+		{"native prerelease", func() { release.Prerelease = true }, false, true, true},
+		{"no closing fix", func() { hasFix = false }, false, false, false},
+		{"ancestry behind", func() { comparison = "behind" }, false, true, false},
+		{"ancestry diverged", func() { comparison = "diverged" }, false, true, false},
+		{"foreign repository", func() { manifest["repository"] = "other/repo" }, false, true, false},
+		{"foreign release URL", func() { release.URL = "https://github.com/other/repo/releases/tag/v2.0.0" }, false, true, false},
+		{"wrong tag", func() { manifest["tag"] = "v2.1.0" }, false, true, false},
+		{"wrong tag commit", func() { tagSHA = fix }, false, true, false},
+		{"short source commit", func() { manifest["commit"] = sha[:7] }, false, true, false},
+		{"invalid fingerprint", func() { manifest["source_fingerprint"] = sha }, false, true, false},
+		{"evidence candidate mismatch", func() { evidence["candidate"] = fix }, false, true, false},
+		{"evidence fingerprint mismatch", func() { evidence["source_fingerprint"] = strings.Repeat("d", 64) }, false, true, false},
+		{"engine fingerprint mismatch", func() { evidenceEngine["source_fingerprint"] = strings.Repeat("d", 64) }, false, true, false},
+		{"engine version mismatch", func() { engine["version"] = "2.1.0" }, false, true, false},
+		{"engine commit mismatch", func() { engine["commit"] = fix }, false, true, false},
+		{"dirty dependency", func() { engine["dirty"] = true }, false, true, false},
+		{"missing dirty declaration", func() { delete(engine, "dirty") }, false, true, false},
+		{"wrong native dirty type", func() { engine["dirty"] = "false" }, false, true, false},
+		{"dirty conformance engine", func() { evidenceEngine["dirty"] = "true" }, false, true, false},
+		{"unreviewed evidence", func() { evidence["reviewed"] = false }, false, true, false},
+		{"missing engine evidence", func() { evidence["records"] = []any{} }, false, true, false},
+		{"missing CLI platform", func() { delete(payloads, "agent-workflow-2.0.0-darwin-arm64.tar.gz") }, false, true, false},
+		{"extra CLI version", func() { payloads["agent-workflow-1.9.0-linux-amd64.tar.gz"] = []byte("different version") }, false, true, false},
+		{"draft", func() { release.Draft = true }, false, true, false},
+		{"unpublished", func() { release.PublishedAt = nil }, false, true, false},
+		{"duplicate asset", func() { release.Assets = append(release.Assets, release.Assets[0]) }, true, true, false},
+		{"duplicate asset ID", func() { release.Assets[1].ID = release.Assets[0].ID }, true, true, false},
+		{"unexpected uploaded asset", func() { a := release.Assets[0]; a.Name = "unexpected.txt"; release.Assets = append(release.Assets, a) }, true, true, false},
+		{"unsafe asset", func() { release.Assets[0].Name = "../unsafe" }, true, true, false},
+		{"missing asset digest", func() { release.Assets[0].Digest = "" }, true, true, false},
+		{"mismatched package digest", func() { release.Assets[0].Digest = "sha256:" + strings.Repeat("e", 64) }, true, true, false},
+		{"upload incomplete", func() { release.Assets[0].State = "new" }, true, true, false},
+		{"bad checksum inventory", func() { replace("SHA256SUMS", []byte("incomplete\n")) }, true, true, false},
+		{"missing provenance bundle", func() {
+			for i, a := range release.Assets {
+				if a.Name == "manifest-provenance.jsonl" {
+					release.Assets = append(release.Assets[:i], release.Assets[i+1:]...)
+					break
+				}
+			}
+		}, true, true, false},
+		{"source-only dk-workflows", func() { repo = "dk-code-factory/dk-workflows"; release.Assets = nil }, true, true, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			reset()
+			if !test.afterSeal {
+				test.change()
+			}
+			seal()
+			if test.afterSeal {
+				test.change()
+			}
+			g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
+				p := r.URL.Path
+				switch {
+				case strings.HasPrefix(p, "/repos/"+DefaultRepository+"/"):
+					reply(w, []any{})
+				case strings.HasSuffix(p, "/timeline"):
+					timeline := []any{}
+					if hasFix {
+						timeline = append(timeline, map[string]any{"event": "cross-referenced", "source": map[string]any{"issue": map[string]any{"number": 21, "html_url": "https://github.com/" + repo + "/pull/21", "pull_request": map[string]any{"url": "api"}}}})
+					}
+					reply(w, timeline)
+				case strings.Contains(p, "/pulls/"):
+					reply(w, map[string]any{"merged": true, "merge_commit_sha": fix, "body": "Fixes #17", "html_url": "https://github.com/" + repo + "/pull/21"})
+				case strings.Contains(p, "/compare/"):
+					reply(w, map[string]string{"status": comparison})
+				case strings.Contains(p, "/commits/"):
+					reply(w, map[string]string{"sha": tagSHA})
+				case strings.HasSuffix(p, "/releases"):
+					reply(w, []githubRelease{release})
+				case strings.Contains(p, "/releases/assets/"):
+					var id int64
+					fmt.Sscanf(p[strings.LastIndex(p, "/")+1:], "%d", &id)
+					if name := names[id]; name != "release-manifest.json" && name != "SHA256SUMS" && name != "dependencies.json" && name != "conformance-evidence.json" {
+						t.Errorf("unexpected archive or auxiliary artifact download: %s", name)
+					}
+					_, _ = w.Write(downloads[id])
+				default:
+					t.Errorf("unexpected request %s", p)
+					http.NotFound(w, r)
+				}
+			})
+			fixes, releases, err := g.Track(context.Background(), Issue{Repository: repo, Number: 17, State: "closed"}, strings.TrimPrefix(repo, "dk-code-factory/"))
+			if (len(fixes) == 1) != test.wantFix || (len(releases) == 1) != test.wantRelease {
+				t.Fatal("incorrect independent native fix/delivery state", fixes, releases, err)
+			}
+			if test.wantRelease {
+				if err != nil || fixes[0].Version != "2.0.0" || fixes[0].PR != "https://github.com/"+repo+"/pull/21" || releases[0].Repository != repo || releases[0].Version != "v2.0.0" || releases[0].ComponentVersion != "2.0.0" || releases[0].Prerelease != release.Prerelease || releases[0].Commit != fix {
+					t.Fatal("native release identity, version or PR association lost", fixes, releases, err)
+				}
+			} else if test.wantFix && fixes[0].Version != "" {
+				t.Fatal("unverified native package supplied a fix version", fixes, releases, err)
 			}
 		})
 	}
