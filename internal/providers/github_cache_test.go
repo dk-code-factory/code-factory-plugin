@@ -203,7 +203,7 @@ func TestGitHubCachePreservesSummarySemanticsCopiesAndRelatedInvalidation(t *tes
 	}
 	first[0].Title = "caller edit"
 	second, observed, err := g.SyncIndex(ctx, repo, true)
-	if err != nil || !second[0].SummaryOnly || second[0].Title != "original" || observed != time.Unix(100, 0) || source.calls != 1 {
+	if err != nil || !second[0].SummaryOnly || second[0].Title != "original" || !observed.Equal(time.Unix(100, 0)) || source.calls != 1 {
 		t.Fatal("cached summary became a full import, changed its observation time or shared mutable data", second, err)
 	}
 	if _, _, err := g.SyncIndex(ctx, other, true); err != nil {

@@ -29,6 +29,8 @@ def commit(value):
 
 def comparison(event, name, bootstrap_sha, ref):
     """Only an explicitly pinned reviewed root import can omit a Git diff."""
+    if name in ("push", "workflow_dispatch") and ref != "refs/heads/main":
+        raise ValueError("Push and manual verification run only on main; open a pull request for feature branches")
     head = commit(git("rev-parse", "HEAD"))
     if name == "pull_request":
         pr = event["pull_request"]

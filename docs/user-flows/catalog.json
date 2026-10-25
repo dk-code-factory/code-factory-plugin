@@ -11486,7 +11486,23 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Temporary Git histories distinguish exact events, branch merge bases and pinned root bootstrap; fixture mode and artifact commit/content/path checks fail closed; release provenance excludes PR or wrong-workflow results."
+          "purpose": "Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before verification or artifact creation; fixture mode, artifact identities and main-push-only release proof fail closed."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_workflow_routes_features_through_pull_requests(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "The hosted workflow subscribes to main pushes, PRs targeting main and manual dispatch, with no feature-push verification route."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_feature_push_and_dispatch_reject_before_verification(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "CLI feature/tag push and manual attempts exit nonzero with a PR/main explanation before invoking verification or artifact-manifest creation."
         }
       ],
       "suites": [
@@ -11549,7 +11565,7 @@
           },
           {
             "id": "CI",
-            "label": "Run remote exact-comparison checks or the single reviewed root import",
+            "label": "Verify a PR to main or a main push/manual check with exact comparisons or the single reviewed root import",
             "scenario": "S5"
           },
           {
@@ -11640,7 +11656,7 @@
           {
             "from": "CI",
             "to": "CD",
-            "label": "successful exact-source push CI and release request"
+            "label": "successful exact-source main push CI and release request"
           },
           {
             "from": "CD",
@@ -11655,7 +11671,7 @@
           {
             "from": "CI",
             "to": "CI_FAIL",
-            "label": "unknown comparison or failed verification"
+            "label": "unsupported feature dispatch, unknown comparison or failed verification"
           },
           {
             "from": "CD",
