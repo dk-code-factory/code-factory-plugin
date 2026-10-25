@@ -106,6 +106,30 @@ func privateWrite(path string, data []byte) error {
 	}
 	return os.Rename(name, path)
 }
+func (s *Service) requirePrivateReportDir(ctx context.Context) error {
+	probe := exec.CommandContext(ctx, "git", "-C", s.Dir, "rev-parse", "--git-dir")
+	for _, variable := range os.Environ() {
+		name, _, _ := strings.Cut(variable, "=")
+		switch name {
+		case "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM":
+			continue
+		}
+		probe.Env = append(probe.Env, variable)
+	}
+	probe.Env = append(probe.Env, "LC_ALL=C", "GIT_DISCOVERY_ACROSS_FILESYSTEM=1")
+	output, err := probe.CombinedOutput()
+	if err == nil {
+		return fmt.Errorf("report data directory must be outside Git checkouts")
+	}
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	if !strings.Contains(string(output), "not a git repository (or any") {
+		return fmt.Errorf("cannot verify report data directory is outside Git checkouts")
+	}
+	return nil
+}
+
 func (s *Service) capture(ctx context.Context, r *Report) error {
 	s.captureMu.Lock()
 	defer s.captureMu.Unlock()
@@ -116,9 +140,8 @@ func (s *Service) capture(ctx context.Context, r *Report) error {
 	*r = current
 	// Never put private evidence into a source checkout, even with a custom data-dir.
 	root := filepath.Join(s.Dir, "issue-reports", r.ID)
-	probe := exec.CommandContext(ctx, "git", "-C", s.Dir, "rev-parse", "--show-toplevel")
-	if probe.Run() == nil {
-		return fmt.Errorf("report data directory must be outside Git checkouts")
+	if err := s.requirePrivateReportDir(ctx); err != nil {
+		return err
 	}
 	if len(r.Evidence) > 0 {
 		for _, v := range r.Evidence {

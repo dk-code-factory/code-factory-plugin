@@ -1947,6 +1947,83 @@ test("reported issues keeps a pending selection read when an older selection mut
   ).toBeEnabled();
 });
 
+test("reported issues allows pagination during continuing slow journal refreshes", async ({
+  page,
+}) => {
+  const reports = Array.from({ length: 65 }, (_, i) =>
+    reportFixture(`report-${String(i).padStart(2, "0")}`),
+  );
+  reports[59].observation.actual = "Second page report";
+  reports[64].observation.actual = "Third page report";
+  let slow = false;
+  const pending: (() => void)[] = [];
+  const { ui, state, calls } = await host(page, {
+    reports,
+    listReports: async (result) => {
+      const response = structuredClone(result);
+      if (slow)
+        await new Promise<void>((resolve) => {
+          pending.push(resolve);
+        });
+      return response;
+    },
+  });
+  async function journalUpdate() {
+    const reads = calls.filter((c) => c.name === "get_issue_report").length;
+    state.cursor++;
+    await expect
+      .poll(() => calls.filter((c) => c.name === "get_issue_report").length)
+      .toBeGreaterThan(reads);
+  }
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  const list = ui.getByLabel("Report list", { exact: true });
+  await expect(list.getByRole("article")).toHaveCount(30);
+  await list
+    .getByRole("button", { name: "Agents: Stale response" })
+    .first()
+    .click();
+  await expect(
+    ui.getByRole("article", { name: "Report details" }),
+  ).toBeVisible();
+  const more = list.getByRole("button", { name: "Load more reports" });
+  slow = true;
+  await journalUpdate();
+  await expect.poll(() => pending.length).toBe(1);
+  await journalUpdate();
+  await journalUpdate();
+  await expect(more).toBeEnabled();
+  await more.dblclick();
+  await expect(more).toBeDisabled();
+  expect(pending).toHaveLength(1);
+  pending[0]();
+  await expect.poll(() => pending.length).toBe(2);
+  await journalUpdate();
+  pending[1]();
+  await expect(list.getByRole("article")).toHaveCount(60);
+  await expect(list).toContainText("Second page report");
+  await expect(list).not.toContainText("Third page report");
+  await expect.poll(() => pending.length).toBe(3);
+  await expect(more).toBeEnabled();
+  // Background refresh remains active after the requested page was rendered.
+  await journalUpdate();
+  await journalUpdate();
+  await expect(more).toBeEnabled();
+  expect(pending).toHaveLength(3);
+  expect(
+    await list.getByRole("article").locator("p").allTextContents(),
+  ).toEqual(
+    reports
+      .slice(0, 60)
+      .map((r) => `needs information · ${r.component} · ${r.id}`),
+  );
+  pending[2]();
+  await expect.poll(() => pending.length).toBe(4);
+  slow = false;
+  pending[3]();
+});
+
 test("reported issues paginates and filters processing component and version", async ({
   page,
 }) => {

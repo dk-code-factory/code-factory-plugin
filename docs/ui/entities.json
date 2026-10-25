@@ -9320,7 +9320,8 @@
         "UI-REPORTS-PAGE",
         "UI-REPORTS-DETAIL-ORDER",
         "UI-REPORTS-SELECTION-ORDER",
-        "UI-REPORTS-DETAIL-PROGRESS"
+        "UI-REPORTS-DETAIL-PROGRESS",
+        "UI-REPORTS-PAGE-PROGRESS"
       ],
       "gaps": [],
       "suites": [
@@ -9358,7 +9359,8 @@
       "assertions": [
         "UI-REPORTS-INFO",
         "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-PAGE"
+        "UI-REPORTS-PAGE",
+        "UI-REPORTS-PAGE-PROGRESS"
       ],
       "gaps": [],
       "suites": [
@@ -9497,7 +9499,8 @@
       "assertions": [
         "UI-REPORTS-INFO",
         "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-PAGE"
+        "UI-REPORTS-PAGE",
+        "UI-REPORTS-PAGE-PROGRESS"
       ],
       "gaps": [
         {
@@ -9515,8 +9518,8 @@
         "go"
       ],
       "element_description": "**heading**, **subtitle**, **refresh** \u201cRefresh issues and releases\u201d; shared **error** alert; **search** \u201cSearch reports\u201d, **processing-filter**, **component-filter**, **version-filter**; **empty** result message; repeated **select** report button, **row-processing**, **row-component**, **row-id**; conditional **load-more** \u201cLoad more reports\u201d.",
-      "state_description": "Rows show independent processing and component identity, with an Unknown component fallback and aria-pressed selection. Zero results show the empty message, including while an initial query is pending. Load more is present only with a next cursor and disabled while loading; refresh is disabled during a mutation. The shared error alert also reports detail, mutation and external-link failures.",
-      "interactions": "Query changes reset pagination through C-REPORT-QUERY. C-REPORT-MORE extends the loaded range; journal updates preserve and refresh it, including a pending Load more request. C-REPORT-SELECT reads the selected report. C-REPORT-REFRESH reads issue and release evidence without starting an agent."
+      "state_description": "Rows show independent processing and component identity, with an Unknown component fallback and aria-pressed selection. Zero results show the empty message, including while an initial query is pending. Load more is present only with a next cursor and disabled only while its requested additional page is pending; background refresh keeps it usable; refresh is disabled during a mutation. The shared error alert also reports detail, mutation and external-link failures.",
+      "interactions": "Query changes reset pagination through C-REPORT-QUERY. C-REPORT-MORE extends the loaded range; journal updates preserve and refresh it, including a pending Load more request. C-REPORT-SELECT reads the selected report. C-REPORT-REFRESH reads issue and release evidence without starting an agent. Continuing slow background refreshes do not prevent an additional page request; repeated clicks while that request is pending do not add extra pages."
     },
     {
       "id": "W-REPORT-DETAIL",
@@ -9959,9 +9962,10 @@
       "external_boundary": false,
       "endpoint_description": "`W-REPORT-LIST.load-more` \u2192 `W-REPORT-LIST`",
       "trigger": "Load more reports; current query, next cursor and loaded range.",
-      "interactions": "Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range.",
+      "interactions": "Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range. Background refresh leaves pagination available; an already pending page request suppresses duplicate clicks.",
       "assertions": [
-        "UI-REPORTS-PAGE"
+        "UI-REPORTS-PAGE",
+        "UI-REPORTS-PAGE-PROGRESS"
       ],
       "kind": "connection",
       "contains": [],
@@ -10551,6 +10555,12 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues makes detail progress while journal updates continue\"",
       "assertion": "Controlled detail reads span multiple confirmed journal/list refresh cycles; releasing a response displays its findings, needs-attention state and Recovery note, preserves them during further updates and starts the queued follow-up read."
+    },
+    {
+      "id": "UI-REPORTS-PAGE-PROGRESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "\"reported issues allows pagination during continuing slow journal refreshes\"",
+      "assertion": "During delayed list reads spanning continuing confirmed journal polls, Load more remains available; duplicate clicks admit one extra page, render exactly the expected 60 unique rows and keep pagination usable through another background refresh."
     }
   ],
   "source_map": [
@@ -11271,7 +11281,8 @@
         "UI-REPORTS-PAGE",
         "UI-REPORTS-DETAIL-ORDER",
         "UI-REPORTS-SELECTION-ORDER",
-        "UI-REPORTS-DETAIL-PROGRESS"
+        "UI-REPORTS-DETAIL-PROGRESS",
+        "UI-REPORTS-PAGE-PROGRESS"
       ],
       "gap": {
         "version": 1,

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -115,6 +116,8 @@ type fakeGitHub struct {
 	fixes                              []Fix
 	releases                           []Release
 	onValidate, onMarker, onCreate     func()
+	onRead                             func()
+	markerErr                          error
 	created                            []Findings
 }
 
@@ -128,10 +131,13 @@ func (g *fakeGitHub) FindMarker(context.Context, string, string) (*Issue, error)
 	if g.onMarker != nil {
 		g.onMarker()
 	}
-	return g.found, nil
+	return g.found, g.markerErr
 }
 func (g *fakeGitHub) ReadIssue(context.Context, string, int) (Issue, error) {
 	g.refreshes++
+	if g.onRead != nil {
+		g.onRead()
+	}
 	return g.issue, g.errorRead
 }
 func (g *fakeGitHub) Create(_ context.Context, f Findings, _ string) (Issue, error) {
@@ -162,6 +168,71 @@ func setupEngine(s *Service) (*fakeEngine, *fakeGitHub) {
 	s.GitHub = g
 	return e, g
 }
+func TestPrivateInputsAreRejectedBeforeCheckoutPersistence(t *testing.T) {
+	s, ctx := fixture(t)
+	if output, err := exec.Command("git", "init", "--quiet", s.Dir).CombinedOutput(); err != nil {
+		t.Fatal(err, string(output))
+	}
+	repoRoot := s.Dir
+	s.Dir = filepath.Join(repoRoot, "nested-data")
+	if err := os.Mkdir(s.Dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GIT_CEILING_DIRECTORIES", repoRoot)
+	if _, err := s.Submit(ctx, observation()); err == nil {
+		t.Fatal("observation accepted inside Git")
+	}
+	rows, err := store.List[Report](ctx, s.Store, "issue-report")
+	if err != nil || len(rows) != 0 {
+		t.Fatal("rejected observation was persisted", rows, err)
+	}
+	var key any
+	if err := s.Store.Get(ctx, "report-key", hash(observation().IdempotencyKey), &key); !errors.Is(err, store.ErrNotFound) {
+		t.Fatal("rejected observation consumed its idempotency key", err)
+	}
+	events, err := s.Store.Events(ctx, 0, 100)
+	if err != nil || len(events) != 0 {
+		t.Fatal("rejected observation wrote report events", events, err)
+	}
+	// A previously valid private ledger can later become part of a checkout.
+	// Recheck its location before any additional host input or recovery note.
+	other, ctx := fixture(t)
+	t.Setenv("GIT_DIR", filepath.Join(repoRoot, ".git"))
+	t.Setenv("GIT_WORK_TREE", repoRoot)
+	t.Setenv("GIT_COMMON_DIR", filepath.Join(repoRoot, ".git"))
+	if err := other.requirePrivateReportDir(ctx); err != nil {
+		t.Fatal("ambient Git overrides changed actual private-location detection", err)
+	}
+	for _, name := range []string{"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_CEILING_DIRECTORIES"} {
+		if err := os.Unsetenv(name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	engine, _ := setupEngine(other)
+	engine.status = "needs_attention"
+	r := submit(t, other, ctx)
+	step(t, other, ctx)
+	before := get(t, other, ctx, r.ID)
+	runtimeBefore, _ := other.runtime(ctx, r.ID)
+	if output, err := exec.Command("git", "init", "--quiet", other.Dir).CombinedOutput(); err != nil {
+		t.Fatal(err, string(output))
+	}
+	addition := EvidenceInput{ID: r.ID, IdempotencyKey: "private-extra", Text: "Private host observation"}
+	if _, err := other.AddEvidence(ctx, addition); err == nil {
+		t.Fatal("additional evidence accepted inside Git")
+	}
+	if _, err := other.ResumeReport(ctx, ResumeInput{ID: r.ID, Reconciled: true, Note: "Private reconciliation details"}); err == nil {
+		t.Fatal("recovery note accepted inside Git")
+	}
+	afterRuntime, _ := other.runtime(ctx, r.ID)
+	if hash(before) != hash(get(t, other, ctx, r.ID)) || hash(runtimeBefore) != hash(afterRuntime) {
+		t.Fatal("rejected private inputs changed the ledger")
+	}
+	if err := other.Store.Get(ctx, "report-evidence-key", hash([]string{r.ID, addition.IdempotencyKey}), &key); !errors.Is(err, store.ErrNotFound) {
+		t.Fatal("rejected evidence consumed its idempotency key", err)
+	}
+}
+
 func TestSubmissionValidationConcurrentIdempotencyAndConflicts(t *testing.T) {
 	s, ctx := fixture(t)
 	for _, change := range []func(*Submission){func(o *Submission) { o.IdempotencyKey = "" }, func(o *Submission) { o.ObservedAt = time.Time{} }, func(o *Submission) { o.Surface = " " }, func(o *Submission) { o.Expected = "" }, func(o *Submission) { o.Actual = "" }, func(o *Submission) { o.ReproductionUnknown = "" }, func(o *Submission) { o.EventAfter = -1 }, func(o *Submission) { o.Steps = []string{" "} }} {
@@ -708,6 +779,231 @@ func TestLedgerPaginationSearchAndVersionFilters(t *testing.T) {
 	b, _ := json.Marshal(p)
 	if strings.Contains(string(b), "lifecycle") {
 		t.Fatal("private runtime exposed")
+	}
+}
+
+func TestPublicationCommandInterruptionRecovery(t *testing.T) {
+	if dir := os.Getenv("CODE_FACTORY_PUBLISH_INTERRUPTION_FIXTURE"); dir != "" {
+		if os.Getenv("CODE_FACTORY_PUBLISH_INTERRUPTION_PHASE") == "before-claim" {
+			os.Exit(23)
+		}
+		db, err := store.Open(filepath.Join(dir, "state.db"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer db.Close()
+		github := &fakeGitHub{onCreate: func() {
+			if err := os.WriteFile(filepath.Join(dir, "creation-effect"), []byte("one external attempt"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			os.Exit(23) // Lose the subprocess after its durable claim, before acknowledgement.
+		}}
+		publisher := &Service{Store: db, Dir: dir, GitHub: github}
+		if err := publisher.PublishReport(context.Background(), os.Getenv("CODE_FACTORY_PUBLISH_INTERRUPTION_REPORT")); err != nil {
+			t.Fatal(err)
+		}
+		t.Fatal("fixture publication did not reach its interruption")
+	}
+	for _, phase := range []string{"before-claim", "after-claim"} {
+		t.Run(phase, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			r := submit(t, s, ctx)
+			step(t, s, ctx)
+			o := observation()
+			o.IdempotencyKey = "queued-after-publication-interruption"
+			other, err := s.Submit(ctx, o)
+			if err != nil {
+				t.Fatal(err)
+			}
+			stepCtx, cancel := context.WithCancel(ctx)
+			defer cancel()
+			s.PublishCommand = func(ctx context.Context, id string) error {
+				cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestPublicationCommandInterruptionRecovery$")
+				cmd.Env = append(os.Environ(), "CODE_FACTORY_PUBLISH_INTERRUPTION_FIXTURE="+s.Dir, "CODE_FACTORY_PUBLISH_INTERRUPTION_PHASE="+phase, "CODE_FACTORY_PUBLISH_INTERRUPTION_REPORT="+id)
+				err := cmd.Run()
+				cancel() // Shutdown cancellation must still retain the recovery state.
+				return err
+			}
+			step(t, s, stepCtx)
+			current := get(t, s, ctx, r.ID)
+			rt, err := s.runtime(ctx, r.ID)
+			claimed := phase == "after-claim"
+			wantState := "blocked"
+			if claimed {
+				wantState = "needs_attention"
+			}
+			if err != nil || current.Processing != wantState || rt.CreateAttempted != claimed || claimed && rt.Intent == nil {
+				t.Fatal("subprocess interruption did not retain actionable claim state", current, rt, err)
+			}
+			engine.status = "running"
+			step(t, s, ctx)
+			if get(t, s, ctx, other.ID).Processing != "investigating" || engine.starts != 2 {
+				t.Fatal("interrupted publication starved queued investigation")
+			}
+			attempts := 1
+			if claimed {
+				attempts = 2
+			}
+			for range attempts {
+				if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if github.creates != 0 {
+				t.Fatal("resume repeated a subprocess creation")
+			}
+			if claimed {
+				github.found = &github.issue
+				if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+					t.Fatal(err)
+				}
+				if get(t, s, ctx, r.ID).Issue == nil {
+					t.Fatal("claimed subprocess issue was not reconciled")
+				}
+				if data, err := os.ReadFile(filepath.Join(s.Dir, "creation-effect")); err != nil || string(data) != "one external attempt" {
+					t.Fatal("fixture did not reach exactly one creation attempt", string(data), err)
+				}
+			}
+		})
+	}
+}
+
+func TestObsoletePublicationFailuresPreserveActiveGeneration(t *testing.T) {
+	for _, phase := range []string{"validation", "queued-evidence", "duplicate-read", "marker-read", "subprocess"} {
+		t.Run(phase, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			if phase == "duplicate-read" {
+				engine.findings.Classification = "duplicate"
+				engine.findings.DuplicateNumber = 17
+			}
+			r := submit(t, s, ctx)
+			step(t, s, ctx)
+			var newer Report
+			var newerRuntime Runtime
+			inject := func() {
+				if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "fresh-failure-race", Text: "Newer host evidence"}); err != nil {
+					t.Fatal(err)
+				}
+				engine.status = "running"
+				if phase != "queued-evidence" {
+					other := &Service{Store: s.Store, Vault: s.Vault, Dir: s.Dir, Engine: engine, GitHub: github}
+					step(t, other, ctx)
+				}
+				newer = get(t, s, ctx, r.ID)
+				newerRuntime, _ = s.runtime(ctx, r.ID)
+			}
+			failure := errors.New("obsolete remote operation failed")
+			switch phase {
+			case "validation", "queued-evidence":
+				github.onValidate, github.validateErr = inject, failure
+			case "duplicate-read":
+				github.onRead, github.errorRead = inject, failure
+			case "marker-read":
+				github.onMarker, github.markerErr = inject, failure
+			case "subprocess":
+				s.PublishCommand = func(context.Context, string) error { inject(); return failure }
+			}
+			step(t, s, ctx)
+			currentRuntime, _ := s.runtime(ctx, r.ID)
+			wantGeneration := 2
+			if phase == "queued-evidence" {
+				wantGeneration = 1
+			}
+			if newerRuntime.Generation != wantGeneration || hash(newerRuntime) != hash(currentRuntime) || hash(newer) != hash(get(t, s, ctx, r.ID)) {
+				t.Fatal("obsolete publisher failure overwrote newer generation")
+			}
+			o := observation()
+			o.IdempotencyKey = "must-remain-queued"
+			waiting, err := s.Submit(ctx, o)
+			if err != nil {
+				t.Fatal(err)
+			}
+			step(t, s, ctx)
+			if engine.starts != 2 || get(t, s, ctx, waiting.ID).Processing != "queued" || github.creates != 0 {
+				t.Fatal("obsolete failure released an active investigation slot")
+			}
+		})
+	}
+	t.Run("obsolete-success-cannot-adopt-newer-claim", func(t *testing.T) {
+		s, ctx := fixture(t)
+		engine, github := setupEngine(s)
+		r := submit(t, s, ctx)
+		step(t, s, ctx)
+		var newer Report
+		var newerRuntime Runtime
+		oldMarkerReads := 0
+		github.onValidate = func() {
+			github.onValidate = nil
+			if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "newer-claim", Text: "Fresh host observation"}); err != nil {
+				t.Fatal(err)
+			}
+			other := &Service{Store: s.Store, Vault: s.Vault, Dir: s.Dir, Engine: engine, GitHub: github}
+			step(t, other, ctx)
+			github.uncertain = true
+			if err := other.PublishReport(ctx, r.ID); err != nil {
+				t.Fatal(err)
+			}
+			newer = get(t, s, ctx, r.ID)
+			newerRuntime, _ = s.runtime(ctx, r.ID)
+			github.onMarker = func() {
+				oldMarkerReads++
+				if oldMarkerReads > 1 {
+					github.markerErr = errors.New("an obsolete publisher must not reconcile this claim")
+				}
+			}
+		}
+		step(t, s, ctx)
+		currentRuntime, _ := s.runtime(ctx, r.ID)
+		if newerRuntime.Generation != 2 || !newerRuntime.CreateAttempted || github.creates != 1 || oldMarkerReads != 1 || hash(newer) != hash(get(t, s, ctx, r.ID)) || hash(newerRuntime) != hash(currentRuntime) {
+			t.Fatal("obsolete publisher adopted a newer generation's publication claim")
+		}
+	})
+}
+
+func TestPublicationFailuresPreserveRecoveredIssueAndClaim(t *testing.T) {
+	for _, phase := range []string{"creation-rejected", "creation-uncertain", "reconcile-error", "reconcile-empty"} {
+		t.Run(phase, func(t *testing.T) {
+			s, ctx := fixture(t)
+			_, github := setupEngine(s)
+			r := submit(t, s, ctx)
+			step(t, s, ctx)
+			recoverIssue := func() {
+				rt, err := s.runtime(ctx, r.ID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				other := &Service{Store: s.Store, Dir: s.Dir}
+				if err := other.finishIssue(ctx, r.ID, github.issue, "filed", rt.AdmissionID); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if phase == "creation-rejected" {
+				github.createErr = &publicationRejected{Reason: "known rejection"}
+				github.onCreate = recoverIssue
+			} else {
+				github.uncertain = true
+				if phase == "creation-uncertain" {
+					github.onCreate = recoverIssue
+				}
+			}
+			step(t, s, ctx)
+			if strings.HasPrefix(phase, "reconcile") {
+				github.onMarker = recoverIssue
+				if phase == "reconcile-error" {
+					github.markerErr = errors.New("obsolete marker failure")
+				}
+				if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			rt, err := s.runtime(ctx, r.ID)
+			current := get(t, s, ctx, r.ID)
+			if err != nil || current.Processing != "complete" || current.Issue == nil || !rt.CreateAttempted || rt.Intent == nil || github.creates != 1 {
+				t.Fatal("late failure overwrote recovered identity or durable claim", current, rt, err)
+			}
+		})
 	}
 }
 

@@ -49,7 +49,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
   const [note, setNote] = useState("");
   const [reconciled, setReconciled] = useState(false);
   const evidenceKey = useRef(crypto.randomUUID());
-  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const detailRequest = useRef(0);
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
@@ -59,13 +59,18 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
     let active = true;
     let inFlight = false;
     let refreshPending = false;
+    let paginationPending = false;
     let pages = 1;
     async function load(more = false) {
-      if (more) pages++;
+      if (more) {
+        if (paginationPending) return;
+        paginationPending = true;
+        pages++;
+        setLoadingMore(true);
+      }
       refreshPending = true;
       if (inFlight) return;
       inFlight = true;
-      setLoading(true);
       try {
         // Journal changes queue a refresh rather than cancelling a pending page.
         while (active && refreshPending) {
@@ -88,12 +93,15 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
           }
           setPage({ items: [...items.values()], nextCursor });
           setError("");
+          paginationPending = false;
+          setLoadingMore(false);
         }
       } catch (e) {
         if (active) setError(String(e));
       } finally {
         inFlight = false;
-        if (active) setLoading(false);
+        paginationPending = false;
+        if (active) setLoadingMore(false);
       }
     }
     latestLoad.current = load;
@@ -249,7 +257,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
           ))}
           {page.nextCursor && (
             <button
-              disabled={loading}
+              disabled={loadingMore}
               onClick={() => void latestLoad.current(true)}
             >
               Load more reports

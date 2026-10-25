@@ -11,7 +11,7 @@ The owner has an authenticated private connection. Automatic investigation requi
 ## Main flow
 
 1. Submit an observation time, affected surface, expected/actual results and reproduction steps or an explicit unknown-reproduction explanation, with a stable idempotency key. Include host-only errors and responses and available relevant IDs. Separate suspected causes from facts.
-2. Retain the report immediately and collect relevant local evidence privately, with origins, capture times, hashes, explicit omissions and truncation. Credentials, authentication and unrelated work are excluded.
+2. Require a private data location outside source checkouts before retaining observations or additional evidence. Retain an accepted report immediately and collect relevant local evidence privately, with origins, capture times, hashes, explicit omissions and truncation. Credentials, authentication and unrelated work are excluded.
 3. Investigate the captured evidence and relevant source through durable local work. Classify confirmed or suspected bugs, duplicates, insufficient information or behavior explained by the contract. Verify component ownership and destination within the organization before drafting repository-native issue text.
 4. Publish the verified draft automatically, recording intent before the external effect and retaining the issue identity afterward. Reuse clear duplicates. Reporting authority does not authorize fixing code.
 5. Keep the shared ledger current with independent processing, outcome, GitHub state, fix references, component versions, published stable/prerelease versions and observed installed versions. Unknown evidence stays Unknown.
@@ -25,15 +25,17 @@ An investigation that finishes with unusable findings retains an actionable repo
 
 An uncertain issue publication retains its reconciliation requirements without holding investigation capacity after its investigation has finalized. Other reports can investigate while that issue identity is recovered; the uncertain creation is never repeated.
 
+An interrupted publication command retains an actionable recovery state and allows other queued investigations to progress. Recovery distinguishes an unclaimed creation from a claimed or uncertain external effect. A delayed publication failure from an earlier investigation cannot change a newer investigation's state or release its capacity.
+
 Additional evidence accepted before an investigation result settles is considered before the report completes or an unclaimed issue creation begins. Work already using an immutable observation finishes and finalizes before a fresh investigation incorporates missed evidence. Evidence accepted after issue creation has been claimed remains retained while that effect settles or is reconciled once.
 
 Issue closure does not prove a fix; a verified closing commit or merged fix can establish its identity independently of release availability. Published package provenance and fix ancestry must agree before availability is shown. Verified component versions enrich the linked fix. Dependencies retain their own versions, using their checked package evidence and independently verified closing-fix ancestry; attribution to a Code Factory release requires an explicit provenance relationship. Source-only releases without checked package evidence stay Unknown. Issue state refreshes at startup and every five minutes; releases refresh every fifteen minutes. Manual refresh starts no agent. Failed release reads preserve discovered fixes and earlier verified availability, with errors, retry times and freshness. A credential's rate-limit deadline applies across reporting operations and reports, including reopened processes; skipped reads do not claim fresh results.
 
-Journal updates refresh the loaded report range, including a pending request for more reports. Changing query filters resets pagination. Detail reads continue to make progress while journal events arrive; pending refreshes coalesce. Older detail responses cannot replace newer selected-report findings, processing or recovery controls, and a previous selection's completed request cannot suppress the current selection's details. Opening a report's GitHub link sends that report's exact issue destination to the host.
+Journal updates refresh the loaded report range, including a pending request for more reports. Additional pages remain available during continuing background refreshes. Changing query filters resets pagination. Detail reads continue to make progress while journal events arrive; pending refreshes coalesce. Older detail responses cannot replace newer selected-report findings, processing or recovery controls, and a previous selection's completed request cannot suppress the current selection's details. Opening a report's GitHub link sends that report's exact issue destination to the host.
 
 ## Scenarios
 
-- **S1** Complete submissions persist; incomplete/conflicting requests fail and concurrent retries return one report. Reporting ships in portable, Codex and browser packages.
+- **S1** Complete submissions in a private location outside source checkouts persist; incomplete/conflicting requests and unsafe evidence locations fail before private input is retained, and concurrent retries return one report. Reporting ships in portable, Codex and browser packages.
 - **S2** Relevant local context is captured with redaction and a private manifest; additional host observations are idempotent and resume requests for information.
 - **S3** Durable investigation verifies ownership, reuses duplicates and files only a verified repository-native draft within the organization.
 - **S4** Missing prerequisites, interrupted controllers, deadlines and uncertain effects remain recoverable without replaying issue creation.
@@ -50,13 +52,14 @@ UI entities: [PAGE-REPORTS](../ui/README.md#PAGE-REPORTS), [P-REPORT-LIST](../ui
 
 ```mermaid
 flowchart TD
-    N0["Persist idempotent observation #40;S1#41;"]
+    N0["Validate private location and retain idempotent observation #40;S1#41;"]
     N1["Capture private scoped evidence and explicit omissions #40;S2#41;"]
     N2["Investigate and verify ownership or duplicate #40;S3#41;"]
     N3["Retain missing prerequisites or interrupted effects for recovery #40;S4#41;"]
     N4["Track issue, fix and verified release independently #40;S5#41;"]
     N5["Search reports and inspect details #40;S6#41;"]
     N6(["Retained report remains available"])
+    N7(["Reject unsafe private evidence location before retention #40;S1#41;"])
     N0 --> N1
     N1 --> N2
     N1 -->|"prerequisite unavailable"| N3
@@ -68,6 +71,7 @@ flowchart TD
     N5 --> N6
     N3 -->|"retain blocked report"| N6
     N2 -->|"Additional evidence needs investigation before settlement"| N2
+    N0 -->|"Unsafe private data location"| N7
 ```
 
 ## Implementation references
@@ -102,7 +106,7 @@ flowchart TD
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestLedgerPaginationSearchAndVersionFilters(`; S6. Assertions inspect the corresponding retained state, boundary effects or visible report behavior.
 - [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestRepositoryRoutingLabelsDuplicateAndPublicationBoundary(`; S3. Assertions inspect the corresponding retained state, boundary effects or visible report behavior.
 - [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestTrackingRequiresPublishedMatchingProvenance(`; S5. Verified direct closing commits and merged fixes stay independent of release reads; reject foreign or unverified commits, preserve partial discoveries, and enrich fix versions while retaining PR association only with matching published provenance.
-- [internal/reports/engine_test.go](../../internal/reports/engine_test.go) — `func TestNativeWorkflowEngineWithFakeProviderAndLifecycle(`; S3, S4. Real controller and fake provider verify large observations and accumulated evidence through a private immutable prompt file, idempotent admission, explicit uncertain lifecycle recovery, controller restart and deadlines.
+- [internal/reports/engine_test.go](../../internal/reports/engine_test.go) — `func TestNativeWorkflowEngineWithFakeProviderAndLifecycle(`; S3, S4. Real controller and fake provider verify large observations and accumulated evidence through a private immutable prompt file, idempotent admission, explicit uncertain lifecycle recovery, controller restart and deadlines. The deadline subtest independently observes its exact fake provider start, requires the retained timeout classification, and verifies provider termination before teardown; launch failure cannot satisfy the oracle.
 - [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S1, S2, S6. Assertions inspect the corresponding retained state, boundary effects or visible report behavior.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues shares ledger search, information requests and evidence recovery"`; S2, S6. Assertions inspect the corresponding retained state, boundary effects or visible report behavior.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues displays independent closure, prerelease delivery and explicit workflow recovery"`; S4, S5, S6. Rendered independent delivery/recovery controls send the selected report exact GitHub URL through the host open-link boundary.
@@ -128,6 +132,11 @@ flowchart TD
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestEvidenceAfterWorkerCompletionRequiresFreshGeneration(`; S2, S3, S4. Evidence accepted after worker completion is captured exactly once by a fresh generation after lifecycle finalization, before stale suspected/information/explained findings settle.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestEvidencePublicationClaimBoundary(`; S2, S3, S4. Atomic evidence/admission checks reject stale unclaimed drafts during validation/marker races and preserve known issue identity; durable or uncertain create claims settle once without replay.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues makes detail progress while journal updates continue"`; S4, S6. Per-read delays span ongoing confirmed journal updates while selected findings and recovery controls become visible and remain current before the queued refresh.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues allows pagination during continuing slow journal refreshes"`; S6. Slow list reads span confirmed continuing journal polls while Load more remains usable; duplicate clicks admit one additional page and exactly the expected 60 unique rows appear before another background refresh.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestPrivateInputsAreRejectedBeforeCheckoutPersistence(`; S1, S2, S4. Private observations, idempotency keys and events are absent after unsafe-location rejection; additions and recovery notes cannot modify a retained ledger after its directory becomes a checkout.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestPublicationCommandInterruptionRecovery(`; S3, S4. Real child-process interruption before and after durable creation claims persists actionable recovery despite cancellation, lets queued investigation proceed and reconciles a claimed effect once without replay.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestObsoletePublicationFailuresPreserveActiveGeneration(`; S2, S3, S4. Delayed validation, duplicate, marker and subprocess failures preserve the exact newer report/runtime or fresh-evidence queue and keep the active investigator capacity.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestPublicationFailuresPreserveRecoveredIssueAndClaim(`; S3, S4. Recovered issue identities and claim state survive late rejection, uncertain creation and reconciliation failure/empty-result paths.
 
 ## Verification and gaps
 

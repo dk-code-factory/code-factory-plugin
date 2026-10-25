@@ -60,6 +60,9 @@ func (s *Service) Get(ctx context.Context, id string) (Report, error) {
 }
 func validText(v string) bool { return strings.TrimSpace(v) != "" }
 func (s *Service) Submit(ctx context.Context, in Submission) (Report, error) {
+	if err := s.requirePrivateReportDir(ctx); err != nil {
+		return Report{}, err
+	}
 	if !validText(in.IdempotencyKey) || len(in.IdempotencyKey) > 200 || in.ObservedAt.IsZero() || !validText(in.Surface) || !validText(in.Expected) || !validText(in.Actual) {
 		return Report{}, fmt.Errorf("idempotencyKey, observedAt, surface, expected and actual are required")
 	}
@@ -208,6 +211,9 @@ func (s *Service) List(ctx context.Context, in ListInput) (Page, error) {
 	return p, nil
 }
 func (s *Service) AddEvidence(ctx context.Context, in EvidenceInput) (Report, error) {
+	if err := s.requirePrivateReportDir(ctx); err != nil {
+		return Report{}, err
+	}
 	if !validText(in.Text) || !validText(in.IdempotencyKey) || len(in.Text) > 128<<10 {
 		return Report{}, fmt.Errorf("nonempty text and idempotencyKey required; evidence limit 128 KiB")
 	}
@@ -250,6 +256,9 @@ func (s *Service) AddEvidence(ctx context.Context, in EvidenceInput) (Report, er
 	return out, e
 }
 func (s *Service) ResumeReport(ctx context.Context, in ResumeInput) (Report, error) {
+	if err := s.requirePrivateReportDir(ctx); err != nil {
+		return Report{}, err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	r, e := s.Get(ctx, in.ID)
@@ -418,7 +427,23 @@ func (s *Service) Step(ctx context.Context) error {
 	}
 	if r.Processing == "filing" {
 		if s.PublishCommand != nil {
-			return s.PublishCommand(ctx, r.ID)
+			if err := s.PublishCommand(ctx, r.ID); err != nil {
+				recoveryCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+				defer cancel()
+				current, e := s.runtime(recoveryCtx, r.ID)
+				if e != nil {
+					return e
+				}
+				if current.AdmissionID != rt.AdmissionID {
+					return nil
+				}
+				status := "blocked"
+				if current.CreateAttempted {
+					status = "needs_attention"
+				}
+				return s.publicationState(recoveryCtx, r.ID, current, status, "Publication command interrupted; resume to retry or reconcile any claimed issue creation", false)
+			}
+			return nil
 		}
 		return s.publish(ctx, r, rt)
 	}
@@ -595,6 +620,38 @@ func (s *Service) Step(ctx context.Context) error {
 	}
 }
 func marker(id string) string { return "<!-- code-factory-report:" + id + " -->" }
+
+// A publication failure owns only its retained generation and claim phase.
+// Another process may have admitted fresh evidence or recovered the issue while
+// this process was waiting for GitHub; neither result may be overwritten.
+func (s *Service) publicationState(ctx context.Context, id string, expected Runtime, status, message string, rejected bool) error {
+	return s.Store.Write(ctx, func(t *store.Tx) error {
+		var r Report
+		var rt Runtime
+		if err := t.Get("issue-report", id, &r); err != nil {
+			return err
+		}
+		if err := t.Get("report-runtime", id, &rt); err != nil {
+			return err
+		}
+		if rt.AdmissionID != expected.AdmissionID || rt.CreateAttempted != expected.CreateAttempted || r.Issue != nil || (r.Processing != "filing" && r.Processing != "needs_attention") {
+			return nil
+		}
+		if !rt.CreateAttempted && len(r.Additions) > rt.AdditionCount {
+			return nil
+		}
+		if rejected {
+			rt.CreateAttempted = false
+			if err := t.Put("report-runtime", id, rt); err != nil {
+				return err
+			}
+		}
+		transition(&r, status, message)
+		r.Updated = time.Now().UTC()
+		return save(t, r)
+	})
+}
+
 func (s *Service) reconcilePublication(ctx context.Context, r *Report, rt Runtime) error {
 	current, err := s.Get(ctx, r.ID)
 	if err != nil {
@@ -604,20 +661,14 @@ func (s *Service) reconcilePublication(ctx context.Context, r *Report, rt Runtim
 		return nil
 	}
 	if s.GitHub == nil || rt.Intent == nil {
-		return s.state(ctx, r.ID, "needs_attention", "Publication intent unavailable; inspect private ledger")
+		return s.publicationState(ctx, r.ID, rt, "needs_attention", "Publication intent unavailable; inspect private ledger", false)
 	}
 	found, e := s.GitHub.FindMarker(ctx, rt.Intent.Repository, marker(r.ID))
 	if e != nil {
-		return s.state(ctx, r.ID, "needs_attention", "Cannot reconcile GitHub creation; retry reconciliation after connectivity recovers")
+		return s.publicationState(ctx, r.ID, rt, "needs_attention", "Cannot reconcile GitHub creation; retry reconciliation after connectivity recovers", false)
 	}
 	if found == nil {
-		_, err := s.update(ctx, r.ID, func(current *Report) error {
-			if current.Issue == nil {
-				transition(current, "needs_attention", "GitHub creation remains uncertain; no retry is allowed until the issue identity is recovered")
-			}
-			return nil
-		})
-		return err
+		return s.publicationState(ctx, r.ID, rt, "needs_attention", "GitHub creation remains uncertain; no retry is allowed until the issue identity is recovered", false)
 	}
 	return s.finishIssue(ctx, r.ID, *found, "filed", rt.AdmissionID)
 }
@@ -653,33 +704,33 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 		return s.finishIssue(ctx, r.ID, *r.Issue, r.Outcome, rt.AdmissionID)
 	}
 	if s.GitHub == nil || r.Findings == nil {
-		return s.state(ctx, r.ID, "blocked", "GitHub adapter or investigation findings unavailable")
+		return s.publicationState(ctx, r.ID, rt, "blocked", "GitHub adapter or investigation findings unavailable", false)
 	}
 	f := *r.Findings
 	if e := s.sanitize(ctx, &f); e != nil {
 		return e
 	}
 	if e := s.GitHub.Validate(ctx, f); e != nil {
-		return s.state(ctx, r.ID, "blocked", e.Error())
+		return s.publicationState(ctx, r.ID, rt, "blocked", e.Error(), false)
 	}
 	if f.Classification == "duplicate" {
 		if f.DuplicateNumber < 1 {
-			return s.state(ctx, r.ID, "blocked", "Duplicate investigation must identify the existing issue")
+			return s.publicationState(ctx, r.ID, rt, "blocked", "Duplicate investigation must identify the existing issue", false)
 		}
 		i, e := s.GitHub.ReadIssue(ctx, f.Repository, f.DuplicateNumber)
 		if e != nil {
-			return s.state(ctx, r.ID, "blocked", e.Error())
+			return s.publicationState(ctx, r.ID, rt, "blocked", e.Error(), false)
 		}
 		return s.finishIssue(ctx, r.ID, i, "duplicate", rt.AdmissionID)
 	}
 	// Similar titles alone do not establish a duplicate. Reuse requires the
 	// investigator's explicit duplicate disposition and verified issue identity.
 	if !validText(f.Title) || !validText(f.Body) || len(f.Title) > 256 || len(f.Body) > 60000 {
-		return s.state(ctx, r.ID, "blocked", "Repository-native verified title and body required")
+		return s.publicationState(ctx, r.ID, rt, "blocked", "Repository-native verified title and body required", false)
 	}
 	existing, e := s.GitHub.FindMarker(ctx, f.Repository, marker(r.ID))
 	if e != nil {
-		return s.state(ctx, r.ID, "blocked", e.Error())
+		return s.publicationState(ctx, r.ID, rt, "blocked", e.Error(), false)
 	}
 	if existing != nil {
 		return s.finishIssue(ctx, r.ID, *existing, "filed", rt.AdmissionID)
@@ -695,11 +746,11 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 		if e := t.Get("report-runtime", r.ID, &rt); e != nil {
 			return e
 		}
-		if rt.CreateAttempted {
-			return nil
-		}
 		if rt.AdmissionID != admissionID {
 			stale = true
+			return nil
+		}
+		if rt.CreateAttempted {
 			return nil
 		}
 		var current Report
@@ -736,13 +787,9 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 	if e != nil {
 		var rejected *publicationRejected
 		if errors.As(e, &rejected) {
-			rt.CreateAttempted = false
-			if err := s.putRuntime(ctx, r.ID, rt); err != nil {
-				return err
-			}
-			return s.state(ctx, r.ID, "blocked", rejected.Error())
+			return s.publicationState(ctx, r.ID, rt, "blocked", rejected.Error(), true)
 		}
-		return s.state(ctx, r.ID, "needs_attention", "GitHub creation result uncertain; reconcile before resuming")
+		return s.publicationState(ctx, r.ID, rt, "needs_attention", "GitHub creation result uncertain; reconcile before resuming", false)
 	}
 	return s.finishIssue(ctx, r.ID, issue, "filed", rt.AdmissionID)
 }

@@ -7111,7 +7111,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Real controller and fake provider verify large observations and accumulated evidence through a private immutable prompt file, idempotent admission, explicit uncertain lifecycle recovery, controller restart and deadlines."
+          "purpose": "Real controller and fake provider verify large observations and accumulated evidence through a private immutable prompt file, idempotent admission, explicit uncertain lifecycle recovery, controller restart and deadlines. The deadline subtest independently observes its exact fake provider start, requires the retained timeout classification, and verifies provider termination before teardown; launch failure cannot satisfy the oracle."
         },
         {
           "path": "internal/transport/mcp_test.go",
@@ -7328,6 +7328,52 @@
             "S6"
           ],
           "purpose": "Per-read delays span ongoing confirmed journal updates while selected findings and recovery controls become visible and remain current before the queued refresh."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues allows pagination during continuing slow journal refreshes\"",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Slow list reads span confirmed continuing journal polls while Load more remains usable; duplicate clicks admit one additional page and exactly the expected 60 unique rows appear before another background refresh."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPrivateInputsAreRejectedBeforeCheckoutPersistence(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S4"
+          ],
+          "purpose": "Private observations, idempotency keys and events are absent after unsafe-location rejection; additions and recovery notes cannot modify a retained ledger after its directory becomes a checkout."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPublicationCommandInterruptionRecovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real child-process interruption before and after durable creation claims persists actionable recovery despite cancellation, lets queued investigation proceed and reconciles a claimed effect once without replay."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestObsoletePublicationFailuresPreserveActiveGeneration(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Delayed validation, duplicate, marker and subprocess failures preserve the exact newer report/runtime or fresh-evidence queue and keep the active investigator capacity."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPublicationFailuresPreserveRecoveredIssueAndClaim(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Recovered issue identities and claim state survive late rejection, uncertain creation and reconciliation failure/empty-result paths."
         }
       ],
       "suites": [
@@ -7379,7 +7425,7 @@
         "nodes": [
           {
             "id": "submit",
-            "label": "Persist idempotent observation",
+            "label": "Validate private location and retain idempotent observation",
             "scenario": "S1"
           },
           {
@@ -7410,6 +7456,12 @@
           {
             "id": "done",
             "label": "Retained report remains available",
+            "terminal": true
+          },
+          {
+            "id": "reject",
+            "label": "Reject unsafe private evidence location before retention",
+            "scenario": "S1",
             "terminal": true
           }
         ],
@@ -7464,6 +7516,11 @@
             "from": "investigate",
             "to": "investigate",
             "label": "Additional evidence needs investigation before settlement"
+          },
+          {
+            "from": "submit",
+            "to": "reject",
+            "label": "Unsafe private data location"
           }
         ]
       }

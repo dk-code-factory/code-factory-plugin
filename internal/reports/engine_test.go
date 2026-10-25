@@ -3,10 +3,12 @@ package reports
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -40,6 +42,12 @@ receipt = json.loads(os.environ['DK_UPDATE_MANAGED_RECEIPT'])
 assert receipt['identity']['name'] == 'dk-workflows'
 assert os.environ['DK_UPDATE_PARENT'] == receipt['token']
 with open(os.path.join(os.path.dirname(__file__), 'provider-calls'), 'a') as file: file.write(receipt['token']+'\n')
+if Path('deadline-provider').exists():
+ started = Path('deadline-provider-started.json')
+ temporary = started.with_suffix('.tmp')
+ temporary.write_text(json.dumps({'pid': os.getpid(), 'token': receipt['token']}))
+ temporary.replace(started)
+ time.sleep(20)
 if os.path.exists(os.path.join(os.path.dirname(__file__), 'slow')): time.sleep(20)
 text = ` + string(mustJSON(string(raw))) + `
 print(json.dumps({'type':'thread.started','thread_id':'fixture-thread'}))
@@ -270,30 +278,64 @@ else:
 		}
 	})
 	t.Run("engine deadline stops fake provider", func(t *testing.T) {
+		deadlineCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
 		rt := Runtime{Generation: 3, AdmissionID: r.ID + "-3"}
-		if e := n.Prepare(ctx, r, &rt); e != nil {
+		if e := n.Prepare(deadlineCtx, r, &rt); e != nil {
 			t.Fatal(e)
 		}
-		defer n.Complete(context.Background(), rt)
-		defer command(context.Background(), rt.Workspace, nil, binary, "stop", "--workspace", rt.Workspace)
+		t.Cleanup(func() {
+			cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := n.Complete(cleanupCtx, rt); err != nil {
+				t.Error("deadline fixture cleanup", err)
+			}
+		})
 		config := filepath.Join(rt.Workspace, "agents.yml")
 		b, e := os.ReadFile(config)
 		if e != nil {
 			t.Fatal(e)
 		}
-		if e = privateWrite(config, []byte(strings.Replace(string(b), "run-timeout: 30m", "run-timeout: 250ms", 1))); e != nil {
+		if e = privateWrite(config, []byte(strings.Replace(string(b), "run-timeout: 30m", "run-timeout: 2s", 1))); e != nil {
 			t.Fatal(e)
 		}
-		if e = os.WriteFile(filepath.Join(dir, "slow"), []byte("slow fixture"), 0600); e != nil {
+		if e = os.WriteFile(filepath.Join(rt.Workspace, "deadline-provider"), []byte("slow fixture"), 0600); e != nil {
 			t.Fatal(e)
 		}
-		state, e := n.Start(ctx, rt)
+		state, e := n.Start(deadlineCtx, rt)
 		if e != nil {
 			t.Fatal(e)
 		}
+		var started struct {
+			PID   int    `json:"pid"`
+			Token string `json:"token"`
+		}
+		startDeadline := time.Now().Add(5 * time.Second)
+		for time.Now().Before(startDeadline) {
+			b, e = os.ReadFile(filepath.Join(rt.Workspace, "deadline-provider-started.json"))
+			if e == nil {
+				break
+			}
+			if !os.IsNotExist(e) {
+				t.Fatal(e)
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+		if e != nil || json.Unmarshal(b, &started) != nil || started.PID < 1 || started.Token != rt.Token {
+			t.Fatalf("deadline admission never started its fake provider: receipt=%s error=%v", b, e)
+		}
+		providerProcess, err := os.FindProcess(started.PID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = providerProcess.Kill(); _ = providerProcess.Release() })
+		if err := providerProcess.Signal(syscall.Signal(0)); err != nil {
+			t.Fatal("deadline fake provider was not observed alive", err)
+		}
+		t.Log("observed this admission's fake provider alive before the deadline")
 		deadline := time.Now().Add(10 * time.Second)
 		for time.Now().Before(deadline) {
-			state, e = n.Status(ctx, rt, state.ID)
+			state, e = n.Status(deadlineCtx, rt, state.ID)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -302,9 +344,33 @@ else:
 			}
 			time.Sleep(30 * time.Millisecond)
 		}
-		if state.Status == "succeeded" || state.Status == "running" || state.Status == "queued" {
-			t.Fatal("deadline not enforced", state)
+		b, e = command(deadlineCtx, rt.Workspace, nil, binary, "status", "--workspace", rt.Workspace, state.ID)
+		var terminal struct {
+			Status       string `json:"status"`
+			FailureClass string `json:"failure_class"`
+			Error        string `json:"error"`
 		}
+		if e != nil || json.Unmarshal(b, &terminal) != nil || terminal.Status != "canceled" || terminal.FailureClass != "timeout" || !strings.Contains(terminal.Error, "context deadline exceeded") {
+			t.Fatalf("active provider did not reach its execution deadline: state=%s error=%v", b, e)
+		}
+		t.Log("controller retained canceled status with timeout failure and context deadline exceeded")
+		// Check before cleanup stops the controller; teardown must not supply the
+		// termination that the real execution deadline is supposed to guarantee.
+		stopDeadline := time.Now().Add(3 * time.Second)
+		for time.Now().Before(stopDeadline) {
+			err = providerProcess.Signal(syscall.Signal(0))
+			if errors.Is(err, os.ErrProcessDone) || errors.Is(err, syscall.ESRCH) {
+				break
+			}
+			if err != nil {
+				t.Fatal("inspect deadline provider termination", err)
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+		if err == nil {
+			t.Fatal("deadline left the started fake provider alive", started.PID)
+		}
+		t.Log("fake provider exited before controller and lifecycle teardown")
 	})
 	t.Run("automatic dependency upgrades block without changing owner settings", func(t *testing.T) {
 		file := filepath.Join(dir, "config/dk-code-factory/updates.json")
