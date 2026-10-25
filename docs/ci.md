@@ -1,7 +1,8 @@
 # GitHub Actions checks and releases
 
 [CI](https://github.com/dk-code-factory/code-factory-plugin/actions/workflows/ci.yml)
-runs on branch pushes, pull requests to main and manual dispatch. Hosted Ubuntu
+runs on pushes to main, pull requests to main and manual dispatch. Feature
+branches require an open pull request for automatic verification. Hosted Ubuntu
 installs Go from go.mod, Node24, Python3.12, locked npm/Python dependencies and the
 matching Playwright Chromium. All actions are pinned to full commit SHAs.
 
@@ -12,9 +13,11 @@ Successful builds upload Linux x86-64 and portable plugin packages, SHA256SUMS a
 a CI manifest bound to the exact source commit. Failed browser evidence is kept
 separately. Verification has read-only repository permissions.
 
-Pushes compare their exact before/after commits; PRs compare their event base/head
-SHAs. A new branch compares its merge base with main. Manual checks use the current
-parent. Missing or mismatched commits fail; there is no guessed-ref fallback.
+Main pushes compare their exact before/after commits; PRs compare their event
+base/head SHAs. Manual checks use the current parent. Missing or mismatched
+commits fail; there is no guessed-ref fallback.
+Manual checks can fail when their parent comparison differs from the recorded
+reconciliation base.
 
 ## Public source import
 
