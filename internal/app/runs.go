@@ -20,22 +20,23 @@ import (
 )
 
 type Manager struct {
-	adminGate      sync.RWMutex
-	providerMu     sync.RWMutex
-	dependencyHTTP *http.Client
-	app            *App
-	ctx            context.Context
-	Binary         string
-	ProviderBin    string
-	ProviderPaths  map[string]string
-	mu             sync.Mutex
-	answerMu       sync.Mutex
-	deliveryMu     sync.Mutex
-	messageWorkers map[string]bool
-	live           map[string]*session
-	wg             sync.WaitGroup
-	closing        bool
-	cancel         context.CancelFunc
+	adminGate        sync.RWMutex
+	providerMu       sync.RWMutex
+	dependencyHTTP   *http.Client
+	app              *App
+	ctx              context.Context
+	Binary           string
+	ProviderBin      string
+	ProviderPaths    map[string]string
+	mu               sync.Mutex
+	answerMu         sync.Mutex
+	deliveryMu       sync.Mutex
+	messageWorkers   map[string]bool
+	attentionWorkers map[string]bool
+	live             map[string]*session
+	wg               sync.WaitGroup
+	closing          bool
+	cancel           context.CancelFunc
 }
 type session struct {
 	mu                sync.Mutex
@@ -182,6 +183,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 	for _, d := range queuedMessages {
 		m.background(func() { m.deliverMessage(d) })
 	}
+	for _, r := range runs {
+		m.queueAttentionReconciliation(r.ID)
+	}
 	return nil
 }
 func (m *Manager) Close() {
@@ -288,6 +292,14 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	if review && !reviewProfileReady(p) {
 		return domain.Run{}, fmt.Errorf("PR review pipeline %q needs read-only/ask authority or explicit full-access/never/authorized authority; configure it in open_settings", p.ID)
 	}
+	prReview := item.Kind == "pr" && (review || p.ID == reviewProfileID(config, repo) || p.ID == "review")
+	if prReview {
+		if err := validatePRReviewAuthor(func(kind, id string, out any) error {
+			return m.app.Store.Get(ctx, kind, id, out)
+		}, item); err != nil {
+			return domain.Run{}, err
+		}
+	}
 	if in.Model != "" {
 		p.Model = in.Model
 	}
@@ -303,7 +315,7 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	if prompt == "" {
 		prompt = strings.NewReplacer("{{title}}", item.Title, "{{body}}", item.Body, "{{url}}", item.URL).Replace(p.Prompt)
 	}
-	if item.Kind == "pr" && (p.ID == reviewProfileID(config, repo) || p.ID == "review") {
+	if prReview {
 		prompt += "\nReview target: " + item.URL + "\nPinned PR head: " + item.Head + "\nCompare this head with the pull request's target branch; report evidence-backed findings."
 		if strings.TrimSpace(repo.ReviewPrompt) != "" {
 			extra := "\nRepository review instructions:\n" + repo.ReviewPrompt
@@ -320,7 +332,7 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	if p.Sandbox == "read-only" || p.Sandbox == "workspace-write" {
 		prompt += "\nSandbox: " + p.Sandbox + " project access; private writable scratch via TMPDIR; GitHub and Codex service domains through an enforced network proxy. Other destinations and unrelated files are blocked. Save review artifacts and temporary checkouts under TMPDIR. Private skill indexes are isolated per run; shared owner settings are not writable."
 	}
-	r := domain.Run{ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
+	r := domain.Run{PRReview: prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
 	r.Branch = "code-factory/" + r.ID
 	r.Worktree = filepath.Join(m.app.DataDir, "worktrees", r.ID)
 	r.Base = in.Base
@@ -389,6 +401,13 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 	err := m.app.Store.Write(ctx, func(t *store.Tx) error {
 		if e := t.Get("run", id, &r); e != nil {
 			return e
+		}
+		var item domain.Item
+		if err := t.Get("item", r.ItemID, &item); err != nil {
+			return err
+		}
+		if err := validatePRReviewRun(t.Get, r, item); err != nil {
+			return err
 		}
 		if r.AutomaticReview && !resume {
 			if err := validateAutomaticStart(t, r); err != nil {
@@ -737,7 +756,11 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 	var after func()
 	var refreshReviewsFor string
 	defer func() {
+		runID := s.run.ID
 		s.mu.Unlock()
+		if msg.Method == "turn/completed" {
+			m.queueAttentionReconciliation(runID)
+		}
 		if after != nil {
 			m.background(after)
 		}

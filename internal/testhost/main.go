@@ -45,7 +45,8 @@ func run() error {
 	if e != nil {
 		return e
 	}
-	a := &app.App{Store: s, Vault: v, DataDir: dir, GitHub: providers.NewGitHub()}
+	github := providers.NewGitHub()
+	a := &app.App{Store: s, Vault: v, DataDir: dir, GitHub: providers.NewCachedGitHub(github)}
 	binary, e := filepath.Abs("bin/fake-codex")
 	if e != nil {
 		return e
@@ -83,8 +84,8 @@ func run() error {
 		}
 	}))
 	defer provider.Close()
-	a.GitHub.BaseURL = provider.URL
-	a.GitHub.Token = func(context.Context) (string, error) { return "provider-fixture", nil }
+	github.BaseURL = provider.URL
+	github.Token = func(context.Context) (string, error) { return "provider-fixture", nil }
 	if e = a.Sync(ctx); e != nil {
 		return e
 	}

@@ -109,7 +109,7 @@ func main() {
 			}
 		case "turn/start":
 			turnNumber++
-			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || mode == "async-question" {
+			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || strings.HasPrefix(mode, "async-question") {
 				turnID = fmt.Sprintf("turn-%d", turnNumber)
 			}
 			var inputs []struct{ Text string }
@@ -117,6 +117,47 @@ func main() {
 			inputText := ""
 			for _, in := range inputs {
 				inputText += in.Text
+			}
+			if strings.Contains(string(m.Params["outputSchema"]), "decisions") {
+				reply(map[string]any{"turn": map[string]string{"id": turnID}})
+				text := os.Getenv("CF_FAKE_ATTENTION_DECISIONS")
+				if text == "" {
+					var data struct {
+						Evidence []struct {
+							Seq        int64
+							Role, Text string
+						}
+					}
+					if i := strings.Index(inputText, "\n{"); i >= 0 {
+						_ = json.Unmarshal([]byte(inputText[i+1:]), &data)
+					}
+					decisions := []map[string]any{}
+					for _, user := range data.Evidence {
+						if user.Role != "user" {
+							continue
+						}
+						for _, agent := range data.Evidence {
+							if agent.Role != "agent" || agent.Seq <= user.Seq {
+								continue
+							}
+							ids := []string{}
+							if strings.Contains(user.Text, "Q1: use stable IDs") && agent.Text == "Q1 accepted. Q2 remains open." {
+								ids = []string{"q1"}
+							}
+							if strings.Contains(user.Text, "Q1: stable IDs; Q2: include PREPARE") && agent.Text == "Both decisions accepted. Review published." {
+								ids = []string{"q1", "q2"}
+							}
+							for _, id := range ids {
+								decisions = append(decisions, map[string]any{"questionId": id, "status": "resolved", "userEvent": user.Seq, "agentEvent": agent.Seq, "userQuote": user.Text, "agentQuote": agent.Text})
+							}
+						}
+					}
+					b, _ := json.Marshal(map[string]any{"decisions": decisions})
+					text = string(b)
+				}
+				notify("item/completed", map[string]any{"item": map[string]string{"id": "attention-helper", "type": "agentMessage", "text": text}})
+				complete("completed")
+				continue
 			}
 			if strings.Contains(string(m.Params["outputSchema"]), "needsInput") {
 				reply(map[string]any{"turn": map[string]string{"id": turnID}})
@@ -126,12 +167,16 @@ func main() {
 				complete("completed")
 				continue
 			}
-			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || mode == "async-question" {
+			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || strings.HasPrefix(mode, "async-question") {
 				notify("turn/started", map[string]any{"turn": map[string]string{"id": turnID}})
 				reply(map[string]any{"turn": map[string]string{"id": turnID}})
 				notify("item/completed", map[string]any{"turnId": turnID, "item": map[string]any{"id": "input-" + turnID, "type": "userMessage", "content": []any{map[string]string{"type": "text", "text": inputText}}}})
-				if mode == "async-question" && turnNumber == 1 {
-					notify("item/completed", map[string]any{"turnId": turnID, "item": map[string]any{"id": "async-1", "type": "agentMessage", "delivery": "async", "text": "Which target?", "questions": []any{map[string]any{"title": "Which target?", "options": []string{"One", "Two"}}}}})
+				if strings.HasPrefix(mode, "async-question") && turnNumber == 1 {
+					questions := []any{map[string]any{"title": "Which target?", "options": []string{"One", "Two"}}}
+					if mode == "async-question-multi" {
+						questions = []any{map[string]any{"title": "Which ID contract?"}, map[string]any{"title": "Which PREPARE scope?"}}
+					}
+					notify("item/completed", map[string]any{"turnId": turnID, "item": map[string]any{"id": "async-1", "type": "agentMessage", "delivery": "async", "text": "Which target?", "questions": questions}})
 					complete("completed")
 					continue
 				}
@@ -143,6 +188,14 @@ func main() {
 					}
 				}
 				text := "Task complete"
+				if mode == "async-question-multi" {
+					if strings.Contains(inputText, "Q1: use stable IDs") {
+						text = "Q1 accepted. Q2 remains open."
+					}
+					if strings.Contains(inputText, "Q1: stable IDs; Q2: include PREPARE") {
+						text = "Both decisions accepted. Review published."
+					}
+				}
 				if turnNumber == 1 || strings.Contains(inputText, "question-only recovery") {
 					text = "Which target should I use?"
 				}
@@ -163,6 +216,14 @@ func main() {
 			notify("item/agentMessage/delta", map[string]string{"threadId": "thread-1", "turnId": "turn-1", "delta": "Inspecting repository"})
 			if mode == "complete" || mode == "inference" {
 				text := "Task complete"
+				if mode == "async-question-multi" {
+					if strings.Contains(inputText, "Q1: use stable IDs") {
+						text = "Q1 accepted. Q2 remains open."
+					}
+					if strings.Contains(inputText, "Q1: stable IDs; Q2: include PREPARE") {
+						text = "Both decisions accepted. Review published."
+					}
+				}
 				if mode == "inference" {
 					text = `{"priority":1,"rationale":"Critical regression","confidence":0.9}`
 				}

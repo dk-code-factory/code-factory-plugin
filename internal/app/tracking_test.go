@@ -90,6 +90,13 @@ func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(t *test
 	if _, err := a.Runs.PreparePRReview(ctx, "repo#1"); err == nil {
 		t.Fatal("ambiguous target prepared work")
 	}
+	i.Author = "other"
+	if err := a.Store.Put(ctx, "item", i.ID, i, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Store.Put(ctx, "identity", "github", domain.GitHubViewer{Login: "me"}, ""); err != nil {
+		t.Fatal(err)
+	}
 	r, err := a.Runs.PreparePRReview(ctx, i.URL)
 	if err != nil || r.ItemID != i.ID || r.Status != "prepared" {
 		t.Fatal(r, err)

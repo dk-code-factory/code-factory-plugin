@@ -82,6 +82,34 @@ The CLI also supplies `install`, `configure-tunnel --id tunnel_…`, `onboarding
 
 State lives under `$XDG_DATA_HOME/code-factory` or `~/.local/share/code-factory`: SQLite WAL state/events, encrypted credentials, a mode-0600 encryption key and owner token, managed clones, retained worktrees, and immutable launch skill snapshots. Keep this directory private. Losing the encryption key loses stored credentials. Service credentials and secret question answers are redacted from incoming Codex output; answer bodies are not journaled. As with any local coding agent, same-user filesystem access is a trust boundary, not protection against a compromised local account.
 
+## GitHub read boundary
+
+The application depends on `providers.GitHubSource`. The daemon supplies
+`CachedGitHub` around the HTTP adapter, using the same read methods for identity,
+teams, repository indexes, item details, lifecycle checks, review requests,
+notifications and posted reviews. Local usage accounting stays live local state.
+
+Normal queries return an unexpired cached result. Cache misses, expiry and
+explicit invalidation fetch through the existing budgeted adapter and retain
+successful results. Cache entries are isolated by API endpoint and authenticated
+principal, persist in private state, and are bounded to 64 MiB and 4,096 entries.
+Cached results preserve their provider observation times and decode into
+independent values. Errors and partial enrichment failures do not become
+successful cache entries.
+
+Use `providers.WithGitHubRead(ctx, providers.RequireLive)` when a current remote
+check is required. This bypasses both query and REST/GraphQL TTLs, allows
+conditional HTTP validation, and writes the response back to the shared cache.
+Initial/resumed execution, new review-notification targets, post-turn receipt
+verification and explicit repository polling use that mode. A failed live check
+returns an error; it does not silently return an older success. Ordinary saved
+tracking/UI reads still return immediately and refresh external observations in
+the background. `CachedGitHub.Invalidate(ctx, resource)` expires the current
+principal's item/repository queries, including affected repository indexes;
+an empty resource expires that principal's query cache. Other repositories and
+principals are preserved. Cache hits need no GitHub HTTP request and remain
+available while another query waits on the network.
+
 ## Layout
 
 | Directory | Responsibility |

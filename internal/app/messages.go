@@ -130,6 +130,9 @@ func (m *Manager) deliverMessage(d MessageDelivery) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(m.ctx), 5*time.Second)
 	defer cancel()
 	_ = m.app.Store.Write(ctx, func(t *store.Tx) error { return saveMessage(t, d) })
+	if d.State == "delivered" {
+		m.queueAttentionReconciliation(d.RunID)
+	}
 }
 
 func (a *App) MessageDelivery(ctx context.Context, runID string) (*MessageDelivery, error) {

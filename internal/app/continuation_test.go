@@ -147,6 +147,41 @@ func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(t *testing.T) {
 	}
 }
 
+func TestContinuationUsesLiveSourceDespiteWarmGitHubCache(t *testing.T) {
+	a, ctx := fixture(t)
+	r := prepareRun(t, a, ctx)
+	var cached domain.Item
+	_ = a.Store.Get(ctx, "item", r.ItemID, &cached)
+	state := "open"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(w, `{"number":1,"title":"Task","state":%q}`, state)
+	}))
+	defer server.Close()
+	source := &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	github := providers.NewCachedGitHub(source)
+	github.ConfigureUsage(nil, func(context.Context) (providers.GitHubPolicy, error) {
+		return providers.GitHubPolicy{RequestsPerHour: 100}, nil
+	})
+	a.GitHub = github
+	if item, err := github.CurrentWorkItem(ctx, cached); err != nil || item.State != "open" {
+		t.Fatal(item, err)
+	}
+	state = "closed"
+	if _, err := a.Runs.Start(ctx, r.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "terminated" })
+	if r.ThreadID != "" || r.ResumePending {
+		t.Fatal("cached open source started provider work")
+	}
+	if _, err := os.Stat(r.Worktree); !os.IsNotExist(err) {
+		t.Fatal("closed source created a workspace", err)
+	}
+	if item, err := github.CurrentWorkItem(ctx, cached); err != nil || item.State != "closed" {
+		t.Fatal("live source was not retained", item, err)
+	}
+}
+
 func TestChangedPRHeadInvalidatesCheckpointsWithoutRetargetingWorkspace(t *testing.T) {
 	t.Setenv("CF_FAKE_MODE", "hold")
 	record := filepath.Join(t.TempDir(), "calls.jsonl")

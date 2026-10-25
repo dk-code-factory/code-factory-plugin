@@ -30,6 +30,8 @@ Messages counts valid unanswered questions and approvals, including nonblocking 
 
 Nonblocking requests leave work active and remain visible in both Messages and the owning conversation. Invalid answers and grants beyond requested permissions are rejected. Duplicate, resolved or stale requests cannot be answered again. Delivery failure after a response is claimed is not automatically replayed. Unsupported host verification stays explicit.
 
+A delivered conversational message, completed turn or startup schedules background reconciliation of retained message/text questions. Only a specific owner decision followed by an explicit agent acknowledgement in the same run can retire that question. Partial decisions preserve the other original question IDs and options; resolved, cancelled or superseded questions leave actionable attention with evidence references retained. A read-only helper checks bounded redacted conversation evidence and cannot answer questions or grant permissions. Missing or ambiguous evidence, helper failure, a changed conversation or another run’s completed review preserves the outstanding asks. Saved-state reads remain immediate and never invoke this helper. Native requests and approvals still require their original protocol response.
+
 Daemon startup preserves unanswered questions without continuing past them. Lost native questions remain answerable through a retained textual continuation; lost approvals expire and must be requested again through the native approval path. No old answer or approval is replayed during automatic session recovery.
 
 Closing or merging the source item terminates its sessions and retires their pending questions and approvals. Those asks cannot be answered or recreated through recovery; history remains available.
@@ -78,6 +80,9 @@ flowchart TD
     N13["Read the current question queue in chat with owning item, profile and exact choices #40;S5#41;"]
     N14(["No pending requests#59; do not infer task completion"])
     N15["Read a fresh queue and owning run#59; report continuation or another wait"]
+    N16["Check explicit same-run owner decisions and later agent acknowledgements for each retained question #40;S4#41;"]
+    N17(["Retire only settled questions and their recovery state#59; retain evidence references"])
+    N18(["Keep unanswered or unverified questions#59; never infer resolution from another run or publication alone"])
     N0 -->|"answer"| N1
     N0 -->|"nonblocking"| N7
     N7 -->|"respond"| N1
@@ -104,6 +109,10 @@ flowchart TD
     N2 -->|"Chat answer accepted"| N15
     N15 -->|"Owning agent continued#59; report observed status"| N3
     N15 -->|"Another request is pending"| N13
+    N0 -->|"delivered follow-up, completed turn or startup"| N16
+    N16 -->|"exact unchanged-conversation evidence settles every question"| N17
+    N16 -->|"partial settlement#59; display original remaining IDs/options"| N0
+    N16 -->|"unrelated message, helper failure, stale evidence or no explicit acknowledgement"| N18
 ```
 
 ## Implementation references
@@ -138,6 +147,8 @@ flowchart TD
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
 - [internal/transport/tracking.go](../../internal/transport/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (s *Server) dashboard(`)
 - [internal/store/reads.go](../../internal/store/reads.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func Select[T any](`)
+- [internal/app/attention_reconciliation.go](../../internal/app/attention_reconciliation.go) — Background same-run per-question reconciliation after delivery, completion and startup. Requires exact owner decision and subsequent agent acknowledgement; uncertainty preserves attention, native approvals are excluded. (`func (m *Manager) reconcileAttention(`)
+- [internal/store/conversation.go](../../internal/store/conversation.go) — Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs. (`func (s *Store) ConversationEvidence(`)
 
 ## Test references
 
@@ -166,6 +177,10 @@ flowchart TD
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(`; S3. Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S3. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
 - [internal/transport/tracking_test.go](../../internal/transport/tracking_test.go) — `func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(`; S5. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(`; S4. Partial acknowledgement retires only Q1, retains actionable Q2 and permits its answer; full same-run acknowledged completion clears the group; unrelated continuation preserves both.
+- [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(`; S4. Other-run review completion, forged quotes/IDs, reversed evidence order and an intervening run turn cannot retire the original requests.
+- [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationHelperFailureRetainsQuestions(`; S4. An invalid helper decision leaves both original requests pending after delivery and continuation.
+- [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationRetiresRecoveryAndPreservesNativeApprovals(`; S4. A cancelled synthetic question retires its recovery episode without answering or dismissing an unrelated native command approval.
 
 ## Verification and gaps
 
@@ -173,5 +188,6 @@ Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-answer-attention-s2-01` · Unverified behavior · P1 · owner: specification-coordinator. External native user-verification and every supported approval/dialog variant lack real-host coverage. Next verification: Record actual-host native user-verification and supported approval/dialog variants using version-bound nonsecret observations; preserve fixture and real-host distinctions.
 - **S5** — `gap-flow-answer-attention-s5-01` · Unverified behavior · P2 · owner: specification-coordinator. Installed ChatGPT Work now directly invokes list_attention, presents the exact native question, delivers the user choice through answer_request and observes same-thread continuation, with independently audited MCP method names. Actual-host multi-agent pagination, stale/duplicate answers, uncertain delivery and recovered-text question variants remain unverified; fixtures cover those boundaries. Next verification: Observe the remaining multi-agent/page, stale/duplicate, uncertain-delivery and recovered-text variants in an explicitly scoped private-pilot campaign, without replaying delivery or substituting runs.
+- **S4** — `gap-flow-answer-attention-s4-reconciliation-real-host` · Unverified behavior · P2 · owner: user-flow-maintainer. Same-run per-question resolution and conservative failure boundaries pass fixtures, but installed real-helper partial/full acknowledgement classification has not been observed. Next verification: In the dedicated private pilot, send a partial answer to two async questions, observe the real helper retain the unanswered question, then settle it and verify restart persistence and actionable queue removal.
 
 <!-- /flow-references -->

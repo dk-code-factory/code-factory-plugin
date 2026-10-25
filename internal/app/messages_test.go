@@ -196,6 +196,10 @@ func TestAcceptedMessageRemainsSavedWhenAgentRestorationFails(t *testing.T) {
 	if err := a.Store.Put(ctx, "run", r.ID, r, ""); err != nil {
 		t.Fatal(err)
 	}
+	request := domain.Attention{ID: "unsettled", RunID: r.ID, Origin: "async", Method: questionMethod, Status: "pending", Params: raw(map[string]any{"questions": []question{{ID: "q1", Question: "Which contract?", IsOther: true}}})}
+	if err := a.Store.Put(ctx, "attention", request.ID, request, ""); err != nil {
+		t.Fatal(err)
+	}
 	const text = "This clarification must survive an unavailable workspace."
 	d, err := a.Runs.QueueMessage(ctx, r.ID, text, "")
 	if err != nil || d.State != "queued" {
@@ -213,5 +217,8 @@ func TestAcceptedMessageRemainsSavedWhenAgentRestorationFails(t *testing.T) {
 	_ = a.Store.Get(ctx, "run", r.ID, &after)
 	if after.ThreadID != r.ThreadID || after.Status != "failed" || !strings.Contains(after.Error, "retained worktree is unavailable") {
 		t.Fatal("failed delivery replaced the session", after)
+	}
+	if err := a.Store.Get(ctx, "attention", request.ID, &request); err != nil || request.Status != "pending" || len(request.Resolutions) != 0 {
+		t.Fatal("uncertain delivery discarded an unanswered question", err)
 	}
 }

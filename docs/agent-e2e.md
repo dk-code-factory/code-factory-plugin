@@ -1,5 +1,55 @@
 # Continue development through the real Chrome session
 
+## GitHub source and shared query cache · 2026-10-25
+
+Local source now depends on a GitHub read interface supplied by a persistent
+caching facade around the existing budgeted REST/GraphQL adapter. Normal reads
+reuse unexpired successful queries; explicit live mode bypasses both TTL layers
+and writes verified results back to the shared cache. Execution preflight, new
+notification targets, post-turn receipt verification and explicit polling use
+live mode. Scoped invalidation, original observation times, summary-only import
+semantics, caller-copy isolation and endpoint/principal isolation are preserved.
+Live failures never silently substitute saved successes.
+
+Fixtures cover expiry, invalidation, restart, direct write-through, GraphQL
+bypass, network-independent cache hits, summary preservation, changed head/scope
+and closed-source preflight against a warm cache. These changes are not installed;
+no live GitHub acceptance or new-build readiness is claimed. Existing host,
+callback, accessibility, soak and login gaps remain open.
+
+
+## Pending-question reconciliation · 2026-10-25
+
+Read-only investigation found partial settlement in GoCQL #1133: the agent
+acknowledged Q1 but explicitly left Q2 open. Python Driver #725’s same retained
+run acknowledged both decisions before reporting its verified review receipt.
+Their original structured-message question groups were still pending.
+
+Local source now reconciles individual message/text questions in the background
+after delivery, completed turns and startup. A bounded read-only helper requires
+explicit owner decisions and later agent acknowledgements in the same run, with
+validated exact evidence references. Partial, uncertain, failed-helper and
+other-run cases retain outstanding questions. Native approvals are excluded.
+Fixture tests cover delivery, partial/full completion, unrelated continuation,
+invalid/stale evidence and remaining-question answers. These changes are not
+installed; production attention records and live agents remain untouched.
+
+
+## Own-author review rejection · 2026-10-25
+
+Local source rejects PR review preparation when the PR author matches the
+signed-in GitHub account, ignoring case. Dedicated and generic/configured review
+launches share the guard. Missing author or identity data blocks review until
+refreshed. Atomic Start rechecks retained and legacy proposals; fresh source
+verification checks author eligibility before workspace or provider creation.
+Review intent is retained across later default-profile changes. Other work on
+the owner's PR remains available.
+
+The regression coverage is fixture-only. This correction is not installed; no
+production run or repository was changed. Existing real-host, accessibility,
+callback, soak and login acceptance gaps remain open.
+
+
 ## Durable follow-up receipt · 2026-10-25
 
 `send_message` now saves an encrypted message and returns `delivery: accepted`,

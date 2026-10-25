@@ -38,7 +38,7 @@ func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(t *testing.T) {
 		}
 	}))
 	defer s.Close()
-	a.GitHub = &providers.GitHub{BaseURL: s.URL, Client: s.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	a.GitHub = providers.NewCachedGitHub(&providers.GitHub{BaseURL: s.URL, Client: s.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }})
 	a.GitHub.ConfigureUsage(a.Store, func(context.Context) (providers.GitHubPolicy, error) {
 		return providers.GitHubPolicy{RequestsPerHour: 60}, nil
 	})

@@ -41,7 +41,7 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	if err != nil {
 		return fmt.Errorf("GitHub cache unavailable")
 	}
-	if g.Managed() && ok && cached.Until.After(g.now()) {
+	if g.Managed() && ok && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true {
 		noteRead(ctx, cached.CheckedAt)
 		return json.Unmarshal(cached.Body, out)
 	}

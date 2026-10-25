@@ -4,6 +4,7 @@ import (
 	"codefactory/internal/app"
 	"codefactory/internal/domain"
 	"codefactory/internal/events"
+	"codefactory/internal/providers"
 	"codefactory/internal/setup"
 	"codefactory/internal/store"
 	"codefactory/internal/web"
@@ -274,7 +275,9 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return nil, a.SaveRepository(ctx, r)
 	})
-	bind(m, settingsURI, "sync_repositories", "Poll configured repositories now. Repositories opted into automatic review may launch their selected review pipeline.", false, false, func(ctx context.Context, _ Empty) (any, error) { return nil, a.Sync(ctx) })
+	bind(m, settingsURI, "sync_repositories", "Poll configured repositories now. Repositories opted into automatic review may launch their selected review pipeline.", false, false, func(ctx context.Context, _ Empty) (any, error) {
+		return nil, a.Sync(providers.WithGitHubRead(ctx, providers.RequireLive))
+	})
 	bind(m, settingsURI, "save_profile", "Create or edit a launch profile, prompt, permissions, skills and publishing authority.", false, false, func(ctx context.Context, in domain.Profile) (any, error) { return nil, a.SaveProfile(ctx, in) })
 	bind(m, settingsURI, "set_jira_credential", "Store a Jira API token from the secure UI. Never return the credential.", true, false, func(ctx context.Context, in CredentialInput) (any, error) {
 		if strings.TrimSpace(in.Token) == "" {

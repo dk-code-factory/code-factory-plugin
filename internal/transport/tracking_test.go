@@ -123,7 +123,10 @@ func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(t *testing.T) {
 	if err = a.SaveRepository(ctx, repo); err != nil {
 		t.Fatal(err)
 	}
-	item := domain.Item{ID: "pilot/repo#1", Repository: repo.ID, Kind: "pr", Number: 1, State: "open", Head: strings.TrimSpace(string(head)), URL: "https://github.com/pilot/repo/pull/1", Title: "Review fixture"}
+	item := domain.Item{ID: "pilot/repo#1", Repository: repo.ID, Kind: "pr", Author: "other", Number: 1, State: "open", Head: strings.TrimSpace(string(head)), URL: "https://github.com/pilot/repo/pull/1", Title: "Review fixture"}
+	if err = a.Store.Put(ctx, "identity", "github", domain.GitHubViewer{Login: "fixture"}, ""); err != nil {
+		t.Fatal(err)
+	}
 	if err = a.Import(ctx, repo, []domain.Item{item}, "fixture", time.Now(), true); err != nil {
 		t.Fatal(err)
 	}

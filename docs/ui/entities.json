@@ -1537,6 +1537,11 @@
           "path": "internal/app/observations.go",
           "anchor": "func (a *App) observation(",
           "purpose": "Deduplicated background observations preserve saved reads and monitoring policy."
+        },
+        {
+          "path": "internal/providers/github_cache.go",
+          "anchor": "type CachedGitHub struct {",
+          "purpose": "Shared metadata query cache beneath saved-state reads; post-turn verification explicitly refreshes live without replacing prior successful observations on error."
         }
       ],
       "assertions": [
@@ -1552,7 +1557,8 @@
         "API-REVIEW-RECEIPTS",
         "UI-POSTED-REVIEWS",
         "API-UI",
-        "UI-SAVED-OBSERVATIONS"
+        "UI-SAVED-OBSERVATIONS",
+        "API-GITHUB-QUERY-CACHE"
       ],
       "gaps": [
         {
@@ -1572,7 +1578,7 @@
       ],
       "element_description": "PR lifecycle, draft/head, review decision, CI rollup, check disclosure and linked PR summaries with source/check links. Posted review receipt links, review bodies and inline comments, observation freshness and Refresh reviews control.",
       "state_description": "Lifecycle, approval and current-head CI are independent. Unknown/none/stale data do not imply success. Linked summaries distinguish implementation associations from references. Submitted reviews remain visible above the conversation, including author, verdict, reviewed commit and current/earlier-head distinction. Loading, unverified, successfully empty and stale/error observations are separate; a finished run never establishes publication. Pending background refresh, paused monitoring and cooldown feedback preserve existing receipts.",
-      "interactions": "Summaries update in list and item context. Source/check links use the host bridge. Expanding check details never launches work. Reading reviews, returning to the PR and completed PR turns refresh provider receipts without publishing or starting work; routine reads share a one-minute cache. Receipt/comment links use the host bridge. Stored reviews include all authors without run attribution. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns."
+      "interactions": "Summaries update in list and item context. Source/check links use the host bridge. Expanding check details never launches work. Reading reviews, returning to the PR and completed PR turns refresh provider receipts without publishing or starting work; routine reads share a one-minute cache. Receipt/comment links use the host bridge. Stored reviews include all authors without run attribution. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns. Provider query cache hits preserve original observation times. Post-turn publication verification uses live data through the same cache boundary; live failure retains prior saved observations with an error."
     },
     {
       "id": "W-ITEM-HISTORY",
@@ -2066,6 +2072,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/attention_reconciliation.go",
+          "anchor": "func (m *Manager) reconcileAttention(",
+          "purpose": "Per-question reconciliation changes saved actionable attention only after same-run owner/agent evidence; it never sends an answer."
         }
       ],
       "assertions": [
@@ -2074,7 +2085,8 @@
         "INPUT-VALIDATION",
         "RUN-RECOVERY",
         "RUN-RECOVERY-2",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "API-ATTENTION-RECONCILIATION"
       ],
       "gaps": [
         {
@@ -2094,7 +2106,7 @@
       ],
       "element_description": "Whole-notice **answer** button; **blocking-label** or **continuing-label**.",
       "state_description": "Repeated for pending requests belonging to the selected run.",
-      "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent."
+      "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them."
     },
     {
       "id": "W-TRANSCRIPT",
@@ -7259,13 +7271,20 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/review_eligibility.go",
+          "anchor": "func validatePRReviewAuthor(",
+          "purpose": "Validate review author against signed-in GitHub identity, with a visible error for self review or unknown identity/author."
         }
       ],
       "assertions": [
         "UI-TRIAGE",
         "UI-ASSEMBLED",
         "UI-LAUNCH-ERROR",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "API-REVIEW-AUTHOR-PREPARE",
+        "UI-OWN-PR-REJECTION"
       ],
       "gaps": [
         {
@@ -7280,11 +7299,12 @@
       ],
       "suites": [
         "tooling",
-        "browser"
+        "browser",
+        "go"
       ],
       "endpoint_description": "Default launch or editor Review \u2192 prepared review",
       "trigger": "Default launch, or explicit Review after customization.",
-      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start.",
+      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account\u2019s own PR and missing author/identity without creating a proposal.",
       "from": [
         "W-LAUNCH-EDITOR.review",
         "W-ITEM-ACTIONS.launch"
@@ -7426,6 +7446,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/review_eligibility.go",
+          "anchor": "func validatePRReviewAuthor(",
+          "purpose": "Validate review author against signed-in GitHub identity, with a visible error for self review or unknown identity/author."
         }
       ],
       "assertions": [
@@ -7436,7 +7461,8 @@
         "UI-DRAFT-LAUNCHES",
         "UI-START-UNKNOWN",
         "UI-START-CONFIRMED",
-        "ADMIN-PLUGIN-GATE"
+        "ADMIN-PLUGIN-GATE",
+        "API-REVIEW-AUTHOR-START"
       ],
       "gaps": [
         {
@@ -7460,11 +7486,12 @@
       ],
       "suites": [
         "tooling",
-        "browser"
+        "browser",
+        "go"
       ],
       "endpoint_description": "`W-LAUNCH-REVIEW.start` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`",
       "trigger": "Prepared run ID.",
-      "interactions": "Explicit Start only. Error/lost response reads the same run; accepted work opens, still-prepared work permits retry, unknown status disables Start/Edit and offers Check start status.",
+      "interactions": "Explicit Start only. Error/lost response reads the same run; accepted work opens, still-prepared work permits retry, unknown status disables Start/Edit and offers Check start status. PR review Start rechecks the current author and identity and rejects self review without queuing work; the retained proposal remains available.",
       "from": [
         "W-LAUNCH-REVIEW.start"
       ],
@@ -7727,6 +7754,11 @@
           "path": "internal/app/messages.go",
           "anchor": "func (m *Manager) QueueMessage(",
           "purpose": "Commit encrypted message text before asynchronous delivery and expose durable receipt state without requiring GitHub or a connected agent."
+        },
+        {
+          "path": "internal/app/attention_reconciliation.go",
+          "anchor": "func (m *Manager) reconcileAttention(",
+          "purpose": "Per-question reconciliation changes saved actionable attention only after same-run owner/agent evidence; it never sends an answer."
         }
       ],
       "assertions": [
@@ -7735,7 +7767,8 @@
         "API-UI-CONTENT",
         "UI-WAKE-MESSAGE",
         "ADMIN-PLUGIN-GATE",
-        "UI-QUEUED-MESSAGE"
+        "UI-QUEUED-MESSAGE",
+        "API-ATTENTION-RECONCILIATION"
       ],
       "gaps": [
         {
@@ -7750,11 +7783,12 @@
       ],
       "suites": [
         "tooling",
-        "browser"
+        "browser",
+        "go"
       ],
       "endpoint_description": "`W-MESSAGE` \u2192 selected run \u2192 `W-TRANSCRIPT`",
       "trigger": "Message text and displayed current-turn context.",
-      "interactions": "Send with current-turn identity while active. Acknowledge durable local queue acceptance before contacting the agent; background delivery restores the same retained session when needed. Saved source context is explicitly unverified; task-required GitHub reads belong to the agent. Accepted sends clear unchanged submitted drafts; rejected acceptance preserves them. Delivery uncertainty remains visible and is never automatically replayed.",
+      "interactions": "Send with current-turn identity while active. Acknowledge durable local queue acceptance before contacting the agent; background delivery restores the same retained session when needed. Saved source context is explicitly unverified; task-required GitHub reads belong to the agent. Accepted sends clear unchanged submitted drafts; rejected acceptance preserves them. Delivery uncertainty remains visible and is never automatically replayed. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
         "W-MESSAGE"
       ],
@@ -7896,6 +7930,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/attention_reconciliation.go",
+          "anchor": "func (m *Manager) reconcileAttention(",
+          "purpose": "Per-question reconciliation changes saved actionable attention only after same-run owner/agent evidence; it never sends an answer."
         }
       ],
       "assertions": [
@@ -7904,7 +7943,8 @@
         "API-UI",
         "API-UI-CONTENT",
         "UI-ATTENTION-CONTEXT",
-        "UI-WAITING-MESSAGES"
+        "UI-WAITING-MESSAGES",
+        "API-ATTENTION-RECONCILIATION"
       ],
       "gaps": [
         {
@@ -7924,7 +7964,7 @@
       ],
       "endpoint_description": "Messages request \u2192 owning run and attention dialog",
       "trigger": "Select one pending request.",
-      "interactions": "Selects that exact owning run and request; identifies item/profile and returns to that conversation after answering.",
+      "interactions": "Selects that exact owning run and request; identifies item/profile and returns to that conversation after answering. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
         "W-WAITING-ROW.select"
       ],
@@ -8065,6 +8105,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/attention_reconciliation.go",
+          "anchor": "func (m *Manager) reconcileAttention(",
+          "purpose": "Per-question reconciliation changes saved actionable attention only after same-run owner/agent evidence; it never sends an answer."
         }
       ],
       "assertions": [
@@ -8076,7 +8121,8 @@
         "UI-KEYBOARD-ATTENTION",
         "API-UI-CONTENT",
         "UI-ATTENTION-CONTEXT",
-        "UI-READABLE-APPROVALS"
+        "UI-READABLE-APPROVALS",
+        "API-ATTENTION-RECONCILIATION"
       ],
       "gaps": [
         {
@@ -8096,7 +8142,7 @@
       ],
       "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` \u2192 request/run state",
       "trigger": "Response matched to current request ID.",
-      "interactions": "Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels.",
+      "interactions": "Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
         "W-QUESTIONS",
         "W-APPROVAL",
@@ -8781,6 +8827,11 @@
           "path": "internal/app/observations.go",
           "anchor": "func (a *App) observation(",
           "purpose": "Deduplicated background observations preserve saved reads and monitoring policy."
+        },
+        {
+          "path": "internal/providers/github_cache.go",
+          "anchor": "type CachedGitHub struct {",
+          "purpose": "Shared metadata query cache beneath saved-state reads; post-turn verification explicitly refreshes live without replacing prior successful observations on error."
         }
       ],
       "assertions": [
@@ -8800,7 +8851,8 @@
         "UI-GITHUB-USAGE",
         "UI-LINKED-DETAIL-REFRESH",
         "UI-READ-FRESHNESS",
-        "UI-SAVED-OBSERVATIONS"
+        "UI-SAVED-OBSERVATIONS",
+        "API-GITHUB-QUERY-CACHE"
       ],
       "gaps": [
         {
@@ -8829,7 +8881,7 @@
       ],
       "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
       "trigger": "Successful polling or action refresh.",
-      "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. Known read calls carry a unique freshness marker so host reuse of an earlier response cannot freeze an empty journal page or saved snapshot. This marker does not change server state, source authority or mutation replay rules. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns.",
+      "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. Known read calls carry a unique freshness marker so host reuse of an earlier response cannot freeze an empty journal page or saved snapshot. This marker does not change server state, source authority or mutation replay rules. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns. Provider query cache hits preserve original observation times. Post-turn publication verification uses live data through the same cache boundary; live failure retains prior saved observations with an error.",
       "from": [
         "S-FACTORY"
       ],
@@ -11734,6 +11786,36 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "saved message clears its draft before agent delivery and shows uncertainty without replay",
       "assertion": "A durable accepted queue receipt clears only the submitted draft before activation; queued delivery is visible, replaced by uncertainty under the same message ID, and sends/starts are never replayed."
+    },
+    {
+      "id": "API-REVIEW-AUTHOR-PREPARE",
+      "path": "internal/app/review_eligibility_test.go",
+      "anchor": "func TestManualPRReviewRejectsOwnPullRequests(",
+      "assertion": "Dedicated/generic review preparation rejects own PRs and missing author/identity before a durable proposal; other work stays available."
+    },
+    {
+      "id": "API-REVIEW-AUTHOR-START",
+      "path": "internal/app/review_eligibility_test.go",
+      "anchor": "func TestManualPRReviewRechecksAuthorBeforeStart(",
+      "assertion": "Start rejects prepared and legacy own-author reviews without creating state events or a workspace."
+    },
+    {
+      "id": "UI-OWN-PR-REJECTION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "own PR review rejection preserves the first message without starting",
+      "assertion": "Both themes display the own-PR rejection, retain the editable first message and send no Start or create any run."
+    },
+    {
+      "id": "API-ATTENTION-RECONCILIATION",
+      "path": "internal/app/attention_reconciliation_test.go",
+      "anchor": "func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(",
+      "assertion": "Delivered same-run acknowledged decisions retire only resolved questions; remaining IDs stay answerable, unrelated follow-ups preserve questions and completed acknowledgements clear actionable attention."
+    },
+    {
+      "id": "API-GITHUB-QUERY-CACHE",
+      "path": "internal/providers/github_cache_test.go",
+      "anchor": "func TestGitHubCacheExpiryInvalidationLiveWriteThroughAndRestart(",
+      "assertion": "Ordinary queries reuse persisted successful data; expiry, invalidation and live mode refresh it without crossing endpoint/principal scope."
     }
   ],
   "source_map": [
@@ -12065,6 +12147,12 @@
       "anchor": "func (m *Manager) QueueMessage(",
       "entities": "W-MESSAGE, W-TRANSCRIPT and C-FOLLOW-UP.",
       "detail": "Durable encrypted message queue, same-session worker, recoverable queued state and at-most-once claims with explicit uncertainty."
+    },
+    {
+      "path": "internal/app/review_eligibility.go",
+      "anchor": "func validatePRReviewAuthor(",
+      "entities": "C-PREPARE and C-START.",
+      "detail": "Shared author/identity rejection before review preparation and execution."
     }
   ],
   "coverage_groups": [

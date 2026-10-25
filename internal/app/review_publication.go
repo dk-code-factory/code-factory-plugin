@@ -85,6 +85,9 @@ func (a *App) refreshPRReviews(ctx context.Context, id string, afterTurn bool) (
 	case a.GitHub == nil:
 		out.Error = "GitHub is unavailable; showing saved reviews"
 	default:
+		if afterTurn {
+			ctx = providers.WithGitHubRead(ctx, providers.RequireLive)
+		}
 		reviews, observed, err := a.GitHub.PublishedReviews(ctx, item)
 		if err != nil {
 			out.Error = "Could not refresh posted reviews; showing saved information. " + err.Error()

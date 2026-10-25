@@ -343,7 +343,10 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 		t.Fatal("settings configuration data missing")
 	}
 
-	pr := domain.Item{ID: "pilot/local#8", Repository: monitored.ID, Kind: "pr", Head: strings.Repeat("b", 40), URL: "https://github.com/pilot/local/pull/8", Title: "Review fixture"}
+	pr := domain.Item{ID: "pilot/local#8", Repository: monitored.ID, Kind: "pr", Author: "other", Head: strings.Repeat("b", 40), URL: "https://github.com/pilot/local/pull/8", Title: "Review fixture"}
+	if err := db.Put(ctx, "identity", "github", domain.GitHubViewer{Login: "me"}, ""); err != nil {
+		t.Fatal(err)
+	}
 	if err := db.Put(ctx, "item", pr.ID, pr, ""); err != nil {
 		t.Fatal(err)
 	}
@@ -354,6 +357,25 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	run := prepared["structuredContent"].(map[string]any)["data"].(map[string]any)
 	if run["status"] != "prepared" || run["base"] != pr.Head || run["profile"].(map[string]any)["id"] != "review" {
 		t.Fatal("PR review did not return the prepared configured pipeline", run)
+	}
+	pr.Author = "ME"
+	if err := db.Put(ctx, "item", pr.ID, pr, ""); err != nil {
+		t.Fatal(err)
+	}
+	beforeOwnReview := db.Latest(ctx)
+	for _, name := range []string{"prepare_pr_review", "prepare_launch"} {
+		args := map[string]any{"itemId": pr.ID}
+		if name == "prepare_launch" {
+			args["profileId"] = "review"
+		}
+		rejected := request("tools/call", map[string]any{"name": name, "arguments": args}, true, "2026-07-28")
+		if rejected["isError"] != true || !strings.Contains(fmt.Sprint(rejected), "cannot review your own pull request") {
+			t.Fatal("MCP accepted own-PR review", name, rejected)
+		}
+	}
+	rejectedStart := request("tools/call", map[string]any{"name": "start_run", "arguments": map[string]any{"id": run["id"]}}, true, "2026-07-28")
+	if rejectedStart["isError"] != true || !strings.Contains(fmt.Sprint(rejectedStart), "cannot review your own pull request") || db.Latest(ctx) != beforeOwnReview {
+		t.Fatal("MCP started own-PR review or changed retained state", rejectedStart)
 	}
 	badReview := request("tools/call", map[string]any{"name": "prepare_pr_review", "arguments": map[string]any{"itemId": "pilot/local#7"}}, true, "2026-07-28")
 	if badReview["isError"] != true {

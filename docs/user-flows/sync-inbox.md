@@ -19,6 +19,8 @@ At least one accessible repository is configured.
 
 Authentication and provider errors remain visible. Failed refreshes retain their last successful progress. Reference backfill yields to repository polling and resumes with other references on its next pass. Rate limits delay retries, and access recovery permits later refreshes.
 
+Normal provider reads reuse successful saved query results until expiry or invalidation. Explicit polling, new notification targets, pre-execution lifecycle checks and post-turn publication checks require current remote validation through the same read boundary; successful live responses update the shared cache. A failed live check never silently substitutes older data. Entries are scoped by authenticated account and endpoint, survive restart and retain original observation times. Invalidation affects the requested item or repository and related repository summaries. Newly observed head/scope changes cannot reuse older item details; cache hits remain available while another query waits on the network.
+
 ## Scenarios
 
 - **S10** An observed closed issue or closed/merged PR terminates all started sessions belonging to that source, retires their provider processes and questions, and retains history/workspaces. Reopening the source does not revive terminated sessions.
@@ -63,6 +65,8 @@ flowchart TD
     N12["Observe submitted reviews with receipts, findings and explicit freshness #40;S9#41;"]
     N13["Verify current source and report changed scope or head before initial or automatic continuation #40;S10#41;"]
     N14(["Closed or merged source#59; terminate session and retain history/workspace"])
+    N15["Reuse a successful unexpired scoped query or require current remote validation #40;S8#41;"]
+    N16["Validate live data within the shared budget and update saved query state #40;S8#41;"]
     N0 --> N1
     N1 -->|"success"| N2
     N0 -->|"provider failure"| N3
@@ -87,6 +91,11 @@ flowchart TD
     N0 -->|"start or continue retained work"| N13
     N13 -->|"source closed or merged"| N14
     N13 -->|"open source#59; agent assesses fresh changes"| N0
+    N1 -->|"ordinary metadata query"| N15
+    N15 -->|"valid cached result#59; original observation time retained"| N2
+    N15 -->|"expired, invalidated or explicitly current query"| N16
+    N16 -->|"successful validation updates shared cache"| N2
+    N16 -->|"failed validation#59; do not claim old success as current"| N3
 ```
 
 ## Implementation references
@@ -112,6 +121,8 @@ flowchart TD
 - [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Read submitted review and inline-comment pages; omit pending drafts. (`func (g *GitHub) PublishedReviews(`)
 - [internal/app/continuation.go](../../internal/app/continuation.go) — Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads. (`func (m *Manager) continuationContext(`)
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
+- [internal/providers/github_source.go](../../internal/providers/github_source.go) — Application-facing read interface and explicit cache/live freshness choice; live adapter scopes cache identity by endpoint and principal. (`type GitHubSource interface {`)
+- [internal/providers/github_cache.go](../../internal/providers/github_cache.go) — Same-API persistent query cache with TTLs, scoped invalidation, bounded eviction, direct write-through and independent caller values. (`type CachedGitHub struct {`)
 
 ## Test references
 
@@ -151,6 +162,12 @@ flowchart TD
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(`; S10. Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(`; S10. Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S10. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
+- [internal/providers/github_cache_test.go](../../internal/providers/github_cache_test.go) — `func TestGitHubCacheExpiryInvalidationLiveWriteThroughAndRestart(`; S8. Normal hits avoid HTTP; explicit live, expiry and invalidation fetch fresh data and persist it across restart without principal crossover.
+- [internal/providers/github_cache_test.go](../../internal/providers/github_cache_test.go) — `func TestGitHubCacheLiveFailureNeverFallsBackAndHitsDoNotWaitForNetwork(`; S8. Live failures never use stale success; ordinary hits stay available during another network request.
+- [internal/providers/github_cache_test.go](../../internal/providers/github_cache_test.go) — `func TestGitHubCacheDirectGraphReadUpdatesSharedHTTPState(`; S8. Explicit live reads bypass GraphQL TTL and retain the verified response for ordinary reads.
+- [internal/providers/github_cache_test.go](../../internal/providers/github_cache_test.go) — `func TestGitHubCachePreservesSummarySemanticsCopiesAndRelatedInvalidation(`; S8. Summary-only flags and original observation times survive cache serialization; caller edits cannot corrupt cache; direct item refresh invalidates its index but preserves other repositories.
+- [internal/providers/github_cache_test.go](../../internal/providers/github_cache_test.go) — `func TestGitHubCacheNewHeadOrUpdateCannotReuseOldDetail(`; S8. A newly observed PR head or updated scope cannot inherit old detail data from a still-valid unrelated snapshot.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestContinuationUsesLiveSourceDespiteWarmGitHubCache(`; S10. A cached open item does not authorize execution after remote closure; preflight fetches live, terminates before workspace/provider creation and updates the cache.
 
 ## Verification and gaps
 

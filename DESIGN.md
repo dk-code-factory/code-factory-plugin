@@ -22,6 +22,8 @@ The app-server connection/process belongs to the daemon, not to an MCP request o
 
 Publishing settings become developer instructions for the agent. The service cannot independently police every external operation performed by arbitrary tools; sandbox/approval policy and credentials define the execution boundary. A future host adapter must not reinterpret a profile to weaken it.
 
+PR review preparation rejects the signed-in account’s own PR and unknown author/identity. Both launch entrypoints share the guard; atomic Start checks retained proposals and fresh source checks repeat it before execution. Prepared runs retain review intent across default-profile changes. Other work on an own PR remains permitted.
+
 ## Work projections and question recovery
 
 Queue membership is a server projection, shared by snapshots and filtered inbox calls. Started runs track an item independently of runtime completion. A closed/merged PR leaves Working; a closed issue or merged explicitly associated implementation PR completes issue work. Reopening restores eligible work. Manual associations and GitHub development links carry implementation intent; source references retain evidence without acquiring that intent. Item activity aggregates all sessions so an older blocker remains visible.
@@ -30,7 +32,30 @@ PR lifecycle, review and CI are independent typed values. Read-only GraphQL meta
 
 Questions have RPC, structured-message or textual origins. Only RPC origins carry live process request IDs. Message/text answers durably claim the attention before steering or restoring the original session; uncertain delivery is not automatically replayed. Synthetic answers retain encrypted redaction values before delivery. Lost native questions can become textual continuations, while approvals must regain a native authorization request.
 
+Synthetic questions are reconciled individually after delivered messages, turn completion and startup. A read-only helper sees bounded redacted same-run owner/agent conversation, identifies only explicit decisions followed by acknowledgements, and must return exact evidence references and quotes. Validation rejects invented IDs/quotes, wrong event order and concurrent conversation changes. Only settled questions are removed from actionable parameters; their resolution metadata references the retained source journal. Other questions retain their original IDs and fields. Native approvals/RPCs are excluded. Completion, progress, delivery acceptance and other-run publication alone cannot settle a question. Uncertainty preserves the ask; saved-state reads never invoke this helper.
+
 A recovery episode is keyed by run and source turn, with durable stage and at most two claimed repair attempts. Its helper uses bounded redacted context, an ephemeral read-only thread, disabled external MCP/apps and a supported low reasoning effort. Repair turns use question-only Plan mode in the original thread and retain its sandbox, approval and publishing authority. Successful answers finish that question-only turn before an ordinary continuation explicitly restores the profile mode. User takeover cancels further repair; process loss retains the episode without replay. The console displays the same redacted journal and uses existing message, answer and interrupt operations. Journal metadata identifies daemon-generated repair and continuation input by its turn and exact text, preserving the role of real answers in that same turn.
+
+## GitHub source and cache
+
+Application code accepts a `GitHubSource` interface. `CachedGitHub` implements
+that same read API around the existing budgeted HTTP/GraphQL adapter. Query
+identity includes endpoint/principal scope, operation and arguments. Normal
+reads reuse successful unexpired values; misses and invalidations fetch fresh
+remote data. Cached summaries retain their summary-only import semantics and
+actual provider observation timestamps. Cached values never share mutable
+storage with callers. Incomplete enrichment and failures are not cached as
+successes. Private persistent entries and in-memory operation use bounded caches.
+
+Freshness is an explicit context choice. Execution preflight, notification-driven
+review-target verification, post-turn publication observation and manual polling
+request live reads through the same API. Live reads bypass all TTLs, use the
+existing conditional validators and quota gate, then update the query cache.
+They invalidate related item/repository snapshots so subsequent ordinary reads
+can observe the newly verified source. Failed live validation never falls back
+to a saved success. Scoped invalidation serializes against in-flight fills;
+cache hits do not wait behind network requests. Authentication changes during
+a fetch reject its result instead of caching it under the wrong principal.
 
 ## Host boundary
 

@@ -213,7 +213,7 @@ func (a *App) SyncNotifications(ctx context.Context) error {
 			} else if e != nil && !errors.Is(e, store.ErrNotFound) {
 				return e
 			}
-			item, e := a.GitHub.ReviewRequest(ctx, n.Repository, n.Number)
+			item, e := a.GitHub.ReviewRequest(providers.WithGitHubRead(ctx, providers.RequireLive), n.Repository, n.Number)
 			if e != nil {
 				err = e
 				break

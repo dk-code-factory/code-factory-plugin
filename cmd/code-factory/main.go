@@ -231,7 +231,7 @@ func run() error {
 	if e != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
 		return fmt.Errorf("listener must use a loopback IP address")
 	}
-	a := &app.App{Store: s, Vault: vault, GitHub: providers.NewGitHub(), DataDir: *dir}
+	a := &app.App{Store: s, Vault: vault, GitHub: providers.NewCachedGitHub(providers.NewGitHub()), DataDir: *dir}
 	a.Runs = app.NewManager(ctx, a, *binary)
 	a.Runs.ProviderBin = providerBin
 	a.Runs.ProviderPaths = providerPaths

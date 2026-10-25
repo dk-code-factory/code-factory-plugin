@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "cca335bca318a1ac88702269a03cc135d5ee67a7",
-  "fingerprint": "6d2876dcdc3ddddf5a65ffe883fff2ef186677da12c9d6204876de6e05a4281e",
+  "base": "a29c7654a94e7077d99f6ea9227074b318bf74dc",
+  "fingerprint": "e74d91db173b19f80fd097f046cf71267ae7a890ccb4011ed3a635aba67bff9e",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Event subscription and callback acceptance remain unchanged and explicitly incomplete for real hosts.",
-    "implementation": "Existing attention events and endpoint catalogs remain intact; new progress projections write no extra public callback type, and local tracking does not establish background delivery.",
-    "tests": "Event/discovery tests retain subscriptions and callback boundaries; existing ledger gaps remain open and no fixture success is claimed as Work callback acceptance."
+    "kind": "structure",
+    "description": "Notification delivery and attention callback claims remain unchanged by the author eligibility restriction.",
+    "implementation": "Review preparation and Start validation do not change subscription records, event payloads or host callback delivery.",
+    "tests": "Existing notification fixtures remain mapped and their explicit real-host gaps are retained; no callback acceptance is inferred."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 15.77
+      "seconds": 17.778
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.185
+      "seconds": 1.164
     },
     {
       "command": [
@@ -44,16 +44,16 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.818
+      "seconds": 24.838
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "4569b0eed3529d4a72ef2d68bb2af73c120528073f0ca8403c72b945c01a24de",
-    "term:attention-request": "47b74f8ed9dbeeeec679e207031fc8097e2905133175b3a97d73e5c23865e7f8",
-    "term:coverage-gap": "ae21b494a4e89ad33379eb9bfab6164bc6fa75ee025e8d5164b816fb174c37b3",
-    "term:host": "e7cdd21070f7c84e9ac5be3327182b9c0278c00078ea5efe69d95b71af94d5ff",
-    "term:known-limitation": "70af24a1e5289cac24c8de9ac191370e043a705bc9257f0a5e0648bb4cdf8d79",
-    "term:subscription": "06761ac95ff4c28fca1d2d5568d07c0a399984b06d95f2f792595d6f60afc111",
-    "term:unverified-behavior": "0791092da2e65d198b98ad62d5863c9501731d37e6e4fdbcbe9dbaf7f2939f1c"
+    "flow:receive-notifications": "0a0572f2d59f3ca7b46ac147fdd9d8ca8250970ff95dc00f9589b5fe5612b6ae",
+    "term:attention-request": "462ac93876005a62efdac37f5be63caffb89f1bfdcfd31c3042505f8cf97f06d",
+    "term:coverage-gap": "ec018212265e427226cc38846c161e5f2faea281e41f3078a8315464784706bf",
+    "term:host": "f6ab4ca8b4139c66c7e6d0f8730609d78bc8ff63aa77f1db64c93754955ad154",
+    "term:known-limitation": "2e36180f24d3d9ba5bfa2de3eacbb50f37f2d8c2346c0ba48fb80990ff7e289c",
+    "term:subscription": "4560e3432a191d32de06301626c4f92734ccdaadbbe232d99ab9f094a51d25ea",
+    "term:unverified-behavior": "43ad92892a2ff7b5d2bc2556c132776587be0a22bf8c8b3309ea0339e9f161e1"
   }
 }

@@ -27,7 +27,7 @@ type App struct {
 	prRefreshAfter string
 	Store          *store.Store
 	Vault          *store.Vault
-	GitHub         *providers.GitHub
+	GitHub         providers.GitHubSource
 	Runs           *Manager
 	DataDir        string
 }

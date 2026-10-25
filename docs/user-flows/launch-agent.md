@@ -31,7 +31,7 @@ Leaving the initial conversation retains its message and busy/uncertain state pe
 
 - **S5** A fresh requested PR can launch automatically only under an owner-enabled inherited/repository policy. It uses the configured review pipeline, honors its explicit execution and publishing authority, pins the current head, appends owner repository instructions and claims the request/head once. Queue-only, paused/stale/failed polls, drafts, other active agent work, unsafe profiles and changed policy do not launch. Restart never replays a claimed request. A newly observed request episode or new head can receive a new review. Manual launches keep their explicit Start behavior.
 
-- **S6** The owner can request a manual PR review through the assistant using a synchronized run/item ID, GitHub URL or repository shorthand directly, without a preliminary discovery call. Ambiguous identifiers return candidates and prepare nothing. Preparation resolves repository, system and built-in review defaults in that order and retains the selected model, skills, pinned head and repository instructions. The assistant inspects the configured authority and starts the matching proposal under the owner's review request. Both read-only/ask and an explicitly selected full-access/never/authorized profile are supported. Proposal-only requests retain unstarted work. Invalid targets, missing heads, unavailable profiles/skills or unsafe review authority return errors without preparing work. Preparation uses synchronized state without provider requests or workspace creation. An uncertain Start is checked against the same retained run before an explicit retry; manual review does not require enabling automatic monitoring.
+- **S6** The owner can request a manual PR review through the assistant using a synchronized run/item ID, GitHub URL or repository shorthand directly, without a preliminary discovery call. Ambiguous identifiers return candidates and prepare nothing. Preparation resolves repository, system and built-in review defaults in that order and retains the selected model, skills, pinned head and repository instructions. The assistant inspects the configured authority and starts the matching proposal under the owner's review request. Both read-only/ask and an explicitly selected full-access/never/authorized profile are supported. Proposal-only requests retain unstarted work. Reviews of the signed-in GitHub account’s own PR are rejected, comparing account names without case sensitivity. Missing author or identity data must be refreshed before review. These checks apply to dedicated and generic review launches and are repeated before Start and against the fresh source before execution. Prepared review intent survives later default-profile changes; older standard review proposals also receive the check. Investigation and implementation of the owner’s PR remain available. Invalid targets, missing heads, unavailable profiles/skills or unsafe review authority return errors without preparing work. Preparation uses synchronized state without provider requests or workspace creation. An uncertain Start is checked against the same retained run before an explicit retry; manual review does not require enabling automatic monitoring.
 
 Review/implementation defaults resolve repository overrides before system defaults. Plugin maintenance excludes concurrent agent start, message/answer delivery and automatic question/inference work; rejected submissions retain their ordinary drafts. Prepared skills retain content/support files and executable modes across later plugin changes.
 
@@ -58,7 +58,7 @@ flowchart TD
     N8["Fresh eligible request uses opted-in policy and one durable head/request claim #40;S5#41;"]
     N9(["Queue only or changed/stale/paused policy#59; no automatic launch"])
     N10["Resolve the configured PR review pipeline and inspect its pinned proposal #40;S6#41;"]
-    N11(["Invalid PR or unsafe/unavailable review pipeline#59; no prepared work"])
+    N11(["Own PR, unknown author/identity or invalid review pipeline#59; no prepared work"])
     N12["Keep source access bounded, private scratch writable and network destinations scoped #40;S7#41;"]
     N13(["Sandbox initialization failed#59; retained work and authority preserved"])
     N14["Honor explicit full access, never command approvals and authorized task publishing #40;S7#41;"]
@@ -84,7 +84,7 @@ flowchart TD
     N0 -->|"owner requests PR review through assistant"| N10
     N10 -->|"inspect snapshot#59; request authorizes review"| N1
     N10 -->|"proposal only#59; no start requested"| N6
-    N10 -->|"invalid target or pipeline"| N11
+    N10 -->|"own PR, unverifiable author or invalid target/pipeline"| N11
     N0 -->|"authorized bounded task start or continuation"| N12
     N12 -->|"valid policy#59; retain scoped work"| N3
     N12 -->|"invalid policy#59; fail before provider launch"| N13
@@ -93,6 +93,8 @@ flowchart TD
     N0 -->|"start or continue retained work"| N15
     N15 -->|"source closed or merged"| N16
     N15 -->|"open source#59; agent assesses fresh changes"| N0
+    N1 -->|"review author now matches the signed-in account"| N11
+    N15 -->|"fresh review author matches the signed-in account or cannot be verified"| N11
 ```
 
 ## Implementation references
@@ -138,6 +140,7 @@ flowchart TD
 - [internal/app/continuation.go](../../internal/app/continuation.go) — Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads. (`func (m *Manager) continuationContext(`)
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
 - [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
+- [internal/app/review_eligibility.go](../../internal/app/review_eligibility.go) — Reject own-author PR reviews and unknown author/identity before preparation, atomic Start and fresh source execution; retain review intent across profile-default changes. (`func validatePRReviewAuthor(`)
 
 ## Test references
 
@@ -196,6 +199,12 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S8. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
 - [internal/transport/tracking_test.go](../../internal/transport/tracking_test.go) — `func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestManualPRReviewRejectsOwnPullRequests(`; S6. Dedicated and generic/configured review preparation reject case-insensitive own authors and unavailable identity/author without persisting work; investigation stays available.
+- [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestManualPRReviewRechecksAuthorBeforeStart(`; S6. Atomic Start rechecks current identity for prepared and legacy reviews without events, workspace or provider start.
+- [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestManualPRReviewRetainsEligibilityAfterDefaultChanges(`; S6. Prepared custom review remains subject to author checks after the configured default changes.
+- [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestManualPRReviewChecksFreshAuthorBeforeProvider(`; S6. Fresh provider source author supersedes cached author and stops self review before workspace/thread creation.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `own PR review rejection preserves the first message without starting`; S6. Light/dark first-message UI exposes author rejection without losing the draft, issuing Start or creating a run.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestContinuationUsesLiveSourceDespiteWarmGitHubCache(`; S8. Execution preflight bypasses a warm query cache and stops a newly closed source before provider/workspace creation.
 
 ## Verification and gaps
 

@@ -3058,6 +3058,32 @@ test("first-message preparation errors retain the editable draft without startin
   expect(calls.filter((c) => c.name === "start_run")).toHaveLength(0);
 });
 
+for (const theme of ["light", "dark"] as const) {
+  test(`own PR review rejection preserves the first message without starting in ${theme}`, async ({ page }) => {
+    const snapshot = initial();
+    snapshot.inbox[0].item.kind = "pr";
+    snapshot.inbox[0].queues = ["mine"];
+    snapshot.profiles[0].id = "review";
+    snapshot.profiles[0].name = "PR review";
+    const { ui, calls } = await host(page, {
+      snapshot,
+      theme,
+      toolError: { name: "prepare_launch", message: "you cannot review your own pull request (owner/repo#1)" },
+    });
+    await ui.getByRole("button", { name: "My PRs", exact: true }).click();
+    await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+    const chat = ui.getByRole("region", { name: "New agent conversation" });
+    await chat.getByLabel("Agent pipeline").selectOption("review");
+    await chat.getByLabel("Message agent").fill("Review this pull request.");
+    await chat.getByRole("button", { name: "Start agent", exact: true }).click();
+    await expect(chat.getByRole("alert")).toContainText("you cannot review your own pull request");
+    await expect(chat.getByLabel("Message agent")).toHaveValue("Review this pull request.");
+    expect(calls.filter(c => c.name === "prepare_launch")).toHaveLength(1);
+    expect(calls.filter(c => c.name === "start_run")).toHaveLength(0);
+    expect(snapshot.runs).toHaveLength(0);
+  });
+}
+
 test("initial bridge failures retry a fresh handshake without reloading or losing state", async ({
   page,
 }) => {

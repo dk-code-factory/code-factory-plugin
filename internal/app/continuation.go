@@ -2,6 +2,7 @@ package app
 
 import (
 	"codefactory/internal/domain"
+	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
 	"fmt"
@@ -38,9 +39,16 @@ func (m *Manager) continuationContext(ctx context.Context, r domain.Run) (*domai
 		bounded, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 		var err error
-		fresh, err = m.app.GitHub.CurrentWorkItem(bounded, cached)
+		fresh, err = m.app.GitHub.CurrentWorkItem(providers.WithGitHubRead(bounded, providers.RequireLive), cached)
 		if err != nil {
 			return nil, "", fmt.Errorf("cannot verify current work item; work remains stopped: %w", err)
+		}
+	}
+	if !closedWork(fresh) {
+		if err := validatePRReviewRun(func(kind, id string, out any) error {
+			return m.app.Store.Get(ctx, kind, id, out)
+		}, r, fresh); err != nil {
+			return nil, "", err
 		}
 	}
 	now := sourceSnapshot(fresh)

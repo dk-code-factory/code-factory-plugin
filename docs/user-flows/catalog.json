@@ -1240,6 +1240,16 @@
           "path": "internal/providers/continuation.go",
           "anchor": "func (g *GitHub) CurrentWorkItem(",
           "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
+        },
+        {
+          "path": "internal/providers/github_source.go",
+          "anchor": "type GitHubSource interface {",
+          "purpose": "Application-facing read interface and explicit cache/live freshness choice; live adapter scopes cache identity by endpoint and principal."
+        },
+        {
+          "path": "internal/providers/github_cache.go",
+          "anchor": "type CachedGitHub struct {",
+          "purpose": "Same-API persistent query cache with TTLs, scoped invalidation, bounded eviction, direct write-through and independent caller values."
         }
       ],
       "tests": [
@@ -1545,6 +1555,54 @@
             "S10"
           ],
           "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
+        },
+        {
+          "path": "internal/providers/github_cache_test.go",
+          "anchor": "func TestGitHubCacheExpiryInvalidationLiveWriteThroughAndRestart(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Normal hits avoid HTTP; explicit live, expiry and invalidation fetch fresh data and persist it across restart without principal crossover."
+        },
+        {
+          "path": "internal/providers/github_cache_test.go",
+          "anchor": "func TestGitHubCacheLiveFailureNeverFallsBackAndHitsDoNotWaitForNetwork(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Live failures never use stale success; ordinary hits stay available during another network request."
+        },
+        {
+          "path": "internal/providers/github_cache_test.go",
+          "anchor": "func TestGitHubCacheDirectGraphReadUpdatesSharedHTTPState(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Explicit live reads bypass GraphQL TTL and retain the verified response for ordinary reads."
+        },
+        {
+          "path": "internal/providers/github_cache_test.go",
+          "anchor": "func TestGitHubCachePreservesSummarySemanticsCopiesAndRelatedInvalidation(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Summary-only flags and original observation times survive cache serialization; caller edits cannot corrupt cache; direct item refresh invalidates its index but preserves other repositories."
+        },
+        {
+          "path": "internal/providers/github_cache_test.go",
+          "anchor": "func TestGitHubCacheNewHeadOrUpdateCannotReuseOldDetail(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "A newly observed PR head or updated scope cannot inherit old detail data from a still-valid unrelated snapshot."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestContinuationUsesLiveSourceDespiteWarmGitHubCache(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "A cached open item does not authorize execution after remote closure; preflight fetches live, terminates before workspace/provider creation and updates the cache."
         }
       ],
       "suites": [
@@ -1685,6 +1743,16 @@
             "id": "source_lifecycle_terminal",
             "label": "Closed or merged source; terminate session and retain history/workspace",
             "terminal": true
+          },
+          {
+            "id": "cache_query",
+            "label": "Reuse a successful unexpired scoped query or require current remote validation",
+            "scenario": "S8"
+          },
+          {
+            "id": "live_query",
+            "label": "Validate live data within the shared budget and update saved query state",
+            "scenario": "S8"
           }
         ],
         "edges": [
@@ -1807,6 +1875,31 @@
             "from": "source_lifecycle_check",
             "to": "n0",
             "label": "open source; agent assesses fresh changes"
+          },
+          {
+            "from": "n1",
+            "to": "cache_query",
+            "label": "ordinary metadata query"
+          },
+          {
+            "from": "cache_query",
+            "to": "n2",
+            "label": "valid cached result; original observation time retained"
+          },
+          {
+            "from": "cache_query",
+            "to": "live_query",
+            "label": "expired, invalidated or explicitly current query"
+          },
+          {
+            "from": "live_query",
+            "to": "n2",
+            "label": "successful validation updates shared cache"
+          },
+          {
+            "from": "live_query",
+            "to": "n3",
+            "label": "failed validation; do not claim old success as current"
           }
         ]
       }
@@ -3129,6 +3222,11 @@
           "path": "internal/app/tracking.go",
           "anchor": "func (a *App) TrackWork(",
           "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/app/review_eligibility.go",
+          "anchor": "func validatePRReviewAuthor(",
+          "purpose": "Reject own-author PR reviews and unknown author/identity before preparation, atomic Start and fresh source execution; retain review intent across profile-default changes."
         }
       ],
       "tests": [
@@ -3579,6 +3677,54 @@
             "S6"
           ],
           "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestManualPRReviewRejectsOwnPullRequests(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Dedicated and generic/configured review preparation reject case-insensitive own authors and unavailable identity/author without persisting work; investigation stays available."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestManualPRReviewRechecksAuthorBeforeStart(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Atomic Start rechecks current identity for prepared and legacy reviews without events, workspace or provider start."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestManualPRReviewRetainsEligibilityAfterDefaultChanges(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Prepared custom review remains subject to author checks after the configured default changes."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestManualPRReviewChecksFreshAuthorBeforeProvider(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Fresh provider source author supersedes cached author and stops self review before workspace/thread creation."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "own PR review rejection preserves the first message without starting",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Light/dark first-message UI exposes author rejection without losing the draft, issuing Start or creating a run."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestContinuationUsesLiveSourceDespiteWarmGitHubCache(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Execution preflight bypasses a warm query cache and stops a newly closed source before provider/workspace creation."
         }
       ],
       "suites": [
@@ -3724,7 +3870,7 @@
           },
           {
             "id": "manual_error",
-            "label": "Invalid PR or unsafe/unavailable review pipeline; no prepared work",
+            "label": "Own PR, unknown author/identity or invalid review pipeline; no prepared work",
             "terminal": true
           },
           {
@@ -3855,7 +4001,7 @@
           {
             "from": "manual_review",
             "to": "manual_error",
-            "label": "invalid target or pipeline"
+            "label": "own PR, unverifiable author or invalid target/pipeline"
           },
           {
             "from": "draft",
@@ -3896,6 +4042,16 @@
             "from": "source_lifecycle_check",
             "to": "draft",
             "label": "open source; agent assesses fresh changes"
+          },
+          {
+            "from": "start",
+            "to": "manual_error",
+            "label": "review author now matches the signed-in account"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "manual_error",
+            "label": "fresh review author matches the signed-in account or cannot be verified"
           }
         ]
       }
@@ -4046,6 +4202,16 @@
           "path": "internal/app/messages.go",
           "anchor": "func (m *Manager) QueueMessage(",
           "purpose": "Durably save encrypted messages before asynchronous same-session delivery; recover queued messages and retain uncertainty without replay."
+        },
+        {
+          "path": "internal/app/attention_reconciliation.go",
+          "anchor": "func (m *Manager) reconcileAttention(",
+          "purpose": "Background same-run per-question reconciliation after delivery, completion and startup. Requires exact owner decision and subsequent agent acknowledgement; uncertainty preserves attention, native approvals are excluded."
+        },
+        {
+          "path": "internal/store/conversation.go",
+          "anchor": "func (s *Store) ConversationEvidence(",
+          "purpose": "Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs."
         }
       ],
       "tests": [
@@ -4321,6 +4487,30 @@
             "S6"
           ],
           "purpose": "A nonexistent retained workspace does not prevent queue acceptance; failed restoration preserves encrypted accepted text and reports uncertainty on the same thread."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Partial acknowledgement retires only Q1, retains actionable Q2 and permits its answer; full same-run acknowledged completion clears the group; unrelated continuation preserves both."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Other-run review completion, forged quotes/IDs, reversed evidence order and an intervening run turn cannot retire the original requests."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationHelperFailureRetainsQuestions(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "An invalid helper decision leaves both original requests pending after delivery and continuation."
         }
       ],
       "suites": [
@@ -4442,6 +4632,11 @@
             "id": "message_uncertain",
             "label": "Keep uncertain delivery visible without automatic replay",
             "terminal": true
+          },
+          {
+            "id": "reconcile_attention",
+            "label": "Reconcile acknowledged same-run decisions; preserve partial, uncertain and other-run asks",
+            "scenario": "S6"
           }
         ],
         "edges": [
@@ -4549,6 +4744,16 @@
             "from": "message_worker",
             "to": "message_uncertain",
             "label": "delivery acknowledgement unavailable"
+          },
+          {
+            "from": "message_worker",
+            "to": "reconcile_attention",
+            "label": "message delivered and agent acknowledges decisions"
+          },
+          {
+            "from": "reconcile_attention",
+            "to": "n6",
+            "label": "only settled questions leave actionable attention"
           }
         ]
       }
@@ -4694,6 +4899,16 @@
           "path": "internal/store/reads.go",
           "anchor": "func Select[T any](",
           "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/app/attention_reconciliation.go",
+          "anchor": "func (m *Manager) reconcileAttention(",
+          "purpose": "Background same-run per-question reconciliation after delivery, completion and startup. Requires exact owner decision and subsequent agent acknowledgement; uncertainty preserves attention, native approvals are excluded."
+        },
+        {
+          "path": "internal/store/conversation.go",
+          "anchor": "func (s *Store) ConversationEvidence(",
+          "purpose": "Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs."
         }
       ],
       "tests": [
@@ -4899,6 +5114,38 @@
             "S5"
           ],
           "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Partial acknowledgement retires only Q1, retains actionable Q2 and permits its answer; full same-run acknowledged completion clears the group; unrelated continuation preserves both."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Other-run review completion, forged quotes/IDs, reversed evidence order and an intervening run turn cannot retire the original requests."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationHelperFailureRetainsQuestions(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An invalid helper decision leaves both original requests pending after delivery and continuation."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationRetiresRecoveryAndPreservesNativeApprovals(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A cancelled synthetic question retires its recovery episode without answering or dismissing an unrelated native command approval."
         }
       ],
       "suites": [
@@ -4925,6 +5172,16 @@
           "owner": "specification-coordinator",
           "reason": "Installed ChatGPT Work now directly invokes list_attention, presents the exact native question, delivers the user choice through answer_request and observes same-thread continuation, with independently audited MCP method names. Actual-host multi-agent pagination, stale/duplicate answers, uncertain delivery and recovered-text question variants remain unverified; fixtures cover those boundaries.",
           "next_verification": "Observe the remaining multi-agent/page, stale/duplicate, uncertain-delivery and recovered-text variants in an explicitly scoped private-pilot campaign, without replaying delivery or substituting runs."
+        },
+        {
+          "version": 1,
+          "id": "gap-flow-answer-attention-s4-reconciliation-real-host",
+          "scenario": "S4",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "user-flow-maintainer",
+          "reason": "Same-run per-question resolution and conservative failure boundaries pass fixtures, but installed real-helper partial/full acknowledgement classification has not been observed.",
+          "next_verification": "In the dedicated private pilot, send a partial answer to two async questions, observe the real helper retain the unanswered question, then settle it and verify restart persistence and actionable queue removal."
         }
       ],
       "ui": [
@@ -5037,6 +5294,21 @@
           {
             "id": "verify_chat",
             "label": "Read a fresh queue and owning run; report continuation or another wait"
+          },
+          {
+            "id": "reconcile_settled",
+            "label": "Check explicit same-run owner decisions and later agent acknowledgements for each retained question",
+            "scenario": "S4"
+          },
+          {
+            "id": "settled_questions",
+            "label": "Retire only settled questions and their recovery state; retain evidence references",
+            "terminal": true
+          },
+          {
+            "id": "unproven_questions",
+            "label": "Keep unanswered or unverified questions; never infer resolution from another run or publication alone",
+            "terminal": true
           }
         ],
         "edges": [
@@ -5169,6 +5441,26 @@
             "from": "verify_chat",
             "to": "chat_queue",
             "label": "Another request is pending"
+          },
+          {
+            "from": "n0",
+            "to": "reconcile_settled",
+            "label": "delivered follow-up, completed turn or startup"
+          },
+          {
+            "from": "reconcile_settled",
+            "to": "settled_questions",
+            "label": "exact unchanged-conversation evidence settles every question"
+          },
+          {
+            "from": "reconcile_settled",
+            "to": "n0",
+            "label": "partial settlement; display original remaining IDs/options"
+          },
+          {
+            "from": "reconcile_settled",
+            "to": "unproven_questions",
+            "label": "unrelated message, helper failure, stale evidence or no explicit acknowledgement"
           }
         ]
       }
@@ -5265,6 +5557,16 @@
           "path": "internal/app/messages.go",
           "anchor": "func (m *Manager) QueueMessage(",
           "purpose": "Recover queued follow-ups using encrypted saved text; retain uncertain delivery without replay or generic startup continuation."
+        },
+        {
+          "path": "internal/app/attention_reconciliation.go",
+          "anchor": "func (m *Manager) reconcileAttention(",
+          "purpose": "Background same-run per-question reconciliation after delivery, completion and startup. Requires exact owner decision and subsequent agent acknowledgement; uncertainty preserves attention, native approvals are excluded."
+        },
+        {
+          "path": "internal/store/conversation.go",
+          "anchor": "func (s *Store) ConversationEvidence(",
+          "purpose": "Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs."
         }
       ],
       "tests": [
@@ -5583,6 +5885,30 @@
             "S6"
           ],
           "purpose": "Queued recovery preserves the submitted follow-up and retained thread without a GitHub preflight; uncertain or failed delivery is retained without automatic replay."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Partial acknowledgement retires only Q1, retains actionable Q2 and permits its answer; full same-run acknowledged completion clears the group; unrelated continuation preserves both."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Other-run review completion, forged quotes/IDs, reversed evidence order and an intervening run turn cannot retire the original requests."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationHelperFailureRetainsQuestions(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "An invalid helper decision leaves both original requests pending after delivery and continuation."
         }
       ],
       "suites": [

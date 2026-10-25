@@ -208,6 +208,7 @@ type Config struct {
 	QuestionHelperModel     string         `json:"questionHelperModel,omitempty"`
 }
 type Run struct {
+	PRReview             bool      `json:"prReview,omitempty"`
 	AutomaticReview      bool      `json:"automaticReview,omitempty"`
 	ReviewPromptSnapshot string    `json:"reviewPromptSnapshot,omitempty"`
 	ID                   string    `json:"id"`
@@ -228,18 +229,27 @@ type Run struct {
 	Created              time.Time `json:"created"`
 }
 type Attention struct {
-	ID         string          `json:"id"`
-	RunID      string          `json:"runId"`
-	RequestID  json.RawMessage `json:"requestId,omitempty"`
-	Method     string          `json:"method"`
-	Params     json.RawMessage `json:"params"`
-	Blocking   bool            `json:"blocking"`
-	Status     string          `json:"status"`
-	Created    time.Time       `json:"created"`
-	Origin     string          `json:"origin,omitempty"`
-	TurnID     string          `json:"turnId,omitempty"`
-	ItemID     string          `json:"itemId,omitempty"`
-	RecoveryID string          `json:"recoveryId,omitempty"`
+	Resolutions []QuestionResolution `json:"resolutions,omitempty"`
+	ID          string               `json:"id"`
+	RunID       string               `json:"runId"`
+	RequestID   json.RawMessage      `json:"requestId,omitempty"`
+	Method      string               `json:"method"`
+	Params      json.RawMessage      `json:"params"`
+	Blocking    bool                 `json:"blocking"`
+	Status      string               `json:"status"`
+	Created     time.Time            `json:"created"`
+	Origin      string               `json:"origin,omitempty"`
+	TurnID      string               `json:"turnId,omitempty"`
+	ItemID      string               `json:"itemId,omitempty"`
+	RecoveryID  string               `json:"recoveryId,omitempty"`
+}
+
+// QuestionResolution retains evidence references without copying human answers.
+type QuestionResolution struct {
+	QuestionID string `json:"questionId"`
+	Status     string `json:"status"`
+	UserEvent  int64  `json:"userEvent"`
+	AgentEvent int64  `json:"agentEvent"`
 }
 type Event struct {
 	Seq    int64           `json:"seq"`
