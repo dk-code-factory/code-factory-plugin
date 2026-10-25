@@ -1075,6 +1075,7 @@ func TestAcceptedRetrySurvivesRestartBeforeProviderHandoff(t *testing.T) {
 				if f.run.LaunchRetryAt.IsZero() || !f.run.ResumePending {
 					t.Fatal("shutdown lost accepted pre-provider retry origin", f.run.Status)
 				}
+				retryAt := f.run.LaunchRetryAt
 				// Capacity recovery remains serialized even across manager replacement.
 				f.a.Runs = NewManager(ctx, f.a, testutil.FakeCodex(t))
 				f.a.Runs.live["occupied"] = &session{run: domain.Run{ID: "occupied", Status: "running"}}
@@ -1085,9 +1086,33 @@ func TestAcceptedRetrySurvivesRestartBeforeProviderHandoff(t *testing.T) {
 				if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil || f.run.Status != "deferred" {
 					t.Fatal("accepted retry was not retained for capacity", f.run.Status, err)
 				}
+				if !strings.Contains(f.run.Error, "restart") || !f.run.LaunchRetryAt.Equal(retryAt) {
+					t.Fatal("restart lost waiting reason or retained deadline", f.run.Error, f.run.LaunchRetryAt)
+				}
+				reason := f.run.Error
+				repo.Paused = true
+				if err := f.a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+					t.Fatal(err)
+				}
 				f.a.Runs.mu.Lock()
 				delete(f.a.Runs.live, "occupied")
 				f.a.Runs.mu.Unlock()
+				if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+					t.Fatal(err)
+				}
+				f.assertNoAgent(t)
+				tracked, err := f.a.TrackWork(ctx, TrackInput{Target: f.run.ID})
+				if err != nil {
+					t.Fatal(err)
+				}
+				current := tracked["currentRun"].(map[string]any)
+				if current["status"] != "deferred" || current["error"] != reason || current["launchRetryAt"] != retryAt {
+					t.Fatal("paused retry lost its projected waiting reason or deadline", current)
+				}
+				repo.Paused = false
+				if err := f.a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+					t.Fatal(err)
+				}
 				if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
 					t.Fatal(err)
 				}

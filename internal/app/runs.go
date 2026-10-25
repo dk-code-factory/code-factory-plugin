@@ -120,10 +120,11 @@ func (m *Manager) Recover(ctx context.Context) error {
 			}
 			r.ResumePending = r.ResumePending && !r.InterruptRequested
 			r.Status = "interrupted"
+			r.Error = ""
 			if retryLaunch {
 				r.Status = "deferred"
+				r.Error = "Launch preparation was interrupted by daemon restart; waiting to retry."
 			}
-			r.Error = ""
 			if e = m.app.Store.Write(ctx, func(t *store.Tx) error {
 				if e := t.Put("run", r.ID, r); e != nil {
 					return e

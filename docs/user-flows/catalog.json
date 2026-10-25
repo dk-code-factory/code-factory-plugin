@@ -1891,7 +1891,7 @@
             "S5",
             "S8"
           ],
-          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once."
+          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once. Restart retains an informative waiting reason and the same deadline under occupied capacity and paused policy; real tracking projects both before eventual startup clears retry metadata."
         },
         {
           "path": "internal/app/launch_retry_test.go",
@@ -4320,7 +4320,7 @@
             "S5",
             "S8"
           ],
-          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once."
+          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once. Restart retains an informative waiting reason and the same deadline under occupied capacity and paused policy; real tracking projects both before eventual startup clears retry metadata."
         },
         {
           "path": "internal/app/launch_retry_test.go",
@@ -7601,7 +7601,7 @@
             "S1",
             "S6"
           ],
-          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once."
+          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once. Restart retains an informative waiting reason and the same deadline under occupied capacity and paused policy; real tracking projects both before eventual startup clears retry metadata."
         },
         {
           "path": "internal/app/launch_retry_test.go",
