@@ -26,8 +26,11 @@ func validatePRReviewRun(get func(string, string, any) error, run domain.Run, it
 	if item.Kind != "pr" {
 		return nil
 	}
-	review := run.PRReview || run.AutomaticReview || run.Profile.ID == "review"
-	if !review {
+	review := run.AutomaticReview || run.Profile.ID == "review"
+	if run.PRReview != nil {
+		review = run.AutomaticReview || *run.PRReview
+	}
+	if !review && run.PRReview == nil {
 		var config domain.Config
 		var repo domain.Repository
 		if err := get("config", "settings", &config); err != nil {

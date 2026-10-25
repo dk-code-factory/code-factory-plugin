@@ -328,6 +328,11 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 		}); err != nil {
 			return err
 		}
+		if a.Runs != nil {
+			if err := a.Runs.stopClosedItem(ctx, fresh); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

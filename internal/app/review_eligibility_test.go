@@ -3,11 +3,117 @@ package app
 import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 )
+
+func TestNonReviewRunRetainsIntentAfterReviewDefaultChanges(t *testing.T) {
+	for _, scope := range []string{"system", "repository"} {
+		t.Run(scope, func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			t.Setenv("CF_FAKE_MODE", "hold")
+			ctx := a.Runs.ctx
+			pr.Author = "me"
+			if err := a.Store.Put(ctx, "item", pr.ID, pr, ""); err != nil {
+				t.Fatal(err)
+			}
+			run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			original := run
+			if scope == "system" {
+				config, _ := a.Config(ctx)
+				config.ReviewProfileID = run.Profile.ID
+				err = a.SaveConfig(ctx, config)
+			} else {
+				var repo domain.Repository
+				_ = a.Store.Get(ctx, "repository", pr.Repository, &repo)
+				repo.ReviewProfileID = run.Profile.ID
+				err = a.SaveRepository(ctx, repo)
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := a.Store.Get(ctx, "run", run.ID, &run); err != nil {
+				t.Fatal(err)
+			}
+			currentItemProvider(t, a, fmt.Sprintf(`{"number":2,"title":"PR","state":"open","user":{"login":"me"},"head":{"sha":%q}}`, pr.Head), 200)
+			if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+				t.Fatal("new default reclassified retained nonreview work", err)
+			}
+			waitFor(t, func() bool {
+				_ = a.Store.Get(ctx, "run", run.ID, &run)
+				return run.Status == "running" && run.ThreadID != ""
+			})
+			thread := run.ThreadID
+			if err := a.Runs.Interrupt(ctx, run.ID); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", run.ID, &run); return run.Status == "interrupted" })
+			if _, err := a.Runs.Start(ctx, run.ID, true); err != nil {
+				t.Fatal("new default blocked retained nonreview continuation", err)
+			}
+			waitFor(t, func() bool {
+				_ = a.Store.Get(ctx, "run", run.ID, &run)
+				return run.Status == "running" && run.TurnID != ""
+			})
+			if run.ThreadID != thread || run.Worktree != original.Worktree || run.Prompt != original.Prompt || string(raw(run.Profile)) != string(raw(original.Profile)) {
+				t.Fatal("default change replaced retained work or authority")
+			}
+		})
+	}
+}
+
+func TestPRReviewIntentJSONCompatibility(t *testing.T) {
+	a, pr := reviewFixture(t)
+	ctx := a.Runs.ctx
+	pr.Author = "me"
+	config, _ := a.Config(ctx)
+	config.ReviewProfileID = "investigate"
+	if err := a.SaveConfig(ctx, config); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name, encoded, profile string
+		known, review, blocked bool
+	}{
+		{"missing-standard", `{}`, "review", false, false, true},
+		{"missing-configured", `{}`, "investigate", false, false, true},
+		{"old-true", `{"prReview":true}`, "old-review", true, true, true},
+		{"explicit-false", `{"prReview":false}`, "investigate", true, false, false},
+		{"automatic", `{"prReview":false,"automaticReview":true}`, "investigate", true, false, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var run domain.Run
+			if err := json.Unmarshal([]byte(tc.encoded), &run); err != nil {
+				t.Fatal(err)
+			}
+			run.Profile.ID = tc.profile
+			var encoded map[string]json.RawMessage
+			if err := json.Unmarshal(raw(run), &encoded); err != nil {
+				t.Fatal(err)
+			}
+			value, known := encoded["prReview"]
+			if known != tc.known || known && string(value) != fmt.Sprint(tc.review) {
+				t.Fatal("review intent lost JSON presence or boolean value", string(value), known)
+			}
+			var legacy struct {
+				PRReview bool `json:"prReview"`
+			}
+			if err := json.Unmarshal(raw(run), &legacy); err != nil || legacy.PRReview != tc.review {
+				t.Fatal("legacy boolean consumer lost compatibility", err)
+			}
+			err := validatePRReviewRun(func(kind, id string, value any) error { return a.Store.Get(ctx, kind, id, value) }, run, pr)
+			if (err != nil) != tc.blocked || err != nil && !strings.Contains(err.Error(), "cannot review your own pull request") {
+				t.Fatal("review intent changed eligibility", err)
+			}
+		})
+	}
+}
 
 func TestManualPRReviewRejectsOwnPullRequests(t *testing.T) {
 	for _, route := range []string{"dedicated", "generic", "configured", "unknown-viewer", "unknown-author"} {

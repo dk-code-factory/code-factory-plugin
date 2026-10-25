@@ -2606,12 +2606,11 @@ function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
               throw new Error(
                 "Use a unique, nonempty label for each priority row.",
               );
-            await save("save_settings", {
-              ...config,
-              priorityLabels: Object.fromEntries(
-                labels.map((row) => [row.label.trim(), row.priority]),
-              ),
-            });
+            const priorityLabels = Object.fromEntries(
+              labels.map((row) => [row.label.trim(), row.priority]),
+            );
+            await save("save_settings", { ...config, priorityLabels });
+            setConfig((current) => ({ ...current, priorityLabels }));
           }}
         >
           <fieldset>

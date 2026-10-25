@@ -1278,7 +1278,7 @@ test("triage does not launch, launch edits and attention answer survive reopenin
 test("settings save repository and priority rows without unused integrations", async ({
   page,
 }) => {
-  const { ui, calls } = await host(page, { surface: "settings" });
+  const { ui, calls, state } = await host(page, { surface: "settings" });
   await expect(ui.getByLabel("Assessment prompt")).toBeHidden();
   await ui.getByLabel("GitHub repository").fill("owner/repo");
   await ui
@@ -1317,6 +1317,25 @@ test("settings save repository and priority rows without unused integrations", a
     calls.find((c) => c.name === "save_settings")?.arguments
       .questionHelperModel,
   ).toBe("fixture-small-model");
+  await ui.getByText("System defaults", { exact: true }).click();
+  await ui.getByLabel("Request budget per hour", { exact: true }).fill("120");
+  await ui
+    .getByRole("button", { name: "Save system defaults", exact: true })
+    .click();
+  const systemForm = ui
+    .getByRole("button", { name: "Save system defaults", exact: true })
+    .locator("xpath=ancestor::form");
+  await expect(systemForm.getByRole("status")).toHaveText("Saved.");
+  const settingsCalls = calls.filter((c) => c.name === "save_settings");
+  expect(settingsCalls).toHaveLength(2);
+  expect(settingsCalls[1].arguments).toMatchObject({
+    priorityLabels: { urgent: 0, P1: 1, P2: 2, P3: 3 },
+    assessmentPrompt: "Assess urgency.",
+    questionHelperModel: "fixture-small-model",
+    githubRequestsPerHour: 120,
+  });
+  expect(state.config.priorityLabels).toEqual({ urgent: 0, P1: 1, P2: 2, P3: 3 });
+  expect(state.config.githubRequestsPerHour).toBe(120);
 });
 
 function retained(

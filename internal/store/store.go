@@ -158,6 +158,27 @@ func (s *Store) Records(ctx context.Context, kind string) (map[string]json.RawMe
 	}
 	return out, rows.Err()
 }
+
+// JSONByteSizes counts JSON-encoded byte slices without transferring or decoding
+// their base64 values. Missing/null fields count as zero; storage keys own identity.
+func (s *Store) JSONByteSizes(ctx context.Context, kind, path string) (map[string]int64, error) {
+	rows, err := s.db.QueryContext(ctx, "SELECT id,coalesce(length(rtrim(json_extract(data, ?), '='))*3/4,0) FROM entities WHERE kind=?", path, kind)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]int64{}
+	for rows.Next() {
+		var id string
+		var size int64
+		if err := rows.Scan(&id, &size); err != nil {
+			return nil, err
+		}
+		out[id] = size
+	}
+	return out, rows.Err()
+}
+
 func (t *Tx) Put(kind, id string, v any) error {
 	b, e := json.Marshal(v)
 	if e != nil {

@@ -50,7 +50,7 @@ func Extract(r io.Reader, destination string, limit int64) error {
 			}
 			continue
 		}
-		if h.Typeflag != tar.TypeReg || seen[name] || total+h.Size > limit {
+		if h.Typeflag != tar.TypeReg || seen[name] || h.Size > limit-total {
 			return fmt.Errorf("dependency archive entry rejected")
 		}
 		seen[name] = true

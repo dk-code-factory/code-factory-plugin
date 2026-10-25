@@ -44,6 +44,54 @@ func TestRecordsKeepStorageKeysAndProjectionPreservesSource(t *testing.T) {
 	}
 }
 
+func TestJSONByteSizesPreservePaddingStorageKeysAndBuckets(t *testing.T) {
+	ctx := context.Background()
+	s, err := Open(filepath.Join(t.TempDir(), "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	for id, body := range map[string][]byte{"zero": {}, "one": {1}, "two": {1, 2}, "three": {1, 2, 3}, "four": {1, 2, 3, 4}, "null": nil} {
+		if err := s.Put(ctx, "cache", id, map[string]any{"ID": "old-embedded-id", "Body": body}, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := s.Put(ctx, "cache", "missing", map[string]any{"Other": "retained"}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Put(ctx, "unrelated", "other-bucket", map[string]any{"Body": []byte("private")}, ""); err != nil {
+		t.Fatal(err)
+	}
+	before, err := s.Records(ctx, "cache")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sizes, err := s.JSONByteSizes(ctx, "cache", "$.Body")
+	if err != nil || len(sizes) != 7 {
+		t.Fatal("cache size inventory", sizes, err)
+	}
+	for id, want := range map[string]int64{"zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "null": 0, "missing": 0} {
+		if got, ok := sizes[id]; !ok || got != want {
+			t.Errorf("%s: size %d, present %t; want %d", id, got, ok, want)
+		}
+	}
+	after, err := s.Records(ctx, "cache")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for id, data := range before {
+		if string(after[id]) != string(data) {
+			t.Fatal("size projection modified stored record", id)
+		}
+	}
+	if sizes, err := s.JSONByteSizes(ctx, "cache' OR 1=1 --", "$.Body"); err != nil || len(sizes) != 0 {
+		t.Fatal("bucket must remain a bound parameter", sizes, err)
+	}
+	if sizes, err := s.JSONByteSizes(ctx, "cache", `$.Body') FROM entities --`); err != nil || sizes["four"] != 0 {
+		t.Fatal("path must remain a bound parameter", sizes, err)
+	}
+}
+
 func TestTransactionsAndVault(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -79,6 +80,7 @@ func TestGitHubCacheLiveFailureNeverFallsBackAndHitsDoNotWaitForNetwork(t *testi
 	var fail atomic.Bool
 	var block atomic.Bool
 	entered, release := make(chan struct{}), make(chan struct{})
+	unblock := sync.OnceFunc(func() { close(release) })
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
 		if block.Load() {
@@ -92,6 +94,7 @@ func TestGitHubCacheLiveFailureNeverFallsBackAndHitsDoNotWaitForNetwork(t *testi
 		fmt.Fprint(w, `{"login":"saved"}`)
 	}))
 	defer server.Close()
+	defer unblock()
 	g := NewCachedGitHub(&GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }})
 	if _, err := g.User(ctx); err != nil {
 		t.Fatal(err)
@@ -104,16 +107,27 @@ func TestGitHubCacheLiveFailureNeverFallsBackAndHitsDoNotWaitForNetwork(t *testi
 	block.Store(true)
 	done := make(chan error, 1)
 	go func() { _, err := g.User(WithGitHubRead(ctx, RequireLive)); done <- err }()
-	<-entered
+	select {
+	case <-entered:
+	case err := <-done:
+		t.Fatal("live fetch exited before entering", err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("live fetch did not enter")
+	}
 	lookup, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	v, err := g.User(lookup)
-	close(release)
+	unblock()
 	if err != nil || v != "saved" {
 		t.Fatal("cache hit waited on an unrelated live fetch", v, err)
 	}
-	if err := <-done; err != nil {
-		t.Fatal(err)
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("live fetch did not finish after release")
 	}
 	if calls.Load() != 3 {
 		t.Fatal("cache hit made an HTTP request", calls.Load())

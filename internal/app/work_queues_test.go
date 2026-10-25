@@ -276,6 +276,7 @@ func TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors(t *testi
 	var block atomic.Bool
 	block.Store(true)
 	entered := make(chan struct{}, 1)
+	release := make(chan struct{})
 	var mu sync.Mutex
 	order := []string{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -284,8 +285,15 @@ func TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors(t *testi
 			order = append(order, r.URL.Path)
 			mu.Unlock()
 			if strings.HasSuffix(r.URL.Path, "/1") && block.Load() {
-				entered <- struct{}{}
-				<-r.Context().Done()
+				select {
+				case entered <- struct{}{}:
+				case <-release:
+					return
+				}
+				select {
+				case <-r.Context().Done():
+				case <-release:
+				}
 				return
 			}
 			n := "1"
@@ -300,6 +308,7 @@ func TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors(t *testi
 		}
 	}))
 	defer server.Close()
+	defer close(release)
 	a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
 	old := domain.Item{ID: "o/r#1", Repository: "o/r", Number: 1, Kind: "pr", State: "open", PR: &domain.PullRequest{ID: "o/r#1", Head: "retained", SyncedAt: time.Now().Add(-time.Hour)}}
 	if err := a.Store.Put(ctx, "linked-pr", old.ID, old, ""); err != nil {
@@ -317,12 +326,19 @@ func TestReferencePollingCancellationYieldsAndRotatesWithoutFalseErrors(t *testi
 	go func() { done <- a.RefreshPullRequests(limited) }()
 	select {
 	case <-entered:
+	case err := <-done:
+		t.Fatal("reference fetch exited before entering", err)
 	case <-time.After(5 * time.Second):
 		t.Fatal("reference fetch did not enter")
 	}
 	cancel()
-	if err := <-done; err != context.Canceled {
-		t.Fatal("cancellation did not yield", err)
+	select {
+	case err := <-done:
+		if err != context.Canceled {
+			t.Fatal("cancellation did not yield", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("reference fetch did not finish after cancellation")
 	}
 	var retained domain.Item
 	if err := a.Store.Get(ctx, "linked-pr", old.ID, &retained); err != nil || retained.PR.Head != "retained" || retained.PR.Error != "" {

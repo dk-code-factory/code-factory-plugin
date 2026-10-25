@@ -431,7 +431,7 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	if p.Sandbox == "read-only" || p.Sandbox == "workspace-write" {
 		prompt += "\nSandbox: " + p.Sandbox + " project access; private writable scratch via TMPDIR; GitHub and Codex service domains through an enforced network proxy. Other destinations and unrelated files are blocked. Save review artifacts and temporary checkouts under TMPDIR. Private skill indexes are isolated per run; shared owner settings are not writable."
 	}
-	r := domain.Run{PRReview: prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
+	r := domain.Run{PRReview: &prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
 	r.Branch = "code-factory/" + r.ID
 	r.Worktree = filepath.Join(m.app.DataDir, "worktrees", r.ID)
 	r.Base = in.Base

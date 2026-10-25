@@ -4142,7 +4142,7 @@
       "scope": "ui-w-run-controls"
     },
     {
-      "id": "element-w-questions-no-reply",
+      "id": "element-w-questions-dismiss",
       "name": "no-reply",
       "aliases": [],
       "category": "element",
@@ -4165,7 +4165,7 @@
       "definition": "The pipeline selection connection within the application interface."
     },
     {
-      "id": "ui-c-text-dismiss",
+      "id": "ui-c-dismiss-question",
       "name": "Text question dismissal connection",
       "aliases": [],
       "category": "ui-connection",

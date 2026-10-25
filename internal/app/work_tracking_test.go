@@ -2,9 +2,122 @@ package app
 
 import (
 	"codefactory/internal/domain"
+	"codefactory/internal/providers"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
+
+func TestRefreshPullRequestsTerminatesOnlyClosedSourceSessions(t *testing.T) {
+	for _, merged := range []bool{false, true} {
+		t.Run(fmt.Sprint(merged), func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			t.Setenv("CF_FAKE_MODE", "question")
+			ctx := a.Runs.ctx
+			start := func(id string) domain.Run {
+				run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: id, ProfileID: "investigate"})
+				if err != nil {
+					t.Fatal(err)
+				}
+				if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+					t.Fatal(err)
+				}
+				waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", run.ID, &run); return run.Status == "waiting" })
+				return run
+			}
+			run := start(pr.ID)
+			original := run
+			at := pendingQuestion(t, a, "rpc")
+			issueRun := start("owner/repo#1")
+			if err := a.Link(ctx, domain.Relationship{Source: issueRun.ItemID, Target: pr.ID}, false); err != nil {
+				t.Fatal(err)
+			}
+			file := filepath.Join(run.Worktree, "unsaved.txt")
+			if err := os.WriteFile(file, []byte("retained work"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/repos/owner/repo/pulls/2":
+					fmt.Fprintf(w, `{"number":2,"title":"PR","state":"closed","merged":%t,"user":{"login":"other"},"head":{"sha":%q}}`, merged, pr.Head)
+				case "/repos/owner/repo/commits/" + pr.Head + "/check-runs":
+					fmt.Fprint(w, `{"total_count":0,"check_runs":[]}`)
+				default:
+					fmt.Fprint(w, `[]`)
+				}
+			}))
+			defer server.Close()
+			a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+			if err := a.RefreshPullRequests(ctx); err != nil {
+				t.Fatal(err)
+			}
+			var saved domain.Item
+			if err := a.Store.Get(ctx, "item", pr.ID, &saved); err != nil || !closedWork(saved) {
+				t.Fatal("targeted closure was not accepted", saved.State, err)
+			}
+			_ = a.Store.Get(ctx, "run", run.ID, &run)
+			if run.Status != "terminated" || run.ResumePending {
+				t.Fatal("targeted closure retained active source work", run.Status)
+			}
+			if run.ThreadID != original.ThreadID || run.Worktree != original.Worktree || run.Prompt != original.Prompt {
+				t.Fatal("targeted closure discarded retained session history")
+			}
+			events, err := a.Store.Events(ctx, 0, 200)
+			if err != nil {
+				t.Fatal(err)
+			}
+			retainedOutput := false
+			for _, event := range events {
+				retainedOutput = retainedOutput || event.Entity == run.ID && event.Kind == "run.output"
+			}
+			if !retainedOutput {
+				t.Fatal("targeted closure discarded conversation history")
+			}
+			live, err := a.Runs.get(run.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			live.mu.Lock()
+			retired := live.retired
+			live.mu.Unlock()
+			if !retired {
+				t.Fatal("terminated source still owns its provider")
+			}
+			page, err := a.ListAttention(ctx, AttentionInput{RunID: run.ID})
+			if err != nil || len(page.Requests) != 0 {
+				t.Fatal("targeted closure retained actionable questions", err)
+			}
+			if err := a.Runs.Answer(ctx, at.ID, json.RawMessage(`{"answers":{"scope":{"answers":["Focused"]}}}`)); err == nil {
+				t.Fatal("terminated question accepted an answer")
+			}
+			_ = a.Store.Get(ctx, "run", issueRun.ID, &issueRun)
+			if issueRun.Status != "waiting" {
+				t.Fatal("linked PR closure stopped the independent issue session", issueRun.Status)
+			}
+			page, err = a.ListAttention(ctx, AttentionInput{RunID: issueRun.ID})
+			if err != nil || len(page.Requests) != 1 {
+				t.Fatal("linked issue lost its own question", err)
+			}
+			if err := a.Runs.Cleanup(ctx, run.ID); err == nil {
+				t.Fatal("dirty terminated workspace was removed")
+			}
+			if data, err := os.ReadFile(file); err != nil || string(data) != "retained work" {
+				t.Fatal("targeted closure lost unsaved work", err)
+			}
+			saved.State, saved.PR.State = "open", "open"
+			importOne(t, a, ctx, saved)
+			if _, err := a.Runs.Start(ctx, run.ID, true); err == nil {
+				t.Fatal("reopening source revived terminated work")
+			}
+		})
+	}
+}
 
 func TestWorkingTracksSessionsUntilGitHubCompletion(t *testing.T) {
 	a, ctx := fixture(t)

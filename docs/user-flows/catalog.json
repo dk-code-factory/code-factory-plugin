@@ -1616,6 +1616,14 @@
           "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
         },
         {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestRefreshPullRequestsTerminatesOnlyClosedSourceSessions(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Accepted targeted closed/merged PR refresh terminates only that source session, retires its question and retains history and dirty workspace; a linked open issue keeps its session and question, and reopening cannot resume the terminated run."
+        },
+        {
           "path": "web/tests/factory.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
@@ -1662,6 +1670,22 @@
             "S8"
           ],
           "purpose": "A newly observed PR head or updated scope cannot inherit old detail data from a still-valid unrelated snapshot."
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheAccountingPreservesLegacyEntriesAndReplacement(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "A fresh provider reads the durable replacement with its original observation time; unrelated legacy bodies remain unchanged and decoded-byte accounting follows storage keys even when embedded IDs are absent."
+        },
+        {
+          "path": "internal/store/store_test.go",
+          "anchor": "func TestJSONByteSizesPreservePaddingStorageKeysAndBuckets(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Read-only byte-size projection preserves database-key identity and exact decoded lengths across base64 padding, null and missing bodies; bucket and JSON-path parameters remain bound and stored records stay unchanged."
         },
         {
           "path": "internal/app/continuation_test.go",
@@ -3789,6 +3813,23 @@
         },
         {
           "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestNonReviewRunRetainsIntentAfterReviewDefaultChanges(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "System and repository review-default changes preserve retained nonreview Start and fresh-source continuation on the owner's PR, with the same thread, workspace, prompt and profile authority."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestPRReviewIntentJSONCompatibility(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Actual Run JSON preserves missing legacy intent and explicit true/false boolean presence; legacy boolean consumers remain compatible while configured/standard/automatic reviews retain self-review rejection."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
           "anchor": "func TestManualPRReviewChecksFreshAuthorBeforeProvider(",
           "scenarios": [
             "S6"
@@ -5297,6 +5338,14 @@
           "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
         },
         {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestRefreshPullRequestsTerminatesOnlyClosedSourceSessions(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Accepted targeted closed/merged PR refresh terminates only that source session, retires its question and retains history and dirty workspace; a linked open issue keeps its session and question, and reopening cannot resume the terminated run."
+        },
+        {
           "path": "web/tests/factory.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
@@ -5867,7 +5916,7 @@
         "C-GLOBAL-ATTENTION",
         "W-QUESTION-RECOVERY",
         "W-SESSION-CONSOLE",
-        "C-TEXT-DISMISS"
+        "C-DISMISS-QUESTION"
       ],
       "terms": [
         "attention-request",
@@ -6625,6 +6674,14 @@
             "S6"
           ],
           "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
+        },
+        {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestRefreshPullRequestsTerminatesOnlyClosedSourceSessions(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Accepted targeted closed/merged PR refresh terminates only that source session, retires its question and retains history and dirty workspace; a linked open issue keeps its session and question, and reopening cannot resume the terminated run."
         },
         {
           "path": "internal/app/continuation_test.go",
@@ -8478,7 +8535,15 @@
           "scenarios": [
             "S6"
           ],
-          "purpose": "Invalid archive paths, links, duplicates and oversized content are rejected; valid content survives extraction."
+          "purpose": "Invalid archive paths, links, duplicates and per-entry or cumulative over-budget content are rejected; exact-limit content survives extraction."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestDependencyArchiveRejectsCumulativeSizeOverflowBeforeWriting(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "After accepting one byte, a MaxInt64 declared entry is rejected before its path is created; the prior accepted file remains intact."
         },
         {
           "path": "internal/dependencies/files_test.go",
@@ -9262,7 +9327,15 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Invalid archive paths, links, duplicates and oversized content are rejected; valid content survives extraction."
+          "purpose": "Invalid archive paths, links, duplicates and per-entry or cumulative over-budget content are rejected; exact-limit content survives extraction."
+        },
+        {
+          "path": "internal/dependencies/files_test.go",
+          "anchor": "func TestDependencyArchiveRejectsCumulativeSizeOverflowBeforeWriting(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "After accepting one byte, a MaxInt64 declared entry is rejected before its path is created; the prior accepted file remains intact."
         },
         {
           "path": "internal/dependencies/files_test.go",

@@ -208,7 +208,7 @@ type Config struct {
 	QuestionHelperModel     string         `json:"questionHelperModel,omitempty"`
 }
 type Run struct {
-	PRReview             bool      `json:"prReview,omitempty"`
+	PRReview             *bool     `json:"prReview,omitempty"`
 	AutomaticReview      bool      `json:"automaticReview,omitempty"`
 	ReviewPromptSnapshot string    `json:"reviewPromptSnapshot,omitempty"`
 	ID                   string    `json:"id"`

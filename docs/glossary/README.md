@@ -3353,10 +3353,10 @@ The optional model used for question recovery.
 
 The displayed lifecycle status of the currently selected session.
 
-<a id="element-w-questions-no-reply"></a>
+<a id="element-w-questions-dismiss"></a>
 ## no-reply
 
-`element-w-questions-no-reply` · element · scope: ui-w-questions
+`element-w-questions-dismiss` · element · scope: ui-w-questions
 
 The control dismissing a textual fallback that needs no user answer.
 
@@ -3374,10 +3374,10 @@ A source link to an individual CI check or status provider.
 
 The pipeline selection connection within the application interface.
 
-<a id="ui-c-text-dismiss"></a>
+<a id="ui-c-dismiss-question"></a>
 ## Text question dismissal connection
 
-`ui-c-text-dismiss` · ui-connection
+`ui-c-dismiss-question` · ui-connection
 
 The text question dismissal connection within the application interface.
 

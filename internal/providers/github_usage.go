@@ -340,23 +340,20 @@ func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
 	if g.usageStore != nil {
 		// Keep the complete private persistent cache bounded as well as memory.
 		id := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
-		entries, err := store.List[struct {
-			ID   string
-			Body []byte
-		}](ctx, g.usageStore, "github-cache")
+		entries, err := g.usageStore.JSONByteSizes(ctx, "github-cache", "$.Body")
 		if err != nil {
 			return err
 		}
-		total := len(v.Body)
-		for _, e := range entries {
-			if e.ID != id {
-				total += len(e.Body)
+		total := int64(len(v.Body))
+		for entryID, size := range entries {
+			if entryID != id {
+				total += size
 			}
 		}
 		if total > 64<<20 {
 			if err := g.usageStore.Write(ctx, func(t *store.Tx) error {
-				for _, e := range entries {
-					if err := t.Delete("github-cache", e.ID); err != nil {
+				for entryID := range entries {
+					if err := t.Delete("github-cache", entryID); err != nil {
 						return err
 					}
 				}

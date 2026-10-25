@@ -2867,8 +2867,8 @@
           "term": "element-w-questions-submit-answer"
         },
         {
-          "id": "W-QUESTIONS.no-reply",
-          "term": "element-w-questions-no-reply"
+          "id": "W-QUESTIONS.dismiss",
+          "term": "element-w-questions-dismiss"
         }
       ],
       "states": [
@@ -11337,7 +11337,7 @@
       ],
       "purpose": "Follow launched work until GitHub completion.",
       "composition": "Query and full-width issue/PR list.",
-      "interactions": "Uses server queue membership; idle, failed and interrupted sessions remain tracked. An issue closes on GitHub or completes when any linked implementation PR merges. PR closure or merge removes its own work. History and outstanding questions remain accessible."
+      "interactions": "Uses server queue membership; idle, failed and interrupted sessions remain tracked. Observed source closure or merge removes its own work, permanently terminates its sessions and retires pending questions, retaining question history and workspaces. A linked implementation PR merge completes the issue's Working membership without terminating its sessions."
     },
     {
       "id": "W-SESSION-CONSOLE",
@@ -11496,10 +11496,10 @@
       "interactions": "Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal."
     },
     {
-      "id": "C-TEXT-DISMISS",
+      "id": "C-DISMISS-QUESTION",
       "kind": "connection",
       "terms": [
-        "ui-c-text-dismiss"
+        "ui-c-dismiss-question"
       ],
       "contains": [],
       "elements": [],
@@ -11519,7 +11519,7 @@
         "browser"
       ],
       "from": [
-        "W-QUESTIONS.no-reply"
+        "W-QUESTIONS.dismiss"
       ],
       "to": [
         "PAGE-AGENT",
@@ -11931,9 +11931,9 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once.",
+      "endpoint_description": "Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed reviews once under the configured authority.",
       "trigger": "Explicit owner configuration or management choice; opted-in successful repository polls.",
-      "interactions": "Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed read-only reviews once.",
+      "interactions": "Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed reviews once under the configured authority.",
       "from": [
         "W-REPOSITORY-SETTINGS.auto-review",
         "W-SYSTEM-DEFAULTS.auto-review"
@@ -12489,7 +12489,7 @@
       "id": "UI-SETTINGS",
       "path": "web/tests/factory.spec.ts",
       "anchor": "settings save repository and priority rows without unused integrations",
-      "assertion": "Dedicated settings stays open after repository save and shows its summary; priority rows save with local status; no unused integration controls or credential submission."
+      "assertion": "Dedicated settings stays open after repository save and shows its summary; priority rows save with local status; a subsequent system-default budget save preserves accepted priority labels, assessment prompt and helper model; no unused integration controls or credential submission."
     },
     {
       "id": "UI-ASSEMBLED",
@@ -14625,7 +14625,7 @@
             "C-START-CHAT",
             "C-SESSION-CONSOLE",
             "C-PIPELINE-SELECT",
-            "C-TEXT-DISMISS",
+            "C-DISMISS-QUESTION",
             "C-PLUGIN-MAINTENANCE",
             "C-REVIEW-POLICY",
             "C-REPOSITORY-REVIEW-PROMPT",

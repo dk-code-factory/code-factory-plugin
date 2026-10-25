@@ -63,6 +63,7 @@ func TestDependencyArchivesRejectTraversalLinksDuplicatesAndBudget(t *testing.T)
 		{"hardlink", []archiveEntry{{name: "link", kind: tar.TypeLink}}, 100},
 		{"duplicate", []archiveEntry{{name: "a", body: "x"}, {name: "a", body: "y"}}, 100},
 		{"budget", []archiveEntry{{name: "a", body: "longer"}}, 2},
+		{"cumulative budget", []archiveEntry{{name: "a", body: "one"}, {name: "b", body: "two"}}, 5},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := Extract(bytes.NewReader(archiveBytes(t, tc.entries...)), t.TempDir(), tc.limit); err == nil {
@@ -71,12 +72,45 @@ func TestDependencyArchivesRejectTraversalLinksDuplicatesAndBudget(t *testing.T)
 		})
 	}
 	root := t.TempDir()
-	if err := Extract(bytes.NewReader(archiveBytes(t, archiveEntry{name: "bin/tool", body: "data"})), root, 100); err != nil {
+	if err := Extract(bytes.NewReader(archiveBytes(t, archiveEntry{name: "bin/tool", body: "data"})), root, 4); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := os.ReadFile(filepath.Join(root, "bin/tool"))
 	if string(b) != "data" {
 		t.Fatal("valid archive lost")
+	}
+}
+
+func TestDependencyArchiveRejectsCumulativeSizeOverflowBeforeWriting(t *testing.T) {
+	var archive bytes.Buffer
+	gz := gzip.NewWriter(&archive)
+	tw := tar.NewWriter(gz)
+	if err := tw.WriteHeader(&tar.Header{Name: "first", Mode: 0600, Size: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write([]byte("a")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tw.WriteHeader(&tar.Header{Name: "overflow", Mode: 0600, Size: 1<<63 - 1, Format: tar.FormatGNU}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write([]byte("beyond the remaining budget")); err != nil {
+		t.Fatal(err)
+	}
+	// Deliberately leave the huge tar entry incomplete. Its declared size must be
+	// rejected before any of its finite, highly compressible payload is written.
+	if err := gz.Close(); err != nil {
+		t.Fatal(err)
+	}
+	root := t.TempDir()
+	if err := Extract(bytes.NewReader(archive.Bytes()), root, 8); err == nil || !strings.Contains(err.Error(), "entry rejected") {
+		t.Fatal("overflowing entry was not rejected by the budget", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "overflow")); !os.IsNotExist(err) {
+		t.Fatal("over-budget entry was created", err)
+	}
+	if body, err := os.ReadFile(filepath.Join(root, "first")); err != nil || string(body) != "a" {
+		t.Fatal("prior accepted entry was changed", string(body), err)
 	}
 }
 

@@ -583,8 +583,8 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 		return nil
 	}
 	// An initial import in a large repository must not hold up every other
-	// repository. Each provider sync has four workers, for at most twelve
-	// concurrent enrichment requests across these three repository workers.
+	// repository. Up to three workers synchronize repository indexes; any
+	// fallback PR metadata is processed sequentially within each index.
 	jobs := make(chan domain.Repository)
 	var workers sync.WaitGroup
 	var firstErr error

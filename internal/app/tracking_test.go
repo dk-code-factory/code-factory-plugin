@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -274,6 +275,8 @@ func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(t *testing.T) {
 	_ = a.Store.Put(ctx, "pr-reviews", i.ID, domain.PRReviews{ItemID: i.ID, SyncedAt: time.Now().UTC(), Reviews: []domain.PublishedReview{}}, "")
 	entered := make(chan struct{})
 	release := make(chan struct{})
+	unblock := sync.OnceFunc(func() { close(release) })
+	defer unblock()
 	writer := make(chan error, 1)
 	go func() {
 		writer <- a.Store.Write(ctx, func(tx *store.Tx) error {
@@ -285,7 +288,13 @@ func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(t *testing.T) {
 			return nil
 		})
 	}()
-	<-entered
+	select {
+	case <-entered:
+	case err := <-writer:
+		t.Fatal("synchronization writer exited before entering", err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("synchronization writer did not enter")
+	}
 	done := make(chan error, 1)
 	go func() { _, err := a.TrackWork(ctx, TrackInput{Target: i.ID}); done <- err }()
 	var err error
@@ -294,9 +303,14 @@ func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(t *testing.T) {
 	case <-time.After(500 * time.Millisecond):
 		err = fmt.Errorf("saved tracking read waited on synchronization write")
 	}
-	close(release)
-	if writeErr := <-writer; writeErr != nil {
-		t.Fatal(writeErr)
+	unblock()
+	select {
+	case writeErr := <-writer:
+		if writeErr != nil {
+			t.Fatal(writeErr)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("synchronization writer did not finish after release")
 	}
 	if err != nil {
 		t.Fatal(err)

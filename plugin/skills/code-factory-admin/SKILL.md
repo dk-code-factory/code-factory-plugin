@@ -21,8 +21,11 @@ review when true. System and repository `reviewProfileId` and
 `implementationProfileId` select default pipelines; empty repository values inherit.
 Repository `reviewPrompt` appends trusted owner instructions to the generic review
 prompt. `paused` stops monitoring. Explain the effective policy before saving an
-automatic-review choice. Automatic reviews use a read-only profile with publishing
-set to ask, and never post reviews or implement changes on their own. Request/head
+automatic-review choice. Automatic reviews support read-only profiles with publishing
+set to `ask`, or explicitly selected `danger-full-access` profiles with approvals
+set to `never` and publishing set to `authorized`. The former requires owner approval
+to publish; the latter permits autonomous publication. Automatic review does not
+enable implementation, and selecting a profile does not enable automatic review. Request/head
 claims prevent duplicate launches across polls and restarts.
 
 For an explicitly requested manual PR review, use the daily Code Factory skill's

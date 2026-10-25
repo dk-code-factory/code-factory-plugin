@@ -116,11 +116,14 @@ pipelines. Queue-only is the default. A repository can inherit either pipeline,
 override it, and inherit/override automatic review independently. Its additional
 review prompt is appended to the generic profile prompt during preparation.
 Automatic reviews wait until current agent work is inactive and require fresh provider state, a current non-draft user/team
-request and a read-only, ask-before-publishing profile. Claims are durable per
+request and a supported review profile: read-only with publishing set to `ask`,
+or explicitly selected `danger-full-access` with approvals set to `never` and
+publishing set to `authorized`. Claims are durable per
 request episode and PR head; repeated polls and restarts do not replay a claim.
 New heads or a newly observed request episode can receive another review.
-Implementation and publishing remain explicit; automatically starting a review
-does not post a GitHub review or implement fixes.
+Automatic review does not enable implementation. Publishing follows the selected
+profile: `ask` requires owner approval; `authorized` permits autonomous publication.
+Selecting either profile does not itself enable automatic review.
 
 Plugins & skills shows a cached, paginated inventory from the pinned Codex CLI.
 Add a local/Git marketplace (with optional ref), find a plugin or enter its

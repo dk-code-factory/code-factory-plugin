@@ -12,7 +12,7 @@ filter, scroll position and row focus. Queries remain independent between tabs.
 
 ## Work lists
 
-- Working contains items with a started pipeline, including idle/interrupted/failed sessions. A PR leaves when closed or merged; an issue leaves when closed or any linked implementation PR merges. A reference alone cannot complete work. Closure changes membership without stopping sessions or deleting history.
+- Working contains items with a started pipeline, including idle/interrupted/failed sessions. A PR leaves when closed or merged; an issue leaves when closed or any linked implementation PR merges. A reference alone cannot complete work. Observed source closure or merge permanently terminates its sessions and retires pending questions, retaining history and workspaces. A linked implementation PR merge completes the issue's Working membership without terminating the issue's sessions.
 - Issues defaults to **open**, including linked PR summaries. **pending** remains the optional open-without-PR filter. This tab always contains issues only.
 - My PRs defaults to open PRs authored by the authenticated GitHub account.
 - Review PRs defaults to open PRs requesting that account or one of its teams.
