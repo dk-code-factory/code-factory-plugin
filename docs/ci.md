@@ -13,12 +13,14 @@ a CI manifest bound to the exact source commit. Failed browser evidence is kept
 separately. Verification has read-only repository permissions.
 
 Main pushes compare their exact before/after commits; PRs compare their event
-base/head SHAs. Manual checks on main use the current parent. Missing or
-mismatched commits fail; there is no guessed-ref fallback. Feature branches are
-verified through PRs to main. A branch without such a PR receives no automatic
-checks or package artifacts. Manual feature-branch verification fails explicitly
-before running checks or creating artifacts. A successful manual check cannot
-replace the main-push verification required for release delivery.
+base/head SHAs. Manual checks on main use the current parent. If checkout lacks
+an event-pinned base after a branch rewrite, CI fetches that exact SHA from
+origin and validates it again. Invalid, unavailable or mismatched commits fail;
+there is no guessed-ref fallback. Feature branches are verified through PRs to
+main. A branch without such a PR receives no automatic checks or package
+artifacts. Manual feature-branch verification fails explicitly before running
+checks or creating artifacts. A successful manual check cannot replace the
+main-push verification required for release delivery.
 
 ## Public source import
 
