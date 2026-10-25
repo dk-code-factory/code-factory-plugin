@@ -1881,7 +1881,8 @@
       "terms": [
         "ui-w-run-controls",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -1927,7 +1928,8 @@
         "state-idle",
         "state-interrupted",
         "state-failed",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "implementation": [
         {
@@ -1983,7 +1985,10 @@
         "UI-CONVERSATION-DETAILS",
         "UI-CONVERSATION-DETAILS",
         "UI-WAKE-MESSAGE",
-        "UI-TERMINATED-WORK"
+        "UI-TERMINATED-WORK",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW",
+        "RUN-LAUNCH-DEFERRED-CANCEL"
       ],
       "gaps": [
         {
@@ -2011,7 +2016,7 @@
         "go"
       ],
       "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
-      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable.",
+      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable. Deferred pre-agent launches expose Cancel retry; interruption or cleanup cancels their retained retry even when no agent session is attached.",
       "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible."
     },
     {
@@ -2116,7 +2121,7 @@
         "go"
       ],
       "element_description": "Whole-notice **answer** button; **blocking-label** or **continuing-label**.",
-      "state_description": "Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question · agent continues; unconfirmed completion and unresolved clarification create no notice.",
+      "state_description": "Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question \u00b7 agent continues; unconfirmed completion and unresolved clarification create no notice.",
       "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them."
     },
     {
@@ -2258,7 +2263,8 @@
       "terms": [
         "ui-w-message",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -2276,7 +2282,8 @@
         "state-running",
         "state-waiting",
         "state-idle",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "implementation": [
         {
@@ -2337,7 +2344,9 @@
         "UI-QUEUED-MESSAGE",
         "API-QUESTION-ACTIVE-TURN",
         "API-INACTIVE-QUESTION-FOLLOWUP",
-        "UI-CLARIFICATION"
+        "UI-CLARIFICATION",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW"
       ],
       "gaps": [
         {
@@ -2354,8 +2363,8 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**text** “Message agent” textarea; **send** button.",
-      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft. Unresolved classification permits explicit owner messaging.",
+      "element_description": "**text** \u201cMessage agent\u201d textarea; **send** button.",
+      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/deferred/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft. Unresolved classification permits explicit owner messaging. A cancelled pre-agent launch without a retained thread also keeps the composer disabled.",
       "interactions": "Active messages require the displayed expected turn. A successful send records the message durably and clears only unchanged submitted text before agent delivery; failed acceptance preserves the draft. Background delivery restores the retained session using this submitted message as its first new turn and makes no GitHub preflight. The UI never calls Resume separately or automatically replays a mutation. Later delivery status remains visible in the conversation."
     },
     {
@@ -3934,7 +3943,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -3957,7 +3966,7 @@
         "tooling",
         "go"
       ],
-      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”.",
+      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** \u201cConnect Code Factory\u201d, **deny** \u201cCancel\u201d.",
       "state_description": "Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages.",
       "interactions": "Allow or Deny consumes the request and redirects to its registered host callback. No credential field."
     },
@@ -4669,7 +4678,7 @@
         "go"
       ],
       "composition": "`W-RUN-ROW` repeated by run ID, or `W-RUN-EMPTY`",
-      "context": "Collapsed Work history inside the selected item’s Item details, containing only that item’s retained conversations and nested Draft launches."
+      "context": "Collapsed Work history inside the selected item\u2019s Item details, containing only that item\u2019s retained conversations and nested Draft launches."
     },
     {
       "id": "P-RUN-DETAIL",
@@ -5751,7 +5760,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6456,7 +6465,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6736,7 +6745,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-INBOX-QUERY` → `P-INBOX-LIST`",
+      "endpoint_description": "`W-INBOX-QUERY` \u2192 `P-INBOX-LIST`",
       "trigger": "Search text and filter value.",
       "interactions": "Applies per-tab kind/ownership/review membership, filter and query. Pending issues exclude linked PRs; lists sort by priority then update time.",
       "from": [
@@ -6825,7 +6834,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Work row → item conversation",
+      "endpoint_description": "Work row \u2192 item conversation",
       "trigger": "Click a row; item ID.",
       "interactions": "Loads and marks the displayed item revision read, continues the newest retained conversation or shows a prefilled first message. Never starts or prepares on selection.",
       "from": [
@@ -6922,7 +6931,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read.",
+      "endpoint_description": "`W-ITEM-ACTIONS` \u2192 persisted item state \u2192 shared snapshot indicators; detail history is a separately retained read.",
       "trigger": "Unread, acknowledge New or record action; item ID.",
       "interactions": "Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. A deferred provider refresh leaves the displayed saved information unread until a successful retry.",
       "from": [
@@ -7005,7 +7014,7 @@
         "go",
         "browser"
       ],
-      "endpoint_description": "`W-PRIORITY.override` → local priority state and displayed item",
+      "endpoint_description": "`W-PRIORITY.override` \u2192 local priority state and displayed item",
       "trigger": "Picker change; automatic clears the override.",
       "interactions": "Saves immediately, disables during submission and restores the saved value with inline error on failure.",
       "from": [
@@ -7097,7 +7106,7 @@
         "go",
         "browser"
       ],
-      "endpoint_description": "`W-RELATIONSHIPS` → selected item's relationships/context",
+      "endpoint_description": "`W-RELATIONSHIPS` \u2192 selected item's relationships/context",
       "trigger": "Add submits `source` and `target`; Remove submits `source`, `target` and `remove: true`.",
       "interactions": "Submits local Add/Remove, then refreshes selected relationships without clearing unrelated drafts. A late earlier response cannot replace later selected detail.",
       "from": [
@@ -7179,7 +7188,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS.launch` → `D-LAUNCH`",
+      "endpoint_description": "`W-ITEM-ACTIONS.launch` \u2192 `D-LAUNCH`",
       "trigger": "Selected item entry.",
       "interactions": "New run under Item details prepares an optional proposal and opens its durable review. No workspace/process starts until Start.",
       "from": [
@@ -7259,7 +7268,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-EDITOR.profile` → its editable fields",
+      "endpoint_description": "`W-LAUNCH-EDITOR.profile` \u2192 its editable fields",
       "trigger": "Select a profile.",
       "interactions": "Replaces prompt/model/effort/skill drafts; keeps the current base draft.",
       "from": [
@@ -7351,9 +7360,9 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Default launch or editor Review → prepared review",
+      "endpoint_description": "Default launch or editor Review \u2192 prepared review",
       "trigger": "Default launch, or explicit Review after customization.",
-      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account’s own PR and missing author/identity without creating a proposal.",
+      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account\u2019s own PR and missing author/identity without creating a proposal.",
       "from": [
         "W-LAUNCH-EDITOR.review",
         "W-ITEM-ACTIONS.launch"
@@ -7434,7 +7443,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.edit` → `P-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.edit` \u2192 `P-LAUNCH-EDITOR`",
       "trigger": "Edit launch click.",
       "interactions": "Returns to the editor. The preceding prepared record is retained, not modified/deleted.",
       "from": [
@@ -7538,7 +7547,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.start` → `PAGE-AGENTS`/`P-RUN-DETAIL`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.start` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`",
       "trigger": "Prepared run ID.",
       "interactions": "Explicit Start only. Error/lost response reads the same run; accepted work opens, still-prepared work permits retry, unknown status disables Start/Edit and offers Check start status. PR review Start rechecks the current author and identity and rejects self review without queuing work; the retained proposal remains available.",
       "from": [
@@ -7626,8 +7635,8 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Retained run or draft row → conversation or review",
-      "trigger": "Retained conversation or draft row inside the owning item’s Work history.",
+      "endpoint_description": "Retained run or draft row \u2192 conversation or review",
+      "trigger": "Retained conversation or draft row inside the owning item\u2019s Work history.",
       "interactions": "Opens the selected retained conversation within the owning item, preserving the originating work queue Back context. Prepared rows reopen their existing immutable review without preparing or starting again.",
       "from": [
         "W-RUN-ROW.select"
@@ -7731,7 +7740,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-RUN-CONTROLS` → selected run → Agents widgets",
+      "endpoint_description": "`W-RUN-CONTROLS` \u2192 selected run \u2192 Agents widgets",
       "trigger": "Explicit Interrupt, question-recovery Take over session, or Cleanup for the selected retained run.",
       "interactions": "Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary. Source closure or merge permanently terminates the session while retaining its history and workspace.",
       "from": [
@@ -7837,7 +7846,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-MESSAGE` → selected run → `W-TRANSCRIPT`",
+      "endpoint_description": "`W-MESSAGE` \u2192 selected run \u2192 `W-TRANSCRIPT`",
       "trigger": "Message text and displayed current-turn context.",
       "interactions": "Send with current-turn identity while active. Acknowledge durable local queue acceptance before contacting the agent; background delivery restores the same retained session when needed. Saved source context is explicitly unverified; task-required GitHub reads belong to the agent. Accepted sends clear unchanged submitted drafts; rejected acceptance preserves them. Delivery uncertainty remains visible and is never automatically replayed. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
@@ -7921,7 +7930,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` → `D-ATTENTION`",
+      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` \u2192 `D-ATTENTION`",
       "trigger": "Notice click; request ID belonging to the selected run.",
       "interactions": "Opens that request without answering.",
       "from": [
@@ -8013,7 +8022,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Messages request → owning run and attention dialog",
+      "endpoint_description": "Messages request \u2192 owning run and attention dialog",
       "trigger": "Select one pending request.",
       "interactions": "Selects that exact owning run and request; identifies item/profile and returns to that conversation after answering. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
@@ -8098,7 +8107,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Attention dialog → owning conversation",
+      "endpoint_description": "Attention dialog \u2192 owning conversation",
       "trigger": "Current attention's owning run ID.",
       "interactions": "Closes attention and opens the owning conversation without submitting an answer.",
       "from": [
@@ -8192,7 +8201,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state",
+      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` \u2192 request/run state",
       "trigger": "Response matched to current request ID.",
       "interactions": "Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
@@ -8282,7 +8291,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "Launch/attention close control → underlying page",
+      "endpoint_description": "Launch/attention close control \u2192 underlying page",
       "trigger": "Close click or Escape inside the active dialog.",
       "interactions": "Dismisses only that dialog and restores its connected opener when permitted. No attention answer or interrupt is sent.",
       "from": [
@@ -8367,7 +8376,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` → repository summary / sync inputs",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` \u2192 repository summary / sync inputs",
       "trigger": "Repository ID, checkout and default base.",
       "interactions": "Shows saving/success/error within the independent settings view. Successful saves remain there; other open task views receive refreshed shared data without navigation or draft reset.",
       "from": [
@@ -8455,7 +8464,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` → profile and launch skill choices",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` \u2192 profile and launch skill choices",
       "trigger": "Explicit skill discovery directory, initially the filesystem root.",
       "interactions": "Loads/discovers skills and refreshes shared choices without saving the repository first.",
       "from": [
@@ -8542,7 +8551,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-POLICY-SETTINGS` → config / priority assessment inputs",
+      "endpoint_description": "`W-POLICY-SETTINGS` \u2192 config / priority assessment inputs",
       "trigger": "Label/priority rows, assessment prompt and notification setting; disabled Jira values are not editable here.",
       "interactions": "Submits configuration; later background assessment can update priority displays. Does not create a host subscription.",
       "from": [
@@ -8631,7 +8640,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-PROFILE-SETTINGS` → future `W-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-PROFILE-SETTINGS` \u2192 future `W-LAUNCH-EDITOR`",
       "trigger": "Saved profile draft.",
       "interactions": "Refreshes available/default launch settings; existing prepared snapshots stay unchanged.",
       "from": [
@@ -8720,7 +8729,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-SKILL-SETTINGS` → profile/launch skill choices",
+      "endpoint_description": "`W-SKILL-SETTINGS` \u2192 profile/launch skill choices",
       "trigger": "Managed skill name/instructions.",
       "interactions": "Refreshes shared skills; immutable prepared skill snapshots stay unchanged.",
       "from": [
@@ -8806,7 +8815,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-DIAGNOSTICS` → its result display",
+      "endpoint_description": "`W-DIAGNOSTICS` \u2192 its result display",
       "trigger": "Check connection click.",
       "interactions": "Shows local Checking feedback and then health results or an exact local error. No repair or page transition.",
       "from": [
@@ -8931,7 +8940,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Shared updated state → Inbox/Agents/Settings summaries, shell counts",
+      "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
       "trigger": "Successful polling or action refresh.",
       "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. Known read calls carry a unique freshness marker so host reuse of an earlier response cannot freeze an empty journal page or saved snapshot. This marker does not change server state, source authority or mutation replay rules. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns. Provider query cache hits preserve original observation times. Post-turn publication verification uses live data through the same cache boundary; live failure retains prior saved observations with an error.",
       "from": [
@@ -9024,7 +9033,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "History pages → `W-TRANSCRIPT`",
+      "endpoint_description": "History pages \u2192 `W-TRANSCRIPT`",
       "trigger": "Selected run and current history cursor; optional reset to beginning.",
       "interactions": "Refreshes display only. Resetting history does not resume/replay agent work.",
       "from": [
@@ -9075,7 +9084,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "Package page links → artifacts / external host setup",
+      "endpoint_description": "Package page links \u2192 artifacts / external host setup",
       "trigger": "Download or follow documented setup instructions.",
       "interactions": "External package downloads and OAuth connection guidance. Only a valid observed registration enables the primary browser package. Portable downloads stay advanced; no connection is fabricated.",
       "from": [
@@ -9103,7 +9112,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -9126,7 +9135,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "External host → `PAGE-OWNER-CONSENT` → registered host callback",
+      "endpoint_description": "External host \u2192 `PAGE-OWNER-CONSENT` \u2192 registered host callback",
       "trigger": "Valid private request; Allow or Deny.",
       "interactions": "External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL.",
       "from": [
@@ -9210,7 +9219,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ELICITATION.open-authorization` → external authorization page",
+      "endpoint_description": "`W-ELICITATION.open-authorization` \u2192 external authorization page",
       "trigger": "Request-supplied URL opened through host.",
       "interactions": "External. Continue reports the user's completion decision; it does not independently prove external success.",
       "from": [
@@ -9258,7 +9267,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` → alternate local transport session",
+      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` \u2192 alternate local transport session",
       "trigger": "Single-use private setup input.",
       "interactions": "Submits and removes form on success; does not navigate into Settings or activate Jira.",
       "from": [
@@ -9311,7 +9320,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-BROWSER-LAB` controls → isolated browser → screenshot/location",
+      "endpoint_description": "`W-BROWSER-LAB` controls \u2192 isolated browser \u2192 screenshot/location",
       "trigger": "Explicit lab navigation/click/key/scroll operations.",
       "interactions": "Developer utility feedback loop; never an Inbox/Agents page transition.",
       "from": [
@@ -10255,7 +10264,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Conversation Back → originating work or Messages tab",
+      "endpoint_description": "Conversation Back \u2192 originating work or Messages tab",
       "trigger": "Back action on the record page.",
       "interactions": "Restores list query, scroll and row focus when the row exists; missing rows leave a usable focus fallback. Ordinary drafts remain keyed to their records.",
       "from": [
@@ -10469,7 +10478,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Host open_settings invocation → independent settings document",
+      "endpoint_description": "Host open_settings invocation \u2192 independent settings document",
       "trigger": "The settings entry tool advertises its own content-specific resource and output template.",
       "interactions": "Opens configuration in its own view. The inbox entry and legacy resource remain inbox-only. Both surfaces reuse authenticated bridged tools without owner credentials or direct iframe localhost access.",
       "from": [
@@ -10767,7 +10776,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "First-message Start → retained run conversation",
+      "endpoint_description": "First-message Start \u2192 retained run conversation",
       "trigger": "Explicit Start with the visible message and authority.",
       "interactions": "Prepares then starts once; verifies the same run after an uncertain response. Preserves per-item draft and recovery state.",
       "from": [
@@ -10784,7 +10793,8 @@
       "id": "W-WORK-STATUS",
       "kind": "widget",
       "terms": [
-        "ui-w-work-status"
+        "ui-w-work-status",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -10794,7 +10804,8 @@
         }
       ],
       "states": [
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "implementation": [
         {
@@ -10806,6 +10817,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Recover(",
           "purpose": "Restore pending same-thread progress at startup while preserving completed, explicitly interrupted and input-waiting work."
+        },
+        {
+          "path": "internal/app/launch_retry.go",
+          "anchor": "func (m *Manager) RetryDeferredLaunches(",
+          "purpose": "Retain scheduled launch state across daemon ticks/restart without duplicate execution."
         }
       ],
       "assertions": [
@@ -10816,7 +10832,11 @@
         "API-WORKING",
         "UI-WORKING-MONITOR",
         "RUN-AUTO-CONTINUE",
-        "UI-TERMINATED-WORK"
+        "UI-TERMINATED-WORK",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW",
+        "RUN-LAUNCH-DEFERRED",
+        "RUN-LAUNCH-DEFERRED-PROJECTION"
       ],
       "gaps": [
         {
@@ -10833,7 +10853,7 @@
         "browser"
       ],
       "element_description": "Compact **value** in issue/PR metadata.",
-      "state_description": "Server aggregate across started sessions: Not started, Starting, Active, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent. After daemon startup, pending sessions continue from their retained progress automatically. Completed idle work stays idle; explicit interrupts and unanswered questions stay stopped. A closed issue or closed/merged PR terminates its retained sessions and displays Stopped; history and workspaces remain available.",
+      "state_description": "Server aggregate across started sessions: Not started, Starting, Active, Waiting for GitHub, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent. After daemon startup, pending sessions continue from their retained progress automatically. Completed idle work stays idle; explicit interrupts and unanswered questions stay stopped. A closed issue or closed/merged PR terminates its retained sessions and displays Stopped; history and workspaces remain available. Accepted launch preflight delayed by the request budget, quota reserve or rate limit displays Waiting for GitHub while its automatic retry remains pending.",
       "interactions": "Display only; no separate activity control or Resume action."
     },
     {
@@ -10872,7 +10892,8 @@
       "id": "W-SESSION-CONSOLE",
       "kind": "widget",
       "terms": [
-        "ui-w-session-console"
+        "ui-w-session-console",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -10881,7 +10902,9 @@
           "term": "element-w-session-console-output"
         }
       ],
-      "states": [],
+      "states": [
+        "state-deferred"
+      ],
       "implementation": [
         {
           "path": "web/src/main.tsx",
@@ -10890,7 +10913,9 @@
         }
       ],
       "assertions": [
-        "UI-SESSION-CONSOLE"
+        "UI-SESSION-CONSOLE",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW"
       ],
       "gaps": [],
       "suites": [
@@ -10898,7 +10923,7 @@
         "go"
       ],
       "element_description": "Paged messages, commands/output, plans, changes and errors from the selected retained session.",
-      "state_description": "Selected instead of the concise conversation; preserves per-run reply draft and existing paging bounds.",
+      "state_description": "Selected instead of the concise conversation; preserves per-run reply draft and existing paging bounds. Deferred work shows Waiting for GitHub, the retained provider reason and next retry time in both conversation and console views. Cancel retry stops the scheduled launch without creating an input request.",
       "interactions": "Uses the same answer, message and interrupt operations; does not open another process or terminal transport."
     },
     {
@@ -11639,7 +11664,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Owner usage settings → persisted request limits and cached accounting",
+      "endpoint_description": "Owner usage settings \u2192 persisted request limits and cached accounting",
       "trigger": "Save system defaults or read cached Settings.",
       "interactions": "Validates and persists bounded request budget/reserve/poll interval; omitted fields from older clients retain their saved values. Budget-only changes preserve assessment policy identity.",
       "from": [
@@ -12239,7 +12264,7 @@
       "id": "UI-ATTENTION-CONTEXT",
       "path": "web/tests/factory.spec.ts",
       "anchor": "global attention selects its owning run and returns to its conversation after answering",
-      "assertion": "Global dialog identifies title/profile; answer leaves owning conversation selected and next message targets its run. After answering the removed global shortcut, keyboard focus moves to the owning task heading. Cross-run attention entered from another item’s agent resets Back to the Agents list, avoiding the unrelated item."
+      "assertion": "Global dialog identifies title/profile; answer leaves owning conversation selected and next message targets its run. After answering the removed global shortcut, keyboard focus moves to the owning task heading. Cross-run attention entered from another item\u2019s agent resets Back to the Agents list, avoiding the unrelated item."
     },
     {
       "id": "UI-START-UNKNOWN",
@@ -12287,7 +12312,7 @@
       "id": "UI-SINGLE-PAGE",
       "path": "web/tests/factory.spec.ts",
       "anchor": "single-page navigation preserves list context and drafts at",
-      "assertion": "1280px and 390px in both themes: no brand/header/footer/split/adjacent detail; full-width list; item replaces list; Back restores query/scroll/row focus; agent Back origins and per-record drafts remain without implicit work. Priority is inside the row selection button to the left of the title’s first line, with no duplicate metadata badge or narrow overflow; checked geometrically in both themes at 390/1280px with a long title."
+      "assertion": "1280px and 390px in both themes: no brand/header/footer/split/adjacent detail; full-width list; item replaces list; Back restores query/scroll/row focus; agent Back origins and per-record drafts remain without implicit work. Priority is inside the row selection button to the left of the title\u2019s first line, with no duplicate metadata badge or narrow overflow; checked geometrically in both themes at 390/1280px with a long title."
     },
     {
       "id": "UI-PAGE-FALLBACK",
@@ -12798,6 +12823,36 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "cooldown without an error keeps a retry action and saved details unread until fresh",
       "assertion": "Error-free cooldown renders saved details, deferred status, optional retry time and the existing Retry control. Retrying while deferred keeps unread and the message draft; retrying after fresh data is allowed marks the displayed revision once, clears deferred feedback and retains the draft without launching work."
+    },
+    {
+      "id": "UI-GITHUB-DEFERRED",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
+      "assertion": "Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations."
+    },
+    {
+      "id": "UI-FAILED-REVIEW",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "failed reviews keep failure status and alert instead of GitHub retry controls",
+      "assertion": "An ordinary failed review keeps Failed in list and detail, displays its original alert, exposes no retry control and permits messaging its retained session."
+    },
+    {
+      "id": "RUN-LAUNCH-DEFERRED",
+      "path": "internal/app/launch_retry_test.go",
+      "anchor": "func TestDeferredReviewLaunchRespectsDeadlineAndRetriesExactlyOnce(",
+      "assertion": "Persist reason/deadline before workspace or agent startup; twelve concurrent due retries produce exactly one run, one automatic claim and one thread/turn start."
+    },
+    {
+      "id": "RUN-LAUNCH-DEFERRED-CANCEL",
+      "path": "internal/app/launch_retry_test.go",
+      "anchor": "func TestDeferredLaunchInterruptAndCleanupCancelAttachedAndDetachedRuns(",
+      "assertion": "Interrupt and cleanup clear retry deadline/pending authority for attached and detached launches; restart and later ticks start no agent."
+    },
+    {
+      "id": "RUN-LAUNCH-DEFERRED-PROJECTION",
+      "path": "internal/app/launch_retry_test.go",
+      "anchor": "func TestDeferredLaunchProjectionRetainsWorkingQueueAndRetryDeadline(",
+      "assertion": "Deferred work stays in Working with Waiting for GitHub; tracking retains launchRetryAt and cancellation clears the waiting projection."
     }
   ],
   "source_map": [
@@ -13027,7 +13082,7 @@
       "path": "internal/gateway/gateway.go",
       "anchor": "func (g *Gateway) Private(",
       "entities": "`PAGE-OWNER-CONSENT`, `P-OWNER-CONSENT`, `W-OWNER-CONSENT`, `C-CONSENT`.",
-      "detail": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
+      "detail": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
       "anchors": [
         "func (g *Gateway) Private("
       ],
@@ -14154,7 +14209,7 @@
           ],
           "headers": [
             "ID",
-            "From → to",
+            "From \u2192 to",
             "Trigger and carried context",
             "Result/type"
           ]

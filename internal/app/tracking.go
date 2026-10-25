@@ -133,7 +133,7 @@ func LatestRun(runs []domain.Run) *domain.Run {
 	return fallback
 }
 func runSummary(r domain.Run) map[string]any {
-	return map[string]any{"id": r.ID, "itemId": r.ItemID, "profileId": r.Profile.ID, "profileName": r.Profile.Name, "status": r.Status, "error": r.Error, "threadId": r.ThreadID, "turnId": r.TurnID, "created": r.Created, "base": r.Base, "resumePending": r.ResumePending, "interruptRequested": r.InterruptRequested}
+	return map[string]any{"id": r.ID, "itemId": r.ItemID, "profileId": r.Profile.ID, "profileName": r.Profile.Name, "status": r.Status, "error": r.Error, "threadId": r.ThreadID, "turnId": r.TurnID, "created": r.Created, "base": r.Base, "resumePending": r.ResumePending, "interruptRequested": r.InterruptRequested, "launchRetryAt": r.LaunchRetryAt}
 }
 func (a *App) TrackWork(ctx context.Context, in TrackInput) (map[string]any, error) {
 	if in.Limit == 0 {

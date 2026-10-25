@@ -346,6 +346,15 @@ The current turn has finished and the retained session can receive follow-up.
 
 Active work has stopped with its session retained for continuation.
 
+<a id="state-deferred"></a>
+## Waiting for GitHub
+
+`state-deferred` · state
+
+Accepted work awaiting an automatic retry after temporary GitHub request-budget, quota-reserve or rate-limit unavailability, with its reason and earliest retry time retained.
+
+Aliases: Deferred.
+
 <a id="state-failed"></a>
 ## Failed
 

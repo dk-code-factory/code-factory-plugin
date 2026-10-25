@@ -1298,6 +1298,11 @@
           "path": "internal/providers/github_cache.go",
           "anchor": "type CachedGitHub struct {",
           "purpose": "Same-API persistent query cache with TTLs, scoped invalidation, bounded eviction, direct write-through and independent caller values."
+        },
+        {
+          "path": "internal/app/launch_retry.go",
+          "anchor": "func (m *Manager) RetryDeferredLaunches(",
+          "purpose": "Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims."
         }
       ],
       "tests": [
@@ -1791,6 +1796,59 @@
             "S6"
           ],
           "purpose": "Separate database connections and transports cannot overlap managed HTTP; a cancelled waiting publication remains BeforeDispatch, exactly two attempts survive, and a later rate-limit deadline is preserved."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRespectsDeadlineAndRetriesExactlyOnce(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Persist reason/deadline before workspace or agent startup; twelve concurrent due retries produce exactly one run, one automatic claim and one thread/turn start."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRetriesWhenRepositorySyncFails(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Scheduler retries due automatic work despite a failed repository poll while retaining the repository failure."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRevalidatesLiveTargetAndPolicy(",
+          "scenarios": [
+            "S5",
+            "S8",
+            "S10"
+          ],
+          "purpose": "Changed head, closure, draft, withdrawn request, author, profile and permanent source errors start no agent; disabled or paused policy holds without HTTP; claim count stays one."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchProjectionRetainsWorkingQueueAndRetryDeadline(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Deferred work stays in Working with Waiting for GitHub; tracking retains launchRetryAt and cancellation clears the waiting projection."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchRepeatedBudgetDenialKeepsAcceptedRun(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Repeated due budget denial retains the same accepted run/claim and renewed deadline without HTTP or agent invocation."
         }
       ],
       "suites": [
@@ -1835,7 +1893,9 @@
         "C-REVIEW-POLICY",
         "C-REPOSITORY-REVIEW-PROMPT",
         "W-GITHUB-USAGE",
-        "C-GITHUB-USAGE"
+        "C-GITHUB-USAGE",
+        "W-WORK-STATUS",
+        "W-SESSION-CONSOLE"
       ],
       "terms": [
         "repository",
@@ -1854,7 +1914,8 @@
         "github-request-reserve",
         "github-review-notification",
         "published-review",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "graph": {
         "start": "n0",
@@ -1940,6 +2001,11 @@
           {
             "id": "live_query",
             "label": "Validate live data within the shared budget and update saved query state",
+            "scenario": "S8"
+          },
+          {
+            "id": "deferred_review_launch",
+            "label": "Retain accepted launch, reason and retry deadline; show Waiting for GitHub",
             "scenario": "S8"
           }
         ],
@@ -2088,6 +2154,21 @@
             "from": "live_query",
             "to": "n3",
             "label": "failed validation; do not claim old success as current"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "deferred_review_launch",
+            "label": "pre-agent budget, quota reserve or rate limit"
+          },
+          {
+            "from": "deferred_review_launch",
+            "to": "source_lifecycle_check",
+            "label": "deadline reached after tick or restart; recheck current source and automatic policy"
+          },
+          {
+            "from": "deferred_review_launch",
+            "to": "queue_review",
+            "label": "explicit cancellation; no agent launch"
           }
         ]
       }
@@ -3451,6 +3532,11 @@
           "path": "internal/app/review_eligibility.go",
           "anchor": "func validatePRReviewAuthor(",
           "purpose": "Reject own-author PR reviews and unknown author/identity before preparation, atomic Start and fresh source execution; retain review intent across profile-default changes."
+        },
+        {
+          "path": "internal/app/launch_retry.go",
+          "anchor": "func (m *Manager) RetryDeferredLaunches(",
+          "purpose": "Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims."
         }
       ],
       "tests": [
@@ -4043,6 +4129,75 @@
             "S5"
           ],
           "purpose": "Repeated automatic eligibility reads only owning-run metadata: all four persisted busy states prevent claims and pipeline validation despite unrelated/private frozen payloads; idle ownership reaches normal pipeline validation without provider work."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRespectsDeadlineAndRetriesExactlyOnce(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Persist reason/deadline before workspace or agent startup; twelve concurrent due retries produce exactly one run, one automatic claim and one thread/turn start."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRecoversBeforeAndAfterDeadline(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Restart before deadline makes no source request or agent call; due manual and automatic reviews start once and clear retry metadata."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRevalidatesLiveTargetAndPolicy(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Changed head, closure, draft, withdrawn request, author, profile and permanent source errors start no agent; disabled or paused policy holds without HTTP; claim count stays one."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchRepeatedBudgetDenialKeepsAcceptedRun(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Repeated due budget denial retains the same accepted run/claim and renewed deadline without HTTP or agent invocation."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestManualDeferredReviewRevalidatesPinnedHeadAndClosedSource(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Due manual PR review rejects a changed pinned head or closed source before agent invocation and clears retry authority."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchCancelAndCloseDuringSourceVerification(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchDoesNotRetryProviderExecutionFailures(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "A typed rate-limit error after provider startup remains failed with no retry metadata and exactly the original two provider requests."
         }
       ],
       "suites": [
@@ -4112,7 +4267,9 @@
         "W-REPOSITORY-SETTINGS",
         "W-SYSTEM-DEFAULTS",
         "C-REVIEW-POLICY",
-        "C-REPOSITORY-REVIEW-PROMPT"
+        "C-REPOSITORY-REVIEW-PROMPT",
+        "W-WORK-STATUS",
+        "W-SESSION-CONSOLE"
       ],
       "terms": [
         "prepared-launch",
@@ -4128,7 +4285,8 @@
         "review-policy",
         "review-request-claim",
         "repository-review-prompt",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "graph": {
         "start": "draft",
@@ -4215,6 +4373,11 @@
             "id": "source_lifecycle_terminal",
             "label": "Closed or merged source; terminate session and retain history/workspace",
             "terminal": true
+          },
+          {
+            "id": "deferred_review_launch",
+            "label": "Retain accepted launch, reason and retry deadline; show Waiting for GitHub",
+            "scenario": "S8"
           }
         ],
         "edges": [
@@ -4370,6 +4533,21 @@
             "from": "source_lifecycle_check",
             "to": "manual_error",
             "label": "fresh review author matches the signed-in account or cannot be verified"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "deferred_review_launch",
+            "label": "pre-agent budget, quota reserve or rate limit"
+          },
+          {
+            "from": "deferred_review_launch",
+            "to": "source_lifecycle_check",
+            "label": "deadline reached after tick or restart; recheck current source and automatic policy"
+          },
+          {
+            "from": "deferred_review_launch",
+            "to": "retained",
+            "label": "explicit cancellation; no agent launch"
           }
         ]
       }
@@ -4541,6 +4719,11 @@
           "path": "internal/store/conversation.go",
           "anchor": "func (t *Tx) ConversationVersion(",
           "purpose": "Transaction guard counts ordinary owner/agent completions and opaque same-run completion chunks as possible conversation changes without importing omitted content as evidence."
+        },
+        {
+          "path": "internal/app/launch_retry.go",
+          "anchor": "func (m *Manager) RetryDeferredLaunches(",
+          "purpose": "Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims."
         }
       ],
       "tests": [
@@ -4963,6 +5146,38 @@
             "S3"
           ],
           "purpose": "Takeover during provider-gated historical reconciliation invalidates the entire queued completion callback, preventing the subsequent stopped-turn classifier from creating fresh recovery or attention."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchInterruptAndCleanupCancelAttachedAndDetachedRuns(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Interrupt and cleanup clear retry deadline/pending authority for attached and detached launches; restart and later ticks start no agent."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchProjectionRetainsWorkingQueueAndRetryDeadline(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Deferred work stays in Working with Waiting for GitHub; tracking retains launchRetryAt and cancellation clears the waiting projection."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchCancelAndCloseDuringSourceVerification(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace."
         }
       ],
       "suites": [
@@ -5009,7 +5224,8 @@
         "unverified-behavior",
         "question-recovery",
         "session-console",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "graph": {
         "start": "n0",
@@ -5030,7 +5246,7 @@
           },
           {
             "id": "n3",
-            "label": "Interrupt active work and stale requests",
+            "label": "Interrupt active work or cancel deferred launch and stale requests",
             "scenario": "S3"
           },
           {
@@ -6545,6 +6761,11 @@
           "path": "internal/app/questions.go",
           "anchor": "func (m *Manager) restoreStoppedTurn(",
           "purpose": "Restore successful provider-completed turn source outside lifecycle locks, revalidate current owner revision and run the existing guarded stopped-question policy without ordinary task replay."
+        },
+        {
+          "path": "internal/app/launch_retry.go",
+          "anchor": "func (m *Manager) RetryDeferredLaunches(",
+          "purpose": "Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims."
         }
       ],
       "tests": [
@@ -7145,6 +7366,74 @@
             "S1"
           ],
           "purpose": "Incomplete or malformed completion chunks and complete user/tool payloads supply no stopped-question source; partial text cannot establish a question."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRecoversBeforeAndAfterDeadline(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Restart before deadline makes no source request or agent call; due manual and automatic reviews start once and clear retry metadata."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewLaunchRevalidatesLiveTargetAndPolicy(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Changed head, closure, draft, withdrawn request, author, profile and permanent source errors start no agent; disabled or paused policy holds without HTTP; claim count stays one."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchInterruptAndCleanupCancelAttachedAndDetachedRuns(",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Interrupt and cleanup clear retry deadline/pending authority for attached and detached launches; restart and later ticks start no agent."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestLegacyBudgetReviewFailureRecoveryIsExactAndPreAgentOnly(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Only the three exact legacy PR-review preflight budget/reserve/rate messages recover and launch once; thread/turn, interrupted, non-review, permanent and lookalike agent errors remain failed."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestManualDeferredReviewRevalidatesPinnedHeadAndClosedSource(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Due manual PR review rejects a changed pinned head or closed source before agent invocation and clears retry authority."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchCancelAndCloseDuringSourceVerification(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredLaunchDoesNotRetryProviderExecutionFailures(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A typed rate-limit error after provider startup remains failed with no retry metadata and exactly the original two provider requests."
         }
       ],
       "suites": [
@@ -7205,7 +7494,8 @@
         "unverified-behavior",
         "question-recovery",
         "session-console",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "graph": {
         "start": "n0",
@@ -7296,6 +7586,11 @@
             "id": "source_lifecycle_terminal",
             "label": "Closed or merged source; terminate session and retain history/workspace",
             "terminal": true
+          },
+          {
+            "id": "deferred_review_launch",
+            "label": "Restore deferred pre-agent launch and honor its retained retry deadline",
+            "scenario": "S1"
           }
         ],
         "edges": [
@@ -7413,6 +7708,26 @@
             "from": "source_lifecycle_check",
             "to": "n0",
             "label": "open source; agent assesses fresh changes"
+          },
+          {
+            "from": "n0",
+            "to": "deferred_review_launch",
+            "label": "deferred or exact recognized legacy preflight failure"
+          },
+          {
+            "from": "deferred_review_launch",
+            "to": "source_lifecycle_check",
+            "label": "deadline reached; revalidate source and automatic policy"
+          },
+          {
+            "from": "deferred_review_launch",
+            "to": "n3",
+            "label": "cleanup cancels retry even without attached session"
+          },
+          {
+            "from": "deferred_review_launch",
+            "to": "startup_unchanged",
+            "label": "interrupt cancels retry even without attached session"
           }
         ]
       }

@@ -80,6 +80,8 @@ export interface Run {
   turnId: string;
   status: string;
   error: string;
+  launchRetryAt?: string;
+  resumePending?: boolean;
   created: string;
 }
 export interface Attention {

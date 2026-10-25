@@ -31,6 +31,9 @@ func validatePRReviewRun(get func(string, string, any) error, run domain.Run, it
 		return err
 	}
 	if review {
+		if run.ThreadID == "" && run.Base != "" && item.Head != run.Base {
+			return fmt.Errorf("PR head changed from the pinned review target; prepare a new review")
+		}
 		return validatePRReviewAuthor(get, item)
 	}
 	return nil

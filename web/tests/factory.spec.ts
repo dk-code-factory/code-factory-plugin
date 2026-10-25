@@ -569,6 +569,17 @@ async function host(
           break;
         case "set_jira_credential":
           break;
+        case "interrupt_run": {
+          const run = state.runs.find((r) => r.id === a.id);
+          if (run?.status === "deferred") {
+            run.status = "interrupted";
+            run.resumePending = false;
+            run.launchRetryAt = undefined;
+            run.error = "";
+            state.cursor++;
+          }
+          break;
+        }
         case "send_message": {
           if (options.beforeMessage) await options.beforeMessage();
           if (options.queueMessages) {
@@ -1360,6 +1371,87 @@ function retained(
     created,
   };
 }
+
+test("GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts", async ({
+  page,
+}) => {
+  const snapshot = initial();
+  snapshot.inbox[0].item.kind = "pr";
+  const run = retained(snapshot, "github-deferred", "deferred");
+  run.threadId = "";
+  run.error = "GitHub request budget exhausted; waiting for capacity.";
+  run.launchRetryAt = "2026-10-25T18:45:00Z";
+  run.resumePending = true;
+  snapshot.runs = [run];
+  const { ui, calls } = await host(page, { snapshot, transcript: [] });
+  await ui.getByRole("button", { name: /^Messages/ }).click();
+  await expect(
+    ui.getByRole("region", { name: "Waiting for you" }).getByRole("button"),
+  ).toHaveCount(0);
+  await ui.getByRole("button", { name: "Working", exact: true }).click();
+  await expect(ui.getByLabel("Work status")).toHaveText("Waiting for GitHub");
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  await expect(ui.getByLabel("Work status")).toHaveText("Waiting for GitHub");
+  const retry = ui.getByRole("region", { name: "GitHub retry" });
+  await expect(retry.getByRole("status")).toHaveText("Waiting for GitHub");
+  await expect(retry).toContainText(run.error);
+  await expect(retry).toContainText("Next retry:");
+  await expect(retry.locator("time")).toHaveAttribute(
+    "datetime",
+    run.launchRetryAt,
+  );
+  await expect(retry.locator("time")).toHaveText(
+    await page.evaluate(
+      (at) => new Date(at).toLocaleString(),
+      run.launchRetryAt,
+    ),
+  );
+  await expect(ui.getByRole("alert")).toHaveCount(0);
+  await expect(
+    ui.getByText("No agent messages yet.", { exact: true }),
+  ).toBeVisible();
+  await expect(ui.getByText("Waiting for you", { exact: true })).toHaveCount(0);
+  await expect(ui.getByLabel("Message agent")).toBeDisabled();
+  await expect(
+    ui.getByRole("button", { name: "Send message", exact: true }),
+  ).toBeDisabled();
+  await ui.getByRole("button", { name: "Cancel retry", exact: true }).click();
+  await expect
+    .poll(() =>
+      calls.filter((c) => c.name === "interrupt_run").map((c) => c.arguments),
+    )
+    .toEqual([{ id: run.id }]);
+  await expect(retry).toHaveCount(0);
+  await expect(ui.getByLabel("Work status")).toHaveText("Inactive");
+  await expect(ui.getByLabel("Message agent")).toBeDisabled();
+  await expect(
+    ui.getByRole("button", { name: "Send message", exact: true }),
+  ).toBeDisabled();
+  expect(
+    calls.filter((c) => ["start_run", "send_message"].includes(c.name)),
+  ).toHaveLength(0);
+});
+
+test("failed reviews keep failure status and alert instead of GitHub retry controls", async ({
+  page,
+}) => {
+  const snapshot = initial();
+  snapshot.inbox[0].item.kind = "pr";
+  const run = retained(snapshot, "review-failed", "failed");
+  run.error = "Review checkout failed.";
+  snapshot.runs = [run];
+  const { ui } = await host(page, { snapshot });
+  await ui.getByRole("button", { name: "Working", exact: true }).click();
+  await expect(ui.getByLabel("Work status")).toHaveText("Failed");
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  await expect(ui.getByLabel("Work status")).toHaveText("Failed");
+  await expect(ui.getByRole("alert")).toHaveText(run.error);
+  await expect(ui.getByRole("region", { name: "GitHub retry" })).toHaveCount(0);
+  await expect(
+    ui.getByRole("button", { name: "Cancel retry", exact: true }),
+  ).toHaveCount(0);
+  await expect(ui.getByLabel("Message agent")).toBeEnabled();
+});
 
 test("item switching restores saved priorities and keeps relationship drafts by item", async ({
   page,

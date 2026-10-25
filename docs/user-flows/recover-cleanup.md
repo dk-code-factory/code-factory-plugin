@@ -23,9 +23,9 @@ Closing the view or transport does not stop work. Startup leaves completed idle 
 
 - **S6** Before an initial start or automatic unfinished-work restoration, verify the current source item and report changed title, description, head, state and assignment context to the agent for assessment. Explicit message-driven restoration instead uses saved source context without a GitHub preflight; its agent performs task-required GitHub reads. Failed preflight reads keep automatic work stopped. A closed issue or closed/merged PR permanently terminates its sessions, retires questions and preserves history and workspaces; reopening the source does not revive them. Dirty cleanup cannot make terminal work resumable.
 
-- **S1** Startup continues pending work from retained progress, preserves prepared and completed work, honors explicit interrupts and unanswered questions, stales expired native requests and isolates unavailable sessions. An interrupted question clarification resumes only through its bounded recovery path; an accepted recovery answer does not trigger automatic task continuation. Older unresolved diagnostics do not prevent newer owner-directed work from continuing.
+- **S1** Startup continues pending work from retained progress, preserves prepared and completed work, honors explicit interrupts and unanswered questions, stales expired native requests and isolates unavailable sessions. An interrupted question clarification resumes only through its bounded recovery path; an accepted recovery answer does not trigger automatic task continuation. Older unresolved diagnostics do not prevent newer owner-directed work from continuing. Deferred launches retain their reason and retry deadline across restart and wait until due before a live source/head and automatic-policy check. Recovery also recognizes only the exact known legacy pre-agent GitHub budget/reserve/rate-limit failures; unrelated failed runs and failures after agent startup are not retried automatically.
 - **S2** Sending a message restores retained work and starts exactly that message instead of replaying its original task.
-- **S3** Dirty cleanup retains the workspace after interrupting the retained session; continuation happens by sending a message. Clean stopped workspace cleanup retains history.
+- **S3** Dirty cleanup retains the workspace after interrupting the retained session; continuation happens by sending a message. Clean stopped workspace cleanup retains history. Cleanup or interrupt of a deferred launch cancels its pending retry even without an attached agent session; later ticks and restart cannot resurrect it.
 
 - **S4** Render native and structured-message questions; classify stopped text and share at most two setup/clarification/form attempts, then offer only confirmed unanswered textual continuation and the same session console. Preserve answer claims and redaction across recovery. A restart between saving a fallback episode and presenting its question restores the unanswered question once, without replaying repair attempts or reopening a claimed answer.
 
@@ -50,7 +50,7 @@ Cancelling automatic recovery does not establish that a genuine pending async qu
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated).
+Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated), [state-deferred](../glossary/README.md#state-deferred).
 UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/README.md#P-RUN-LIST), [P-RUN-DETAIL](../ui/README.md#P-RUN-DETAIL), [W-RUN-ROW](../ui/README.md#W-RUN-ROW), [W-RUN-EMPTY](../ui/README.md#W-RUN-EMPTY), [W-RUN-CONTROLS](../ui/README.md#W-RUN-CONTROLS), [C-SELECT-RUN](../ui/README.md#C-SELECT-RUN), [C-RUN-ACTION](../ui/README.md#C-RUN-ACTION), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE).
 
 ## Flow diagram
@@ -75,6 +75,7 @@ flowchart TD
     N15(["Continuation unavailable#59; retain work and report failure"])
     N16["Verify current source and report changed scope or head before initial or automatic continuation #40;S6#41;"]
     N17(["Closed or merged source#59; terminate session and retain history/workspace"])
+    N18["Restore deferred pre-agent launch and honor its retained retry deadline #40;S1#41;"]
     N0 -->|"send message"| N1
     N1 --> N2
     N0 -->|"cleanup stopped work"| N3
@@ -98,6 +99,10 @@ flowchart TD
     N0 -->|"start or continue retained work"| N16
     N16 -->|"source closed or merged"| N17
     N16 -->|"open source#59; agent assesses fresh changes"| N0
+    N0 -->|"deferred or exact recognized legacy preflight failure"| N18
+    N18 -->|"deadline reached#59; revalidate source and automatic policy"| N16
+    N18 -->|"cleanup cancels retry even without attached session"| N3
+    N18 -->|"interrupt cancels retry even without attached session"| N14
 ```
 
 ## Implementation references
@@ -126,6 +131,7 @@ flowchart TD
 - [internal/app/tracking.go](../../internal/app/tracking.go) — Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required. (`func (a *App) TrackWork(`)
 - [internal/store/progress.go](../../internal/store/progress.go) — Read the complete same-turn redacted final agent response from paged retained journal, reusing legacy chunk framing and excluding excerpts or unrelated sources. (`func (s *Store) TurnFinalText(`)
 - [internal/app/questions.go](../../internal/app/questions.go) — Restore successful provider-completed turn source outside lifecycle locks, revalidate current owner revision and run the existing guarded stopped-question policy without ordinary task replay. (`func (m *Manager) restoreStoppedTurn(`)
+- [internal/app/launch_retry.go](../../internal/app/launch_retry.go) — Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims. (`func (m *Manager) RetryDeferredLaunches(`)
 
 ## Test references
 
@@ -202,6 +208,14 @@ flowchart TD
 - [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestTakeoverCancelsRestoredCompletedTurnClassification(`; S1. Interrupt completes while restored completion classification is gated; releasing and joining that callback before daemon shutdown preserves cancelled recovery with no attention or question-only repair.
 - [internal/store/progress_test.go](../../internal/store/progress_test.go) — `func TestTurnFinalTextRestoresFullOwningResponseAcrossPages(`; S1. The full redacted owning agent response survives Unicode/escaped chunk framing across journal pages with explicit or started-boundary turn identity; other runs, older/newer turns, user/tool output and missing turn identity cannot replace it.
 - [internal/store/progress_test.go](../../internal/store/progress_test.go) — `func TestTurnFinalTextRejectsIncompleteAndNonAgentSources(`; S1. Incomplete or malformed completion chunks and complete user/tool payloads supply no stopped-question source; partial text cannot establish a question.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts`; S1, S3. Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewLaunchRecoversBeforeAndAfterDeadline(`; S1. Restart before deadline makes no source request or agent call; due manual and automatic reviews start once and clear retry metadata.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewLaunchRevalidatesLiveTargetAndPolicy(`; S1, S6. Changed head, closure, draft, withdrawn request, author, profile and permanent source errors start no agent; disabled or paused policy holds without HTTP; claim count stays one.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchInterruptAndCleanupCancelAttachedAndDetachedRuns(`; S1, S3. Interrupt and cleanup clear retry deadline/pending authority for attached and detached launches; restart and later ticks start no agent.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestLegacyBudgetReviewFailureRecoveryIsExactAndPreAgentOnly(`; S1. Only the three exact legacy PR-review preflight budget/reserve/rate messages recover and launch once; thread/turn, interrupted, non-review, permanent and lookalike agent errors remain failed.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestManualDeferredReviewRevalidatesPinnedHeadAndClosedSource(`; S1, S6. Due manual PR review rejects a changed pinned head or closed source before agent invocation and clears retry authority.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchCancelAndCloseDuringSourceVerification(`; S1. Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchDoesNotRetryProviderExecutionFailures(`; S1. A typed rate-limit error after provider startup remains failed with no retry metadata and exactly the original two provider requests.
 
 ## Verification and gaps
 

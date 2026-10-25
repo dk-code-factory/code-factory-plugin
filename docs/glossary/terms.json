@@ -345,6 +345,15 @@
       "definition": "Active work has stopped with its session retained for continuation."
     },
     {
+      "id": "state-deferred",
+      "name": "Waiting for GitHub",
+      "aliases": [
+        "Deferred"
+      ],
+      "category": "state",
+      "definition": "Accepted work awaiting an automatic retry after temporary GitHub request-budget, quota-reserve or rate-limit unavailability, with its reason and earliest retry time retained."
+    },
+    {
       "id": "state-failed",
       "name": "Failed",
       "aliases": [],

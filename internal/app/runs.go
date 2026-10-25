@@ -96,6 +96,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 	acceptedTaskStarts := map[string]bool{}
 	attached := map[string]bool{}
 	for _, r := range runs {
+		if err := m.recoverDeferredLaunch(ctx, r); err != nil {
+			return err
+		}
 		if r.ResumePending && !r.InterruptRequested && r.TurnID == "" &&
 			(r.Status == "queued" || r.Status == "starting" || r.Status == "running") {
 			acceptedTaskStarts[r.ID] = true
@@ -307,7 +310,7 @@ func (m *Manager) Recover(ctx context.Context) error {
 		id := run.ID
 		m.background(func() { m.recheckAmbiguous(id, "", true) })
 	}
-	return nil
+	return m.RetryDeferredLaunches(ctx)
 }
 func (m *Manager) Close() {
 	m.mu.Lock()
@@ -597,16 +600,19 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 		if err := t.Get("item", r.ItemID, &item); err != nil {
 			return err
 		}
-		if err := validatePRReviewRun(t.Get, r, item); err != nil {
-			return err
+		deferred := recovering && r.Status == "deferred" && r.ResumePending && !r.InterruptRequested && !time.Now().Before(r.LaunchRetryAt)
+		if !deferred {
+			if err := validatePRReviewRun(t.Get, r, item); err != nil {
+				return err
+			}
 		}
-		if r.AutomaticReview && !resume {
+		if r.AutomaticReview && !resume && !deferred {
 			if err := validateAutomaticStart(t, r); err != nil {
 				return err
 			}
 		}
 		detachedIdle := r.Status == "idle" && (old == nil || old.disconnected || old.retired)
-		if (!resume && r.Status != "prepared" && !(recovering && r.Status == "interrupted" && r.ResumePending)) || (resume && r.Status != "interrupted" && r.Status != "failed" && !(message != "" && detachedIdle)) {
+		if (!resume && r.Status != "prepared" && !(recovering && r.Status == "interrupted" && r.ResumePending) && !deferred) || (resume && r.Status != "interrupted" && r.Status != "failed" && !(message != "" && detachedIdle)) {
 			return fmt.Errorf("run cannot start from %s", r.Status)
 		}
 		if resume && message != "" && recovery == nil && r.ThreadID == "" {
@@ -640,6 +646,7 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 			r.TurnID = ""
 		}
 		r.Error = ""
+		r.LaunchRetryAt = time.Time{}
 		r.ResumePending = recovery == nil
 		r.InterruptRequested = false
 		if e := t.Put("run", id, r); e != nil {
@@ -783,6 +790,7 @@ func (m *Manager) fail(s *session, e error) {
 	s.run.Status = "failed"
 	s.run.Error = e.Error()
 	s.run.ResumePending = false
+	s.run.LaunchRetryAt = time.Time{}
 	if s.recovery != nil && automaticRecovery(s.recovery) {
 		s.recovery.DiagnosticError = clarificationUnavailable
 		m.fallbackLocked(s, s.recovery)
@@ -824,6 +832,9 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		source, sourceContext, e = m.continuationContext(ctx, r)
 	}
 	if e != nil {
+		if message == "" && m.deferLaunch(s, e) {
+			return
+		}
 		m.fail(s, e)
 		return
 	}
@@ -835,6 +846,16 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		if err := m.stopClosedItem(terminal, *source); err != nil {
 			m.fail(s, err)
 		}
+		return
+	}
+	if e := m.validateLaunchPolicy(ctx, r, *source); e != nil {
+		m.fail(s, e)
+		return
+	}
+	s.mu.Lock()
+	stopped := s.retired || m.ctx.Err() != nil
+	s.mu.Unlock()
+	if stopped {
 		return
 	}
 	if _, e := codex.Version(ctx, m.CodexBinary()); e != nil {
@@ -886,6 +907,12 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	s.mu.Lock()
 	if s.stopped() {
 		s.mu.Unlock()
+		return
+	}
+	// Recheck current policy after sandbox preparation, before creating a provider.
+	if e := m.validateLaunchPolicy(ctx, r, *source); e != nil {
+		s.mu.Unlock()
+		m.fail(s, e)
 		return
 	}
 	c, e := codex.Start(s.ctx, m.CodexBinary(), sandboxArgs, func(msg codex.Message) { m.onMessage(s, msg) })
@@ -1465,12 +1492,22 @@ func (m *Manager) Interrupt(ctx context.Context, id string) error {
 	}
 	defer unlock()
 	if s.clientless {
+		var r domain.Run
+		if err := m.app.Store.Get(ctx, "run", id, &r); err != nil {
+			return err
+		}
+		if r.Status == "deferred" {
+			r.Status, r.ResumePending, r.InterruptRequested = "interrupted", false, true
+			r.LaunchRetryAt = time.Time{}
+			s.run = r
+			return m.app.Store.Put(ctx, "run", id, r, "run.state")
+		}
 		return m.cancelUnattachedRecovery(ctx, id)
 	}
 	s.ownerRevision++
 	m.cancelRecoveryLocked(s)
 	if s.run.TurnID == "" || s.client == nil {
-		if s.recovery != nil && s.recovery.Stage == "cancelled" {
+		if s.run.Status == "deferred" || s.run.Status == "queued" || s.run.Status == "starting" || s.recovery != nil && s.recovery.Stage == "cancelled" {
 			s.retired = true
 			if s.cancel != nil {
 				s.cancel()
@@ -1478,7 +1515,8 @@ func (m *Manager) Interrupt(ctx context.Context, id string) error {
 			if s.client != nil {
 				_ = s.client.Close()
 			}
-			s.run.Status = "interrupted"
+			s.run.Status, s.run.ResumePending, s.run.InterruptRequested = "interrupted", false, true
+			s.run.LaunchRetryAt = time.Time{}
 			return m.persist(s, "run.state")
 		}
 		return nil
@@ -1776,7 +1814,7 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 	if e := m.app.Store.Get(ctx, "run", id, &r); e != nil {
 		return e
 	}
-	if r.Status != "interrupted" && r.Status != "failed" && r.Status != "idle" && r.Status != "terminated" {
+	if r.Status != "interrupted" && r.Status != "failed" && r.Status != "idle" && r.Status != "terminated" && r.Status != "deferred" {
 		return fmt.Errorf("run must be stopped before cleanup")
 	}
 	if s != nil {
@@ -1807,6 +1845,7 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 		r.Status = "interrupted"
 	}
 	r.ResumePending = false
+	r.LaunchRetryAt = time.Time{}
 	r.InterruptRequested = true
 	if e := m.app.Store.Put(ctx, "run", id, r, "run.state"); e != nil {
 		return e

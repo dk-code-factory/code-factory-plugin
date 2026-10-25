@@ -233,14 +233,18 @@ func (a *App) ProcessReviewRequests(ctx context.Context) error {
 }
 
 func validateAutomaticStart(t *store.Tx, run domain.Run) error {
-	var repo domain.Repository
-	var config domain.Config
 	var item domain.Item
-	var viewer domain.GitHubViewer
-	var profile domain.Profile
 	if err := t.Get("item", run.ItemID, &item); err != nil {
 		return err
 	}
+	return validateAutomaticPolicy(t, run, item, true)
+}
+
+func validateAutomaticPolicy(t *store.Tx, run domain.Run, item domain.Item, requireSync bool) error {
+	var repo domain.Repository
+	var config domain.Config
+	var viewer domain.GitHubViewer
+	var profile domain.Profile
 	if err := t.Get("repository", item.Repository, &repo); err != nil {
 		return err
 	}
@@ -253,7 +257,7 @@ func validateAutomaticStart(t *store.Tx, run domain.Run) error {
 	if err := t.Get("profile", run.Profile.ID, &profile); err != nil {
 		return err
 	}
-	if repo.Paused || repo.Error != "" || !reviewFresh(config, repo, item) || !autoReviewEnabled(config, repo) || !requestedReview(item, viewer) || item.Head != run.Base || repo.ReviewPrompt != run.ReviewPromptSnapshot || reviewProfileID(config, repo) != run.Profile.ID || string(raw(profile)) != string(raw(run.Profile)) || !reviewProfileReady(profile) {
+	if repo.Paused || requireSync && (repo.Error != "" || !reviewFresh(config, repo, item)) || !autoReviewEnabled(config, repo) || !requestedReview(item, viewer) || item.Head != run.Base || repo.ReviewPrompt != run.ReviewPromptSnapshot || reviewProfileID(config, repo) != run.Profile.ID || string(raw(profile)) != string(raw(run.Profile)) || !reviewProfileReady(profile) {
 		return fmt.Errorf("automatic review policy or target changed; inspect the retained launch")
 	}
 	return nil

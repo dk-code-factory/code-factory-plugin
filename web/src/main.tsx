@@ -47,17 +47,19 @@ function WorkStatus({
       ? "Waiting for you"
       : !run || run.status === "prepared"
         ? "Not started"
-        : ["queued", "starting"].includes(run.status)
-          ? "Starting"
-          : ["running", "waiting"].includes(run.status)
-            ? "Active"
-            : run.status === "failed"
-              ? "Failed"
-              : run.status === "terminated"
-                ? "Stopped"
-                : run.status === "cleaned"
-                ? "Finished"
-                : "Inactive");
+        : run.status === "deferred"
+          ? "Waiting for GitHub"
+          : ["queued", "starting"].includes(run.status)
+            ? "Starting"
+            : ["running", "waiting"].includes(run.status)
+              ? "Active"
+              : run.status === "failed"
+                ? "Failed"
+                : run.status === "terminated"
+                  ? "Stopped"
+                  : run.status === "cleaned"
+                    ? "Finished"
+                    : "Inactive");
   return (
     <span
       className="status"
@@ -2088,6 +2090,10 @@ function Agent({
   const [busy, setBusy] = useState(false);
   const pageCursor = useRef(0);
   const [historyVersion, setHistoryVersion] = useState(0);
+  const deferred = run.status === "deferred";
+  const canMessage =
+    !!run.threadId &&
+    ["idle", "running", "waiting", "interrupted", "failed"].includes(run.status);
   useEffect(() => {
     let stop = false;
     let timer: ReturnType<typeof setTimeout>;
@@ -2144,10 +2150,28 @@ function Agent({
           <WorkStatus run={run} blocked={attention.some((a) => a.blocking)} />
         </>
       )}
-      {run.error && <p role="alert">{run.error}</p>}
+      {deferred ? (
+        <section aria-label="GitHub retry">
+          <p role="status">Waiting for GitHub</p>
+          {run.error && <p>{run.error}</p>}
+          {run.launchRetryAt && (
+            <p>
+              Next retry:{" "}
+              <time dateTime={run.launchRetryAt}>
+                {new Date(run.launchRetryAt).toLocaleString()}
+              </time>
+            </p>
+          )}
+          <button onClick={() => void action("interrupt_run", { id: run.id })}>
+            Cancel retry
+          </button>
+        </section>
+      ) : run.error ? (
+        <p role="alert">{run.error}</p>
+      ) : null}
       {embedded && (
         <p aria-label="Session status">
-          {run.profile.name} · {run.status}
+          {run.profile.name} · {deferred ? "Waiting for GitHub" : run.status}
         </p>
       )}
       <div className="buttons">
@@ -2240,6 +2264,7 @@ function Agent({
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          if (!canMessage || busy || !message.trim()) return;
           setBusy(true);
           const submitted = message;
           try {
@@ -2263,6 +2288,7 @@ function Agent({
           Message agent
           <textarea
             value={message}
+            disabled={!run.threadId || deferred}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
           />
@@ -2272,9 +2298,7 @@ function Agent({
           disabled={
             busy ||
             !message.trim() ||
-            !["idle", "running", "waiting", "interrupted", "failed"].includes(
-              run.status,
-            ) || !!recovery && ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(recovery.stage)
+            !canMessage || !!recovery && ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(recovery.stage)
           }
         >
           Send message
