@@ -1,0 +1,96 @@
+{
+  "observedAt": "2026-10-25T01:19:43.353714+00:00",
+  "version": "0.1.0-8a8a9e76654d",
+  "sourceCommit": "6bf7f9871e1dbea32fdd8f4501ef6550c74abf5f",
+  "preservation": {
+    "runtime.json": true,
+    "gateway-auth.json": true,
+    "registered-app.json": true,
+    "tailscale.json": true,
+    "owner.token": true,
+    "vault.key": true,
+    "globalCodexConfig": true,
+    "tailscaleServe": true,
+    "allRunIds": true,
+    "retainedThreadWorkspaceProfile": true,
+    "postContinuationThreadWorkspaceProfile": true
+  },
+  "retainedRuns": 32,
+  "activeBeforeUpgrade": 0,
+  "pr": "https://github.com/scylladb/python-driver/pull/1128",
+  "verification": {
+    "goRace": "passed all packages",
+    "browserFixtures": 87,
+    "specificationModules": 201,
+    "legacyFlowModules": 20,
+    "staticBuildPackagingInstallerRecoverySmoke": "passed",
+    "specificationSubjects": 17,
+    "stagedAndCommittedComparison": "passed"
+  },
+  "liveCheckAt": "2026-10-25T01:26:35.192123+00:00",
+  "realWorkflow": {
+    "entryMode": "explicit same-thread continuation of an owner-requested legacy run; no new run or original-task replay",
+    "automaticStartupScheduling": "fixture-verified; real pending-run startup scheduling not exercised during this rollout",
+    "terminalLifecycle": "fixture-verified for closed issue, closed PR, merge, active sync and pending questions; no production item was closed for testing"
+  },
+  "reviewRuns": [
+    {
+      "id": "9a355eed356fe80dd94bddf996767a18",
+      "item": "scylladb/python-driver#1128",
+      "status": "idle",
+      "threadId": "01a16f35-ab10-7072-a2e4-e2ce6e3669d9",
+      "pendingRequests": 0,
+      "error": "",
+      "verifiedSourceState": "open",
+      "verifiedSourceHead": "4f6ca93137e279ac2c57d45c18a497a7e490496e"
+    },
+    {
+      "id": "297ac828683b5b90158c0acda9805be6",
+      "item": "scylladb/python-driver#725",
+      "status": "interrupted",
+      "threadId": "01a16f35-a511-7042-94c2-078c2bc3290c",
+      "pendingRequests": 1,
+      "error": "",
+      "verifiedSourceState": null,
+      "verifiedSourceHead": null
+    }
+  ],
+  "checkpointReuse": {
+    "mattPocock": "completed checkpoint reused; zero findings",
+    "ad": "unfinished pass resumed, completed with zero findings",
+    "nativeObservationAt": "2026-10-25T01:21:04.413685921Z",
+    "sourceComparison": "head, base, description, Decisions and rules unchanged",
+    "noSurvivingChildWork": "confirmed by retained agent before continuation"
+  },
+  "pr725": {
+    "publication": "none from this run",
+    "verifiedFinding": "P2 speculative batch shared reprepare-state race causing false ID mismatch",
+    "focusedTestsPassed": 30,
+    "blockedOn": "existing ID-contract and PREPARE-stage scope request; unanswered and preserved"
+  },
+  "pr1128": {
+    "outcome": "complete; both configured reviewers and independent verification found no actionable defect",
+    "publication": {
+      "reviewId": 5640926437,
+      "state": "COMMENTED",
+      "url": "https://github.com/scylladb/python-driver/pull/1128#pullrequestreview-5640926437",
+      "head": "4f6ca93137e279ac2c57d45c18a497a7e490496e",
+      "submittedAt": "2026-10-25T01:25:06Z",
+      "inlineComments": 0,
+      "verifiedVia": "GitHub provider read and retained agent publication receipt"
+    },
+    "retainedFocusedChecks": {
+      "passed": 486,
+      "skipped": 33,
+      "importProfileSmoke": "passed"
+    },
+    "notRerun": [
+      "live-cluster integration",
+      "full unit suite",
+      "docs build",
+      "native-extension matrix"
+    ],
+    "finalAgentReplyAt": "2026-10-25T01:25:30.554385973Z",
+    "retainedArtifact": "/tmp/pr1128-review/final-result.json"
+  }
+}

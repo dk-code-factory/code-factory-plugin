@@ -1,5 +1,33 @@
 # Continue development through the real Chrome session
 
+## Source-aware continuation installed and observed · 2026-10-24
+
+Installed **0.1.0-8a8a9e76654d** from source commit `6bf7f98`, after the complete
+fixture/specification, 87-browser, Go race, static, packaging, installer recovery
+and smoke checks passed. Both services are healthy. All 32 run identities, threads,
+workspaces and profiles were preserved, as were runtime/provider configuration,
+authentication files, global Codex configuration and complete Tailscale routes.
+The [rollout evidence](evidence/2026-10-24-source-aware-continuation.json) records
+the checksummed release and nonsecret observations.
+
+The owner-requested legacy **python-driver #1128** run continued in the same native
+thread. Its installed source check verified the unchanged open head; the agent
+confirmed unchanged description, base, Decisions and rules, reused Matt Pocock's
+completed zero-finding checkpoint, and completed only the interrupted AD pass.
+Both reviewers and independent verification found no actionable defect. The
+[verified COMMENT receipt](https://github.com/scylladb/python-driver/pull/1128#pullrequestreview-5640926437)
+targets that same head with zero inline comments. The session finished idle with
+no pending request. Retained focused checks were 486 passed and 33 skipped;
+integration, full-suite, docs and native-extension checks were not rerun.
+
+The existing **#725** scope request remains unanswered, with its P2 batch-race
+evidence and 30 passing focused tests retained. It has not published a review.
+This was an explicit continuation of an old run lacking startup-pending metadata;
+it proves installed same-thread continuation and checkpoint reuse. Actual automatic
+pending-run startup scheduling and real closed-source termination remain separate
+from the passing fixtures; no production item was closed for testing. Existing
+host callback, accessibility, soak and login gaps remain open.
+
 ## Source-aware continuation and terminal lifecycle · 2026-10-24
 
 Before initial execution or restoration of a retained session, a targeted GitHub

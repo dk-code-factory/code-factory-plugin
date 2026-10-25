@@ -1,5 +1,30 @@
 # Work acceptance gate
 
+## Installed source-aware continuation · 2026-10-24
+
+Build **0.1.0-8a8a9e76654d** (source `6bf7f98`) is installed and both services are
+healthy. The checksummed deployment preserved all 32 run identities, threads,
+workspaces and profiles, selected provider/runtime configuration, authentication
+files, global Codex configuration and complete Tailscale routes. All 87 browser
+fixtures, Go race/static checks, specification reconciliation, packaging, installer
+recovery and smoke passed. See the [nonsecret rollout evidence](evidence/2026-10-24-source-aware-continuation.json).
+
+The owner-requested #1128 review continued in its original thread after an installed
+fresh-source check. Its unchanged head/base/description/Decisions allowed reuse of
+the completed Matt Pocock checkpoint and continuation of the unfinished AD pass.
+Both reviewers and independent checks found no actionable defect. GitHub confirms
+the [current-head COMMENT review](https://github.com/scylladb/python-driver/pull/1128#pullrequestreview-5640926437)
+with zero inline comments; the run is idle with no pending attention. Previously
+retained checks were 486 passed and 33 skipped, with broader integration/full-suite,
+docs and native builds not rerun. #725 remains incomplete with its original scope
+question preserved and unanswered, P2 batch-race evidence and 30 passing unit tests.
+
+This real observation used explicit same-thread continuation of a legacy run.
+Automatic startup scheduling for a live pending model session and actual terminal
+source closure remain fixture-verified only. No synthetic production-repository
+mutation, browser-host acceptance or closure of the existing broad readiness gaps
+is inferred from this rollout.
+
 ## Source-aware continuation and terminal lifecycle · 2026-10-24
 
 Before initial execution or restoration of a retained session, a targeted GitHub
