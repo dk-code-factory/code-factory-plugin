@@ -1450,6 +1450,9 @@ for (const theme of ["light", "dark"] as const) {
     await expect(
       ui.getByRole("button", { name: "Send message", exact: true }),
     ).toBeDisabled();
+    await ui
+      .getByRole("button", { name: "Waiting for your answer — Answer" })
+      .hover();
     await scanOwnedApp(page, `${theme}-recovery-narrow`);
     await ui.getByRole("button", { name: "Take over", exact: true }).focus();
     await page.keyboard.press("Enter");

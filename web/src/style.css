@@ -345,7 +345,8 @@ dd {
   margin: 4px 0;
   overflow-wrap: anywhere;
 }
-.notice {
+.notice,
+button.notice:hover {
   display: block;
   background: #fff0cb;
   color: #785319;
