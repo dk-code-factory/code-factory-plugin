@@ -14,6 +14,14 @@ An agent has requested a question, approval, permission grant or supported form 
 2. Choose an answer or complete the supported form.
 3. Submit the answer and return to the owning run’s conversation.
 
+An accepted response is saved privately together with the one-time answer claim
+before delivery. Its exact content remains encrypted even if delivery becomes
+uncertain. The request leaves actionable attention and stays absent after reopening,
+disconnect or restart; an answered repair cannot become a new fallback question.
+Recovery also retires an older duplicate fallback for that answered episode,
+while preserving unrelated unanswered requests. Invalid or rejected duplicate
+responses cannot replace the saved answer.
+
 In chat, ask which agents need an answer. The connected plugin lists the same
 answerable requests with their item, profile, exact questions and options. It
 asks for your response, sends it to the matching request once, and checks the
@@ -66,11 +74,11 @@ UI entities: [D-ATTENTION](../ui/README.md#D-ATTENTION), [P-ATTENTION-FRAME](../
 flowchart TD
     N0["Display original request and blocking status"]
     N1["Choose answer or complete supported form #40;S2#41;"]
-    N2["Claim the matching pending question or approval once #40;S1#41;"]
-    N3(["Resolved response visible in run"])
+    N2["Save the private reply and claim the matching pending request together once #40;S1#41;"]
+    N3(["Answered request stays out of attention after reopening or recovery"])
     N4["Reject invalid, duplicate, resolved or stale response"]
     N5["Correct supported answer or refresh pending request"]
-    N6(["Claimed response delivery failed#59; no automatic replay"])
+    N6(["Claimed reply remains saved after uncertain delivery#59; no reopening or automatic replay"])
     N7["Nonblocking request leaves work active #40;S3#41;"]
     N8["Inspect a stopped reply for an unresolved human question #40;S4#41;"]
     N9["Request a native question form in the same session at most twice"]
@@ -149,6 +157,7 @@ flowchart TD
 - [internal/store/reads.go](../../internal/store/reads.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func Select[T any](`)
 - [internal/app/attention_reconciliation.go](../../internal/app/attention_reconciliation.go) — Background same-run per-question reconciliation after delivery, completion and startup. Requires exact owner decision and subsequent agent acknowledgement; uncertainty preserves attention, native approvals are excluded. (`func (m *Manager) reconcileAttention(`)
 - [internal/store/conversation.go](../../internal/store/conversation.go) — Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs. (`func (s *Store) ConversationEvidence(`)
+- [internal/store/vault.go](../../internal/store/vault.go) — Encrypt exact attention replies in the same transaction as answer and recovery claims; no plaintext answer payload in public state. (`func (v *Vault) SetTx(`)
 
 ## Test references
 
@@ -181,6 +190,11 @@ flowchart TD
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(`; S4. Other-run review completion, forged quotes/IDs, reversed evidence order and an intervening run turn cannot retire the original requests.
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationHelperFailureRetainsQuestions(`; S4. An invalid helper decision leaves both original requests pending after delivery and continuation.
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationRetiresRecoveryAndPreservesNativeApprovals(`; S4. A cancelled synthetic question retires its recovery episode without answering or dismissing an unrelated native command approval.
+- [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestAnsweredRepairNeverReappearsAfterRecovery(`; S1, S4, S5. Restart settles answered and legacy partially saved recovery episodes, retires pre-existing duplicate fallbacks, preserves unrelated unanswered requests and remains stable on repeated recovery.
+- [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestAnsweredRepairDisconnectDoesNotCreateFallback(`; S4. A provider disconnect after claiming a repair answer resolves recovery without creating another text question.
+- [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestAttentionRepliesPersistEncryptedAndStayOutOfQueue(`; S1, S2, S3, S4, S5. Native, nonblocking, approval, message and text replies survive a new database/vault connection exactly; invalid/duplicate submissions cannot overwrite them and repeated restart keeps the queue empty.
+- [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestUncertainAttentionReplyIsRetainedWithoutReopening(`; S1, S4, S5. Unavailable session leaves an encrypted exact reply and uncertain status, no plaintext journal, no reopened request and no duplicate replay.
+- [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestNativeAnswerRollsBackWhenRecoveryCannotBeSaved(`; S1, S4. A missing recovery record rolls back both the encrypted answer and native answer claim, leaving the unanswered request visible and answerable.
 
 ## Verification and gaps
 

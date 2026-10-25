@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "187db59e2c5d1f79bdb502fa4e49b4a7db9347a0",
-  "fingerprint": "421e148e9f951b315aa526588cb5c7b6229c256ae1aa504cb17c2768427b04fb",
+  "base": "a845b26d93fc868c0858ac66cfb56ac0dc338a29",
+  "fingerprint": "45b67583bc1fbb749949ea104c9a5072c936ed02ac47844c04d2fb17216865bf",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "Incoming Code Factory MCP and private owner API calls now have a private bounded rotating diagnostic log with UTC start time, safe parameters, call names, transport status and handler processing duration. Secret/free-text payloads and URL credentials/query/fragment are redacted; raw headers/bodies/responses and exceptions are excluded.",
-    "implementation": "API wrappers observe only consumed request bytes, keep existing limits/authentication and response handling, and append sanitized bounded JSONL records under private log permissions. Rotation preserves private files; unsafe linked paths are refused and generic write-failure warnings never change or replay work. Health requests share the same owner logging boundary.",
-    "tests": "New TestAPILog fixtures cover actual successful/rejected MCP tools, resources, owner validation, schema rejection, private credential/answer/message/metadata and URL redaction, timing with unchanged downstream bytes, bounded malformed/oversized bodies, propagated panics, concurrent JSONL rotation and unchanged API results/unrelated files when logging fails."
+    "kind": "structure",
+    "description": "Dependency/plugin maintenance, runtime selection and service operation contracts are unchanged. The new encrypted reply path retains the existing maintenance refusal before answers are accepted.",
+    "implementation": "Answer still acquires adminGate before reading or claiming requests; no service, installation or provider-selection code changed. SetTx preserves the existing vault ciphertext format and does not expose payloads through owner inventory.",
+    "tests": "Plugin/dependency maintenance race assertions and installer recovery/smoke rerun. The new failed native transaction fixture leaves an unanswered request pending when recovery cannot be saved, with no retained rejected reply."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 105.667
+      "seconds": 105.383
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 17.898
+      "seconds": 19.822
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.972
+      "seconds": 3.292
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.629
+      "seconds": 2.93
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 22.785
+      "seconds": 22.632
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.181
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.663
+      "seconds": 0.662
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.245
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,11 +131,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.027
+      "seconds": 24.816
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "3c60ed10b58b0936fbf0aa849ab54c6c015c2de81fd28f41c5bb8be2fdcc06f0",
+    "flow:operate-installation": "4728288b6322db4aea0da64bfaef27a1ba0d08e8da8e6c72497186a0a4c0c508",
     "term:connection-refreshes": "b896dd9babd67f60ef0e780696fb3e896d9e891127a6b49f4fde006dc6cd1d55",
     "term:connection-submits": "f9dda81a53770b4ac6ed20dae2c590ffeec99ba988b8f6e0e5ca159a309c050f",
     "term:coverage-gap": "ec018212265e427226cc38846c161e5f2faea281e41f3078a8315464784706bf",
@@ -172,12 +172,12 @@
     "term:ui-w-diagnostics": "4cb13461853292c7d1e93908a1999beffec7ae163cf52f3a6797923f1102648a",
     "term:unverified-behavior": "43ad92892a2ff7b5d2bc2556c132776587be0a22bf8c8b3309ea0339e9f161e1",
     "term:verification": "10cffa3dfff47b7c9dcf01d69e5318b78913b8c727191cbc0ddb9b848907ba08",
-    "ui:C-BROWSER-LAB": "15382f1d9ea76794600ef18fb9d69b64bbdc8ef747acde1f9a976bdc4bf76ca9",
-    "ui:C-DIAGNOSE": "43ea7775cd25f14e038131e1dd046dea37e4a05df7d9744c26ace42bbc54c37d",
-    "ui:P-BROWSER-LAB": "9e748cb83120446b19f6da317b3b8459cd4ad94640921836e1972a600dc55226",
-    "ui:P-DIAGNOSTICS": "9fed4f524b346dd973464d0b27f3bbcf7d77ea6a37d0a062590462b7d453b78f",
-    "ui:PAGE-BROWSER-LAB": "59c2822b279b0f430d6816460452a53348d480b6c7619b3d8b88bef04d10b4ed",
-    "ui:W-BROWSER-LAB": "4009e61bde8d029d7d594e7e04986b8569db23e7a6acc3f537e031482a8885b9",
-    "ui:W-DIAGNOSTICS": "da718681aec3ce4419404f6485741aea1558da71d71108446ab4ace756b9d89e"
+    "ui:C-BROWSER-LAB": "01aedd1d20932ebf8dea049d5293a4764eb93dc4db52391f453aa1db0d2f08f9",
+    "ui:C-DIAGNOSE": "bd973074368219e1ef555c349298f74383ecf45acc27f033a4a426dd634e6129",
+    "ui:P-BROWSER-LAB": "c47764f5b4c15755b06d2b9b79d368b7fbe7abb372a5d4d3f74e1d1915aff26c",
+    "ui:P-DIAGNOSTICS": "17f8842c2b281f3635a7f9948a22594aef3192a3f095eca3968340fa453fe26f",
+    "ui:PAGE-BROWSER-LAB": "b3a1d5edaaa01441fc196ea81bb6924d4ae14d0c74f2ca2657eaaf25febbd279",
+    "ui:W-BROWSER-LAB": "db16504b544d8c674b6a2ed011265cf9a59dabbc518ae27259bd5819ab941546",
+    "ui:W-DIAGNOSTICS": "8782a37bf3263967f79abbeaa6ad10861cf105238100cc389ffca19804f68582"
   }
 }

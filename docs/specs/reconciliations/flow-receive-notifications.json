@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "187db59e2c5d1f79bdb502fa4e49b4a7db9347a0",
-  "fingerprint": "5b2768b791222b73376e03aa1e1235c695c9900d96fe5c2f9b4f4474da922274",
+  "base": "a845b26d93fc868c0858ac66cfb56ac0dc338a29",
+  "fingerprint": "bc6e874d0b12832b220a32d8197a92e7af520e3cf03c9ecefaca0680cfb58814",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Subscribe to host notifications and manage delivery retains its existing observable contract. Incoming request logging records diagnostics after handling and does not change this flow\u2019s state, authority, queue membership or outcomes.",
-    "implementation": "Inspected the shared transport/health and owner handler wrappers: the original handlers see unchanged reads, request limits, authentication, status and response bodies. Timing and sanitized parameter records are separate private files rather than application events or caller data.",
-    "tests": "Existing mapped receive-notifications assertions and suites remain required. New transport fixtures assert request/response preservation and failure isolation; the log never performs an extra GitHub call, starts an agent, answers a question or retries an action. Existing real-host coverage gaps remain open."
+    "description": "Journal event discovery and host subscription contracts remain unchanged; a removed answered request is still represented by attention.resolved. No real host callback or subscription evidence is added.",
+    "implementation": "putAttention continues emitting only request/run/status/blocking metadata; encrypted payload writes emit no secret event. Legacy duplicate fallback retirement uses the same resolved event and leaves unrelated pending requests intact.",
+    "tests": "Existing event/gateway/transport fixtures rerun; new uncertain-send assertions reject plaintext reply data in journal events and recovery assertions verify precise removal. Real subscription and callback gaps remain explicit."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 17.898
+      "seconds": 19.822
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.245
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,11 +44,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.027
+      "seconds": 24.816
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "4e970b10efeb9942ddb7391014fadf9c1c213af34f53c2722663b81a75de4fba",
+    "flow:receive-notifications": "aa650e2a7cebf436de2b1c0683d7cadf966f745130c4791f486e2c05fc39b24b",
     "term:attention-request": "462ac93876005a62efdac37f5be63caffb89f1bfdcfd31c3042505f8cf97f06d",
     "term:coverage-gap": "ec018212265e427226cc38846c161e5f2faea281e41f3078a8315464784706bf",
     "term:host": "f6ab4ca8b4139c66c7e6d0f8730609d78bc8ff63aa77f1db64c93754955ad154",

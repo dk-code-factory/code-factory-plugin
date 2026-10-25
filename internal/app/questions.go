@@ -479,7 +479,7 @@ func (m *Manager) repairQuestion(ctx context.Context, s *session, r *domain.Ques
 }
 
 func (m *Manager) recoverTextQuestion(ctx context.Context, r domain.QuestionRecovery) error {
-	if strings.TrimSpace(r.Question) == "" {
+	if r.Stage == "answered" || r.Stage == "resolved" || r.Stage == "cancelled" || strings.TrimSpace(r.Question) == "" {
 		return nil
 	}
 	id := r.ID + ":text"
@@ -516,6 +516,14 @@ func (m *Manager) retainLostQuestion(ctx context.Context, a domain.Attention) er
 	return m.recoverTextQuestion(ctx, r)
 }
 func (m *Manager) fallbackLocked(s *session, r *domain.QuestionRecovery) {
+	if r.Stage == "answered" || r.Stage == "resolved" || r.Stage == "cancelled" {
+		if r.Stage == "answered" {
+			r.Stage = "resolved"
+			_ = m.saveRecovery(r)
+		}
+		m.wakeRecovery(s)
+		return
+	}
 	r.Stage = "fallback"
 	_ = m.saveRecovery(r)
 	if m.recoverTextQuestion(m.ctx, *r) == nil {
@@ -620,6 +628,9 @@ func (m *Manager) answerSynthetic(ctx context.Context, a domain.Attention, resul
 		}
 		if current.Status != "pending" {
 			return fmt.Errorf("attention request is stale or already answered")
+		}
+		if err := m.app.Vault.SetTx(t, "attention-answer:"+a.ID, string(result)); err != nil {
+			return err
 		}
 		current.Status = "answered"
 		if err := t.Put("attention", a.ID, current); err != nil {

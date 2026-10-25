@@ -42,12 +42,17 @@ func NewVault(s *Store, dir string) (*Vault, error) {
 	return &Vault{s: s, a: a}, e
 }
 func (v *Vault) Set(ctx context.Context, name, secret string) error {
+	return v.s.Write(ctx, func(tx *Tx) error { return v.SetTx(tx, name, secret) })
+}
+
+// SetTx commits encrypted payloads with their owning state transition.
+func (v *Vault) SetTx(tx *Tx, name, secret string) error {
 	n := make([]byte, v.a.NonceSize())
 	if _, e := rand.Read(n); e != nil {
 		return e
 	}
 	b := v.a.Seal(n, n, []byte(secret), []byte(name))
-	return v.s.Put(ctx, "secret", name, base64.StdEncoding.EncodeToString(b), "")
+	return tx.Put("secret", name, base64.StdEncoding.EncodeToString(b))
 }
 func (v *Vault) Get(ctx context.Context, name string) (string, error) {
 	var str string

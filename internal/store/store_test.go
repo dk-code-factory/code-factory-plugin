@@ -88,6 +88,18 @@ func TestTransactionsAndVault(t *testing.T) {
 	if e != nil || got != "secret-token" {
 		t.Fatal(got, e)
 	}
+	e = s.Write(ctx, func(tx *Tx) error {
+		if err := v.SetTx(tx, "answer", "private-answer"); err != nil {
+			return err
+		}
+		return boom
+	})
+	if !errors.Is(e, boom) {
+		t.Fatal(e)
+	}
+	if _, err := v.Get(ctx, "answer"); !errors.Is(err, ErrNotFound) {
+		t.Fatal("rolled-back answer remained in vault", err)
+	}
 	info, e := os.Stat(filepath.Join(dir, "vault.key"))
 	if e != nil || info.Mode().Perm() != 0600 {
 		t.Fatal("unsafe key permissions", e)

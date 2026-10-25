@@ -4909,6 +4909,11 @@
           "path": "internal/store/conversation.go",
           "anchor": "func (s *Store) ConversationEvidence(",
           "purpose": "Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs."
+        },
+        {
+          "path": "internal/store/vault.go",
+          "anchor": "func (v *Vault) SetTx(",
+          "purpose": "Encrypt exact attention replies in the same transaction as answer and recovery claims; no plaintext answer payload in public state."
         }
       ],
       "tests": [
@@ -5146,6 +5151,55 @@
             "S4"
           ],
           "purpose": "A cancelled synthetic question retires its recovery episode without answering or dismissing an unrelated native command approval."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestAnsweredRepairNeverReappearsAfterRecovery(",
+          "scenarios": [
+            "S1",
+            "S4",
+            "S5"
+          ],
+          "purpose": "Restart settles answered and legacy partially saved recovery episodes, retires pre-existing duplicate fallbacks, preserves unrelated unanswered requests and remains stable on repeated recovery."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestAnsweredRepairDisconnectDoesNotCreateFallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A provider disconnect after claiming a repair answer resolves recovery without creating another text question."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestAttentionRepliesPersistEncryptedAndStayOutOfQueue(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "purpose": "Native, nonblocking, approval, message and text replies survive a new database/vault connection exactly; invalid/duplicate submissions cannot overwrite them and repeated restart keeps the queue empty."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestUncertainAttentionReplyIsRetainedWithoutReopening(",
+          "scenarios": [
+            "S1",
+            "S4",
+            "S5"
+          ],
+          "purpose": "Unavailable session leaves an encrypted exact reply and uncertain status, no plaintext journal, no reopened request and no duplicate replay."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestNativeAnswerRollsBackWhenRecoveryCannotBeSaved(",
+          "scenarios": [
+            "S1",
+            "S4"
+          ],
+          "purpose": "A missing recovery record rolls back both the encrypted answer and native answer claim, leaving the unanswered request visible and answerable."
         }
       ],
       "suites": [
@@ -5234,12 +5288,12 @@
           },
           {
             "id": "n2",
-            "label": "Claim the matching pending question or approval once",
+            "label": "Save the private reply and claim the matching pending request together once",
             "scenario": "S1"
           },
           {
             "id": "n3",
-            "label": "Resolved response visible in run",
+            "label": "Answered request stays out of attention after reopening or recovery",
             "terminal": true
           },
           {
@@ -5252,7 +5306,7 @@
           },
           {
             "id": "n6",
-            "label": "Claimed response delivery failed; no automatic replay",
+            "label": "Claimed reply remains saved after uncertain delivery; no reopening or automatic replay",
             "terminal": true
           },
           {
@@ -7259,7 +7313,7 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "Encrypted credential storage and transactional journal."
+          "purpose": "Encrypted credential storage and transactional journal; rolled-back encrypted reply writes leave no saved payload."
         },
         {
           "path": "internal/store/redactor_test.go",
@@ -7572,6 +7626,33 @@
             "S2"
           ],
           "purpose": "Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestAttentionRepliesPersistEncryptedAndStayOutOfQueue(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "Native, nonblocking, approval, message and text replies survive a new database/vault connection exactly; invalid/duplicate submissions cannot overwrite them and repeated restart keeps the queue empty."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestUncertainAttentionReplyIsRetainedWithoutReopening(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "Unavailable session leaves an encrypted exact reply and uncertain status, no plaintext journal, no reopened request and no duplicate replay."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestNativeAnswerRollsBackWhenRecoveryCannotBeSaved(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "A missing recovery record rolls back both the encrypted answer and native answer claim, leaving the unanswered request visible and answerable."
         }
       ],
       "suites": [

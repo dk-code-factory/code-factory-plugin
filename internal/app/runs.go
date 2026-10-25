@@ -129,7 +129,44 @@ func (m *Manager) Recover(ctx context.Context) error {
 	if e != nil {
 		return e
 	}
+	answeredRecoveries := map[string]bool{}
+	for _, a := range atts {
+		if a.RecoveryID != "" && (a.Status == "answered" || a.Status == "uncertain") {
+			answeredRecoveries[a.RecoveryID] = true
+		}
+	}
 	for _, r := range recoveries {
+		// Also repair older saves interrupted between claiming the answer and
+		// updating the recovery episode. A claimed answer must never reopen.
+		if !attached[r.RunID] && (r.Stage == "answered" || answeredRecoveries[r.ID]) {
+			r.Stage = "resolved"
+			if e = m.app.Store.Write(ctx, func(tx *store.Tx) error {
+				if err := tx.Put("question-recovery", r.ID, r); err != nil {
+					return err
+				}
+				// Older versions may already have recreated a text fallback for
+				// this answered episode. Retire only its still-pending requests.
+				for _, at := range atts {
+					if at.RunID != r.RunID || at.RecoveryID != r.ID || at.Status != "pending" {
+						continue
+					}
+					var current domain.Attention
+					if err := tx.Get("attention", at.ID, &current); err != nil {
+						return err
+					}
+					if current.Status == "pending" {
+						current.Status = "resolved"
+						if err := putAttention(tx, current, "attention.resolved"); err != nil {
+							return err
+						}
+					}
+				}
+				return tx.Event("run.recovery", r.ID, r)
+			}); e != nil {
+				return e
+			}
+			continue
+		}
 		if !attached[r.RunID] && r.Stage != "resolved" && r.Stage != "cancelled" && r.Stage != "fallback" {
 			r.Stage = "fallback"
 			if e = m.app.Store.Put(ctx, "question-recovery", r.ID, r, "run.recovery"); e != nil {
@@ -1204,18 +1241,39 @@ func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage)
 		}
 	}
 	a.Status = "answered"
-	if e = m.saveAttention(ctx, a, "attention.resolved"); e != nil {
+	if e = m.app.Store.Write(ctx, func(tx *store.Tx) error {
+		var current domain.Attention
+		if err := tx.Get("attention", id, &current); err != nil {
+			return err
+		}
+		if current.Status != "pending" {
+			return fmt.Errorf("attention request is stale or already answered")
+		}
+		if err := m.app.Vault.SetTx(tx, "attention-answer:"+id, string(result)); err != nil {
+			return err
+		}
+		if a.RecoveryID != "" {
+			var recovery domain.QuestionRecovery
+			if err := tx.Get("question-recovery", a.RecoveryID, &recovery); err != nil {
+				return err
+			}
+			if recovery.Stage == "awaiting-answer" {
+				recovery.Stage = "answered"
+				if err := tx.Put("question-recovery", recovery.ID, recovery); err != nil {
+					return err
+				}
+			}
+		}
+		return putAttention(tx, a, "attention.resolved")
+	}); e != nil {
 		return e
 	}
 	delete(s.pending, id)
 	if s.recovery != nil && a.RecoveryID == s.recovery.ID && s.recovery.Stage == "awaiting-answer" {
 		s.recovery.Stage = "answered"
-		if e = m.saveRecovery(s.recovery); e != nil {
-			return e
-		}
 	}
 	if e = s.client.Reply(a.RequestID, result); e != nil {
-		a.Status = "stale"
+		a.Status = "uncertain"
 		_ = m.saveAttention(ctx, a, "attention.resolved")
 		return e
 	}

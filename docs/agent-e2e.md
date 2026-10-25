@@ -1,5 +1,22 @@
 # Continue development through the real Chrome session
 
+## Durable attention answers and recovery · 2026-10-25
+
+Local source now saves the exact native, approval, form or message/text reply
+encrypted with its one-time answer claim before delivery. Native repair recovery
+state commits in that same transaction. Rejected duplicates cannot replace the
+saved reply; uncertain delivery retains it without automatic replay.
+
+Regression fixtures reproduced answered repair questions returning as text
+fallbacks after restart or provider disconnect. Recovery now closes those
+episodes and retires previously recreated fallback requests for the same episode,
+preserving unrelated unanswered requests. Focused race fixtures verify exact
+replies through a fresh database/vault connection, invalid/duplicate rejection,
+uncertain-send retention and repeated recovery. These changes are not installed;
+no live attention records or agents were changed. Installed-host restart and
+disconnect acceptance remains unverified, along with existing readiness gaps.
+
+
 ## Incoming API call diagnostics · 2026-10-25
 
 Local source records MCP methods/tools and private owner API calls, including
