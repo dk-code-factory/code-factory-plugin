@@ -74,6 +74,11 @@ type launchRetryFixture struct {
 
 func deferredReviewFixture(t *testing.T, automatic bool) *launchRetryFixture {
 	t.Helper()
+	return deferredProfileReviewFixture(t, automatic, nil, false)
+}
+
+func deferredProfileReviewFixture(t *testing.T, automatic bool, profile *domain.Profile, generic bool) *launchRetryFixture {
+	t.Helper()
 	a, pr := reviewFixture(t)
 	t.Setenv("CF_FAKE_MODE", "hold")
 	f := &launchRetryFixture{a: a, pr: pr, record: filepath.Join(t.TempDir(), "calls.jsonl")}
@@ -111,6 +116,19 @@ func deferredReviewFixture(t *testing.T, automatic bool) *launchRetryFixture {
 	f.source = &launchRetrySource{GitHubSource: f.github, item: pr}
 	a.GitHub = f.source
 	ctx := a.Runs.ctx
+	if profile != nil {
+		if err := a.SaveProfile(ctx, *profile); err != nil {
+			t.Fatal(err)
+		}
+		config, err := a.Config(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		config.ReviewProfileID = profile.ID
+		if err := a.SaveConfig(ctx, config); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if _, err := f.github.User(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +150,11 @@ func deferredReviewFixture(t *testing.T, automatic bool) *launchRetryFixture {
 		}
 	} else {
 		var err error
-		f.run, err = a.Runs.PreparePRReview(ctx, pr.ID)
+		if generic {
+			f.run, err = a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: profile.ID})
+		} else {
+			f.run, err = a.Runs.PreparePRReview(ctx, pr.ID)
+		}
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -452,7 +474,6 @@ func TestLegacyBudgetReviewFailureRecoveryIsExactAndPreAgentOnly(t *testing.T) {
 				if err := f.a.Store.Put(context.Background(), "config", "settings", config, ""); err != nil {
 					t.Fatal(err)
 				}
-				eligible = false
 			case "explicit-false-review":
 				intent := false
 				r.PRReview = &intent
@@ -1236,6 +1257,211 @@ exec %q "$@"
 			}
 			if claimCount(t, f.a) != 1 {
 				t.Fatal("uncertain startup replaced its accepted claim")
+			}
+		})
+	}
+}
+
+func TestLegacyCustomReviewRecoversIntentAcrossChangedDefaults(t *testing.T) {
+	for _, path := range []string{"dedicated", "generic-workspace"} {
+		t.Run(path, func(t *testing.T) {
+			p := domain.Profile{ID: "historical-custom", Name: "Historical custom review", Prompt: "Review {{title}}: {{body}} ({{url}})", Sandbox: "read-only", Approval: "on-request", Publishing: "ask"}
+			if path == "generic-workspace" {
+				p.Sandbox = "workspace-write"
+			}
+			f := deferredProfileReviewFixture(t, false, &p, path == "generic-workspace")
+			makeLegacyCustomReview(t, f)
+			ctx := context.Background()
+			f.restart(t)
+			f.run = domain.Run{ID: f.run.ID}
+			if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil {
+				t.Fatal(err)
+			}
+			usage, err := f.github.UsageStatus(ctx)
+			if err != nil || f.run.Status != "deferred" || f.run.PRReview == nil || !*f.run.PRReview || !f.run.LaunchRetryAt.Equal(usage.NextRequest) {
+				t.Fatal("historical custom review did not recover durable intent", f.run.Status, f.run.PRReview, err)
+			}
+			f.assertNoAgent(t)
+			f.budget.Store(100)
+			if err := f.a.Runs.Recover(ctx); err != nil {
+				t.Fatal(err)
+			}
+			f.assertNoAgent(t)
+			f.expire(t)
+			var wg sync.WaitGroup
+			for n := 0; n < 8; n++ {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+						t.Error(err)
+					}
+				}()
+			}
+			waitLaunchRetry(t, func() { wg.Wait() })
+			f.assertSingleLaunch(t)
+			if f.run.Profile.ID != p.ID || f.run.Profile.Sandbox != p.Sandbox || f.run.Profile.Publishing != p.Publishing || claimCount(t, f.a) != 0 {
+				t.Fatal("legacy recovery changed retained authority or created a manual claim")
+			}
+		})
+	}
+}
+
+func makeLegacyCustomReview(t *testing.T, f *launchRetryFixture) {
+	t.Helper()
+	waitLaunchRetry(t, f.a.Runs.Close)
+	r := f.run
+	r.Status, r.ResumePending, r.LaunchRetryAt = "failed", false, time.Time{}
+	r.Error = "cannot verify current work item; work remains stopped: Code Factory GitHub budget reached; synchronization will retry"
+	r.SourceSnapshot.Author = "" // Both confirmed historical writers omitted this field.
+	var old map[string]json.RawMessage
+	if err := json.Unmarshal(raw(r), &old); err != nil {
+		t.Fatal(err)
+	}
+	delete(old, "prReview")
+	delete(old, "launchRetryAt")
+	if err := f.a.Store.Put(context.Background(), "run", r.ID, old, ""); err != nil {
+		t.Fatal(err)
+	}
+	config, err := f.a.Config(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.ReviewProfileID = "review"
+	if err := f.a.SaveConfig(context.Background(), config); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLegacyCustomReviewRequiresWholeHistoricalPrompt(t *testing.T) {
+	item := domain.Item{ID: "owner/repo#2", Repository: "owner/repo", Number: 2, Kind: "pr", Title: "title {{body}}", Body: "body {{title}}", URL: "https://github.com/owner/repo/pull/2", Head: "abc"}
+	profile := domain.Profile{ID: "custom", Prompt: "{{title}}|{{body}}|{{title}}|{{url}}", Sandbox: "read-only", Approval: "on-request", Publishing: "ask"}
+	// Golden bytes from the confirmed historical writer. Tokens inside inserted
+	// values are not expanded again; repeated template tokens are all replaced.
+	prefix := "title {{body}}|body {{title}}|title {{body}}|https://github.com/owner/repo/pull/2"
+	block := "\nReview target: https://github.com/owner/repo/pull/2\nPinned PR head: abc\nCompare this head with the pull request's target branch; report evidence-backed findings."
+	ask := "\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems."
+	bounded := "\nSandbox: read-only project access; private writable scratch via TMPDIR; GitHub and Codex service domains through an enforced network proxy. Other destinations and unrelated files are blocked. Save review artifacts and temporary checkouts under TMPDIR. Private skill indexes are isolated per run; shared owner settings are not writable."
+	base := domain.Run{ID: "legacy", ItemID: item.ID, Profile: profile, SourceSnapshot: &item, Prompt: prefix + block + ask + bounded, Status: "failed", Error: "cannot verify current work item; work remains stopped: Code Factory GitHub budget reached; synchronization will retry"}
+	if !legacyLaunchBudgetFailure(base) {
+		t.Fatal("coherent historical custom prompt was not recognized")
+	}
+	for _, which := range []string{"false", "snapshot", "id", "head", "url", "kind", "template", "override", "embedded-markers", "sandbox", "approval", "publishing", "authority-tail", "extra-tail"} {
+		t.Run(which, func(t *testing.T) {
+			r := base
+			snapshot := item
+			r.SourceSnapshot = &snapshot
+			switch which {
+			case "false":
+				intent := false
+				r.PRReview = &intent
+			case "snapshot":
+				r.SourceSnapshot = nil
+			case "id":
+				snapshot.ID = "owner/repo#3"
+			case "head":
+				snapshot.Head = "other"
+			case "url":
+				snapshot.URL = "https://github.com/owner/repo/pull/3"
+			case "kind":
+				snapshot.Kind = "issue"
+			case "template":
+				r.Profile.Prompt = ""
+			case "override":
+				r.Prompt = "Owner supplied a different task" + block + ask + bounded
+			case "embedded-markers":
+				snapshot.Body = prefix + block + ask + bounded
+				r.Profile.Prompt = "{{body}}"
+				r.Prompt = snapshot.Body + ask + bounded // A nonreview's ordinary writer, not a review suffix.
+			case "sandbox":
+				r.Profile.Sandbox = "unsupported"
+				r.Prompt = prefix + block + ask
+			case "approval":
+				r.Profile.Approval = "unsupported"
+			case "publishing":
+				r.Profile.Publishing = "unsupported"
+			case "authority-tail":
+				r.Prompt = prefix + block + ask
+			case "extra-tail":
+				r.Prompt += "\nUnverified trailing instructions"
+			}
+			if legacyLaunchBudgetFailure(r) {
+				t.Fatal("uncertain record gained automatic review intent")
+			}
+		})
+	}
+	// Existing repository-instruction deduplication is retained byte-for-byte.
+	dedup := base
+	source := item
+	source.Body = "\nRepository review instructions:\nowner rules"
+	dedup.SourceSnapshot = &source
+	dedup.ReviewPromptSnapshot = "owner rules"
+	dedup.Prompt = "title {{body}}|\nRepository review instructions:\nowner rules|title {{body}}|https://github.com/owner/repo/pull/2" + block + ask + bounded
+	if !legacyLaunchBudgetFailure(dedup) {
+		t.Fatal("historical instruction deduplication changed")
+	}
+	if got := appendLaunchAuthority(appendPRReviewPrompt("title {{body}}|\nRepository review instructions:\nowner rules|title {{body}}|https://github.com/owner/repo/pull/2", source, "owner rules"), profile); got != dedup.Prompt {
+		t.Fatal("current writer changed historical deduplication bytes")
+	}
+	full := base
+	full.Profile.Sandbox, full.Profile.Approval, full.Profile.Publishing = "danger-full-access", "never", "authorized"
+	full.Prompt = prefix + block + "\nPublishing authority: publishing is authorized when needed to fulfill the task, subject to stricter local and managed policies."
+	if !legacyLaunchBudgetFailure(full) {
+		t.Fatal("retained explicit full authority was not recognized")
+	}
+}
+
+func TestRecoveredLegacyCustomReviewStillChecksLiveEligibility(t *testing.T) {
+	for _, change := range []string{"head", "own-author", "unknown-author", "cached-identity"} {
+		t.Run(change, func(t *testing.T) {
+			p := domain.Profile{ID: "old-custom", Name: "Old custom review", Prompt: "Review {{title}}", Sandbox: "read-only", Approval: "on-request", Publishing: "ask"}
+			f := deferredProfileReviewFixture(t, false, &p, false)
+			makeLegacyCustomReview(t, f)
+			ctx := context.Background()
+			if change == "cached-identity" {
+				cached := f.pr
+				cached.URL = "https://github.com/owner/repo/pull/3"
+				if err := f.a.Store.Put(ctx, "item", cached.ID, cached, ""); err != nil {
+					t.Fatal(err)
+				}
+			}
+			f.restart(t)
+			f.run = domain.Run{ID: f.run.ID}
+			if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil {
+				t.Fatal(err)
+			}
+			if change == "cached-identity" {
+				if f.run.Status != "failed" || f.run.PRReview != nil {
+					t.Fatal("incoherent cached identity was promoted")
+				}
+				f.assertNoAgent(t)
+				return
+			}
+			if f.run.PRReview == nil || !*f.run.PRReview {
+				t.Fatal("verified legacy intent was not persisted")
+			}
+			live := f.pr
+			switch change {
+			case "head":
+				live.Head = "changed"
+			case "own-author":
+				live.Author = "me"
+			case "unknown-author":
+				live.Author = ""
+			}
+			f.live.Store(live)
+			f.budget.Store(100)
+			f.expire(t)
+			if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool { _ = f.a.Store.Get(ctx, "run", f.run.ID, &f.run); return f.run.Status == "failed" })
+			f.assertNoAgent(t)
+			if f.run.ResumePending || !f.run.LaunchRetryAt.IsZero() {
+				t.Fatal("ineligible historical review retained retry authority")
+			}
+			if claimCount(t, f.a) != 0 {
+				t.Fatal("manual recovery created a claim")
 			}
 		})
 	}

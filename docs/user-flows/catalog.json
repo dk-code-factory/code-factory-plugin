@@ -1910,6 +1910,33 @@
             "S8"
           ],
           "purpose": "A due automatic retry rejects occupied capacity before decoding a large wrong-shaped saved bundle, never overwrites projected payloads and later preserves the complete accepted snapshot when admitted."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestLegacyCustomReviewRecoversIntentAcrossChangedDefaults(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Real dedicated and generic workspace-write custom preparations are serialized without the historical review-intent field, recover after current defaults change with durable verified intent and the saved deadline, then start the original run once without adding a manual claim or changing authority."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestLegacyCustomReviewRequiresWholeHistoricalPrompt(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Whole historical writer bytes preserve repeated-token one-pass expansion, repository-instruction deduplication and explicit full authority; embedded markers, mismatched snapshot/template/override, explicit false, unsupported authority and unexpected suffixes cannot authorize recovery."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestRecoveredLegacyCustomReviewStillChecksLiveEligibility(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Persisted historical custom-review intent keeps live head and own/unknown author checks after defaults change; mismatched cached source identity remains stopped without promotion or a new claim."
         }
       ],
       "suites": [
@@ -4339,6 +4366,33 @@
             "S8"
           ],
           "purpose": "A due automatic retry rejects occupied capacity before decoding a large wrong-shaped saved bundle, never overwrites projected payloads and later preserves the complete accepted snapshot when admitted."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestLegacyCustomReviewRecoversIntentAcrossChangedDefaults(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Real dedicated and generic workspace-write custom preparations are serialized without the historical review-intent field, recover after current defaults change with durable verified intent and the saved deadline, then start the original run once without adding a manual claim or changing authority."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestLegacyCustomReviewRequiresWholeHistoricalPrompt(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Whole historical writer bytes preserve repeated-token one-pass expansion, repository-instruction deduplication and explicit full authority; embedded markers, mismatched snapshot/template/override, explicit false, unsupported authority and unexpected suffixes cannot authorize recovery."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestRecoveredLegacyCustomReviewStillChecksLiveEligibility(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Persisted historical custom-review intent keeps live head and own/unknown author checks after defaults change; mismatched cached source identity remains stopped without promotion or a new claim."
         }
       ],
       "suites": [
@@ -7620,6 +7674,33 @@
             "S6"
           ],
           "purpose": "A due automatic retry rejects occupied capacity before decoding a large wrong-shaped saved bundle, never overwrites projected payloads and later preserves the complete accepted snapshot when admitted."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestLegacyCustomReviewRecoversIntentAcrossChangedDefaults(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Real dedicated and generic workspace-write custom preparations are serialized without the historical review-intent field, recover after current defaults change with durable verified intent and the saved deadline, then start the original run once without adding a manual claim or changing authority."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestLegacyCustomReviewRequiresWholeHistoricalPrompt(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Whole historical writer bytes preserve repeated-token one-pass expansion, repository-instruction deduplication and explicit full authority; embedded markers, mismatched snapshot/template/override, explicit false, unsupported authority and unexpected suffixes cannot authorize recovery."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestRecoveredLegacyCustomReviewStillChecksLiveEligibility(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Persisted historical custom-review intent keeps live head and own/unknown author checks after defaults change; mismatched cached source identity remains stopped without promotion or a new claim."
         }
       ],
       "suites": [

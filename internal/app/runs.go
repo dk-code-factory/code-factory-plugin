@@ -507,22 +507,9 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 		prompt = strings.NewReplacer("{{title}}", item.Title, "{{body}}", item.Body, "{{url}}", item.URL).Replace(p.Prompt)
 	}
 	if prReview {
-		prompt += "\nReview target: " + item.URL + "\nPinned PR head: " + item.Head + "\nCompare this head with the pull request's target branch; report evidence-backed findings."
-		if strings.TrimSpace(repo.ReviewPrompt) != "" {
-			extra := "\nRepository review instructions:\n" + repo.ReviewPrompt
-			if !strings.Contains(prompt, extra) {
-				prompt += extra
-			}
-		}
+		prompt = appendPRReviewPrompt(prompt, item, repo.ReviewPrompt)
 	}
-	if p.Publishing == "ask" {
-		prompt += "\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems."
-	} else {
-		prompt += "\nPublishing authority: publishing is authorized when needed to fulfill the task, subject to stricter local and managed policies."
-	}
-	if p.Sandbox == "read-only" || p.Sandbox == "workspace-write" {
-		prompt += "\nSandbox: " + p.Sandbox + " project access; private writable scratch via TMPDIR; GitHub and Codex service domains through an enforced network proxy. Other destinations and unrelated files are blocked. Save review artifacts and temporary checkouts under TMPDIR. Private skill indexes are isolated per run; shared owner settings are not writable."
-	}
+	prompt = appendLaunchAuthority(prompt, p)
 	r := domain.Run{PRReview: &prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
 	r.Branch = "code-factory/" + r.ID
 	r.Worktree = filepath.Join(m.app.DataDir, "worktrees", r.ID)
@@ -562,6 +549,29 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 		return t.Event("run.prepared", r.ID, map[string]string{"id": r.ID, "status": r.Status})
 	})
 }
+func appendPRReviewPrompt(prompt string, item domain.Item, repositoryPrompt string) string {
+	prompt += "\nReview target: " + item.URL + "\nPinned PR head: " + item.Head + "\nCompare this head with the pull request's target branch; report evidence-backed findings."
+	if strings.TrimSpace(repositoryPrompt) != "" {
+		extra := "\nRepository review instructions:\n" + repositoryPrompt
+		if !strings.Contains(prompt, extra) {
+			prompt += extra
+		}
+	}
+	return prompt
+}
+
+func appendLaunchAuthority(prompt string, p domain.Profile) string {
+	if p.Publishing == "ask" {
+		prompt += "\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems."
+	} else {
+		prompt += "\nPublishing authority: publishing is authorized when needed to fulfill the task, subject to stricter local and managed policies."
+	}
+	if p.Sandbox == "read-only" || p.Sandbox == "workspace-write" {
+		prompt += "\nSandbox: " + p.Sandbox + " project access; private writable scratch via TMPDIR; GitHub and Codex service domains through an enforced network proxy. Other destinations and unrelated files are blocked. Save review artifacts and temporary checkouts under TMPDIR. Private skill indexes are isolated per run; shared owner settings are not writable."
+	}
+	return prompt
+}
+
 func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run, error) {
 	if !m.adminGate.TryRLock() {
 		return domain.Run{}, fmt.Errorf("plugin maintenance in progress; try again when it finishes")
