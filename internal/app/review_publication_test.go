@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -42,8 +43,19 @@ func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(t *testing.T) {
 		return providers.GitHubPolicy{RequestsPerHour: 60}, nil
 	})
 	first, err := a.ReadPRReviews(ctx, i.ID)
-	if err != nil || len(first.Reviews) != 0 || first.SyncedAt.IsZero() {
+	if err != nil || len(first.Reviews) != 0 || first.Refresh != "pending" || !first.SyncedAt.IsZero() {
 		t.Fatal(first, err)
+	}
+	deadlineFirst := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadlineFirst) {
+		first, err = a.SavedPRReviews(ctx, i.ID)
+		if !first.SyncedAt.IsZero() {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if err != nil || first.SyncedAt.IsZero() {
+		t.Fatal("background observation missing", first, err)
 	}
 	before := reads.Load()
 	posted.Store(true)
@@ -85,5 +97,66 @@ func TestPostedReviewsRefreshAfterTurnAndRetainReceiptsOnFailure(t *testing.T) {
 	_ = a.Store.Put(ctx, "item", i.ID, i, "")
 	if _, err := a.ReadPRReviews(ctx, i.ID); err == nil {
 		t.Fatal("issue accepted as PR")
+	}
+}
+
+func TestPostedReviewRefreshCoalescesPostTurnHintsDuringPendingRead(t *testing.T) {
+	a, ctx := fixture(t)
+	i := item()
+	i.Kind = "pr"
+	i.Head = "head"
+	i.Body = ""
+	importOne(t, a, ctx, i)
+	entered := make(chan struct{})
+	release := make(chan struct{})
+	var reads atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/reviews") {
+			n := reads.Add(1)
+			if n == 1 {
+				close(entered)
+				<-release
+			}
+			if n > 1 {
+				fmt.Fprint(w, `[{"id":9,"state":"COMMENTED","body":"Posted after pending read","commit_id":"head","submitted_at":"2026-10-24T01:00:00Z","html_url":"https://github.com/owner/repo/pull/1#pullrequestreview-9","user":{"login":"me"}}]`)
+				return
+			}
+		}
+		fmt.Fprint(w, `[]`)
+	}))
+	defer server.Close()
+	a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	a.GitHub.ConfigureUsage(a.Store, func(context.Context) (providers.GitHubPolicy, error) {
+		return providers.GitHubPolicy{RequestsPerHour: 600}, nil
+	})
+	first, err := a.ReadPRReviews(ctx, i.ID)
+	if err != nil || first.Refresh != "pending" {
+		t.Fatal(first, err)
+	}
+	select {
+	case <-entered:
+	case <-time.After(time.Second):
+		close(release)
+		t.Fatal("no background read")
+	}
+	for n := 0; n < 10; n++ {
+		a.queueReviewsAfterTurn(i.ID)
+	}
+	if reads.Load() != 1 {
+		close(release)
+		t.Fatal("pending observation duplicated HTTP work")
+	}
+	close(release)
+	deadline := time.Now().Add(3 * time.Second)
+	var saved domain.PRReviews
+	for time.Now().Before(deadline) {
+		saved, _ = a.SavedPRReviews(ctx, i.ID)
+		if len(saved.Reviews) == 1 {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if len(saved.Reviews) != 1 || reads.Load() != 2 {
+		t.Fatal("completion hint was lost or duplicated", len(saved.Reviews), reads.Load())
 	}
 }

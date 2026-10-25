@@ -30,6 +30,8 @@ type Manager struct {
 	ProviderPaths  map[string]string
 	mu             sync.Mutex
 	answerMu       sync.Mutex
+	deliveryMu     sync.Mutex
+	messageWorkers map[string]bool
 	live           map[string]*session
 	wg             sync.WaitGroup
 	closing        bool
@@ -74,6 +76,7 @@ func (m *Manager) Recover(ctx context.Context) error {
 		m.live = map[string]*session{}
 	}
 	m.mu.Unlock()
+	m.background(func() { _ = m.app.Store.BackfillProgress(m.ctx) })
 	runs, e := store.List[domain.Run](ctx, m.app.Store, "run")
 	if e != nil {
 		return e
@@ -101,6 +104,10 @@ func (m *Manager) Recover(ctx context.Context) error {
 				return e
 			}
 		}
+	}
+	messageBlocked, queuedMessages, e := m.recoverMessages(ctx)
+	if e != nil {
+		return e
 	}
 	atts, e := store.List[domain.Attention](ctx, m.app.Store, "attention")
 	if e != nil {
@@ -148,6 +155,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 		if err := m.app.Store.Get(ctx, "run", r.ID, &r); err != nil {
 			return err
 		}
+		if messageBlocked[r.ID] {
+			continue
+		}
 		if !attached[r.ID] && r.ResumePending && questions[r.ID] && r.Status == "interrupted" {
 			source, _, err := m.continuationContext(ctx, r)
 			if err == nil && closedWork(*source) {
@@ -168,6 +178,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 				return err
 			}
 		}
+	}
+	for _, d := range queuedMessages {
+		m.background(func() { m.deliverMessage(d) })
 	}
 	return nil
 }
@@ -211,13 +224,14 @@ func (m *Manager) busy() bool {
 }
 
 type LaunchInput struct {
-	ItemID    string   `json:"itemId"`
+	Target    string   `json:"target,omitempty"`
+	ItemID    string   `json:"itemId,omitempty"`
 	ProfileID string   `json:"profileId"`
-	Prompt    string   `json:"prompt"`
-	SkillIDs  []string `json:"skillIds"`
-	Model     string   `json:"model"`
-	Effort    string   `json:"effort"`
-	Base      string   `json:"base"`
+	Prompt    string   `json:"prompt,omitempty"`
+	SkillIDs  []string `json:"skillIds,omitempty"`
+	Model     string   `json:"model,omitempty"`
+	Effort    string   `json:"effort,omitempty"`
+	Base      string   `json:"base,omitempty"`
 }
 
 func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, error) {
@@ -234,6 +248,18 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 		return domain.Run{}, fmt.Errorf("plugin maintenance in progress; try again when it finishes")
 	}
 	defer m.adminGate.RUnlock()
+	target := in.ItemID
+	if in.Target != "" {
+		target = in.Target
+	}
+	resolved, err := m.app.ResolveTarget(ctx, target)
+	if err != nil {
+		return domain.Run{}, err
+	}
+	if resolved.Status != "resolved" {
+		return domain.Run{}, fmt.Errorf("target %s; inspect candidates with track_work", resolved.Status)
+	}
+	in.ItemID = resolved.ItemID
 	var item domain.Item
 	var p domain.Profile
 	var repo domain.Repository
@@ -514,7 +540,16 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	s.run.Status = "starting"
 	_ = m.persist(s, "run.state")
 	s.mu.Unlock()
-	source, sourceContext, e := m.continuationContext(ctx, r)
+	var source *domain.Item
+	var sourceContext string
+	var e error
+	if message != "" {
+		// Follow-up delivery uses saved context. Any GitHub read needed to carry
+		// out the message belongs to the agent, not the message transport.
+		source, sourceContext, e = m.savedMessageContext(ctx, r)
+	} else {
+		source, sourceContext, e = m.continuationContext(ctx, r)
+	}
 	if e != nil {
 		m.fail(s, e)
 		return
@@ -707,7 +742,7 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 			m.background(after)
 		}
 		if refreshReviewsFor != "" && m.app.GitHub != nil && m.app.GitHub.Managed() {
-			m.background(func() { _, _ = m.app.refreshPRReviews(m.ctx, refreshReviewsFor, true) })
+			m.app.queueReviewsAfterTurn(refreshReviewsFor)
 		}
 	}()
 	if s.retired {
@@ -792,15 +827,26 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 			_ = m.saveRecovery(s.recovery)
 			m.wakeRecovery(s)
 		}
-		if e := m.saveAttention(ctx, a, "attention.required"); e != nil {
+		next := s.run
+		if a.Blocking {
+			next.Status = "waiting"
+		}
+		// Readers on WAL connections can observe each committed transaction. Publish
+		// the native request and its owning waiting state together, never halfway.
+		if e := m.app.Store.Write(ctx, func(t *store.Tx) error {
+			if err := putAttention(t, a, "attention.required"); err != nil {
+				return err
+			}
+			if err := t.Put("run", next.ID, next); err != nil {
+				return err
+			}
+			return t.Event("run.state", next.ID, map[string]string{"id": next.ID, "status": next.Status})
+		}); e != nil {
 			_ = s.client.Close()
 			return
 		}
+		s.run = next
 		s.pending[a.ID] = a
-		if a.Blocking {
-			s.run.Status = "waiting"
-		}
-		_ = m.persist(s, "run.state")
 		return
 	}
 	var p struct {
@@ -914,7 +960,7 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 			}
 			text = text[n:]
 		}
-		return nil
+		return t.ProjectLatest(s.run.ID, msg.Method, msg.Params)
 	})
 }
 func supportedRequest(method string) bool {
@@ -1432,12 +1478,13 @@ func permissionSubset(grant, requested any) bool {
 }
 
 func (m *Manager) saveAttention(ctx context.Context, a domain.Attention, event string) error {
-	return m.app.Store.Write(ctx, func(t *store.Tx) error {
-		if e := t.Put("attention", a.ID, a); e != nil {
-			return e
-		}
-		return t.Event(event, a.RunID, map[string]any{"id": a.ID, "runId": a.RunID, "status": a.Status, "blocking": a.Blocking})
-	})
+	return m.app.Store.Write(ctx, func(t *store.Tx) error { return putAttention(t, a, event) })
+}
+func putAttention(t *store.Tx, a domain.Attention, event string) error {
+	if err := t.Put("attention", a.ID, a); err != nil {
+		return err
+	}
+	return t.Event(event, a.RunID, map[string]any{"id": a.ID, "runId": a.RunID, "status": a.Status, "blocking": a.Blocking})
 }
 
 // Plan mode provides Codex's supported request_user_input path. The resolved

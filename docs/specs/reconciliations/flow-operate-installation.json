@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "ff02c684c5244606e6a30b40d46f2803dec7cce7",
-  "fingerprint": "10fe22b7d9d697acdd1cb495c913a9921b4bfc3bb79e971f6cf36eedcde862bd",
+  "base": "cca335bca318a1ac88702269a03cc135d5ee67a7",
+  "fingerprint": "4f476b75602c773b4d46a6287486e7087ab8f723a832d84e230438a91bb30ba6",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "S1-S4 validated upgrades, rollback, health and unrelated service preservation remain unchanged. Dated ledger/runbook explicitly state local source verification and leave installed startup recovery unverified.",
-    "implementation": "Reviewed main startup Recover integration and unchanged installer lifecycle. No service restart, installation, dependency activation, route or authentication change is part of this edit.",
-    "tests": "Isolated release/installer recovery/smoke suites remain required by shared runtime inputs. These execute private fixtures, and their success cannot substitute for a dedicated real-provider restart or reviewer checkpoint reuse observation."
+    "kind": "refactor",
+    "description": "Checksummed release, preserved runtime/provider selection and explicit upgrade recovery remain accurate.",
+    "implementation": "No service or route manager code changed; additive SQLite indexes/projection entities retain old domain records and do not change OAuth, Tailscale or credentials.",
+    "tests": "Release suite rechecks packaging, installer failure/recovery and compiled smoke; deployment preflight and actual installed evidence are recorded separately from fixtures."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 97.116
+      "seconds": 103.761
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 13.085
+      "seconds": 15.77
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.71
+      "seconds": 3.252
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.307
+      "seconds": 2.448
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 22.4
+      "seconds": 22.566
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.181
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.645
+      "seconds": 0.644
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.186
+      "seconds": 1.185
     },
     {
       "command": [
@@ -131,11 +131,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.525
+      "seconds": 24.818
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "cb748e454b2611701b0eaedd8474145420e4d4e28eaaa70992cae88aae66f52d",
+    "flow:operate-installation": "267a15f8d7db7a6a8151130fafee34c7f0a8323ee29ea952b0125b2398862504",
     "term:connection-refreshes": "0807e22cada26e88be44c8827dbe19d70d8cf3fd3b501497d6e34298d6930ef1",
     "term:connection-submits": "c89eb7d928c2c0e357529b579fc2bc5758004c68ffc9f1b2c51b2aba34fda074",
     "term:coverage-gap": "ae21b494a4e89ad33379eb9bfab6164bc6fa75ee025e8d5164b816fb174c37b3",
@@ -172,12 +172,12 @@
     "term:ui-w-diagnostics": "a3e0ceb196dedc188355659f710ee28636f237fc2e1ccc982ec1a7bdfa17a3cb",
     "term:unverified-behavior": "0791092da2e65d198b98ad62d5863c9501731d37e6e4fdbcbe9dbaf7f2939f1c",
     "term:verification": "27ef614c7493b7d4b9eba6efe5e4ea3fed6637ed0cf4eb26e6efc3384e815207",
-    "ui:C-BROWSER-LAB": "944d0da242c3952fb2364cdd71430c754a1e199c3b22f2b45d1c2bbaa0749479",
-    "ui:C-DIAGNOSE": "2a40c4d194670f988b2e5ad429d8a2971c6584fded2e6a0293e2eda0dd87ef63",
-    "ui:P-BROWSER-LAB": "6a6e147300f368983b1c2dbe2d8e3435cef199587d9a6986e2a1d31e4e86c3b4",
-    "ui:P-DIAGNOSTICS": "607ed333362d4124efb77a631b50dbe2c6a8bbd731902efda3a5a819489962b0",
-    "ui:PAGE-BROWSER-LAB": "288fdf7ed14a3c9e688f46db303174fc813c250a37b50725b19782a0a83a4c8d",
-    "ui:W-BROWSER-LAB": "63f6186f2a3e94e66c0480a855a918f0d181a7e7761b60628292c2fdc0c21ce3",
-    "ui:W-DIAGNOSTICS": "4ecbef50840df480334750171612936d9bfe28e4594e6964f691dbbe40ce6ea8"
+    "ui:C-BROWSER-LAB": "cf734f67b345e327139b648f82ff3425ebddb6da6d2914016ea20cd895600fdc",
+    "ui:C-DIAGNOSE": "f6c6f1dd27b115ce1169f081eddd3f6c9b888cebb7bd8b6305d61115ed9fee74",
+    "ui:P-BROWSER-LAB": "ae55ac410d0d3ffe3d2587afa99b12d1639355f3f56a295249fa6126cd2c2a5c",
+    "ui:P-DIAGNOSTICS": "0811fc354ec925aa044520c717a23728ecaedb457781e5e84f8aaea95db515fb",
+    "ui:PAGE-BROWSER-LAB": "76e7795aa03dab736e81dfd9ae592ee99c465ce82b7f9075fa5166721286c5cf",
+    "ui:W-BROWSER-LAB": "29e5094f416544faa0f7ee0548602922560cb627831f42f526292d8824053610",
+    "ui:W-DIAGNOSTICS": "571aa75dd3234549150a7e1d24b4d7061acfe18e2f8079c70a5417b70cdaf217"
   }
 }

@@ -19,6 +19,9 @@ import (
 )
 
 type App struct {
+	refreshMu      sync.Mutex
+	refreshing     map[string]bool
+	refreshAgain   map[string]bool
 	autoReviewMu   sync.Mutex
 	providerMu     sync.Mutex
 	prRefreshAfter string

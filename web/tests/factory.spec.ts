@@ -90,6 +90,7 @@ async function host(
     failSave?: boolean;
     beforeSave?: () => Promise<void>;
     beforeMessage?: () => Promise<void>;
+    queueMessages?: boolean;
     failReadRun?: boolean;
     loseStartResponse?: boolean;
     beforeStartResponse?: () => Promise<void>;
@@ -504,6 +505,18 @@ async function host(
           break;
         case "send_message": {
           if (options.beforeMessage) await options.beforeMessage();
+          if (options.queueMessages) {
+            state.cursor++;
+            options.transcript?.push({
+              seq: state.cursor,
+              kind: "run.output",
+              entity: String(a.id),
+              at: new Date().toISOString(),
+              data: { method: "codefactory/messageDelivery", params: { itemId: "saved-message", state: "queued" } },
+            });
+            data = { delivery: "accepted", messageId: "saved-message", messageDelivery: { state: "queued" } };
+            break;
+          }
           const run = state.runs.find((r) => r.id === a.id);
           if (run && ["interrupted", "failed"].includes(run.status)) {
             run.status = "running";
@@ -3366,6 +3379,25 @@ for (const theme of ["light", "dark"] as const) {
     }
   });
 }
+test("saved message clears its draft before agent delivery and shows uncertainty without replay", async ({ page }) => {
+  const snapshot = initial();
+  snapshot.runs = [retained(snapshot, "queued-session", "interrupted")];
+  const transcript: JournalEvent[] = [];
+  const { ui, calls } = await host(page, { snapshot, transcript, queueMessages: true });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  await ui.getByLabel("Message agent").fill("Save my follow-up before contacting the agent.");
+  await ui.getByRole("button", { name: "Send message", exact: true }).click();
+  await expect(ui.getByLabel("Message agent")).toHaveValue("");
+  await expect(ui.locator(".transcript")).toContainText("Message saved. Awaiting agent delivery.");
+  await expect(ui.getByRole("status", { name: "Work status" })).toHaveText("Inactive");
+  transcript.push({ seq: snapshot.cursor + 1, kind: "run.output", entity: "queued-session", at: new Date().toISOString(), data: { method: "codefactory/messageDelivery", params: { itemId: "saved-message", state: "uncertain", error: "Agent delivery could not be confirmed. Inspect this session before sending again." } } });
+  await expect(ui.locator(".transcript")).toContainText("Agent delivery could not be confirmed.");
+  await expect(ui.locator(".transcript")).not.toContainText("Awaiting agent delivery");
+  await expect(ui.locator(".transcript article")).toHaveCount(1);
+  expect(calls.filter(c => c.name === "send_message")).toHaveLength(1);
+  expect(calls.filter(c => c.name === "start_run")).toHaveLength(0);
+});
+
 test("failed inactive message keeps its draft and never calls Resume or replays the send", async ({
   page,
 }) => {
@@ -4176,5 +4208,28 @@ for (const theme of ["light", "dark"] as const) {
     expect(calls.filter(c=>["start_run","prepare_launch","prepare_pr_review"].includes(c.name))).toHaveLength(0);
     expect(calls.filter(c=>c.name==="read_pr_reviews").every(c=>c.arguments.id===entry.item.id)).toBe(true);
     await scanOwnedApp(page,`${theme}-posted-reviews`);
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
+  test(`saved details and receipts render during background refresh in ${theme}`, async ({page}) => {
+    const snapshot=initial();const entry=snapshot.inbox[0];
+    Object.assign(entry.item,{kind:"pr",head:"current-head",author:"someone",reviewRequests:["alex"]});entry.queues=["review"];
+    let pending=true;
+    const {ui,calls}=await host(page,{snapshot,theme,
+      readItem:async(detail)=>({...detail,observation:{observedAt:"2026-10-24T01:00:00Z",refresh:pending?"pending":"fresh"}}),
+      readReviews:async()=>({itemId:entry.item.id,refresh:pending?"pending":"fresh",syncedAt:"2026-10-24T01:00:00Z",lastAttempt:"2026-10-24T01:00:00Z",reviews:[{id:"saved",url:"https://github.com/owner/repo/pull/1#pullrequestreview-1",author:"alex",state:"COMMENTED",head:"current-head",submittedAt:"2026-10-24T01:00:00Z",body:"Saved receipt available immediately",comments:[]}]})
+    });
+    await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+    await expect(ui.getByText("Refreshing saved details…",{exact:true})).toBeVisible();
+    await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toBeVisible();
+    await expect(ui.getByText("Saved receipt available immediately",{exact:true})).toBeVisible();
+    pending=false;
+    await expect(ui.getByText("Refreshing saved details…",{exact:true})).toHaveCount(0);
+    await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toHaveCount(0);
+    expect(calls.filter(c=>["start_run","prepare_launch","prepare_pr_review"].includes(c.name))).toHaveLength(0);
+    expect(new Set(calls.filter(c=>c.name==="read_pr_reviews").map(c=>c.arguments.freshness)).size).toBeGreaterThan(1);
+    await scanOwnedApp(page,`${theme}-saved-observations`);
   });
 }

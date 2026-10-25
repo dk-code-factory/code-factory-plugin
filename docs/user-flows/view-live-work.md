@@ -28,13 +28,15 @@ Hidden or disconnected views back off refreshes. Failed initialization does not 
 - **S2** Incremental state and paged transcript preserve older history without losing concurrent changes. Saved prepared proposals from another connected view appear without manually reloading or starting work. A previous empty refresh result cannot freeze later updates; retained status reflects completed actions even when the host reuses identical read responses.
 - **S3** Reopening a view retains pending attention and live work; hidden/disconnected refreshes back off.
 
-Conversation rendering keeps human-facing agent messages and your replies visible. Technical activity remains under Details, with structured error data there and the readable error message visible. Streaming updates preserve that distinction; a technical-only active stream shows a concise waiting status. Pending questions and approvals remain actionable outside Details.
+Conversation rendering keeps human-facing agent messages, your replies and saved-message delivery status visible. Queue acceptance precedes agent delivery, and uncertainty remains visible without automatic replay. Technical activity remains under Details, with structured error data there and the readable error message visible. Streaming updates preserve that distinction; a technical-only active stream shows a concise waiting status. Pending questions and approvals remain actionable outside Details.
 
 - **S4** Switch between concise conversation and full session console without changing the retained session or reply draft.
 
 Automatic recovery exchanges appear as technical activity under Details or in the session console. Your responses keep their ordinary conversation role.
 
-- **S5** Submitted reviews refresh after a PR turn and remain available to plugin skills with provider receipt URLs and explicit freshness. A failed refresh retains saved reviews and the last successful observation; an unverified result is not an empty or successful publication result. Reading, refreshing and opening review links never starts work or repeats publication.
+- **S5** Submitted reviews refresh after a PR turn and remain available to plugin skills with provider receipt URLs and explicit freshness. A failed refresh retains saved reviews and the last successful observation; an unverified result is not an empty or successful publication result. Reading, refreshing and opening review links never starts work or repeats publication. Saved details and receipts render while a background refresh is pending; errors retain the previous successful observation. Fresh host reads do not force provider requests or bypass pause, budgets and cooldowns.
+
+- **S6** A conversational status read includes the selected item and current/retained run summaries, exact pending questions, a bounded agent progress or final-response excerpt with its timestamp and continuation reference, and saved current-head versus earlier-head publication receipts. The current run uses the same retained-session preference as the embedded view; a run identifier selects that exact run. Missing progress projections and missing external observations remain explicitly unavailable. Longer history, questions and receipts use independent pagination. Dashboard opening is explicit and returns a compact overview; the embedded app obtains its own state through the host connection.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -55,6 +57,7 @@ flowchart TD
     N6(["Current view available"])
     N7["Switch between concise conversation and full session console without changing the retained session or reply draft. #40;S4#41;"]
     N8["Observe submitted reviews with receipts, findings and explicit freshness #40;S5#41;"]
+    N9["Read saved work, questions and publication with explicit freshness and bounded history #40;S6#41;"]
     N0 -->|"connected"| N1
     N0 -->|"connection unavailable"| N4
     N1 -->|"success"| N2
@@ -68,6 +71,8 @@ flowchart TD
     N7 -->|"resolved or explicit recovery"| N6
     N0 -->|"PR selected or turn completed"| N8
     N8 -->|"Show provider receipts or retained stale result"| N6
+    N0 -->|"conversational status request"| N9
+    N9 -->|"saved result or explicit unknown/ambiguity"| N6
 ```
 
 ## Implementation references
@@ -96,6 +101,11 @@ flowchart TD
 - [web/src/reviews.tsx](../../web/src/reviews.tsx) — Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links. (`export function PostedReviews(`)
 - [internal/app/review_publication.go](../../internal/app/review_publication.go) — Durable budgeted review observations, failure retention and post-turn refresh. (`func (a *App) ReadPRReviews(`)
 - [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Read submitted review and inline-comment pages; omit pending drafts. (`func (g *GitHub) PublishedReviews(`)
+- [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
+- [internal/app/observations.go](../../internal/app/observations.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) observation(`)
+- [internal/store/reads.go](../../internal/store/reads.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func Select[T any](`)
+- [internal/store/progress.go](../../internal/store/progress.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (t *Tx) ProjectProgress(`)
+- [internal/transport/tracking.go](../../internal/transport/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (s *Server) dashboard(`)
 
 ## Test references
 
@@ -122,6 +132,15 @@ flowchart TD
 - [internal/providers/github_reviews_test.go](../../internal/providers/github_reviews_test.go) — `func TestPublishedReviewsKeepVerdictCommitAndPaginatedInlineEvidence(`; S5. Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `posted reviews show verified verdicts findings and refresh after completion`; S5. Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes.
 - [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S5. Model/app discovery exposes read_pr_reviews; authenticated read_pr_reviews/read_run preserve receipt URL, reviewed head and inline findings.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/store/progress_test.go](../../internal/store/progress_test.go) — `func TestProgressProjectionBackfillAndPrivateRunProjection(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/transport/tracking_test.go](../../internal/transport/tracking_test.go) — `func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestSavedReadsDoNotWaitForSynchronizationOrBlockedGitHubAndDeduplicate(`; S6. Provider/sync locks and blocked HTTP cannot delay saved reads; repeat freshness reads deduplicate the observation worker.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestObservationPauseCooldownAndFailureRetainSavedState(`; S6. Failed receipts retain successful data and timestamp; pause and repository retry suppress new requests.
+- [internal/transport/reads_bench_test.go](../../internal/transport/reads_bench_test.go) — `func TestReadPerformancePilotFixture(`; S6. Opt-in loopback latency and size assertions, measured separately; ordinary Go verification skips this benchmark.
+- [internal/app/review_publication_test.go](../../internal/app/review_publication_test.go) — `func TestPostedReviewRefreshCoalescesPostTurnHintsDuringPendingRead(`; S5. Repeated turn-completion hints coalesce into one post-read pass; a receipt posted during an older read is neither lost nor fetched by concurrent workers.
+- [internal/store/progress_test.go](../../internal/store/progress_test.go) — `func TestProgressBackfillReassemblesChunkedFinalWithoutRequestHistoryScan(`; S6. Indexed startup backfill reassembles chunked final messages and returns a bounded excerpt; partial chunks never become output.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(`; S6. Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint.
 
 ## Verification and gaps
 
@@ -129,5 +148,6 @@ Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-view-live-work-s2-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Concurrent snapshot/cursor ordering and large diff pagination need focused tests. Next verification: Add concurrent snapshot/cursor ordering and multi-page large-diff fixture cases that assert no missed, repeated or reordered retained events.
 - **S3** — `gap-flow-view-live-work-s3-01` · Unverified behavior · P1 · owner: specification-coordinator. The actual final-build connected one-hour interval passed in ../acceptance.md. Hidden/disconnected visibility timing and backoff transitions still lack focused assertions; reconnect/iframe fixtures and a stable connected soak do not prove those variants. Next verification: Exercise hidden/disconnected visibility and retry-backoff transitions with focused fixture assertions, and retain the completed installed-build soak as bounded dated evidence rather than indefinite-availability proof.
+- **S6** — `gap-flow-view-live-work-s6-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Synthetic and installed-version measurements plus real Work observations establish normal saved lookup/publication, queue-page, configured-launch, nonsecret answer/local-delivery, retained-thread follow-up and explicit-dashboard paths. Actual-host ambiguous targets, retained-history/large-page variants, changed-head receipts, cooldown/error and uncertain-delivery variants remain unverified. Next verification: Observe the remaining ambiguity, history/large-page, changed-head, cooldown/error and uncertain-delivery variants through an explicitly scoped private-pilot campaign; keep fixture and host evidence separate.
 
 <!-- /flow-references -->

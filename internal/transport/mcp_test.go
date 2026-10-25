@@ -125,8 +125,8 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 				t.Fatal("PR review workflow is not discoverable to the model", tool)
 			}
 			schema := tool["inputSchema"].(map[string]any)
-			if required := schema["required"].([]any); len(required) != 1 || required[0] != "itemId" {
-				t.Fatal("PR review requires only the synchronized itemId", schema)
+			if schema["properties"].(map[string]any)["target"] == nil || schema["properties"].(map[string]any)["itemId"] == nil {
+				t.Fatal("preparation must accept targets and legacy itemId", schema)
 			}
 		}
 		if tool["name"] == "read_pr_reviews" {
@@ -140,8 +140,12 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 		case "read_plugin_admin", "manage_codex_plugins", "sync_repositories", "open_settings", "get_settings", "save_settings", "save_repository", "save_profile", "set_jira_credential", "discover_skills", "save_skill", "diagnostics":
 			expectedURI = SettingsResourceURI
 		}
-		if metadata["ui"].(map[string]any)["resourceUri"] != expectedURI {
-			t.Fatalf("tool %s does not reference current UI: %v", tool["name"], metadata)
+		opens := tool["name"] == "open_factory" || tool["name"] == "open_settings"
+		if opens && metadata["ui"].(map[string]any)["resourceUri"] != expectedURI {
+			t.Fatalf("opener %s does not reference current UI: %v", tool["name"], metadata)
+		}
+		if !opens && (metadata["ui"].(map[string]any)["resourceUri"] != nil || metadata["openai/outputTemplate"] != nil) {
+			t.Fatalf("non-opening tool %s would implicitly render a dashboard", tool["name"])
 		}
 		if (tool["name"] == "open_factory" || tool["name"] == "open_settings") && metadata["openai/outputTemplate"] != expectedURI {
 			t.Fatal("open_factory output template does not match current UI", metadata)

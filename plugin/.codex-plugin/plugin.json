@@ -1,6 +1,6 @@
 {
   "name": "code-factory",
-  "version": "0.2.6",
+  "version": "0.2.8",
   "description": "Triage GitHub issues and pull requests, launch isolated Codex tasks, and answer agents in ChatGPT Work.",
   "keywords": [
     "github",

@@ -178,6 +178,8 @@ export interface PublishedReview {
   comments: {id: string; url: string; author: string; body: string; path: string; line?: number}[];
 }
 export interface PRReviews {
+ refresh?: string;
+ retryAt?: string;
   itemId: string;
   reviews: PublishedReview[];
   syncedAt: string;
@@ -197,6 +199,7 @@ export interface EventPage {
   hasMore: boolean;
 }
 export interface Detail {
+ observation?: {observedAt:string;refresh:string;error?:string;retryAt?:string};
  refreshError?: string;
   item: Item;
   user: UserState;

@@ -1,5 +1,82 @@
 # Continue development through the real Chrome session
 
+## Durable follow-up receipt · 2026-10-25
+
+`send_message` now saves an encrypted message and returns `delivery: accepted`,
+a message ID and queued delivery state before contacting its agent. A worker
+restores the same retained session from saved context without a GitHub preflight;
+task-required GitHub reads belong to the agent. Tracking, run detail and the
+conversation expose later delivery or uncertainty. Queued messages survive a
+restart; an interrupted delivery claim is never replayed automatically or replaced
+with a generic continuation. Failed acceptance retains the draft; accepted text
+stays saved even when later restoration fails.
+
+The message queue race fixtures cover a blocked agent, caller cancellation,
+concurrent pending submissions, same-thread recovery with zero GitHub requests,
+stale targets and interrupted delivery. Browser fixtures distinguish saved receipt
+from activation and replace queue feedback with uncertainty without replay. These
+fixture results do not establish installed ChatGPT acceptance for this correction.
+
+
+## Fast saved-state tracking installed · 2026-10-25
+
+Installed **0.1.0-fd9095162bd6** with plugin **0.2.7**. Routine conversational
+lookups use `track_work` with a run ID, canonical item ID, GitHub URL or repository
+shorthand. Saved item/run/question/progress/receipt state returns immediately;
+stale or missing GitHub observations refresh in the background with timestamps,
+errors and retry feedback. Fresh host markers preserve monitoring pauses, budgets
+and cooldowns. Missing evidence stays unknown. History, questions and receipts
+have independent bounded pages; full detail and transcripts remain available.
+
+`open_factory` explicitly opens the dashboard and returns a compact overview.
+The app loads its own state through the MCP bridge. Rendering metadata belongs
+only to the dashboard/settings openers, so conversational status reads do not
+create a widget. Successful starts, answers and messages return local acceptance
+or delivery plus pending attention; completion is established separately.
+
+The [version-bound evidence](evidence/2026-10-24-fast-reads-tracking.json) separates
+synthetic server/caller timings, installed loopback timings and real Work calls.
+Installed cached caller p95 was **97 ms / 4.7 KiB** for tracking and **37 ms** for
+item detail. Dashboard output fell from **4.89 MB to 465 bytes**; the earlier
+installed detail read took **8.7 seconds** when refreshing. These measurements
+exclude ChatGPT orchestration and WAN latency. Synthetic status p95 was 22.5 ms.
+The original parallel group membership was unavailable; the evidence labels its
+reproducible dashboard/detail/all-six benchmark groups explicitly.
+
+Fresh Work conversations and a names-only loopback audit observed these normal
+Code Factory model-visible sequences:
+
+| Task | Calls |
+|---|---|
+| Saved review/agent lookup and publication receipts | `track_work` |
+| First queue page | `track_work` |
+| Configured launch acceptance | `prepare_pr_review` → `start_run` |
+| Question discovery and local answer delivery | `list_attention` → `answer_request` |
+| Retained-thread follow-up delivery | `track_work` → `send_message` |
+| Explicit dashboard | `open_factory` |
+
+Completion reads are separate from local-delivery confirmation. Earlier observed
+extra verification reads and an automatically rendered widget are retained in the
+evidence alongside the corrected catalog/guidance and successful repeats.
+
+The private **Code Factory Tracking E2E 0.2.7** package uses the existing observed
+registered connection. The host exposes no in-place update for the older private
+packages, so they remain installed. The native pilot used the existing question-only
+Plan/read-only profile; temporary private-repository defaults were restored.
+All **33 original runs**, threads, workspaces, profiles and pending-request metadata
+remain intact, with two explicit test runs added and left idle. Runtime/provider
+selection, protected files and complete Tailscale routes matched upgrade preflight.
+
+Actual Work delivered the native Continue choice. A later follow-up restored the
+same retained thread after the daemon upgrade. The installed widget loaded the exact
+source JavaScript hash, retained the same unanswered request after a full page
+reload, delivered its UI answer once and displayed `TRACKING_UI_ANSWER_OK Continue`.
+No code review or publication was performed by these bounded question tests.
+
+Broader host ambiguity/pagination/changed-head/failure variants retain explicit
+gaps. Callbacks, current-build soak/login and broader manual accessibility acceptance
+remain open; these successful normal paths do not establish full readiness.
+
 ## Source-aware continuation installed and observed · 2026-10-24
 
 Installed **0.1.0-8a8a9e76654d** from source commit `6bf7f98`, after the complete

@@ -52,7 +52,7 @@ custom connections and event-triggered tasks. Follow the
 
 Open the embedded inbox and configure monitored repositories in Settings. Use the dedicated private pilot repository for synthetic browser/model acceptance. Working tracks launched work until its GitHub completion; Issues includes linked PR information; My PRs and Review PRs follow GitHub author/reviewer identity. Each queue retains its query and Back context. Item selection opens the conversation without starting an agent.
 
-For manual work, choose a pipeline, review its mode, permissions and publishing authority, and explicitly Start. System defaults can instead opt into automatically starting eligible requested PR reviews; queue-only is the default, and repository policy can inherit or override it. Review/implementation pipeline defaults and additional repository review instructions are configured in Settings. Automatic reviews wait for current work, use read-only/ask authority and are durably claimed once per observed request/head. Each pipeline is one retained Codex session. New run and prepared proposals remain under Item details. Follow up by sending a message; inactive work restores its original thread and workspace. Interrupt remains explicit and cleanup refuses dirty worktrees.
+For manual work, choose a pipeline, review its mode, permissions and publishing authority, and explicitly Start. System defaults can instead opt into automatically starting eligible requested PR reviews; queue-only is the default, and repository policy can inherit or override it. Review/implementation pipeline defaults and additional repository review instructions are configured in Settings. Automatic reviews wait for current work, use read-only/ask authority and are durably claimed once per observed request/head. Each pipeline is one retained Codex session. New run and prepared proposals remain under Item details. Follow up by sending a message; the service saves it durably and acknowledges queue acceptance before background delivery. Inactive work restores its original thread and workspace using saved source context, with task-required GitHub reads left to the agent. Tracking and the conversation distinguish queued, delivering, delivered and uncertain state. Interrupt remains explicit and cleanup refuses dirty worktrees.
 
 Messages lists native, structured-message and recovered textual questions and approvals. Answer the displayed form. If a stopped agent fails to produce a form, the helper gets at most two question-only repair attempts before offering a free-text answer and Open session console. The console shows the same session's technical activity and retains its draft. Take over session cancels further repair. Unknown delivery is never retried automatically; inspect the console first.
 
@@ -112,8 +112,10 @@ gateway snapshot retain their current profile and need a compatibility check.
 
 After daemon loss, pending work continues from its retained session and saved
 progress. Completed turns remain idle; explicit interrupts and unanswered questions
-remain paused. Before initial execution or session restoration, a targeted fresh
-source check compares scope, state, head and assignments. The agent assesses
+remain paused. Before initial execution or automatic unfinished-work restoration, a targeted fresh
+source check compares scope, state, head and assignments. An explicit follow-up
+message is saved first and restores its retained session without a GitHub preflight;
+the agent receives explicitly unverified saved context and checks GitHub as needed. The agent assesses
 changes and reuses only still-valid checkpoints. Failed reads keep work stopped.
 Closed issues and closed/merged PRs permanently terminate their sessions and retire
 pending requests. Reopening a source requires new work rather than reviving its

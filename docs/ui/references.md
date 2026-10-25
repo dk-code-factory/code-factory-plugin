@@ -40,6 +40,7 @@ Implementation references are independent of the visible entity boundaries.
 | [web/src/main.tsx](../../web/src/main.tsx) — `function PullRequestInfo(` | PR monitoring and linked implementation/reference summaries. | Source and check links use the host bridge; independent lifecycle, review, CI and stale/error states. |
 | [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — `func (g *GitHub) UsageStatus(` | `W-GITHUB-USAGE`, `C-GITHUB-USAGE`. | Cached statistics and shared request gate; no independent quota endpoint polling. |
 | [web/src/reviews.tsx](../../web/src/reviews.tsx) — `export function PostedReviews(` | W-PR-EVIDENCE posted review elements and C-ITEM-SOURCE receipt links. | Submitted receipts and findings remain visible with verdict/head/freshness, provider failures retain saved reviews, and links use the host bridge. |
+| [internal/app/messages.go](../../internal/app/messages.go) — `func (m *Manager) QueueMessage(` | W-MESSAGE, W-TRANSCRIPT and C-FOLLOW-UP. | Durable encrypted message queue, same-session worker, recoverable queued state and at-most-once claims with explicit uncertainty. |
 <!-- /specs:references-sources -->
 
 ## Test reference keys
@@ -155,6 +156,8 @@ These references identify existing assertions and explicit remaining gaps.
 | `UI-POSTED-REVIEWS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `posted reviews show verified verdicts findings and refresh after completion` | Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes. |
 | `RUN-AUTO-CONTINUE` | [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `TestStartupContinuesPendingSessionFromRetainedProgress` | Startup continues pending running/queued/starting/interrupted work through the same thread, retains workspace/profile/prompt and completed reviewer artifacts, and a repeated recovery does not create another session or replay the original task. |
 | `UI-TERMINATED-WORK` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation` | In both themes, terminated work shows Stopped and its lifecycle reason, disables message continuation, exposes cleanup, omits Interrupt and sends no start or message action. |
+| `UI-SAVED-OBSERVATIONS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `saved details and receipts render during background refresh` | Both themes show saved details/receipts and pending feedback immediately, then automatically reread without launching work; receipt reads carry distinct freshness markers and scoped Axe passes. |
+| `UI-QUEUED-MESSAGE` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `saved message clears its draft before agent delivery and shows uncertainty without replay` | A durable accepted queue receipt clears only the submitted draft before activation; queued delivery is visible, replaced by uncertainty under the same message ID, and sends/starts are never replayed. |
 <!-- /specs:references-assertions -->
 
 ## Entity coverage

@@ -41,8 +41,12 @@ func (a *App) projectWork(ctx context.Context, items []domain.Item, links []doma
 	if err != nil {
 		return err
 	}
+	return a.projectWorkRecords(ctx, items, links, entries, runs, attention, external)
+}
+
+func (a *App) projectWorkRecords(ctx context.Context, items []domain.Item, links []domain.Relationship, entries []domain.InboxEntry, runs []domain.Run, attention []domain.Attention, external []domain.Item) error {
 	var viewer domain.GitHubViewer
-	if err = a.Store.Get(ctx, "identity", "github", &viewer); err != nil && err != store.ErrNotFound {
+	if err := a.Store.Get(ctx, "identity", "github", &viewer); err != nil && err != store.ErrNotFound {
 		return err
 	}
 	byID := map[string]domain.Item{}

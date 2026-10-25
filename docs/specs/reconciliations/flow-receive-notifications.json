@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "ff02c684c5244606e6a30b40d46f2803dec7cce7",
-  "fingerprint": "87d0fe9278f293e400542189dbaad3e1e1c2882d8d3e3b1a29b28f9c96a90f68",
+  "base": "cca335bca318a1ac88702269a03cc135d5ee67a7",
+  "fingerprint": "6d2876dcdc3ddddf5a65ffe883fff2ef186677da12c9d6204876de6e05a4281e",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "S1-S4 subscription delivery, signing, filtering and retry policy remain unchanged. Additional startup run.state transitions use the existing metadata-only notification mechanism.",
-    "implementation": "Reviewed persisted run.state events and attention staling against the unchanged event service. No callback, subscription or secret-bearing event payload was introduced.",
-    "tests": "Existing notification metadata/filter/retry fixtures remain mapped and are rerun with shared input changes. Real host callback and delivery variants remain explicit gaps; automatic continuation is not evidence of successful notification delivery."
+    "kind": "refactor",
+    "description": "Event subscription and callback acceptance remain unchanged and explicitly incomplete for real hosts.",
+    "implementation": "Existing attention events and endpoint catalogs remain intact; new progress projections write no extra public callback type, and local tracking does not establish background delivery.",
+    "tests": "Event/discovery tests retain subscriptions and callback boundaries; existing ledger gaps remain open and no fixture success is claimed as Work callback acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 13.085
+      "seconds": 15.77
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.186
+      "seconds": 1.185
     },
     {
       "command": [
@@ -44,11 +44,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.525
+      "seconds": 24.818
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "98dab5a039d2d71195a12421a9c4308841b38188861de0b4a2fa99ce28fe687e",
+    "flow:receive-notifications": "4569b0eed3529d4a72ef2d68bb2af73c120528073f0ca8403c72b945c01a24de",
     "term:attention-request": "47b74f8ed9dbeeeec679e207031fc8097e2905133175b3a97d73e5c23865e7f8",
     "term:coverage-gap": "ae21b494a4e89ad33379eb9bfab6164bc6fa75ee025e8d5164b816fb174c37b3",
     "term:host": "e7cdd21070f7c84e9ac5be3327182b9c0278c00078ea5efe69d95b71af94d5ff",

@@ -1234,7 +1234,7 @@
         {
           "path": "internal/app/continuation.go",
           "anchor": "func (m *Manager) continuationContext(",
-          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+          "purpose": "Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads."
         },
         {
           "path": "internal/providers/continuation.go",
@@ -1678,7 +1678,7 @@
           },
           {
             "id": "source_lifecycle_check",
-            "label": "Verify current source and report changed scope or head before continuation",
+            "label": "Verify current source and report changed scope or head before initial or automatic continuation",
             "scenario": "S10"
           },
           {
@@ -1820,7 +1820,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -1914,6 +1915,31 @@
           "path": "internal/app/app.go",
           "anchor": "func (a *App) InboxSummaries(",
           "purpose": "Bulk-load keyed user/assessment/ticket state and project list history fields before Go decoding; retain canonical linked-context hashing and full source/detail records."
+        },
+        {
+          "path": "internal/app/detail.go",
+          "anchor": "func (a *App) ItemDetail(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/app/observations.go",
+          "anchor": "func (a *App) observation(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/app/tracking.go",
+          "anchor": "func (a *App) TrackWork(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/store/reads.go",
+          "anchor": "func Select[T any](",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/transport/tracking.go",
+          "anchor": "func (s *Server) dashboard(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
         }
       ],
       "tests": [
@@ -2142,6 +2168,54 @@
             "S3"
           ],
           "purpose": "Synthetic retained-history benchmark at452items/1372links/265externalPRs/27large skill snapshots. Measures full and compact latency/allocations; no user data or provider calls and no flaky timing pass threshold."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestSavedReadsDoNotWaitForSynchronizationOrBlockedGitHubAndDeduplicate(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Provider/sync locks and blocked HTTP cannot delay saved reads; repeat freshness reads deduplicate the observation worker."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestObservationPauseCooldownAndFailureRetainSavedState(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Failed receipts retain successful data and timestamp; pause and repository retry suppress new requests."
+        },
+        {
+          "path": "internal/transport/reads_bench_test.go",
+          "anchor": "func TestReadPerformancePilotFixture(",
+          "purpose": "Opt-in loopback latency and size assertions, measured separately; ordinary Go verification skips this benchmark.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestFreshDetailKeepsMonitoringFocusWithoutProviderRefresh(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A fresh local detail read retains the original selected-item monitoring focus without scheduling provider work."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint."
         }
       ],
       "suites": [
@@ -2237,6 +2311,11 @@
             "id": "deferred_detail",
             "label": "Show saved information and Retry; deferred refresh leaves item unread",
             "scenario": "S5"
+          },
+          {
+            "id": "saved_tracking",
+            "label": "Read saved work, questions and publication with explicit freshness and bounded history",
+            "scenario": "S6"
           }
         ],
         "edges": [
@@ -2299,6 +2378,16 @@
             "from": "deferred_detail",
             "to": "n1",
             "label": "retry after budget permits"
+          },
+          {
+            "from": "n0",
+            "to": "saved_tracking",
+            "label": "conversational status request"
+          },
+          {
+            "from": "saved_tracking",
+            "to": "n5",
+            "label": "saved result or explicit unknown/ambiguity"
           }
         ]
       }
@@ -3029,12 +3118,17 @@
         {
           "path": "internal/app/continuation.go",
           "anchor": "func (m *Manager) continuationContext(",
-          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+          "purpose": "Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads."
         },
         {
           "path": "internal/providers/continuation.go",
           "anchor": "func (g *GitHub) CurrentWorkItem(",
           "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
+        },
+        {
+          "path": "internal/app/tracking.go",
+          "anchor": "func (a *App) TrackWork(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
         }
       ],
       "tests": [
@@ -3469,6 +3563,22 @@
             "S8"
           ],
           "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/transport/tracking_test.go",
+          "anchor": "func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
         }
       ],
       "suites": [
@@ -3634,7 +3744,7 @@
           },
           {
             "id": "source_lifecycle_check",
-            "label": "Verify current source and report changed scope or head before continuation",
+            "label": "Verify current source and report changed scope or head before initial or automatic continuation",
             "scenario": "S8"
           },
           {
@@ -3799,7 +3909,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -3914,12 +4025,27 @@
         {
           "path": "internal/app/continuation.go",
           "anchor": "func (m *Manager) continuationContext(",
-          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+          "purpose": "Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads."
         },
         {
           "path": "internal/providers/continuation.go",
           "anchor": "func (g *GitHub) CurrentWorkItem(",
           "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
+        },
+        {
+          "path": "internal/app/tracking.go",
+          "anchor": "func (a *App) TrackWork(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/transport/tracking.go",
+          "anchor": "func (s *Server) dashboard(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/app/messages.go",
+          "anchor": "func (m *Manager) QueueMessage(",
+          "purpose": "Durably save encrypted messages before asynchronous same-session delivery; recover queued messages and retain uncertainty without replay."
         }
       ],
       "tests": [
@@ -4139,6 +4265,62 @@
             "S4"
           ],
           "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
+        },
+        {
+          "path": "internal/transport/tracking_test.go",
+          "anchor": "func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestMessageQueueCommitsBeforeBlockedAgentAndSurvivesCallerCancellation(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Blocked session cannot delay queue acceptance; committed encrypted payload survives caller cancellation, rejects duplicate pending sends and becomes delivered."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestQueuedFollowUpRecoversSameThreadWithoutAnyGitHubPreflight(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Offline queue recovery restores the retained thread exactly once with saved context and zero GitHub requests."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestInterruptedMessageDeliveryIsUncertainAndNeverReplayed(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Interrupted delivery is marked uncertain and prevents automatic message or generic-continuation replay."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestQueueMessageRejectsStaleAndUnstartedTargetsBeforeAcceptance(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Prepared and stale-turn messages reject before any accepted message record exists."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "saved message clears its draft before agent delivery and shows uncertainty without replay",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Accepted queue receipt clears its submitted draft before agent activation; transcript replaces queue feedback with uncertainty and never replays send or starts a substitute run."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestAcceptedMessageRemainsSavedWhenAgentRestorationFails(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A nonexistent retained workspace does not prevent queue acceptance; failed restoration preserves encrypted accepted text and reports uncertainty on the same thread."
         }
       ],
       "suites": [
@@ -4239,12 +4421,26 @@
           },
           {
             "id": "source_lifecycle_check",
-            "label": "Verify current source and report changed scope or head before continuation",
+            "label": "Verify current source and report changed scope or head before initial or automatic continuation",
             "scenario": "S4"
           },
           {
             "id": "source_lifecycle_terminal",
             "label": "Closed or merged source; terminate session and retain history/workspace",
+            "terminal": true
+          },
+          {
+            "id": "message_saved",
+            "label": "Save message and acknowledge queue acceptance",
+            "scenario": "S6"
+          },
+          {
+            "id": "message_worker",
+            "label": "Deliver saved message to the same agent using retained context"
+          },
+          {
+            "id": "message_uncertain",
+            "label": "Keep uncertain delivery visible without automatic replay",
             "terminal": true
           }
         ],
@@ -4276,12 +4472,12 @@
           },
           {
             "from": "n2",
-            "to": "n6",
+            "to": "message_saved",
             "label": "accepted"
           },
           {
             "from": "n1",
-            "to": "n6",
+            "to": "message_saved",
             "label": ""
           },
           {
@@ -4291,7 +4487,7 @@
           },
           {
             "from": "n5",
-            "to": "n6",
+            "to": "message_saved",
             "label": ""
           },
           {
@@ -4327,7 +4523,7 @@
           {
             "from": "n0",
             "to": "source_lifecycle_check",
-            "label": "start or continue retained work"
+            "label": "initial launch or automatic unfinished-work continuation"
           },
           {
             "from": "source_lifecycle_check",
@@ -4338,6 +4534,21 @@
             "from": "source_lifecycle_check",
             "to": "n0",
             "label": "open source; agent assesses fresh changes"
+          },
+          {
+            "from": "message_saved",
+            "to": "message_worker",
+            "label": "background delivery"
+          },
+          {
+            "from": "message_worker",
+            "to": "n6",
+            "label": "agent accepted message"
+          },
+          {
+            "from": "message_worker",
+            "to": "message_uncertain",
+            "label": "delivery acknowledgement unavailable"
           }
         ]
       }
@@ -4467,12 +4678,22 @@
         {
           "path": "internal/app/continuation.go",
           "anchor": "func (m *Manager) continuationContext(",
-          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+          "purpose": "Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads."
         },
         {
           "path": "internal/providers/continuation.go",
           "anchor": "func (g *GitHub) CurrentWorkItem(",
           "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
+        },
+        {
+          "path": "internal/transport/tracking.go",
+          "anchor": "func (s *Server) dashboard(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/store/reads.go",
+          "anchor": "func Select[T any](",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
         }
       ],
       "tests": [
@@ -4670,6 +4891,14 @@
             "S3"
           ],
           "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
+        },
+        {
+          "path": "internal/transport/tracking_test.go",
+          "anchor": "func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
         }
       ],
       "suites": [
@@ -4694,8 +4923,8 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "specification-coordinator",
-          "reason": "Actual ChatGPT Work presented a real native question, delivered the selected answer and observed queue removal plus same-thread continuation on the installed release. Host activity did not expose the selected RPC method name, so direct list_attention invocation by ChatGPT remains unverified; multi-agent pagination and stale-answer cases have independent SDK/fixture coverage only.",
-          "next_verification": "Capture a nonsecret actual-host tool trace identifying list_attention and exercise paginated multi-agent queue refresh and stale-answer recovery in ChatGPT; retain the passed ordinary question/answer evidence and separate SDK/fixture results."
+          "reason": "Installed ChatGPT Work now directly invokes list_attention, presents the exact native question, delivers the user choice through answer_request and observes same-thread continuation, with independently audited MCP method names. Actual-host multi-agent pagination, stale/duplicate answers, uncertain delivery and recovered-text question variants remain unverified; fixtures cover those boundaries.",
+          "next_verification": "Observe the remaining multi-agent/page, stale/duplicate, uncertain-delivery and recovered-text variants in an explicitly scoped private-pilot campaign, without replaying delivery or substituting runs."
         }
       ],
       "ui": [
@@ -5025,12 +5254,17 @@
         {
           "path": "internal/app/continuation.go",
           "anchor": "func (m *Manager) continuationContext(",
-          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+          "purpose": "Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads."
         },
         {
           "path": "internal/providers/continuation.go",
           "anchor": "func (g *GitHub) CurrentWorkItem(",
           "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
+        },
+        {
+          "path": "internal/app/messages.go",
+          "anchor": "func (m *Manager) QueueMessage(",
+          "purpose": "Recover queued follow-ups using encrypted saved text; retain uncertain delivery without replay or generic startup continuation."
         }
       ],
       "tests": [
@@ -5322,6 +5556,33 @@
             "S6"
           ],
           "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestQueuedFollowUpRecoversSameThreadWithoutAnyGitHubPreflight(",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "Queued recovery preserves the submitted follow-up and retained thread without a GitHub preflight; uncertain or failed delivery is retained without automatic replay."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestInterruptedMessageDeliveryIsUncertainAndNeverReplayed(",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "Queued recovery preserves the submitted follow-up and retained thread without a GitHub preflight; uncertain or failed delivery is retained without automatic replay."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestAcceptedMessageRemainsSavedWhenAgentRestorationFails(",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "Queued recovery preserves the submitted follow-up and retained thread without a GitHub preflight; uncertain or failed delivery is retained without automatic replay."
         }
       ],
       "suites": [
@@ -5466,7 +5727,7 @@
           },
           {
             "id": "source_lifecycle_check",
-            "label": "Verify current source and report changed scope or head before continuation",
+            "label": "Verify current source and report changed scope or head before initial or automatic continuation",
             "scenario": "S6"
           },
           {
@@ -5603,7 +5864,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -5708,6 +5970,31 @@
           "path": "internal/providers/github_reviews.go",
           "anchor": "func (g *GitHub) PublishedReviews(",
           "purpose": "Read submitted review and inline-comment pages; omit pending drafts."
+        },
+        {
+          "path": "internal/app/tracking.go",
+          "anchor": "func (a *App) TrackWork(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/app/observations.go",
+          "anchor": "func (a *App) observation(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/store/reads.go",
+          "anchor": "func Select[T any](",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/store/progress.go",
+          "anchor": "func (t *Tx) ProjectProgress(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/transport/tracking.go",
+          "anchor": "func (s *Server) dashboard(",
+          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
         }
       ],
       "tests": [
@@ -5899,6 +6186,78 @@
             "S5"
           ],
           "purpose": "Model/app discovery exposes read_pr_reviews; authenticated read_pr_reviews/read_run preserve receipt URL, reviewed head and inline findings."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestProgressProjectionBackfillAndPrivateRunProjection(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/transport/tracking_test.go",
+          "anchor": "func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestSavedReadsDoNotWaitForSynchronizationOrBlockedGitHubAndDeduplicate(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Provider/sync locks and blocked HTTP cannot delay saved reads; repeat freshness reads deduplicate the observation worker."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestObservationPauseCooldownAndFailureRetainSavedState(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Failed receipts retain successful data and timestamp; pause and repository retry suppress new requests."
+        },
+        {
+          "path": "internal/transport/reads_bench_test.go",
+          "anchor": "func TestReadPerformancePilotFixture(",
+          "purpose": "Opt-in loopback latency and size assertions, measured separately; ordinary Go verification skips this benchmark.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/app/review_publication_test.go",
+          "anchor": "func TestPostedReviewRefreshCoalescesPostTurnHintsDuringPendingRead(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Repeated turn-completion hints coalesce into one post-read pass; a receipt posted during an older read is neither lost nor fetched by concurrent workers."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestProgressBackfillReassemblesChunkedFinalWithoutRequestHistoryScan(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Indexed startup backfill reassembles chunked final messages and returns a bounded excerpt; partial chunks never become output."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint."
         }
       ],
       "suites": [
@@ -5925,6 +6284,16 @@
           "owner": "specification-coordinator",
           "reason": "The actual final-build connected one-hour interval passed in ../acceptance.md. Hidden/disconnected visibility timing and backoff transitions still lack focused assertions; reconnect/iframe fixtures and a stable connected soak do not prove those variants.",
           "next_verification": "Exercise hidden/disconnected visibility and retry-backoff transitions with focused fixture assertions, and retain the completed installed-build soak as bounded dated evidence rather than indefinite-availability proof."
+        },
+        {
+          "version": 1,
+          "id": "gap-flow-view-live-work-s6-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "user-flow-maintainer",
+          "scenario": "S6",
+          "reason": "Synthetic and installed-version measurements plus real Work observations establish normal saved lookup/publication, queue-page, configured-launch, nonsecret answer/local-delivery, retained-thread follow-up and explicit-dashboard paths. Actual-host ambiguous targets, retained-history/large-page variants, changed-head receipts, cooldown/error and uncertain-delivery variants remain unverified.",
+          "next_verification": "Observe the remaining ambiguity, history/large-page, changed-head, cooldown/error and uncertain-delivery variants through an explicitly scoped private-pilot campaign; keep fixture and host evidence separate."
         }
       ],
       "ui": [
@@ -6008,6 +6377,11 @@
             "id": "posted_reviews",
             "label": "Observe submitted reviews with receipts, findings and explicit freshness",
             "scenario": "S5"
+          },
+          {
+            "id": "saved_tracking",
+            "label": "Read saved work, questions and publication with explicit freshness and bounded history",
+            "scenario": "S6"
           }
         ],
         "edges": [
@@ -6075,6 +6449,16 @@
             "from": "posted_reviews",
             "to": "n6",
             "label": "Show provider receipts or retained stale result"
+          },
+          {
+            "from": "n0",
+            "to": "saved_tracking",
+            "label": "conversational status request"
+          },
+          {
+            "from": "saved_tracking",
+            "to": "n6",
+            "label": "saved result or explicit unknown/ambiguity"
           }
         ]
       }

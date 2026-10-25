@@ -1,0 +1,3166 @@
+{
+  "recordedAt": "2026-10-25T02:49:19.238694+00:00",
+  "comparisonBase": "cca335bca318a1ac88702269a03cc135d5ee67a7",
+  "sourceState": "uncommitted implementation; checks and deployment recorded separately",
+  "syntheticBaseline": {
+    "apis": {
+      "list_attention": {
+        "callerP50Ms": 7.831822,
+        "callerP95Ms": 9.261423,
+        "maxResponseBytes": 146,
+        "serverP50Ms": 7.732486,
+        "serverP95Ms": 9.123764
+      },
+      "list_inbox": {
+        "callerP50Ms": 42.801357,
+        "callerP95Ms": 45.770927,
+        "maxResponseBytes": 202004,
+        "serverP50Ms": 42.588295,
+        "serverP95Ms": 45.424544
+      },
+      "list_runs": {
+        "callerP50Ms": 78.636953,
+        "callerP95Ms": 82.346185,
+        "maxResponseBytes": 1298274,
+        "serverP50Ms": 77.957585,
+        "serverP95Ms": 81.363055
+      },
+      "open_factory": {
+        "callerP50Ms": 216.412477,
+        "callerP95Ms": 220.889846,
+        "maxResponseBytes": 9556643,
+        "serverP50Ms": 213.804259,
+        "serverP95Ms": 218.408905
+      },
+      "read_item": {
+        "callerP50Ms": 84.183874,
+        "callerP95Ms": 88.881876,
+        "maxResponseBytes": 87130,
+        "serverP50Ms": 83.957448,
+        "serverP95Ms": 88.691798
+      },
+      "read_pr_reviews": {
+        "callerP50Ms": 0.277192,
+        "callerP95Ms": 0.563661,
+        "maxResponseBytes": 386,
+        "serverP50Ms": 0.225184,
+        "serverP95Ms": 0.520399
+      },
+      "read_run": {
+        "callerP50Ms": 2.805682,
+        "callerP95Ms": 3.542628,
+        "maxResponseBytes": 41086,
+        "serverP50Ms": 2.688601,
+        "serverP95Ms": 3.428154
+      }
+    },
+    "fixture": {
+      "externalPRs": 265,
+      "items": 452,
+      "relationships": 1372,
+      "runs": 32
+    },
+    "groupProvenance": "The supplied plan did not name the original parallel memberships; these explicit dashboard/detail/all-six groups are reproducible substitutes.",
+    "parallelGroups": [
+      {
+        "individualCallerP95Ms": 254.892277,
+        "individualServerP95Ms": 251.232217,
+        "meanGroupResponseBytes": 11056921,
+        "samples": 10,
+        "tools": [
+          "open_factory",
+          "list_inbox",
+          "list_runs"
+        ],
+        "wallP95Ms": 289.422381
+      },
+      {
+        "individualCallerP95Ms": 86.738096,
+        "individualServerP95Ms": 86.520536,
+        "meanGroupResponseBytes": 128602,
+        "samples": 10,
+        "tools": [
+          "read_item",
+          "read_run",
+          "read_pr_reviews"
+        ],
+        "wallP95Ms": 88.889887
+      },
+      {
+        "individualCallerP95Ms": 253.31599,
+        "individualServerP95Ms": 250.255078,
+        "meanGroupResponseBytes": 11185523,
+        "samples": 10,
+        "tools": [
+          "open_factory",
+          "list_inbox",
+          "list_runs",
+          "read_item",
+          "read_run",
+          "read_pr_reviews"
+        ],
+        "wallP95Ms": 287.023017
+      }
+    ],
+    "samplesPerAPI": 20,
+    "scope": "synthetic loopback MCP; server includes tool execution and JSON encoding; caller includes local HTTP and body read; no ChatGPT orchestration or WAN"
+  },
+  "syntheticImplementation": {
+    "apis": {
+      "list_attention": {
+        "callerP50Ms": 7.494903,
+        "callerP95Ms": 7.941115,
+        "maxResponseBytes": 206,
+        "serverP50Ms": 7.396939,
+        "serverP95Ms": 7.836548
+      },
+      "list_inbox": {
+        "callerP50Ms": 37.64651,
+        "callerP95Ms": 39.36889,
+        "maxResponseBytes": 99581,
+        "serverP50Ms": 37.419993,
+        "serverP95Ms": 39.232212
+      },
+      "list_runs": {
+        "callerP50Ms": 7.427937,
+        "callerP95Ms": 8.490452,
+        "maxResponseBytes": 11922,
+        "serverP50Ms": 7.321746,
+        "serverP95Ms": 8.33061
+      },
+      "open_factory": {
+        "callerP50Ms": 51.606864,
+        "callerP95Ms": 52.936843,
+        "maxResponseBytes": 403,
+        "serverP50Ms": 51.457121,
+        "serverP95Ms": 52.784436
+      },
+      "read_item": {
+        "callerP50Ms": 9.519454,
+        "callerP95Ms": 10.598449,
+        "maxResponseBytes": 43668,
+        "serverP50Ms": 9.420146,
+        "serverP95Ms": 10.489082
+      },
+      "read_pr_reviews": {
+        "callerP50Ms": 0.227109,
+        "callerP95Ms": 0.5986,
+        "maxResponseBytes": 373,
+        "serverP50Ms": 0.178928,
+        "serverP95Ms": 0.540269
+      },
+      "read_run": {
+        "callerP50Ms": 1.609788,
+        "callerP95Ms": 2.221372,
+        "maxResponseBytes": 20641,
+        "serverP50Ms": 1.534927,
+        "serverP95Ms": 2.12477
+      },
+      "track_work": {
+        "callerP50Ms": 21.719375,
+        "callerP95Ms": 22.611178,
+        "maxResponseBytes": 1735,
+        "serverP50Ms": 21.575714,
+        "serverP95Ms": 22.461225
+      }
+    },
+    "fixture": {
+      "externalPRs": 265,
+      "items": 452,
+      "relationships": 1372,
+      "runs": 32
+    },
+    "groupProvenance": "The supplied plan did not name the original parallel memberships; these explicit dashboard/detail/all-six groups are reproducible substitutes.",
+    "parallelGroups": [
+      {
+        "individualCallerP95Ms": 55.909774,
+        "individualServerP95Ms": 55.534305,
+        "meanGroupResponseBytes": 111905,
+        "samples": 10,
+        "tools": [
+          "open_factory",
+          "list_inbox",
+          "list_runs"
+        ],
+        "wallP95Ms": 56.601018
+      },
+      {
+        "individualCallerP95Ms": 11.837898,
+        "individualServerP95Ms": 11.567729,
+        "meanGroupResponseBytes": 64682,
+        "samples": 10,
+        "tools": [
+          "read_item",
+          "read_run",
+          "read_pr_reviews"
+        ],
+        "wallP95Ms": 12.042474
+      },
+      {
+        "individualCallerP95Ms": 59.11366,
+        "individualServerP95Ms": 58.883916,
+        "meanGroupResponseBytes": 176587,
+        "samples": 10,
+        "tools": [
+          "open_factory",
+          "list_inbox",
+          "list_runs",
+          "read_item",
+          "read_run",
+          "read_pr_reviews"
+        ],
+        "wallP95Ms": 63.52298
+      }
+    ],
+    "samplesPerAPI": 20,
+    "scope": "synthetic loopback MCP; server includes tool execution and JSON encoding; caller includes local HTTP and body read; no ChatGPT orchestration or WAN"
+  },
+  "installedBaseline": {
+    "version": "0.1.0-8a8a9e76654d",
+    "scope": "Installed daemon loopback caller wall time and actual response bytes; no ChatGPT orchestration or WAN. Only the dedicated private pilot is targeted for detail/receipt/run reads.",
+    "samplesPerAPI": 10,
+    "apis": {
+      "open_factory": {
+        "firstCallMs": 335.0102249532938,
+        "cachedCallerP50Ms": 330.43942297808826,
+        "cachedCallerP95Ms": 341.36546502122656,
+        "maxResponseBytes": 4889353
+      },
+      "list_inbox": {
+        "firstCallMs": 106.30972700892016,
+        "cachedCallerP50Ms": 105.67884700139984,
+        "cachedCallerP95Ms": 108.3104420104064,
+        "maxResponseBytes": 106077
+      },
+      "read_item": {
+        "firstCallMs": 8737.231553008314,
+        "cachedCallerP50Ms": 149.90249497350305,
+        "cachedCallerP95Ms": 7923.7445360049605,
+        "maxResponseBytes": 10350
+      },
+      "list_runs": {
+        "firstCallMs": 157.45024400530383,
+        "cachedCallerP50Ms": 149.78497399715707,
+        "cachedCallerP95Ms": 173.16870501963422,
+        "maxResponseBytes": 641616
+      },
+      "read_run": {
+        "firstCallMs": 1.5494429972022772,
+        "cachedCallerP50Ms": 0.7066429825499654,
+        "cachedCallerP95Ms": 1.7783139483071864,
+        "maxResponseBytes": 2958
+      },
+      "read_pr_reviews": {
+        "firstCallMs": 1294.5259920088574,
+        "cachedCallerP50Ms": 0.26084197452291846,
+        "cachedCallerP95Ms": 0.5637040012516081,
+        "maxResponseBytes": 1178
+      }
+    }
+  },
+  "verification": {
+    "focusedRace": "passed after WAL read-pool and asynchronous focus changes; actual uncommitted-write regression reproduced before the fix",
+    "focusedBrowser": "4 passed: saved-state and posted-review fixtures in both themes",
+    "specificationReconciliation": "passed for current source, all affected behavior/UI subjects, without broadening adoption",
+    "ci": "passed make ci FLOW_BASE=cca335bca318a1ac88702269a03cc135d5ee67a7 for final guidance source; 89 browser fixtures plus Go race/static, TS, packaging, installer recovery and compiled smoke",
+    "specsCheck": "passed against cca335bca318a1ac88702269a03cc135d5ee67a7",
+    "ciAfterLedger": "passed make ci FLOW_BASE=cca335bca318a1ac88702269a03cc135d5ee67a7 after narrowing only verified gap assertions and updating dated runbook/acceptance evidence",
+    "specsCheckAfterLedger": "passed against the pinned base",
+    "documentationOnlyRebuildBinaryMatchesInstalled": true,
+    "newRunbookLedgerLinks": "validated local evidence links"
+  },
+  "deployment": {
+    "at": "2026-10-25T03:47:02.773773+00:00",
+    "installedVersion": "0.1.0-fd9095162bd6",
+    "retainedRuns": 34,
+    "all34IdentitiesThreadsWorkspacesProfilesStatusesPreserved": true,
+    "sameAttentionMetadata": true,
+    "sameRuntimeProviderSelection": true,
+    "sameProtectedFiles": true,
+    "sameTailscaleServe": true,
+    "release": {
+      "version": "0.1.0-fd9095162bd6",
+      "archiveSha256": "e8dbbf3b286958cce5144e375df4e34e6c89298b8c72ba75a4392b75737f4120",
+      "manifestFilesVerified": 331,
+      "release": "/extra/dkropachev/tmp/code-factory-fast-reads/extracted/code-factory-0.1.0-fd9095162bd6"
+    },
+    "retainedInstalledArchiveCopy": "/extra/dkropachev/tmp/code-factory-fast-reads/installed-release-artifact/code-factory-0.1.0-fd9095162bd6-linux-amd64.tar.gz"
+  },
+  "host": {
+    "status": "normal workflows observed; broader host variants remain open",
+    "existingPackageHasUpdateControl": false,
+    "preserveExistingPackages": true,
+    "toolCatalogRefreshed": true,
+    "privatePackageId": "Plugin_6dd2017875d88191b5dc21e7f8648af1",
+    "privatePackageVersion": "0.2.7",
+    "privatePackageName": "Code Factory Tracking E2E",
+    "privatePackageUploaded": true,
+    "privatePackageSha256": "499a6757dfd741fa1704c171613537fc26d16dd1ca3473ef56d4f0407c4cacd8",
+    "sameExistingRegisteredConnection": true,
+    "existingPackagesPreserved": true,
+    "privatePackageInstalled": true,
+    "initialLookup": {
+      "installedVersion": "0.1.0-6aa0c7000e54",
+      "chat": "https://chatgpt.com/c/6add71c1-e200-83ea-8e9c-2eac7e3b9f91",
+      "modelTools": [
+        "track_work",
+        "track_work"
+      ],
+      "followupReason": "external observation still pending",
+      "verifiedReceipt": "https://github.com/dkropachev/code-factory-pilot-20261019/pull/2#pullrequestreview-5576410604",
+      "noWorkLaunched": true,
+      "unexpectedDashboardRendered": true,
+      "defect": "Every tool carried ui.resourceUri. The host rendered a dashboard even though the model never called open_factory and claimed no dashboard was opened. Restrict resource metadata to explicit openers and repeat."
+    },
+    "lookupAfterFix": {
+      "chat": "https://chatgpt.com/c/6add7749-9630-83e9-b577-ee746ad54daa",
+      "installedVersion": "0.1.0-4c51af9b6746",
+      "modelTools": [
+        "track_work"
+      ],
+      "visibleCodeFactoryFrames": 0,
+      "onlyIframe": "hidden DIL execution sandbox",
+      "noDashboardOpened": true,
+      "noWorkLaunched": true,
+      "savedReceiptAndFreshnessReported": true
+    },
+    "queueTriage": {
+      "modelTools": [
+        "track_work"
+      ],
+      "resultItems": [
+        1,
+        3,
+        4,
+        5,
+        6
+      ],
+      "allDedicatedPilot": true,
+      "noVisibleFrames": true,
+      "noExtraPagesOrLaunch": true
+    },
+    "configuredLaunchInitial": {
+      "chat": "https://chatgpt.com/c/6add7932-333c-83e9-9b78-3499aba49997",
+      "installedVersion": "0.1.0-4c51af9b6746",
+      "modelTools": [
+        "prepare_pr_review",
+        "start_run",
+        "track_work"
+      ],
+      "runId": "1094360eedfa0de7072da345a0ff2eaa",
+      "threadId": "01a17121-9d87-7f80-9885-6a1f6d6a8aef",
+      "authorityInspected": "Plan/read-only/on-request/ask, gpt-6.1-sol low, no skills, pinned head and question-only prompt",
+      "nativeStatus": "waiting",
+      "temporaryPilotDefaultsRestored": true,
+      "extraHostVerificationRead": true,
+      "followup": "Remove the tool-description invitation to monitor immediately after successful acceptance; repeat fresh launch after deployment."
+    },
+    "initialQuestionAnswer": {
+      "modelTools": [
+        "list_attention",
+        "answer_request",
+        "track_work"
+      ],
+      "question": {
+        "id": "74b51e9a990cc9683f594d2d7eb7653c",
+        "runId": "1094360eedfa0de7072da345a0ff2eaa",
+        "turnId": "01a17121-a297-7e93-914d-b4bbed8d4d04",
+        "questions": [
+          {
+            "id": "queue_acceptance",
+            "header": "Queue test",
+            "question": "Should this queue acceptance test continue or stop?",
+            "isOther": true,
+            "isSecret": false,
+            "options": [
+              {
+                "label": "Continue",
+                "description": "Continue the queue acceptance test."
+              },
+              {
+                "label": "Stop",
+                "description": "Stop the queue acceptance test."
+              }
+            ]
+          }
+        ]
+      },
+      "observed": {
+        "runId": "1094360eedfa0de7072da345a0ff2eaa",
+        "status": "idle",
+        "threadId": "01a17121-9d87-7f80-9885-6a1f6d6a8aef",
+        "questionStatus": "answered",
+        "latestOutput": "QUEUE_ANSWER_OK Continue",
+        "recoveryStages": [
+          [
+            "resolved"
+          ]
+        ]
+      },
+      "exactQuestionPresentedAndWaited": true,
+      "userTestChoice": "Continue",
+      "extraHostCompletionRead": true,
+      "claim": "Delivery and same-thread completion succeeded; the extra completion read is recorded separately from the intended two-call local-delivery workflow."
+    },
+    "configuredLaunchFinal": {
+      "installedVersion": "0.1.0-fd9095162bd6",
+      "chat": "https://chatgpt.com/c/6add7cc7-8f84-83ea-b055-a101ca687ea2",
+      "modelTools": [
+        "prepare_pr_review",
+        "start_run"
+      ],
+      "runId": "a3683bac409197b28323d859af532bfd",
+      "threadId": "01a1712f-da28-78d0-bab6-3294fe070297",
+      "scope": "bounded question-only Plan/read-only pilot profile; no review/publication",
+      "acceptanceReportedWithoutCompletionRead": true,
+      "pilotDefaultsRestored": true
+    },
+    "questionDeliveryFinal": {
+      "modelTools": [
+        "list_attention",
+        "answer_request"
+      ],
+      "exactNativeChoicesPresentedAndWaited": true,
+      "localDeliveryReportedWithoutExtraRead": true,
+      "nativeCompletionIndependentlyObserved": "QUEUE_ANSWER_OK Continue",
+      "sameThread": true,
+      "runStatus": "idle"
+    },
+    "followupRestoration": {
+      "modelTools": [
+        "track_work",
+        "send_message"
+      ],
+      "runId": "1094360eedfa0de7072da345a0ff2eaa",
+      "sameThreadId": "01a17121-9d87-7f80-9885-6a1f6d6a8aef",
+      "restoredAfterInstalledDaemonUpgrade": true,
+      "newNativeQuestionObserved": {
+        "id": "17d913e656b5b8cccddd1e589192d54c",
+        "runId": "1094360eedfa0de7072da345a0ff2eaa",
+        "turnId": "01a17132-03f6-7ef2-a2a6-fec36f39beed",
+        "questions": [
+          {
+            "id": "ui_recovery",
+            "header": "UI recovery",
+            "question": "Should the UI recovery test continue or stop?",
+            "isOther": true,
+            "isSecret": false,
+            "options": [
+              {
+                "label": "Continue",
+                "description": "Continue the UI recovery test."
+              },
+              {
+                "label": "Stop",
+                "description": "Stop the UI recovery test."
+              }
+            ]
+          }
+        ],
+        "threadId": "01a17121-9d87-7f80-9885-6a1f6d6a8aef"
+      },
+      "totalRunsStill35": true,
+      "noSubstituteRun": true,
+      "localDeliveryOnlyReported": true
+    },
+    "explicitDashboard": {
+      "modelTools": [
+        "open_factory"
+      ],
+      "appOnlySnapshotAndJournalReadsObserved": true,
+      "connected": true,
+      "moduleSHA256": "80feb3ce694d4b5fdae38b6122a63b840922e36399dc16720b6ae3fc29977623",
+      "matchesInstalledSourceModule": true,
+      "onlyExplicitOpenRenderedDashboard": true
+    },
+    "auditedScenarios": {
+      "savedLookup": [
+        {
+          "at": "2026-10-25T03:28:25.799571+00:00",
+          "tool": "track_work"
+        }
+      ],
+      "queueTriage": [
+        {
+          "at": "2026-10-25T03:29:35.374044+00:00",
+          "tool": "track_work"
+        }
+      ],
+      "configuredLaunch": [
+        {
+          "at": "2026-10-25T03:51:58.297958+00:00",
+          "tool": "prepare_pr_review"
+        },
+        {
+          "at": "2026-10-25T03:52:00.518191+00:00",
+          "tool": "start_run"
+        }
+      ],
+      "questionDiscovery": [
+        {
+          "at": "2026-10-25T03:52:35.779081+00:00",
+          "tool": "list_attention"
+        }
+      ],
+      "answerLocalDelivery": [
+        {
+          "at": "2026-10-25T03:53:02.202106+00:00",
+          "tool": "answer_request"
+        }
+      ],
+      "followupRestoration": [
+        {
+          "at": "2026-10-25T03:54:20.930626+00:00",
+          "tool": "track_work"
+        },
+        {
+          "at": "2026-10-25T03:54:23.589662+00:00",
+          "tool": "send_message"
+        }
+      ],
+      "explicitDashboard": [
+        {
+          "at": "2026-10-25T03:55:35.804600+00:00",
+          "tool": "open_factory"
+        },
+        {
+          "at": "2026-10-25T03:55:38.611213+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T03:55:42.626441+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:44.878549+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:46.743013+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:48.334473+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:49.919044+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:51.615346+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:53.282611+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:54.998619+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:56.750306+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:58.370951+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:55:59.991092+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:01.630336+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:03.375200+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:05.007140+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:06.775219+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:08.546735+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:10.170703+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:11.886539+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:13.610879+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:15.366748+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:17.119958+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:18.991448+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:20.310391+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:22.064385+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:23.797007+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:25.594403+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:27.298976+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:28.906401+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:29.591411+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T03:56:33.899078+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:35.626487+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:37.195537+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:38.489532+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:40.218677+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:41.754627+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:43.472069+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:45.125104+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:46.836662+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:48.495770+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:50.068851+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:51.754955+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:53.498550+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:55.067917+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:56.703205+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:58.269403+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:56:59.837815+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:00.530096+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T03:57:05.834086+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:06.366792+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T03:57:10.506813+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:12.222065+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:13.818026+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:15.538030+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:17.078036+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:18.782107+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:20.333447+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T03:57:21.909611+00:00",
+          "tool": "read_changes"
+        }
+      ],
+      "widgetAnswer": [
+        {
+          "at": "2026-10-25T03:59:57.989812+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T03:59:59.605697+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:01.233715+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:02.833662+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:03.193840+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:03.742015+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:04.478054+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:06.205809+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:06.642320+00:00",
+          "tool": "answer_request"
+        },
+        {
+          "at": "2026-10-25T04:00:07.326146+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:07.482300+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:07.550417+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:08.118032+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:09.282293+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:09.962212+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:00:10.898220+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:11.597955+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:00:12.655928+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:14.227709+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:14.816564+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:15.431746+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:15.840187+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:19.068125+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:20.767639+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:21.576172+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:00:22.649045+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:22.796994+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:24.253198+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:24.539382+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:26.008481+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:26.131837+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:26.864050+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:29.305865+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:31.181771+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:31.739448+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:32.358220+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:32.466968+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:34.230235+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:36.057297+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:36.482134+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:36.842194+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:38.350888+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:40.113895+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:41.371713+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:41.710621+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:41.967332+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:45.478224+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:47.334789+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:47.621802+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:48.905943+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:49.202531+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:50.526919+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:50.845765+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:52.122135+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:52.614146+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:53.733998+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:54.218530+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:55.345737+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:55.978294+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:00:56.681868+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:00:57.084857+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:00:59.325216+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:01.021264+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:01.148975+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:01.784796+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:01:02.893237+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:04.845127+00:00",
+          "tool": "read_item"
+        },
+        {
+          "at": "2026-10-25T04:01:04.977905+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:05.533642+00:00",
+          "tool": "item_action"
+        },
+        {
+          "at": "2026-10-25T04:01:05.902120+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:06.216082+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:01:06.354505+00:00",
+          "tool": "read_item"
+        },
+        {
+          "at": "2026-10-25T04:01:06.530396+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:01:06.642788+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:09.006461+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:09.576691+00:00",
+          "tool": "read_item"
+        },
+        {
+          "at": "2026-10-25T04:01:10.868315+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:11.315312+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:11.325180+00:00",
+          "tool": "read_item"
+        },
+        {
+          "at": "2026-10-25T04:01:12.581557+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:13.035230+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:13.082400+00:00",
+          "tool": "read_item"
+        },
+        {
+          "at": "2026-10-25T04:01:14.282818+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:14.671484+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:14.742150+00:00",
+          "tool": "read_item"
+        },
+        {
+          "at": "2026-10-25T04:01:15.446395+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:01:15.447044+00:00",
+          "tool": "item_action"
+        },
+        {
+          "at": "2026-10-25T04:01:15.974286+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:16.213803+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:01:17.904400+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:18.357703+00:00",
+          "tool": "read_item"
+        },
+        {
+          "at": "2026-10-25T04:01:19.286979+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:19.642741+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:20.315234+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:01:20.890646+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:22.363323+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:01:22.586546+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:23.985146+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:01:24.181218+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:25.541332+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:25.974219+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:26.154685+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:01:28.385637+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:29.198002+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:01:29.954255+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:30.249918+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:31.282407+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:31.886133+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:32.562626+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:33.486518+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:34.242106+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:34.825925+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:35.857701+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:36.386377+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:37.426032+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:37.960749+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:39.114334+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:39.538462+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:40.670219+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:41.086786+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:42.299163+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:42.701760+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:43.889615+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:44.289815+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:45.589770+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:46.002147+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:47.237744+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:47.573724+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:48.553755+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:49.146246+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:50.342100+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:50.929816+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:51.958065+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:52.509766+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:53.614404+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:54.070355+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:55.217951+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:55.669618+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:56.838165+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:57.302435+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:01:58.406925+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:01:58.890057+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:00.014261+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:00.470112+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:01.610747+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:01.758162+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:02.891023+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:03.398483+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:04.513940+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:04.978270+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:06.098423+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:06.258301+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:07.662231+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:07.830282+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:08.970016+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:09.106108+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:10.598050+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:10.726868+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:12.290234+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:12.378348+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:13.858077+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:13.942298+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:15.466366+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:15.537534+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:17.062271+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:17.137582+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:18.658512+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:18.725841+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:20.273579+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:20.349406+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:21.877837+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:21.953583+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:23.465639+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:23.525665+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:25.041912+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:25.250756+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:26.861577+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:26.957915+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:28.403408+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:28.546065+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:29.777763+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:02:29.981533+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:30.101908+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:31.338187+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:02:31.525751+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:31.677930+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:32.174531+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:02:34.093910+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:35.662149+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:02:35.994419+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:36.642773+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:37.590630+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:38.222436+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:39.169833+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:39.897404+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:40.830703+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:41.458688+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:42.614435+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:43.046619+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:44.166124+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:44.619322+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:45.728324+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:46.165987+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:47.329563+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:47.755552+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:48.912952+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:49.419636+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:50.592827+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:51.051077+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:52.251867+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:52.491560+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:53.861955+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:54.091717+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:55.552892+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:55.612043+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:57.213912+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:57.250761+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:58.761509+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:02:58.841818+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:02:59.565664+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:03:00.382681+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:02.125637+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:03.142557+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:03.690487+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:03:03.814817+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:05.090484+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:07.077509+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:07.750627+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:08.686337+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:09.326036+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:10.242515+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:10.910491+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:11.834456+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:12.251537+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:13.403374+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:13.819119+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:15.049690+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:15.434611+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:16.634010+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:17.146053+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:18.214135+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:18.759312+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:19.918906+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:20.318866+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:21.534302+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:21.950264+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:23.090905+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:23.518619+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:24.635020+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:24.830137+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:26.082831+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:26.191907+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:27.383939+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:28.051045+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:28.664182+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:29.618996+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:30.313354+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:30.942387+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:03:31.282300+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:33.326106+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:35.021279+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:35.042448+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:35.703998+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:03:36.313032+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:03:37.330802+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:37.960105+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:03:39.101707+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:39.341181+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:40.050212+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:03:40.756103+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:42.103305+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:42.671077+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:03:43.689942+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:43.779246+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:45.246466+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:45.326887+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:46.514542+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:46.926459+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:48.098076+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:48.489704+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:49.666311+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:50.037900+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:51.197720+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:51.485889+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:52.746500+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:53.097765+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:54.293983+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:54.694652+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:55.931020+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:56.366900+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:57.630234+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:58.014313+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:03:59.239416+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:03:59.878104+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:03:59.929891+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:02.099074+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:03.742517+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:03.954470+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:04.582748+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:04:05.402140+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:06.974392+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:08.722880+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:09.066798+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:10.318465+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:10.674165+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:11.958264+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:11.970509+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:13.567974+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:13.697268+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:15.193833+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:15.339287+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:16.823913+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:16.915774+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:18.449133+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:18.633011+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:20.047616+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:20.248291+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:21.650167+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:21.943688+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:22.971756+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:23.226823+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:24.580162+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:24.597979+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:26.183883+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:26.184214+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:27.781685+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:27.893449+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:29.365546+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:29.514086+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:30.117297+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:04:31.177273+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:33.109779+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:34.153114+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:34.697170+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:35.709801+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:36.278398+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:37.369239+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:37.573745+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:39.145368+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:39.161843+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:40.688968+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:40.741936+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:42.295312+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:42.443067+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:43.437851+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:04:43.714968+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:43.898427+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:45.282086+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:45.438082+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:46.878060+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:46.990334+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:48.586073+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:48.622439+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:50.162681+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:50.235118+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:51.802238+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:51.834265+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:53.374265+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:53.474537+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:54.910027+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:55.054515+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:56.482524+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:56.635584+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:57.774427+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:58.210149+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:04:59.385164+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:04:59.813342+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:00.961042+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:01.393264+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:02.646103+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:02.973744+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:04.222220+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:04.258116+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:05.782535+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:05.825894+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:07.345673+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:07.417627+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:08.917587+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:09.046680+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:10.574049+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:10.657841+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:12.346310+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:12.370385+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:13.918615+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:14.090558+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:15.482608+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:15.647193+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:17.067293+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:17.298259+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:18.743056+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:18.858204+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:20.298666+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:20.462045+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:21.858908+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:22.050370+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:23.338467+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:23.494387+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:24.910953+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:25.126031+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:26.478592+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:26.681905+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:28.084148+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:28.254774+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:29.678531+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:30.008885+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:31.443391+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:31.726217+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:32.996838+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:33.305168+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:34.648540+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:34.899665+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:36.201477+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:36.462495+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:37.796186+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:38.078332+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:39.352358+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:39.656873+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:40.947138+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:41.235618+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:41.721431+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:05:43.218586+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:44.436031+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:05:45.078205+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:45.826607+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:05:46.730187+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:47.086253+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:47.711094+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:05:48.426806+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:50.686307+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:51.382785+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:05:51.998281+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:52.055279+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:53.670256+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:53.814086+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:55.254623+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:55.682101+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:56.838445+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:57.302355+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:05:58.410644+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:05:59.014423+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:00.010754+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:00.622840+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:01.658643+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:02.291072+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:03.250139+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:04.030678+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:04.874243+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:05.654667+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:06.522461+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:07.266220+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:08.190511+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:09.055560+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:09.782367+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:10.682184+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:11.377955+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:12.306463+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:12.997544+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:13.913950+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:14.801794+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:15.266155+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:16.385844+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:16.869317+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:18.004876+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:18.460841+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:19.705441+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:20.060927+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:21.001376+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:21.737285+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:22.605000+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:23.345962+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:24.217763+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:24.933615+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:26.005724+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:26.654240+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:27.613688+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:28.250850+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:29.214482+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:29.864068+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:30.849448+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:31.455942+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:32.445168+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:33.067896+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:34.239333+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:34.361798+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:35.887906+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:35.977624+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:37.487562+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:37.573440+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:39.120034+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:39.220630+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:40.745226+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:40.955130+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:42.052577+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:42.527450+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:43.711593+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:44.260868+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:45.296183+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:45.556842+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:46.868900+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:46.905640+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:48.164150+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:48.506319+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:49.557173+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:49.786417+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:51.258252+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:51.397163+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:51.668365+00:00",
+          "tool": "read_pr_reviews"
+        },
+        {
+          "at": "2026-10-25T04:06:52.937714+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:53.124682+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:54.618312+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:54.687704+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:56.277106+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:56.319922+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:57.865854+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:57.947391+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:06:59.473203+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:06:59.501566+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:01.081216+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:01.132421+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:02.651881+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:02.729632+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:04.226785+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:04.304949+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:05.801950+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:05.998941+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:07.418034+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:07.605888+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:08.997798+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:09.180431+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:10.549338+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:10.756303+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:12.251083+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:12.586901+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:13.842852+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:14.227038+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:15.497594+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:15.798828+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:17.117391+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:17.478480+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:18.706481+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:19.090409+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:20.318772+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:20.702350+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:21.986260+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:22.302526+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:23.806232+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:23.914182+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:25.442504+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:25.517637+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:27.090820+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:27.374032+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:28.678010+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:28.950572+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:29.298636+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:07:33.391415+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:36.017900+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:36.833445+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:37.141492+00:00",
+          "tool": "read_snapshot"
+        },
+        {
+          "at": "2026-10-25T04:07:37.609782+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:43.039166+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:44.646664+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:44.698590+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:46.270924+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:46.466554+00:00",
+          "tool": "read_changes"
+        },
+        {
+          "at": "2026-10-25T04:07:47.818807+00:00",
+          "tool": "read_transcript"
+        },
+        {
+          "at": "2026-10-25T04:07:48.061795+00:00",
+          "tool": "read_changes"
+        }
+      ]
+    },
+    "modelVisibleCallCounts": {
+      "savedLookupAndPublication": 1,
+      "queueTriage": 1,
+      "configuredLaunch": 2,
+      "questionDiscoveryThenAnswerLocalDelivery": 2,
+      "followupRestoration": 2,
+      "explicitDashboard": 1
+    },
+    "callCountScope": "Actual Code Factory MCP request names captured passively on loopback. Explicit dashboard app-only snapshot/journal polling is recorded separately; the widget answer is a browser action, not a conversational-model call. Launch/answer/message counts establish acceptance/local delivery, not task completion.",
+    "widgetReloadRecovery": {
+      "samePendingRequestAfterFullPageReload": true,
+      "originalRequestId": "17d913e656b5b8cccddd1e589192d54c",
+      "nativeQuestionAndChoicesVisibleAfterReload": true,
+      "uiContinueSubmittedOnce": true,
+      "result": {
+        "runId": "1094360eedfa0de7072da345a0ff2eaa",
+        "status": "idle",
+        "sameThread": true,
+        "requestStatus": "answered",
+        "latestOutput": "TRACKING_UI_ANSWER_OK Continue",
+        "matchingFinalMessageCount": 1,
+        "totalRuns": 35
+      },
+      "finalReplyVisibleInInstalledWidget": true,
+      "automationNote": "After reload, a DevTools coordinate click did not activate the nested-frame navigation; its current DOM element was activated in-frame. No app code or permission workaround was used."
+    },
+    "nativeCodexVersion": "0.163.0",
+    "auditStoppedAfterAcceptance": true
+  },
+  "limitations": [
+    "Original parallel-group membership was absent from the supplied plan; reproducible dashboard/detail/all-six groups are labeled as substitutes.",
+    "Synthetic loopback measurements separate server and caller time; installed measurements report caller wall time only. Neither includes ChatGPT orchestration or WAN latency.",
+    "Prior callback, one-hour soak, login-cycle and broader manual accessibility acceptance remain open."
+  ],
+  "installedImplementation": {
+    "version": "0.1.0-fd9095162bd6",
+    "scope": "Installed daemon loopback caller wall time and actual response bytes; no ChatGPT orchestration or WAN. Only the dedicated private pilot is targeted for detail/receipt/run reads.",
+    "samplesPerAPI": 10,
+    "apis": {
+      "open_factory": {
+        "firstCallMs": 173.97969699231908,
+        "cachedCallerP50Ms": 191.62865402176976,
+        "cachedCallerP95Ms": 203.68031499674544,
+        "maxResponseBytes": 465
+      },
+      "list_inbox": {
+        "firstCallMs": 115.44979497557506,
+        "cachedCallerP50Ms": 103.8508279598318,
+        "cachedCallerP95Ms": 106.16554802982137,
+        "maxResponseBytes": 51238
+      },
+      "read_item": {
+        "firstCallMs": 35.122473957017064,
+        "cachedCallerP50Ms": 35.21155199268833,
+        "cachedCallerP95Ms": 37.42579201934859,
+        "maxResponseBytes": 5268
+      },
+      "list_runs": {
+        "firstCallMs": 39.29032204905525,
+        "cachedCallerP50Ms": 40.85502598900348,
+        "cachedCallerP95Ms": 44.31856400333345,
+        "maxResponseBytes": 25541
+      },
+      "read_run": {
+        "firstCallMs": 0.8250369573943317,
+        "cachedCallerP50Ms": 0.5574019742198288,
+        "cachedCallerP95Ms": 0.6744630518369377,
+        "maxResponseBytes": 1964
+      },
+      "read_pr_reviews": {
+        "firstCallMs": 0.5243899649940431,
+        "cachedCallerP50Ms": 0.381760997697711,
+        "cachedCallerP95Ms": 0.9174120496027172,
+        "maxResponseBytes": 765
+      },
+      "track_work": {
+        "firstCallMs": 89.24475504318252,
+        "cachedCallerP50Ms": 92.17531798640266,
+        "cachedCallerP95Ms": 96.6460769996047,
+        "maxResponseBytes": 4681
+      }
+    }
+  },
+  "priorDeployments": [
+    {
+      "at": "2026-10-25T03:01:37.792545+00:00",
+      "installedVersion": "0.1.0-6aa0c7000e54",
+      "retainedRuns": 33,
+      "sameRunIdentitiesThreadsWorkspacesProfilesStatuses": true,
+      "sameSettings": true,
+      "sameAttentionMetadata": true,
+      "sameRuntimeProviderSelection": true,
+      "protectedFilesAllMatch": true,
+      "sameTailscaleServe": true,
+      "release": {
+        "version": "0.1.0-6aa0c7000e54",
+        "archive": "/extra/dkropachev/code-factory-plugin/dist/code-factory-0.1.0-6aa0c7000e54-linux-amd64.tar.gz",
+        "archiveSha256": "659b70fea3454bd67c3198bc7dc316469345877c22c00d3f0772e1ecbeb65b42",
+        "verifiedFiles": 331,
+        "release": "/extra/dkropachev/tmp/code-factory-fast-reads/extracted/code-factory-0.1.0-6aa0c7000e54"
+      },
+      "services": [
+        "code-factory.service active",
+        "code-factory-gateway.service active"
+      ]
+    },
+    {
+      "at": "2026-10-25T03:24:43.018533+00:00",
+      "installedVersion": "0.1.0-4c51af9b6746",
+      "retainedRuns": 33,
+      "sameRunIdentitiesThreadsWorkspacesProfilesStatuses": true,
+      "sameSettings": true,
+      "sameAttentionMetadata": true,
+      "sameRuntimeProviderSelection": true,
+      "protectedFilesMatchImmediatePreflight": true,
+      "sameTailscaleServe": true,
+      "release": {
+        "version": "0.1.0-4c51af9b6746",
+        "archiveSha256": "102d7330eee272bad7e6274265750ea620e66d7a326e0d7975cefe3eb525de9a",
+        "manifestFilesVerified": 331,
+        "release": "/extra/dkropachev/tmp/code-factory-fast-reads/extracted/code-factory-0.1.0-4c51af9b6746"
+      }
+    }
+  ],
+  "completedAt": "2026-10-25T04:07:49.175460+00:00",
+  "finalIntegrity": {
+    "originalRunsPreserved": 33,
+    "allOriginalIdentitiesThreadsWorkspacesProfilesPreserved": true,
+    "originalAttentionMetadataUnchanged": true,
+    "allOriginalSettingsRestored": true,
+    "totalRuns": 35,
+    "explicitAddedPilotRuns": [
+      "1094360eedfa0de7072da345a0ff2eaa",
+      "a3683bac409197b28323d859af532bfd"
+    ],
+    "bothPilotRunsIdle": true,
+    "sameRuntime": true,
+    "sameTailscaleServe": true
+  },
+  "finalCheckedAt": "2026-10-25T04:18:39.231120+00:00"
+}

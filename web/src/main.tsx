@@ -1294,6 +1294,7 @@ function ItemDetail({
         if (alive) {
           setDetail(data);
           setLoadError(undefined);
+          if(data.observation?.refresh === "pending") timer=setTimeout(load,1000);
         }
       } catch (error) {
         if (!alive) return;
@@ -1349,6 +1350,7 @@ function ItemDetail({
   const summary = summaryParagraph.slice(0, 600);
   return (
     <>
+      {detail.observation?.refresh === "pending" && <p role="status">Refreshing saved details…</p>}
       {detail.refreshError && <p role="alert">{detail.refreshError} <button onClick={()=>setDetailVersion(v=>v+1)}>Retry detail refresh</button></p>}
       {loadError && (
         <p role={loadError.retrying ? "status" : "alert"}>
@@ -1916,7 +1918,17 @@ function transcriptBlocks(events: JournalEvent[]) {
     let label = "";
     let text = "";
     let details: string | undefined;
-    if (m.includes("agentMessage/delta")) {
+    if (m === "codefactory/messageDelivery") {
+      label = "Message delivery";
+      text =
+        p.state === "queued"
+          ? "Message saved. Awaiting agent delivery."
+          : p.state === "delivering"
+            ? "Message saved. Delivering to agent…"
+            : p.state === "delivered"
+              ? "Message delivered to agent."
+              : String(p.error ?? "Agent delivery is uncertain. Check this session before sending again.");
+    } else if (m.includes("agentMessage/delta")) {
       label = "Agent";
       text = String(p.delta ?? "");
     } else if (m.includes("commandExecution/outputDelta")) {
@@ -2057,12 +2069,12 @@ function Agent({
   }, [run.id, historyVersion]);
   const blocks = transcriptBlocks(events);
   const conversation = blocks.filter((b) =>
-    ["Agent", "You", "Run error"].includes(b.label),
+    ["Agent", "You", "Run error", "Message delivery"].includes(b.label),
   );
   const activity = blocks.flatMap((b) =>
     b.details
       ? [{ ...b, label: "Error details", text: b.details }]
-      : ["Agent", "You", "Run error"].includes(b.label)
+      : ["Agent", "You", "Run error", "Message delivery"].includes(b.label)
         ? []
         : [b],
   );

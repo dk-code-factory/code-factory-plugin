@@ -1,5 +1,55 @@
 # Work acceptance gate
 
+## Durable follow-up receipt · 2026-10-25
+
+`send_message` now saves an encrypted message and returns `delivery: accepted`,
+a message ID and queued delivery state before contacting its agent. A worker
+restores the same retained session from saved context without a GitHub preflight;
+task-required GitHub reads belong to the agent. Tracking, run detail and the
+conversation expose later delivery or uncertainty. Queued messages survive a
+restart; an interrupted delivery claim is never replayed automatically or replaced
+with a generic continuation. Failed acceptance retains the draft; accepted text
+stays saved even when later restoration fails.
+
+The message queue race fixtures cover a blocked agent, caller cancellation,
+concurrent pending submissions, same-thread recovery with zero GitHub requests,
+stale targets and interrupted delivery. Browser fixtures distinguish saved receipt
+from activation and replace queue feedback with uncertainty without replay. These
+fixture results do not establish installed ChatGPT acceptance for this correction.
+
+
+## Installed fast reads and daily workflows · 2026-10-25
+
+Build **0.1.0-fd9095162bd6** and private pilot package **0.2.7** are installed.
+Reviewed specifications and `make ci FLOW_BASE=cca335bca318a1ac88702269a03cc135d5ee67a7`
+passed, including 89 browser fixtures, Go race/static and TypeScript checks,
+packaging, installer recovery and compiled smoke. The checksummed upgrades
+preserved all 33 original runs, threads, workspaces, profiles, attention metadata,
+provider/runtime selection, protected files and Tailscale routes. Two explicitly
+launched read-only question-test runs remain idle; pilot configuration was restored.
+See [the dated evidence](evidence/2026-10-24-fast-reads-tracking.json).
+
+Saved reads now return independently of blocked GitHub requests and an uncommitted
+sync write. Installed tracking measured 97 ms caller p95 at 4.7 KiB; item detail
+measured 37 ms p95, and dashboard output is 465 bytes versus the earlier 4.89 MB.
+Synthetic measurements distinguish server execution/encoding from total caller time;
+installed timings exclude Work orchestration and WAN overhead.
+
+A passive audit of MCP method names established normal Work lookup/triage/publication
+in one call, configured launch acceptance in two, question discovery plus local
+delivery in two, retained-session follow-up in two and explicit dashboard opening
+in one. The launch/answer/message observations establish local acceptance/delivery;
+real native completion was checked separately. Both the initial extra host reads
+and their successful scoped repeats remain recorded. The loaded widget matched
+the installed module hash; its unanswered native question survived a full page
+reload and a single UI answer produced `TRACKING_UI_ANSWER_OK Continue` on the same
+thread. The owner's unrelated scope question remains unanswered.
+
+The older cloud packages remain preserved because their management view has no
+update control; **Code Factory Tracking E2E** uses the existing registered OAuth
+connection. Broader host variants, event callbacks, current-build soak/login and
+remaining manual accessibility checks are still open. Full readiness is not claimed.
+
 ## Installed source-aware continuation · 2026-10-24
 
 Build **0.1.0-8a8a9e76654d** (source `6bf7f98`) is installed and both services are

@@ -50,6 +50,8 @@ Automatic recovery exchanges appear as technical activity under Details or in th
 
 During plugin maintenance an answer is refused with explicit feedback; the caller retains its draft. Maintenance cannot begin while live waiting/running agent work owns the provider. No answer is replayed automatically.
 
+Successful conversational answers return local delivery state, the originating run/turn/thread identities and remaining pending attention, so queue discovery and answer verification normally take two calls. Accepted delivery does not establish task completion. Uncertain delivery still requires reading current state without replay.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -132,8 +134,10 @@ flowchart TD
 - [internal/app/plugins.go](../../internal/app/plugins.go) — Plugin maintenance excludes new answer delivery without replay. (`func (m *Manager) PluginAction(`)
 - [internal/app/attention.go](../../internal/app/attention.go) — Read-only oldest-first actionable question/approval queue with compact owning context, run filtering, bounded cursor pagination and no provider RPC IDs or answer data. (`func (a *App) ListAttention(`)
 - [plugin/skills/code-factory/SKILL.md](../../plugin/skills/code-factory/SKILL.md) — Conversational queue discovery, exact user/question matching, safe one-time answer, fresh queue/run verification and explicit host subscription limits.
-- [internal/app/continuation.go](../../internal/app/continuation.go) — Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge. (`func (m *Manager) continuationContext(`)
+- [internal/app/continuation.go](../../internal/app/continuation.go) — Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads. (`func (m *Manager) continuationContext(`)
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
+- [internal/transport/tracking.go](../../internal/transport/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (s *Server) dashboard(`)
+- [internal/store/reads.go](../../internal/store/reads.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func Select[T any](`)
 
 ## Test references
 
@@ -161,12 +165,13 @@ flowchart TD
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(`; S3. Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(`; S3. Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S3. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
+- [internal/transport/tracking_test.go](../../internal/transport/tracking_test.go) — `func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(`; S5. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
 
 ## Verification and gaps
 
 Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-answer-attention-s2-01` · Unverified behavior · P1 · owner: specification-coordinator. External native user-verification and every supported approval/dialog variant lack real-host coverage. Next verification: Record actual-host native user-verification and supported approval/dialog variants using version-bound nonsecret observations; preserve fixture and real-host distinctions.
-- **S5** — `gap-flow-answer-attention-s5-01` · Unverified behavior · P2 · owner: specification-coordinator. Actual ChatGPT Work presented a real native question, delivered the selected answer and observed queue removal plus same-thread continuation on the installed release. Host activity did not expose the selected RPC method name, so direct list_attention invocation by ChatGPT remains unverified; multi-agent pagination and stale-answer cases have independent SDK/fixture coverage only. Next verification: Capture a nonsecret actual-host tool trace identifying list_attention and exercise paginated multi-agent queue refresh and stale-answer recovery in ChatGPT; retain the passed ordinary question/answer evidence and separate SDK/fixture results.
+- **S5** — `gap-flow-answer-attention-s5-01` · Unverified behavior · P2 · owner: specification-coordinator. Installed ChatGPT Work now directly invokes list_attention, presents the exact native question, delivers the user choice through answer_request and observes same-thread continuation, with independently audited MCP method names. Actual-host multi-agent pagination, stale/duplicate answers, uncertain delivery and recovered-text question variants remain unverified; fixtures cover those boundaries. Next verification: Observe the remaining multi-agent/page, stale/duplicate, uncertain-delivery and recovered-text variants in an explicitly scoped private-pilot campaign, without replaying delivery or substituting runs.
 
 <!-- /flow-references -->

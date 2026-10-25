@@ -61,7 +61,7 @@ flowchart TD
     N10["Read review-notification hints without marking read#59; reconcile repositories periodically #40;S7#41;"]
     N11["Shared request budget, reserve or cooldown defers reads and retains saved state #40;S8#41;"]
     N12["Observe submitted reviews with receipts, findings and explicit freshness #40;S9#41;"]
-    N13["Verify current source and report changed scope or head before continuation #40;S10#41;"]
+    N13["Verify current source and report changed scope or head before initial or automatic continuation #40;S10#41;"]
     N14(["Closed or merged source#59; terminate session and retain history/workspace"])
     N0 --> N1
     N1 -->|"success"| N2
@@ -110,7 +110,7 @@ flowchart TD
 - [web/src/reviews.tsx](../../web/src/reviews.tsx) — Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links. (`export function PostedReviews(`)
 - [internal/app/review_publication.go](../../internal/app/review_publication.go) — Durable budgeted review observations, failure retention and post-turn refresh. (`func (a *App) ReadPRReviews(`)
 - [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Read submitted review and inline-comment pages; omit pending drafts. (`func (g *GitHub) PublishedReviews(`)
-- [internal/app/continuation.go](../../internal/app/continuation.go) — Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge. (`func (m *Manager) continuationContext(`)
+- [internal/app/continuation.go](../../internal/app/continuation.go) — Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads. (`func (m *Manager) continuationContext(`)
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
 
 ## Test references

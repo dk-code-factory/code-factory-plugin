@@ -1532,6 +1532,11 @@
           "path": "internal/providers/github_reviews.go",
           "anchor": "func (g *GitHub) PublishedReviews(",
           "purpose": "Read submitted review and inline-comment pages; omit pending drafts."
+        },
+        {
+          "path": "internal/app/observations.go",
+          "anchor": "func (a *App) observation(",
+          "purpose": "Deduplicated background observations preserve saved reads and monitoring policy."
         }
       ],
       "assertions": [
@@ -1546,7 +1551,8 @@
         "API-POSTED-REVIEWS",
         "API-REVIEW-RECEIPTS",
         "UI-POSTED-REVIEWS",
-        "API-UI"
+        "API-UI",
+        "UI-SAVED-OBSERVATIONS"
       ],
       "gaps": [
         {
@@ -1565,8 +1571,8 @@
         "tooling"
       ],
       "element_description": "PR lifecycle, draft/head, review decision, CI rollup, check disclosure and linked PR summaries with source/check links. Posted review receipt links, review bodies and inline comments, observation freshness and Refresh reviews control.",
-      "state_description": "Lifecycle, approval and current-head CI are independent. Unknown/none/stale data do not imply success. Linked summaries distinguish implementation associations from references. Submitted reviews remain visible above the conversation, including author, verdict, reviewed commit and current/earlier-head distinction. Loading, unverified, successfully empty and stale/error observations are separate; a finished run never establishes publication.",
-      "interactions": "Summaries update in list and item context. Source/check links use the host bridge. Expanding check details never launches work. Reading reviews, returning to the PR and completed PR turns refresh provider receipts without publishing or starting work; routine reads share a one-minute cache. Receipt/comment links use the host bridge. Stored reviews include all authors without run attribution."
+      "state_description": "Lifecycle, approval and current-head CI are independent. Unknown/none/stale data do not imply success. Linked summaries distinguish implementation associations from references. Submitted reviews remain visible above the conversation, including author, verdict, reviewed commit and current/earlier-head distinction. Loading, unverified, successfully empty and stale/error observations are separate; a finished run never establishes publication. Pending background refresh, paused monitoring and cooldown feedback preserve existing receipts.",
+      "interactions": "Summaries update in list and item context. Source/check links use the host bridge. Expanding check details never launches work. Reading reviews, returning to the PR and completed PR turns refresh provider receipts without publishing or starting work; routine reads share a one-minute cache. Receipt/comment links use the host bridge. Stored reviews include all authors without run attribution. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns."
     },
     {
       "id": "W-ITEM-HISTORY",
@@ -2185,6 +2191,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/messages.go",
+          "anchor": "func (m *Manager) QueueMessage(",
+          "purpose": "Commit encrypted message text before asynchronous delivery and expose durable receipt state without requiring GitHub or a connected agent."
         }
       ],
       "assertions": [
@@ -2195,7 +2206,8 @@
         "UI-CONVERSATION-DETAILS",
         "UI-CONNECT-TRANSCRIPT",
         "UI-CONVERSATION-EMPTY",
-        "UI-SESSION-CONSOLE"
+        "UI-SESSION-CONSOLE",
+        "UI-QUEUED-MESSAGE"
       ],
       "gaps": [
         {
@@ -2213,7 +2225,7 @@
         "browser"
       ],
       "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too.",
-      "state_description": "The normal conversation contains agent progress/final messages, user replies and readable errors only. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role.",
+      "state_description": "The normal conversation contains agent progress/final messages, user replies, saved-message delivery status and readable errors. Saved messages show queued, delivering, delivered or uncertain feedback; changes replace the same message status block. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role.",
       "interactions": "Details reveals retained technical activity without starting or changing agent work. Pending question/approval controls remain outside the collapsed data. History paging/reset and the 1,000-event retained limit remain unchanged. Session console reveals the full event stream using the same session and reply draft."
     },
     {
@@ -2282,6 +2294,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/messages.go",
+          "anchor": "func (m *Manager) QueueMessage(",
+          "purpose": "Commit encrypted message text before asynchronous delivery and expose durable receipt state without requiring GitHub or a connected agent."
         }
       ],
       "assertions": [
@@ -2292,7 +2309,8 @@
         "UI-OPEN-AGENT",
         "UI-SINGLE-PAGE",
         "UI-WAKE-MESSAGE",
-        "UI-TERMINATED-WORK"
+        "UI-TERMINATED-WORK",
+        "UI-QUEUED-MESSAGE"
       ],
       "gaps": [
         {
@@ -2311,7 +2329,7 @@
       ],
       "element_description": "**text** \u201cMessage agent\u201d textarea; **send** button.",
       "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens.",
-      "interactions": "Active messages require the displayed expected turn. Inactive messages atomically claim and restore the retained session, using the submitted message as its first continuation turn. The UI never calls Resume separately. Only accepted sends clear unchanged text; errors preserve drafts and no mutation is automatically replayed."
+      "interactions": "Active messages require the displayed expected turn. A successful send records the message durably and clears only unchanged submitted text before agent delivery; failed acceptance preserves the draft. Background delivery restores the retained session using this submitted message as its first new turn and makes no GitHub preflight. The UI never calls Resume separately or automatically replays a mutation. Later delivery status remains visible in the conversation."
     },
     {
       "id": "W-DIALOG-FRAME",
@@ -7704,6 +7722,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/messages.go",
+          "anchor": "func (m *Manager) QueueMessage(",
+          "purpose": "Commit encrypted message text before asynchronous delivery and expose durable receipt state without requiring GitHub or a connected agent."
         }
       ],
       "assertions": [
@@ -7711,7 +7734,8 @@
         "UI-ASSEMBLED",
         "API-UI-CONTENT",
         "UI-WAKE-MESSAGE",
-        "ADMIN-PLUGIN-GATE"
+        "ADMIN-PLUGIN-GATE",
+        "UI-QUEUED-MESSAGE"
       ],
       "gaps": [
         {
@@ -7730,7 +7754,7 @@
       ],
       "endpoint_description": "`W-MESSAGE` \u2192 selected run \u2192 `W-TRANSCRIPT`",
       "trigger": "Message text and displayed current-turn context.",
-      "interactions": "Send with current-turn identity while active, or restore the inactive retained session using this message as its first new turn. Success clears only unchanged submitted text after acceptance; failures preserve drafts and never cause automatic replay.",
+      "interactions": "Send with current-turn identity while active. Acknowledge durable local queue acceptance before contacting the agent; background delivery restores the same retained session when needed. Saved source context is explicitly unverified; task-required GitHub reads belong to the agent. Accepted sends clear unchanged submitted drafts; rejected acceptance preserves them. Delivery uncertainty remains visible and is never automatically replayed.",
       "from": [
         "W-MESSAGE"
       ],
@@ -8752,6 +8776,11 @@
           "path": "web/src/bridge.ts",
           "anchor": "export async function call",
           "purpose": "Known-read allowlist, bounded transport retries, tool-result distinction and fresh failed-initialization recovery."
+        },
+        {
+          "path": "internal/app/observations.go",
+          "anchor": "func (a *App) observation(",
+          "purpose": "Deduplicated background observations preserve saved reads and monitoring policy."
         }
       ],
       "assertions": [
@@ -8770,7 +8799,8 @@
         "UI-COMPACT-REVIEW",
         "UI-GITHUB-USAGE",
         "UI-LINKED-DETAIL-REFRESH",
-        "UI-READ-FRESHNESS"
+        "UI-READ-FRESHNESS",
+        "UI-SAVED-OBSERVATIONS"
       ],
       "gaps": [
         {
@@ -8799,7 +8829,7 @@
       ],
       "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
       "trigger": "Successful polling or action refresh.",
-      "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. Known read calls carry a unique freshness marker so host reuse of an earlier response cannot freeze an empty journal page or saved snapshot. This marker does not change server state, source authority or mutation replay rules.",
+      "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. Known read calls carry a unique freshness marker so host reuse of an earlier response cannot freeze an empty journal page or saved snapshot. This marker does not change server state, source authority or mutation replay rules. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns.",
       "from": [
         "S-FACTORY"
       ],
@@ -11692,6 +11722,18 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "terminated work retains history and cleanup without allowing continuation",
       "assertion": "In both themes, terminated work shows Stopped and its lifecycle reason, disables message continuation, exposes cleanup, omits Interrupt and sends no start or message action."
+    },
+    {
+      "id": "UI-SAVED-OBSERVATIONS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "saved details and receipts render during background refresh",
+      "assertion": "Both themes show saved details/receipts and pending feedback immediately, then automatically reread without launching work; receipt reads carry distinct freshness markers and scoped Axe passes."
+    },
+    {
+      "id": "UI-QUEUED-MESSAGE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "saved message clears its draft before agent delivery and shows uncertainty without replay",
+      "assertion": "A durable accepted queue receipt clears only the submitted draft before activation; queued delivery is visible, replaced by uncertainty under the same message ID, and sends/starts are never replayed."
     }
   ],
   "source_map": [
@@ -12017,6 +12059,12 @@
       "location_labels": [
         "export function PostedReviews("
       ]
+    },
+    {
+      "path": "internal/app/messages.go",
+      "anchor": "func (m *Manager) QueueMessage(",
+      "entities": "W-MESSAGE, W-TRANSCRIPT and C-FOLLOW-UP.",
+      "detail": "Durable encrypted message queue, same-session worker, recoverable queued state and at-most-once claims with explicit uncertainty."
     }
   ],
   "coverage_groups": [

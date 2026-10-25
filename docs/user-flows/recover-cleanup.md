@@ -17,11 +17,11 @@ At least one run has been prepared or launched and its local state is retained.
 
 ## Alternatives and recovery
 
-Closing the view or transport does not stop work. Startup leaves completed idle sessions idle, honors explicit interrupts even when their acknowledgment was lost, and preserves unanswered questions without answering for the owner. Process loss makes live RPC IDs stale. Structured-message questions remain retained; lost native questions become textual continuations, while approvals must be requested again through their native authorization path. Automatic continuation reuses the retained session and saved workflow progress, never its original task as a fresh launch. Unavailable retained state fails visibly without substituting a new task or preventing other sessions from continuing. Sending to inactive work restores its retained session and uses the submitted message as the only new turn. It must not replay the original task, a generic resume prompt or old answers. Failed delivery retains the draft. Cleanup first retires any retained session, makes its pending requests stale and marks the run interrupted. If workspace removal is then refused because it is dirty, the workspace remains but continuation happens by sending a message. Cleanup retains snapshots and history.
+Closing the view or transport does not stop work. Startup leaves completed idle sessions idle, honors explicit interrupts even when their acknowledgment was lost, and preserves unanswered questions without answering for the owner. Process loss makes live RPC IDs stale. Structured-message questions remain retained; lost native questions become textual continuations, while approvals must be requested again through their native authorization path. Automatic continuation reuses the retained session and saved workflow progress, never its original task as a fresh launch. Unavailable retained state fails visibly without substituting a new task or preventing other sessions from continuing. Sending to inactive work restores its retained session and uses the submitted message as the only new turn. It must not replay the original task, a generic resume prompt or old answers. Failed acceptance retains the draft; accepted messages remain durably saved even if delivery later fails. A queued message resumes its own delivery after restart; an uncertain delivery is never replayed or replaced with a generic continuation. Cleanup first retires any retained session, makes its pending requests stale and marks the run interrupted. If workspace removal is then refused because it is dirty, the workspace remains but continuation happens by sending a message. Cleanup retains snapshots and history.
 
 ## Scenarios
 
-- **S6** Before starting or restoring work, verify the current source item and report changed title, description, head, state and assignment context to the agent for assessment. Failed reads keep work stopped. A closed issue or closed/merged PR permanently terminates its sessions, retires questions and preserves history and workspaces; reopening the source does not revive them. Dirty cleanup cannot make terminal work resumable.
+- **S6** Before an initial start or automatic unfinished-work restoration, verify the current source item and report changed title, description, head, state and assignment context to the agent for assessment. Explicit message-driven restoration instead uses saved source context without a GitHub preflight; its agent performs task-required GitHub reads. Failed preflight reads keep automatic work stopped. A closed issue or closed/merged PR permanently terminates its sessions, retires questions and preserves history and workspaces; reopening the source does not revive them. Dirty cleanup cannot make terminal work resumable.
 
 - **S1** Startup continues pending work from retained progress, preserves prepared and completed work, honors explicit interrupts and unanswered questions, stales expired native requests and isolates unavailable sessions.
 - **S2** Sending a message restores retained work and starts exactly that message instead of replaying its original task.
@@ -59,7 +59,7 @@ flowchart TD
     N13["Automatically restore the same session and last unfinished step #40;S1#41;"]
     N14(["Keep completed, explicitly stopped and unanswered work unchanged"])
     N15(["Continuation unavailable#59; retain work and report failure"])
-    N16["Verify current source and report changed scope or head before continuation #40;S6#41;"]
+    N16["Verify current source and report changed scope or head before initial or automatic continuation #40;S6#41;"]
     N17(["Closed or merged source#59; terminate session and retain history/workspace"])
     N0 -->|"send message"| N1
     N1 --> N2
@@ -103,8 +103,9 @@ flowchart TD
 - [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/app/cleanup.go](../../internal/app/cleanup.go) — Confine removal to one run; make sealed scratch directories removable without chmod of files or following owner references. Missing worktree permits an explicit retry after partial cleanup. (`func removeRunScratch(`)
-- [internal/app/continuation.go](../../internal/app/continuation.go) — Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge. (`func (m *Manager) continuationContext(`)
+- [internal/app/continuation.go](../../internal/app/continuation.go) — Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads. (`func (m *Manager) continuationContext(`)
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
+- [internal/app/messages.go](../../internal/app/messages.go) — Recover queued follow-ups using encrypted saved text; retain uncertain delivery without replay or generic startup continuation. (`func (m *Manager) QueueMessage(`)
 
 ## Test references
 
@@ -143,6 +144,9 @@ flowchart TD
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestStartupTerminatesClosedWorkEvenWithPendingQuestion(`; S6. Startup checks source closure even for a session awaiting input and terminates it without leaving an actionable question.
 - [internal/providers/continuation_test.go](../../internal/providers/continuation_test.go) — `func TestCurrentWorkItemRevalidatesCachedLifecycleAndFailsClosed(`; S6. Targeted lifecycle revalidation bypasses a cached open state and never falls back after a failed fresh read.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S6. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestQueuedFollowUpRecoversSameThreadWithoutAnyGitHubPreflight(`; S2, S6. Queued recovery preserves the submitted follow-up and retained thread without a GitHub preflight; uncertain or failed delivery is retained without automatic replay.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestInterruptedMessageDeliveryIsUncertainAndNeverReplayed(`; S2, S6. Queued recovery preserves the submitted follow-up and retained thread without a GitHub preflight; uncertain or failed delivery is retained without automatic replay.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestAcceptedMessageRemainsSavedWhenAgentRestorationFails(`; S2, S6. Queued recovery preserves the submitted follow-up and retained thread without a GitHub preflight; uncertain or failed delivery is retained without automatic replay.
 
 ## Verification and gaps
 

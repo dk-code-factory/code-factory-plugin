@@ -18,8 +18,10 @@ export function PostedReviews({
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
     async function load() {
+      let delay = 60000;
       try {
         const result = await call<PRReviews>("read_pr_reviews", { id: itemId });
+        if(result.refresh === "pending") delay = 1000;
         if (alive) {
           setData(result);
           setError("");
@@ -27,7 +29,7 @@ export function PostedReviews({
       } catch (e) {
         if (alive) setError(String(e));
       }
-      if (alive) timer = setTimeout(load, 60000);
+      if (alive) timer = setTimeout(load, delay);
     }
     void load();
     return () => {
@@ -67,6 +69,9 @@ export function PostedReviews({
             : "Publication has not been verified."}
         </p>
       )}
+      {saved?.refresh === "pending" && <p role="status">Refreshing saved reviews…</p>}
+      {saved?.refresh === "paused" && <p>Repository monitoring is paused.</p>}
+      {saved?.refresh === "cooldown" && <p>Refresh is waiting for its retry time.</p>}
       {verified && !saved?.reviews.length && (
         <p>No posted reviews found at the last successful check.</p>
       )}

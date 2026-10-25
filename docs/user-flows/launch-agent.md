@@ -31,7 +31,7 @@ Leaving the initial conversation retains its message and busy/uncertain state pe
 
 - **S5** A fresh requested PR can launch automatically only under an owner-enabled inherited/repository policy. It uses the configured review pipeline, honors its explicit execution and publishing authority, pins the current head, appends owner repository instructions and claims the request/head once. Queue-only, paused/stale/failed polls, drafts, other active agent work, unsafe profiles and changed policy do not launch. Restart never replays a claimed request. A newly observed request episode or new head can receive a new review. Manual launches keep their explicit Start behavior.
 
-- **S6** The owner can request a manual PR review through the assistant. Preparation resolves repository, system and built-in review defaults in that order and retains the selected model, skills, pinned head and repository instructions. The assistant inspects the configured authority and starts the matching proposal under the owner's review request. Both read-only/ask and an explicitly selected full-access/never/authorized profile are supported. Proposal-only requests retain unstarted work. Invalid targets, missing heads, unavailable profiles/skills or unsafe review authority return errors without preparing work. Preparation uses synchronized state without provider requests or workspace creation. An uncertain Start is checked against the same retained run before an explicit retry; manual review does not require enabling automatic monitoring.
+- **S6** The owner can request a manual PR review through the assistant using a synchronized run/item ID, GitHub URL or repository shorthand directly, without a preliminary discovery call. Ambiguous identifiers return candidates and prepare nothing. Preparation resolves repository, system and built-in review defaults in that order and retains the selected model, skills, pinned head and repository instructions. The assistant inspects the configured authority and starts the matching proposal under the owner's review request. Both read-only/ask and an explicitly selected full-access/never/authorized profile are supported. Proposal-only requests retain unstarted work. Invalid targets, missing heads, unavailable profiles/skills or unsafe review authority return errors without preparing work. Preparation uses synchronized state without provider requests or workspace creation. An uncertain Start is checked against the same retained run before an explicit retry; manual review does not require enabling automatic monitoring.
 
 Review/implementation defaults resolve repository overrides before system defaults. Plugin maintenance excludes concurrent agent start, message/answer delivery and automatic question/inference work; rejected submissions retain their ordinary drafts. Prepared skills retain content/support files and executable modes across later plugin changes.
 
@@ -62,7 +62,7 @@ flowchart TD
     N12["Keep source access bounded, private scratch writable and network destinations scoped #40;S7#41;"]
     N13(["Sandbox initialization failed#59; retained work and authority preserved"])
     N14["Honor explicit full access, never command approvals and authorized task publishing #40;S7#41;"]
-    N15["Verify current source and report changed scope or head before continuation #40;S8#41;"]
+    N15["Verify current source and report changed scope or head before initial or automatic continuation #40;S8#41;"]
     N16(["Closed or merged source#59; terminate session and retain history/workspace"])
     N0 --> N1
     N0 -->|"customize a separate proposal"| N5
@@ -135,8 +135,9 @@ flowchart TD
 - [internal/app/sandbox.go](../../internal/app/sandbox.go) — Capture authoritative native installed-plugin metadata outside writable task scratch once; retain it across continuation and reject malformed or linked snapshots. (`func (m *Manager) nativeRegistrySnapshot(`)
 - [internal/commandenv/providers.go](../../internal/commandenv/providers.go) — Expose only the regular executable companion from the selected pinned Codex distribution; a different installation cannot substitute its code execution host. (`func CodexCompanion(`)
 - [internal/app/native_context.go](../../internal/app/native_context.go) — Keep durable native child sessions, writer locks and nonsecret installation state in task-private storage, with read-only references to existing owner authentication/configuration and no owner-history access. (`func prepareNativeContext(`)
-- [internal/app/continuation.go](../../internal/app/continuation.go) — Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge. (`func (m *Manager) continuationContext(`)
+- [internal/app/continuation.go](../../internal/app/continuation.go) — Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads. (`func (m *Manager) continuationContext(`)
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
+- [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
 
 ## Test references
 
@@ -193,6 +194,8 @@ flowchart TD
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(`; S8. Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(`; S8. Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S8. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/transport/tracking_test.go](../../internal/transport/tracking_test.go) — `func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
 
 ## Verification and gaps
 

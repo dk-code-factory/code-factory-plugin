@@ -29,6 +29,8 @@ Listing items and opening their external GitHub links do not mark them read. A f
 
 - **S5** When a provider refresh is deferred, saved item details remain visible with an explicit Retry action. The item is not marked read until a successful refresh can present its displayed version; retrying never launches work.
 
+- **S6** Find synchronized work conversationally by run ID, canonical item ID, GitHub URL or repository shorthand, or triage a filtered result page without opening the dashboard. Ambiguous identifiers return candidates without selecting or starting. Saved state returns immediately while stale or missing external observations refresh in the background under existing monitoring policy; observation time, refresh state, last error and retry time remain explicit. Queue/history pages are bounded and continue with the same filters.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -47,6 +49,7 @@ flowchart TD
     N5(["Triage state retained"])
     N6["Track launched work and show independent linked PR lifecycle, review and current-head CI#59; merged implementation links complete issues without changing their GitHub state. #40;S4#41;"]
     N7["Show saved information and Retry#59; deferred refresh leaves item unread #40;S5#41;"]
+    N8["Read saved work, questions and publication with explicit freshness and bounded history #40;S6#41;"]
     N0 --> N1
     N1 --> N2
     N2 -->|"later change"| N3
@@ -59,6 +62,8 @@ flowchart TD
     N6 -->|"resolved or explicit recovery"| N5
     N1 -->|"provider read deferred"| N7
     N7 -->|"retry after budget permits"| N1
+    N0 -->|"conversational status request"| N8
+    N8 -->|"saved result or explicit unknown/ambiguity"| N5
 ```
 
 ## Implementation references
@@ -85,6 +90,11 @@ flowchart TD
 - [internal/web/embed.go](../../internal/web/embed.go) — Embedded UI build and host-fixture configuration
 - [internal/app/work.go](../../internal/app/work.go) — Server queue membership and linked PR/work projections. (`func (a *App) projectWork(`)
 - [internal/app/app.go](../../internal/app/app.go) — Bulk-load keyed user/assessment/ticket state and project list history fields before Go decoding; retain canonical linked-context hashing and full source/detail records. (`func (a *App) InboxSummaries(`)
+- [internal/app/detail.go](../../internal/app/detail.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) ItemDetail(`)
+- [internal/app/observations.go](../../internal/app/observations.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) observation(`)
+- [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
+- [internal/store/reads.go](../../internal/store/reads.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func Select[T any](`)
+- [internal/transport/tracking.go](../../internal/transport/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (s *Server) dashboard(`)
 
 ## Test references
 
@@ -115,6 +125,12 @@ flowchart TD
 - [internal/app/inbox_reads_test.go](../../internal/app/inbox_reads_test.go) — `func TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions(`; S1, S2, S3. Full/compact reads agree outside omitted history; legacy embedded IDs do not override storage keys, source history remains intact and linked item/ticket changes invalidate inference immediately.
 - [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestRecordsKeepStorageKeysAndProjectionPreservesSource(`; S1, S2. Bulk reads retain database keys; bound JSON projections omit only requested large fields, scope to requested bucket and do not modify stored records.
 - [internal/app/inbox_bench_test.go](../../internal/app/inbox_bench_test.go) — `func BenchmarkInboxRetainedHistory(`; S3. Synthetic retained-history benchmark at452items/1372links/265externalPRs/27large skill snapshots. Measures full and compact latency/allocations; no user data or provider calls and no flaky timing pass threshold.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(`; S6. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestSavedReadsDoNotWaitForSynchronizationOrBlockedGitHubAndDeduplicate(`; S6. Provider/sync locks and blocked HTTP cannot delay saved reads; repeat freshness reads deduplicate the observation worker.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestObservationPauseCooldownAndFailureRetainSavedState(`; S6. Failed receipts retain successful data and timestamp; pause and repository retry suppress new requests.
+- [internal/transport/reads_bench_test.go](../../internal/transport/reads_bench_test.go) — `func TestReadPerformancePilotFixture(`; S6. Opt-in loopback latency and size assertions, measured separately; ordinary Go verification skips this benchmark.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestFreshDetailKeepsMonitoringFocusWithoutProviderRefresh(`; S6. A fresh local detail read retains the original selected-item monitoring focus without scheduling provider work.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(`; S6. Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint.
 
 ## Verification and gaps
 

@@ -19,7 +19,7 @@ A previously launched run has a live or retained agent session.
 
 Daemon startup automatically continues unfinished work in the same retained session using saved progress. Completed idle sessions remain idle and accept a follow-up without a new task. Explicit interrupts remain stopped until the owner continues them; startup does not undo an interrupt.
 
-A message for an outdated active turn is rejected. Sending a message to interrupted or failed retained work restores its existing session and starts exactly that submitted message, with no original-task or generic-resume turn replay. Concurrent wake attempts cannot start multiple turns. Failed wake retains the draft. Back returns to the originating work queue or Messages. The list is absent while the conversation is open; Messages shows only live pending blocking questions and approvals; retained conversations remain scoped to their item under Work history. Sending a message does not create a second run. Message drafts stay with each run across tabs and run selection for the lifetime of the open app. Successful sends clear only unchanged submitted text; failures keep the draft. Workspace paths and cleanup are secondary details; technical commands, plans, diffs and internal summaries are under Details; progress messages, final replies, questions and readable errors remain visible.
+A message for an outdated active turn is rejected. Sending a message to interrupted or failed retained work restores its existing session and starts exactly that submitted message, with no original-task or generic-resume turn replay. Concurrent wake attempts cannot start multiple turns. Failed acceptance retains the draft; accepted messages remain saved even if later delivery fails. Back returns to the originating work queue or Messages. The list is absent while the conversation is open; Messages shows only live pending blocking questions and approvals; retained conversations remain scoped to their item under Work history. Sending a message does not create a second run. Message drafts stay with each run across tabs and run selection for the lifetime of the open app. Queue acceptance clears only unchanged submitted text; rejected acceptance keeps the draft. Workspace paths and cleanup are secondary details; technical commands, plans, diffs and internal summaries are under Details; progress messages, final replies, questions and readable errors remain visible.
 
 ## Scenarios
 
@@ -38,6 +38,10 @@ Automatic recovery exchanges appear as technical activity under Details or in th
 During explicit plugin maintenance, a new Start, message or answer is temporarily refused rather than delivered against changing plugin state. The caller retains its draft and receives the maintenance error. Maintenance is itself refused while agent work is active; question repair and continuation share the same boundary.
 
 - **S5** Restoring an inactive bounded task reapplies its invocation-local filesystem and network profile before the submitted turn. It preserves the same workspace, scratch, private indexes and original approval/publishing authority. A legacy sandbox override cannot discard the scoped policy; invalid initialization fails without starting an unrestricted replacement.
+
+Conversational follow-up normally uses one saved-state tracking read to identify the retained run and expected active turn, then one message operation. Its response includes durable queue acceptance, a message ID and pending attention for that same run; acceptance does not establish agent delivery or task completion.
+
+- **S6** Save a follow-up durably before contacting its agent and return queue acceptance immediately. A blocked agent or unavailable GitHub cannot delay acceptance. Deliver in the background to the same retained session using explicitly unverified saved source context; the agent performs GitHub reads when required by the task. Show queued, delivering, delivered or uncertain status in the conversation and tracking. Recover saved queued messages after restart, but never automatically replay a delivery whose acknowledgement is uncertain or replace it with a generic continuation.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -59,26 +63,32 @@ flowchart TD
     N7["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
     N8["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
     N9(["Sandbox initialization failed#59; retained work and authority preserved"])
-    N10["Verify current source and report changed scope or head before continuation #40;S4#41;"]
+    N10["Verify current source and report changed scope or head before initial or automatic continuation #40;S4#41;"]
     N11(["Closed or merged source#59; terminate session and retain history/workspace"])
+    N12["Save message and acknowledge queue acceptance #40;S6#41;"]
+    N13["Deliver saved message to the same agent using retained context"]
+    N14(["Keep uncertain delivery visible without automatic replay"])
     N0 -->|"idle"| N1
     N0 -->|"active"| N2
     N0 -->|"interrupt"| N3
     N2 -->|"stale turn"| N4
     N4 -->|"refresh context"| N0
-    N2 -->|"accepted"| N6
-    N1 --> N6
+    N2 -->|"accepted"| N12
+    N1 --> N12
     N3 -->|"continue later"| N5
-    N5 --> N6
+    N5 --> N12
     N0 -->|"inactive message"| N5
     N0 -->|"additional workbench path"| N7
     N7 -->|"resolved or explicit recovery"| N6
     N0 -->|"authorized bounded task start or continuation"| N8
     N8 -->|"valid policy#59; retain scoped work"| N6
     N8 -->|"invalid policy#59; fail before provider launch"| N9
-    N0 -->|"start or continue retained work"| N10
+    N0 -->|"initial launch or automatic unfinished-work continuation"| N10
     N10 -->|"source closed or merged"| N11
     N10 -->|"open source#59; agent assesses fresh changes"| N0
+    N12 -->|"background delivery"| N13
+    N13 -->|"agent accepted message"| N6
+    N13 -->|"delivery acknowledgement unavailable"| N14
 ```
 
 ## Implementation references
@@ -109,8 +119,11 @@ flowchart TD
 - [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
 - [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
-- [internal/app/continuation.go](../../internal/app/continuation.go) — Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge. (`func (m *Manager) continuationContext(`)
+- [internal/app/continuation.go](../../internal/app/continuation.go) — Verify fresh source for initial/automatic continuation; message-triggered restoration supplies saved context and lets the agent perform task-required GitHub reads. (`func (m *Manager) continuationContext(`)
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
+- [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
+- [internal/transport/tracking.go](../../internal/transport/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (s *Server) dashboard(`)
+- [internal/app/messages.go](../../internal/app/messages.go) — Durably save encrypted messages before asynchronous same-session delivery; recover queued messages and retain uncertainty without replay. (`func (m *Manager) QueueMessage(`)
 
 ## Test references
 
@@ -141,6 +154,13 @@ flowchart TD
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(`; S4. Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(`; S4. Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S4. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
+- [internal/transport/tracking_test.go](../../internal/transport/tracking_test.go) — `func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(`; S5. Asserts saved-state target resolution, exact question/receipt pagination, bounded projection or daily one/two-call delivery behavior.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestMessageQueueCommitsBeforeBlockedAgentAndSurvivesCallerCancellation(`; S6. Blocked session cannot delay queue acceptance; committed encrypted payload survives caller cancellation, rejects duplicate pending sends and becomes delivered.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestQueuedFollowUpRecoversSameThreadWithoutAnyGitHubPreflight(`; S6. Offline queue recovery restores the retained thread exactly once with saved context and zero GitHub requests.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestInterruptedMessageDeliveryIsUncertainAndNeverReplayed(`; S6. Interrupted delivery is marked uncertain and prevents automatic message or generic-continuation replay.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestQueueMessageRejectsStaleAndUnstartedTargetsBeforeAcceptance(`; S6. Prepared and stale-turn messages reject before any accepted message record exists.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `saved message clears its draft before agent delivery and shows uncertainty without replay`; S6. Accepted queue receipt clears its submitted draft before agent activation; transcript replaces queue feedback with uncertainty and never replays send or starts a substitute run.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestAcceptedMessageRemainsSavedWhenAgentRestorationFails(`; S6. A nonexistent retained workspace does not prevent queue acceptance; failed restoration preserves encrypted accepted text and reports uncertainty on the same thread.
 
 ## Verification and gaps
 

@@ -97,7 +97,8 @@ type StartInput struct {
 	Resume bool   `json:"resume,omitempty"`
 }
 type PRReviewInput struct {
-	ItemID string `json:"itemId"`
+	ItemID string `json:"itemId,omitempty"`
+	Target string `json:"target,omitempty"`
 }
 type MessageInput struct {
 	ID           string `json:"id"`
@@ -164,8 +165,12 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 	if appOnly {
 		vis = []string{"app"}
 	}
-	meta := mcp.Meta{"ui": map[string]any{"resourceUri": resourceURI, "visibility": vis}}
+	// A resource URI asks MCP Apps hosts to render a widget. Only explicit
+	// openers carry it; status/launch/answer calls stay conversational while
+	// remaining callable from the embedded app through visibility metadata.
+	meta := mcp.Meta{"ui": map[string]any{"visibility": vis}}
 	if name == "open_factory" || name == "open_settings" {
+		meta["ui"].(map[string]any)["resourceUri"] = resourceURI
 		meta["openai/outputTemplate"] = resourceURI
 	}
 	openWorld := name == "start_run" || name == "send_message" || name == "answer_request" || name == "manage_codex_plugins"
@@ -175,18 +180,19 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 		if e != nil {
 			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: e.Error()}}}, nil, nil
 		}
-		return nil, map[string]any{"data": v}, nil
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: name + " returned saved state or operation result; inspect structuredContent.data."}}}, map[string]any{"data": v}, nil
 	})
 }
 func ptr[T any](v T) *T { return &v }
 func New(a *app.App, ev *events.Service) *Server {
 	s := &Server{App: a, Events: ev}
-	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. For agents waiting for human input, call list_attention with a fresh marker, show the exact questions and options, and use answer_request only with the user’s answer and the request ID. Never invent an answer, replay uncertain delivery or collect secrets in chat. Re-read the queue and owning run after answering. To run a PR review pipeline: find the PR itemId with list_inbox, call prepare_pr_review, inspect the returned profile, skills, prompt and authority, then call start_run with the returned run id when authorized. prepare_pr_review resolves repository then system review defaults automatically. Use prepare_launch for other or customized launches. An explicit request to run a review authorizes starting the matching prepared review; ask only if authority or scope needs clarification. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
+	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. For checking reviews/agents and publication use track_work; omit target and filter queue for triage. Use track_work then send_message for follow-up. Open the dashboard only when explicitly requested. For agents waiting for human input, call list_attention with a fresh marker, show the exact questions and options, and use answer_request only with the user’s answer and the request ID. Never invent an answer, replay uncertain delivery or collect secrets in chat. Use returned delivery state and pending attention; a queued message is saved, not yet delivered, and accepted does not mean complete. On uncertainty use track_work, never replay. To run a PR review pipeline: call prepare_pr_review with target URL or repository shorthand, inspect the returned profile, skills, prompt and authority, then call start_run with the returned run id when authorized. prepare_pr_review resolves repository then system review defaults automatically. Use prepare_launch for other or customized launches. An explicit request to run a review authorizes starting the matching prepared review; ask only if authority or scope needs clarification. Successful start_run establishes launch acceptance; answer_request establishes local answer delivery. send_message saves the message and establishes queue acceptance only; its messageDelivery state tracks later agent delivery. These responses include pending attention. Report that returned state without adding a verification read or polling in the same launch/answer/message workflow; acceptance/delivery does not establish task completion. Use track_work for later user-requested status or uncertain responses. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
 	s.MCP = m
 	uri := registerUIResource(m, web.HTML)
 	settingsURI := registerSettingsUIResource(m, web.SettingsHTML())
 	bind(m, settingsURI, "open_settings", "Open Code Factory settings in its own dedicated view. Configure repositories, priorities, profiles and skills here; settings are not part of the inbox or agent UI.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.settingsSnapshot(ctx) })
-	bind(m, uri, "open_factory", "Open Code Factory’s GitHub issue and pull-request dashboard and local Codex agents. No email account is needed.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
+	bind(m, uri, "open_factory", "Open Code Factory’s GitHub issue and pull-request dashboard and local Codex agents. No email account is needed.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.dashboard(ctx) })
+	bind(m, uri, "track_work", "Check an agent or review, triage a queue, or verify GitHub publication in one local saved-state read. Target accepts run ID, canonical item ID, GitHub URL or repository shorthand (python-driver#725); ambiguous identifiers return candidates without selecting or starting. Returns current/retained runs, exact pending questions, bounded latest output, continuation IDs and current/earlier-head receipts. Omit target for paginated queue triage. Follow nextCursor, attention.nextCursor or nextReceiptCursor independently. freshness bypasses host memoization, never GitHub policy. Stale/missing observations refresh in background; unknown stays unknown. Dashboard opening is optional.", false, true, func(ctx context.Context, in app.TrackInput) (any, error) { return a.TrackWork(ctx, in) })
 	bind(m, uri, "list_inbox", "List synchronized issues and PRs, optionally filtering queue (working, issues, mine, review), without marking read.", false, true, func(ctx context.Context, in InboxInput) (any, error) {
 		if in.Queue != "" && in.Queue != "all" && in.Queue != "working" && in.Queue != "issues" && in.Queue != "mine" && in.Queue != "review" {
 			return nil, fmt.Errorf("unknown queue")
@@ -203,8 +209,8 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return inboxSummaries(out), nil
 	})
-	bind(m, uri, "read_item", "Read item detail. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
-	bind(m, uri, "read_pr_reviews", "Read GitHub-verified posted reviews for a synchronized PR item id: receipt URL, author, verdict, reviewed commit, submitted time, body and inline comments. Includes all authors; does not attribute them to a run. SyncedAt and error distinguish saved/stale data from a successful refresh. Pending drafts and agent publication claims are excluded. Reads are cached for one minute; never posts, retries publication or starts work.", false, true, func(ctx context.Context, in IDInput) (any, error) { return a.ReadPRReviews(ctx, in.ID) })
+	bind(m, uri, "read_item", "Read saved item detail immediately with observation time and background refresh state. freshness never forces GitHub. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
+	bind(m, uri, "read_pr_reviews", "Read GitHub-verified posted reviews for a synchronized PR item id: receipt URL, author, verdict, reviewed commit, submitted time, body and inline comments. Includes all authors; does not attribute them to a run. syncedAt, refresh, error and retryAt describe saved observations and background refresh. Pending drafts and agent publication claims are excluded. Returns immediately and schedules stale/missing observations in the background; never posts, retries publication or starts work.", false, true, func(ctx context.Context, in IDInput) (any, error) { return a.ReadPRReviews(ctx, in.ID) })
 	bind(m, uri, "item_action", "Mark displayed revision read, unread, acknowledge, record action, or override priority.", false, false, func(ctx context.Context, in UserAction) (any, error) {
 		return nil, a.UserAction(ctx, in.ID, in.Action, in.Revision, in.Priority)
 	})
@@ -279,20 +285,54 @@ func New(a *app.App, ev *events.Service) *Server {
 	bind(m, uri, "set_relationship", "Add or remove a local item relationship; never changes GitHub or Jira.", false, false, func(ctx context.Context, in LinkInput) (any, error) {
 		return nil, a.Link(ctx, domain.Relationship{Source: in.Source, Target: in.Target, Evidence: in.Evidence}, in.Remove)
 	})
-	bind(m, uri, "prepare_pr_review", "Prepare the configured PR review pipeline for a synchronized PR. Pass itemId from list_inbox (not a URL). Resolves repository reviewProfileId, then system default, then review; retains selected skills, model, pinned PR head and repository review prompt. Accepts read-only/ask authority or an explicitly configured full-access/never/authorized profile. Does not start work or call GitHub. Inspect the returned run, then use start_run with its id when the user requested a review. Use read_run/list_runs to check uncertain starts; never automatically replay them.", false, false, func(ctx context.Context, in PRReviewInput) (any, error) {
-		r, e := a.Runs.PreparePRReview(ctx, in.ItemID)
+	bind(m, uri, "prepare_pr_review", "Prepare the configured PR review pipeline for a synchronized PR. Pass target or itemId as a run ID, canonical item ID, GitHub URL or repository shorthand. Ambiguity returns candidates without preparing. Resolves repository reviewProfileId, then system default, then review; retains selected skills, model, pinned PR head and repository review prompt. Accepts read-only/ask authority or an explicitly configured full-access/never/authorized profile. Does not start work or call GitHub. Inspect the returned run, then use start_run with its id when the user requested a review. Use read_run/list_runs to check uncertain starts; never automatically replay them.", false, false, func(ctx context.Context, in PRReviewInput) (any, error) {
+		target := in.ItemID
+		if in.Target != "" {
+			target = in.Target
+		}
+		resolved, e := a.ResolveTarget(ctx, target)
+		if e != nil {
+			return nil, e
+		}
+		if resolved.Status != "resolved" {
+			return resolved, nil
+		}
+		r, e := a.Runs.PreparePRReview(ctx, resolved.ItemID)
 		return publicRun(r), e
 	})
-	bind(m, uri, "prepare_launch", "Prepare an editable, durable launch snapshot using itemId and profileId. For a PR's configured review pipeline prefer prepare_pr_review; use this tool for investigation, implementation or explicit custom choices. Does not start an agent; inspect the result then call start_run with its id when authorized.", false, false, func(ctx context.Context, in app.LaunchInput) (any, error) {
+	bind(m, uri, "prepare_launch", "Prepare an editable durable launch snapshot using target (run/item ID, GitHub URL or repository shorthand) or legacy itemId, and profileId. Ambiguity returns candidates without preparing. For a PR's configured review pipeline prefer prepare_pr_review; use this tool for investigation, implementation or explicit custom choices. Does not start an agent; inspect the result then call start_run with its id when authorized.", false, false, func(ctx context.Context, in app.LaunchInput) (any, error) {
+		target := in.ItemID
+		if in.Target != "" {
+			target = in.Target
+		}
+		resolved, e := a.ResolveTarget(ctx, target)
+		if e != nil {
+			return nil, e
+		}
+		if resolved.Status != "resolved" {
+			return resolved, nil
+		}
+		in.ItemID = resolved.ItemID
+		in.Target = ""
 		r, e := a.Runs.Prepare(ctx, in)
 		return publicRun(r), e
 	})
-	bind(m, uri, "start_run", "Start the prepared PR review pipeline or other launch using the id returned by prepare_pr_review/prepare_launch. An explicit user request to run that review authorizes Start after inspecting its snapshot. Returns immediately; monitor with read_run. On an uncertain result inspect that same run before any explicit retry. Also supports explicit resume of an interrupted run.", false, false, func(ctx context.Context, in StartInput) (any, error) {
+	bind(m, uri, "start_run", "Start the prepared PR review pipeline or other launch using the id returned by prepare_pr_review/prepare_launch. An explicit user request to run that review authorizes Start after inspecting its snapshot. Returns acceptance, run/turn IDs and pending attention. A successful response confirms launch acceptance: report it without adding a verification read or polling. Use track_work for a later user-requested status check or an uncertain response. On an uncertain result inspect that same run before any explicit retry. Also supports explicit resume of an interrupted run.", false, false, func(ctx context.Context, in StartInput) (any, error) {
 		r, e := a.Runs.Start(ctx, in.ID, in.Resume)
-		return publicRun(r), e
+		if e != nil {
+			return nil, e
+		}
+		out := s.operationState(ctx, r.ID, "accepted")
+		snapshot, _ := json.Marshal(publicRun(r))
+		var legacy map[string]any
+		_ = json.Unmarshal(snapshot, &legacy)
+		for key, value := range legacy {
+			out[key] = value
+		}
+		return out, nil
 	})
 	bind(m, uri, "list_runs", "List agent status and retained workspaces.", false, true, func(ctx context.Context, _ Empty) (any, error) {
-		runs, e := store.List[domain.Run](ctx, a.Store, "run")
+		runs, e := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.prompt", "$.profile.prompt", "$.sourceSnapshot", "$.reviewPromptSnapshot")
 		for i := range runs {
 			runs[i] = publicRun(runs[i])
 		}
@@ -300,18 +340,22 @@ func New(a *app.App, ev *events.Service) *Server {
 	})
 	bind(m, uri, "list_attention", "List the Messages queue of unanswered agent questions and approvals, oldest first, with request id, exact question IDs/options and owning run/item/profile. Includes retained textual asks; excludes answered, stale and orphaned requests. Blocking requests pause the agent; nonblocking requests do not. Use runId to filter, nextCursor for more pages, and a new freshness marker on fresh reads. Read only: never answers or starts work. Ask the user before answering; send the request.id, not run.id, to answer_request.", false, true, func(ctx context.Context, in app.AttentionInput) (any, error) { return a.ListAttention(ctx, in) })
 	bind(m, uri, "read_run", "Read a run snapshot, pending attention and saved postedReviews for its PR. Run completion is not publication proof. Use read_pr_reviews with run.itemId to refresh verified receipts, verdicts and findings; reviews include all authors and are not attributed to this run.", false, true, func(ctx context.Context, in IDInput) (any, error) {
-		var run domain.Run
-		if e := a.Store.Get(ctx, "run", in.ID, &run); e != nil {
+		runs, e := store.Runs(ctx, a.Store, "", in.ID)
+		if e != nil {
 			return nil, e
 		}
-		atts, e := store.List[domain.Attention](ctx, a.Store, "attention")
+		if len(runs) == 0 {
+			return nil, store.ErrNotFound
+		}
+		run := runs[0]
+		atts, e := store.Select[domain.Attention](ctx, a.Store, "attention", "runId", in.ID)
 		out := []domain.Attention{}
 		for _, at := range atts {
 			if at.RunID == in.ID && at.Status == "pending" {
 				out = append(out, at)
 			}
 		}
-		recoveries, err := store.List[domain.QuestionRecovery](ctx, a.Store, "question-recovery")
+		recoveries, err := store.Select[domain.QuestionRecovery](ctx, a.Store, "question-recovery", "runId", in.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -325,17 +369,34 @@ func New(a *app.App, ev *events.Service) *Server {
 		if err != nil {
 			return nil, err
 		}
-		return map[string]any{"run": publicRun(run), "attention": out, "questionRecoveries": runRecoveries, "postedReviews": reviews}, e
+		delivery, e := a.MessageDelivery(ctx, in.ID)
+		return map[string]any{"run": publicRun(run), "attention": out, "questionRecoveries": runRecoveries, "postedReviews": reviews, "messageDelivery": delivery}, e
 	})
-	bind(m, uri, "send_message", "Send a message, restoring an inactive retained session when needed. Provide expectedTurn for an active turn to steer safely.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
-		return nil, a.Runs.Message(ctx, in.ID, in.Text, in.ExpectedTurn)
+	bind(m, uri, "send_message", "Save a message durably for background delivery to the same agent, restoring its retained session when needed. No GitHub or agent request is required for acceptance. Provide expectedTurn from track_work for an active turn. Returns delivery=accepted and messageDelivery.state=queued, not proof of agent delivery or completion. Inspect track_work later for delivered or uncertain status; never replay an uncertain message.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
+		delivery, e := a.Runs.QueueMessage(ctx, in.ID, in.Text, in.ExpectedTurn)
+		if e != nil {
+			return nil, e
+		}
+		out := s.operationState(ctx, in.ID, "accepted")
+		out["messageId"] = delivery.ID
+		out["messageDelivery"] = delivery
+		return out, nil
 	})
-	bind(m, uri, "answer_request", "Answer one pending request from list_attention/read_run, using its request id (not run id). For questions send answer: {answers: {questionId: {answers: [userAnswer]}}}, including each exact question ID and selected option label or permitted free text. Ask the user; never invent their answer or approval. Secret answers belong in the embedded form, not chat. Stale/duplicate answers reject; after uncertain delivery refresh list_attention and read_run instead of replaying. Valid answers continue the originating session.", false, false, func(ctx context.Context, in AnswerInput) (any, error) {
+	bind(m, uri, "answer_request", "Answer one pending request from list_attention/read_run, using its request id (not run id). For questions send answer: {answers: {questionId: {answers: [userAnswer]}}}, including each exact question ID and selected option label or permitted free text. Ask the user; never invent their answer or approval. Secret answers belong in the embedded form, not chat. Stale/duplicate answers reject; after uncertain delivery use track_work instead of replaying. A successful result includes delivery and pending attention for local verification. Valid answers continue the originating session.", false, false, func(ctx context.Context, in AnswerInput) (any, error) {
 		b, e := json.Marshal(in.Answer)
 		if e != nil {
 			return nil, e
 		}
-		return nil, a.Runs.Answer(ctx, in.ID, b)
+		var request domain.Attention
+		if e = a.Store.Get(ctx, "attention", in.ID, &request); e != nil {
+			return nil, e
+		}
+		if e = a.Runs.Answer(ctx, in.ID, b); e != nil {
+			return nil, e
+		}
+		out := s.operationState(ctx, request.RunID, "delivered")
+		out["requestId"] = in.ID
+		return out, nil
 	})
 	bind(m, uri, "interrupt_run", "Interrupt the active turn, preserving worktree and history.", false, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.Interrupt(ctx, in.ID) })
 	bind(m, uri, "dismiss_question", "Dismiss a textual fallback that needs no reply. Does not answer, authorize or advance the agent.", true, false, func(ctx context.Context, in IDInput) (any, error) { return nil, a.Runs.DismissQuestion(ctx, in.ID) })
@@ -359,7 +420,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		Limit     int    `json:"limit,omitempty"`
 		Freshness string `json:"freshness,omitempty" jsonschema:"Unique read request marker; ignored by transcript pagination."`
 	}
-	bind(m, uri, "read_transcript", "Page durable agent output and diffs without loading the entire transcript.", true, true, func(ctx context.Context, in TranscriptInput) (any, error) {
+	bind(m, uri, "read_transcript", "Page durable redacted agent output and diffs without loading the entire transcript; use a track_work continuation run ID. Follow cursor and hasMore for full retained output.", false, true, func(ctx context.Context, in TranscriptInput) (any, error) {
 		return a.Store.RunEvents(ctx, in.ID, in.After, in.Limit)
 	})
 	bind(m, settingsURI, "diagnostics", "Check daemon, providers, Codex compatibility and outstanding host setup blockers.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.diagnostics(ctx), nil })
@@ -401,7 +462,7 @@ func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 	if e != nil {
 		return nil, e
 	}
-	runs, e := store.List[domain.Run](ctx, s.App.Store, "run")
+	runs, e := store.Runs(ctx, s.App.Store, "", "")
 	if e != nil {
 		return nil, e
 	}
@@ -416,7 +477,7 @@ func (s *Server) snapshot(ctx context.Context) (map[string]any, error) {
 	if e != nil {
 		return nil, e
 	}
-	skills, e := store.List[domain.Skill](ctx, s.App.Store, "skill")
+	skills, e := store.ListWithout[domain.Skill](ctx, s.App.Store, "skill", "$.files", "$.content")
 	if e != nil {
 		return nil, e
 	}
@@ -447,7 +508,7 @@ func (s *Server) settingsSnapshot(ctx context.Context) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	skills, err := store.List[domain.Skill](ctx, s.App.Store, "skill")
+	skills, err := store.ListWithout[domain.Skill](ctx, s.App.Store, "skill", "$.files")
 	if err != nil {
 		return nil, err
 	}
@@ -460,44 +521,7 @@ func (s *Server) settingsSnapshot(ctx context.Context) (map[string]any, error) {
 }
 
 func (s *Server) detail(ctx context.Context, id string) (any, error) {
-	refreshError := ""
-	if err := s.App.RefreshItemDetail(ctx, id); err != nil {
-		refreshError = "Could not refresh details; showing saved information. " + err.Error()
-	}
-
-	var item domain.Item
-	if e := s.App.Store.Get(ctx, "item", id, &item); e != nil {
-		return nil, e
-	}
-	links, e := store.List[domain.Relationship](ctx, s.App.Store, "relationship")
-	if e != nil {
-		return nil, e
-	}
-	out := []domain.Relationship{}
-	tickets := []domain.Ticket{}
-	for _, l := range links {
-		if l.Source == id {
-			out = append(out, l)
-			var ticket domain.Ticket
-			if s.App.Store.Get(ctx, "ticket", l.Target, &ticket) == nil {
-				tickets = append(tickets, ticket)
-			}
-		}
-	}
-	var state domain.UserState
-	if e = s.App.Store.Get(ctx, "user", id, &state); e != nil {
-		return nil, e
-	}
-	entries, e := s.App.Inbox(ctx, "all")
-	if e != nil {
-		return nil, e
-	}
-	for _, entry := range entries {
-		if entry.Item.ID == id {
-			return map[string]any{"refreshError": refreshError, "item": item, "user": state, "relationships": out, "tickets": tickets, "linkedPullRequests": entry.LinkedPullRequests, "work": entry.Work, "queues": entry.Queues}, nil
-		}
-	}
-	return map[string]any{"item": item, "user": state, "relationships": out, "tickets": tickets}, nil
+	return s.App.ItemDetail(ctx, id)
 }
 func (s *Server) diagnostics(ctx context.Context) setup.Diagnostics {
 	return setup.Diagnose(ctx, s.App.DataDir, s.App.Runs.CodexBinary(), "", s.App.Store)

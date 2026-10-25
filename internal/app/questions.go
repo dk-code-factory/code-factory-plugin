@@ -98,15 +98,16 @@ func isRecoveryInput(s *session, msg codex.Message) bool {
 	}
 	return text == expected
 }
-func (m *Manager) background(f func()) {
+func (m *Manager) background(f func()) bool {
 	m.mu.Lock()
 	if m.closing || m.ctx.Err() != nil {
 		m.mu.Unlock()
-		return
+		return false
 	}
 	m.wg.Add(1)
 	m.mu.Unlock()
 	go func() { defer m.wg.Done(); f() }()
+	return true
 }
 func (m *Manager) wakeRecovery(s *session) {
 	if s.recoveryWake != nil {

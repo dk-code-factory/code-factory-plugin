@@ -12,6 +12,7 @@ import (
 )
 
 type AttentionInput struct {
+	ItemID    string `json:"itemId,omitempty"`
 	RunID     string `json:"runId,omitempty" jsonschema:"Optionally restrict pending requests to this run."`
 	Limit     int    `json:"limit,omitempty" jsonschema:"Page size from 1 to 100; defaults to 25."`
 	Cursor    string `json:"cursor,omitempty" jsonschema:"Use nextCursor from the previous page; omit to refresh from the start."`
@@ -40,6 +41,7 @@ type attentionCursor struct {
 	Created time.Time `json:"created"`
 	ID      string    `json:"id"`
 	RunID   string    `json:"runId"`
+	ItemID  string    `json:"itemId,omitempty"`
 }
 
 // ListAttention is the model-visible equivalent of Messages. It returns only
@@ -59,17 +61,33 @@ func (a *App) ListAttention(ctx context.Context, in AttentionInput) (AttentionPa
 			return out, fmt.Errorf("invalid attention cursor")
 		}
 		b, err := base64.RawURLEncoding.DecodeString(in.Cursor)
-		if err != nil || json.Unmarshal(b, &after) != nil || after.ID == "" || after.RunID != in.RunID {
+		if err != nil || json.Unmarshal(b, &after) != nil || after.ID == "" || (after.RunID != in.RunID || after.ItemID != in.ItemID) {
 			return out, fmt.Errorf("invalid attention cursor for this run filter")
 		}
 	}
-	requests, err := store.List[domain.Attention](ctx, a.Store, "attention")
+	var runs []domain.Run
+	var err error
+	paths := []string{"$.skills", "$.prompt", "$.reviewPromptSnapshot", "$.profile.prompt", "$.sourceSnapshot"}
+	if in.RunID != "" {
+		runs, err = store.Select[domain.Run](ctx, a.Store, "run", "id", in.RunID, paths...)
+	} else if in.ItemID != "" {
+		runs, err = store.Select[domain.Run](ctx, a.Store, "run", "itemId", in.ItemID, paths...)
+	} else {
+		runs, err = store.ListWithout[domain.Run](ctx, a.Store, "run", paths...)
+	}
 	if err != nil {
 		return out, err
 	}
-	runs, err := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.prompt", "$.reviewPromptSnapshot", "$.profile.prompt", "$.sourceSnapshot")
-	if err != nil {
-		return out, err
+	requests := []domain.Attention{}
+	for _, r := range runs {
+		if in.ItemID != "" && r.ItemID != in.ItemID {
+			continue
+		}
+		ats, e := store.Select[domain.Attention](ctx, a.Store, "attention", "runId", r.ID)
+		if e != nil {
+			return out, e
+		}
+		requests = append(requests, ats...)
 	}
 	byID := map[string]domain.Run{}
 	for _, r := range runs {
@@ -90,6 +108,11 @@ func (a *App) ListAttention(ctx context.Context, in AttentionInput) (AttentionPa
 		if in.Cursor != "" && (request.Created.Before(after.Created) || request.Created.Equal(after.Created) && request.ID <= after.ID) {
 			continue
 		}
+		// A blocking request may arrive after the run snapshot was read. Its
+		// presence establishes waiting for this saved-state projection.
+		if request.Blocking && r.Status == "running" {
+			r.Status = "waiting"
+		}
 		request.RequestID = nil // Provider RPC IDs are not answer_request IDs.
 		out.Requests = append(out.Requests, AttentionEntry{Request: request, Run: AttentionRun{ID: r.ID, ItemID: r.ItemID, ProfileID: r.Profile.ID, ProfileName: r.Profile.Name, Status: r.Status}})
 	}
@@ -103,7 +126,7 @@ func (a *App) ListAttention(ctx context.Context, in AttentionInput) (AttentionPa
 	if len(out.Requests) > in.Limit {
 		out.Requests = out.Requests[:in.Limit]
 		last := out.Requests[len(out.Requests)-1].Request
-		b, _ := json.Marshal(attentionCursor{Created: last.Created, ID: last.ID, RunID: in.RunID})
+		b, _ := json.Marshal(attentionCursor{Created: last.Created, ID: last.ID, RunID: in.RunID, ItemID: in.ItemID})
 		out.NextCursor = base64.RawURLEncoding.EncodeToString(b)
 	}
 	return out, nil

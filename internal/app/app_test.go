@@ -214,8 +214,8 @@ func TestAgentQuestionExactlyOnceAndRecovery(t *testing.T) {
 	})
 	var run domain.Run
 	_ = a.Store.Get(ctx, "run", r.ID, &run)
-	if run.Status != "waiting" {
-		t.Fatal("blocking question must set waiting", run.Status)
+	if run.Status != "waiting" || run.TurnID != pending.TurnID || pending.RunID != run.ID {
+		t.Fatal("committed blocking question must include its owning waiting run/turn", run.Status)
 	}
 	if e := a.Runs.Message(ctx, r.ID, "Clarification", "wrong-turn"); e == nil {
 		t.Fatal("accepted stale steering")
@@ -580,6 +580,12 @@ func TestSecretAnswerRedactionSurvivesMessageWake(t *testing.T) {
 	if strings.Contains(ciphertext, secret) {
 		t.Fatal("secret stored without encryption")
 	}
+	// Wait for completion classification, so this test exercises restoration
+	// of a completed task rather than interrupting question recovery itself.
+	waitFor(t, func() bool {
+		var recovery domain.QuestionRecovery
+		return a.Store.Get(ctx, "question-recovery", r.ID+":turn-1", &recovery) == nil && recovery.Stage == "resolved"
+	})
 	a.Runs.Close()
 	if e = a.Runs.Recover(ctx); e != nil {
 		t.Fatal(e)
