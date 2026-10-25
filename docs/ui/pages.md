@@ -33,7 +33,7 @@ contains navigation to the other. Both may remain open concurrently.
 | `PAGE-WORKING` | Follow launched work until GitHub completion. | Query and full-width issue/PR list. | Uses server queue membership; idle, failed and interrupted sessions remain tracked. An issue closes on GitHub or completes when any linked implementation PR merges. PR closure or merge removes its own work. History and outstanding questions remain accessible. |
 <!-- /specs:pages-0 -->
 
-Issues, My PRs and Review PRs are focused work lists. Messages contains pending requests and collapsed retained work. Item selection opens the Agent conversation directly. Settings is an independent configuration surface.
+Issues, My PRs and Review PRs are focused work lists. Messages contains pending requests; retained work appears under the owning conversation’s Item details. Item selection opens the Agent conversation directly. Settings is an independent configuration surface.
 PR checks, relationships, profiles and skills remain controls within their owning
 page. Only one page is displayed; no sidebar or split layout is used.
 No URL deep-link or browser-back routing contract is established by the current
@@ -44,7 +44,7 @@ embedded UI.
 <!-- specs:pages-1 -->
 | Dialog | Composition | Owning context | Dismissal and completion |
 | --- | --- | --- | --- |
-| `D-LAUNCH` | `P-LAUNCH-FRAME` and either `P-LAUNCH-EDITOR` or `P-LAUNCH-REVIEW`. | Selected item or retained prepared run; default entry prepares the first profile automatically. | Explicit Start only. Edit exposes customization; Close retains prepared snapshots. Uncertain Start reads the same run and gates retry until status is known. |
+| `D-LAUNCH` | `P-LAUNCH-FRAME` and either `P-LAUNCH-EDITOR` or `P-LAUNCH-REVIEW`. | Selected item or retained prepared run; default entry prepares the repository or system role profile, while reopening a draft retains its immutable profile. | Explicit Start only. Edit exposes customization; Close retains prepared snapshots. Uncertain Start reads the same run and gates retry until status is known. |
 | `D-ATTENTION` | `P-ATTENTION-FRAME` and one of `P-QUESTIONS`, `P-APPROVAL`, `P-ELICITATION`. | Request ID and owning run, with item title/profile displayed and run selected before opening. | Successful answer returns to the owning conversation. Deferred/failed answers remain pending. Keying by request resets local answers, including secret fields; no answers enter ordinary draft stores. |
 <!-- /specs:pages-1 -->
 

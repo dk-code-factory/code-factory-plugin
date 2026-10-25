@@ -107,6 +107,6 @@ flowchart TD
 
 Local suites: `go`, `packaging`.
 Fixture success does not establish real-host acceptance.
-- **S3** — `gap-flow-install-connect-s3-01` · Unverified behavior · P1 · owner: specification-coordinator. Current installed Work core and scoped connect-src enforcement are observed in ../acceptance.md, including restore of the owner-approved global setting. Other CSP directives, full host acceptance and manual/assistive-technology coverage remain incomplete; local package tests alone do not establish signed-in-host results. Next verification: Verify remaining declared CSP directive boundaries and incomplete manual/assistive-technology checks in the actual host. Preserve separate local package, scoped connect-src and current signed-in Work evidence without inferring complete host acceptance.
+- **S3** — `gap-flow-install-connect-s3-01` · Unverified behavior · P1 · owner: specification-coordinator. No installed-host, real-provider or CSP acceptance is established by this development port. Local package and connection fixtures do not establish signed-in-host results; full host and manual/assistive-technology coverage remain incomplete. Next verification: Verify the complete installed plugin, declared CSP directive boundaries and incomplete manual/assistive-technology checks in the actual host for this port version. Keep local package and connection fixtures separate from signed-in-host evidence.
 
 <!-- /flow-references -->

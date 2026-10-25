@@ -10,6 +10,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import type { Snapshot, Run, Detail, JournalEvent, PRReviews, IssueReport, ReportPage } from "../src/types";
+import { fixtureUIOrigin, fixtureDaemonOrigin } from "../fixture-ports";
 function initial(): Snapshot {
   return {
     viewer: { login: "alex", teams: [] },
@@ -597,7 +598,7 @@ async function host(
     },
   );
   await page.route("**/settings-ui", async (route) => {
-    const response = await route.fetch({ url: "http://127.0.0.1:4173/" });
+    const response = await route.fetch({ url: `${fixtureUIOrigin}/` });
     await route.fulfill({
       response,
       body: (await response.text()).replace(
@@ -2478,7 +2479,7 @@ async function assembledHost(
   ).origin;
   async function request(p: ToolCall): Promise<ToolResult> {
     calls.push(p);
-    const response = await fetch(`${daemonOrigin}/mcp`, {
+    const response = await fetch(`${fixtureDaemonOrigin}/mcp`, {
       method: "POST",
       headers: {
         Authorization:
@@ -2534,11 +2535,12 @@ async function assembledHost(
       body: `<!doctype html><iframe title="Code Factory app" src="/" style="width:100%;height:95vh;border:0"></iframe><script>window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;try{let result={};if(m.method==='ui/initialize'){result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Assembled test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:'light',displayMode:'inline'}}}else if(m.method==='tools/call'){result=await window.daemonCall(m.params)}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*')}});</script>`,
     }),
   );
+  const fixtureDaemonHost = new URL(fixtureDaemonOrigin).host;
   const forbidden: string[] = [];
   page.on("request", (r) => {
     if (
       r.frame().parentFrame() &&
-      (new URL(r.url()).origin === daemonOrigin || /localhost/.test(r.url()))
+      (r.url().includes(fixtureDaemonHost) || /localhost/.test(r.url()))
     )
       forbidden.push(r.url());
   });

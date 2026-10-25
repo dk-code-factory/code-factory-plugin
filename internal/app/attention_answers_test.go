@@ -95,6 +95,7 @@ func TestAttentionRepliesPersistEncryptedAndStayOutOfQueue(t *testing.T) {
 				_ = a.Store.Get(ctx, "run", run.ID, &run)
 				return run.Status == "idle"
 			})
+			waitForResolvedCompletion(t, a, ctx, run.ID)
 			a.Runs.Close()
 			// Read through a new database connection and vault to prove disk
 			// persistence, rather than relying on a manager's in-memory state.

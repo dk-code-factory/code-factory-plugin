@@ -57,16 +57,15 @@ flowchart TD
     N4["Reject invalid origin, expired or reused form"]
     N5["Obtain a valid form through authorized setup"]
     N6(["Private value withheld from ordinary output"])
-    N7["Reusable Jira password input requires a nonempty token"]
-    N8["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
-    N9["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
-    N10(["Sandbox initialization failed#59; retained work and authority preserved"])
-    N11["Authenticate owner and inspect or update identified managed dependencies #40;S6#41;"]
-    N12(["Observe verified per-dependency outcomes#59; retain backups and existing authentication"])
-    N13(["Reject busy, invalid or incompatible changes#59; retain state and inspect uncertain outcomes"])
-    N14["Record API name, safe parameters, transport status and server processing time #40;S2#41;"]
-    N15(["Retain private bounded logs with secret values redacted"])
-    N16(["Warn once if logging is unavailable#59; preserve the API result without replay"])
+    N7["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
+    N8["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
+    N9(["Sandbox initialization failed#59; retained work and authority preserved"])
+    N10["Authenticate owner and inspect or update identified managed dependencies #40;S6#41;"]
+    N11(["Observe verified per-dependency outcomes#59; retain backups and existing authentication"])
+    N12(["Reject busy, invalid or incompatible changes#59; retain state and inspect uncertain outcomes"])
+    N13["Record API name, safe parameters, transport status and server processing time #40;S2#41;"]
+    N14(["Retain private bounded logs with secret values redacted"])
+    N15(["Warn once if logging is unavailable#59; preserve the API result without replay"])
     N0 -->|"valid local setup or secret-answer submission"| N1
     N0 -->|"local setup: invalid origin, expired or reused form"| N4
     N4 --> N5
@@ -75,20 +74,17 @@ flowchart TD
     N2 -->|"resume"| N3
     N2 -->|"retained safely"| N6
     N3 --> N6
-    N0 -->|"Jira credential input"| N7
-    N7 -->|"save nonempty token"| N1
-    N7 -->|"empty token rejected#59; correct input"| N0
-    N0 -->|"additional workbench path"| N8
-    N8 -->|"resolved or explicit recovery"| N6
-    N0 -->|"authorized bounded task start or continuation"| N9
-    N9 -->|"valid policy#59; retain scoped work"| N6
-    N9 -->|"invalid policy#59; fail before provider launch"| N10
-    N0 -->|"explicit owner dependency maintenance"| N11
-    N11 -->|"authorized idle operation and verified changes"| N12
-    N11 -->|"unauthorized, active work, local edits, failed probe or interruption"| N13
-    N0 -->|"incoming MCP or private owner API call"| N14
-    N14 -->|"safe bounded record appended#59; rotate older entries"| N15
-    N14 -->|"unsafe path or log write failure"| N16
+    N0 -->|"additional workbench path"| N7
+    N7 -->|"resolved or explicit recovery"| N6
+    N0 -->|"authorized bounded task start or continuation"| N8
+    N8 -->|"valid policy#59; retain scoped work"| N6
+    N8 -->|"invalid policy#59; fail before provider launch"| N9
+    N0 -->|"explicit owner dependency maintenance"| N10
+    N10 -->|"authorized idle operation and verified changes"| N11
+    N10 -->|"unauthorized, active work, local edits, failed probe or interruption"| N12
+    N0 -->|"incoming MCP or private owner API call"| N13
+    N13 -->|"safe bounded record appended#59; rotate older entries"| N14
+    N13 -->|"unsafe path or log write failure"| N15
 ```
 
 ## Implementation references
@@ -113,6 +109,7 @@ flowchart TD
 - [web/vite.config.ts](../../web/vite.config.ts) — Embedded UI build and host-fixture configuration
 - [web/index.html](../../web/index.html) — Embedded UI build and host-fixture configuration
 - [web/playwright.config.ts](../../web/playwright.config.ts) — Embedded UI build and host-fixture configuration
+- [web/fixture-ports.ts](../../web/fixture-ports.ts) — Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout. (`export const fixtureUIOrigin =`)
 - [internal/testhost/main.go](../../internal/testhost/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration

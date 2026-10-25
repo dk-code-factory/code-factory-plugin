@@ -4174,9 +4174,14 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+          "path": "internal/setup/onboarding.go",
+          "anchor": "const formHTML =",
+          "purpose": "Renders the temporary local tunnel-key password form, readiness reveal, clear-on-submit feedback and success removal."
+        },
+        {
+          "path": "internal/setup/onboarding.go",
+          "anchor": "func (f *credentialForm) ServeHTTP(",
+          "purpose": "Owns local-form reachability, session, origin, expiry and single-submission boundaries; alternate transport remains disabled in the pilot."
         }
       ],
       "assertions": [
@@ -4259,9 +4264,14 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+          "path": "scripts/browser_lab.mjs",
+          "anchor": "function html(csrf, nonce)",
+          "purpose": "Renders the independent private operator browser-controller surface and its explicit screenshot/navigation/input controls."
+        },
+        {
+          "path": "scripts/browser_lab.mjs",
+          "anchor": "export function createHandler(config, driver)",
+          "purpose": "Owns controller session, owner/Host/Origin/CSRF checks and explicit isolated-browser action endpoints; separate from product navigation."
         }
       ],
       "assertions": [
@@ -6032,9 +6042,14 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+          "path": "internal/setup/onboarding.go",
+          "anchor": "const formHTML =",
+          "purpose": "Renders the temporary local tunnel-key password form, readiness reveal, clear-on-submit feedback and success removal."
+        },
+        {
+          "path": "internal/setup/onboarding.go",
+          "anchor": "func (f *credentialForm) ServeHTTP(",
+          "purpose": "Owns local-form reachability, session, origin, expiry and single-submission boundaries; alternate transport remains disabled in the pilot."
         }
       ],
       "assertions": [
@@ -6071,9 +6086,14 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+          "path": "scripts/browser_lab.mjs",
+          "anchor": "function html(csrf, nonce)",
+          "purpose": "Renders the independent private operator browser-controller surface and its explicit screenshot/navigation/input controls."
+        },
+        {
+          "path": "scripts/browser_lab.mjs",
+          "anchor": "export function createHandler(config, driver)",
+          "purpose": "Owns controller session, owner/Host/Origin/CSRF checks and explicit isolated-browser action endpoints; separate from product navigation."
         }
       ],
       "assertions": [
@@ -6525,7 +6545,7 @@
         "browser"
       ],
       "composition": "`P-LAUNCH-FRAME` and either `P-LAUNCH-EDITOR` or `P-LAUNCH-REVIEW`.",
-      "context": "Selected item or retained prepared run; default entry prepares the first profile automatically.",
+      "context": "Selected item or retained prepared run; default entry prepares the repository or system role profile, while reopening a draft retains its immutable profile.",
       "interactions": "Explicit Start only. Edit exposes customization; Close retains prepared snapshots. Uncertain Start reads the same run and gates retry until status is known."
     },
     {
@@ -8764,7 +8784,7 @@
         "go"
       ],
       "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` → profile and launch skill choices",
-      "trigger": "Draft checkout or fallback root.",
+      "trigger": "Explicit skill discovery directory, initially the filesystem root.",
       "interactions": "Loads/discovers skills and refreshes shared choices without saving the repository first.",
       "from": [
         "W-REPOSITORY-SETTINGS.discover-skills"
@@ -9679,9 +9699,14 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+          "path": "scripts/browser_lab.mjs",
+          "anchor": "function html(csrf, nonce)",
+          "purpose": "Renders the independent private operator browser-controller surface and its explicit screenshot/navigation/input controls."
+        },
+        {
+          "path": "scripts/browser_lab.mjs",
+          "anchor": "export function createHandler(config, driver)",
+          "purpose": "Owns controller session, owner/Host/Origin/CSRF checks and explicit isolated-browser action endpoints; separate from product navigation."
         }
       ],
       "assertions": [
@@ -12872,7 +12897,7 @@
       "id": "UI-WAITING-MESSAGES",
       "path": "web/tests/factory.spec.ts",
       "anchor": "Messages lists waiting agents and answering removes only its owning request",
-      "assertion": "Only live pending blocking questions/approvals appear or count; nonblocking/stale/answered/orphaned/disconnected requests and agent inventories are absent. Selection and answers keep owning item/run identity; resolving one leaves the other requests intact."
+      "assertion": "Live pending blocking and nonblocking questions plus approvals appear with owning context; stale, answered, orphaned and disconnected live requests and agent inventories are absent. Selection and answers preserve item/run identity; resolving one leaves the others intact and the final nonblocking question remains answerable."
     },
     {
       "id": "API-QUEUE-LINKS",

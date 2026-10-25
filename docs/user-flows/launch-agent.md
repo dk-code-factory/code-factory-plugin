@@ -79,7 +79,7 @@ flowchart TD
     N0 -->|"additional workbench path"| N7
     N7 -->|"resolved or explicit recovery"| N3
     N0 -->|"repository poll"| N8
-    N8 -->|"valid read-only review claim"| N3
+    N8 -->|"valid configured review claim"| N3
     N8 -->|"not eligible, already claimed or policy changed"| N9
     N0 -->|"owner requests PR review through assistant"| N10
     N10 -->|"inspect snapshot#59; request authorizes review"| N1
@@ -116,6 +116,7 @@ flowchart TD
 - [web/vite.config.ts](../../web/vite.config.ts) — Embedded UI build and host-fixture configuration
 - [web/index.html](../../web/index.html) — Embedded UI build and host-fixture configuration
 - [web/playwright.config.ts](../../web/playwright.config.ts) — Embedded UI build and host-fixture configuration
+- [web/fixture-ports.ts](../../web/fixture-ports.ts) — Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout. (`export const fixtureUIOrigin =`)
 - [internal/testhost/main.go](../../internal/testhost/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration

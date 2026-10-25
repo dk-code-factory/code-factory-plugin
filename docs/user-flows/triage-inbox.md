@@ -84,6 +84,7 @@ flowchart TD
 - [web/vite.config.ts](../../web/vite.config.ts) — Embedded UI build and host-fixture configuration
 - [web/index.html](../../web/index.html) — Embedded UI build and host-fixture configuration
 - [web/playwright.config.ts](../../web/playwright.config.ts) — Embedded UI build and host-fixture configuration
+- [web/fixture-ports.ts](../../web/fixture-ports.ts) — Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout. (`export const fixtureUIOrigin =`)
 - [internal/testhost/main.go](../../internal/testhost/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Embedded UI build and host-fixture configuration
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration

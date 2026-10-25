@@ -84,6 +84,7 @@ func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(t *testing.T) {
 					t.Fatal("remaining question cannot be answered", err)
 				}
 				waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "idle" })
+				waitForResolvedCompletion(t, a, ctx, r.ID)
 				a.Runs.Close()
 				if err := a.Runs.Recover(ctx); err != nil {
 					t.Fatal(err)

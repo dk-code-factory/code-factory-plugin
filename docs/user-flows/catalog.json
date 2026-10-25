@@ -464,8 +464,8 @@
           "kind": "unverified-behavior",
           "severity": "P1",
           "owner": "specification-coordinator",
-          "reason": "Current installed Work core and scoped connect-src enforcement are observed in ../acceptance.md, including restore of the owner-approved global setting. Other CSP directives, full host acceptance and manual/assistive-technology coverage remain incomplete; local package tests alone do not establish signed-in-host results.",
-          "next_verification": "Verify remaining declared CSP directive boundaries and incomplete manual/assistive-technology checks in the actual host. Preserve separate local package, scoped connect-src and current signed-in Work evidence without inferring complete host acceptance."
+          "reason": "No installed-host, real-provider or CSP acceptance is established by this development port. Local package and connection fixtures do not establish signed-in-host results; full host and manual/assistive-technology coverage remain incomplete.",
+          "next_verification": "Verify the complete installed plugin, declared CSP directive boundaries and incomplete manual/assistive-technology checks in the actual host for this port version. Keep local package and connection fixtures separate from signed-in-host evidence."
         }
       ],
       "ui": [
@@ -657,6 +657,11 @@
         {
           "path": "web/playwright.config.ts",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "web/fixture-ports.ts",
+          "anchor": "export const fixtureUIOrigin =",
+          "purpose": "Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout."
         },
         {
           "path": "internal/testhost/main.go",
@@ -1665,6 +1670,14 @@
             "S10"
           ],
           "purpose": "A cached open item does not authorize execution after remote closure; preflight fetches live, terminates before workspace/provider creation and updates the cache."
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestPreparePRReviewHonorsExplicitFullAccess(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly."
         }
       ],
       "suites": [
@@ -1871,7 +1884,7 @@
           {
             "from": "auto_review",
             "to": "n5",
-            "label": "valid read-only review claim"
+            "label": "valid configured review claim"
           },
           {
             "from": "auto_review",
@@ -2044,6 +2057,11 @@
         {
           "path": "web/playwright.config.ts",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "web/fixture-ports.ts",
+          "anchor": "export const fixtureUIOrigin =",
+          "purpose": "Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout."
         },
         {
           "path": "internal/testhost/main.go",
@@ -3173,6 +3191,11 @@
           "purpose": "Embedded UI build and host-fixture configuration"
         },
         {
+          "path": "web/fixture-ports.ts",
+          "anchor": "export const fixtureUIOrigin =",
+          "purpose": "Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout."
+        },
+        {
           "path": "internal/testhost/main.go",
           "purpose": "Embedded UI build and host-fixture configuration"
         },
@@ -4038,7 +4061,7 @@
           {
             "from": "auto_review",
             "to": "accepted",
-            "label": "valid read-only review claim"
+            "label": "valid configured review claim"
           },
           {
             "from": "auto_review",
@@ -4128,7 +4151,8 @@
         "S3",
         "S4",
         "S5",
-        "S6"
+        "S6",
+        "S7"
       ],
       "implementation": [
         {
@@ -4200,6 +4224,11 @@
         {
           "path": "web/playwright.config.ts",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "web/fixture-ports.ts",
+          "anchor": "export const fixtureUIOrigin =",
+          "purpose": "Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout."
         },
         {
           "path": "internal/testhost/main.go",
@@ -4458,7 +4487,7 @@
           "path": "internal/app/continuation_test.go",
           "anchor": "func TestContinuationProvidesFreshChangesWithoutReplacingSession(",
           "scenarios": [
-            "S4"
+            "S7"
           ],
           "purpose": "Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged."
         },
@@ -4466,7 +4495,7 @@
           "path": "internal/app/continuation_test.go",
           "anchor": "func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(",
           "scenarios": [
-            "S4"
+            "S7"
           ],
           "purpose": "Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files."
         },
@@ -4474,7 +4503,7 @@
           "path": "internal/app/continuation_test.go",
           "anchor": "func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(",
           "scenarios": [
-            "S4"
+            "S7"
           ],
           "purpose": "Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback."
         },
@@ -4482,7 +4511,7 @@
           "path": "internal/app/continuation_test.go",
           "anchor": "func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(",
           "scenarios": [
-            "S4"
+            "S7"
           ],
           "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
         },
@@ -4490,7 +4519,7 @@
           "path": "web/tests/factory.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
-            "S4"
+            "S7"
           ],
           "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
         },
@@ -4770,7 +4799,7 @@
           {
             "id": "source_lifecycle_check",
             "label": "Verify current source and report changed scope or head before initial or automatic continuation",
-            "scenario": "S4"
+            "scenario": "S7"
           },
           {
             "id": "source_lifecycle_terminal",
@@ -4997,6 +5026,11 @@
         {
           "path": "web/playwright.config.ts",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "web/fixture-ports.ts",
+          "anchor": "export const fixtureUIOrigin =",
+          "purpose": "Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout."
         },
         {
           "path": "internal/testhost/main.go",
@@ -5798,8 +5832,8 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "specification-coordinator",
-          "reason": "Installed ChatGPT Work now directly invokes list_attention, presents the exact native question, delivers the user choice through answer_request and observes same-thread continuation, with independently audited MCP method names. Actual-host multi-agent pagination, stale/duplicate answers, uncertain delivery and recovered-text question variants remain unverified; fixtures cover those boundaries.",
-          "next_verification": "Observe the remaining multi-agent/page, stale/duplicate, uncertain-delivery and recovered-text variants in an explicitly scoped private-pilot campaign, without replaying delivery or substituting runs."
+          "reason": "Fixtures cover queue discovery, exact question/options, answer delivery and same-thread continuation. No installed ChatGPT Work attention acceptance is established by this development port; actual-host normal, multi-agent/page, stale/duplicate, uncertain-delivery and recovered-text variants remain unverified.",
+          "next_verification": "Observe normal queue discovery and same-thread answer continuation, then multi-agent/page, stale/duplicate, uncertain-delivery and recovered-text variants in an explicitly scoped private-pilot campaign for the installed port version, without replaying delivery or substituting runs."
         },
         {
           "version": 1,
@@ -6891,8 +6925,8 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "user-flow-maintainer",
-          "reason": "Fake resume success does not prove full real-provider history preservation; dated real acceptance is in ../acceptance.md.",
-          "next_verification": "Check existing dated provider acceptance against the current binary and retain explicit evidence of resumed conversation/workspace history without task or answer replay; fixture success alone is insufficient."
+          "reason": "Fake-provider message restoration does not prove current installed real-provider conversation or workspace history preservation. No installed-host or real-provider recovery acceptance is established by this development port.",
+          "next_verification": "Verify message restoration against the installed port version and record retained conversation/workspace history without task or answer replay; fixture success alone is insufficient."
         },
         {
           "version": 1,
@@ -7214,6 +7248,11 @@
         {
           "path": "web/playwright.config.ts",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "web/fixture-ports.ts",
+          "anchor": "export const fixtureUIOrigin =",
+          "purpose": "Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout."
         },
         {
           "path": "internal/testhost/main.go",
@@ -7567,8 +7606,8 @@
           "kind": "unverified-behavior",
           "severity": "P1",
           "owner": "specification-coordinator",
-          "reason": "The actual final-build connected one-hour interval passed in ../acceptance.md. Hidden/disconnected visibility timing and backoff transitions still lack focused assertions; reconnect/iframe fixtures and a stable connected soak do not prove those variants.",
-          "next_verification": "Exercise hidden/disconnected visibility and retry-backoff transitions with focused fixture assertions, and retain the completed installed-build soak as bounded dated evidence rather than indefinite-availability proof."
+          "reason": "No installed-host connected one-hour soak is established by this development port. Hidden/disconnected visibility timing and backoff transitions also lack focused assertions; reconnect/iframe fixtures do not prove those variants.",
+          "next_verification": "Exercise hidden/disconnected visibility and retry-backoff transitions with focused fixture assertions, then record a connected one-hour soak for the actual installed port version as bounded dated evidence."
         },
         {
           "version": 1,
@@ -7577,8 +7616,8 @@
           "severity": "P2",
           "owner": "user-flow-maintainer",
           "scenario": "S6",
-          "reason": "Synthetic and installed-version measurements plus real Work observations establish normal saved lookup/publication, queue-page, configured-launch, nonsecret answer/local-delivery, retained-thread follow-up and explicit-dashboard paths. Actual-host ambiguous targets, retained-history/large-page variants, changed-head receipts, cooldown/error and uncertain-delivery variants remain unverified.",
-          "next_verification": "Observe the remaining ambiguity, history/large-page, changed-head, cooldown/error and uncertain-delivery variants through an explicitly scoped private-pilot campaign; keep fixture and host evidence separate."
+          "reason": "Synthetic fixture measurements cover saved lookup/publication, queue pages, configured launch, nonsecret answer/local delivery, retained-thread follow-up and explicit dashboard paths. No installed-version or real Work acceptance is established by this development port. Actual-host normal, ambiguous-target, retained-history/large-page, changed-head receipt, cooldown/error and uncertain-delivery variants remain unverified.",
+          "next_verification": "Observe normal conversational paths and the ambiguity, history/large-page, changed-head, cooldown/error and uncertain-delivery variants through an explicitly scoped private-pilot campaign for the installed port version; keep fixture and host evidence separate."
         }
       ],
       "ui": [
@@ -8095,6 +8134,11 @@
         {
           "path": "web/playwright.config.ts",
           "purpose": "Embedded UI build and host-fixture configuration"
+        },
+        {
+          "path": "web/fixture-ports.ts",
+          "anchor": "export const fixtureUIOrigin =",
+          "purpose": "Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout."
         },
         {
           "path": "internal/testhost/main.go",
@@ -8646,10 +8690,6 @@
             "terminal": true
           },
           {
-            "id": "n7",
-            "label": "Reusable Jira password input requires a nonempty token"
-          },
-          {
             "id": "workbench_s4",
             "label": "Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.",
             "scenario": "S4"
@@ -8735,21 +8775,6 @@
             "from": "n3",
             "to": "n6",
             "label": ""
-          },
-          {
-            "from": "n0",
-            "to": "n7",
-            "label": "Jira credential input"
-          },
-          {
-            "from": "n7",
-            "to": "n1",
-            "label": "save nonempty token"
-          },
-          {
-            "from": "n7",
-            "to": "n0",
-            "label": "empty token rejected; correct input"
           },
           {
             "from": "n0",
@@ -9358,8 +9383,8 @@
           "kind": "unverified-behavior",
           "severity": "P1",
           "owner": "specification-coordinator",
-          "reason": "Controller option fixtures establish only configured local attachment arguments, not sign-in or actual browser/app acceptance. Diagnostics cannot establish host receipt, soak or CSP enforcement; outstanding checks stay unverified in ../acceptance.md.",
-          "next_verification": "Inspect actual-host callback receipt and CSP behavior and complete the recorded soak for the installed version; update dated acceptance evidence while retaining unobserved checks as unverified."
+          "reason": "Controller option fixtures establish only configured local attachment arguments, not sign-in or actual browser/app acceptance. This development port establishes no installed-host callback, soak, login or CSP acceptance; outstanding checks remain unverified in ../acceptance.md.",
+          "next_verification": "Inspect actual-host callback receipt and CSP behavior and complete a connected one-hour soak for the installed port version; update dated acceptance evidence while retaining unobserved checks as unverified."
         },
         {
           "version": 1,

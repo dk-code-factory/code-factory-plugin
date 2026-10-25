@@ -183,6 +183,24 @@ func prepareRun(t *testing.T, a *App, ctx context.Context) domain.Run {
 	}
 	return r
 }
+
+// Idle is saved before final-text classification. These persistence tests wait
+// for that exact completion check instead of interrupting question recovery.
+func waitForResolvedCompletion(t *testing.T, a *App, ctx context.Context, runID string) {
+	t.Helper()
+	live, err := a.Runs.get(runID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	live.mu.Lock()
+	recoveryID := runID + ":" + live.lastCompletedTurn
+	live.mu.Unlock()
+	waitFor(t, func() bool {
+		var recovery domain.QuestionRecovery
+		return a.Store.Get(ctx, "question-recovery", recoveryID, &recovery) == nil && recovery.Stage == "resolved"
+	})
+}
+
 func waitFor(t *testing.T, f func() bool) {
 	t.Helper()
 	deadline := time.Now().Add(8 * time.Second)

@@ -31,7 +31,7 @@ Normal provider reads reuse successful saved query results until expiry or inval
 
 - **S4** Track launched work and show independent linked PR lifecycle, review and current-head CI; merged implementation links complete issues without changing their GitHub state.
 
-- **S5** Repository monitoring displays its last successful poll and failures, supports a manual poll and can pause. System and repository policy determines whether current user/team review requests remain queued or start a read-only review after fresh synchronization. Durable request/head claims prevent duplicate polls or restart from repeating launches; stale provider state cannot authorize a new review.
+- **S5** Repository monitoring displays its last successful poll and failures, supports a manual poll and can pause. System and repository policy determines whether current user/team review requests remain queued or start the configured review pipeline with its explicitly selected authority after fresh synchronization. Durable request/head claims prevent duplicate polls or restart from repeating launches; stale provider state cannot authorize a new review.
 
 - **S6** Repository summary discovery does not fetch every item’s full history. Requests are serialized and bounded; failures retain successful progress, and reference backfill yields between passes.
 
@@ -77,7 +77,7 @@ flowchart TD
     N0 -->|"additional workbench path"| N6
     N6 -->|"resolved or explicit recovery"| N5
     N0 -->|"repository poll"| N7
-    N7 -->|"valid read-only review claim"| N5
+    N7 -->|"valid configured review claim"| N5
     N7 -->|"not eligible, already claimed or policy changed"| N8
     N0 -->|"independent repository polling"| N9
     N9 -->|"another repository succeeds"| N5
@@ -168,6 +168,7 @@ flowchart TD
 - [internal/providers/github_cache_test.go](../../internal/providers/github_cache_test.go) — `func TestGitHubCachePreservesSummarySemanticsCopiesAndRelatedInvalidation(`; S8. Summary-only flags and original observation times survive cache serialization; caller edits cannot corrupt cache; direct item refresh invalidates its index but preserves other repositories.
 - [internal/providers/github_cache_test.go](../../internal/providers/github_cache_test.go) — `func TestGitHubCacheNewHeadOrUpdateCannotReuseOldDetail(`; S8. A newly observed PR head or updated scope cannot inherit old detail data from a still-valid unrelated snapshot.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestContinuationUsesLiveSourceDespiteWarmGitHubCache(`; S10. A cached open item does not authorize execution after remote closure; preflight fetches live, terminates before workspace/provider creation and updates the cache.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewHonorsExplicitFullAccess(`; S5. Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly.
 
 ## Verification and gaps
 
