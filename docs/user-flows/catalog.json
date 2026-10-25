@@ -5060,6 +5060,10 @@
             "S5"
           ],
           "purpose": "Version-tag and manual dry-run package promotion; scoped publisher permission, no live-machine deployment."
+        },
+        {
+          "path": "release/fixed-issues.json",
+          "purpose": "Explicit fixed issues backed by ancestor source commits and exact promoted package versions."
         }
       ],
       "tests": [
@@ -6935,6 +6939,425 @@
             "from": "CD",
             "to": "CI_FAIL",
             "label": "invalid or expired artifacts, mismatched source, or existing release"
+          }
+        ]
+      }
+    },
+    {
+      "id": "report-code-factory-issue",
+      "title": "Report suspected defects and track verified delivery",
+      "spec": "docs/user-flows/report-code-factory-issue.md",
+      "scenarios": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "implementation": [
+        {
+          "path": "cmd/code-factory/main.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "go.mod",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "go.sum",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/app/app.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/pluginbundle/hosting.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/engine.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/evidence.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/github.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/investigate.yml",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/service.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/types.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "plugin/skills/code-factory-report-issue/SKILL.md",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "plugin/skills/code-factory/SKILL.md",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "release/fixed-issues.json",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "scripts/ci.py",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "web/src/reports.tsx",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/provider.py",
+          "purpose": "Restores the full retained dk-workflows receipt and lifecycle environment at the native provider boundary while preserving native Codex authentication."
+        }
+      ],
+      "tests": [
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestSubmissionValidationConcurrentIdempotencyAndConflicts(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestEvidenceIsPrivateScopedHashedAndRedacted(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestWorkflowLostAdmissionDaemonRestartAndUncertainCreation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestMissingPrerequisitesInformationAndExplicitRecovery(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestDuplicateReuseRoutingBlockAndSingleInvestigation(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRefreshSeparatesIssueFixDeliveryAndPreservesSuccessfulState(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestLedgerPaginationSearchAndVersionFilters(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestRepositoryRoutingLabelsDuplicateAndPublicationBoundary(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestTrackingRequiresPublishedMatchingProvenance(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/engine_test.go",
+          "anchor": "func TestNativeWorkflowEngineWithFakeProviderAndLifecycle(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestAuthenticatedMCPDiscoveryToolsAndUI(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S6"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues shares ledger search, information requests and evidence recovery\"",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues displays independent closure, prerelease delivery and explicit workflow recovery\"",
+          "scenarios": [
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_component_versions_come_from_promoted_packages(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_fixed_issue_requires_ancestor_commit_and_explicit_issue_reference(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "scripts/test_packaging.py",
+          "anchor": "def test_zip_is_self_contained_deterministic_and_contains_no_host_state(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "scripts/test_packaging.py",
+          "anchor": "def test_registered_browser_package_has_no_local_mcp_launcher(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues paginates and filters processing component and version\"",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Report list cursor pagination and all three structured filters select the matching ledger row."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestConcurrentPublicationCommandsClaimOneExternalEffect(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Concurrent publication claims one external create, and interrupted lifecycle preparation cannot replay without explicit reconciliation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestInterruptedPreparationNeedsLifecycleReconciliation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Concurrent publication claims one external create, and interrupted lifecycle preparation cannot replay without explicit reconciliation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestSimilarTitlesDoNotSilentlyMergeDistinctObservations(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Similar titles alone cannot merge distinct observations; duplicate reuse requires an explicit investigated issue identity."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRejectedCreationCanResumeWithoutTreatingItAsAnUnknownEffect(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Definite GitHub rejections recover after correction; ambiguous server/network results never permit a repeated issue creation."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestHTTPPublicationRejectsKnownFailuresAndRetainsServerUncertainty(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Definite GitHub rejections recover after correction; ambiguous server/network results never permit a repeated issue creation."
+        },
+        {
+          "path": "internal/reports/engine_test.go",
+          "anchor": "func TestNativeAuthenticationPrerequisitesUseOnlyFakeBoundaries(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Fake native login-status boundaries distinguish available authentication from actionable Codex and GitHub sign-in prerequisites, without reading real credentials."
+        }
+      ],
+      "suites": [
+        "go",
+        "browser",
+        "packaging",
+        "tooling"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-flow-report-issue-host",
+          "scenario": "S6",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "user-flow-maintainer",
+          "reason": "Installed-host reporting and authenticated live filing acceptance have not been observed; ordinary CI uses fake provider, lifecycle and GitHub boundaries.",
+          "next_verification": "Run separately authorized acceptance against the approved private test repository and browser session; retain private version-bound evidence outside Git."
+        }
+      ],
+      "ui": [
+        "PAGE-REPORTS",
+        "P-REPORT-LIST",
+        "P-REPORT-DETAIL",
+        "W-REPORT-LIST",
+        "W-REPORT-DETAIL",
+        "C-REPORT-SELECT",
+        "C-REPORT-EVIDENCE",
+        "C-REPORT-RECOVER",
+        "C-REPORT-REFRESH",
+        "W-NAVIGATION",
+        "C-NAVIGATE"
+      ],
+      "terms": [
+        "issue-report",
+        "report-ledger",
+        "report-processing",
+        "report-outcome",
+        "evidence-manifest",
+        "delivery-evidence",
+        "fixed-issue",
+        "credential"
+      ],
+      "graph": {
+        "start": "submit",
+        "nodes": [
+          {
+            "id": "submit",
+            "label": "Persist idempotent observation",
+            "scenario": "S1"
+          },
+          {
+            "id": "capture",
+            "label": "Capture private scoped evidence and explicit omissions",
+            "scenario": "S2"
+          },
+          {
+            "id": "investigate",
+            "label": "Investigate and verify ownership or duplicate",
+            "scenario": "S3"
+          },
+          {
+            "id": "recover",
+            "label": "Retain missing prerequisites or interrupted effects for recovery",
+            "scenario": "S4"
+          },
+          {
+            "id": "track",
+            "label": "Track issue, fix and verified release independently",
+            "scenario": "S5"
+          },
+          {
+            "id": "view",
+            "label": "Search reports and inspect details",
+            "scenario": "S6"
+          },
+          {
+            "id": "done",
+            "label": "Retained report remains available",
+            "terminal": true
+          }
+        ],
+        "edges": [
+          {
+            "from": "submit",
+            "to": "capture"
+          },
+          {
+            "from": "capture",
+            "to": "investigate"
+          },
+          {
+            "from": "capture",
+            "to": "recover",
+            "label": "prerequisite unavailable"
+          },
+          {
+            "from": "investigate",
+            "to": "recover",
+            "label": "missing information or interrupted effects"
+          },
+          {
+            "from": "recover",
+            "to": "investigate",
+            "label": "evidence supplied or effects reconciled"
+          },
+          {
+            "from": "investigate",
+            "to": "track",
+            "label": "filed or duplicate"
+          },
+          {
+            "from": "investigate",
+            "to": "view",
+            "label": "explained behavior"
+          },
+          {
+            "from": "track",
+            "to": "view"
+          },
+          {
+            "from": "view",
+            "to": "done"
+          },
+          {
+            "from": "recover",
+            "to": "done",
+            "label": "retain blocked report"
           }
         ]
       }

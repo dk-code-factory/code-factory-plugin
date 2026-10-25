@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import type { Snapshot, Run, Detail } from "../src/types";
+import type { Snapshot, Run, Detail, IssueReport } from "../src/types";
 function initial(): Snapshot {
   return {
     cursor: 1,
@@ -72,6 +72,7 @@ async function host(
   page: Page,
   options: {
     snapshot?: Snapshot;
+    reports?: IssueReport[];
     readItem?: (detail: Detail) => Promise<Detail>;
     failPreparation?: boolean;
     theme?: "light" | "dark";
@@ -82,6 +83,7 @@ async function host(
   } = {},
 ) {
   const state = options.snapshot ?? initial();
+  const reports = options.reports ?? [];
   let answered = false;
   let relationships: Detail["relationships"] = [];
   const calls: { name: string; arguments: Record<string, unknown> }[] = [];
@@ -118,6 +120,50 @@ async function host(
             cursor: state.cursor,
             hasMore: false,
           };
+          break;
+        case "list_issue_reports": {
+          const rows = reports
+            .filter(
+              (r) =>
+                (!a.status || r.processing === a.status) &&
+                (!a.component || r.component === a.component) &&
+                (!a.version || r.installedVersion === a.version) &&
+                (!a.search ||
+                  (r.observation.surface + r.observation.actual)
+                    .toLowerCase()
+                    .includes(String(a.search).toLowerCase())) &&
+                (!a.cursor || r.id > String(a.cursor)),
+            )
+            .sort((a, b) => a.id.localeCompare(b.id));
+          const limit = Number(a.limit || 30);
+          data = {
+            items: structuredClone(rows.slice(0, limit)),
+            nextCursor: rows.length > limit ? rows[limit - 1].id : "",
+          };
+          break;
+        }
+        case "get_issue_report":
+          data = structuredClone(reports.find((r) => r.id === a.id));
+          break;
+        case "add_issue_evidence": {
+          const report = reports.find((r) => r.id === a.id)!;
+          report.additions.push(String(a.text));
+          report.processing = "queued";
+          state.cursor++;
+          data = structuredClone(report);
+          break;
+        }
+        case "resume_issue_report": {
+          const report = reports.find((r) => r.id === a.id)!;
+          report.processing = "investigating";
+          report.message = "Recovery admitted";
+          state.cursor++;
+          data = structuredClone(report);
+          break;
+        }
+        case "refresh_issue_reports":
+          state.cursor++;
+          data = null;
           break;
         case "read_item": {
           const entry = state.inbox.find((entry) => entry.item.id === a.id)!;
@@ -1542,4 +1588,188 @@ test("nonblocking recovered text question keeps its continuing label", async ({
   await expect(
     ui.getByRole("button", { name: /Waiting for your answer/ }),
   ).toHaveCount(0);
+});
+
+function reportFixture(id = "report-1"): IssueReport {
+  const at = "2026-10-25T12:00:00Z";
+  const fresh = { lastSuccess: "", lastAttempt: "", retryAt: "", error: "" };
+  return {
+    id,
+    observation: {
+      surface: "Agents",
+      expected: "Answer delivered",
+      actual: "Stale response",
+      reproductionUnknown: "Observed once",
+      observedAt: at,
+    },
+    processing: "needs_information",
+    outcome: "",
+    component: "code-factory",
+    message: "Awaiting host observation",
+    additions: [],
+    workflowId: "workflow-1",
+    versions: { plugin: "0.2.2" },
+    installedVersion: "",
+    findings: {
+      classification: "insufficient_information",
+      summary: "The runtime lacks the host response",
+      missingInformation: "What exact response did Work display?",
+      repository: "dk-code-factory/code-factory-plugin",
+    },
+    fixes: [],
+    releases: [],
+    evidence: [
+      {
+        origin: "runtime:manifest",
+        sha256: "abc",
+        bytes: 200,
+        at,
+        truncated: false,
+      },
+    ],
+    history: [
+      {
+        status: "needs_information",
+        detail: "Host display unavailable locally",
+        at,
+      },
+    ],
+    issueSync: { ...fresh },
+    releaseSync: { ...fresh },
+  };
+}
+test("reported issues shares ledger search, information requests and evidence recovery", async ({
+  page,
+}) => {
+  const report = reportFixture();
+  const { ui, calls } = await host(page, { reports: [report] });
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  await expect(detail).toContainText("What exact response did Work display?");
+  await expect(detail).toContainText("Stable availability: Unknown");
+  await expect(detail).toContainText(
+    "Observed installed Code Factory version: Unknown",
+  );
+  await ui
+    .getByLabel("What did the host display?")
+    .fill("Work displayed an expired request error");
+  await ui.getByRole("button", { name: "Add evidence", exact: true }).click();
+  await expect(detail).toContainText("Work displayed an expired request error");
+  await expect(detail.getByRole("definition").first()).toHaveText("queued");
+  expect(
+    calls.find((c) => c.name === "add_issue_evidence")?.arguments,
+  ).toMatchObject({
+    id: "report-1",
+    text: "Work displayed an expired request error",
+  });
+  expect(
+    calls.find((c) => c.name === "add_issue_evidence")?.arguments
+      .idempotencyKey,
+  ).toBeTruthy();
+  await ui.getByLabel("Search reports").fill("missing");
+  await expect(ui.getByLabel("Report list")).toContainText("No reports match");
+  await ui.getByLabel("Search reports").fill("stale");
+  await expect(
+    ui.getByRole("button", { name: "Agents: Stale response" }),
+  ).toBeVisible();
+  await ui.getByRole("button", { name: "Refresh issues and releases" }).click();
+  await expect
+    .poll(() => calls.some((c) => c.name === "refresh_issue_reports"))
+    .toBeTruthy();
+  expect(calls.some((c) => c.name === "start_run")).toBeFalsy();
+});
+test("reported issues displays independent closure, prerelease delivery and explicit workflow recovery", async ({
+  page,
+}) => {
+  const report = reportFixture();
+  report.processing = "needs_attention";
+  report.outcome = "filed";
+  report.issue = {
+    repository: "dk-code-factory/code-factory-plugin",
+    number: 17,
+    url: "https://github.com/dk-code-factory/code-factory-plugin/issues/17",
+    state: "closed",
+    closureReason: "completed",
+  };
+  report.releases = [
+    {
+      repository: "dk-code-factory/agent-workflow",
+      version: "v2.0.0-rc1",
+      componentVersion: "2.0.0-rc1",
+      publishedAt: "2026-10-25T12:00:00Z",
+      url: "https://github.com/dk-code-factory/agent-workflow/releases/tag/v2.0.0-rc1",
+      commit: "abc",
+      prerelease: true,
+    },
+  ];
+  report.releases[0].prerelease = true;
+  report.releaseSync.error = "GitHub rate limit";
+  const { ui, calls } = await host(page, { reports: [report] });
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  await expect(detail).toContainText(
+    "State: closed · Closure reason: completed",
+  );
+  await expect(detail).toContainText("Linked fix: Unknown");
+  await expect(detail).toContainText("Stable availability: Unknown");
+  await expect(detail).toContainText(
+    "Prerelease availability: dk-code-factory/agent-workflow v2.0.0-rc1",
+  );
+  await expect(detail).toContainText("GitHub rate limit");
+  const resume = ui.getByRole("button", { name: "Resume or reconcile report" });
+  await expect(resume).toBeDisabled();
+  await ui
+    .getByLabel("Recovery note")
+    .fill("Inspected stopped workflow attempts and verified no pending writes");
+  await ui
+    .getByRole("checkbox", { name: "I inspected the retained workflow" })
+    .check();
+  await resume.click();
+  await expect(detail).toContainText("Recovery admitted");
+  expect(
+    calls.find((c) => c.name === "resume_issue_report")?.arguments,
+  ).toMatchObject({ id: "report-1", reconciled: true });
+  await ui.getByRole("button", { name: "Open GitHub issue #17" }).click();
+});
+
+test("reported issues paginates and filters processing component and version", async ({
+  page,
+}) => {
+  const reports = Array.from({ length: 32 }, (_, i) =>
+    reportFixture(`report-${String(i).padStart(2, "0")}`),
+  );
+  reports[31].processing = "complete";
+  reports[31].component = "plugin";
+  reports[31].installedVersion = "1.2.3";
+  reports[31].observation.actual = "Final report";
+  const { ui, calls } = await host(page, { reports });
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  const list = ui.getByLabel("Report list", { exact: true });
+  await expect(list.getByRole("article")).toHaveCount(30);
+  await ui.getByRole("button", { name: "Load more reports" }).click();
+  await expect(list.getByRole("article")).toHaveCount(32);
+  await ui.getByLabel("Processing", { exact: true }).selectOption("complete");
+  await ui.getByLabel("Component", { exact: true }).fill("plugin");
+  await ui.getByLabel("Version", { exact: true }).fill("1.2.3");
+  await expect(list.getByRole("article")).toHaveCount(1);
+  await expect(list).toContainText("Final report");
+  await expect
+    .poll(() =>
+      calls.some(
+        (c) =>
+          c.name === "list_issue_reports" &&
+          c.arguments.status === "complete" &&
+          c.arguments.component === "plugin" &&
+          c.arguments.version === "1.2.3",
+      ),
+    )
+    .toBeTruthy();
 });

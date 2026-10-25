@@ -14,6 +14,7 @@ use `S-FACTORY` and its identity, navigation, feedback and continuity panes.
 | `PAGE-INBOX` | Search and triage synchronized issues/PRs without starting work. | `P-INBOX-QUERY`, `P-INBOX-LIST`, `P-ITEM-DETAIL`. | Initial page after data loads, or Inbox navigation. Selection changes detail in place. Launch action opens `D-LAUNCH`; Add repository goes to Settings. |
 | `PAGE-AGENTS` | Inspect retained work, respond to requests and continue or recover a task. | `P-RUN-LIST`, `P-RUN-DETAIL`. | Agents navigation, successful launch, Needs attention, or Open agent chat. Selecting a run changes detail in place. Attention notices open `D-ATTENTION`. |
 | `PAGE-SETTINGS` | Configure repository access, priorities, work profiles, skills and health inspection. | `P-REPOSITORIES`, `P-POLICIES`, `P-PROFILES`, `P-SKILLS`, `P-DIAGNOSTICS`. | Settings navigation or Add repository. Save actions update data in place. Leave through navigation; local unsaved drafts are not persisted across remount. |
+| `PAGE-REPORTS` | Discover suspected defects and inspect investigation and delivery evidence. | Report list and selected report details. | Entered from Reported issues navigation; journal changes refresh both panes. |
 <!-- /specs:pages-0 -->
 
 The app has no separate item-detail, run-detail, PR-checks, ticket, profile or

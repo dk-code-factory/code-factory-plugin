@@ -25,7 +25,7 @@ for a clickable navigation control.
 <!-- specs:connections-0 -->
 | ID | From → to | Trigger and carried context | Result/type |
 | --- | --- | --- | --- |
-| `C-NAVIGATE` | `W-NAVIGATION` → one embedded `PAGE-*` | Inbox/Agents/Settings click. | Navigates. Keeps shell selections/search/filter; remounts page-local components. |
+| `C-NAVIGATE` | `W-NAVIGATION` → one embedded `PAGE-*` | Inbox/Agents/Reported issues/Settings click. | Navigates. Keeps shell selections/search/filter; remounts page-local components. |
 | `C-FILTER` | `W-INBOX-QUERY` → `P-INBOX-LIST` | Search text and filter value. | Selects visible rows locally. The selected detail may remain visible even if its row no longer matches. |
 | `C-SELECT-ITEM` | `W-ITEM-ROW[itemId]` → `P-ITEM-DETAIL` | Click a row; item ID. | Selects and loads detail; the displayed revision is marked read. This can change unread indicators in the list. |
 | `C-EMPTY-SETUP` | `W-INBOX-EMPTY` → `PAGE-SETTINGS` | Add repository click. | Navigates without saving settings or automatically focusing a field. |
@@ -61,6 +61,10 @@ for a clickable navigation control.
 | `C-BROWSER-LAB` | `W-BROWSER-LAB` controls → isolated browser → screenshot/location | Explicit lab navigation/click/key/scroll operations. | Developer utility feedback loop; never an Inbox/Agents page transition. |
 | `C-QUESTION-RECOVERY` | Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention. | Owning recovery or attention identity. | Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention. |
 | `C-DISMISS-QUESTION` | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. | Owning recovery or attention identity. | No reply needed dismisses a pending textual fallback without submitting an answer or advancing work. |
+| `C-REPORT-SELECT` | W-REPORT-LIST → W-REPORT-DETAIL | Report row selection | Read selected report without starting an agent. |
+| `C-REPORT-EVIDENCE` | W-REPORT-DETAIL → W-REPORT-DETAIL | Add evidence | Append idempotent host observations and queue reports waiting for information. |
+| `C-REPORT-RECOVER` | W-REPORT-DETAIL → W-REPORT-DETAIL | Resume or reconcile report | Validate recovery prerequisites and acknowledgement before resuming retained work. |
+| `C-REPORT-REFRESH` | W-REPORT-LIST → W-REPORT-LIST and W-REPORT-DETAIL | Refresh issues and releases | Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent. |
 <!-- /specs:connections-0 -->
 
 ## Navigation overview
@@ -72,6 +76,7 @@ flowchart LR
     N66["PAGE-INBOX"]
     N67["PAGE-AGENTS"]
     N68["PAGE-SETTINGS"]
+    N111["PAGE-REPORTS"]
     N6["W-INBOX-QUERY"]
     N45["P-INBOX-LIST"]
     N8["W-ITEM-ROW"]
@@ -115,9 +120,12 @@ flowchart LR
     N73["PAGE-LOCAL-TUNNEL-SETUP"]
     N39["W-BROWSER-LAB"]
     N74["PAGE-BROWSER-LAB"]
+    N114["W-REPORT-LIST"]
+    N115["W-REPORT-DETAIL"]
     N2 -->|"C-NAVIGATE"| N66
     N2 -->|"C-NAVIGATE"| N67
     N2 -->|"C-NAVIGATE"| N68
+    N2 -->|"C-NAVIGATE"| N111
     N6 -->|"C-FILTER"| N45
     N8 -->|"C-SELECT-ITEM"| N46
     N9 -->|"C-EMPTY-SETUP"| N68
@@ -176,6 +184,11 @@ flowchart LR
     N19 -->|"C-QUESTION-RECOVERY"| N19
     N26 -->|"C-DISMISS-QUESTION"| N70
     N26 -->|"C-DISMISS-QUESTION"| N48
+    N114 -->|"C-REPORT-SELECT"| N115
+    N115 -->|"C-REPORT-EVIDENCE"| N115
+    N115 -->|"C-REPORT-RECOVER"| N115
+    N114 -->|"C-REPORT-REFRESH"| N114
+    N114 -->|"C-REPORT-REFRESH"| N115
 ```
 <!-- /specs:connections -->
 

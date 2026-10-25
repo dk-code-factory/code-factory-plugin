@@ -23,6 +23,27 @@ import (
 //go:embed dist/code-factory.zip
 var packaged []byte
 
+// Version identifies the plugin bytes shipped with this API build, independently
+// of the version a host reports observing in its installed package.
+func Version() string {
+	archive, err := zip.NewReader(bytes.NewReader(packaged), int64(len(packaged)))
+	if err != nil {
+		return "Unknown"
+	}
+	f, err := archive.Open("plugin.json")
+	if err != nil {
+		return "Unknown"
+	}
+	defer f.Close()
+	var manifest struct {
+		Version string `json:"version"`
+	}
+	if json.NewDecoder(f).Decode(&manifest) != nil || manifest.Version == "" {
+		return "Unknown"
+	}
+	return manifest.Version
+}
+
 type Bundle struct {
 	files    map[string][]byte
 	archive  []byte

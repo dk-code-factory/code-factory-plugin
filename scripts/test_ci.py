@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Exercise event comparisons, bootstrap boundaries and artifact promotion."""
 import json
+import io
+import tarfile
+import zipfile
 import os
 from pathlib import Path
 import subprocess
@@ -83,10 +86,46 @@ class HostedCITests(unittest.TestCase):
     def assets(self):
         directory = self.root / "dist"
         directory.mkdir()
-        (directory / "code-factory-test-linux-amd64.tar.gz").write_bytes(b"archive")
-        (directory / "code-factory-plugin-test.zip").write_bytes(b"plugin")
+        with tarfile.open(directory / "code-factory-test-linux-amd64.tar.gz", "w:gz") as archive:
+            body = json.dumps({"version": "test-daemon"}).encode()
+            member = tarfile.TarInfo("code-factory-test/release.json")
+            member.size = len(body)
+            archive.addfile(member, io.BytesIO(body))
+        with zipfile.ZipFile(directory / "code-factory-plugin-test.zip", "w") as archive:
+            for name in ("plugin.json", ".codex-plugin/plugin.json"):
+                archive.writestr(name, json.dumps({"version": "test-plugin"}))
         ci.artifact_manifest(directory, self.first)
         return directory
+
+    def test_component_versions_come_from_promoted_packages(self):
+        directory = self.assets()
+        data = json.loads((directory / "CI-MANIFEST.json").read_text())
+        self.assertEqual(data["components"]["plugin"]["version"], "test-plugin")
+        self.assertEqual(data["components"]["code-factory"]["version"], "test-daemon")
+        data["components"]["plugin"]["version"] = "invented"
+        (directory / "CI-MANIFEST.json").write_text(json.dumps(data))
+        with self.assertRaisesRegex(ValueError, "provenance"):
+            ci.verify_artifacts(directory, self.first)
+
+    def test_fixed_issue_requires_ancestor_commit_and_explicit_issue_reference(self):
+        registry = self.root / "release/fixed-issues.json"
+        registry.parent.mkdir()
+        components = {"code-factory": {"version": "test"}}
+        fix = {"issue": "dk-code-factory/code-factory-plugin#17", "component": "code-factory", "commit": self.first}
+        registry.write_text(json.dumps({"version": 1, "fixes": [fix]}))
+        with self.assertRaisesRegex(ValueError, "explicitly reference"):
+            ci.fixed_issues(self.first, components)
+        self.git("commit", "--allow-empty", "-m", "Fixes dk-code-factory/code-factory-plugin#17")
+        fixed = self.git("rev-parse", "HEAD")
+        fix["commit"] = fixed
+        registry.write_text(json.dumps({"version": 1, "fixes": [fix]}))
+        self.assertEqual(ci.fixed_issues(fixed, components), [fix])
+        with self.assertRaises(subprocess.CalledProcessError):
+            ci.fixed_issues(self.first, components)
+        fix["component"] = "unpackaged-dependency"
+        registry.write_text(json.dumps({"version": 1, "fixes": [fix]}))
+        with self.assertRaises(ValueError):
+            ci.fixed_issues(fixed, components)
 
     def test_promoted_assets_require_exact_commit_and_unchanged_bytes(self):
         directory = self.assets()

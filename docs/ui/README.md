@@ -131,6 +131,11 @@ flowchart TD
     N72["PAGE-OWNER-CONSENT"]
     N73["PAGE-LOCAL-TUNNEL-SETUP"]
     N74["PAGE-BROWSER-LAB"]
+    N111["PAGE-REPORTS"]
+    N112["P-REPORT-LIST"]
+    N113["P-REPORT-DETAIL"]
+    N114["W-REPORT-LIST"]
+    N115["W-REPORT-DETAIL"]
     N0 --> N40
     N0 --> N41
     N0 --> N42
@@ -140,6 +145,7 @@ flowchart TD
     N0 --> N68
     N0 --> N69
     N0 --> N70
+    N0 --> N111
     N66 --> N44
     N66 --> N45
     N66 --> N46
@@ -162,6 +168,8 @@ flowchart TD
     N72 --> N63
     N73 --> N64
     N74 --> N65
+    N111 --> N112
+    N111 --> N113
     I0["P-IDENTITY/W-IDENTITY"]
     N40 --> I0
     I0 -.->|"type"| N1
@@ -288,6 +296,12 @@ flowchart TD
     I41["P-BROWSER-LAB/W-BROWSER-LAB"]
     N65 --> I41
     I41 -.->|"type"| N39
+    I42["P-REPORT-LIST/W-REPORT-LIST"]
+    N112 --> I42
+    I42 -.->|"type"| N114
+    I43["P-REPORT-DETAIL/W-REPORT-DETAIL"]
+    N113 --> I43
+    I43 -.->|"type"| N115
 ```
 <!-- /specs:containment -->
 
@@ -358,6 +372,8 @@ No installed UI, authentication, service or browser-session change is implied.
 | `P-OWNER-CONSENT/W-OWNER-CONSENT` | `W-OWNER-CONSENT` | `P-OWNER-CONSENT` | one per displayed pane |
 | `P-LOCAL-TUNNEL-KEY/W-LOCAL-TUNNEL-KEY` | `W-LOCAL-TUNNEL-KEY` | `P-LOCAL-TUNNEL-KEY` | one per displayed pane |
 | `P-BROWSER-LAB/W-BROWSER-LAB` | `W-BROWSER-LAB` | `P-BROWSER-LAB` | one per displayed pane |
+| `P-REPORT-LIST/W-REPORT-LIST` | `W-REPORT-LIST` | `P-REPORT-LIST` | one per report page |
+| `P-REPORT-DETAIL/W-REPORT-DETAIL` | `W-REPORT-DETAIL` | `P-REPORT-DETAIL` | one per report page |
 <!-- /specs:instances -->
 
 ## Canonical entity names
@@ -476,4 +492,13 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="C-BROWSER-LAB"></a>`C-BROWSER-LAB` | connection | [Browser lab connection](../glossary/README.md#ui-c-browser-lab), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="C-QUESTION-RECOVERY"></a>`C-QUESTION-RECOVERY` | connection | [Question recovery data connection](../glossary/README.md#ui-c-question-recovery), [Question recovery](../glossary/README.md#question-recovery) |
 | <a id="C-DISMISS-QUESTION"></a>`C-DISMISS-QUESTION` | connection | [Question dismissal connection](../glossary/README.md#ui-c-dismiss-question), [Question recovery](../glossary/README.md#question-recovery) |
+| <a id="PAGE-REPORTS"></a>`PAGE-REPORTS` | page | [Reported issues page](../glossary/README.md#ui-page-reports), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="P-REPORT-LIST"></a>`P-REPORT-LIST` | pane | [Report list pane](../glossary/README.md#ui-p-report-list), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="P-REPORT-DETAIL"></a>`P-REPORT-DETAIL` | pane | [Report detail pane](../glossary/README.md#ui-p-report-detail), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="W-REPORT-LIST"></a>`W-REPORT-LIST` | widget | [Report list widget](../glossary/README.md#ui-w-report-list), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="W-REPORT-DETAIL"></a>`W-REPORT-DETAIL` | widget | [Report detail widget](../glossary/README.md#ui-w-report-detail), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-SELECT"></a>`C-REPORT-SELECT` | connection | [Report selection connection](../glossary/README.md#ui-c-report-select), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-EVIDENCE"></a>`C-REPORT-EVIDENCE` | connection | [Report evidence connection](../glossary/README.md#ui-c-report-evidence), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-RECOVER"></a>`C-REPORT-RECOVER` | connection | [Report recovery connection](../glossary/README.md#ui-c-report-recover), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-REFRESH"></a>`C-REPORT-REFRESH` | connection | [Report refresh connection](../glossary/README.md#ui-c-report-refresh), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
 <!-- /specs:terminology -->

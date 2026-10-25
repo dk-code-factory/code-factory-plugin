@@ -115,6 +115,7 @@ small,
 }
 nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 12px 30px;
   border-bottom: 1px solid var(--line);
@@ -421,4 +422,25 @@ footer {
 
 .recovery-progress button {
   color: var(--accent);
+}
+
+.report-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(280px, 2fr);
+  gap: 1rem;
+}
+.report-layout article {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.report-layout dd {
+  margin-bottom: 0.7rem;
+  white-space: pre-wrap;
+}
+@media (max-width: 700px) {
+  .report-layout {
+    grid-template-columns: 1fr;
+  }
 }

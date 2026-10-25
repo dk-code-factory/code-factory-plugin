@@ -3047,6 +3047,126 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The local dismissal connection for a textual question."
+    },
+    {
+      "id": "issue-report",
+      "name": "Issue report",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A retained observation of suspected defective behavior with its investigation and delivery evidence."
+    },
+    {
+      "id": "report-ledger",
+      "name": "Report ledger",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The persistent collection of issue reports and their independent histories."
+    },
+    {
+      "id": "report-processing",
+      "name": "Report processing state",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The progress of an observation through investigation, information requests, publication and recovery."
+    },
+    {
+      "id": "report-outcome",
+      "name": "Report outcome",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The investigation disposition identifying a filed issue, a duplicate or explained behavior."
+    },
+    {
+      "id": "evidence-manifest",
+      "name": "Evidence manifest",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An inventory of evidence origins, capture times, content identities, omissions and truncation."
+    },
+    {
+      "id": "delivery-evidence",
+      "name": "Delivery evidence",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Verified relationships among a fix, its component version and a published package."
+    },
+    {
+      "id": "fixed-issue",
+      "name": "Fixed-issue reference",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An explicit association of an issue with the source commit that corrects it."
+    },
+    {
+      "id": "element-w-navigation-reports",
+      "name": "reported issues",
+      "aliases": [],
+      "category": "element",
+      "definition": "The reported issues destination control in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "ui-page-reports",
+      "name": "Reported issues page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The page presenting retained issue reports."
+    },
+    {
+      "id": "ui-p-report-list",
+      "name": "Report list pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The pane containing report discovery and filtering controls."
+    },
+    {
+      "id": "ui-p-report-detail",
+      "name": "Report detail pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The pane presenting the selected report and its recovery controls."
+    },
+    {
+      "id": "ui-w-report-list",
+      "name": "Report list widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The searchable and paginated presentation of retained reports."
+    },
+    {
+      "id": "ui-w-report-detail",
+      "name": "Report detail widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The presentation of one report, its investigation, evidence and delivery state."
+    },
+    {
+      "id": "ui-c-report-select",
+      "name": "Report selection connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The transition from a report row to its details."
+    },
+    {
+      "id": "ui-c-report-evidence",
+      "name": "Report evidence connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The addition of an observation to a retained report."
+    },
+    {
+      "id": "ui-c-report-recover",
+      "name": "Report recovery connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The explicit recovery of retained report work."
+    },
+    {
+      "id": "ui-c-report-refresh",
+      "name": "Report refresh connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The refresh of issue and delivery evidence."
     }
   ]
 }

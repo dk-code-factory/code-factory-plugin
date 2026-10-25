@@ -19,7 +19,8 @@
         "PAGE-AGENTS",
         "PAGE-SETTINGS",
         "D-LAUNCH",
-        "D-ATTENTION"
+        "D-ATTENTION",
+        "PAGE-REPORTS"
       ],
       "elements": [],
       "states": [],
@@ -65,7 +66,8 @@
         "UI-ASSEMBLED",
         "API-UI",
         "UI-AXE-CORE",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-REPORTS-NAV-NARROW"
       ],
       "gaps": [
         {
@@ -178,8 +180,8 @@
         "browser",
         "go"
       ],
-      "element_description": "**mark**, **name** “Code Factory”, **subtitle**, **connection** text.",
-      "state_description": "Connection begins “Connecting to Work…”, then Connected or Disconnected/reconnecting.",
+      "element_description": "**mark**, **name** \u201cCode Factory\u201d, **subtitle**, **connection** text.",
+      "state_description": "Connection begins \u201cConnecting to Work\u2026\u201d, then Connected or Disconnected/reconnecting.",
       "interactions": "Connection status is feedback, not a reconnect button."
     },
     {
@@ -219,6 +221,10 @@
         {
           "id": "W-NAVIGATION.attention-count",
           "term": "element-w-navigation-attention-count"
+        },
+        {
+          "id": "W-NAVIGATION.reports",
+          "term": "element-w-navigation-reports"
         }
       ],
       "states": [
@@ -265,7 +271,9 @@
         "UI-TRIAGE",
         "UI-ASSEMBLED",
         "API-UI",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-NAV-NARROW"
       ],
       "gaps": [
         {
@@ -283,8 +291,8 @@
         "browser",
         "go"
       ],
-      "element_description": "**inbox**, **agents**, **settings** buttons; **current** marker; **agents-count** badge; **needs-attention** button and **attention-count**.",
-      "state_description": "Pending requests determine badges/counts; current page is highlighted.",
+      "element_description": "**inbox**, **agents**, **reports**, **settings** buttons; **current** marker; **agents-count** badge; **needs-attention** button and **attention-count**.",
+      "state_description": "Pending requests determine badges/counts; current page is highlighted. Navigation wraps to available rows within the viewport, including the Reported issues destination.",
       "interactions": "Tab actions select a page. Needs attention selects Agents and opens the first pending request if one exists; it does not itself select that request's run."
     },
     {
@@ -1048,7 +1056,7 @@
         "go"
       ],
       "element_description": "**loading** / **select-item** prompt; **id**, **kind**, **state**, **title**, **body**.",
-      "state_description": "No selection shows a prompt; a selected item shows Loading until detail and matching snapshot entry are available. Empty body shows “No description.”",
+      "state_description": "No selection shows a prompt; a selected item shows Loading until detail and matching snapshot entry are available. Empty body shows \u201cNo description.\u201d",
       "interactions": "Loading detail causes the exact displayed revision to be marked read. It does not launch an agent."
     },
     {
@@ -1151,7 +1159,7 @@
         "browser",
         "go"
       ],
-      "element_description": "**launch** “Launch agent”; **unread** “Mark unread”; **acknowledge** “Acknowledge new”; **record-action**.",
+      "element_description": "**launch** \u201cLaunch agent\u201d; **unread** \u201cMark unread\u201d; **acknowledge** \u201cAcknowledge new\u201d; **record-action**.",
       "state_description": "Available with item detail. These are separate actions, not one combined completion state.",
       "interactions": "Launch opens `D-LAUNCH`. Successful item mutations refresh the shared snapshot and reread selected detail/history without resetting independent drafts or repeating displayed-revision reads."
     },
@@ -2213,7 +2221,7 @@
       ],
       "element_description": "**heading**, **live-region**, repeated **block-label** and **block-text**; **waiting**, **loading-more**, **restart-history**. Heading is Technical transcript. Automatic inputs are labelled Question recovery; real user replies retain You.",
       "state_description": "Displays conversation, commands/output, summary, plan, changes and run errors when present. Reads history in pages, retaining up to 1,000 events in the view.",
-      "interactions": "Additional pages load automatically. “View history from the beginning” resets the displayed cursor/events when the retained-event threshold is reached; it does not restart the task. Fallback inspection selects the owning Agents pane and its technical transcript. Agent text including UI_ANSWER_OK remains literal transcript content and never creates application status."
+      "interactions": "Additional pages load automatically. \u201cView history from the beginning\u201d resets the displayed cursor/events when the retained-event threshold is reached; it does not restart the task. Fallback inspection selects the owning Agents pane and its technical transcript. Agent text including UI_ANSWER_OK remains literal transcript content and never creates application status."
     },
     {
       "id": "W-MESSAGE",
@@ -2306,7 +2314,7 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**text** “Message agent” textarea; **send** button.",
+      "element_description": "**text** \u201cMessage agent\u201d textarea; **send** button.",
       "state_description": "Send is disabled while submitting, for blank/whitespace text, or unless status is idle/running/waiting. Send is also disabled while recovery is active; answer the request or take over first.",
       "interactions": "Sends follow-up or current-turn steering on the selected run. Success clears text; failure preserves it and shows shell error feedback. Drafts stay with their run across navigation and fallback inspection. Successful sends clear only the unchanged submitted draft; failed/uncertain sends retain text."
     },
@@ -3831,7 +3839,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -3854,7 +3862,7 @@
         "tooling",
         "go"
       ],
-      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”.",
+      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** \u201cConnect Code Factory\u201d, **deny** \u201cCancel\u201d.",
       "state_description": "Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages.",
       "interactions": "Allow or Deny consumes the request and redirects to its registered host callback. No credential field."
     },
@@ -4131,7 +4139,8 @@
         "UI-TRIAGE",
         "UI-ASSEMBLED",
         "API-UI",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-REPORTS-NAV-NARROW"
       ],
       "gaps": [
         {
@@ -5672,7 +5681,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6299,7 +6308,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6464,7 +6473,9 @@
         "UI-TRIAGE",
         "UI-ASSEMBLED",
         "API-UI",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-NAV-NARROW"
       ],
       "gaps": [
         {
@@ -6482,8 +6493,8 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-NAVIGATION` → one embedded `PAGE-*`",
-      "trigger": "Inbox/Agents/Settings click.",
+      "endpoint_description": "`W-NAVIGATION` \u2192 one embedded `PAGE-*`",
+      "trigger": "Inbox/Agents/Reported issues/Settings click.",
       "interactions": "Navigates. Keeps shell selections/search/filter; remounts page-local components.",
       "from": [
         "W-NAVIGATION"
@@ -6491,7 +6502,8 @@
       "to": [
         "PAGE-INBOX",
         "PAGE-AGENTS",
-        "PAGE-SETTINGS"
+        "PAGE-SETTINGS",
+        "PAGE-REPORTS"
       ],
       "connection_type": "connection-navigates",
       "external_boundary": false
@@ -6565,7 +6577,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-INBOX-QUERY` → `P-INBOX-LIST`",
+      "endpoint_description": "`W-INBOX-QUERY` \u2192 `P-INBOX-LIST`",
       "trigger": "Search text and filter value.",
       "interactions": "Selects visible rows locally. The selected detail may remain visible even if its row no longer matches.",
       "from": [
@@ -6649,7 +6661,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ITEM-ROW[itemId]` → `P-ITEM-DETAIL`",
+      "endpoint_description": "`W-ITEM-ROW[itemId]` \u2192 `P-ITEM-DETAIL`",
       "trigger": "Click a row; item ID.",
       "interactions": "Selects and loads detail; the displayed revision is marked read. This can change unread indicators in the list.",
       "from": [
@@ -6732,7 +6744,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-INBOX-EMPTY` → `PAGE-SETTINGS`",
+      "endpoint_description": "`W-INBOX-EMPTY` \u2192 `PAGE-SETTINGS`",
       "trigger": "Add repository click.",
       "interactions": "Navigates without saving settings or automatically focusing a field.",
       "from": [
@@ -6826,7 +6838,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read.",
+      "endpoint_description": "`W-ITEM-ACTIONS` \u2192 persisted item state \u2192 shared snapshot indicators; detail history is a separately retained read.",
       "trigger": "Unread, acknowledge New or record action; item ID.",
       "interactions": "Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged.",
       "from": [
@@ -6906,7 +6918,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-PRIORITY` → item priority → list/detail",
+      "endpoint_description": "`W-PRIORITY` \u2192 item priority \u2192 list/detail",
       "trigger": "Save override or clear override; item ID and value.",
       "interactions": "Submits then refreshes; does not modify provider labels.",
       "from": [
@@ -6996,7 +7008,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-RELATIONSHIPS` → selected item's relationships/context",
+      "endpoint_description": "`W-RELATIONSHIPS` \u2192 selected item's relationships/context",
       "trigger": "Add submits `source` and `target`; Remove submits `source`, `target` and `remove: true`.",
       "interactions": "Submits local Add/Remove, then refreshes selected relationships without clearing unrelated drafts. A late earlier response cannot replace later selected detail.",
       "from": [
@@ -7077,7 +7089,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS.launch` → `D-LAUNCH`",
+      "endpoint_description": "`W-ITEM-ACTIONS.launch` \u2192 `D-LAUNCH`",
       "trigger": "Selected item entry.",
       "interactions": "Opens editor using current profiles and skills. No process starts.",
       "from": [
@@ -7157,7 +7169,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-EDITOR.profile` → its editable fields",
+      "endpoint_description": "`W-LAUNCH-EDITOR.profile` \u2192 its editable fields",
       "trigger": "Select a profile.",
       "interactions": "Replaces prompt/model/effort/skill drafts; keeps the current base draft.",
       "from": [
@@ -7241,7 +7253,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-EDITOR.review` → `P-LAUNCH-REVIEW`",
+      "endpoint_description": "`W-LAUNCH-EDITOR.review` \u2192 `P-LAUNCH-REVIEW`",
       "trigger": "Item, profile, edited prompt/model/effort/skills/base.",
       "interactions": "Submits preparation and shows a durable prepared snapshot. Failure retains the editor and its drafts with a dialog-local alert; no Start occurs.",
       "from": [
@@ -7323,7 +7335,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.edit` → `P-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.edit` \u2192 `P-LAUNCH-EDITOR`",
       "trigger": "Edit launch click.",
       "interactions": "Returns to the editor. The preceding prepared record is retained, not modified/deleted.",
       "from": [
@@ -7416,7 +7428,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.start` → `PAGE-AGENTS`/`P-RUN-DETAIL`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.start` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`",
       "trigger": "Prepared run ID.",
       "interactions": "Busy disables Start during a request. Received success selects the run; lost/error response retains review with a dialog-local alert. Retrying an already accepted run rejects; inspect that same retained run.",
       "from": [
@@ -7502,7 +7514,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-RUN-ROW[runId]` → `P-RUN-DETAIL`",
+      "endpoint_description": "`W-RUN-ROW[runId]` \u2192 `P-RUN-DETAIL`",
       "trigger": "Click a run row.",
       "interactions": "Selects run, pending requests and transcript context. Does not resume it.",
       "from": [
@@ -7602,7 +7614,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-RUN-CONTROLS` → selected run → Agents widgets",
+      "endpoint_description": "`W-RUN-CONTROLS` \u2192 selected run \u2192 Agents widgets",
       "trigger": "Interrupt, Resume or Cleanup; selected run ID.",
       "interactions": "Submits an explicit action, refreshing snapshot on success or failure. Cleanup retires/stales the retained session before dirty refusal; the interrupted UI retains work/history/draft and requires explicit Resume.",
       "from": [
@@ -7690,7 +7702,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-MESSAGE` → selected run → `W-TRANSCRIPT`",
+      "endpoint_description": "`W-MESSAGE` \u2192 selected run \u2192 `W-TRANSCRIPT`",
       "trigger": "Message text and displayed current-turn context.",
       "interactions": "Submits idle follow-up or active steering. Stale active-turn responses fail; success clears the message draft.",
       "from": [
@@ -7774,7 +7786,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` → `D-ATTENTION`",
+      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` \u2192 `D-ATTENTION`",
       "trigger": "Notice click; request ID belonging to the selected run.",
       "interactions": "Opens that request without answering.",
       "from": [
@@ -7858,7 +7870,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-NAVIGATION.needs-attention` → Agents and optional `D-ATTENTION`",
+      "endpoint_description": "`W-NAVIGATION.needs-attention` \u2192 Agents and optional `D-ATTENTION`",
       "trigger": "Current pending-request list.",
       "interactions": "Navigates to Agents; opens its first pending request if present. It does not automatically change selected run.",
       "from": [
@@ -7944,7 +7956,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-DIALOG-FRAME.open-chat` → `PAGE-AGENTS`/`P-RUN-DETAIL`; textual fallback inspection also selects W-TRANSCRIPT.",
+      "endpoint_description": "`W-DIALOG-FRAME.open-chat` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`; textual fallback inspection also selects W-TRANSCRIPT.",
       "trigger": "Current attention's owning run ID.",
       "interactions": "Closes attention, selects its run and navigates to Agents. No answer is submitted. Text fallback uses Inspect technical transcript and preserves the owning run draft.",
       "from": [
@@ -8036,7 +8048,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state",
+      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` \u2192 request/run state",
       "trigger": "Response matched to current request ID.",
       "interactions": "Submits once through request identity validation. Success closes attention, selects the owner and starts a five-second local confirmation independently of refresh. Failed/uncertain submissions never confirm or replay; refresh failure after success is reported separately.",
       "from": [
@@ -8126,7 +8138,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "Launch/attention close control → underlying page",
+      "endpoint_description": "Launch/attention close control \u2192 underlying page",
       "trigger": "Close click or Escape inside the active dialog.",
       "interactions": "Dismisses only that dialog and restores its connected opener when permitted. No attention answer or interrupt is sent.",
       "from": [
@@ -8208,7 +8220,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` → repository summary / sync inputs",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` \u2192 repository summary / sync inputs",
       "trigger": "Repository ID, checkout and default base.",
       "interactions": "Submits and refreshes settings/health. Inbox items arrive through background synchronization, not an implied immediate import.",
       "from": [
@@ -8290,7 +8302,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` → profile and launch skill choices",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` \u2192 profile and launch skill choices",
       "trigger": "Draft checkout or fallback root.",
       "interactions": "Loads/discovers skills and refreshes shared choices without saving the repository first.",
       "from": [
@@ -8372,7 +8384,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-POLICY-SETTINGS` → config / priority assessment inputs",
+      "endpoint_description": "`W-POLICY-SETTINGS` \u2192 config / priority assessment inputs",
       "trigger": "Parsed label mapping, policy, notification setting, optional tenant/email.",
       "interactions": "Submits configuration; later background assessment can update priority displays. Does not create a host subscription.",
       "from": [
@@ -8460,7 +8472,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-JIRA-CREDENTIAL` → private credential store",
+      "endpoint_description": "`W-JIRA-CREDENTIAL` \u2192 private credential store",
       "trigger": "Dedicated password-field submission.",
       "interactions": "Saves a nonempty token through the authenticated app tool and clears the reusable password field on success. Stored value is not supplied back to a widget. This is separate from the temporary local setup form and its expiry/single-use checks.",
       "from": [
@@ -8543,7 +8555,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-PROFILE-SETTINGS` → future `W-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-PROFILE-SETTINGS` \u2192 future `W-LAUNCH-EDITOR`",
       "trigger": "Saved profile draft.",
       "interactions": "Refreshes available/default launch settings; existing prepared snapshots stay unchanged.",
       "from": [
@@ -8626,7 +8638,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-SKILL-SETTINGS` → profile/launch skill choices",
+      "endpoint_description": "`W-SKILL-SETTINGS` \u2192 profile/launch skill choices",
       "trigger": "Managed skill name/instructions.",
       "interactions": "Refreshes shared skills; immutable prepared skill snapshots stay unchanged.",
       "from": [
@@ -8704,7 +8716,7 @@
       "suites": [
         "tooling"
       ],
-      "endpoint_description": "`W-DIAGNOSTICS` → its result display",
+      "endpoint_description": "`W-DIAGNOSTICS` \u2192 its result display",
       "trigger": "Check connection click.",
       "interactions": "Reads health, no repair or page transition.",
       "from": [
@@ -8801,7 +8813,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Shared updated state → Inbox/Agents/Settings summaries, shell counts",
+      "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
       "trigger": "Successful polling or action refresh.",
       "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts.",
       "from": [
@@ -8889,7 +8901,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "History pages → `W-TRANSCRIPT`",
+      "endpoint_description": "History pages \u2192 `W-TRANSCRIPT`",
       "trigger": "Selected run and current history cursor; optional reset to beginning.",
       "interactions": "Refreshes display only. Resetting history does not resume/replay agent work.",
       "from": [
@@ -8939,7 +8951,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "Package page links → artifacts / external host setup",
+      "endpoint_description": "Package page links \u2192 artifacts / external host setup",
       "trigger": "Download or follow documented setup instructions.",
       "interactions": "External. Missing registered app mapping can make browser download fail; it does not silently create a connection.",
       "from": [
@@ -8967,7 +8979,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -8990,7 +9002,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "External host → `PAGE-OWNER-CONSENT` → registered host callback",
+      "endpoint_description": "External host \u2192 `PAGE-OWNER-CONSENT` \u2192 registered host callback",
       "trigger": "Valid private request; Allow or Deny.",
       "interactions": "External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL.",
       "from": [
@@ -9074,7 +9086,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ELICITATION.open-authorization` → external authorization page",
+      "endpoint_description": "`W-ELICITATION.open-authorization` \u2192 external authorization page",
       "trigger": "Request-supplied URL opened through host.",
       "interactions": "External. Continue reports the user's completion decision; it does not independently prove external success.",
       "from": [
@@ -9122,7 +9134,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` → alternate local transport session",
+      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` \u2192 alternate local transport session",
       "trigger": "Single-use private setup input.",
       "interactions": "Submits and removes form on success; does not navigate into Settings or activate Jira.",
       "from": [
@@ -9170,7 +9182,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-BROWSER-LAB` controls → isolated browser → screenshot/location",
+      "endpoint_description": "`W-BROWSER-LAB` controls \u2192 isolated browser \u2192 screenshot/location",
       "trigger": "Explicit lab navigation/click/key/scroll operations.",
       "interactions": "Developer utility feedback loop; never an Inbox/Agents page transition.",
       "from": [
@@ -9274,6 +9286,376 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false
+    },
+    {
+      "id": "PAGE-REPORTS",
+      "kind": "page",
+      "terms": [
+        "ui-page-reports",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [
+        "P-REPORT-LIST",
+        "P-REPORT-DETAIL"
+      ],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY",
+        "UI-REPORTS-PAGE"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "purpose": "Discover suspected defects and inspect investigation and delivery evidence.",
+      "composition": "Report list and selected report details.",
+      "interactions": "Entered from Reported issues navigation; journal changes refresh both panes."
+    },
+    {
+      "id": "P-REPORT-LIST",
+      "kind": "pane",
+      "terms": [
+        "ui-p-report-list",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY",
+        "UI-REPORTS-PAGE"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "composition": "Search, processing/component/version filters, report rows, pagination and manual refresh.",
+      "context": "The shared persistent report ledger."
+    },
+    {
+      "id": "P-REPORT-DETAIL",
+      "kind": "pane",
+      "terms": [
+        "ui-p-report-detail",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "composition": "Observation, findings, missing information, evidence, GitHub and delivery, freshness and recovery.",
+      "context": "The selected durable report ID."
+    },
+    {
+      "id": "W-REPORT-LIST",
+      "kind": "widget",
+      "terms": [
+        "ui-w-report-list",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY",
+        "UI-REPORTS-PAGE"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "element_description": "Search and filters, report selectors, Load more reports and Refresh issues and releases.",
+      "state_description": "Empty and filtered lists are explicit; server pagination is bounded. Refresh starts no agent.",
+      "interactions": "Query changes reload reports; selection reads report details; journal updates refresh current state."
+    },
+    {
+      "id": "W-REPORT-DETAIL",
+      "kind": "widget",
+      "terms": [
+        "ui-w-report-detail",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "element_description": "Observation and findings, information request, evidence input, recovery note and acknowledgement, GitHub link and version displays.",
+      "state_description": "Unknown evidence remains Unknown. Processing and outcome are independent of GitHub closure and fix, stable, prerelease and installed versions. Recovery requires effect reconciliation for interrupted workflows.",
+      "interactions": "Adding host evidence resumes information requests. Blocked work can retry; interrupted work needs explicit reconciliation; uncertain GitHub creation is searched without another create."
+    },
+    {
+      "id": "C-REPORT-SELECT",
+      "kind": "connection",
+      "terms": [
+        "ui-c-report-select",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "from": [
+        "W-REPORT-LIST"
+      ],
+      "to": [
+        "W-REPORT-DETAIL"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false,
+      "endpoint_description": "W-REPORT-LIST \u2192 W-REPORT-DETAIL",
+      "trigger": "Report row selection",
+      "interactions": "Read selected report without starting an agent."
+    },
+    {
+      "id": "C-REPORT-EVIDENCE",
+      "kind": "connection",
+      "terms": [
+        "ui-c-report-evidence",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "from": [
+        "W-REPORT-DETAIL"
+      ],
+      "to": [
+        "W-REPORT-DETAIL"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false,
+      "endpoint_description": "W-REPORT-DETAIL \u2192 W-REPORT-DETAIL",
+      "trigger": "Add evidence",
+      "interactions": "Append idempotent host observations and queue reports waiting for information."
+    },
+    {
+      "id": "C-REPORT-RECOVER",
+      "kind": "connection",
+      "terms": [
+        "ui-c-report-recover",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "from": [
+        "W-REPORT-DETAIL"
+      ],
+      "to": [
+        "W-REPORT-DETAIL"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false,
+      "endpoint_description": "W-REPORT-DETAIL \u2192 W-REPORT-DETAIL",
+      "trigger": "Resume or reconcile report",
+      "interactions": "Validate recovery prerequisites and acknowledgement before resuming retained work."
+    },
+    {
+      "id": "C-REPORT-REFRESH",
+      "kind": "connection",
+      "terms": [
+        "ui-c-report-refresh",
+        "issue-report",
+        "report-ledger",
+        "delivery-evidence"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reports.tsx",
+          "anchor": "export function ReportedIssues(",
+          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "export interface IssueReport",
+          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
+        }
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "browser",
+        "go"
+      ],
+      "from": [
+        "W-REPORT-LIST"
+      ],
+      "to": [
+        "W-REPORT-LIST",
+        "W-REPORT-DETAIL"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": false,
+      "endpoint_description": "W-REPORT-LIST \u2192 W-REPORT-LIST and W-REPORT-DETAIL",
+      "trigger": "Refresh issues and releases",
+      "interactions": "Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent."
     }
   ],
   "instances": [
@@ -9528,6 +9910,18 @@
       "type": "W-BROWSER-LAB",
       "pane": "P-BROWSER-LAB",
       "repeat": "one per displayed pane"
+    },
+    {
+      "id": "P-REPORT-LIST/W-REPORT-LIST",
+      "type": "W-REPORT-LIST",
+      "pane": "P-REPORT-LIST",
+      "repeat": "one per report page"
+    },
+    {
+      "id": "P-REPORT-DETAIL/W-REPORT-DETAIL",
+      "type": "W-REPORT-DETAIL",
+      "pane": "P-REPORT-DETAIL",
+      "repeat": "one per report page"
     }
   ],
   "assertions": [
@@ -9734,6 +10128,30 @@
       "path": "internal/app/question_classification_test.go",
       "anchor": "func TestClassifierFailuresClarifyCompletionWithoutAttention(",
       "assertion": "Classifier startup, disconnect, timeout and invalid results trigger one original-agent clarification; completion creates no attention."
+    },
+    {
+      "id": "UI-REPORTS-INFO",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "\"reported issues shares ledger search, information requests and evidence recovery\"",
+      "assertion": "Selects shared report details, reads missing-information request, appends exact host evidence with an idempotency key, searches and refreshes without starting work."
+    },
+    {
+      "id": "UI-REPORTS-RECOVERY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "\"reported issues displays independent closure, prerelease delivery and explicit workflow recovery\"",
+      "assertion": "Separates closure, unknown fix/stable/installed evidence and dependency prerelease; blocks recovery until acknowledged and opens the issue link."
+    },
+    {
+      "id": "UI-REPORTS-PAGE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "\"reported issues paginates and filters processing component and version\"",
+      "assertion": "Loads 30 then 32 report rows through server cursor pagination and applies processing, component and version filters to one matching row."
+    },
+    {
+      "id": "UI-REPORTS-NAV-NARROW",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "test(`recovery icons, fallback controls and keyboard navigation at narrow width in ${theme}`",
+      "assertion": "Light/dark 390px fixtures keep the additional Reported issues tab and attention control within the viewport while preserving keyboard and recovery controls."
     }
   ],
   "source_map": [
@@ -9963,7 +10381,7 @@
       "path": "internal/gateway/gateway.go",
       "anchor": "func (g *Gateway) Private(",
       "entities": "`PAGE-OWNER-CONSENT`, `P-OWNER-CONSENT`, `W-OWNER-CONSENT`, `C-CONSENT`.",
-      "detail": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
+      "detail": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
       "anchors": [
         "func (g *Gateway) Private("
       ],
@@ -10010,6 +10428,19 @@
       ],
       "location_labels": [
         "export function useModalFocus("
+      ]
+    },
+    {
+      "path": "web/src/reports.tsx",
+      "anchor": "export function ReportedIssues(",
+      "purpose": "Shared report ledger UI.",
+      "entities": "`PAGE-REPORTS`, `P-REPORT-LIST`, `P-REPORT-DETAIL`, `W-REPORT-LIST`, `W-REPORT-DETAIL`, `C-REPORT-SELECT`, `C-REPORT-EVIDENCE`, `C-REPORT-RECOVER`, `C-REPORT-REFRESH`",
+      "detail": "Queries bounded report pages and reads selected reports; journal refresh, host evidence, explicit recovery and independent delivery/freshness displays.",
+      "anchors": [
+        "export function ReportedIssues("
+      ],
+      "location_labels": [
+        "export function ReportedIssues("
       ]
     }
   ],
@@ -10405,6 +10836,33 @@
         "reason": "`LAB` covers controller access boundaries. It does not establish product UI acceptance.",
         "next_verification": "For Optional browser lab: Keep operator-controller fixture evidence separate and record actual installed-product UI acceptance in its host; lab fixture success must not close product UI checks."
       }
+    },
+    {
+      "name": "Reported issues",
+      "entities": [
+        "PAGE-REPORTS",
+        "P-REPORT-LIST",
+        "P-REPORT-DETAIL",
+        "W-REPORT-LIST",
+        "W-REPORT-DETAIL",
+        "C-REPORT-SELECT",
+        "C-REPORT-EVIDENCE",
+        "C-REPORT-RECOVER",
+        "C-REPORT-REFRESH"
+      ],
+      "assertions": [
+        "UI-REPORTS-INFO",
+        "UI-REPORTS-RECOVERY"
+      ],
+      "gap": {
+        "version": 1,
+        "id": "gap-coverage-reports-host",
+        "kind": "unverified-behavior",
+        "severity": "P2",
+        "owner": "specification-coordinator",
+        "reason": "Fixture assertions cover report discovery, host evidence and recovery/version displays; installed-host behavior and assistive-technology acceptance remain unverified.",
+        "next_verification": "Observe Reported issues in the approved installed host and perform keyboard/screen-reader acceptance against its actual version."
+      }
     }
   ],
   "documents": [
@@ -10447,7 +10905,9 @@
             "W-RELATIONSHIPS",
             "W-TICKET-CONTEXT",
             "W-PR-EVIDENCE",
-            "W-ITEM-HISTORY"
+            "W-ITEM-HISTORY",
+            "W-REPORT-LIST",
+            "W-REPORT-DETAIL"
           ],
           "fields": [
             "element_description",
@@ -10599,7 +11059,9 @@
           "ids": [
             "P-INBOX-QUERY",
             "P-INBOX-LIST",
-            "P-ITEM-DETAIL"
+            "P-ITEM-DETAIL",
+            "P-REPORT-LIST",
+            "P-REPORT-DETAIL"
           ],
           "fields": [
             "composition",
@@ -10716,7 +11178,8 @@
           "ids": [
             "PAGE-INBOX",
             "PAGE-AGENTS",
-            "PAGE-SETTINGS"
+            "PAGE-SETTINGS",
+            "PAGE-REPORTS"
           ],
           "fields": [
             "purpose",
@@ -10812,7 +11275,11 @@
             "C-TUNNEL-KEY",
             "C-BROWSER-LAB",
             "C-QUESTION-RECOVERY",
-            "C-DISMISS-QUESTION"
+            "C-DISMISS-QUESTION",
+            "C-REPORT-SELECT",
+            "C-REPORT-EVIDENCE",
+            "C-REPORT-RECOVER",
+            "C-REPORT-REFRESH"
           ],
           "fields": [
             "endpoint_description",
@@ -10821,7 +11288,7 @@
           ],
           "headers": [
             "ID",
-            "From → to",
+            "From \u2192 to",
             "Trigger and carried context",
             "Result/type"
           ]

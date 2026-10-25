@@ -30,3 +30,8 @@ Tailscale network. Never request credentials in chat. Use `diagnostics` for
 observed connection state; local health does not prove Work callbacks or UI
 acceptance. Settings remain in the embedded app, and Jira stays disabled for the
 personal pilot unless the user explicitly changes that scope.
+
+When observed Code Factory behavior appears defective, invoke the bundled
+`code-factory-report-issue` skill. Preserve the exact host observation and tool
+response, reuse its durable report ID, and let the local backend collect evidence,
+investigate and file. Investigation and filing do not authorize code fixes.

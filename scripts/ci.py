@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import tarfile
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SHA = re.compile(r"[0-9a-f]{40}")
@@ -69,6 +71,56 @@ def run_verification(plan, runner=subprocess.run):
         runner(argv, cwd=ROOT, env=env, check=True)
 
 
+def package_components(directory, records, head):
+    """Derive component identities from the exact promoted package bytes."""
+    daemon_versions, plugin_versions = set(), set()
+    for record in records:
+        path = directory / record["name"]
+        if path.name.endswith(".tar.gz"):
+            with tarfile.open(path, "r:gz") as archive:
+                manifests = [m for m in archive.getmembers() if m.name.count("/") == 1 and m.name.endswith("/release.json")]
+                if len(manifests) != 1 or not manifests[0].isfile():
+                    raise ValueError("Release archive needs one ordinary release manifest")
+                data = json.load(archive.extractfile(manifests[0]))
+                daemon_versions.add(data["version"])
+        elif path.name.endswith(".zip"):
+            with zipfile.ZipFile(path) as archive:
+                data = json.loads(archive.read("plugin.json"))
+                compatibility = json.loads(archive.read(".codex-plugin/plugin.json"))
+                if compatibility["version"] != data["version"]:
+                    raise ValueError("Portable and Codex plugin versions disagree")
+                plugin_versions.add(data["version"])
+    if len(daemon_versions) != 1 or len(plugin_versions) != 1:
+        raise ValueError("Conflicting or missing packaged component versions")
+    return {"code-factory": {"repository": "dk-code-factory/code-factory-plugin", "version": daemon_versions.pop(), "commit": head},
+            "plugin": {"repository": "dk-code-factory/code-factory-plugin", "version": plugin_versions.pop(), "commit": head}}
+
+
+def fixed_issues(head, components):
+    path = ROOT / "release/fixed-issues.json"
+    data = json.loads(path.read_text()) if path.exists() else {"version": 1, "fixes": []}
+    if type(data.get("version")) is not int or data["version"] != 1 or not isinstance(data.get("fixes"), list):
+        raise ValueError("Invalid fixed-issue registry")
+    seen = set()
+    for fix in data["fixes"]:
+        if set(fix) != {"issue", "component", "commit"} or fix["component"] not in components:
+            raise ValueError("Fixed issue must identify a packaged component")
+        if not re.fullmatch(r"dk-code-factory/code-factory-plugin#[1-9][0-9]*", fix["issue"]):
+            raise ValueError("Fixed issue must belong to its component repository")
+        sha = commit(fix["commit"])
+        subprocess.run(["git", "merge-base", "--is-ancestor", sha, head], cwd=ROOT, check=True)
+        message = git("show", "-s", "--format=%B", sha)
+        number = fix["issue"].split("#")[1]
+        reference = r"(?:" + re.escape(fix["issue"]) + r"\b|#" + number + r"\b|https://github\.com/dk-code-factory/code-factory-plugin/issues/" + number + r"\b)"
+        if not re.search(r"(?i)\b(?:fix(?:e[sd])?|close[sd]?|resolve[sd]?)\s*:?\s*" + reference, message):
+            raise ValueError("Fix commit does not explicitly reference this fixed issue")
+        key = (fix["issue"], fix["component"], sha)
+        if key in seen:
+            raise ValueError("Duplicate fixed-issue reference")
+        seen.add(key)
+    return data["fixes"]
+
+
 def artifact_manifest(directory, head):
     directory = Path(directory)
     paths = sorted(p for p in directory.iterdir() if ASSET.fullmatch(p.name))
@@ -80,7 +132,8 @@ def artifact_manifest(directory, head):
             raise ValueError("Release assets must be ordinary files")
         records.append({"name": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "size": path.stat().st_size})
     manifest = directory / "CI-MANIFEST.json"
-    manifest.write_text(json.dumps({"version": 1, "commit": head, "files": records}, indent=2) + "\n")
+    components = package_components(directory, records, head)
+    manifest.write_text(json.dumps({"version": 1, "commit": head, "files": records, "components": components, "fixes": fixed_issues(head, components)}, indent=2) + "\n")
     checks = [*records, {"name": manifest.name, "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest()}]
     (directory / "SHA256SUMS").write_text("".join(r["sha256"] + "  " + r["name"] + "\n" for r in checks))
     verify_artifacts(directory, head)
@@ -105,6 +158,9 @@ def verify_artifacts(directory, head):
         names.append(name)
     if not any(n.endswith(".tar.gz") for n in names) or not any(n.endswith(".zip") for n in names):
         raise ValueError("Incomplete release artifact set")
+    components = package_components(directory, data["files"], head)
+    if data.get("components") != components or data.get("fixes") != fixed_issues(head, components):
+        raise ValueError("Component or fixed-issue provenance differs from checked source/packages")
     if set(p.name for p in directory.iterdir()) != set(names) | {"CI-MANIFEST.json", "SHA256SUMS"}:
         raise ValueError("Unexpected artifact files")
     expected = "".join(r["sha256"] + "  " + r["name"] + "\n" for r in data["files"])

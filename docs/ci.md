@@ -50,3 +50,10 @@ needed. CI artifacts expire after30days; rerun their original CI run if necessar
 Deployment to an operator's Linux machine remains manual. No workflow installs
 services, changes Tailscale, signs into providers, starts agents or runs live-host
 acceptance. A green build does not establish that an installation is ready.
+
+The checked CI manifest also identifies daemon and plugin component versions
+from the promoted package bytes. Explicit fixed issues in
+`release/fixed-issues.json` must name full ancestor fix commits with matching
+fixing/closing issue references. Report delivery tracking verifies the published
+release, uploaded asset digests, tag commit, checksum list and component ancestry;
+a tag, closed issue or merged PR alone does not establish release availability.

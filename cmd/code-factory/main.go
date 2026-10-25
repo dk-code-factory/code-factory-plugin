@@ -8,6 +8,7 @@ import (
 	"codefactory/internal/events"
 	"codefactory/internal/gateway"
 	"codefactory/internal/providers"
+	"codefactory/internal/reports"
 	"codefactory/internal/setup"
 	"codefactory/internal/store"
 	"codefactory/internal/transport"
@@ -221,6 +222,10 @@ func run() error {
 		}
 		return result
 	}
+	if command == "report-publish" {
+		service := &reports.Service{Store: s, Vault: vault, Dir: *dir, GitHub: &reports.GitHubAdapter{Client: providers.NewGitHub()}}
+		return service.PublishReport(ctx, *tunnelID)
+	}
 	if command != "serve" {
 		return fmt.Errorf("unknown command %s", command)
 	}
@@ -232,6 +237,19 @@ func run() error {
 	a.Runs = app.NewManager(ctx, a, *binary)
 	if e = a.Init(ctx); e != nil {
 		return e
+	}
+	executable, e := os.Executable()
+	if e != nil {
+		return e
+	}
+	a.Reports.PublishCommand = func(ctx context.Context, id string) error {
+		ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, executable, "report-publish", "--data-dir", *dir, "--id", id)
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("report publication command interrupted; retained intent will be reconciled")
+		}
+		return nil
 	}
 	if e = a.Runs.Recover(ctx); e != nil {
 		return e
@@ -249,7 +267,7 @@ func run() error {
 	})
 	httpServer := &http.Server{Addr: *address, Handler: mux, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	var wg sync.WaitGroup
-	for _, loop := range []func(context.Context){a.SyncLoop, a.AssessmentLoop, ev.Loop} {
+	for _, loop := range []func(context.Context){a.SyncLoop, a.AssessmentLoop, a.Reports.Loop, ev.Loop} {
 		wg.Add(1)
 		go func(loop func(context.Context)) { defer wg.Done(); loop(ctx) }(loop)
 	}

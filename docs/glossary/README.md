@@ -2823,4 +2823,123 @@ The connection between question recovery progress and its owning question and ru
 `ui-c-dismiss-question` · ui-connection
 
 The local dismissal connection for a textual question.
+
+<a id="issue-report"></a>
+## Issue report
+
+`issue-report` · domain
+
+A retained observation of suspected defective behavior with its investigation and delivery evidence.
+
+<a id="report-ledger"></a>
+## Report ledger
+
+`report-ledger` · domain
+
+The persistent collection of issue reports and their independent histories.
+
+<a id="report-processing"></a>
+## Report processing state
+
+`report-processing` · domain
+
+The progress of an observation through investigation, information requests, publication and recovery.
+
+<a id="report-outcome"></a>
+## Report outcome
+
+`report-outcome` · domain
+
+The investigation disposition identifying a filed issue, a duplicate or explained behavior.
+
+<a id="evidence-manifest"></a>
+## Evidence manifest
+
+`evidence-manifest` · domain
+
+An inventory of evidence origins, capture times, content identities, omissions and truncation.
+
+<a id="delivery-evidence"></a>
+## Delivery evidence
+
+`delivery-evidence` · domain
+
+Verified relationships among a fix, its component version and a published package.
+
+<a id="fixed-issue"></a>
+## Fixed-issue reference
+
+`fixed-issue` · domain
+
+An explicit association of an issue with the source commit that corrects it.
+
+<a id="element-w-navigation-reports"></a>
+## reported issues
+
+`element-w-navigation-reports` · element · scope: ui-w-navigation
+
+The reported issues destination control in the navigation widget.
+
+<a id="ui-page-reports"></a>
+## Reported issues page
+
+`ui-page-reports` · ui-page
+
+The page presenting retained issue reports.
+
+<a id="ui-p-report-list"></a>
+## Report list pane
+
+`ui-p-report-list` · ui-pane
+
+The pane containing report discovery and filtering controls.
+
+<a id="ui-p-report-detail"></a>
+## Report detail pane
+
+`ui-p-report-detail` · ui-pane
+
+The pane presenting the selected report and its recovery controls.
+
+<a id="ui-w-report-list"></a>
+## Report list widget
+
+`ui-w-report-list` · ui-widget
+
+The searchable and paginated presentation of retained reports.
+
+<a id="ui-w-report-detail"></a>
+## Report detail widget
+
+`ui-w-report-detail` · ui-widget
+
+The presentation of one report, its investigation, evidence and delivery state.
+
+<a id="ui-c-report-select"></a>
+## Report selection connection
+
+`ui-c-report-select` · ui-connection
+
+The transition from a report row to its details.
+
+<a id="ui-c-report-evidence"></a>
+## Report evidence connection
+
+`ui-c-report-evidence` · ui-connection
+
+The addition of an observation to a retained report.
+
+<a id="ui-c-report-recover"></a>
+## Report recovery connection
+
+`ui-c-report-recover` · ui-connection
+
+The explicit recovery of retained report work.
+
+<a id="ui-c-report-refresh"></a>
+## Report refresh connection
+
+`ui-c-report-refresh` · ui-connection
+
+The refresh of issue and delivery evidence.
 <!-- /specs:terms -->
