@@ -12231,7 +12231,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "The hosted workflow subscribes to main pushes, PRs targeting main and manual dispatch, with no feature-push verification route."
+          "purpose": "The checked workflow admits PRs to main and sync/local-development only, retains main-only pushes and keeps manual dispatch available under its main guard."
         },
         {
           "path": "scripts/test_ci.py",
@@ -12302,7 +12302,7 @@
           },
           {
             "id": "CI",
-            "label": "Verify a PR to main or a main push/manual check with exact comparisons or the single reviewed root import",
+            "label": "Verify a PR to main or sync/local-development or a main push/manual check with exact comparisons or the single reviewed root import",
             "scenario": "S5"
           },
           {

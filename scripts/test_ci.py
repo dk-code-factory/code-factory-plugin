@@ -68,7 +68,7 @@ class HostedCITests(unittest.TestCase):
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci.yml").read_text()
         triggers = workflow.split("\npermissions:", 1)[0]
         self.assertIn("  push:\n    branches: [main]\n", triggers)
-        self.assertIn("  pull_request:\n    branches: [main]\n", triggers)
+        self.assertIn("  pull_request:\n    branches: [main, sync/local-development]\n", triggers)
         self.assertIn("  workflow_dispatch:\n", triggers)
 
     def test_feature_push_and_dispatch_reject_before_verification(self):
