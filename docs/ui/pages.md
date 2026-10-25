@@ -4,21 +4,38 @@
 [Implementation/tests](references.md)
 
 Page names below identify task surfaces, not framework routes. All embedded pages
-use `S-FACTORY` and its identity, navigation, feedback and continuity panes.
+use the owning surface below with compact, conditional feedback.
+
+## Independent application surfaces
+
+The inbox/agent surface and Settings open independently in chat, using the same
+protected connection. Settings has its own document and entry tool; neither view
+contains navigation to the other. Both may remain open concurrently.
+
+<!-- specs:surfaces -->
+| Surface | Context |
+| --- | --- |
+| `S-FACTORY` | Five work tabs and one conversation page. Settings opens independently. |
+| `S-SETTINGS` | A separate MCP Apps settings document using the same authenticated connection and bridged tools. No Inbox/Agents navigation, attention, launch overlay or task pane. |
+<!-- /specs:surfaces -->
 
 ## Embedded pages
 
 <!-- specs:pages-0 -->
 | Page | Purpose | Page-owned panes | Entry and exit |
 | --- | --- | --- | --- |
-| `PAGE-INBOX` | Search and triage synchronized issues/PRs without starting work. | `P-INBOX-QUERY`, `P-INBOX-LIST`, `P-ITEM-DETAIL`. | Initial page after data loads, or Inbox navigation. Selection changes detail in place. Launch action opens `D-LAUNCH`; Add repository goes to Settings. |
-| `PAGE-AGENTS` | Inspect retained work, respond to requests and continue or recover a task. | `P-RUN-LIST`, `P-RUN-DETAIL`. | Agents navigation, successful launch, Needs attention, or Open agent chat. Selecting a run changes detail in place. Attention notices open `D-ATTENTION`. |
-| `PAGE-SETTINGS` | Configure repository access, priorities, work profiles, skills and health inspection. | `P-REPOSITORIES`, `P-POLICIES`, `P-PROFILES`, `P-SKILLS`, `P-DIAGNOSTICS`. | Settings navigation or Add repository. Save actions update data in place. Leave through navigation; local unsaved drafts are not persisted across remount. |
-| `PAGE-REPORTS` | Discover suspected defects and inspect investigation and delivery evidence. | Report list and selected report details. | Entered from Reported issues navigation; journal changes refresh both panes. |
+| `PAGE-INBOX` | Open issues including issues with linked PRs, ordered by priority. | Query and full-width issue list only. | Issues defaults to open; pending remains the optional open-without-PR filter. Per-tab search, filter, scroll and row focus remain independent. |
+| `PAGE-AGENTS` | Answer agents blocked on human input. | Unanswered questions and approvals only; ordinary progress and results stay in the owning conversation. | List unanswered native questions and approvals, structured message questions and textual fallback asks with their owning session. Live RPC requests require a matching connected session; async/text requests remain answerable through retained session recovery. Selection opens the exact answer dialog. |
+| `PAGE-SETTINGS` | Configure repositories, priorities, profiles, skills and diagnostics in an independent view. | One compact column of relevant repository/policy/profile/skill/diagnostic disclosures; no integration placeholder. Plugin/skill administration and system defaults are independent disclosures. | Opened through the dedicated open_settings tool/resource. No Inbox/Agents navigation; saving remains here with local progress/success/error feedback. It does not replace an already-open task view. |
+| `PAGE-AGENT` | Chat about one item immediately. | Item summary then existing conversation or prefilled first message, followed by collapsed Item details. No item-only intermediate page. | Item selection continues the newest retained run or opens a prefilled draft. First Start is explicit. Sending a message to inactive retained work restores its session and starts that submitted message. Back restores the originating queue. Work history and prepared drafts stay under Item details. |
+| `PAGE-MY-PRS` | Open pull requests authored by the authenticated GitHub account. | Query and full-width PR list only. | Independent search/filter and restored Back context; item selection opens its conversation directly. |
+| `PAGE-REVIEW-PRS` | Open pull requests requesting the authenticated account or one of its teams. | Query and full-width PR list only. | Independent search/filter and restored Back context; item selection opens its conversation directly. |
+| `PAGE-WORKING` | Follow launched work until GitHub completion. | Query and full-width issue/PR list. | Uses server queue membership; idle, failed and interrupted sessions remain tracked. An issue closes on GitHub or completes when any linked implementation PR merges. PR closure or merge removes its own work. History and outstanding questions remain accessible. |
 <!-- /specs:pages-0 -->
 
-The app has no separate item-detail, run-detail, PR-checks, ticket, profile or
-managed-skill navigation page. Those are panes/widgets within the three pages.
+Issues, My PRs and Review PRs are focused work lists. Messages contains pending requests and collapsed retained work. Item selection opens the Agent conversation directly. Settings is an independent configuration surface.
+PR checks, relationships, profiles and skills remain controls within their owning
+page. Only one page is displayed; no sidebar or split layout is used.
 No URL deep-link or browser-back routing contract is established by the current
 embedded UI.
 
@@ -27,8 +44,8 @@ embedded UI.
 <!-- specs:pages-1 -->
 | Dialog | Composition | Owning context | Dismissal and completion |
 | --- | --- | --- | --- |
-| `D-LAUNCH` | `P-LAUNCH-FRAME` and either `P-LAUNCH-EDITOR` or `P-LAUNCH-REVIEW`. | Item supplied when Launch agent is clicked. Rendered at shell level above the current page. | Close/Escape dismisses local review selection without starting/deleting prepared work and restores a connected opener. Preparation/Start failures appear in the dialog and retain edits/review. Received success closes, selects the run and enters Agents. |
-| `D-ATTENTION` | `P-ATTENTION-FRAME` and one of `P-QUESTIONS`, `P-APPROVAL`, `P-ELICITATION`. | Selected pending request and its owning run. May be opened from global navigation or a selected run. | Close/Escape defers responding and restores a connected opener. Modal keyboard focus remains contained across polling. Successful answer closes/refreshes; failed response retains dialog/error. Open chat selects its owning run. |
+| `D-LAUNCH` | `P-LAUNCH-FRAME` and either `P-LAUNCH-EDITOR` or `P-LAUNCH-REVIEW`. | Selected item or retained prepared run; default entry prepares the first profile automatically. | Explicit Start only. Edit exposes customization; Close retains prepared snapshots. Uncertain Start reads the same run and gates retry until status is known. |
+| `D-ATTENTION` | `P-ATTENTION-FRAME` and one of `P-QUESTIONS`, `P-APPROVAL`, `P-ELICITATION`. | Request ID and owning run, with item title/profile displayed and run selected before opening. | Successful answer returns to the owning conversation. Deferred/failed answers remain pending. Keying by request resets local answers, including secret fields; no answers enter ordinary draft stores. |
 <!-- /specs:pages-1 -->
 
 Dialog closure does not answer a request, interrupt an agent or cancel a prepared
@@ -56,13 +73,13 @@ or treat this catalog as authorization to automate sign-in.
 
 | State | Lifetime and sharing |
 | --- | --- |
-| Current page, search/filter, selected item and selected run | Shell-local while mounted. Survive switching embedded tabs; not a promised URL/history or reload-persistence mechanism. |
+| Current page, search/filter, selected item and selected run | Shell-local while mounted. Back restores per-page scroll and row focus; query/drafts survive navigation. No browser URL/history or reload-persistence promise. |
 | Snapshot records and run status | Shared application state refreshed into all relevant pages. User actions and background updates can change several panes together. |
-| Item detail and priority/link drafts | Detail-pane local. New selected content loads asynchronously; current code does not promise every field resets on item-ID changes. |
+| Item detail, priority and link drafts | Detail loads by selected item. Priority initializes from the saved override and saves immediately. Unsubmitted relationship targets are kept by item ID in the open app across tabs. |
 | Settings drafts and diagnostics result | Settings component local. Leaving/re-entering remounts it from the latest snapshot; no unsaved-changes warning is implemented. |
 | Launch draft and selected prepared result | Launch-dialog local. Prepared records themselves persist after preparation. |
-| Attention selection and answer draft | Selected request is shell-local; input/error/busy state is dialog-local. The current dialog is not keyed by request ID, so a clean draft reset between simultaneously pending requests is not an established guarantee. |
-| Run transcript cursor, retained displayed events and message draft | Run-pane local; reset on a keyed run change or remount. Durable conversation history remains application state. |
+| Attention selection and answer draft | The owning run is selected first. Answers/errors/busy state are keyed by request ID and end with that dialog; secret answers stay outside ordinary draft storage. |
+| Run transcript and message drafts | Transcript cursor/displayed events reset on run change or remount; durable history remains stored. Message drafts are retained by run ID for the lifetime of the open app, including tab changes. |
 
 These distinctions matter when drawing connections: a saved profile feeds a
 future launch, while an edited but unsaved profile does not; selecting another

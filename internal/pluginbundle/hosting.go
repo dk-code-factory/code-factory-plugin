@@ -144,10 +144,17 @@ func New(origin string) (*Bundle, error) {
 	return b, nil
 }
 
-func (b *Bundle) Register(mux *http.ServeMux) {
+func (b *Bundle) Register(mux *http.ServeMux, lookup func() (string, error)) {
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = landing.Execute(w, map[string]string{"Version": b.version, "BaseURL": b.origin, "Endpoint": b.origin + "/mcp", "Checksum": b.checksum})
+		registered := false
+		if lookup != nil {
+			if id, err := lookup(); err == nil {
+				_, err = b.BrowserArchive(id)
+				registered = err == nil
+			}
+		}
+		_ = landing.Execute(w, map[string]any{"Version": b.version, "BaseURL": b.origin, "Endpoint": b.origin + "/mcp", "Registered": registered})
 	})
 	mux.HandleFunc("GET /plugin.zip", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/zip")
@@ -181,12 +188,12 @@ var landing = template.Must(template.New("installation").Parse(`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Code Factory</title><style>
 body{font:17px/1.6 system-ui,sans-serif;max-width:760px;margin:60px auto;padding:24px;background:#f7faf7;color:#193e2c}header{display:flex;align-items:center;gap:18px}header img{width:64px}h1{margin:0}small{color:#55705e}.button{display:inline-block;background:#285d45;color:white;padding:12px 20px;border-radius:9px;text-decoration:none}section{background:white;border:1px solid #dbe6dd;padding:24px;border-radius:14px;margin:24px 0}code{overflow-wrap:anywhere;font-size:.9em}a{color:#285d45}li{margin:12px 0}</style></head><body>
 <header><img src="{{.BaseURL}}/assets/logo.svg" alt=""><div><h1>Code Factory</h1><small>Plugin {{.Version}} · hosted on your machine through Tailscale</small></div></header>
-<p>Your GitHub inbox and interactive local Codex agents. Includes the embedded inbox, OAuth MCP connection, and setup and daily-use skills.</p>
-<p><a class="button" href="{{.BaseURL}}/plugin.zip">Download complete plugin</a> <a href="{{.BaseURL}}/plugin.zip.sha256">SHA256 checksum</a></p>
+<p>Your GitHub inbox and interactive local Codex agents. Includes the embedded inbox, OAuth MCP connection, and setup, daily-use and admin skills.</p>
+{{if .Registered}}<p><a class="button" href="{{.BaseURL}}/plugin-browser.zip">Download browser package</a></p>
+<p>Linked to your registered MCP connection. Import into a supported private plugin flow and approve OAuth when asked.</p>{{end}}
 <section><h2>Connect in browser Work</h2><ol><li>In your existing signed-in ChatGPT browser tab, open <strong>Plugins</strong>, choose <strong>+ → Add custom MCP server</strong>, and name it <strong>Code Factory</strong>. Stay in that browser tab; this page does not launch or require the desktop app.</li>
 <li>Use this server URL:<br><code>{{.Endpoint}}</code></li><li>Choose <strong>OAuth</strong>. Leave optional client ID and secret empty. Create the plugin and approve <strong>Connect Code Factory</strong> on the private Tailscale page. Your browser must be connected to the owner's tailnet.</li><li>Install Code Factory from Personal, open a new Work conversation, and ask <strong>Call Code Factory’s open_factory tool to show GitHub issues and pull requests</strong>.</li></ol>
 <p>This connects the hosted tools and embedded UI. Installing the ZIP's bundled skills depends on your Work account's package-import support. A download link cannot install into your account automatically.</p></section>
-<section><h2>Browser package connection</h2><p><a href="{{.BaseURL}}/plugin-browser.zip">Download browser package linked to a registered MCP connection</a>. This download becomes available after the real connection ID is recorded. If it reports that registration is missing, a Plugin_ package ID cannot substitute for the required remote server ID. An existing upload that says Open in desktop app is not proof of browser tool access.</p></section>
-<section><h2>Complete plugin package</h2><p>The ZIP contains manifests, remote connection, branding, and both skills. Use it with a host that supports plugin packages, or a desktop local marketplace. If Work offers a package import, upload the downloaded ZIP. This site does not claim browser ZIP import or cloud registration has been verified.</p><p><a href="{{.BaseURL}}/plugin.json">Plugin manifest</a> · <a href="{{.BaseURL}}/mcp.json">MCP configuration</a> · <a href="{{.BaseURL}}/plugin-release.json">Release details</a></p></section>
+<details><summary>Advanced packages & manifests</summary><section><h2>Portable plugin package</h2><p>For hosts that support portable plugin manifests or a local marketplace.</p><p><a href="{{.BaseURL}}/plugin.zip">Download portable plugin</a> · <a href="{{.BaseURL}}/plugin.zip.sha256">SHA256 checksum</a></p><p><a href="{{.BaseURL}}/plugin.json">Plugin manifest</a> · <a href="{{.BaseURL}}/mcp.json">MCP configuration</a> · <a href="{{.BaseURL}}/plugin-release.json">Release details</a></p></section></details>
 <p><small>MCP calls require OAuth. Approval stays private to the Tailscale owner. Package downloads contain no local tokens, credentials, inbox data or run history.</small></p>
 </body></html>`))

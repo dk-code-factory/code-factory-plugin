@@ -67,12 +67,12 @@ func Diagnose(ctx context.Context, dir, binary, address string, s *store.Store) 
 	defer cancel()
 	status := codex.Inspect(check, binary)
 	if status.Compatible && status.Authenticated {
-		add("provider.codex", Verified, "Codex 0.161.0 authenticated; real task acceptance is separate")
+		add("provider.codex", Verified, status.Version+" authenticated; real task acceptance is separate")
 	} else {
-		add("provider.codex", Failed, "Codex 0.161.0 compatibility or authentication check failed")
+		add("provider.codex", Failed, "Codex compatibility or authentication check failed")
 	}
-	if exec.CommandContext(check, "gh", "auth", "status", "--hostname", "github.com").Run() == nil {
-		add("provider.github", Verified, "GitHub CLI authentication check passed")
+	if token, err := exec.CommandContext(check, "gh", "auth", "token", "--hostname", "github.com").Output(); err == nil && len(bytes.TrimSpace(token)) > 0 {
+		add("provider.github", Verified, "GitHub CLI credential available locally; repository access is checked during budgeted synchronization")
 	} else {
 		add("provider.github", Failed, "GitHub CLI authentication unavailable")
 	}
@@ -164,13 +164,19 @@ func Diagnose(ctx context.Context, dir, binary, address string, s *store.Store) 
 			for _, r := range repos {
 				state := Verified
 				detail := "Last successful sync: " + r.LastSync.UTC().Format(time.RFC3339)
-				if r.Error != "" {
+				if r.Paused {
+					state = Unverified
+					detail = "Repository monitoring paused"
+				} else if time.Now().Before(r.RetryAt) {
+					state = Unverified
+					detail = "Synchronization deferred until " + r.RetryAt.UTC().Format(time.RFC3339)
+				} else if r.Error != "" {
 					state = Failed
 					detail = "Last synchronization failed"
 				} else if r.LastSync.IsZero() {
 					state = Unverified
 					detail = "First successful sync pending"
-				} else if time.Since(r.LastSync) > 2*time.Minute {
+				} else if time.Since(r.LastSync) > 30*time.Minute {
 					state = Failed
 					detail = "Successful synchronization is overdue"
 				}

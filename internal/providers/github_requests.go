@@ -75,12 +75,6 @@ func (g *GitHub) Operation(ctx context.Context, ledger *store.Store, memoize boo
 func (g *GitHub) StartOperation(ctx context.Context, ledger *store.Store, memoize bool) context.Context {
 	return context.WithValue(ctx, operationKey{}, &operation{client: g, ledger: ledger, requireLedger: memoize, memoize: memoize, memo: map[string]bool{}})
 }
-func (g *GitHub) now() time.Time {
-	if g.Now != nil {
-		return g.Now().UTC()
-	}
-	return time.Now().UTC()
-}
 func (g *GitHub) resolve(ctx context.Context, op *operation) error {
 	if !op.resolved {
 		op.resolved = true
@@ -296,14 +290,27 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	if g.Client == nil {
 		return fail(BeforeDispatch, 0, errors.New("GitHub HTTP client unavailable; restore settings and resume"))
 	}
+	if g.Managed() {
+		g.requestMu.Lock()
+		defer g.requestMu.Unlock()
+	}
 	safe := *g.Client
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	if err = g.beginRequest(ctx, op.token, "core", req.URL.Path); err != nil {
+		return fail(BeforeDispatch, 0, err)
+	}
 	res, err := safe.Do(req)
 	if err != nil {
 		return fail(Uncertain, 0, errors.New("GitHub connection failed"))
 	}
 	defer res.Body.Close()
+	if err = g.observe(ctx, op.token, "core", req.URL.Path, res.Header); err != nil {
+		return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
+	}
 	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "") {
+		if g.Managed() {
+			return fail(HTTPRejected, res.StatusCode, g.rateLimited(ctx, op.token, "core", res.Header))
+		}
 		deadline := retryDeadline(res.Header, g.now())
 		if until.After(deadline) {
 			deadline = until

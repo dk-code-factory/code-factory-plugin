@@ -19,7 +19,7 @@ export function useModalFocus(close: () => void) {
     const controls = () =>
       [
         ...dialog.querySelectorAll<HTMLElement>(
-          "button, a[href], input:not([type=hidden]), select, textarea, [tabindex]",
+          "summary, button, a[href], input:not([type=hidden]), select, textarea, [tabindex]",
         ),
       ].filter(
         (element) =>
@@ -79,9 +79,21 @@ export function useModalFocus(close: () => void) {
       stack.splice(stack.indexOf(dialog), 1);
       if (
         opener?.isConnected &&
+        !opener.matches("body, html, .page") &&
         (!stack.length || stack.at(-1)!.contains(opener))
       )
         opener.focus();
+      else if (!stack.length) {
+        const heading = doc.querySelector<HTMLElement>(
+          ".detail h1, .detail h2",
+        );
+        const fallback =
+          heading ?? doc.querySelector<HTMLElement>("nav button[aria-current]");
+        if (fallback) {
+          if (heading) heading.tabIndex = -1;
+          fallback.focus();
+        }
+      }
     };
   }, []);
   return ref;

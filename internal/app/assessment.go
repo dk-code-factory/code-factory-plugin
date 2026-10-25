@@ -68,14 +68,18 @@ func (a *App) AssessNext(ctx context.Context) error {
 	return nil
 }
 func (a *App) infer(ctx context.Context, item domain.Item, config domain.Config) (domain.Assessment, error) {
+	if !a.Runs.adminGate.TryRLock() {
+		return domain.Assessment{}, fmt.Errorf("assessment deferred during plugin maintenance")
+	}
+	defer a.Runs.adminGate.RUnlock()
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	var result domain.Assessment
-	if _, e := codex.Version(ctx, a.Runs.Binary); e != nil {
+	if _, e := codex.Version(ctx, a.Runs.CodexBinary()); e != nil {
 		return result, e
 	}
 	done := make(chan codex.Message, 64)
-	client, e := codex.Start(ctx, a.Runs.Binary, nil, func(m codex.Message) {
+	client, e := codex.Start(ctx, a.Runs.CodexBinary(), nil, func(m codex.Message) {
 		select {
 		case done <- m:
 		case <-ctx.Done():

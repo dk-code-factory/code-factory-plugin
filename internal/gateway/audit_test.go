@@ -65,6 +65,9 @@ func TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails(t *testing.T) {
 	if err := json.Unmarshal(output.Bytes(), &entry); err != nil {
 		t.Fatal("missing structured unknown-route audit", err)
 	}
+	if duration, ok := entry["duration_ms"].(float64); !ok || duration < 0 {
+		t.Fatal("missing safe latency diagnostics", log)
+	}
 	if entry["route"] != "other" || entry["status"] != float64(http.StatusNotFound) || entry["surface"] != "public" {
 		t.Fatal("missing actionable unknown-route audit", log)
 	}

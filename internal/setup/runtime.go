@@ -1,6 +1,8 @@
 package setup
 
 import (
+	"codefactory/internal/codex"
+	"codefactory/internal/commandenv"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,10 +14,11 @@ import (
 )
 
 type Runtime struct {
-	Paths   map[string]string `json:"paths"`
-	Path    string            `json:"path"`
-	DataDir string            `json:"dataDir"`
-	Listen  string            `json:"listen"`
+	ProviderBin string            `json:"providerBin,omitempty"`
+	Paths       map[string]string `json:"paths"`
+	Path        string            `json:"path"`
+	DataDir     string            `json:"dataDir"`
+	Listen      string            `json:"listen"`
 }
 
 func ReadRuntime(dir string) (Runtime, error) {
@@ -53,8 +56,13 @@ func ResolveRuntime(ctx context.Context, dir, listen string) (Runtime, error) {
 		}
 		r.Paths[name] = p
 	}
-	dirs := []string{}
-	seen := map[string]bool{}
+	providerBin, e := commandenv.Prepare(filepath.Join(dir, "provider-bin"), r.Paths)
+	if e != nil {
+		return r, e
+	}
+	r.ProviderBin = providerBin
+	dirs := []string{providerBin}
+	seen := map[string]bool{providerBin: true}
 	for _, name := range []string{"git", "gh", "codex", "systemctl"} {
 		path := filepath.Dir(r.Paths[name])
 		if !seen[path] {
@@ -71,9 +79,8 @@ func ResolveRuntime(ctx context.Context, dir, listen string) (Runtime, error) {
 	r.Path = strings.Join(dirs, string(os.PathListSeparator))
 	check, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	b, e := exec.CommandContext(check, r.Paths["codex"], "--version").Output()
-	if e != nil || string(b) != "codex-cli 0.161.0\n" {
-		return r, fmt.Errorf("setup blocker: Codex 0.161.0 is required")
+	if _, e := codex.Version(check, r.Paths["codex"]); e != nil {
+		return r, fmt.Errorf("setup blocker: stable Codex 0.161.0 or later is required")
 	}
 	return r, nil
 }

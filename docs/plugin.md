@@ -1,8 +1,8 @@
 # Code Factory plugin
 
-The complete private plugin is `dist/code-factory-plugin-0.2.2.zip`. Its root
+The complete private plugin is `dist/code-factory-plugin-0.2.8.zip`. Its root
 contains a portable `plugin.json`, portable `mcp.json`, Codex compatibility
-manifests, SVG branding, an onboarding skill and a daily Code Factory skill.
+manifests, SVG branding, onboarding, daily-work and administration skills.
 It bundles the Tailscale HTTPS endpoint and discovers OAuth from the server's
 protected-resource metadata. No client secret or local owner token ships.
 
@@ -44,7 +44,7 @@ Source contract: [OpenAI plugin packaging](https://developers.openai.com/plugins
 
 The running Tailscale gateway hosts the complete package and a browser installation
 page at its HTTPS base URL. Under the default `/code-factory` base,
-`/code-factory/plugin.zip` downloads the plugin with both skills,
+`/code-factory/plugin.zip` downloads the plugin with all three skills,
 branding and MCP connection; the adjacent `plugin.zip.sha256` and `plugin-release.json` describe
 those exact bytes. Public `plugin.json` and `mcp.json` provide package metadata.
 The archive is embedded in the versioned binary, so services do not depend on a
@@ -59,14 +59,14 @@ existing authorization boundaries. Only explicit public artifacts are served.
 ## Registered browser package
 
 An uploaded `Plugin_...` identifier names a package, not an MCP server.
-A private browser package must reference its separately registered remote server:
+A private browser package references its separately registered remote server:
 
 ```sh
 python3 scripts/package_plugin.py --registered-app-id plugin_asdk_app_OBSERVED
 ```
 
 The generated `code-factory-browser-plugin-<version>.zip` includes the registered
-`.app.json` reference, both skills and branding. It omits `mcp.json`, `.mcp.json`
+`.app.json` reference, all three skills and branding. It omits `mcp.json`, `.mcp.json`
 and the compatibility `mcpServers` setting. Both manifests point to `.app.json`.
 No fake or placeholder ID is accepted as a substitute for the observed ID, and
 this does not create or authenticate the remote connection itself. Access to that
@@ -78,3 +78,102 @@ without publishing arbitrary host files. Until a registered ID is recorded, that
 route returns HTTP 409 with a setup explanation and no download. The portable
 `/plugin.zip` remains a separate artifact and is not labelled as a verified browser
 installation. Public submission requires the separate With MCP review flow.
+
+The bundled `code-factory-admin` skill uses the same repository, system-default,
+plugin inventory and maintenance tools as the settings widget. Codex plugin
+management uses the pinned provider CLI; runtime app-server plugin APIs remain
+under development and are not used for installation.
+
+## Repository monitoring and plugin administration
+
+For a manual review, ask Code Factory to run the configured review pipeline for
+the PR. The model-visible `prepare_pr_review` tool accepts the synchronized PR's
+`itemId` from `list_inbox`. It resolves repository, system and built-in review
+defaults in that order and returns the prepared run, including its selected
+skills/model, pinned head, repository instructions and authority. Preparation
+does not contact GitHub, create a workspace or start an agent. After inspecting
+the snapshot, the assistant uses `start_run` with its returned `id` under the
+owner's review request; results/status come from `read_run`. Queue-only monitoring
+still permits explicitly requested manual review. Unsafe or unavailable pipelines
+return an error rather than silently substituting one. Posting findings to GitHub
+requires separate publishing authority.
+
+Plugin 0.2.4 adds this recipe and a PR-review starter prompt. Existing cloud
+packages retain their uploaded skill text; refreshing the existing connection's
+tools exposes the new server instructions and tool even before replacing the
+uploaded package. The older generic `prepare_launch` path remains supported.
+
+Open Code Factory settings with `open_settings`. Add `owner/repository` under
+Repositories; GitHub access is taken from the existing account. Configured
+review notifications are checked every two minutes by default and repository
+summaries reconcile every 15 minutes. Notification reads preserve their GitHub
+read/unread state. Review PRs shows requests addressed to
+that user or their teams. Last-poll and access errors are visible; a repository
+can be edited or paused, and Poll repositories now requests a fresh sync.
+
+System defaults choose queue-only or automatic review plus review and implementation
+pipelines. Queue-only is the default. A repository can inherit either pipeline,
+override it, and inherit/override automatic review independently. Its additional
+review prompt is appended to the generic profile prompt during preparation.
+Automatic reviews wait until current agent work is inactive and require fresh provider state, a current non-draft user/team
+request and a read-only, ask-before-publishing profile. Claims are durable per
+request episode and PR head; repeated polls and restarts do not replay a claim.
+New heads or a newly observed request episode can receive another review.
+Implementation and publishing remain explicit; automatically starting a review
+does not post a GitHub review or implement fixes.
+
+Plugins & skills shows a cached, paginated inventory from the pinned Codex CLI.
+Add a local/Git marketplace (with optional ref), find a plugin or enter its
+`name@marketplace`, then explicitly install, update or remove it. Existing
+plugins are included. The panel tracks installation, enabled state, observed
+versions, available updates, policy and operation errors. Authentication policy
+is metadata; actual plugin connection readiness is checked by Codex on use.
+
+Check for plugin updates refreshes Git marketplace metadata and compares
+local/Git source manifests with installed versions. For installed remote catalog
+plugins whose latest version is not exposed by the stable CLI, the panel says
+Unknown and provides an explicit Update action to install its current release.
+The app does not call under-development app-server plugin management endpoints.
+Optional periodic checks are metadata-only; 0 means manual, and positive intervals
+are 15–10080 minutes. No update is installed automatically.
+
+Management creates a durable operation before invoking one CLI command. View
+closure does not replay it. A failed/uncertain response or daemon restart requires
+inspection/refresh rather than automatic retry. Maintenance and active agent work
+exclude each other; no global Codex executable or authentication is replaced.
+After discovery/installation, select plugin or standalone skills under Launch
+profiles → Default skills, or choose per-launch skills. Prepared launches retain
+their skill/support files and executable modes. Disabled or unavailable skills
+are visible and cannot be newly prepared.
+
+The bundled `code-factory-admin` skill and the owner MCP tools expose these same
+settings and operations. Plugin source compatibility, authentication, hooks and
+MCP tools remain subject to Codex policy; the inventory does not certify arbitrary
+third-party code. New remote/installed-host acceptance stays separate from fixtures.
+
+Admin tools preserve new monitoring fields when older cached widgets omit them.
+For repository policy, an explicit `autoReview: null` means inherit; an omitted
+field leaves the existing override unchanged. An empty reviewPrompt explicitly
+clears the extra instructions.
+
+## GitHub API allowance
+
+In **Settings → System defaults → GitHub API usage**, set the shared application
+budget (60–5000 request attempts/hour), reported-quota reserve (0–5000), and
+notification interval (60–3600 seconds). Defaults are 600, 100 and 120 seconds.
+REST remaining quota uses requests; GraphQL remaining quota uses points. The
+reserve applies to each reported quota, while the local allowance counts HTTP
+request attempts.
+Legacy zero/unset budget or interval values use those defaults; an unset reserve
+uses 100. The counter is a cached Settings snapshot and reads no quota endpoint.
+
+All daemon REST/GraphQL reads, manual polls and selected details use one persistent
+serialized gate. Request attempts, including conditional requests, count against
+the local allowance; cached reads do not. GitHub reset/Retry-After/polling headers
+and conditional validators are honored. Normal polling imports summaries rather
+than every PR's reviews, comments, commits and checks. Full details refresh for
+selected/tracked work; unavailable details retain saved content and explicit Retry.
+
+Plugins, skills, agent commands and other clients use GitHub independently of this
+cap. Inspect their usage separately before increasing the allowance. Verify each
+installation separately using the [acceptance guide](acceptance.md).

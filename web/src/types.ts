@@ -23,6 +23,9 @@ export interface Item {
     url: string;
   }[];
   checks?: unknown;
+  pr?: PullRequest;
+  reviewRequests?: string[];
+  reviewTeams?: string[];
 }
 export interface UserState {
   new: boolean;
@@ -43,6 +46,8 @@ export interface Profile {
   publishing: string;
 }
 export interface Skill {
+  disabled?: boolean;
+  description?: string;
   id: string;
   name: string;
   path: string;
@@ -50,6 +55,12 @@ export interface Skill {
   managed: boolean;
 }
 export interface Repository {
+  paused?: boolean;
+  autoReview?: boolean | null;
+  reviewProfileId?: string;
+  implementationProfileId?: string;
+  reviewPrompt?: string;
+  reviewError?: string;
   id: string;
   checkout: string;
   base: string;
@@ -71,28 +82,16 @@ export interface Run {
   error: string;
   created: string;
 }
-export interface QuestionRecovery {
-  sourceText?: string;
-  question?: string;
-  confirmation?: string;
-  originalBlocking?: boolean;
-  diagnosticError?: string;
-  textAttentionId?: string;
-  id: string;
-  runId: string;
-  stage: string;
-  attempts: number;
-}
 export interface Attention {
-  origin?: "rpc" | "async" | "text";
-  turnId?: string;
-  itemId?: string;
-  recoveryId?: string;
   id: string;
   runId: string;
   method: string;
   blocking: boolean;
   status: string;
+  origin?: "rpc" | "async" | "text";
+  turnId?: string;
+  itemId?: string;
+  recoveryId?: string;
   params: {
     questions?: Question[];
     availableDecisions?: unknown[];
@@ -110,6 +109,16 @@ export interface Question {
   options?: { label: string; description: string }[];
 }
 export interface Entry {
+  hasPullRequest?: boolean;
+  queues?: string[];
+  work?: {
+    tracked: boolean;
+    complete: boolean;
+    status: string;
+    runIds: string[];
+    attentionCount: number;
+  };
+  linkedPullRequests?: PullRequest[];
   item: Item;
   user: UserState;
   unread: boolean;
@@ -123,7 +132,13 @@ export interface Entry {
   };
 }
 export interface Config {
-  questionHelperModel?: string;
+ githubRequestsPerHour?: number;
+ githubReserve?: number;
+ githubPollSeconds?: number;
+  autoReview?: boolean;
+  reviewProfileId?: string;
+  implementationProfileId?: string;
+  pluginCheckMinutes?: number;
   id: string;
   priorityLabels: Record<string, number>;
   assessmentPrompt: string;
@@ -131,9 +146,17 @@ export interface Config {
   jiraUrl: string;
   jiraEmail: string;
   notifications: boolean;
+  questionHelperModel?: string;
+}
+export interface GitHubUsage {
+ notificationError?:string;
+ requestsLastHour:number; budget:number; reserve:number; nextRequest:string;
+ restRemaining?:number;restReset:string;graphqlRemaining?:number;graphqlReset:string;
 }
 export interface Snapshot {
-  questionRecoveries?: QuestionRecovery[];
+  reviewVersions?: Record<string, string>;
+ githubUsage?:GitHubUsage;
+  viewer?: { login: string; teams: string[] | null; teamError?: string };
   cursor: number;
   inbox: Entry[];
   repositories: Repository[];
@@ -141,7 +164,27 @@ export interface Snapshot {
   runs: Run[];
   skills: Skill[];
   attention: Attention[];
+  questionRecoveries?: QuestionRecovery[];
   config: Config;
+}
+export interface PublishedReview {
+  id: string;
+  url: string;
+  author: string;
+  state: string;
+  body: string;
+  head: string;
+  submittedAt: string;
+  comments: {id: string; url: string; author: string; body: string; path: string; line?: number}[];
+}
+export interface PRReviews {
+ refresh?: string;
+ retryAt?: string;
+  itemId: string;
+  reviews: PublishedReview[];
+  syncedAt: string;
+  lastAttempt: string;
+  error?: string;
 }
 export interface JournalEvent {
   seq: number;
@@ -156,8 +199,11 @@ export interface EventPage {
   hasMore: boolean;
 }
 export interface Detail {
+ observation?: {observedAt:string;refresh:string;error?:string;retryAt?:string};
+ refreshError?: string;
   item: Item;
   user: UserState;
+  linkedPullRequests?: PullRequest[];
   relationships: {
     id: string;
     source: string;
@@ -166,6 +212,33 @@ export interface Detail {
     manual: boolean;
   }[];
   tickets: { id: string; summary: string; status: string; error: string }[];
+}
+
+export interface PullRequest {
+  id: string;
+  title: string;
+  url: string;
+  state: string;
+  draft: boolean;
+  head: string;
+  reviewDecision: string;
+  ci: string;
+  checks: { name: string; status: string; conclusion: string; url: string }[];
+  syncedAt: string;
+  error?: string;
+  implementation?: boolean;
+}
+export interface QuestionRecovery {
+  sourceText?: string;
+  question?: string;
+  confirmation?: string;
+  originalBlocking?: boolean;
+  diagnosticError?: string;
+  textAttentionId?: string;
+  id: string;
+  runId: string;
+  stage: string;
+  attempts: number;
 }
 
 export interface Diagnostics {

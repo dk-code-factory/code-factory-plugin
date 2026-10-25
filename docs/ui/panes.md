@@ -12,10 +12,11 @@ The list expresses logical composition, not required component boundaries.
 <!-- specs:panes-0 -->
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
-| `P-IDENTITY` | `W-IDENTITY` | Product identity and connection health; top of the embedded shell. |
+| `P-IDENTITY` | `W-IDENTITY` connection status within navigation. | Connection feedback for each independently opened surface. Normal success is screen-reader-only; failures remain visible. |
 | `P-NAVIGATION` | `W-NAVIGATION` | Current page and pending requests; below identity, independent of page body. |
 | `P-FEEDBACK` | `W-GLOBAL-ERROR`, `W-CONNECTION-BLOCKER` | Shell-wide operation errors and initial connection state. Blocker replaces the page body until initial data is available. |
-| `P-CONTINUITY` | `W-CONTINUITY-NOTICE` | Footer shared by all embedded pages, including initial loading. |
+| `P-WAITING-QUEUE` | W-WAITING-ROW | Conditional content in the single active page. |
+| `P-NEW-CHAT` | W-NEW-CHAT | Conditional content in the single active page. |
 <!-- /specs:panes-0 -->
 
 ## Inbox panes
@@ -23,11 +24,9 @@ The list expresses logical composition, not required component boundaries.
 <!-- specs:panes-1 -->
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
-| `P-INBOX-QUERY` | `W-INBOX-QUERY`, `W-SYNC-HEALTH` | Inbox search/filter and configured repositories; above the list/detail split. |
-| `P-INBOX-LIST` | `W-ITEM-ROW` repeated by item ID, or `W-INBOX-EMPTY` | Filtered synchronized inbox. Selection identifies one detail context; filtering need not clear selection. |
-| `P-ITEM-DETAIL` | `W-ITEM-OVERVIEW`, `W-ITEM-ACTIONS`, `W-PRIORITY`, `W-RELATIONSHIPS`, `W-TICKET-CONTEXT`, `W-PR-EVIDENCE`, `W-ITEM-HISTORY` | One selected item ID and its displayed revision. Prompt/loading replaces the other widgets until matching detail is available. Detail loads on item-ID or revision changes and remount; refreshing the shared snapshot alone does not reload it. |
-| `P-REPORT-LIST` | Search, processing/component/version filters, report rows, pagination and manual refresh. | The shared persistent report ledger. |
-| `P-REPORT-DETAIL` | Observation, findings, missing information, evidence, GitHub and delivery, freshness and recovery. | The selected durable report ID. |
+| `P-INBOX-QUERY` | `W-INBOX-QUERY`, `W-SYNC-HEALTH` | Independent compact search/filter controls for the current work queue, with repository errors when present. |
+| `P-INBOX-LIST` | `W-ITEM-ROW` repeated by item ID, or `W-INBOX-EMPTY` | Full-width filtered list on the active Working, Issues, My PRs or Review PRs page. Selection opens one item conversation. |
+| `P-ITEM-DETAIL` | `W-ITEM-OVERVIEW`, `W-ITEM-ACTIONS`, `W-PRIORITY`, `W-RELATIONSHIPS`, `W-TICKET-CONTEXT`, `W-PR-EVIDENCE`, `W-ITEM-HISTORY`; contextual Back-only `W-NAVIGATION` instance. | Item summary above chat and collapsed triage/details below it on PAGE-AGENT. Submitted PR reviews are visible above chat rather than hidden in Activity. |
 <!-- /specs:panes-1 -->
 
 ## Agent panes
@@ -35,8 +34,8 @@ The list expresses logical composition, not required component boundaries.
 <!-- specs:panes-2 -->
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
-| `P-RUN-LIST` | `W-RUN-ROW` repeated by run ID, or `W-RUN-EMPTY` | All retained runs except prepared runs; selection is independent of inbox selection. |
-| `P-RUN-DETAIL` | `W-RUN-CONTROLS`, `W-ATTENTION-NOTICE` repeated by request ID, `W-TRANSCRIPT`, `W-MESSAGE`; or `W-RUN-EMPTY` | One selected run, its pending attention and transcript cursor. Selection of a different run resets this pane's local transcript/message state. |
+| `P-RUN-LIST` | `W-RUN-ROW` repeated by run ID, or `W-RUN-EMPTY` | Collapsed Work history inside the selected item’s Item details, containing only that item’s retained conversations and nested Draft launches. |
+| `P-RUN-DETAIL` | `W-RUN-CONTROLS`, `W-ATTENTION-NOTICE` repeated by request ID, `W-TRANSCRIPT`, `W-MESSAGE`; or `W-RUN-EMPTY`; contextual Back-only `W-NAVIGATION` instance. Session console and question recovery widgets share the retained session context. | Conversation content on PAGE-AGENT below the item summary, with origin-specific Back and per-run follow-up drafts. |
 <!-- /specs:panes-2 -->
 
 ## Settings panes
@@ -45,14 +44,15 @@ The list expresses logical composition, not required component boundaries.
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
 | `P-REPOSITORIES` | `W-REPOSITORY-SETTINGS` | Repository drafts and configured-repository summary. Discovery updates the skills available to other panes. |
-| `P-POLICIES` | `W-POLICY-SETTINGS`, `W-JIRA-CREDENTIAL` | Ordinary settings and private credential submission are separate forms in the same pane. Saving policy does not submit the credential. |
+| `P-POLICIES` | `W-POLICY-SETTINGS` | Collapsed priority and notification form with ordinary label/priority rows and local feedback. |
 | `P-PROFILES` | `W-PROFILE-SETTINGS` | One editable profile and its default skills; connects to future launch preparation. |
 | `P-SKILLS` | `W-SKILL-SETTINGS` | One managed skill draft and the currently known managed skills. |
 | `P-DIAGNOSTICS` | `W-DIAGNOSTICS` | Explicitly requested health results and provider authorization guidance. |
+| `P-PLUGIN-ADMIN` | `W-PLUGIN-ADMIN` | A collapsed settings disclosure independent of task conversations. |
+| `P-SYSTEM-DEFAULTS` | `W-GITHUB-USAGE`, `W-SYSTEM-DEFAULTS` | A collapsed settings disclosure independent of task conversations. |
 <!-- /specs:panes-3 -->
 
-These five panes share the Settings page's local draft lifetime. They are a grid
-of sections, not separate routed pages or sequential wizard steps.
+These five relevant panes share the Settings page's local draft lifetime. They are collapsible sections with Repositories initially open; saves remain in Settings with independent form feedback.
 
 ## Launch dialog panes
 
@@ -60,20 +60,19 @@ of sections, not separate routed pages or sequential wizard steps.
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
 | `P-LAUNCH-FRAME` | `W-DIALOG-FRAME` | Launch title, originating item and close control; common to both phases. |
-| `P-LAUNCH-EDITOR` | `W-LAUNCH-EDITOR` | Selected item, profile and editable task draft; shown before a prepared snapshot is selected. |
-| `P-LAUNCH-REVIEW` | `W-LAUNCH-REVIEW` | One durable prepared run; replaces the editor after successful preparation. |
+| `P-LAUNCH-EDITOR` | `W-LAUNCH-EDITOR` | Optional Edit view of a selected item and profile with Advanced customization. |
+| `P-LAUNCH-REVIEW` | `W-LAUNCH-REVIEW` | Default entry into launch; one durable snapshot, also reopened from Draft launches. |
 <!-- /specs:panes-4 -->
 
 The editor and review panes are alternatives, not simultaneously editable panes.
-Closing the dialog removes their local state. A prepared record can outlive that
-dialog even though it is omitted from the current Agents list.
+Closing the dialog removes their local state. A prepared record outlives the dialog and reopens from Draft launches without another preparation.
 
 ## Attention dialog panes
 
 <!-- specs:panes-5 -->
 | Pane | Widgets | Shared context and placement |
 | --- | --- | --- |
-| `P-ATTENTION-FRAME` | `W-DIALOG-FRAME` | Request identity, blocking/continuing explanation, close, inline submission error and Open agent chat. |
+| `P-ATTENTION-FRAME` | `W-DIALOG-FRAME` | Owning item title/profile, blocking explanation, close, local error and Open agent chat. |
 | `P-QUESTIONS` | `W-QUESTIONS` | Used when the request supplies questions; all question answers are submitted together. |
 | `P-APPROVAL` | `W-APPROVAL` | Nonquestion command/file/permission approval with original request detail and available decisions. |
 | `P-ELICITATION` | `W-ELICITATION` plus request-details display from `W-APPROVAL` | Nonquestion elicitation: supported form, external authorization URL or unsupported-native-host notice. |
@@ -97,14 +96,12 @@ are variants within the same dialog; there is no approval navigation page.
 
 ## Layout and access constraints
 
-- Inbox and Agents use list/detail side-by-side on larger widths. At widths up to
-  700px they stack; lists become vertically bounded and scrollable. These remain
-  the same panes, not new mobile pages.
-- Settings uses a responsive section grid and becomes one column on narrow
-  widths. Each pane keeps its own form semantics.
-- Dialogs overlay the page, constrain their height and allow internal scrolling.
-  Their current code declares modal roles but does not establish keyboard focus
-  trapping/restoration, Escape handling, or mutual exclusion of both dialogs.
+- Work tabs display full-width lists; selection replaces the list with one
+  conversation page at every width. No side-by-side or stacked list/detail layout.
+- Settings is one column of collapsed sections with Repositories open initially.
+- Dialogs overlay the current page, constrain height and scroll internally.
+  Local keyboard fixtures cover focus containment, Escape and opener restoration;
+  complete installed-host accessibility remains separately unverified.
 - Shared connection and error feedback must remain distinguishable from an
   individual run's failure and an attention submission error. They have different
   owners and recovery actions.

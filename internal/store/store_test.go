@@ -11,6 +11,39 @@ import (
 	"testing"
 )
 
+func TestRecordsKeepStorageKeysAndProjectionPreservesSource(t *testing.T) {
+	ctx := context.Background()
+	s, err := Open(filepath.Join(t.TempDir(), "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	source := map[string]any{"id": "legacy-embedded-id", "title": "visible", "activity": []string{strings.Repeat("history", 1000)}, "pr": map[string]any{"state": "open", "checks": []string{"large"}}}
+	if err := s.Put(ctx, "item", "storage-id", source, ""); err != nil {
+		t.Fatal(err)
+	}
+	records, err := s.Records(ctx, "item")
+	if err != nil || records["storage-id"] == nil || records["legacy-embedded-id"] != nil {
+		t.Fatal("database identity lost", err)
+	}
+	before := string(records["storage-id"])
+	projected, err := ListWithout[map[string]any](ctx, s, "item", "$.activity", "$.pr.checks")
+	if err != nil || len(projected) != 1 {
+		t.Fatal("projection", err)
+	}
+	if projected[0]["activity"] != nil || projected[0]["pr"].(map[string]any)["checks"] != nil || projected[0]["title"] != "visible" || projected[0]["pr"].(map[string]any)["state"] != "open" {
+		t.Fatal("incorrect projection")
+	}
+	after, err := s.Records(ctx, "item")
+	if err != nil || string(after["storage-id"]) != before {
+		t.Fatal("projection modified retained data", err)
+	}
+	empty, err := ListWithout[map[string]any](ctx, s, "item' OR 1=1 --", "$.activity")
+	if err != nil || len(empty) != 0 {
+		t.Fatal("bucket must be a bound parameter", err)
+	}
+}
+
 func TestTransactionsAndVault(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
@@ -54,6 +87,18 @@ func TestTransactionsAndVault(t *testing.T) {
 	got, e := v.Get(ctx, "jira")
 	if e != nil || got != "secret-token" {
 		t.Fatal(got, e)
+	}
+	e = s.Write(ctx, func(tx *Tx) error {
+		if err := v.SetTx(tx, "answer", "private-answer"); err != nil {
+			return err
+		}
+		return boom
+	})
+	if !errors.Is(e, boom) {
+		t.Fatal(e)
+	}
+	if _, err := v.Get(ctx, "answer"); !errors.Is(err, ErrNotFound) {
+		t.Fatal("rolled-back answer remained in vault", err)
 	}
 	info, e := os.Stat(filepath.Join(dir, "vault.key"))
 	if e != nil || info.Mode().Perm() != 0600 {

@@ -1,6 +1,6 @@
 {
   "name": "code-factory",
-  "version": "0.2.2",
+  "version": "0.2.8",
   "description": "Triage GitHub issues and pull requests, launch isolated Codex tasks, and answer agents in ChatGPT Work.",
   "keywords": [
     "github",
@@ -24,6 +24,7 @@
     "composerIcon": "./assets/icon.svg",
     "logo": "./assets/logo.svg",
     "defaultPrompt": [
+      "Run the configured review pipeline for a pull request.",
       "Open Code Factory\u2019s GitHub issue and pull-request dashboard.",
       "Show my agents that need attention.",
       "Investigate an issue with a read-only Codex agent."

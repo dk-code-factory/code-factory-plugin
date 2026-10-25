@@ -344,7 +344,7 @@ The current turn has finished and the retained session can receive follow-up.
 
 `state-interrupted` · state
 
-Active work has stopped and requires explicit continuation.
+Active work has stopped with its session retained for continuation.
 
 <a id="state-failed"></a>
 ## Failed
@@ -2440,18 +2440,22 @@ The local tunnel key pane within the application interface.
 The browser lab pane within the application interface.
 
 <a id="ui-page-inbox"></a>
-## Inbox page
+## Issues page
 
 `ui-page-inbox` · ui-page
 
-The inbox page within the application interface.
+The issues page within the application interface.
+
+Aliases: Inbox page.
 
 <a id="ui-page-agents"></a>
-## Agents page
+## Messages page
 
 `ui-page-agents` · ui-page
 
-The agents page within the application interface.
+The messages page within the application interface.
+
+Aliases: Agents page.
 
 <a id="ui-page-settings"></a>
 ## Settings page
@@ -2740,549 +2744,1104 @@ The tunnel key connection within the application interface.
 
 The browser lab connection within the application interface.
 
+<a id="element-w-sync-health-details"></a>
+## details
+
+`element-w-sync-health-details` · element · scope: ui-w-sync-health
+
+The disclosure containing routine repository synchronization times.
+
+<a id="element-w-inbox-empty-no-matches"></a>
+## no-matches
+
+`element-w-inbox-empty-no-matches` · element · scope: ui-w-inbox-empty
+
+Feedback that the current search and filter have no matching items.
+
+<a id="element-w-inbox-empty-clear-filters"></a>
+## clear-filters
+
+`element-w-inbox-empty-clear-filters` · element · scope: ui-w-inbox-empty
+
+The control that resets search and includes all item states.
+
+<a id="element-w-item-actions-open-agent"></a>
+## open-agent
+
+`element-w-item-actions-open-agent` · element · scope: ui-w-item-actions
+
+The control for continuing the most recent retained agent run for an item.
+
+<a id="element-w-priority-save-status"></a>
+## save-status
+
+`element-w-priority-save-status` · element · scope: ui-w-priority
+
+Feedback for an immediate priority save or its failure.
+
+<a id="element-w-run-row-draft-launches"></a>
+## draft-launches
+
+`element-w-run-row-draft-launches` · element · scope: ui-w-run-row
+
+The collapsed group of prepared launches awaiting an explicit start.
+
+<a id="element-w-run-controls-task-title"></a>
+## task-title
+
+`element-w-run-controls-task-title` · element · scope: ui-w-run-controls
+
+The title of the work item associated with the selected run.
+
+<a id="element-w-run-controls-details"></a>
+## details
+
+`element-w-run-controls-details` · element · scope: ui-w-run-controls
+
+The disclosure containing workspace location and secondary agent actions.
+
+<a id="element-w-run-controls-cleanup-effect"></a>
+## cleanup-effect
+
+`element-w-run-controls-cleanup-effect` · element · scope: ui-w-run-controls
+
+An explanation that cleanup retires the retained session and removes only a clean workspace.
+
+<a id="element-w-transcript-command-disclosure"></a>
+## command-disclosure
+
+`element-w-transcript-command-disclosure` · element · scope: ui-w-transcript
+
+The disclosure containing a command or its output in conversation history.
+
+<a id="element-w-launch-editor-advanced"></a>
+## advanced
+
+`element-w-launch-editor-advanced` · element · scope: ui-w-launch-editor
+
+The disclosure containing optional model, effort, skills and base customization.
+
+<a id="element-w-launch-review-profile"></a>
+## profile
+
+`element-w-launch-review-profile` · element · scope: ui-w-launch-review
+
+The work profile captured in the prepared launch.
+
+<a id="element-w-launch-review-mode"></a>
+## mode
+
+`element-w-launch-review-mode` · element · scope: ui-w-launch-review
+
+The agent mode captured in the prepared launch.
+
+<a id="element-w-launch-review-check-status"></a>
+## check-status
+
+`element-w-launch-review-check-status` · element · scope: ui-w-launch-review
+
+The control for verifying whether an uncertain Start was accepted.
+
+<a id="element-w-dialog-frame-owning-task"></a>
+## owning-task
+
+`element-w-dialog-frame-owning-task` · element · scope: ui-w-dialog-frame
+
+The item title and work profile identifying the task requesting attention.
+
+<a id="element-w-approval-command"></a>
+## command
+
+`element-w-approval-command` · element · scope: ui-w-approval
+
+The command requested by an approval.
+
+<a id="element-w-approval-reason"></a>
+## reason
+
+`element-w-approval-reason` · element · scope: ui-w-approval
+
+The reason supplied for an approval request.
+
+<a id="element-w-approval-requested-access"></a>
+## requested-access
+
+`element-w-approval-requested-access` · element · scope: ui-w-approval
+
+The permission or file access requested by the agent.
+
+<a id="element-w-approval-technical-details"></a>
+## technical-details
+
+`element-w-approval-technical-details` · element · scope: ui-w-approval
+
+The collapsed original approval request payload.
+
+<a id="element-w-repository-settings-save-result"></a>
+## save-result
+
+`element-w-repository-settings-save-result` · element · scope: ui-w-repository-settings
+
+The local saving, success or failure feedback for the settings form.
+
+<a id="element-w-policy-settings-save-result"></a>
+## save-result
+
+`element-w-policy-settings-save-result` · element · scope: ui-w-policy-settings
+
+The local saving, success or failure feedback for the settings form.
+
+<a id="element-w-profile-settings-save-result"></a>
+## save-result
+
+`element-w-profile-settings-save-result` · element · scope: ui-w-profile-settings
+
+The local saving, success or failure feedback for the settings form.
+
+<a id="element-w-skill-settings-save-result"></a>
+## save-result
+
+`element-w-skill-settings-save-result` · element · scope: ui-w-skill-settings
+
+The local saving, success or failure feedback for the settings form.
+
+<a id="element-w-policy-settings-add-label"></a>
+## add-label
+
+`element-w-policy-settings-add-label` · element · scope: ui-w-policy-settings
+
+The control to add a label and priority mapping row.
+
+<a id="element-w-policy-settings-remove-label"></a>
+## remove-label
+
+`element-w-policy-settings-remove-label` · element · scope: ui-w-policy-settings
+
+The control to remove a label and priority mapping row.
+
+<a id="element-w-jira-credential-jira-url"></a>
+## jira-url
+
+`element-w-jira-credential-jira-url` · element · scope: ui-w-jira-credential
+
+The configured Jira tenant address.
+
+<a id="element-w-jira-credential-jira-email"></a>
+## jira-email
+
+`element-w-jira-credential-jira-email` · element · scope: ui-w-jira-credential
+
+The configured Jira account email.
+
+<a id="element-w-jira-credential-disabled-notice"></a>
+## disabled-notice
+
+`element-w-jira-credential-disabled-notice` · element · scope: ui-w-jira-credential
+
+The explanation that Jira is disabled for the pilot.
+
+<a id="ui-p-integrations"></a>
+## Integrations pane
+
+`ui-p-integrations` · ui-pane
+
+The group of external service configuration controls within the application interface.
+
+<a id="element-w-package-overview-advanced"></a>
+## advanced
+
+`element-w-package-overview-advanced` · element · scope: ui-w-package-overview
+
+The disclosure containing portable packages, checksums and manifests.
+
+<a id="ui-page-item"></a>
+## Item page
+
+`ui-page-item` · ui-page
+
+A focused application surface for one work item.
+
+<a id="ui-page-agent"></a>
+## Agent page
+
+`ui-page-agent` · ui-page
+
+A focused application surface for one retained agent run.
+
+<a id="element-w-navigation-back"></a>
+## back
+
+`element-w-navigation-back` · element · scope: ui-w-navigation
+
+The action returning from a focused record to its originating page.
+
+<a id="ui-c-back"></a>
+## Back navigation
+
+`ui-c-back` · ui-connection
+
+A return from focused work to its originating application surface.
+
+<a id="element-w-item-row-source-link"></a>
+## source-link
+
+`element-w-item-row-source-link` · element · scope: ui-w-item-row
+
+The link to the original provider page for a work item.
+
+<a id="ui-c-item-source"></a>
+## Original item navigation
+
+`ui-c-item-source` · ui-connection
+
+A transition to the original provider page for a work item.
+
+<a id="ui-s-settings"></a>
+## Settings surface
+
+`ui-s-settings` · ui-shell
+
+The independent application surface for configuration.
+
+<a id="ui-c-open-settings"></a>
+## Dedicated settings entry
+
+`ui-c-open-settings` · ui-connection
+
+An entry into the independent configuration surface.
+
+<a id="ui-page-my-prs"></a>
+## My pull requests page
+
+`ui-page-my-prs` · ui-page
+
+The my pull requests page within the application interface.
+
+<a id="ui-page-review-prs"></a>
+## Review pull requests page
+
+`ui-page-review-prs` · ui-page
+
+The review pull requests page within the application interface.
+
+<a id="element-w-navigation-my-prs"></a>
+## my-prs
+
+`element-w-navigation-my-prs` · element · scope: ui-w-navigation
+
+The my-prs control or displayed value in the navigation widget.
+
+<a id="element-w-navigation-review-prs"></a>
+## review-prs
+
+`element-w-navigation-review-prs` · element · scope: ui-w-navigation
+
+The review-prs control or displayed value in the navigation widget.
+
+<a id="element-w-navigation-messages"></a>
+## messages
+
+`element-w-navigation-messages` · element · scope: ui-w-navigation
+
+The messages control or displayed value in the navigation widget.
+
+<a id="ui-p-waiting-queue"></a>
+## Waiting messages pane
+
+`ui-p-waiting-queue` · ui-pane
+
+The waiting messages pane within the application interface.
+
+<a id="ui-p-new-chat"></a>
+## First conversation pane
+
+`ui-p-new-chat` · ui-pane
+
+The first conversation pane within the application interface.
+
+<a id="ui-w-waiting-row"></a>
+## Waiting message widget
+
+`ui-w-waiting-row` · ui-widget
+
+The waiting message widget within the application interface.
+
+<a id="element-w-waiting-row-select"></a>
+## select
+
+`element-w-waiting-row-select` · element · scope: ui-w-waiting-row
+
+The select control or displayed value in the waiting message widget.
+
+<a id="element-w-waiting-row-title"></a>
+## title
+
+`element-w-waiting-row-title` · element · scope: ui-w-waiting-row
+
+The title control or displayed value in the waiting message widget.
+
+<a id="element-w-waiting-row-profile"></a>
+## profile
+
+`element-w-waiting-row-profile` · element · scope: ui-w-waiting-row
+
+The profile control or displayed value in the waiting message widget.
+
+<a id="element-w-waiting-row-question"></a>
+## question
+
+`element-w-waiting-row-question` · element · scope: ui-w-waiting-row
+
+The question control or displayed value in the waiting message widget.
+
+<a id="element-w-waiting-row-state"></a>
+## state
+
+`element-w-waiting-row-state` · element · scope: ui-w-waiting-row
+
+The state control or displayed value in the waiting message widget.
+
+<a id="ui-w-new-chat"></a>
+## First message widget
+
+`ui-w-new-chat` · ui-widget
+
+The first message widget within the application interface.
+
+<a id="element-w-new-chat-message"></a>
+## message
+
+`element-w-new-chat-message` · element · scope: ui-w-new-chat
+
+The message control or displayed value in the first message widget.
+
+<a id="element-w-new-chat-authority"></a>
+## authority
+
+`element-w-new-chat-authority` · element · scope: ui-w-new-chat
+
+The authority control or displayed value in the first message widget.
+
+<a id="element-w-new-chat-start"></a>
+## start
+
+`element-w-new-chat-start` · element · scope: ui-w-new-chat
+
+The start control or displayed value in the first message widget.
+
+<a id="element-w-new-chat-check-status"></a>
+## check-status
+
+`element-w-new-chat-check-status` · element · scope: ui-w-new-chat
+
+The check-status control or displayed value in the first message widget.
+
+<a id="element-w-new-chat-error"></a>
+## error
+
+`element-w-new-chat-error` · element · scope: ui-w-new-chat
+
+The error control or displayed value in the first message widget.
+
+<a id="ui-c-start-chat"></a>
+## First message start connection
+
+`ui-c-start-chat` · ui-connection
+
+The first message start connection within the application interface.
+
+<a id="element-w-item-overview-retry"></a>
+## retry
+
+`element-w-item-overview-retry` · element · scope: ui-w-item-overview
+
+The retry control or displayed value in the item overview widget.
+
+<a id="element-w-item-overview-read-error"></a>
+## read-error
+
+`element-w-item-overview-read-error` · element · scope: ui-w-item-overview
+
+The read-error control or displayed value in the item overview widget.
+
+<a id="element-w-transcript-read-error"></a>
+## read-error
+
+`element-w-transcript-read-error` · element · scope: ui-w-transcript
+
+The read-error control or displayed value in the transcript widget.
+
+<a id="element-w-transcript-technical-activity"></a>
+## technical-activity
+
+`element-w-transcript-technical-activity` · element · scope: ui-w-transcript
+
+The technical-activity content within the transcript widget.
+
+<a id="element-w-transcript-error-details"></a>
+## error-details
+
+`element-w-transcript-error-details` · element · scope: ui-w-transcript
+
+The error-details content within the transcript widget.
+
+<a id="ui-w-work-status"></a>
+## Work status widget
+
+`ui-w-work-status` · ui-widget
+
+A compact display of activity or waiting state attached to a work item.
+
+<a id="element-w-work-status-value"></a>
+## value
+
+`element-w-work-status-value` · element · scope: ui-w-work-status
+
+The displayed activity or waiting state in a work status widget.
+
+<a id="working-queue"></a>
+## Working queue
+
+`working-queue` · domain
+
+The collection of launched work whose issue remains open without a merged implementation pull request, or whose pull request remains open.
+
+<a id="agent-pipeline"></a>
+## Agent pipeline
+
+`agent-pipeline` · domain
+
+A selected reusable profile for one retained agent session.
+
 <a id="question-recovery"></a>
 ## Question recovery
 
 `question-recovery` · domain
 
-A bounded effort to recover an unanswered human question while preserving the original task and authority.
+A bounded dialogue that turns an unresolved textual request for human input into an answerable question.
 
-<a id="state-recovering"></a>
-## Recovering
+<a id="session-console"></a>
+## Session console
 
-`state-recovering` · state
+`session-console` · domain
 
-A pending human question is being checked or restated before task continuation.
+An alternative view of one retained agent conversation and its technical activity.
 
-<a id="element-w-run-controls-waiting-icon"></a>
-## waiting-icon
+<a id="implementation-relationship"></a>
+## Implementation relationship
 
-`element-w-run-controls-waiting-icon` · element · scope: ui-w-run-controls
+`implementation-relationship` · domain
 
-The decorative clock beside a readable waiting status.
+An explicit association between an issue and a pull request intended to address it.
 
-<a id="element-w-run-controls-recovery-progress"></a>
-## recovery-progress
+<a id="ui-page-working"></a>
+## Working page
 
-`element-w-run-controls-recovery-progress` · element · scope: ui-w-run-controls
+`ui-page-working` · ui-page
 
-The readable status of question recovery and its bounded attempts.
+The page displaying launched work awaiting GitHub completion.
 
-<a id="element-w-run-controls-recovery-icon"></a>
-## recovery-icon
+<a id="ui-w-session-console"></a>
+## Session console widget
 
-`element-w-run-controls-recovery-icon` · element · scope: ui-w-run-controls
+`ui-w-session-console` · ui-widget
 
-The decorative circular arrow beside recovery progress.
+The widget displaying a retained session and its technical activity.
 
-<a id="element-w-run-controls-takeover"></a>
+<a id="ui-w-question-recovery"></a>
+## Question recovery widget
+
+`ui-w-question-recovery` · ui-widget
+
+The widget displaying question repair progress and user takeover.
+
+<a id="ui-c-session-console"></a>
+## Session console connection
+
+`ui-c-session-console` · ui-connection
+
+The connection selecting a retained session presentation.
+
+<a id="element-w-navigation-working"></a>
+## working
+
+`element-w-navigation-working` · element · scope: ui-w-navigation
+
+The control opening the Working queue.
+
+<a id="element-w-pr-evidence-lifecycle"></a>
+## lifecycle
+
+`element-w-pr-evidence-lifecycle` · element · scope: ui-w-pr-evidence
+
+The independently displayed open, closed or merged pull request state.
+
+<a id="element-w-pr-evidence-review"></a>
+## review
+
+`element-w-pr-evidence-review` · element · scope: ui-w-pr-evidence
+
+The authoritative pull request review decision.
+
+<a id="element-w-pr-evidence-ci"></a>
+## ci
+
+`element-w-pr-evidence-ci` · element · scope: ui-w-pr-evidence
+
+The current-head check rollup.
+
+<a id="element-w-pr-evidence-linked-pr"></a>
+## linked-pr
+
+`element-w-pr-evidence-linked-pr` · element · scope: ui-w-pr-evidence
+
+A related pull request summary and source link.
+
+<a id="element-w-pr-evidence-error"></a>
+## error
+
+`element-w-pr-evidence-error` · element · scope: ui-w-pr-evidence
+
+A visible unavailable or stale synchronization result.
+
+<a id="element-w-new-chat-pipeline"></a>
+## pipeline
+
+`element-w-new-chat-pipeline` · element · scope: ui-w-new-chat
+
+The selected reusable launch profile.
+
+<a id="element-w-session-console-output"></a>
+## output
+
+`element-w-session-console-output` · element · scope: ui-w-session-console
+
+The redacted technical activity and conversation stream.
+
+<a id="element-w-question-recovery-progress"></a>
+## progress
+
+`element-w-question-recovery-progress` · element · scope: ui-w-question-recovery
+
+The current question recovery stage and attempt count.
+
+<a id="element-w-question-recovery-takeover"></a>
 ## takeover
 
-`element-w-run-controls-takeover` · element · scope: ui-w-run-controls
+`element-w-question-recovery-takeover` · element · scope: ui-w-question-recovery
 
-The control that stops question recovery for owner takeover.
+The control returning session control to the user.
 
-<a id="element-w-run-controls-confirmation"></a>
-## confirmation
+<a id="element-w-transcript-console"></a>
+## console
 
-`element-w-run-controls-confirmation` · element · scope: ui-w-run-controls
+`element-w-transcript-console` · element · scope: ui-w-transcript
 
-The temporary acknowledgement of a successful response in its owning run.
-
-<a id="element-w-attention-notice-waiting-icon"></a>
-## waiting-icon
-
-`element-w-attention-notice-waiting-icon` · element · scope: ui-w-attention-notice
-
-The decorative clock beside a readable waiting request label.
-
-<a id="element-w-questions-dismiss"></a>
-## dismiss
-
-`element-w-questions-dismiss` · element · scope: ui-w-questions
-
-The control that dismisses a textual question without replying or granting authority.
+The control switching between conversation and session console.
 
 <a id="element-w-policy-settings-question-helper-model"></a>
 ## question-helper-model
 
 `element-w-policy-settings-question-helper-model` · element · scope: ui-w-policy-settings
 
-The optional model used to check stopped task questions, with an empty value meaning the task model.
+The optional model used for question recovery.
 
-<a id="ui-c-question-recovery"></a>
-## Question recovery data connection
+<a id="element-w-run-controls-session-status"></a>
+## session-status
 
-`ui-c-question-recovery` · ui-connection
+`element-w-run-controls-session-status` · element · scope: ui-w-run-controls
 
-The connection between question recovery progress and its owning question and run.
+The displayed lifecycle status of the currently selected session.
 
-<a id="ui-c-dismiss-question"></a>
-## Question dismissal connection
+<a id="element-w-questions-no-reply"></a>
+## no-reply
 
-`ui-c-dismiss-question` · ui-connection
+`element-w-questions-no-reply` · element · scope: ui-w-questions
 
-The local dismissal connection for a textual question.
+The control dismissing a textual fallback that needs no user answer.
 
-<a id="issue-report"></a>
-## Issue report
+<a id="element-w-pr-evidence-check-link"></a>
+## check-link
 
-`issue-report` · domain
+`element-w-pr-evidence-check-link` · element · scope: ui-w-pr-evidence
 
-A retained observation of suspected defective behavior with its investigation and delivery evidence.
+A source link to an individual CI check or status provider.
 
-<a id="report-ledger"></a>
-## Report ledger
+<a id="ui-c-pipeline-select"></a>
+## Pipeline selection connection
 
-`report-ledger` · domain
+`ui-c-pipeline-select` · ui-connection
 
-The persistent collection of issue reports and their independent histories.
+The pipeline selection connection within the application interface.
 
-<a id="report-processing"></a>
-## Report processing state
+<a id="ui-c-text-dismiss"></a>
+## Text question dismissal connection
 
-`report-processing` · domain
+`ui-c-text-dismiss` · ui-connection
 
-The progress of an observation through investigation, information requests, publication and recovery.
+The text question dismissal connection within the application interface.
 
-<a id="report-outcome"></a>
-## Report outcome
+<a id="codex-plugin"></a>
+## Codex plugin
 
-`report-outcome` · domain
+`codex-plugin` · domain
 
-The investigation disposition identifying a filed issue, a duplicate or explained behavior.
+An installed or available Codex extension containing skills, tools or hooks from a chosen source.
 
-<a id="evidence-manifest"></a>
-## Evidence manifest
+<a id="plugin-marketplace"></a>
+## Plugin marketplace
 
-`evidence-manifest` · domain
+`plugin-marketplace` · domain
 
-An inventory of evidence origins, capture times, content identities, omissions and truncation.
+A local, Git-backed or remote catalog from which Codex plugins are selected.
 
-<a id="delivery-evidence"></a>
-## Delivery evidence
+<a id="plugin-inventory"></a>
+## Plugin inventory
 
-`delivery-evidence` · domain
+`plugin-inventory` · domain
 
-Verified relationships among a fix, its component version and a published package.
+The last observed plugin installation, enablement and version state.
 
-<a id="fixed-issue"></a>
-## Fixed-issue reference
+<a id="plugin-maintenance"></a>
+## Plugin maintenance
 
-`fixed-issue` · domain
+`plugin-maintenance` · domain
 
-An explicit association of an issue with the source commit that corrects it.
+An explicit operation that observes or changes Codex plugin state.
 
-<a id="element-w-navigation-reports"></a>
-## reported issues
+<a id="review-policy"></a>
+## Review policy
 
-`element-w-navigation-reports` · element · scope: ui-w-navigation
+`review-policy` · domain
 
-The reported issues destination control in the navigation widget.
+The effective system default or repository override controlling whether requested reviews are queued or started automatically.
 
-<a id="ui-page-reports"></a>
-## Reported issues page
+<a id="repository-review-prompt"></a>
+## Repository review prompt
 
-`ui-page-reports` · ui-page
+`repository-review-prompt` · domain
 
-The page presenting retained issue reports.
+Owner-defined repository instructions appended to a generic review prompt.
 
-<a id="ui-p-report-list"></a>
-## Report list pane
+<a id="review-request-claim"></a>
+## Review request claim
 
-`ui-p-report-list` · ui-pane
+`review-request-claim` · domain
 
-The pane containing report discovery and filtering controls.
+A durable association between a review-request episode, pull-request head and one retained review run.
 
-<a id="ui-p-report-detail"></a>
-## Report detail pane
+<a id="ui-w-plugin-admin"></a>
+## Codex plugin admin widget
 
-`ui-p-report-detail` · ui-pane
+`ui-w-plugin-admin` · ui-widget
 
-The pane presenting the selected report and its recovery controls.
+The plugin inventory and maintenance controls in the administration interface.
 
-<a id="ui-w-report-list"></a>
-## Report list widget
+<a id="element-w-plugin-admin-inventory"></a>
+## inventory
 
-`ui-w-report-list` · ui-widget
+`element-w-plugin-admin-inventory` · element · scope: ui-w-plugin-admin
 
-The searchable and paginated presentation of retained reports.
+The inventory control or observed value in Codex plugin administration.
 
-<a id="ui-w-report-detail"></a>
-## Report detail widget
-
-`ui-w-report-detail` · ui-widget
-
-The presentation of one report, its investigation, evidence and delivery state.
-
-<a id="ui-c-report-select"></a>
-## Report selection connection
-
-`ui-c-report-select` · ui-connection
-
-The transition from a report row to its details.
-
-<a id="ui-c-report-evidence"></a>
-## Report evidence connection
-
-`ui-c-report-evidence` · ui-connection
-
-The addition of an observation to a retained report.
-
-<a id="ui-c-report-recover"></a>
-## Report recovery connection
-
-`ui-c-report-recover` · ui-connection
-
-The explicit recovery of retained report work.
-
-<a id="ui-c-report-refresh"></a>
-## Report refresh connection
-
-`ui-c-report-refresh` · ui-connection
-
-The refresh of issue and delivery evidence.
-
-<a id="element-w-report-list-heading"></a>
-## heading
-
-`element-w-report-list-heading` · element · scope: ui-w-report-list
-
-The heading naming the retained report collection in the report list widget.
-
-<a id="element-w-report-list-subtitle"></a>
-## subtitle
-
-`element-w-report-list-subtitle` · element · scope: ui-w-report-list
-
-The description of investigation, issue state and verified delivery in the report list widget.
-
-<a id="element-w-report-list-refresh"></a>
-## refresh
-
-`element-w-report-list-refresh` · element · scope: ui-w-report-list
-
-The action requesting refreshed issue and release evidence in the report list widget.
-
-<a id="element-w-report-list-error"></a>
-## error
-
-`element-w-report-list-error` · element · scope: ui-w-report-list
-
-The alert displaying a report read, mutation or external-link failure in the report list widget.
-
-<a id="element-w-report-list-search"></a>
+<a id="element-w-plugin-admin-search"></a>
 ## search
 
-`element-w-report-list-search` · element · scope: ui-w-report-list
+`element-w-plugin-admin-search` · element · scope: ui-w-plugin-admin
 
-The text input matching a report identifier, observation surface or actual behavior, processing explanation or investigation summary in the report list widget.
+The search control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-processing-filter"></a>
-## processing-filter
+<a id="element-w-plugin-admin-available"></a>
+## available
 
-`element-w-report-list-processing-filter` · element · scope: ui-w-report-list
+`element-w-plugin-admin-available` · element · scope: ui-w-plugin-admin
 
-The selector narrowing reports by their processing state in the report list widget.
+The available control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-component-filter"></a>
-## component-filter
+<a id="element-w-plugin-admin-previous"></a>
+## previous
 
-`element-w-report-list-component-filter` · element · scope: ui-w-report-list
+`element-w-plugin-admin-previous` · element · scope: ui-w-plugin-admin
 
-The input narrowing reports by component in the report list widget.
+The previous control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-version-filter"></a>
-## version-filter
+<a id="element-w-plugin-admin-next"></a>
+## next
 
-`element-w-report-list-version-filter` · element · scope: ui-w-report-list
+`element-w-plugin-admin-next` · element · scope: ui-w-plugin-admin
 
-The input narrowing reports by an observed plugin, installed or component version, or a retained release package or component version, in the report list widget.
+The next control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-empty"></a>
-## empty
+<a id="element-w-plugin-admin-refresh"></a>
+## refresh
 
-`element-w-report-list-empty` · element · scope: ui-w-report-list
+`element-w-plugin-admin-refresh` · element · scope: ui-w-plugin-admin
 
-The message displayed when the report list widget has no matching records.
+The refresh control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-select"></a>
-## select
+<a id="element-w-plugin-admin-check-updates"></a>
+## check-updates
 
-`element-w-report-list-select` · element · scope: ui-w-report-list
+`element-w-plugin-admin-check-updates` · element · scope: ui-w-plugin-admin
 
-The repeated action selecting a retained report by its observation surface and actual behavior in the report list widget.
+The check updates control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-row-processing"></a>
-## row-processing
+<a id="element-w-plugin-admin-discover-skills"></a>
+## discover-skills
 
-`element-w-report-list-row-processing` · element · scope: ui-w-report-list
+`element-w-plugin-admin-discover-skills` · element · scope: ui-w-plugin-admin
 
-The processing state displayed for each retained report in the report list widget.
+The discover skills control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-row-component"></a>
-## row-component
+<a id="element-w-plugin-admin-plugin-selector"></a>
+## plugin-selector
 
-`element-w-report-list-row-component` · element · scope: ui-w-report-list
+`element-w-plugin-admin-plugin-selector` · element · scope: ui-w-plugin-admin
 
-The component identity or unknown-component fallback displayed for each retained report in the report list widget.
+The plugin selector control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-row-id"></a>
-## row-id
+<a id="element-w-plugin-admin-install"></a>
+## install
 
-`element-w-report-list-row-id` · element · scope: ui-w-report-list
+`element-w-plugin-admin-install` · element · scope: ui-w-plugin-admin
 
-The durable identifier displayed for each retained report in the report list widget.
+The install control or observed value in Codex plugin administration.
 
-<a id="element-w-report-list-load-more"></a>
-## load-more
+<a id="element-w-plugin-admin-update"></a>
+## update
 
-`element-w-report-list-load-more` · element · scope: ui-w-report-list
+`element-w-plugin-admin-update` · element · scope: ui-w-plugin-admin
 
-The action requesting the next page of retained reports in the report list widget.
+The update control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-surface"></a>
-## surface
+<a id="element-w-plugin-admin-remove"></a>
+## remove
 
-`element-w-report-detail-surface` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-remove` · element · scope: ui-w-plugin-admin
 
-The heading identifying the selected observation's surface in the report detail widget.
+The remove control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-id"></a>
-## id
+<a id="element-w-plugin-admin-marketplace-source"></a>
+## marketplace-source
 
-`element-w-report-detail-id` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-marketplace-source` · element · scope: ui-w-plugin-admin
 
-The durable identifier of the selected report in the report detail widget.
+The marketplace source control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-processing"></a>
-## processing
+<a id="element-w-plugin-admin-marketplace-ref"></a>
+## marketplace-ref
 
-`element-w-report-detail-processing` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-marketplace-ref` · element · scope: ui-w-plugin-admin
 
-The selected report's investigation and publication progress displayed in the report detail widget.
+The marketplace ref control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-outcome"></a>
-## outcome
+<a id="element-w-plugin-admin-add-marketplace"></a>
+## add-marketplace
 
-`element-w-report-detail-outcome` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-add-marketplace` · element · scope: ui-w-plugin-admin
 
-The selected report's investigation disposition or Unknown fallback displayed in the report detail widget.
+The add marketplace control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-observed"></a>
-## observed
+<a id="element-w-plugin-admin-remove-marketplace"></a>
+## remove-marketplace
 
-`element-w-report-detail-observed` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-remove-marketplace` · element · scope: ui-w-plugin-admin
 
-The observation time or Unknown fallback displayed in the report detail widget.
+The remove marketplace control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-expected"></a>
-## expected
+<a id="element-w-plugin-admin-operation-status"></a>
+## operation-status
 
-`element-w-report-detail-expected` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-operation-status` · element · scope: ui-w-plugin-admin
 
-The expected behavior of the selected observation displayed in the report detail widget.
+The operation status control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-actual"></a>
-## actual
+<a id="element-w-plugin-admin-error"></a>
+## error
 
-`element-w-report-detail-actual` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-error` · element · scope: ui-w-plugin-admin
 
-The actual behavior of the selected observation displayed in the report detail widget.
+The error control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-reproduction"></a>
-## reproduction
+<a id="element-w-plugin-admin-skills"></a>
+## skills
 
-`element-w-report-detail-reproduction` · element · scope: ui-w-report-detail
+`element-w-plugin-admin-skills` · element · scope: ui-w-plugin-admin
 
-The reproduction steps, explanation of unknown reproduction or Unknown fallback displayed in the report detail widget.
+The skills control or observed value in Codex plugin administration.
 
-<a id="element-w-report-detail-message"></a>
-## message
+<a id="ui-w-system-defaults"></a>
+## System review defaults widget
 
-`element-w-report-detail-message` · element · scope: ui-w-report-detail
+`ui-w-system-defaults` · ui-widget
 
-The current processing explanation displayed in the report detail widget.
+The system-level defaults for review processing and plugin metadata checks.
 
-<a id="element-w-report-detail-findings"></a>
-## findings
+<a id="element-w-system-defaults-auto-review"></a>
+## auto-review
 
-`element-w-report-detail-findings` · element · scope: ui-w-report-detail
+`element-w-system-defaults-auto-review` · element · scope: ui-w-system-defaults
 
-The retained investigation summary displayed in the report detail widget.
+The auto review setting or result in system review defaults.
 
-<a id="element-w-report-detail-missing-information"></a>
-## missing-information
+<a id="element-w-system-defaults-review-pipeline"></a>
+## review-pipeline
 
-`element-w-report-detail-missing-information` · element · scope: ui-w-report-detail
+`element-w-system-defaults-review-pipeline` · element · scope: ui-w-system-defaults
 
-The request for additional information displayed in the report detail widget.
+The review pipeline setting or result in system review defaults.
 
-<a id="element-w-report-detail-open-issue"></a>
-## open-issue
+<a id="element-w-system-defaults-implementation-pipeline"></a>
+## implementation-pipeline
 
-`element-w-report-detail-open-issue` · element · scope: ui-w-report-detail
+`element-w-system-defaults-implementation-pipeline` · element · scope: ui-w-system-defaults
 
-The action opening the selected report's retained GitHub issue through the host from the report detail widget.
+The implementation pipeline setting or result in system review defaults.
 
-<a id="element-w-report-detail-issue-state"></a>
-## issue-state
+<a id="element-w-system-defaults-plugin-check-interval"></a>
+## plugin-check-interval
 
-`element-w-report-detail-issue-state` · element · scope: ui-w-report-detail
+`element-w-system-defaults-plugin-check-interval` · element · scope: ui-w-system-defaults
 
-The retained GitHub issue's open or closed state displayed in the report detail widget.
+The plugin check interval setting or result in system review defaults.
 
-<a id="element-w-report-detail-closure-reason"></a>
-## closure-reason
+<a id="element-w-system-defaults-save"></a>
+## save
 
-`element-w-report-detail-closure-reason` · element · scope: ui-w-report-detail
+`element-w-system-defaults-save` · element · scope: ui-w-system-defaults
 
-The retained GitHub issue's closure reason or Unknown fallback displayed in the report detail widget.
+The save setting or result in system review defaults.
 
-<a id="element-w-report-detail-open-fix"></a>
-## open-fix
+<a id="element-w-system-defaults-save-result"></a>
+## save-result
 
-`element-w-report-detail-open-fix` · element · scope: ui-w-report-detail
+`element-w-system-defaults-save-result` · element · scope: ui-w-system-defaults
 
-The repeated action opening a retained fix pull request or commit through the host from the report detail widget.
+The save result setting or result in system review defaults.
 
-<a id="element-w-report-detail-open-release"></a>
-## open-release
+<a id="ui-p-plugin-admin"></a>
+## Plugin administration pane
 
-`element-w-report-detail-open-release` · element · scope: ui-w-report-detail
+`ui-p-plugin-admin` · ui-pane
 
-The repeated action opening a retained stable or prerelease URL through the host from the report detail widget.
+The plugin administration pane within the settings page.
 
-<a id="element-w-report-detail-linked-fix"></a>
-## linked-fix
+<a id="ui-p-system-defaults"></a>
+## System defaults pane
 
-`element-w-report-detail-linked-fix` · element · scope: ui-w-report-detail
+`ui-p-system-defaults` · ui-pane
 
-The retained fix repository, commit and component version or Unknown fallback displayed in the report detail widget.
+The system defaults pane within the settings page.
 
-<a id="element-w-report-detail-stable-availability"></a>
-## stable-availability
+<a id="element-w-repository-settings-edit-repository"></a>
+## edit-repository
 
-`element-w-report-detail-stable-availability` · element · scope: ui-w-report-detail
+`element-w-repository-settings-edit-repository` · element · scope: ui-w-repository-settings
 
-The stable release repository, package version, component version and publication time or Unknown fallback displayed in the report detail widget.
+The edit repository control or value for repository monitoring.
 
-<a id="element-w-report-detail-prerelease-availability"></a>
-## prerelease-availability
+<a id="element-w-repository-settings-last-poll"></a>
+## last-poll
 
-`element-w-report-detail-prerelease-availability` · element · scope: ui-w-report-detail
+`element-w-repository-settings-last-poll` · element · scope: ui-w-repository-settings
 
-The prerelease repository, package version, component version and publication time or Unknown fallback displayed in the report detail widget.
+The last poll control or value for repository monitoring.
 
-<a id="element-w-report-detail-installed-version"></a>
-## installed-version
+<a id="element-w-repository-settings-paused"></a>
+## paused
 
-`element-w-report-detail-installed-version` · element · scope: ui-w-report-detail
+`element-w-repository-settings-paused` · element · scope: ui-w-repository-settings
 
-The observed installed Code Factory version or Unknown fallback displayed in the report detail widget.
+The paused control or value for repository monitoring.
 
-<a id="element-w-report-detail-observed-version"></a>
-## observed-version
+<a id="element-w-repository-settings-auto-review"></a>
+## auto-review
 
-`element-w-report-detail-observed-version` · element · scope: ui-w-report-detail
+`element-w-repository-settings-auto-review` · element · scope: ui-w-repository-settings
 
-The repeated observed component version or Unknown fallback displayed in the report detail widget.
+The auto review control or value for repository monitoring.
 
-<a id="element-w-report-detail-issue-freshness"></a>
-## issue-freshness
+<a id="element-w-repository-settings-review-pipeline"></a>
+## review-pipeline
 
-`element-w-report-detail-issue-freshness` · element · scope: ui-w-report-detail
+`element-w-repository-settings-review-pipeline` · element · scope: ui-w-repository-settings
 
-The last successful GitHub verification and any error and retry time displayed in the report detail widget.
+The review pipeline control or value for repository monitoring.
 
-<a id="element-w-report-detail-release-freshness"></a>
-## release-freshness
+<a id="element-w-repository-settings-implementation-pipeline"></a>
+## implementation-pipeline
 
-`element-w-report-detail-release-freshness` · element · scope: ui-w-report-detail
+`element-w-repository-settings-implementation-pipeline` · element · scope: ui-w-repository-settings
 
-The last successful release verification and any error and retry time displayed in the report detail widget.
+The implementation pipeline control or value for repository monitoring.
 
-<a id="element-w-report-detail-additions"></a>
-## additions
+<a id="element-w-repository-settings-review-prompt"></a>
+## review-prompt
 
-`element-w-report-detail-additions` · element · scope: ui-w-report-detail
+`element-w-repository-settings-review-prompt` · element · scope: ui-w-repository-settings
 
-The retained additional host observations displayed in the report detail widget.
+The review prompt control or value for repository monitoring.
 
-<a id="element-w-report-detail-evidence"></a>
-## evidence
+<a id="element-w-repository-settings-poll"></a>
+## poll
 
-`element-w-report-detail-evidence` · element · scope: ui-w-report-detail
+`element-w-repository-settings-poll` · element · scope: ui-w-repository-settings
 
-The draft input for an additional host observation in the report detail widget.
+The poll control or value for repository monitoring.
 
-<a id="element-w-report-detail-add-evidence"></a>
-## add-evidence
+<a id="element-w-repository-settings-review-error"></a>
+## review-error
 
-`element-w-report-detail-add-evidence` · element · scope: ui-w-report-detail
+`element-w-repository-settings-review-error` · element · scope: ui-w-repository-settings
 
-The action adding an additional host observation to the selected report in the report detail widget.
+The review error control or value for repository monitoring.
 
-<a id="element-w-report-detail-recovery-note"></a>
-## recovery-note
+<a id="element-w-repository-settings-skill-directory"></a>
+## skill-directory
 
-`element-w-report-detail-recovery-note` · element · scope: ui-w-report-detail
+`element-w-repository-settings-skill-directory` · element · scope: ui-w-repository-settings
 
-The draft explanation of inspected and reconciled workflow effects in the report detail widget.
+The skill directory control or value for repository monitoring.
 
-<a id="element-w-report-detail-effects-acknowledgement"></a>
-## effects-acknowledgement
+<a id="ui-c-plugin-maintenance"></a>
+## Plugin maintenance connection
 
-`element-w-report-detail-effects-acknowledgement` · element · scope: ui-w-report-detail
+`ui-c-plugin-maintenance` · ui-connection
 
-The checkbox recording that retained workflow effects were inspected and reconciled in the report detail widget.
+The connection between owner plugin-management choices and observed operation state.
 
-<a id="element-w-report-detail-resume"></a>
-## resume
+<a id="ui-c-review-policy"></a>
+## Review policy connection
 
-`element-w-report-detail-resume` · element · scope: ui-w-report-detail
+`ui-c-review-policy` · ui-connection
 
-The action requesting explicit recovery of the selected retained report from the report detail widget.
+The connection between inherited review policy and eligible requested-review work.
 
-<a id="element-w-report-detail-evidence-history"></a>
-## evidence-history
+<a id="ui-c-repository-review-prompt"></a>
+## Repository review prompt connection
 
-`element-w-report-detail-evidence-history` · element · scope: ui-w-report-detail
+`ui-c-repository-review-prompt` · ui-connection
 
-The disclosure control revealing the evidence manifest and processing history in the report detail widget.
+The connection between owner repository review instructions and the prepared review prompt.
 
-<a id="element-w-report-detail-evidence-manifest"></a>
-## evidence-manifest
+<a id="github-request-budget"></a>
+## GitHub request budget
 
-`element-w-report-detail-evidence-manifest` · element · scope: ui-w-report-detail
+`github-request-budget` · domain
 
-The repeated evidence origin, time, digest or omission and truncation marker displayed in the report detail widget.
+The maximum HTTP requests sent directly to the GitHub API by Code Factory during the preceding hour, including conditional requests.
 
-<a id="element-w-report-detail-history"></a>
-## history
+<a id="github-request-reserve"></a>
+## GitHub request reserve
 
-`element-w-report-detail-history` · element · scope: ui-w-report-detail
+`github-request-reserve` · domain
 
-The repeated processing time, state and explanation displayed in the report detail widget.
+The threshold at or below which reported remaining GitHub quota causes Code Factory to defer further requests.
 
-<a id="ui-c-report-query"></a>
-## Report query connection
+<a id="github-review-notification"></a>
+## GitHub review notification
 
-`ui-c-report-query` · ui-connection
+`github-review-notification` · domain
 
-The transition selecting the displayed report subset from search and filter values.
+A GitHub notification associated with a requested pull-request review.
 
-<a id="ui-c-report-more"></a>
-## Report pagination connection
+<a id="ui-w-github-usage"></a>
+## GitHub API usage
 
-`ui-c-report-more` · ui-connection
+`ui-w-github-usage` · ui-widget
 
-The transition extending the displayed range of retained reports.
+The GitHub request-budget, reserve, polling and cached quota controls.
 
-<a id="ui-c-report-open-link"></a>
-## Report external link connection
+<a id="ui-c-github-usage"></a>
+## GitHub usage settings connection
 
-`ui-c-report-open-link` · ui-connection
+`ui-c-github-usage` · ui-connection
 
-The transition opening a retained report issue, fix or release through the host.
+The connection between owner GitHub usage choices and bounded application requests.
+
+<a id="element-w-github-usage-budget"></a>
+## budget
+
+`element-w-github-usage-budget` · element · scope: ui-w-github-usage
+
+The maximum application API requests allowed per hour.
+
+<a id="element-w-github-usage-reserve"></a>
+## reserve
+
+`element-w-github-usage-reserve` · element · scope: ui-w-github-usage
+
+The amount of reported GitHub quota reserved for other work.
+
+<a id="element-w-github-usage-poll-interval"></a>
+## poll-interval
+
+`element-w-github-usage-poll-interval` · element · scope: ui-w-github-usage
+
+The interval between scheduled review-notification checks.
+
+<a id="element-w-github-usage-usage"></a>
+## request-statistics
+
+`element-w-github-usage-usage` · element · scope: ui-w-github-usage
+
+The cached application request count, observed remaining quota and deferral information.
+
+Aliases: usage.
+
+<a id="dependency-operation"></a>
+## Dependency operation
+
+`dependency-operation` · domain
+
+An identified maintenance request with retained per-dependency observations and a lifecycle outcome.
+
+<a id="github-skill-source"></a>
+## GitHub skill source
+
+`github-skill-source` · domain
+
+The recorded repository, revision selection and skill location identifying the origin of an installed standalone skill.
+
+<a id="published-review"></a>
+## Published review
+
+`published-review` · domain
+
+A submitted pull-request assessment identified by a provider receipt, author, verdict and reviewed commit.
+
+<a id="element-w-pr-evidence-review-receipt"></a>
+## Review receipt
+
+`element-w-pr-evidence-review-receipt` · element · scope: ui-w-pr-evidence
+
+The provider link identifying a submitted review.
+
+<a id="element-w-pr-evidence-review-content"></a>
+## Review content
+
+`element-w-pr-evidence-review-content` · element · scope: ui-w-pr-evidence
+
+The text and inline comments belonging to a submitted review.
+
+<a id="element-w-pr-evidence-review-freshness"></a>
+## Review freshness
+
+`element-w-pr-evidence-review-freshness` · element · scope: ui-w-pr-evidence
+
+The last successful observation time and any later observation failure for submitted reviews.
+
+<a id="element-w-pr-evidence-refresh-reviews"></a>
+## Refresh reviews
+
+`element-w-pr-evidence-refresh-reviews` · element · scope: ui-w-pr-evidence
+
+The control requesting an observation of submitted reviews.
+
+<a id="state-terminated"></a>
+## Stopped
+
+`state-terminated` · state
+
+Work has ended because its source item closed or merged; the retained session cannot continue.
 <!-- /specs:terms -->

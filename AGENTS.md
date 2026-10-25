@@ -1,5 +1,9 @@
 # Code Factory contributor instructions
 
+Develop on dedicated branches and submit changes through pull requests. Do not
+commit or push development changes directly to main unless explicitly requested.
+Run required checks and review before merging; merge only when requested.
+
 Use the [layered specification guide](docs/specs/README.md) and
 [reconciliation skill](.agents/skills/reconcile-specs/SKILL.md) for source, tests
 and behavior changes. Preserve glossary → meaning, UI → glossary, and flows →

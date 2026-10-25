@@ -138,3 +138,72 @@ func TestConditionalCacheKeepsPaginationAndScopesAuthentication(t *testing.T) {
 		t.Fatal("cache reused another principal", len(g.cache), calls)
 	}
 }
+
+func TestSyncEnrichmentHasBoundedParallelismAndCancelsOnFailure(t *testing.T) {
+	for _, fail := range []bool{false, true} {
+		t.Run(fmt.Sprint(fail), func(t *testing.T) {
+			var active, peak atomic.Int32
+			entered := make(chan struct{}, 8)
+			release := make(chan struct{})
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch {
+				case r.URL.Path == "/repos/o/r/issues":
+					fmt.Fprint(w, `[`)
+					for n := 1; n <= 8; n++ {
+						if n > 1 {
+							fmt.Fprint(w, `,`)
+						}
+						fmt.Fprintf(w, `{"number":%d,"state":"open","title":"item"}`, n)
+					}
+					fmt.Fprint(w, `]`)
+				case strings.HasSuffix(r.URL.Path, "/comments"):
+					n := active.Add(1)
+					defer active.Add(-1)
+					for old := peak.Load(); n > old && !peak.CompareAndSwap(old, n); old = peak.Load() {
+					}
+					entered <- struct{}{}
+					select {
+					case <-release:
+					case <-r.Context().Done():
+						return
+					}
+					if fail {
+						w.WriteHeader(500)
+						return
+					}
+					fmt.Fprint(w, `[]`)
+				default:
+					fmt.Fprint(w, `[]`)
+				}
+			}))
+			defer server.Close()
+			g := &GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			finished := make(chan error, 1)
+			var items []domain.Item
+			go func() { var err error; items, err = g.Sync(ctx, domain.Repository{ID: "o/r"}, true); finished <- err }()
+			for n := 0; n < 4; n++ {
+				select {
+				case <-entered:
+				case <-ctx.Done():
+					close(release)
+					t.Fatal("independent items did not make progress")
+				}
+			}
+			close(release)
+			err := <-finished
+			if peak.Load() != 4 {
+				t.Fatalf("worker bound: %d", peak.Load())
+			}
+			if fail {
+				if err == nil || items != nil {
+					t.Fatal("failed hydration published partial repository", err)
+				}
+			} else if err != nil || len(items) != 8 {
+				t.Fatal("lost hydrated items", len(items), err)
+			}
+		})
+	}
+}

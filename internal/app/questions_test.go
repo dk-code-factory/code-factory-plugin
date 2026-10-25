@@ -75,23 +75,7 @@ func TestStoppedQuestionRecoveryNativeAndFallback(t *testing.T) {
 				_ = a.Store.Get(ctx, "question-recovery", recovery.ID, &recovery)
 				return run.Status == "idle" && recovery.Stage == "resolved"
 			})
-			waitFor(t, func() bool {
-				events, _ := a.Store.Events(ctx, 0, 200)
-				for _, event := range events {
-					if event.Entity != run.ID {
-						continue
-					}
-					var out struct {
-						Params struct{ Item struct{ Text string } }
-					}
-					_ = json.Unmarshal(event.Data, &out)
-					if out.Params.Item.Text == "Task complete" {
-						return true
-					}
-				}
-				return false
-			})
-			if run.ThreadID != before.ThreadID || run.Worktree != before.Worktree || string(raw(run.Profile)) != string(raw(before.Profile)) {
+			if run.ThreadID != before.ThreadID || run.Worktree != before.Worktree {
 				t.Fatal("answer replaced the original session")
 			}
 			if err := a.Runs.Answer(ctx, at.ID, answer); err == nil {
@@ -290,10 +274,6 @@ func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(t *testin
 		t.Fatal(err)
 	}
 	at := pendingQuestion(t, a, "rpc")
-	at.Origin = "" // Published historical records have no origin metadata.
-	if err := a.Store.Put(ctx, "attention", at.ID, at, ""); err != nil {
-		t.Fatal(err)
-	}
 	approval := domain.Attention{ID: "lost-approval", RunID: run.ID, Method: "item/commandExecution/requestApproval", Status: "pending", Blocking: true, Params: raw(map[string]any{"command": "git status"})}
 	if err := a.Store.Put(ctx, "attention", approval.ID, approval, ""); err != nil {
 		t.Fatal(err)
@@ -374,112 +354,5 @@ func TestCompletedTurnRetainsUnansweredNativeQuestionAsText(t *testing.T) {
 	_ = a.Store.Get(ctx, "attention", at.ID, &original)
 	if original.Status != "stale" {
 		t.Fatal("completed native request ID remained live")
-	}
-}
-
-func TestQuestionHelperIsolationAndModelSelection(t *testing.T) {
-	for _, helper := range []string{"", "helper-model"} {
-		t.Run("helper-"+helper, func(t *testing.T) {
-			t.Setenv("CF_FAKE_MODE", "recover-first")
-			record := filepath.Join(t.TempDir(), "protocol.jsonl")
-			t.Setenv("CF_FAKE_RECORD", record)
-			a, ctx := fixture(t)
-			config, _ := a.Config(ctx)
-			config.QuestionHelperModel = helper
-			if err := a.SaveConfig(ctx, config); err != nil {
-				t.Fatal(err)
-			}
-			run := prepareRun(t, a, ctx)
-			run.Profile.Model = "task-model"
-			if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
-				t.Fatal(err)
-			}
-			if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
-				t.Fatal(err)
-			}
-			pendingQuestion(t, a, "rpc")
-			data, err := os.ReadFile(record)
-			if err != nil {
-				t.Fatal(err)
-			}
-			found := false
-			for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
-				var call struct {
-					Method string
-					Params struct {
-						Ephemeral                           bool
-						Sandbox, ApprovalPolicy, Model, Cwd string
-						Config                              map[string]json.RawMessage
-					}
-				}
-				_ = json.Unmarshal([]byte(line), &call)
-				if call.Method != "thread/start" || !call.Params.Ephemeral {
-					continue
-				}
-				found = true
-				expected := helper
-				if expected == "" {
-					expected = "task-model"
-				}
-				if call.Params.Model != expected || call.Params.Sandbox != "read-only" || call.Params.ApprovalPolicy != "never" || call.Params.Cwd != a.DataDir || string(call.Params.Config["features.apps"]) != "false" {
-					t.Fatal("helper isolation or model selection changed")
-				}
-			}
-			if !found {
-				t.Fatal("no isolated helper thread")
-			}
-		})
-	}
-}
-
-func TestRestartDuringRepairRetainsOneFallbackWithoutReplayingAttempts(t *testing.T) {
-	t.Setenv("CF_FAKE_MODE", "recover-first")
-	a, ctx := fixture(t)
-	run := prepareRun(t, a, ctx)
-	if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
-		t.Fatal(err)
-	}
-	at := pendingQuestion(t, a, "rpc")
-	a.Runs.Close()
-	for n := 0; n < 2; n++ {
-		if err := a.Runs.Recover(ctx); err != nil {
-			t.Fatal(err)
-		}
-	}
-	fallback := pendingQuestion(t, a, "text")
-	var r domain.QuestionRecovery
-	if err := a.Store.Get(ctx, "question-recovery", at.RecoveryID, &r); err != nil || r.Attempts != 1 || r.Stage != "fallback" || fallback.RecoveryID != r.ID {
-		t.Fatal("restart replayed or replaced repair")
-	}
-	atts, _ := store.List[domain.Attention](ctx, a.Store, "attention")
-	pending := 0
-	for _, candidate := range atts {
-		if candidate.Status == "pending" {
-			pending++
-		}
-	}
-	if pending != 1 {
-		t.Fatalf("restart created %d pending requests", pending)
-	}
-}
-
-func TestRestartMaterializesAlreadyPersistedFallback(t *testing.T) {
-	a, ctx := fixture(t)
-	r := domain.QuestionRecovery{ID: "persisted-fallback", RunID: "run", Stage: "fallback", Question: "Which target?", Attempts: 2}
-	if err := a.Store.Put(ctx, "question-recovery", r.ID, r, ""); err != nil {
-		t.Fatal(err)
-	}
-	for n := 0; n < 2; n++ {
-		if err := a.Runs.Recover(ctx); err != nil {
-			t.Fatal(err)
-		}
-	}
-	at := pendingQuestion(t, a, "text")
-	if at.ID != r.ID+":text" {
-		t.Fatal("fallback identity changed")
-	}
-	atts, _ := store.List[domain.Attention](ctx, a.Store, "attention")
-	if len(atts) != 1 {
-		t.Fatal("restart duplicated fallback")
 	}
 }

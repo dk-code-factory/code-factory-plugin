@@ -214,8 +214,8 @@ func TestAgentQuestionExactlyOnceAndRecovery(t *testing.T) {
 	})
 	var run domain.Run
 	_ = a.Store.Get(ctx, "run", r.ID, &run)
-	if run.Status != "waiting" {
-		t.Fatal("blocking question must set waiting", run.Status)
+	if run.Status != "waiting" || run.TurnID != pending.TurnID || pending.RunID != run.ID {
+		t.Fatal("committed blocking question must include its owning waiting run/turn", run.Status)
 	}
 	if e := a.Runs.Message(ctx, r.ID, "Clarification", "wrong-turn"); e == nil {
 		t.Fatal("accepted stale steering")
@@ -340,7 +340,7 @@ func TestAssessmentCacheAndInvalidation(t *testing.T) {
 	}
 }
 
-func TestRecoveryStalesRequestsAndIdleRuns(t *testing.T) {
+func TestRecoveryStalesRequestsAndPreservesIdleRuns(t *testing.T) {
 	a, ctx := fixture(t)
 	r := domain.Run{ID: "recovery", Status: "idle", ThreadID: "dead-thread", Worktree: "/retained/worktree"}
 	if e := a.Store.Put(ctx, "run", r.ID, r, ""); e != nil {
@@ -355,7 +355,7 @@ func TestRecoveryStalesRequestsAndIdleRuns(t *testing.T) {
 	}
 	_ = a.Store.Get(ctx, "run", r.ID, &r)
 	_ = a.Store.Get(ctx, "attention", at.ID, &at)
-	if r.Status != "interrupted" || r.Worktree != "/retained/worktree" || at.Status != "stale" {
+	if r.Status != "idle" || r.Worktree != "/retained/worktree" || at.Status != "stale" {
 		t.Fatal(r, at)
 	}
 	if e := a.Runs.Answer(ctx, at.ID, json.RawMessage(`{"answers":{}}`)); e == nil {
@@ -417,6 +417,10 @@ func TestScheduledSyncRecoversCredentialsAndFindsNewItems(t *testing.T) {
 		t.Fatal("revocation advanced checkpoint")
 	}
 	revoked.Store(false)
+	repo.RetryAt = time.Now().Add(-time.Second)
+	if err := a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+		t.Fatal(err)
+	}
 	ticks <- time.Now()
 	waitFor(t, func() bool {
 		_ = a.Store.Get(ctx, "repository", "owner/repo", &repo)
@@ -427,6 +431,10 @@ func TestScheduledSyncRecoversCredentialsAndFindsNewItems(t *testing.T) {
 		t.Fatal("baseline state", entries, e)
 	}
 	number.Store(2)
+	repo.LastSync = time.Now().Add(-16 * time.Minute)
+	if err := a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+		t.Fatal(err)
+	}
 	ticks <- time.Now()
 	waitFor(t, func() bool { entries, _ = a.Inbox(ctx, "open"); return len(entries) == 2 })
 	found := false
@@ -527,7 +535,7 @@ func TestConcurrentPollingSteeringAndAnswersThenDirtyCleanup(t *testing.T) {
 	}
 }
 
-func TestSecretAnswerRedactionSurvivesExplicitResume(t *testing.T) {
+func TestSecretAnswerRedactionSurvivesMessageWake(t *testing.T) {
 	a, ctx := fixture(t)
 	r := prepareRun(t, a, ctx)
 	if _, e := a.Runs.Start(ctx, r.ID, false); e != nil {
@@ -572,11 +580,17 @@ func TestSecretAnswerRedactionSurvivesExplicitResume(t *testing.T) {
 	if strings.Contains(ciphertext, secret) {
 		t.Fatal("secret stored without encryption")
 	}
+	// Wait for completion classification, so this test exercises restoration
+	// of a completed task rather than interrupting question recovery itself.
+	waitFor(t, func() bool {
+		var recovery domain.QuestionRecovery
+		return a.Store.Get(ctx, "question-recovery", r.ID+":turn-1", &recovery) == nil && recovery.Stage == "resolved"
+	})
 	a.Runs.Close()
 	if e = a.Runs.Recover(ctx); e != nil {
 		t.Fatal(e)
 	}
-	if _, e = a.Runs.Start(ctx, r.ID, true); e != nil {
+	if e = a.Runs.Message(ctx, r.ID, "Continue without repeating the private answer.", ""); e != nil {
 		t.Fatal(e)
 	}
 	waitFor(t, func() bool {
@@ -650,5 +664,175 @@ func TestSharedGitHubCooldownPreservesInboxCheckpoints(t *testing.T) {
 				t.Fatal("shared cooldown allowed another dispatch", calls, tokens)
 			}
 		})
+	}
+}
+
+func TestMessageRestoresRetainedSessionWithOneSubmittedTurn(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "hold")
+	record := filepath.Join(t.TempDir(), "requests.jsonl")
+	t.Setenv("CF_FAKE_RECORD", record)
+	a, ctx := fixture(t)
+	r := prepareRun(t, a, ctx)
+	if _, err := a.Runs.Start(ctx, r.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "running" && r.TurnID != "" })
+	original := r
+	if err := a.Runs.Interrupt(ctx, r.ID); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "interrupted" })
+	// Simulate daemon recovery: no live in-memory session remains.
+	a.Runs.Close()
+	a.Runs = NewManager(ctx, a, testutil.FakeCodex(t))
+	if err := a.Runs.Recover(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.Message(ctx, r.ID, "Do not accept a stale turn", original.TurnID); err == nil {
+		t.Fatal("accepted stale turn")
+	}
+	const message = "Continue with the focused fix and report its status."
+	var accepted atomic.Int32
+	var wg sync.WaitGroup
+	for n := 0; n < 8; n++ {
+		wg.Go(func() {
+			if a.Runs.Message(ctx, r.ID, message, "") == nil {
+				accepted.Add(1)
+			}
+		})
+	}
+	wg.Wait()
+	if accepted.Load() != 1 {
+		t.Fatalf("accepted %d concurrent wake messages", accepted.Load())
+	}
+	if err := a.Store.Get(ctx, "run", r.ID, &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.Status != "running" || r.ThreadID != original.ThreadID || r.Worktree != original.Worktree || r.Prompt != original.Prompt || string(raw(r.Profile)) != string(raw(original.Profile)) {
+		t.Fatalf("retained session changed: %#v", r)
+	}
+	b, err := os.ReadFile(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
+	if len(lines) != 4 {
+		t.Fatalf("expected original start and one resume/turn pair, got %d", len(lines))
+	}
+	var resume, turn struct {
+		Method string
+		Params map[string]json.RawMessage
+	}
+	if err = json.Unmarshal([]byte(lines[2]), &resume); err != nil {
+		t.Fatal(err)
+	}
+	if err = json.Unmarshal([]byte(lines[3]), &turn); err != nil {
+		t.Fatal(err)
+	}
+	if resume.Method != "thread/resume" || string(resume.Params["threadId"]) != string(raw(original.ThreadID)) || string(resume.Params["cwd"]) != string(raw(original.Worktree)) || len(resume.Params["sandbox"]) != 0 {
+		t.Fatalf("wrong resume parameters: %s", lines[2])
+	}
+	var input []struct{ Type, Text string }
+	if err = json.Unmarshal(turn.Params["input"], &input); err != nil {
+		t.Fatal(err)
+	}
+	if turn.Method != "turn/start" || len(input) == 0 || input[0].Text != message {
+		t.Fatalf("wake did not use submitted message: %s", lines[3])
+	}
+}
+
+func TestWakeMessageFailureKeepsRetainedRecordAndRejectsCleanedWork(t *testing.T) {
+	a, ctx := fixture(t)
+	r := prepareRun(t, a, ctx)
+	if err := a.Runs.Message(ctx, r.ID, "Do not launch a prepared proposal", ""); err == nil {
+		t.Fatal("prepared launch bypassed Start")
+	}
+	r.Status = "failed"
+	if err := a.Store.Put(ctx, "run", r.ID, r, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.Message(ctx, r.ID, "Do not create a different thread", ""); err == nil || !strings.Contains(err.Error(), "retained Codex session is unavailable") {
+		t.Fatalf("missing-session error: %v", err)
+	}
+	r.Status = "interrupted"
+	r.ThreadID = "retained-thread"
+	if err := a.Store.Put(ctx, "run", r.ID, r, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.Message(ctx, r.ID, "Retain this message on failure", ""); err == nil || !strings.Contains(err.Error(), "retained worktree is unavailable") {
+		t.Fatalf("missing-worktree error: %v", err)
+	}
+	var after domain.Run
+	if err := a.Store.Get(ctx, "run", r.ID, &after); err != nil {
+		t.Fatal(err)
+	}
+	if after.Status != "failed" || after.ThreadID != r.ThreadID || after.Prompt != r.Prompt {
+		t.Fatalf("failed wake lost retained state: %#v", after)
+	}
+	after.Status = "cleaned"
+	if err := a.Store.Put(ctx, "run", r.ID, after, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.Message(ctx, r.ID, "Do not revive cleaned work", ""); err == nil {
+		t.Fatal("cleaned workspace accepted message")
+	}
+}
+
+func TestInterruptThenMessageStalesOldQuestionAndRestoresSameSession(t *testing.T) {
+	a, ctx := fixture(t)
+	r := prepareRun(t, a, ctx)
+	if _, err := a.Runs.Start(ctx, r.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	var old domain.Attention
+	waitFor(t, func() bool {
+		_ = a.Store.Get(ctx, "run", r.ID, &r)
+		atts, _ := store.List[domain.Attention](ctx, a.Store, "attention")
+		for _, at := range atts {
+			if at.RunID == r.ID && at.Status == "pending" && r.Status == "waiting" {
+				old = at
+				return true
+			}
+		}
+		return false
+	})
+	original := r
+	if err := a.Runs.Interrupt(ctx, r.ID); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "interrupted" })
+	if err := a.Store.Get(ctx, "attention", old.ID, &old); err != nil {
+		t.Fatal(err)
+	}
+	if old.Status != "stale" || r.TurnID != "" {
+		t.Fatalf("interruption retained an active request: %#v %#v", old, r)
+	}
+	answer := json.RawMessage(`{"answers":{"scope":{"answers":["Focused"]}}}`)
+	if err := a.Runs.Answer(ctx, old.ID, answer); err == nil {
+		t.Fatal("old interrupted question accepted")
+	}
+	if err := a.Runs.Message(ctx, r.ID, "Ask about the focused fix again.", ""); err != nil {
+		t.Fatal(err)
+	}
+	var fresh domain.Attention
+	waitFor(t, func() bool {
+		atts, _ := store.List[domain.Attention](ctx, a.Store, "attention")
+		for _, at := range atts {
+			if at.RunID == r.ID && at.Status == "pending" && at.ID != old.ID {
+				fresh = at
+				return true
+			}
+		}
+		return false
+	})
+	if err := a.Runs.Answer(ctx, old.ID, answer); err == nil {
+		t.Fatal("old request answered the newly restored question")
+	}
+	if err := a.Runs.Answer(ctx, fresh.ID, answer); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "idle" })
+	if r.ThreadID != original.ThreadID || r.Worktree != original.Worktree {
+		t.Fatal("interrupted conversation was replaced")
 	}
 }

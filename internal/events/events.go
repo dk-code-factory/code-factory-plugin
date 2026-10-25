@@ -307,7 +307,7 @@ func (s *Service) Tick(ctx context.Context) error {
 		}
 		for _, ev := range evs {
 			name := ev.Kind
-			if name == "item.changed" {
+			if name == "item.changed" || name == "pr.changed" {
 				name = "inbox.changed"
 			}
 			match := name == sub.Name && (sub.Arguments["entity"] == "" || sub.Arguments["entity"] == ev.Entity) && config.Notifications

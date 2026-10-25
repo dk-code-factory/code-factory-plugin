@@ -10,7 +10,7 @@ The owner controls the computer, has existing provider access, and can approve a
 
 ## Main flow
 
-1. Obtain the complete application package and install it for the current user.
+1. Obtain the complete application package and install it for the current user. The hosted page promotes the browser package when a valid observed registration exists; otherwise it leads with connection steps. Portable packages, checksums and manifests are under Advanced.
 2. Connect the private host to the application and approve access as the configured owner.
 3. Link the observed connection to the complete plugin, install it, and open its inbox.
 
@@ -28,7 +28,7 @@ Invalid packages, unrelated identities, invalid connection identifiers and unaut
 ## Terminology and UI references
 
 Glossary: [owner](../glossary/README.md#owner), [host](../glossary/README.md#host), [credential](../glossary/README.md#credential), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior).
-UI entities: [PAGE-PACKAGE](../ui/README.md#PAGE-PACKAGE), [PAGE-OWNER-CONSENT](../ui/README.md#PAGE-OWNER-CONSENT), [P-PACKAGE-OVERVIEW](../ui/README.md#P-PACKAGE-OVERVIEW), [P-CONNECTION-GUIDE](../ui/README.md#P-CONNECTION-GUIDE), [P-OWNER-CONSENT](../ui/README.md#P-OWNER-CONSENT), [W-PACKAGE-OVERVIEW](../ui/README.md#W-PACKAGE-OVERVIEW), [W-CONNECTION-GUIDE](../ui/README.md#W-CONNECTION-GUIDE), [W-OWNER-CONSENT](../ui/README.md#W-OWNER-CONSENT), [C-PACKAGE](../ui/README.md#C-PACKAGE), [C-CONSENT](../ui/README.md#C-CONSENT), [PAGE-LOCAL-TUNNEL-SETUP](../ui/README.md#PAGE-LOCAL-TUNNEL-SETUP), [P-LOCAL-TUNNEL-KEY](../ui/README.md#P-LOCAL-TUNNEL-KEY), [W-LOCAL-TUNNEL-KEY](../ui/README.md#W-LOCAL-TUNNEL-KEY), [C-TUNNEL-KEY](../ui/README.md#C-TUNNEL-KEY).
+UI entities: [PAGE-PACKAGE](../ui/README.md#PAGE-PACKAGE), [PAGE-OWNER-CONSENT](../ui/README.md#PAGE-OWNER-CONSENT), [P-PACKAGE-OVERVIEW](../ui/README.md#P-PACKAGE-OVERVIEW), [P-CONNECTION-GUIDE](../ui/README.md#P-CONNECTION-GUIDE), [P-OWNER-CONSENT](../ui/README.md#P-OWNER-CONSENT), [W-PACKAGE-OVERVIEW](../ui/README.md#W-PACKAGE-OVERVIEW), [W-CONNECTION-GUIDE](../ui/README.md#W-CONNECTION-GUIDE), [W-OWNER-CONSENT](../ui/README.md#W-OWNER-CONSENT), [C-PACKAGE](../ui/README.md#C-PACKAGE), [C-CONSENT](../ui/README.md#C-CONSENT), [PAGE-LOCAL-TUNNEL-SETUP](../ui/README.md#PAGE-LOCAL-TUNNEL-SETUP), [P-LOCAL-TUNNEL-KEY](../ui/README.md#P-LOCAL-TUNNEL-KEY), [W-LOCAL-TUNNEL-KEY](../ui/README.md#W-LOCAL-TUNNEL-KEY), [C-TUNNEL-KEY](../ui/README.md#C-TUNNEL-KEY), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS).
 
 ## Flow diagram
 
@@ -84,6 +84,8 @@ flowchart TD
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/transport/mcp.go](../../internal/transport/mcp.go) — Advertises the embedded UI under a full-content SHA256 URI and binds all tool/output-template references to it, retaining only an unadvertised exact legacy-read alias. (`func registerUIResource(`)
+- [internal/web/embed.go](../../internal/web/embed.go) — Configuration opens through its own bridged document entry. (`func SettingsHTML(`)
+- [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Third packaged skill ships in portable and browser artifacts. (`name: code-factory-admin`)
 
 ## Test references
 
@@ -98,6 +100,8 @@ flowchart TD
 - [internal/pluginbundle/hosting_test.go](../../internal/pluginbundle/hosting_test.go) — `func TestHostedPackageIsCompleteBoundToHostAndChecksummed(`; S1. Host-bound complete checksummed archive.
 - [internal/gateway/prefix_test.go](../../internal/gateway/prefix_test.go) — `func TestPrefixedGatewayOAuthAndProxy(`; S2. Prefixed OAuth routes and proxy fixture.
 - [internal/transport/ui_resource_test.go](../../internal/transport/ui_resource_test.go) — `func TestUIResourceContentIdentityAndCompatibility(`; S1, S2. Actual SDK fixture asserts stable same-content and changed-content UI identity, matching current tool/resource metadata and exact HTML; only the original exact URI reads current content unadvertised, while unknown/previous hashes and query variants reject. CSP domains stay empty. This does not prove host refresh or installed UI acceptance.
+- [internal/pluginbundle/hosting_test.go](../../internal/pluginbundle/hosting_test.go) — `func TestLandingPrioritizesOnlyValidRegisteredBrowserPackage(`; S1. Registration-aware primary browser download with portable artifacts collapsed; missing/invalid mappings show connection steps.
+- [scripts/test_packaging.py](../../scripts/test_packaging.py) — `def test_zip_is_self_contained_deterministic_and_contains_no_host_state(`; S1. Archive includes admin, daily-use and setup skills with checksums while private host state remains excluded.
 
 ## Verification and gaps
 

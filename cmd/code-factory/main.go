@@ -104,7 +104,10 @@ func run() error {
 		}
 		return setup.InstallRelease(ctx, *dir, *source, *address)
 	}
+	var providerBin string
+	var providerPaths map[string]string
 	if r, err := setup.ReadRuntime(*dir); err == nil {
+		providerBin, providerPaths = r.ProviderBin, r.Paths
 		if err = os.Setenv("PATH", r.Path); err != nil {
 			return err
 		}
@@ -233,8 +236,10 @@ func run() error {
 	if e != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
 		return fmt.Errorf("listener must use a loopback IP address")
 	}
-	a := &app.App{Store: s, Vault: vault, GitHub: providers.NewGitHub(), DataDir: *dir}
+	a := &app.App{Store: s, Vault: vault, GitHub: providers.NewCachedGitHub(providers.NewGitHub()), DataDir: *dir}
 	a.Runs = app.NewManager(ctx, a, *binary)
+	a.Runs.ProviderBin = providerBin
+	a.Runs.ProviderPaths = providerPaths
 	if e = a.Init(ctx); e != nil {
 		return e
 	}
@@ -251,6 +256,9 @@ func run() error {
 		}
 		return nil
 	}
+	if e = a.EnableGitHubUsage(ctx); e != nil {
+		return e
+	}
 	if e = a.Runs.Recover(ctx); e != nil {
 		return e
 	}
@@ -258,13 +266,15 @@ func run() error {
 	server := transport.New(a, ev)
 	mux := http.NewServeMux()
 	mux.Handle("/mcp", server.Handler(token))
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/admin/dependencies", server.DependencyHandler(token))
+	mux.Handle("/admin/dependencies/", server.DependencyHandler(token))
+	mux.Handle("/healthz", server.LogAPI("owner", token, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+token {
 			http.Error(w, "Unauthorized", 401)
 			return
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"version": buildinfo.Version, "status": "verified"})
-	})
+	})))
 	httpServer := &http.Server{Addr: *address, Handler: mux, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	var wg sync.WaitGroup
 	for _, loop := range []func(context.Context){a.SyncLoop, a.AssessmentLoop, a.Reports.Loop, ev.Loop} {

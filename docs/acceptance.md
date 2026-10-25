@@ -1,5 +1,20 @@
 # Acceptance and verification
 
+## Development port pending verification · 2026-10-25
+
+The development source port adds work queues, direct item conversations, retained
+continuations, dependency and plugin administration, bounded GitHub reads, API
+observations and durable attention replies. It preserves published history and
+hosted CI/release delivery. Private pilot history and operational evidence are
+excluded from the port.
+
+Specification schema validation passes. Branch CI currently stops at stale
+reconciliation receipts and missing UI contract decisions for the published base;
+fresh reviewed reconciliation is required. A local binary build encountered disk
+quota exhaustion, so the port has no successful full build or branch verification
+claim. Keep the PR in draft until these checks pass. No installed-host, real
+provider, browser, callback, soak or login acceptance is established by this port.
+
 This public repository contains source, deterministic fixtures and specification
 contracts. Personal pilot logs, hostnames, app registrations, conversation links,
 credentials and installation state are intentionally not published.
