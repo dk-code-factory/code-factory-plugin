@@ -111,9 +111,18 @@ func (m *Manager) Recover(ctx context.Context) error {
 		if attached[r.ID] {
 			continue
 		}
-		if r.Status == "running" || r.Status == "waiting" || r.Status == "queued" || r.Status == "starting" {
-			r.ResumePending = !r.InterruptRequested
+		retryLaunch := r.ResumePending && !r.InterruptRequested && r.ThreadID == "" && r.TurnID == "" && !r.LaunchRetryAt.IsZero() && (r.Status == "queued" || r.Status == "starting" || r.Status == "interrupted")
+		if retryLaunch || r.Status == "running" || r.Status == "waiting" || r.Status == "queued" || r.Status == "starting" {
+			// A pre-thread starting run can have durably relinquished automatic
+			// retry before provider creation. Never restore that uncertain intent.
+			if r.Status != "starting" || r.ThreadID != "" || r.TurnID != "" {
+				r.ResumePending = true
+			}
+			r.ResumePending = r.ResumePending && !r.InterruptRequested
 			r.Status = "interrupted"
+			if retryLaunch {
+				r.Status = "deferred"
+			}
 			r.Error = ""
 			if e = m.app.Store.Write(ctx, func(t *store.Tx) error {
 				if e := t.Put("run", r.ID, r); e != nil {
@@ -600,7 +609,7 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 		if err := t.Get("item", r.ItemID, &item); err != nil {
 			return err
 		}
-		deferred := recovering && r.Status == "deferred" && r.ResumePending && !r.InterruptRequested && !time.Now().Before(r.LaunchRetryAt)
+		deferred := recovering && r.Status == "deferred" && r.ResumePending && !r.InterruptRequested && r.ThreadID == "" && r.TurnID == "" && !time.Now().Before(r.LaunchRetryAt)
 		if !deferred {
 			if err := validatePRReviewRun(t.Get, r, item); err != nil {
 				return err
@@ -646,7 +655,9 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 			r.TurnID = ""
 		}
 		r.Error = ""
-		r.LaunchRetryAt = time.Time{}
+		if !deferred {
+			r.LaunchRetryAt = time.Time{}
+		}
 		r.ResumePending = recovery == nil
 		r.InterruptRequested = false
 		if e := t.Put("run", id, r); e != nil {
@@ -915,6 +926,18 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		m.fail(s, e)
 		return
 	}
+	if !s.run.LaunchRetryAt.IsZero() {
+		// Source/workspace preparation is replayable. Provider creation is not:
+		// a lost response cannot prove whether a thread was created. Persist this
+		// boundary first and leave uncertain startup stopped after a restart.
+		s.run.LaunchRetryAt = time.Time{}
+		s.run.ResumePending = false
+		if e := m.persist(s, "run.state"); e != nil {
+			s.mu.Unlock()
+			m.fail(s, e)
+			return
+		}
+	}
 	c, e := codex.Start(s.ctx, m.CodexBinary(), sandboxArgs, func(msg codex.Message) { m.onMessage(s, msg) })
 	if e != nil {
 		s.mu.Unlock()
@@ -972,6 +995,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.run.ThreadID = result.Thread.ID
+	s.run.ResumePending = true
 	s.run.SourceSnapshot = source
 	if s.run.Profile.Model == "" {
 		s.run.Profile.Model = result.Model
@@ -1120,7 +1144,10 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 			s.recoveryCancel()
 		}
 		if s.run.Status == "running" || s.run.Status == "waiting" || s.run.Status == "queued" || s.run.Status == "starting" {
-			s.run.ResumePending = !s.run.InterruptRequested
+			if s.run.Status != "starting" || s.run.ThreadID != "" || s.run.TurnID != "" {
+				s.run.ResumePending = true
+			}
+			s.run.ResumePending = s.run.ResumePending && !s.run.InterruptRequested
 			s.run.Status = "interrupted"
 			s.run.Error = ""
 		}

@@ -18,6 +18,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -406,7 +407,7 @@ func TestDeferredLaunchInterruptAndCleanupCancelAttachedAndDetachedRuns(t *testi
 
 func TestLegacyBudgetReviewFailureRecoveryIsExactAndPreAgentOnly(t *testing.T) {
 	const prefix = "cannot verify current work item; work remains stopped: "
-	for _, which := range []string{"budget", "reserve", "rate", "permanent", "thread", "turn", "interrupted", "non-review", "agent-error", "lookalike"} {
+	for _, which := range []string{"budget", "reserve", "rate", "permanent", "thread", "turn", "interrupted", "non-review", "nil-review", "nil-custom-configured", "explicit-false-review", "explicit-true-custom", "agent-error", "lookalike"} {
 		t.Run(which, func(t *testing.T) {
 			f := deferredReviewFixture(t, false)
 			waitLaunchRetry(t, f.a.Runs.Close)
@@ -434,9 +435,30 @@ func TestLegacyBudgetReviewFailureRecoveryIsExactAndPreAgentOnly(t *testing.T) {
 				r.InterruptRequested = true
 				eligible = false
 			case "non-review":
-				r.PRReview = false
+				intent := false
+				r.PRReview = &intent
 				r.Profile.ID = "investigate"
 				eligible = false
+			case "nil-review":
+				r.PRReview = nil
+			case "nil-custom-configured":
+				r.PRReview = nil
+				r.Profile.ID = "custom"
+				config, err := f.a.Config(context.Background())
+				if err != nil {
+					t.Fatal(err)
+				}
+				config.ReviewProfileID = "custom"
+				if err := f.a.Store.Put(context.Background(), "config", "settings", config, ""); err != nil {
+					t.Fatal(err)
+				}
+				eligible = false
+			case "explicit-false-review":
+				intent := false
+				r.PRReview = &intent
+				eligible = false
+			case "explicit-true-custom":
+				r.Profile.ID = "custom"
 			case "agent-error":
 				r.Error = "Code Factory GitHub budget reached; synchronization will retry"
 				eligible = false
@@ -983,4 +1005,213 @@ func TestAutomaticRequestPollSharesAcceptanceCriticalSection(t *testing.T) {
 		t.Fatal("real request poll did not update the same episode", state, err)
 	}
 	f.assertNoAgent(t)
+}
+
+func TestAcceptedRetrySurvivesRestartBeforeProviderHandoff(t *testing.T) {
+	for _, stage := range []string{"source", "verified-source"} {
+		for _, cache := range []string{"stale", "error"} {
+			t.Run(stage+"/"+cache, func(t *testing.T) {
+				f := deferredReviewFixture(t, true)
+				ctx := context.Background()
+				f.budget.Store(100)
+				f.expire(t)
+				var repo domain.Repository
+				if err := f.a.Store.Get(ctx, "repository", f.pr.Repository, &repo); err != nil {
+					t.Fatal(err)
+				}
+				if cache == "error" {
+					repo.Error = "fixture sync unavailable"
+				} else {
+					repo.LastSync = time.Now().UTC().Add(-time.Hour)
+					item := f.pr
+					item.ReviewObservedAt = repo.LastSync
+					if err := f.a.Store.Put(ctx, "item", item.ID, item, ""); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if err := f.a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+					t.Fatal(err)
+				}
+				var entered string
+				if stage == "source" {
+					f.source.currentEntered, f.source.currentRelease = make(chan struct{}), make(chan struct{})
+				} else {
+					root := t.TempDir()
+					entered = filepath.Join(root, "entered")
+					fifo := filepath.Join(root, "release")
+					if err := syscall.Mkfifo(fifo, 0600); err != nil {
+						t.Fatal(err)
+					}
+					wrapper := filepath.Join(root, "codex")
+					script := fmt.Sprintf("#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then\n : > %q\n read release < %q\nfi\nexec %q \"$@\"\n", entered, fifo, f.a.Runs.Binary)
+					// Keep a shell builtin blocked after live verification, before
+					// workspace/sandbox preparation and app-server creation.
+					if err := os.WriteFile(wrapper, []byte(script), 0700); err != nil {
+						t.Fatal(err)
+					}
+					f.a.Runs.Binary = wrapper
+				}
+				if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+					t.Fatal(err)
+				}
+				if stage == "source" {
+					select {
+					case <-f.source.currentEntered:
+					case <-time.After(3 * time.Second):
+						t.Fatal("source verification did not start")
+					}
+				} else {
+					waitFor(t, func() bool { _, err := os.Stat(entered); return err == nil })
+				}
+				waitLaunchRetry(t, f.a.Runs.Close)
+				f.assertNoAgent(t)
+				if stage == "source" {
+					close(f.source.currentRelease)
+					f.source.currentEntered = nil
+				}
+				if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil {
+					t.Fatal(err)
+				}
+				if f.run.LaunchRetryAt.IsZero() || !f.run.ResumePending {
+					t.Fatal("shutdown lost accepted pre-provider retry origin", f.run.Status)
+				}
+				// Capacity recovery remains serialized even across manager replacement.
+				f.a.Runs = NewManager(ctx, f.a, testutil.FakeCodex(t))
+				f.a.Runs.live["occupied"] = &session{run: domain.Run{ID: "occupied", Status: "running"}}
+				if err := f.a.Runs.Recover(ctx); err != nil {
+					t.Fatal(err)
+				}
+				f.assertNoAgent(t)
+				if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil || f.run.Status != "deferred" {
+					t.Fatal("accepted retry was not retained for capacity", f.run.Status, err)
+				}
+				f.a.Runs.mu.Lock()
+				delete(f.a.Runs.live, "occupied")
+				f.a.Runs.mu.Unlock()
+				if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+					t.Fatal(err)
+				}
+				f.assertSingleLaunch(t)
+			})
+		}
+	}
+}
+
+func TestDueAutomaticRetryRejectsBusyBeforeBundleDecode(t *testing.T) {
+	f := deferredReviewFixture(t, true)
+	ctx := context.Background()
+	f.expire(t)
+	if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil {
+		t.Fatal(err)
+	}
+	saved := f.run
+	var heavy map[string]any
+	if err := json.Unmarshal(raw(saved), &heavy); err != nil {
+		t.Fatal(err)
+	}
+	heavy["skills"] = strings.Repeat("unused accepted bundle ", 1<<18)
+	heavy["profile"] = "wrong-shaped unused profile"
+	if err := f.a.Store.Put(ctx, "run", saved.ID, heavy, ""); err != nil {
+		t.Fatal(err)
+	}
+	f.a.Runs.mu.Lock()
+	f.a.Runs.live["occupied"] = &session{run: domain.Run{ID: "occupied", Status: "running"}}
+	f.a.Runs.mu.Unlock()
+	f.a.autoReviewMu.Lock()
+	_, _, err := f.a.Runs.startDeferredLaunch(ctx, saved)
+	f.a.autoReviewMu.Unlock()
+	if err == nil || err.Error() != "automatic review is waiting for active work" {
+		t.Fatal("busy admission decoded an unused accepted bundle", err)
+	}
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var after map[string]any
+	if err := f.a.Store.Get(ctx, "run", saved.ID, &after); err != nil || string(raw(after)) != string(raw(heavy)) {
+		t.Fatal("busy poll rewrote a projected candidate", err)
+	}
+	// Restore the valid accepted bundle; its full profile/context must survive
+	// the eventual admitted claim, rather than the projected snapshot.
+	if err := f.a.Store.Put(ctx, "run", saved.ID, saved, ""); err != nil {
+		t.Fatal(err)
+	}
+	f.a.Runs.mu.Lock()
+	delete(f.a.Runs.live, "occupied")
+	f.a.Runs.mu.Unlock()
+	f.budget.Store(100)
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	f.assertSingleLaunch(t)
+	if string(raw(saved.Profile)) != string(raw(f.run.Profile)) || string(raw(saved.Skills)) != string(raw(f.run.Skills)) || saved.Prompt != f.run.Prompt || saved.ReviewPromptSnapshot != f.run.ReviewPromptSnapshot || f.run.SourceSnapshot == nil {
+		t.Fatal("admitted retry lost accepted payload")
+	}
+}
+
+func TestAcceptedRetryStopsAcrossUncertainProviderCreation(t *testing.T) {
+	for _, disconnect := range []bool{false, true} {
+		t.Run(fmt.Sprint(disconnect), func(t *testing.T) {
+			f := deferredReviewFixture(t, true)
+			ctx := context.Background()
+			f.budget.Store(100)
+			f.expire(t)
+			root := t.TempDir()
+			entered, fifo := filepath.Join(root, "created"), filepath.Join(root, "release")
+			if err := syscall.Mkfifo(fifo, 0600); err != nil {
+				t.Fatal(err)
+			}
+			wrapper := filepath.Join(root, "codex")
+			script := fmt.Sprintf(`#!/bin/sh
+if [ "$1" = "app-server" ]; then
+ echo created >> %q
+ read release < %q
+fi
+exec %q "$@"
+`, entered, fifo, f.a.Runs.Binary)
+			if err := os.WriteFile(wrapper, []byte(script), 0700); err != nil {
+				t.Fatal(err)
+			}
+			f.a.Runs.Binary = wrapper
+			if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool { _, err := os.Stat(entered); return err == nil })
+			if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil {
+				t.Fatal(err)
+			}
+			if !f.run.LaunchRetryAt.IsZero() || f.run.ResumePending || f.run.ThreadID != "" {
+				t.Fatal("provider created before durable non-replay boundary", f.run.Status)
+			}
+			if disconnect {
+				live, err := f.a.Runs.get(f.run.ID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				f.a.Runs.onMessage(live, codex.Message{Method: "process/closed"})
+			}
+			waitLaunchRetry(t, f.a.Runs.Close)
+			f.a.Runs = NewManager(ctx, f.a, testutil.FakeCodex(t))
+			if err := f.a.Runs.Recover(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if err := f.a.Store.Get(ctx, "run", f.run.ID, &f.run); err != nil {
+				t.Fatal(err)
+			}
+			if f.run.Status != "interrupted" || f.run.ResumePending || !f.run.LaunchRetryAt.IsZero() {
+				t.Fatal("uncertain startup regained retry authority", f.run.Status)
+			}
+			f.assertNoAgent(t)
+			created, err := os.ReadFile(entered)
+			if err != nil || string(created) != `created
+` {
+				t.Fatal("uncertain provider creation was replayed", err)
+			}
+			if claimCount(t, f.a) != 1 {
+				t.Fatal("uncertain startup replaced its accepted claim")
+			}
+		})
+	}
 }

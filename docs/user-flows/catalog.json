@@ -1883,6 +1883,33 @@
             "S8"
           ],
           "purpose": "Wrong-shaped unused retained payloads cannot break polling because SQLite omits them before decoding; due candidates are reread with complete profile, skills, prompt and source retained."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAcceptedRetrySurvivesRestartBeforeProviderHandoff(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAcceptedRetryStopsAcrossUncertainProviderCreation(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Provider process creation occurs only after durable retry cancellation; manager restart and process-closed notification never restore uncertain pre-thread startup authority or repeat provider creation."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDueAutomaticRetryRejectsBusyBeforeBundleDecode(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "A due automatic retry rejects occupied capacity before decoding a large wrong-shaped saved bundle, never overwrites projected payloads and later preserves the complete accepted snapshot when admitted."
         }
       ],
       "suites": [
@@ -4285,6 +4312,33 @@
             "S8"
           ],
           "purpose": "Absent or empty legacy accepted-head snapshots retain the existing Base pin and reject a changed head."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAcceptedRetrySurvivesRestartBeforeProviderHandoff(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAcceptedRetryStopsAcrossUncertainProviderCreation(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Provider process creation occurs only after durable retry cancellation; manager restart and process-closed notification never restore uncertain pre-thread startup authority or repeat provider creation."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDueAutomaticRetryRejectsBusyBeforeBundleDecode(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "A due automatic retry rejects occupied capacity before decoding a large wrong-shaped saved bundle, never overwrites projected payloads and later preserves the complete accepted snapshot when admitted."
         }
       ],
       "suites": [
@@ -7539,6 +7593,33 @@
             "S6"
           ],
           "purpose": "Absent or empty legacy accepted-head snapshots retain the existing Base pin and reject a changed head."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAcceptedRetrySurvivesRestartBeforeProviderHandoff(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Real manager shutdown and replacement during blocked source verification or after live verification preserve accepted retry authority despite stale or failed repository synchronization; capacity blocks startup until release, then the same run and claim start once."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestAcceptedRetryStopsAcrossUncertainProviderCreation(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Provider process creation occurs only after durable retry cancellation; manager restart and process-closed notification never restore uncertain pre-thread startup authority or repeat provider creation."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDueAutomaticRetryRejectsBusyBeforeBundleDecode(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "A due automatic retry rejects occupied capacity before decoding a large wrong-shaped saved bundle, never overwrites projected payloads and later preserves the complete accepted snapshot when admitted."
         }
       ],
       "suites": [

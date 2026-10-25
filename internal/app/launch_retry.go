@@ -6,6 +6,7 @@ import (
 	"codefactory/internal/store"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -35,7 +36,7 @@ func (m *Manager) deferLaunch(s *session, cause error) bool {
 }
 
 func legacyLaunchBudgetFailure(r domain.Run) bool {
-	if r.Status != "failed" || r.ThreadID != "" || r.TurnID != "" || r.InterruptRequested || !(r.PRReview || r.AutomaticReview || r.Profile.ID == "review") {
+	if r.Status != "failed" || r.ThreadID != "" || r.TurnID != "" || r.InterruptRequested || !(r.AutomaticReview || r.PRReview != nil && *r.PRReview || r.PRReview == nil && r.Profile.ID == "review") {
 		return false
 	}
 	const prefix = "cannot verify current work item; work remains stopped: "
@@ -74,6 +75,9 @@ func (m *Manager) recoverDeferredLaunch(ctx context.Context, r domain.Run) error
 			return nil
 		}
 		r.Status, r.ResumePending, r.LaunchRetryAt = "deferred", true, usage.NextRequest.UTC()
+		if r.LaunchRetryAt.IsZero() {
+			r.LaunchRetryAt = time.Now().UTC()
+		}
 		if err := tx.Put("run", r.ID, r); err != nil {
 			return err
 		}
@@ -85,8 +89,6 @@ func (m *Manager) recoverDeferredLaunch(ctx context.Context, r domain.Run) error
 // synchronization fails or is not due. startRun serializes and persists the claim
 // before launching, so concurrent polls and startup cannot replay the same run.
 func (m *Manager) RetryDeferredLaunches(ctx context.Context) error {
-	m.app.autoReviewMu.Lock()
-	defer m.app.autoReviewMu.Unlock()
 	// Share the fresh automatic acceptance/start critical section. A retry cannot
 	// take the idle slot between ProcessReviewRequests busy check and Start.
 	m.app.autoReviewMu.Lock()
@@ -109,9 +111,6 @@ func (m *Manager) RetryDeferredLaunches(ctx context.Context) error {
 		// Disabling or pausing the policy holds accepted work without fetching
 		// source or creating a new automatic review claim.
 		if r.AutomaticReview {
-			if m.busy() {
-				continue
-			}
 			var item domain.Item
 			var repo domain.Repository
 			if err := m.app.Store.Get(ctx, "item", r.ItemID, &item); err != nil {
@@ -128,7 +127,7 @@ func (m *Manager) RetryDeferredLaunches(ctx context.Context) error {
 				continue
 			}
 		}
-		_, _, err := m.startRun(ctx, r.ID, false, "", true, nil)
+		_, _, err := m.startDeferredLaunch(ctx, r)
 		if err != nil && (ctx.Err() != nil || m.ctx.Err() != nil) {
 			return err
 		}
@@ -149,4 +148,14 @@ func (m *Manager) validateLaunchPolicy(ctx context.Context, r domain.Run, source
 		}
 		return nil
 	})
+}
+
+func (m *Manager) startDeferredLaunch(ctx context.Context, candidate domain.Run) (domain.Run, *session, error) {
+	// The caller holds autoReviewMu through the busy check and accepted start,
+	// sharing fresh automatic acceptance without holding manager membership locks.
+	// Reject before rereading the retained immutable bundles.
+	if candidate.AutomaticReview && m.busy() {
+		return candidate, nil, fmt.Errorf("automatic review is waiting for active work")
+	}
+	return m.startRun(ctx, candidate.ID, false, "", true, nil)
 }

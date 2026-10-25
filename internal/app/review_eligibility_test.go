@@ -574,7 +574,8 @@ func TestManualPRReviewExplicitBaseKeepsAcceptedHead(t *testing.T) {
 func TestLegacyReviewHeadStillUsesPinnedBase(t *testing.T) {
 	a, pr := reviewFixture(t)
 	for _, snapshot := range []*domain.Item{nil, {Head: ""}} {
-		run := domain.Run{PRReview: true, Base: pr.Head, SourceSnapshot: snapshot}
+		review := true
+		run := domain.Run{PRReview: &review, Base: pr.Head, SourceSnapshot: snapshot}
 		get := func(kind, id string, out any) error { return a.Store.Get(a.Runs.ctx, kind, id, out) }
 		if err := validatePRReviewRun(get, run, pr); err != nil {
 			t.Fatal(err)
