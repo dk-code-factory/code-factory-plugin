@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "a29c7654a94e7077d99f6ea9227074b318bf74dc",
-  "fingerprint": "e74d91db173b19f80fd097f046cf71267ae7a890ccb4011ed3a635aba67bff9e",
+  "base": "187db59e2c5d1f79bdb502fa4e49b4a7db9347a0",
+  "fingerprint": "5b2768b791222b73376e03aa1e1235c695c9900d96fe5c2f9b4f4474da922274",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Notification delivery and attention callback claims remain unchanged by the author eligibility restriction.",
-    "implementation": "Review preparation and Start validation do not change subscription records, event payloads or host callback delivery.",
-    "tests": "Existing notification fixtures remain mapped and their explicit real-host gaps are retained; no callback acceptance is inferred."
+    "description": "Subscribe to host notifications and manage delivery retains its existing observable contract. Incoming request logging records diagnostics after handling and does not change this flow\u2019s state, authority, queue membership or outcomes.",
+    "implementation": "Inspected the shared transport/health and owner handler wrappers: the original handlers see unchanged reads, request limits, authentication, status and response bodies. Timing and sanitized parameter records are separate private files rather than application events or caller data.",
+    "tests": "Existing mapped receive-notifications assertions and suites remain required. New transport fixtures assert request/response preservation and failure isolation; the log never performs an extra GitHub call, starts an agent, answers a question or retries an action. Existing real-host coverage gaps remain open."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 17.778
+      "seconds": 17.898
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.245
     },
     {
       "command": [
@@ -44,11 +44,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.838
+      "seconds": 25.027
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "0a0572f2d59f3ca7b46ac147fdd9d8ca8250970ff95dc00f9589b5fe5612b6ae",
+    "flow:receive-notifications": "4e970b10efeb9942ddb7391014fadf9c1c213af34f53c2722663b81a75de4fba",
     "term:attention-request": "462ac93876005a62efdac37f5be63caffb89f1bfdcfd31c3042505f8cf97f06d",
     "term:coverage-gap": "ec018212265e427226cc38846c161e5f2faea281e41f3078a8315464784706bf",
     "term:host": "f6ab4ca8b4139c66c7e6d0f8730609d78bc8ff63aa77f1db64c93754955ad154",

@@ -18,6 +18,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -66,6 +67,8 @@ func registerUIResource(m *mcp.Server, html string) string {
 }
 
 type Server struct {
+	apiLogOnce  sync.Once
+	apiLog      *apiCallLog
 	App         *app.App
 	Events      *events.Service
 	MCP         *mcp.Server
@@ -532,7 +535,7 @@ func (s *Server) diagnostics(ctx context.Context) setup.Diagnostics {
 
 func (s *Server) Handler(token string) http.Handler {
 	h := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return s.MCP }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true, MaxRequestBodyBytes: 1 << 20})
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return s.LogAPI("mcp", token, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") || len(token) < 32 || subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
 			http.Error(w, "owner authentication required", http.StatusUnauthorized)
@@ -545,7 +548,7 @@ func (s *Server) Handler(token string) http.Handler {
 		s.lastRequest.Store(time.Now().Unix())
 		w.Header().Set("Cache-Control", "no-store")
 		h.ServeHTTP(w, r)
-	})
+	}))
 }
 
 type eventParams struct {

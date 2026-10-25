@@ -7224,6 +7224,16 @@
         {
           "path": "docs/dependency-admin.md",
           "purpose": "Owner dependency API request, recovery, provenance and supported dependency boundaries."
+        },
+        {
+          "path": "internal/transport/api_log.go",
+          "anchor": "func (s *Server) LogAPI(",
+          "purpose": "Record incoming MCP/owner API call names, safe parameters, UTC start time, HTTP status and handler duration in a private bounded rotating JSONL log without changing request processing."
+        },
+        {
+          "path": "internal/transport/api_log_parameters.go",
+          "anchor": "func privateAPIParameter(",
+          "purpose": "Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence."
         }
       ],
       "tests": [
@@ -7522,6 +7532,46 @@
             "S6"
           ],
           "purpose": "Cached owner inventory exposes installed plugin/skill metadata while excluding skill contents and uninstalled catalog entries."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Actual MCP tool/resource and rejected requests retain call names, safe parameters and durations while omitting owner credentials, stored secrets, answers, message text and URL secrets; files and directory are private."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Owner request parameters and processing duration are recorded while the downstream handler sees unchanged request bytes and status."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogActualOwnerHandlerRecordsRejectedInput(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "The actual private owner handler logs rejected dependency parameters and HTTP status without executing maintenance."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogRotationConcurrencyAndFailurePreserveAPI(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogBoundsMalformedBodiesAndPreservesPanic(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records."
         }
       ],
       "suites": [
@@ -7642,6 +7692,21 @@
             "id": "dependency_preserved",
             "label": "Reject busy, invalid or incompatible changes; retain state and inspect uncertain outcomes",
             "terminal": true
+          },
+          {
+            "id": "api_call_log",
+            "label": "Record API name, safe parameters, transport status and server processing time",
+            "scenario": "S2"
+          },
+          {
+            "id": "api_log_saved",
+            "label": "Retain private bounded logs with secret values redacted",
+            "terminal": true
+          },
+          {
+            "id": "api_log_failed",
+            "label": "Warn once if logging is unavailable; preserve the API result without replay",
+            "terminal": true
           }
         ],
         "edges": [
@@ -7739,6 +7804,21 @@
             "from": "dependency_admin",
             "to": "dependency_preserved",
             "label": "unauthorized, active work, local edits, failed probe or interruption"
+          },
+          {
+            "from": "n0",
+            "to": "api_call_log",
+            "label": "incoming MCP or private owner API call"
+          },
+          {
+            "from": "api_call_log",
+            "to": "api_log_saved",
+            "label": "safe bounded record appended; rotate older entries"
+          },
+          {
+            "from": "api_call_log",
+            "to": "api_log_failed",
+            "label": "unsafe path or log write failure"
           }
         ]
       }
@@ -7894,6 +7974,16 @@
         {
           "path": "docs/dependency-admin.md",
           "purpose": "Owner dependency API request, recovery, provenance and supported dependency boundaries."
+        },
+        {
+          "path": "internal/transport/api_log.go",
+          "anchor": "func (s *Server) LogAPI(",
+          "purpose": "Record incoming MCP/owner API call names, safe parameters, UTC start time, HTTP status and handler duration in a private bounded rotating JSONL log without changing request processing."
+        },
+        {
+          "path": "internal/transport/api_log_parameters.go",
+          "anchor": "func privateAPIParameter(",
+          "purpose": "Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence."
         }
       ],
       "tests": [
@@ -8218,6 +8308,46 @@
             "S5"
           ],
           "purpose": "Cached owner inventory exposes installed plugin/skill metadata while excluding skill contents and uninstalled catalog entries."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Actual MCP tool/resource and rejected requests retain call names, safe parameters and durations while omitting owner credentials, stored secrets, answers, message text and URL secrets; files and directory are private."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Owner request parameters and processing duration are recorded while the downstream handler sees unchanged request bytes and status."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogActualOwnerHandlerRecordsRejectedInput(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "The actual private owner handler logs rejected dependency parameters and HTTP status without executing maintenance."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogRotationConcurrencyAndFailurePreserveAPI(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogBoundsMalformedBodiesAndPreservesPanic(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records."
         }
       ],
       "suites": [
@@ -8327,6 +8457,21 @@
             "id": "dependency_preserved",
             "label": "Reject busy, invalid or incompatible changes; retain state and inspect uncertain outcomes",
             "terminal": true
+          },
+          {
+            "id": "api_call_log",
+            "label": "Record API name, safe parameters, transport status and server processing time",
+            "scenario": "S4"
+          },
+          {
+            "id": "api_log_saved",
+            "label": "Retain private bounded logs with secret values redacted",
+            "terminal": true
+          },
+          {
+            "id": "api_log_failed",
+            "label": "Warn once if logging is unavailable; preserve the API result without replay",
+            "terminal": true
           }
         ],
         "edges": [
@@ -8409,6 +8554,21 @@
             "from": "dependency_admin",
             "to": "dependency_preserved",
             "label": "unauthorized, active work, local edits, failed probe or interruption"
+          },
+          {
+            "from": "n0",
+            "to": "api_call_log",
+            "label": "incoming MCP or private owner API call"
+          },
+          {
+            "from": "api_call_log",
+            "to": "api_log_saved",
+            "label": "safe bounded record appended; rotate older entries"
+          },
+          {
+            "from": "api_call_log",
+            "to": "api_log_failed",
+            "label": "unsafe path or log write failure"
           }
         ]
       }

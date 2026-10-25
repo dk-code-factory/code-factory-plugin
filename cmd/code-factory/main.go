@@ -250,13 +250,13 @@ func run() error {
 	mux.Handle("/mcp", server.Handler(token))
 	mux.Handle("/admin/dependencies", server.DependencyHandler(token))
 	mux.Handle("/admin/dependencies/", server.DependencyHandler(token))
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/healthz", server.LogAPI("owner", token, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+token {
 			http.Error(w, "Unauthorized", 401)
 			return
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"version": buildinfo.Version, "status": "verified"})
-	})
+	})))
 	httpServer := &http.Server{Addr: *address, Handler: mux, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	var wg sync.WaitGroup
 	for _, loop := range []func(context.Context){a.SyncLoop, a.AssessmentLoop, ev.Loop} {

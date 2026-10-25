@@ -1,5 +1,21 @@
 # Continue development through the real Chrome session
 
+## Incoming API call diagnostics · 2026-10-25
+
+Local source records MCP methods/tools and private owner API calls, including
+health and rejected requests, in private `logs/api-calls.jsonl`. Records contain
+UTC start time, API name, bounded safe parameters, HTTP status and server handler
+duration. Credentials, answer/free-text payloads and URL secrets are redacted;
+headers, raw bodies, responses and exception text are excluded. Logs rotate at
+10 MiB with three backups. Failure warns once without changing or replaying work.
+
+Fixtures cover actual MCP/owner boundaries, parameter/timing capture, secret
+redaction, malformed/oversized input, panic propagation, private permissions,
+concurrent rotation and preservation of API results/unrelated files on failure.
+This logging is not installed and has no historical or real-host call evidence.
+Existing installed-version readiness and host acceptance gaps remain unchanged.
+
+
 ## GitHub source and shared query cache · 2026-10-25
 
 Local source now depends on a GitHub read interface supplied by a persistent

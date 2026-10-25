@@ -72,6 +72,30 @@ answers must not appear in diagnostics or transcripts. Streaming redaction
 withholds a suffix that could be the start of a known secret; an unfinished suffix
 is discarded on process loss.
 
+Incoming Code Factory MCP and private owner API calls are recorded in
+`$XDG_DATA_HOME/code-factory/logs/api-calls.jsonl` (normally
+`~/.local/share/code-factory/logs/api-calls.jsonl`). Each JSON line contains UTC
+`startedAt`, the API/tool name, optional JSON-RPC method, HTTP method,
+`parameters`, `httpStatus` and `durationMs`. Timing covers server request handling,
+including validation and response writing; it excludes client/WAN orchestration,
+background agent execution and writing the log itself. HTTP 200 can still carry
+a tool-level error; this field is transport status, not task completion proof.
+
+Credential fields, answer payloads, free-form messages/prompts/content and
+metadata are redacted. URLs omit userinfo, queries and fragments; known service
+credentials and common token forms are masked. Other parameters retain bounded
+values; oversized or malformed input is represented by safe markers. Responses,
+headers, raw request bodies and exception text are not logged. Rejected requests
+that reach these endpoints are recorded too, without reading an unauthorized
+request body. This does not enable raw gateway/tunnel or outbound GitHub logging.
+
+The log directory is private (0700), files are 0600, and rotation retains the
+current 10 MiB file plus up to three numbered backups. A failed log write emits
+one generic service warning and never retries or changes the API operation.
+Logging observes request reads without consuming or replacing their body/limits.
+Newly built logging is source-only until a release containing it is installed;
+prior calls are not reconstructed.
+
 Record a nonsecret evidence reference for each observed acceptance checkpoint:
 
 ```sh

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "a29c7654a94e7077d99f6ea9227074b318bf74dc",
-  "fingerprint": "1be0db093785996a54ebf986b257ba08951210cdf65c6788c27795a861e9053c",
+  "base": "187db59e2c5d1f79bdb502fa4e49b4a7db9347a0",
+  "fingerprint": "421e148e9f951b315aa526588cb5c7b6229c256ae1aa504cb17c2768427b04fb",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Service lifecycle, upgrades and protected-state preservation remain unchanged; the runbook labels this correction as source-only.",
-    "implementation": "Only optional review-intent metadata and application eligibility checks changed; no service restart or installed state write occurred.",
-    "tests": "Release/installer recovery suites remain required because shared domain/build inputs changed; fixture success is kept separate from deployment."
+    "kind": "behavior",
+    "description": "Incoming Code Factory MCP and private owner API calls now have a private bounded rotating diagnostic log with UTC start time, safe parameters, call names, transport status and handler processing duration. Secret/free-text payloads and URL credentials/query/fragment are redacted; raw headers/bodies/responses and exceptions are excluded.",
+    "implementation": "API wrappers observe only consumed request bytes, keep existing limits/authentication and response handling, and append sanitized bounded JSONL records under private log permissions. Rotation preserves private files; unsafe linked paths are refused and generic write-failure warnings never change or replay work. Health requests share the same owner logging boundary.",
+    "tests": "New TestAPILog fixtures cover actual successful/rejected MCP tools, resources, owner validation, schema rejection, private credential/answer/message/metadata and URL redaction, timing with unchanged downstream bytes, bounded malformed/oversized bodies, propagated panics, concurrent JSONL rotation and unchanged API results/unrelated files when logging fails."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.141
+      "seconds": 0.181
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 104.409
+      "seconds": 105.667
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 17.778
+      "seconds": 17.898
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.648
+      "seconds": 2.972
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.427
+      "seconds": 2.629
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 22.7
+      "seconds": 22.785
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.16
+      "seconds": 0.161
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.642
+      "seconds": 0.663
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.245
     },
     {
       "command": [
@@ -131,11 +131,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.838
+      "seconds": 25.027
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "c27f75eb6a4111bc0b8da5033ff379a751c6cec071e9c15c3329a687f7d89252",
+    "flow:operate-installation": "3c60ed10b58b0936fbf0aa849ab54c6c015c2de81fd28f41c5bb8be2fdcc06f0",
     "term:connection-refreshes": "b896dd9babd67f60ef0e780696fb3e896d9e891127a6b49f4fde006dc6cd1d55",
     "term:connection-submits": "f9dda81a53770b4ac6ed20dae2c590ffeec99ba988b8f6e0e5ca159a309c050f",
     "term:coverage-gap": "ec018212265e427226cc38846c161e5f2faea281e41f3078a8315464784706bf",
@@ -172,12 +172,12 @@
     "term:ui-w-diagnostics": "4cb13461853292c7d1e93908a1999beffec7ae163cf52f3a6797923f1102648a",
     "term:unverified-behavior": "43ad92892a2ff7b5d2bc2556c132776587be0a22bf8c8b3309ea0339e9f161e1",
     "term:verification": "10cffa3dfff47b7c9dcf01d69e5318b78913b8c727191cbc0ddb9b848907ba08",
-    "ui:C-BROWSER-LAB": "6451b0c6fbb67ab02b3eb86d23ea3d3f67b3a8ad401ef1af6af7a3d37dd52f91",
-    "ui:C-DIAGNOSE": "b01de0288399d15602211753099d300520b04b0f7a08e0227a952c7dcfe77762",
-    "ui:P-BROWSER-LAB": "53eb8804997f743f1b52741d45e94b46c9e8e63a9c056fbfa54c3afe527f2bfb",
-    "ui:P-DIAGNOSTICS": "c0482cf0a269a6284e2dbd91eed6d7d87026e4cc0cffb3416f56b6219ab20861",
-    "ui:PAGE-BROWSER-LAB": "cde794c58b851a43b5dbe212d1b87b18c07a8e297631a4b08625c5d563ab5042",
-    "ui:W-BROWSER-LAB": "c5ed9270f92f7b31cf8f4b110ed07b7eee9504ccc9257c43d84565c96f03aa2d",
-    "ui:W-DIAGNOSTICS": "dbba711752cf97260ffa098253813100c6056e8a4f6ba1e19aa5ff19af20fb4c"
+    "ui:C-BROWSER-LAB": "15382f1d9ea76794600ef18fb9d69b64bbdc8ef747acde1f9a976bdc4bf76ca9",
+    "ui:C-DIAGNOSE": "43ea7775cd25f14e038131e1dd046dea37e4a05df7d9744c26ace42bbc54c37d",
+    "ui:P-BROWSER-LAB": "9e748cb83120446b19f6da317b3b8459cd4ad94640921836e1972a600dc55226",
+    "ui:P-DIAGNOSTICS": "9fed4f524b346dd973464d0b27f3bbcf7d77ea6a37d0a062590462b7d453b78f",
+    "ui:PAGE-BROWSER-LAB": "59c2822b279b0f430d6816460452a53348d480b6c7619b3d8b88bef04d10b4ed",
+    "ui:W-BROWSER-LAB": "4009e61bde8d029d7d594e7e04986b8569db23e7a6acc3f537e031482a8885b9",
+    "ui:W-DIAGNOSTICS": "da718681aec3ce4419404f6485741aea1558da71d71108446ab4ace756b9d89e"
   }
 }

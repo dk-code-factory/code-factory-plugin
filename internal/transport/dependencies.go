@@ -17,7 +17,7 @@ import (
 // DependencyHandler is mounted only on the loopback owner's admin route. It is
 // intentionally absent from MCP discovery and the public OAuth gateway routes.
 func (s *Server) DependencyHandler(token string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return s.LogAPI("owner", token, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Type", "application/json")
 		auth := r.Header.Get("Authorization")
@@ -74,7 +74,7 @@ func (s *Server) DependencyHandler(token string) http.Handler {
 		}
 		w.WriteHeader(status)
 		_ = json.NewEncoder(w).Encode(value)
-	})
+	}))
 }
 
 func adminError(w http.ResponseWriter, status int, message string) {

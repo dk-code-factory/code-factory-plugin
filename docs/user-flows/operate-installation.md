@@ -20,6 +20,8 @@ The owner has a local installation and, for a release change, a validated packag
 
 Invalid packages or occupied ports fail without replacing a healthy installation. Failed upgrades attempt automatic recovery. If interruption occurs after a release is activated but before the change is finalized, explicit rollback can restore the retained compatible snapshot. Rollback preserves newer state in an archive. Shared network routes and login policy are preserved. Browser inspection uses an explicitly owner-approved attachment mode. A dedicated persistent pilot profile requires its own initial manual sign-in without copying authentication; inspection pauses during that sign-in. Local debugger readiness alone does not establish application or host acceptance. Upgrading changed embedded UI content also changes its advertised resource identity; hosts may still require a metadata refresh or fresh view. Verify the actual rendered revision rather than inferring it from healthy service or local resource reads. Operator evidence is version-bound and never inferred from fixture success.
 
+The owner can inspect private rotating diagnostics for incoming MCP and owner API calls, with UTC start time, API name, bounded safe parameters, transport status and server processing duration. The duration does not measure client latency or background agent completion. Logs survive restart, rotate within fixed bounds and never broaden request authority. Rejected calls are recorded; unsafe paths and write failures produce a generic warning while preserving API behavior. Existing earlier calls are not reconstructed.
+
 ## Scenarios
 
 - **S1** Fresh/rerun installation and failed upgrade preserve private state. Application and task commands use the recorded provider programs without replacing global programs; prior provider command selections remain available for compatible rollback. Explicit rollback recovers an interruption after release activation but before the change is finalized, restoring the compatible snapshot and archiving newer state.
@@ -49,6 +51,9 @@ flowchart TD
     N8["Authenticate owner and inspect or update identified managed dependencies #40;S5#41;"]
     N9(["Observe verified per-dependency outcomes#59; retain backups and existing authentication"])
     N10(["Reject busy, invalid or incompatible changes#59; retain state and inspect uncertain outcomes"])
+    N11["Record API name, safe parameters, transport status and server processing time #40;S4#41;"]
+    N12(["Retain private bounded logs with secret values redacted"])
+    N13(["Warn once if logging is unavailable#59; preserve the API result without replay"])
     N0 -->|"upgrade"| N1
     N1 -->|"upgrade returns failure"| N2
     N2 -->|"recovered"| N0
@@ -65,6 +70,9 @@ flowchart TD
     N0 -->|"explicit owner dependency maintenance"| N8
     N8 -->|"authorized idle operation and verified changes"| N9
     N8 -->|"unauthorized, active work, local edits, failed probe or interruption"| N10
+    N0 -->|"incoming MCP or private owner API call"| N11
+    N11 -->|"safe bounded record appended#59; rotate older entries"| N12
+    N11 -->|"unsafe path or log write failure"| N13
 ```
 
 ## Implementation references
@@ -101,6 +109,8 @@ flowchart TD
 - [internal/transport/dependencies.go](../../internal/transport/dependencies.go) — Private bearer-authenticated owner REST API outside MCP/public/browser routing, with strict JSON input and durable status. (`func (s *Server) DependencyHandler(`)
 - [internal/codex/client.go](../../internal/codex/client.go) — No-model compatibility probe covering initialize, current account, skills, config and native plugin inventory. (`func Probe(`)
 - [docs/dependency-admin.md](../../docs/dependency-admin.md) — Owner dependency API request, recovery, provenance and supported dependency boundaries.
+- [internal/transport/api_log.go](../../internal/transport/api_log.go) — Record incoming MCP/owner API call names, safe parameters, UTC start time, HTTP status and handler duration in a private bounded rotating JSONL log without changing request processing. (`func (s *Server) LogAPI(`)
+- [internal/transport/api_log_parameters.go](../../internal/transport/api_log_parameters.go) — Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence. (`func privateAPIParameter(`)
 
 ## Test references
 
@@ -144,6 +154,11 @@ flowchart TD
 - [internal/codex/compatibility_test.go](../../internal/codex/compatibility_test.go) — `func TestStableCodexVersionBoundary(`; S5. Stable minimum and numeric ordering accept upgrade candidates while rejecting older/prerelease CLI versions.
 - [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyMarketplaceFailureDoesNotBlockIndependentPlugins(`; S5. A failed renamed/unavailable Git marketplace remains an isolated result while independent plugins still update; failure output stays private.
 - [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyInventoryExcludesSkillContents(`; S5. Cached owner inventory exposes installed plugin/skill metadata while excluding skill contents and uninstalled catalog entries.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(`; S4. Actual MCP tool/resource and rejected requests retain call names, safe parameters and durations while omitting owner credentials, stored secrets, answers, message text and URL secrets; files and directory are private.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(`; S4. Owner request parameters and processing duration are recorded while the downstream handler sees unchanged request bytes and status.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogActualOwnerHandlerRecordsRejectedInput(`; S4. The actual private owner handler logs rejected dependency parameters and HTTP status without executing maintenance.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRotationConcurrencyAndFailurePreserveAPI(`; S4. Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogBoundsMalformedBodiesAndPreservesPanic(`; S4. Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records.
 
 ## Verification and gaps
 

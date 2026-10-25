@@ -19,6 +19,8 @@ The owner intentionally enables a feature needing a credential or an agent reque
 
 The temporary local tunnel setup form requires verified reachability and valid origin, expires, and accepts one submission. The pilot exposes no unused Jira configuration or credential form; no such credential submission is offered from Settings. The authenticated backend credential capability is separate from the temporary form and has no single-use session. Ordinary settings and tools never echo credentials. A claimed secret answer is not replayed automatically. Jira and the alternate tunnel remain disabled in this pilot.
 
+Incoming API diagnostics record call names, bounded safe parameters and processing time in private rotating logs. Credential fields, secret-answer payloads, free-form message/prompt/content and metadata are redacted; URL credentials, queries and fragments are masked. Headers, raw bodies, response payloads and exception text are excluded. Invalid or oversized input receives a safe marker. Logging cannot change authentication, request limits or replay an operation, and a failed log write leaves the original response intact.
+
 ## Scenarios
 
 - **S1** Temporary local tunnel credential input is origin-bound, expiry-bound and single-use. Settings has no Jira credential input or submission; private values are absent from ordinary UI results.
@@ -57,6 +59,9 @@ flowchart TD
     N11["Authenticate owner and inspect or update identified managed dependencies #40;S6#41;"]
     N12(["Observe verified per-dependency outcomes#59; retain backups and existing authentication"])
     N13(["Reject busy, invalid or incompatible changes#59; retain state and inspect uncertain outcomes"])
+    N14["Record API name, safe parameters, transport status and server processing time #40;S2#41;"]
+    N15(["Retain private bounded logs with secret values redacted"])
+    N16(["Warn once if logging is unavailable#59; preserve the API result without replay"])
     N0 -->|"valid local setup or secret-answer submission"| N1
     N0 -->|"local setup: invalid origin, expired or reused form"| N4
     N4 --> N5
@@ -76,6 +81,9 @@ flowchart TD
     N0 -->|"explicit owner dependency maintenance"| N11
     N11 -->|"authorized idle operation and verified changes"| N12
     N11 -->|"unauthorized, active work, local edits, failed probe or interruption"| N13
+    N0 -->|"incoming MCP or private owner API call"| N14
+    N14 -->|"safe bounded record appended#59; rotate older entries"| N15
+    N14 -->|"unsafe path or log write failure"| N16
 ```
 
 ## Implementation references
@@ -119,6 +127,8 @@ flowchart TD
 - [internal/transport/dependencies.go](../../internal/transport/dependencies.go) — Private bearer-authenticated owner REST API outside MCP/public/browser routing, with strict JSON input and durable status. (`func (s *Server) DependencyHandler(`)
 - [internal/codex/client.go](../../internal/codex/client.go) — No-model compatibility probe covering initialize, current account, skills, config and native plugin inventory. (`func Probe(`)
 - [docs/dependency-admin.md](../../docs/dependency-admin.md) — Owner dependency API request, recovery, provenance and supported dependency boundaries.
+- [internal/transport/api_log.go](../../internal/transport/api_log.go) — Record incoming MCP/owner API call names, safe parameters, UTC start time, HTTP status and handler duration in a private bounded rotating JSONL log without changing request processing. (`func (s *Server) LogAPI(`)
+- [internal/transport/api_log_parameters.go](../../internal/transport/api_log_parameters.go) — Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence. (`func privateAPIParameter(`)
 
 ## Test references
 
@@ -159,6 +169,11 @@ flowchart TD
 - [internal/codex/compatibility_test.go](../../internal/codex/compatibility_test.go) — `func TestStableCodexVersionBoundary(`; S6. Stable minimum and numeric ordering accept upgrade candidates while rejecting older/prerelease CLI versions.
 - [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyMarketplaceFailureDoesNotBlockIndependentPlugins(`; S6. A failed renamed/unavailable Git marketplace remains an isolated result while independent plugins still update; failure output stays private.
 - [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyInventoryExcludesSkillContents(`; S6. Cached owner inventory exposes installed plugin/skill metadata while excluding skill contents and uninstalled catalog entries.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(`; S2. Actual MCP tool/resource and rejected requests retain call names, safe parameters and durations while omitting owner credentials, stored secrets, answers, message text and URL secrets; files and directory are private.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(`; S2. Owner request parameters and processing duration are recorded while the downstream handler sees unchanged request bytes and status.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogActualOwnerHandlerRecordsRejectedInput(`; S2. The actual private owner handler logs rejected dependency parameters and HTTP status without executing maintenance.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRotationConcurrencyAndFailurePreserveAPI(`; S2. Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogBoundsMalformedBodiesAndPreservesPanic(`; S2. Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records.
 
 ## Verification and gaps
 
