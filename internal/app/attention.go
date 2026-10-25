@@ -67,7 +67,7 @@ func (a *App) ListAttention(ctx context.Context, in AttentionInput) (AttentionPa
 	if err != nil {
 		return out, err
 	}
-	runs, err := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.prompt", "$.reviewPromptSnapshot", "$.profile.prompt")
+	runs, err := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.prompt", "$.reviewPromptSnapshot", "$.profile.prompt", "$.sourceSnapshot")
 	if err != nil {
 		return out, err
 	}
@@ -81,7 +81,7 @@ func (a *App) ListAttention(ctx context.Context, in AttentionInput) (AttentionPa
 			continue
 		}
 		if request.Origin == "async" || request.Origin == "text" {
-			if r.Status == "prepared" || r.Status == "cleaned" {
+			if r.Status == "prepared" || r.Status == "cleaned" || r.Status == "terminated" {
 				continue
 			}
 		} else if r.Status != "waiting" && r.Status != "running" {

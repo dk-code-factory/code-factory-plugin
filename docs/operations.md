@@ -56,7 +56,7 @@ For manual work, choose a pipeline, review its mode, permissions and publishing 
 
 Messages lists native, structured-message and recovered textual questions and approvals. Answer the displayed form. If a stopped agent fails to produce a form, the helper gets at most two question-only repair attempts before offering a free-text answer and Open session console. The console shows the same session's technical activity and retains its draft. Take over session cancels further repair. Unknown delivery is never retried automatically; inspect the console first.
 
-PR lifecycle, review approval and current-head CI are independent. Linked implementation PRs can complete issue work on merge without changing the issue on GitHub. Incidental references cannot. Inaccessible or stale PR information remains visibly unknown. GitHub review-notification checks default to two minutes, with repository summary reconciliation every 15 minutes and an initial baseline for new repositories. Full histories/checks refresh only for selected or tracked work and bounded explicit references. Visible UI refreshes through the host bridge; neither closing the UI nor GitHub completion stops a run. Dashboard reads use summaries and load full history/check lists only for the selected item. A GitHub rate limit preserves imported rows and delays retries; do not force repeated manual polls during its cooldown.
+PR lifecycle, review approval and current-head CI are independent. Linked implementation PRs can complete issue work on merge without changing the issue on GitHub. Incidental references cannot. Inaccessible or stale PR information remains visibly unknown. GitHub review-notification checks default to two minutes, with repository summary reconciliation every 15 minutes and an initial baseline for new repositories. Full histories/checks refresh only for selected or tracked work and bounded explicit references. Visible UI refreshes through the host bridge; closing the UI leaves work running, while observing source closure or merge terminates its sessions. Dashboard reads use summaries and load full history/check lists only for the selected item. A GitHub rate limit preserves imported rows and delays retries; do not force repeated manual polls during its cooldown.
 
 ## Diagnostics and evidence
 
@@ -110,10 +110,15 @@ pre-upgrade profile. The canonical MCP URL can therefore change back; check the
 restored profile before reconnecting Work. Old installation records without a
 gateway snapshot retain their current profile and need a compatibility check.
 
-After daemon/app-server loss, old attention IDs are stale. Refresh, inspect the
-retained run/worktree, and Resume explicitly. Answers are never replayed. Clean up
-only stopped, clean worktrees; dirty ones are refused. A missing worktree or a
-provider authentication failure needs repair before resume.
+After daemon loss, pending work continues from its retained session and saved
+progress. Completed turns remain idle; explicit interrupts and unanswered questions
+remain paused. Before initial execution or session restoration, a targeted fresh
+source check compares scope, state, head and assignments. The agent assesses
+changes and reuses only still-valid checkpoints. Failed reads keep work stopped.
+Closed issues and closed/merged PRs permanently terminate their sessions and retire
+pending requests. Reopening a source requires new work rather than reviving its
+terminated sessions. History and workspaces remain; explicit cleanup refuses dirty
+files. Answers and completed external actions are never replayed automatically.
 
 ## Uninstall
 

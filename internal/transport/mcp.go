@@ -596,6 +596,7 @@ func registerEvents(m *mcp.Server, ev *events.Service) {
 }
 
 func publicRun(r domain.Run) domain.Run {
+	r.SourceSnapshot = nil
 	r.Skills = append([]domain.Skill{}, r.Skills...)
 	for i := range r.Skills {
 		r.Skills[i].Files = nil

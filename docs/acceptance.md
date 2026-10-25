@@ -1,5 +1,36 @@
 # Work acceptance gate
 
+## Source-aware continuation and terminal lifecycle · 2026-10-24
+
+Before initial execution or restoration of a retained session, a targeted GitHub
+read verifies its source state without trusting cached lifecycle data. Structured
+previous/current context identifies title, description, head, draft, update,
+labels, assignment and review-request changes for the agent to assess. Unknown
+legacy baselines remain explicit. Saved checkpoints are reused only if still valid.
+Failed source reads leave work stopped. Closed issues and closed/merged PRs
+permanently terminate their started sessions, kill their provider process groups,
+retire pending questions and preserve history and workspaces. Synced closure also
+stops active work. Dirty cleanup cannot make a terminated session resumable.
+
+Source fixtures cover these boundaries, fresh-cache revalidation, same-thread
+context delivery and changed-head validity, with Stopped/disabled-send/cleanup
+browser assertions in both themes. Deployment and real-provider observations are
+recorded separately after installation; fixture success does not establish them.
+
+
+## Automatic startup continuation · 2026-10-24
+
+Local source now continues pending sessions from retained thread/workspace progress
+after daemon startup, with saved-result and reviewer-checkpoint reuse instructions.
+Focused Go race fixtures assert same-thread continuation, preserved reviewer
+artifacts and authority, idempotent recovery, no original-task replay, completion
+reconciliation, explicit-interrupt preservation, prepared/idle exclusion, unanswered
+question retention, fresh native approval and isolated unavailable workspaces.
+
+These are fixture results. This change has not been installed, and neither historical
+review run was resumed. Real-provider checkpoint reuse, absence of duplicate external
+actions and installed startup recovery require separate dedicated-pilot evidence.
+
 ## Dependency administration and owner fork · 2026-10-23
 
 Live owner API operation `owner-fork-dependency-upgrade-20261023` succeeded on

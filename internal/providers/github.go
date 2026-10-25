@@ -72,6 +72,7 @@ func NewGitHub() *GitHub {
 }
 
 type githubRedirect struct{ location string }
+type requireFreshRead struct{}
 
 func (r *githubRedirect) Error() string { return "GitHub repository redirected" }
 func (g *GitHub) get(ctx context.Context, path string, out any) (http.Header, error) {
@@ -119,7 +120,7 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 	if err != nil {
 		return nil, fmt.Errorf("GitHub cache unavailable")
 	}
-	if g.Managed() && hasCache && cached.Until.After(g.now()) {
+	if g.Managed() && hasCache && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true {
 		if cached.Redirect != "" {
 			return nil, &githubRedirect{location: cached.Redirect}
 		}

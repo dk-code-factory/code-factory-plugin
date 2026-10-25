@@ -79,7 +79,17 @@ func main() {
 			reply(map[string]any{"userAgent": "fixture"})
 		case "initialized":
 		case "thread/start", "thread/resume":
-			reply(map[string]any{"thread": map[string]string{"id": "thread-1"}})
+			if m.Method == "thread/resume" && mode == "resume-missing" {
+				send(map[string]any{"id": m.ID, "error": map[string]any{"code": -1, "message": "retained thread unavailable"}})
+				continue
+			}
+			thread := map[string]any{"id": "thread-1"}
+			if m.Method == "thread/resume" {
+				if status := os.Getenv("CF_FAKE_RESUME_STATUS"); status != "" {
+					thread["turns"] = []any{map[string]any{"id": "turn-1", "status": status}}
+				}
+			}
+			reply(map[string]any{"thread": thread})
 		case "config/read":
 			reply(map[string]any{"config": map[string]any{}})
 		case "model/list":

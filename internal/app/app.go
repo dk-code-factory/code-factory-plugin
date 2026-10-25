@@ -336,7 +336,7 @@ func (a *App) importItems(ctx context.Context, r domain.Repository, items []doma
 	if err != nil {
 		return err
 	}
-	return a.Store.Write(ctx, func(t *store.Tx) error {
+	err = a.Store.Write(ctx, func(t *store.Tx) error {
 		for _, i := range items {
 			var old domain.Item
 			e := t.Get("item", i.ID, &old)
@@ -456,6 +456,23 @@ func (a *App) importItems(ctx context.Context, r domain.Repository, items []doma
 		}
 		return t.Event("sync.completed", r.ID, map[string]any{"repository": r.ID, "at": checkpoint})
 	})
+	if err != nil {
+		return err
+	}
+	if a.Runs != nil {
+		for _, item := range items {
+			if closedWork(item) {
+				var saved domain.Item
+				if err := a.Store.Get(ctx, "item", item.ID, &saved); err != nil {
+					return err
+				}
+				if err := a.Runs.stopClosedItem(ctx, saved); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 func (a *App) Sync(ctx context.Context) error { return a.sync(ctx, false) }
 func (a *App) sync(ctx context.Context, dueOnly bool) error {

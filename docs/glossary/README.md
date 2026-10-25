@@ -344,7 +344,7 @@ The current turn has finished and the retained session can receive follow-up.
 
 `state-interrupted` · state
 
-Active work has stopped and requires explicit continuation.
+Active work has stopped with its session retained for continuation.
 
 <a id="state-failed"></a>
 ## Failed
@@ -3837,4 +3837,11 @@ The last successful observation time and any later observation failure for submi
 `element-w-pr-evidence-refresh-reviews` · element · scope: ui-w-pr-evidence
 
 The control requesting an observation of submitted reviews.
+
+<a id="state-terminated"></a>
+## Stopped
+
+`state-terminated` · state
+
+Work has ended because its source item closed or merged; the retained session cannot continue.
 <!-- /specs:terms -->

@@ -52,7 +52,9 @@ function WorkStatus({
             ? "Active"
             : run.status === "failed"
               ? "Failed"
-              : run.status === "cleaned"
+              : run.status === "terminated"
+                ? "Stopped"
+                : run.status === "cleaned"
                 ? "Finished"
                 : "Inactive");
   return (
@@ -2227,7 +2229,7 @@ function Agent({
         <p>
           Workspace: <code>{run.worktree}</code>
         </p>
-        {["idle", "interrupted", "failed"].includes(run.status) && (
+        {["idle", "interrupted", "failed", "terminated"].includes(run.status) && (
           <>
             <p>
               Cleanup retires the retained session and removes a clean worktree.

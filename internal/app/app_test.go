@@ -340,7 +340,7 @@ func TestAssessmentCacheAndInvalidation(t *testing.T) {
 	}
 }
 
-func TestRecoveryStalesRequestsAndIdleRuns(t *testing.T) {
+func TestRecoveryStalesRequestsAndPreservesIdleRuns(t *testing.T) {
 	a, ctx := fixture(t)
 	r := domain.Run{ID: "recovery", Status: "idle", ThreadID: "dead-thread", Worktree: "/retained/worktree"}
 	if e := a.Store.Put(ctx, "run", r.ID, r, ""); e != nil {
@@ -355,7 +355,7 @@ func TestRecoveryStalesRequestsAndIdleRuns(t *testing.T) {
 	}
 	_ = a.Store.Get(ctx, "run", r.ID, &r)
 	_ = a.Store.Get(ctx, "attention", at.ID, &at)
-	if r.Status != "interrupted" || r.Worktree != "/retained/worktree" || at.Status != "stale" {
+	if r.Status != "idle" || r.Worktree != "/retained/worktree" || at.Status != "stale" {
 		t.Fatal(r, at)
 	}
 	if e := a.Runs.Answer(ctx, at.ID, json.RawMessage(`{"answers":{}}`)); e == nil {
@@ -617,6 +617,10 @@ func TestMessageRestoresRetainedSessionWithOneSubmittedTurn(t *testing.T) {
 	}
 	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "running" && r.TurnID != "" })
 	original := r
+	if err := a.Runs.Interrupt(ctx, r.ID); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "interrupted" })
 	// Simulate daemon recovery: no live in-memory session remains.
 	a.Runs.Close()
 	a.Runs = NewManager(ctx, a, testutil.FakeCodex(t))

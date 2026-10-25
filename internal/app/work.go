@@ -29,7 +29,7 @@ func ContainsQueue(entry domain.InboxEntry, queue string) bool {
 }
 
 func (a *App) projectWork(ctx context.Context, items []domain.Item, links []domain.Relationship, entries []domain.InboxEntry) error {
-	runs, err := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot")
+	runs, err := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
 	if err != nil {
 		return err
 	}
@@ -106,6 +106,8 @@ func (a *App) projectWork(ctx context.Context, items []domain.Item, links []doma
 					state = "Interrupted"
 				case "cleaned":
 					state = "Session closed"
+				case "terminated":
+					state = "Stopped"
 				}
 				if workRank(state) > workRank(e.Work.Status) {
 					e.Work.Status = state
@@ -154,7 +156,7 @@ func (a *App) projectWork(ctx context.Context, items []domain.Item, links []doma
 }
 
 func workRank(s string) int {
-	return map[string]int{"Not started": 0, "Session closed": 1, "Inactive": 2, "Interrupted": 3, "Failed": 4, "Starting": 5, "Active": 6, "Waiting for you": 7}[s]
+	return map[string]int{"Not started": 0, "Session closed": 1, "Stopped": 1, "Inactive": 2, "Interrupted": 3, "Failed": 4, "Starting": 5, "Active": 6, "Waiting for you": 7}[s]
 }
 func summary(i domain.Item) domain.PullRequest {
 	if i.PR != nil {

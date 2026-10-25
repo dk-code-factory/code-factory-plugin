@@ -3284,6 +3284,21 @@ test("exact host-wrapped connection failure never replays a mutation", async ({
 });
 
 for (const theme of ["light", "dark"] as const) {
+  test(`terminated work retains history and cleanup without allowing continuation in ${theme}`, async ({ page }) => {
+    const snapshot = initial();
+    snapshot.runs = [retained(snapshot, "closed-source", "terminated")];
+    snapshot.runs[0].error = "PR is merged; work terminated. History and workspace are retained.";
+    const { ui, calls } = await host(page, { snapshot, theme });
+    await expect(ui.getByRole("status", { name: "Work status" })).toHaveText("Stopped");
+    await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+    await expect(ui.getByRole("alert")).toContainText("PR is merged; work terminated");
+    await ui.getByLabel("Message agent").fill("Continue anyway");
+    await expect(ui.getByRole("button", { name: "Send message", exact: true })).toBeDisabled();
+    await ui.getByText("Details", { exact: true }).click();
+    await expect(ui.getByRole("button", { name: "Clean up worktree", exact: true })).toBeVisible();
+    await expect(ui.getByRole("button", { name: "Interrupt", exact: true })).toHaveCount(0);
+    expect(calls.filter(c => ["start_run", "send_message"].includes(c.name))).toHaveLength(0);
+  });
   test(`inactive work status and sending a message restore the retained session in ${theme}`, async ({
     page,
   }) => {

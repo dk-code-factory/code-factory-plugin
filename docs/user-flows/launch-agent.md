@@ -21,6 +21,8 @@ Leaving the initial conversation retains its message and busy/uncertain state pe
 
 ## Scenarios
 
+- **S8** Revalidate the current source before execution. Changed scope/head is supplied as untrusted context for the agent to assess against saved checkpoints. Unavailable source data prevents execution. A closed issue or closed/merged PR terminates the session without starting provider work.
+
 - **S1** Item selection opens a prefilled conversation without preparing or starting. Optional New run opens a prepared review; customization and reopening retained drafts never start an agent or create a workspace.
 - **S2** Explicit Start queues prepared work once and returns before completion; subsequent Start requests for that run are rejected. An uncertain response locates the accepted run before another action is offered.
 - **S3** Selected skill contents and profile choices remain fixed in the prepared snapshot. A plugin skill retains its package resources, executable helpers and relative entrypoint layout across later installation changes and retained continuation. Missing, oversized or escaping bundle content rejects preparation; restored snapshot paths cannot write outside their own root. Standalone skills retain their existing entrypoint.
@@ -38,7 +40,7 @@ Review/implementation defaults resolve repository overrides before system defaul
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [prepared-launch](../glossary/README.md#prepared-launch), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [workspace](../glossary/README.md#workspace), [agent-run](../glossary/README.md#agent-run), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [keyboard-focus](../glossary/README.md#keyboard-focus), [modal-dialog](../glossary/README.md#modal-dialog), [agent-pipeline](../glossary/README.md#agent-pipeline), [review-policy](../glossary/README.md#review-policy), [review-request-claim](../glossary/README.md#review-request-claim), [repository-review-prompt](../glossary/README.md#repository-review-prompt).
+Glossary: [prepared-launch](../glossary/README.md#prepared-launch), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [workspace](../glossary/README.md#workspace), [agent-run](../glossary/README.md#agent-run), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [keyboard-focus](../glossary/README.md#keyboard-focus), [modal-dialog](../glossary/README.md#modal-dialog), [agent-pipeline](../glossary/README.md#agent-pipeline), [review-policy](../glossary/README.md#review-policy), [review-request-claim](../glossary/README.md#review-request-claim), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [state-terminated](../glossary/README.md#state-terminated).
 UI entities: [D-LAUNCH](../ui/README.md#D-LAUNCH), [P-LAUNCH-FRAME](../ui/README.md#P-LAUNCH-FRAME), [P-LAUNCH-EDITOR](../ui/README.md#P-LAUNCH-EDITOR), [P-LAUNCH-REVIEW](../ui/README.md#P-LAUNCH-REVIEW), [W-DIALOG-FRAME](../ui/README.md#W-DIALOG-FRAME), [W-LAUNCH-EDITOR](../ui/README.md#W-LAUNCH-EDITOR), [W-LAUNCH-REVIEW](../ui/README.md#W-LAUNCH-REVIEW), [C-LAUNCH-OPEN](../ui/README.md#C-LAUNCH-OPEN), [C-LAUNCH-PROFILE](../ui/README.md#C-LAUNCH-PROFILE), [C-PREPARE](../ui/README.md#C-PREPARE), [C-LAUNCH-EDIT](../ui/README.md#C-LAUNCH-EDIT), [C-START](../ui/README.md#C-START), [C-DISMISS](../ui/README.md#C-DISMISS), [W-NEW-CHAT](../ui/README.md#W-NEW-CHAT), [P-NEW-CHAT](../ui/README.md#P-NEW-CHAT), [C-START-CHAT](../ui/README.md#C-START-CHAT), [C-PIPELINE-SELECT](../ui/README.md#C-PIPELINE-SELECT), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT).
 
 ## Flow diagram
@@ -60,6 +62,8 @@ flowchart TD
     N12["Keep source access bounded, private scratch writable and network destinations scoped #40;S7#41;"]
     N13(["Sandbox initialization failed#59; retained work and authority preserved"])
     N14["Honor explicit full access, never command approvals and authorized task publishing #40;S7#41;"]
+    N15["Verify current source and report changed scope or head before continuation #40;S8#41;"]
+    N16(["Closed or merged source#59; terminate session and retain history/workspace"])
     N0 --> N1
     N0 -->|"customize a separate proposal"| N5
     N5 -->|"reviewed Start"| N1
@@ -86,6 +90,9 @@ flowchart TD
     N12 -->|"invalid policy#59; fail before provider launch"| N13
     N2 -->|"owner selected full-access profile"| N14
     N14 -->|"same retained task#59; ask only for unresolved material decisions"| N3
+    N0 -->|"start or continue retained work"| N15
+    N15 -->|"source closed or merged"| N16
+    N15 -->|"open source#59; agent assesses fresh changes"| N0
 ```
 
 ## Implementation references
@@ -128,6 +135,8 @@ flowchart TD
 - [internal/app/sandbox.go](../../internal/app/sandbox.go) — Capture authoritative native installed-plugin metadata outside writable task scratch once; retain it across continuation and reject malformed or linked snapshots. (`func (m *Manager) nativeRegistrySnapshot(`)
 - [internal/commandenv/providers.go](../../internal/commandenv/providers.go) — Expose only the regular executable companion from the selected pinned Codex distribution; a different installation cannot substitute its code execution host. (`func CodexCompanion(`)
 - [internal/app/native_context.go](../../internal/app/native_context.go) — Keep durable native child sessions, writer locks and nonsecret installation state in task-private storage, with read-only references to existing owner authentication/configuration and no owner-history access. (`func prepareNativeContext(`)
+- [internal/app/continuation.go](../../internal/app/continuation.go) — Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge. (`func (m *Manager) continuationContext(`)
+- [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
 
 ## Test references
 
@@ -155,7 +164,7 @@ flowchart TD
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(`; S6. Repository/system/built-in resolution retains model, mode, pinned head and repository prompt; no workspace before explicit Start, and repeated Start rejected.
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewRejectsInvalidTargetsAndUnsafePipelines(`; S6. Invalid item, missing head/profile, write/publishing authority and unavailable skills reject without persisting work.
 - [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S6. MCP catalog exposes model-visible PR review preparation with only itemId required and follow-on start_run guidance; wire call returns pinned prepared run.
-- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S7. Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S7. Start and automatic startup continuation retain the same bounded process profile and thread without a legacy policy override; explicit cleanup removes private scratch.
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S7. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S7. Invalid sandbox fails before app-server launch without an unrestricted fallback.
 - [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S7. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
@@ -179,6 +188,11 @@ flowchart TD
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewHonorsExplicitFullAccess(`; S5, S6. Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly.
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestExplicitFullAccessKeepsScratchAndDisablesTechnicalApprovals(`; S7. Native startup receives danger-full-access and approval never, autonomous publishing/decision instructions, private scratch and disabled bounded proxy; no default bounded permission profile leaks into this explicit choice. Existing owner rules and Decisions seed private data even in full-access mode; repeated setup preserves run updates and leaves owner stores unchanged.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("explicit full-access launch shows never approvals and authorized publishing"`; S4, S6, S7. UI displays explicit full access, never approvals and authorized publishing; opens without Start, starts once on explicit action, and Settings describes selected authority.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestContinuationProvidesFreshChangesWithoutReplacingSession(`; S8. Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(`; S8. Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(`; S8. Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(`; S8. Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S8. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
 
 ## Verification and gaps
 

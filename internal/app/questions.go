@@ -557,7 +557,7 @@ func (m *Manager) answerSynthetic(ctx context.Context, a domain.Attention, resul
 	if err := m.app.Store.Get(ctx, "run", a.RunID, &run); err != nil {
 		return err
 	}
-	if run.Status == "cleaned" || run.Status == "prepared" {
+	if run.Status == "cleaned" || run.Status == "prepared" || run.Status == "terminated" {
 		return fmt.Errorf("question session is no longer available")
 	}
 	var content struct{ Questions []question }
@@ -642,7 +642,7 @@ func (m *Manager) answerSynthetic(ctx context.Context, a domain.Attention, resul
 				_ = m.saveRecovery(s.recovery)
 			}
 		}
-		if s.client != nil && !s.retired && (s.run.Status == "idle" || s.run.Status == "running" || s.run.Status == "waiting") {
+		if s.client != nil && !s.retired && !s.disconnected && (s.run.Status == "idle" || s.run.Status == "running" || s.run.Status == "waiting") {
 			err = m.sendLocked(ctx, s, text, s.run.TurnID)
 			s.mu.Unlock()
 			locked = false

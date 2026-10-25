@@ -2,7 +2,7 @@
 
 ## Goal
 
-The owner can recover interrupted work after a process or connection loss and deliberately remove a clean stopped workspace.
+Pending work continues automatically after daemon startup from its retained progress. The owner can explicitly continue stopped work and deliberately remove a clean stopped workspace.
 
 ## Preconditions
 
@@ -11,17 +11,19 @@ At least one run has been prepared or launched and its local state is retained.
 ## Main flow
 
 1. Reopen the application and inspect retained run status and history.
-2. After process loss, send a message to continue an interrupted or failed run.
-3. Continue in the retained workspace and conversation history.
+2. On daemon startup, automatically continue previously active work from its last unfinished step in the same retained session. Previously accepted work that had not yet begun starts once; prepared drafts remain unstarted.
+3. Preserve the workspace, conversation, authority, saved results and reviewer checkpoints. Reconcile a saved completion before continuing, and inspect uncertain actions before acting again.
 4. Open the secondary agent details, review that cleanup retires the session and removes a clean workspace, then explicitly clean up a stopped run with no uncommitted changes.
 
 ## Alternatives and recovery
 
-Closing the view or transport does not stop work. Process loss makes live RPC IDs stale. Structured-message questions remain retained; lost native questions become textual continuations, while approvals must be requested again through their native authorization path. Sending to inactive work restores its retained session and uses the submitted message as the only new turn. It must not replay the original task, a generic resume prompt or old answers. Failed delivery retains the draft. Cleanup first retires any retained session, makes its pending requests stale and marks the run interrupted. If workspace removal is then refused because it is dirty, the workspace remains but continuation happens by sending a message. Cleanup retains snapshots and history.
+Closing the view or transport does not stop work. Startup leaves completed idle sessions idle, honors explicit interrupts even when their acknowledgment was lost, and preserves unanswered questions without answering for the owner. Process loss makes live RPC IDs stale. Structured-message questions remain retained; lost native questions become textual continuations, while approvals must be requested again through their native authorization path. Automatic continuation reuses the retained session and saved workflow progress, never its original task as a fresh launch. Unavailable retained state fails visibly without substituting a new task or preventing other sessions from continuing. Sending to inactive work restores its retained session and uses the submitted message as the only new turn. It must not replay the original task, a generic resume prompt or old answers. Failed delivery retains the draft. Cleanup first retires any retained session, makes its pending requests stale and marks the run interrupted. If workspace removal is then refused because it is dirty, the workspace remains but continuation happens by sending a message. Cleanup retains snapshots and history.
 
 ## Scenarios
 
-- **S1** Restart recovery preserves prepared candidates and interrupts dead sessions while staling pending requests.
+- **S6** Before starting or restoring work, verify the current source item and report changed title, description, head, state and assignment context to the agent for assessment. Failed reads keep work stopped. A closed issue or closed/merged PR permanently terminates its sessions, retires questions and preserves history and workspaces; reopening the source does not revive them. Dirty cleanup cannot make terminal work resumable.
+
+- **S1** Startup continues pending work from retained progress, preserves prepared and completed work, honors explicit interrupts and unanswered questions, stales expired native requests and isolates unavailable sessions.
 - **S2** Sending a message restores retained work and starts exactly that message instead of replaying its original task.
 - **S3** Dirty cleanup retains the workspace after interrupting the retained session; continuation happens by sending a message. Clean stopped workspace cleanup retains history.
 
@@ -34,7 +36,7 @@ Plugin maintenance also survives view closure. Startup marks queued/running oper
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console).
+Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated).
 UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/README.md#P-RUN-LIST), [P-RUN-DETAIL](../ui/README.md#P-RUN-DETAIL), [W-RUN-ROW](../ui/README.md#W-RUN-ROW), [W-RUN-EMPTY](../ui/README.md#W-RUN-EMPTY), [W-RUN-CONTROLS](../ui/README.md#W-RUN-CONTROLS), [C-SELECT-RUN](../ui/README.md#C-SELECT-RUN), [C-RUN-ACTION](../ui/README.md#C-RUN-ACTION), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE).
 
 ## Flow diagram
@@ -54,6 +56,11 @@ flowchart TD
     N10(["Sandbox initialization failed#59; retained work and authority preserved"])
     N11["Remove only the run scratch, including sealed workflow directories #40;S5#41;"]
     N12(["Interrupted cleanup retains history#59; explicitly retry remaining scratch removal"])
+    N13["Automatically restore the same session and last unfinished step #40;S1#41;"]
+    N14(["Keep completed, explicitly stopped and unanswered work unchanged"])
+    N15(["Continuation unavailable#59; retain work and report failure"])
+    N16["Verify current source and report changed scope or head before continuation #40;S6#41;"]
+    N17(["Closed or merged source#59; terminate session and retain history/workspace"])
     N0 -->|"send message"| N1
     N1 --> N2
     N0 -->|"cleanup stopped work"| N3
@@ -70,11 +77,18 @@ flowchart TD
     N11 -->|"scratch removed#59; preserve external references"| N6
     N11 -->|"scratch removal fails"| N12
     N0 -->|"explicit retry after workspace already removed"| N11
+    N0 -->|"pending work after daemon startup"| N13
+    N13 -->|"retained session available#59; reuse saved results"| N2
+    N13 -->|"retained state unavailable#59; no replacement task"| N15
+    N0 -->|"completed, explicitly stopped, failed, prepared or input pending"| N14
+    N0 -->|"start or continue retained work"| N16
+    N16 -->|"source closed or merged"| N17
+    N16 -->|"open source#59; agent assesses fresh changes"| N0
 ```
 
 ## Implementation references
 
-- [internal/app/runs.go](../../internal/app/runs.go) — Recovery and retained-session continuation by message. Cleanup retires the provider, stales pending requests and persists interrupted before worktree removal. Dirty refusal preserves files/history; sending a message restores that retained thread without a separate Resume action. (`func (m *Manager) Recover(`)
+- [internal/app/runs.go](../../internal/app/runs.go) — Startup continues pending work in its retained thread and workspace with saved progress and reviewer checkpoints. Completed idle work, explicit interrupts and unanswered questions are preserved without automatic task replay. Cleanup retains the clean-workspace boundary and dirty refusal permits message continuation. (`func (m *Manager) Recover(`)
 - [internal/store/store.go](../../internal/store/store.go) — Durable local run and journal storage
 - [web/src/main.tsx](../../web/src/main.tsx) — Retained runs, resume and cleanup controls
 - [internal/domain/types.go](../../internal/domain/types.go) — Shared domain, persistence, transport or dependency contract
@@ -89,14 +103,16 @@ flowchart TD
 - [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/app/cleanup.go](../../internal/app/cleanup.go) — Confine removal to one run; make sealed scratch directories removable without chmod of files or following owner references. Missing worktree permits an explicit retry after partial cleanup. (`func removeRunScratch(`)
+- [internal/app/continuation.go](../../internal/app/continuation.go) — Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge. (`func (m *Manager) continuationContext(`)
+- [internal/providers/continuation.go](../../internal/providers/continuation.go) — Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement. (`func (g *GitHub) CurrentWorkItem(`)
 
 ## Test references
 
-- [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestRecoveryStalesRequestsAndIdleRuns(`; S1. Stored dead session and attention become interrupted/stale.
+- [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestRecoveryStalesRequestsAndPreservesIdleRuns(`; S1. Completed idle sessions retain their status and workspace; expired native requests become stale and reject answers.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestNonblockingApprovalsCrashAndResume(`; S2. Crashed fake process can explicitly resume.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestConcurrentPollingSteeringAndAnswersThenDirtyCleanup(`; S3. Dirty cleanup returns an error and retains the unsaved file; the assertion does not verify session retirement, interrupted status, stale requests or subsequent explicit resume.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("sending a message restores the dirty retained daemon session without a Resume action"`; S2, S3. Assembled cleanup refuses dirty removal, preserves history/workspace/thread and restores that session by sending the draft, without separate Resume.
-- [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestMessageRestoresRetainedSessionWithOneSubmittedTurn(`; S2. Cold daemon recovery preserves run/thread/worktree/authority and delivers exactly the submitted message; eight simultaneous sends accept one wake only.
+- [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestMessageRestoresRetainedSessionWithOneSubmittedTurn(`; S2. An explicitly interrupted session remains stopped across startup; a follow-up retains run/thread/worktree/authority and eight concurrent messages accept exactly one submitted turn.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestWakeMessageFailureKeepsRetainedRecordAndRejectsCleanedWork(`; S2, S3. Missing retained worktree returns wake failure without losing the retained record; prepared and cleaned work cannot accept a message.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `inactive work status and sending a message restore the retained session`; S2. Both themes verify work-item activity and message-triggered continuation, no Resume control, one submit and retained failure draft.
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestStoppedQuestionRecoveryNativeAndFallback(`; S4. Same-session bounded question repair, at-most-once answers and original-mode restoration.
@@ -104,18 +120,35 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `text fallback opens the same session console`; S4. Fallback routes the exact answer to its request and console mode retains the reply draft without a new launch.
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(`; S4. Lost question IDs are stale but retained textual continuation remains; lost approvals never become textual authorization.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginRestartAndMalformedInventoryRetainObservedState(`; S1. Startup marks in-flight plugin operations uncertain; malformed inventory retains prior observations without replay.
-- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S5. Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch.
+- [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestTaskSandboxRetainsIsolationAcrossSessionWake(`; S5. Start and automatic startup continuation retain the same bounded process profile and thread without a legacy policy override; explicit cleanup removes private scratch.
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestSandboxSkillDataIsPrivateBoundedAndRetained(`; S5. Refreshing private skill indexes cannot alter the owner source; resume keeps run caches and rejects symlink sources.
 - [internal/app/sandbox_test.go](../../internal/app/sandbox_test.go) — `func TestInvalidTaskSandboxFailsWithoutProviderFallback(`; S5. Invalid sandbox fails before app-server launch without an unrestricted fallback.
 - [internal/codex/sandbox_test.go](../../internal/codex/sandbox_test.go) — `func TestTaskSandboxPolicyAndInvalidRoots(`; S5. Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts.
 - [internal/app/cleanup_test.go](../../internal/app/cleanup_test.go) — `func TestRunScratchCleanupSealedDirectoriesPreservesExternalReferences(`; S5. Sealed directories are removed; symlink targets and shared hard-linked file contents/modes stay intact; missing scratch is idempotent and escaping ID rejected.
 - [internal/app/cleanup_test.go](../../internal/app/cleanup_test.go) — `func TestCleanupRetriesScratchFailureAfterWorktreeWasRemoved(`; S3, S5. Injected scratch failure leaves interrupted record after worktree removal; explicit retry removes remaining sealed scratch, marks cleaned and retains original thread.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupContinuesPendingSessionFromRetainedProgress(`; S1, S2. Running/queued/starting and process-interrupted work resumes the identical thread/workspace/profile, retains a completed-reviewer artifact, and repeated recovery cannot create a duplicate session or replay the original task.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupLeavesFinishedStoppedAndUnstartedWorkAlone(`; S1. Idle, explicitly interrupted, failed, prepared and cleaned snapshots remain unchanged; no provider invocation or new workspace occurs.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupRetainsQuestionsAndNeverReplaysApprovalAnswers(`; S1, S4. Lost native questions remain unanswered text; expired native approvals become stale and continuation requests fresh native approval without textual authorization.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupReconcilesProviderCompletionWithoutAnotherTurn(`; S1, S2. A durably completed retained turn becomes idle after thread resume with no additional model turn.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupHonorsInterruptBeforeProviderAcknowledges(`; S1. A persisted interrupt request prevents automatic continuation even before the provider acknowledges stopping.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupIsolatesUnavailableWorkAndContinuesOtherSessions(`; S1, S2. Unavailable retained workspace fails visibly without creating a replacement task; another pending session continues independently.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupStartsOnlyPreviouslyAcceptedUnstartedWork(`; S1. Previously accepted queued work with no provider thread is launched once before or after workspace creation; prepared drafts are independently excluded.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupNeverReplacesAnUnavailableRetainedThread(`; S1, S2. An unavailable retained provider thread produces a visible failure while preserving its identity; neither a fresh thread nor another task turn is created.
+- [internal/app/recovery_test.go](../../internal/app/recovery_test.go) — `func TestStartupHonorsCleanupEvenWhenDirtyRemovalFails(`; S1, S3. Explicit cleanup clears pending continuation before dirty removal fails; startup leaves the interrupted run stopped with its unsaved file intact.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestContinuationProvidesFreshChangesWithoutReplacingSession(`; S6. Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestChangedPRHeadInvalidatesCheckpointsWithoutRetargetingWorkspace(`; S6. Changed PR head and previous/current identities reach the agent for checkpoint validity decisions without silently changing workspace, base or thread.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(`; S6. Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(`; S6. Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(`; S6. Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestStartupTerminatesClosedWorkEvenWithPendingQuestion(`; S6. Startup checks source closure even for a session awaiting input and terminates it without leaving an actionable question.
+- [internal/providers/continuation_test.go](../../internal/providers/continuation_test.go) — `func TestCurrentWorkItemRevalidatesCachedLifecycleAndFailsClosed(`; S6. Targeted lifecycle revalidation bypasses a cached open state and never falls back after a failed fresh read.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `terminated work retains history and cleanup without allowing continuation`; S6. Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action.
 
 ## Verification and gaps
 
 Local suites: `go`.
 Fixture success does not establish real-host acceptance.
-- **S1** — `gap-flow-recover-cleanup-s1-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Prepared-run recovery persistence is implemented but lacks a targeted assertion. Next verification: Persist a prepared run, reconstruct recovery state, and assert that its prepared snapshot survives without launching or creating a workspace.
+- **S1** — `gap-flow-recover-cleanup-s1-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Prepared snapshots, automatic same-thread fixture continuation, saved reviewer artifacts and excluded inactive states are asserted. Installed-daemon restart with real-provider progress and workflow-checkpoint reuse remains unverified for this change. Next verification: Observe a dedicated pilot session through an installed-daemon restart, verify identical thread/workspace and retained reviewer checkpoint reuse, and verify no duplicate task, answer or publication; fixtures alone do not establish real-provider continuation.
 - **S2** — `gap-flow-recover-cleanup-s2-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Fake resume success does not prove full real-provider history preservation; dated real acceptance is in ../acceptance.md. Next verification: Check existing dated provider acceptance against the current binary and retain explicit evidence of resumed conversation/workspace history without task or answer replay; fixture success alone is insufficient.
 - **S3** — `gap-flow-recover-cleanup-s3-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Assembled dirty refusal asserts interrupted status, retained file/history/draft and same-run/thread Resume. Pending-request staleness, session-retirement races and clean cleanup/history retention still need dedicated assertions. Next verification: Exercise pending requests/concurrent clients during cleanup, then separately assert clean removal and retained snapshots/history.
 

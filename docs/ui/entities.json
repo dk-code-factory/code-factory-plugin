@@ -1904,7 +1904,8 @@
         "state-error",
         "state-idle",
         "state-interrupted",
-        "state-failed"
+        "state-failed",
+        "state-terminated"
       ],
       "implementation": [
         {
@@ -1959,7 +1960,8 @@
         "API-UI-CONTENT",
         "UI-CONVERSATION-DETAILS",
         "UI-CONVERSATION-DETAILS",
-        "UI-WAKE-MESSAGE"
+        "UI-WAKE-MESSAGE",
+        "UI-TERMINATED-WORK"
       ],
       "gaps": [
         {
@@ -1987,7 +1989,7 @@
         "go"
       ],
       "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
-      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions.",
+      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable.",
       "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible."
     },
     {
@@ -2237,7 +2239,8 @@
         "state-error",
         "state-running",
         "state-waiting",
-        "state-idle"
+        "state-idle",
+        "state-terminated"
       ],
       "implementation": [
         {
@@ -2288,7 +2291,8 @@
         "API-UI-CONTENT",
         "UI-OPEN-AGENT",
         "UI-SINGLE-PAGE",
-        "UI-WAKE-MESSAGE"
+        "UI-WAKE-MESSAGE",
+        "UI-TERMINATED-WORK"
       ],
       "gaps": [
         {
@@ -2306,7 +2310,7 @@
         "browser"
       ],
       "element_description": "**text** \u201cMessage agent\u201d textarea; **send** button.",
-      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages.",
+      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens.",
       "interactions": "Active messages require the displayed expected turn. Inactive messages atomically claim and restore the retained session, using the submitted message as its first continuation turn. The UI never calls Resume separately. Only accepted sends clear unchanged text; errors preserve drafts and no mutation is automatically replayed."
     },
     {
@@ -7552,7 +7556,8 @@
       "contains": [],
       "elements": [],
       "states": [
-        "state-failed"
+        "state-failed",
+        "state-terminated"
       ],
       "implementation": [
         {
@@ -7604,7 +7609,8 @@
         "UI-DIRTY-CLEANUP",
         "API-UI-CONTENT",
         "UI-WAKE-MESSAGE",
-        "UI-REPAIR-TAKEOVER"
+        "UI-REPAIR-TAKEOVER",
+        "UI-TERMINATED-WORK"
       ],
       "gaps": [
         {
@@ -7633,7 +7639,7 @@
       ],
       "endpoint_description": "`W-RUN-CONTROLS` \u2192 selected run \u2192 Agents widgets",
       "trigger": "Explicit Interrupt, question-recovery Take over session, or Cleanup for the selected retained run.",
-      "interactions": "Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary.",
+      "interactions": "Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary. Source closure or merge permanently terminates the session while retaining its history and workspace.",
       "from": [
         "W-RUN-CONTROLS",
         "W-QUESTION-RECOVERY.takeover"
@@ -9848,12 +9854,19 @@
           "term": "element-w-work-status-value"
         }
       ],
-      "states": [],
+      "states": [
+        "state-terminated"
+      ],
       "implementation": [
         {
           "path": "web/src/main.tsx",
           "anchor": "function WorkStatus(",
           "purpose": "Compact issue/PR work status, shared by list metadata and the focused item; activity is not a separate agent header."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) Recover(",
+          "purpose": "Restore pending same-thread progress at startup while preserving completed, explicitly interrupted and input-waiting work."
         }
       ],
       "assertions": [
@@ -9862,7 +9875,9 @@
         "UI-OPEN-AGENT",
         "UI-FINISHED-STATUS",
         "API-WORKING",
-        "UI-WORKING-MONITOR"
+        "UI-WORKING-MONITOR",
+        "RUN-AUTO-CONTINUE",
+        "UI-TERMINATED-WORK"
       ],
       "gaps": [
         {
@@ -9879,7 +9894,7 @@
         "browser"
       ],
       "element_description": "Compact **value** in issue/PR metadata.",
-      "state_description": "Server aggregate across started sessions: Not started, Starting, Active, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent.",
+      "state_description": "Server aggregate across started sessions: Not started, Starting, Active, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent. After daemon startup, pending sessions continue from their retained progress automatically. Completed idle work stays idle; explicit interrupts and unanswered questions stay stopped. A closed issue or closed/merged PR terminates its retained sessions and displays Stopped; history and workspaces remain available.",
       "interactions": "Display only; no separate activity control or Resume action."
     },
     {
@@ -11081,8 +11096,8 @@
     {
       "id": "RUN-RECOVERY",
       "path": "internal/app/app_test.go",
-      "anchor": "TestRecoveryStalesRequestsAndIdleRuns",
-      "assertion": "Recovery marks a retained idle run interrupted, preserves its worktree path, marks its pending request stale and rejects an answer to that dead request."
+      "anchor": "TestRecoveryStalesRequestsAndPreservesIdleRuns",
+      "assertion": "Recovery preserves a completed idle run and its retained worktree, stales its dead RPC request and rejects an answer to that expired request."
     },
     {
       "id": "RUN-RECOVERY-2",
@@ -11665,6 +11680,18 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "posted reviews show verified verdicts findings and refresh after completion",
       "assertion": "Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes."
+    },
+    {
+      "id": "RUN-AUTO-CONTINUE",
+      "path": "internal/app/recovery_test.go",
+      "anchor": "TestStartupContinuesPendingSessionFromRetainedProgress",
+      "assertion": "Startup continues pending running/queued/starting/interrupted work through the same thread, retains workspace/profile/prompt and completed reviewer artifacts, and a repeated recovery does not create another session or replay the original task."
+    },
+    {
+      "id": "UI-TERMINATED-WORK",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "terminated work retains history and cleanup without allowing continuation",
+      "assertion": "In both themes, terminated work shows Stopped and its lifecycle reason, disables message continuation, exposes cleanup, omits Interrupt and sends no start or message action."
     }
   ],
   "source_map": [

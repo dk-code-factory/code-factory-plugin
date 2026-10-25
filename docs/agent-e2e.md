@@ -1,5 +1,39 @@
 # Continue development through the real Chrome session
 
+## Source-aware continuation and terminal lifecycle · 2026-10-24
+
+Before initial execution or restoration of a retained session, a targeted GitHub
+read verifies its source state without trusting cached lifecycle data. Structured
+previous/current context identifies title, description, head, draft, update,
+labels, assignment and review-request changes for the agent to assess. Unknown
+legacy baselines remain explicit. Saved checkpoints are reused only if still valid.
+Failed source reads leave work stopped. Closed issues and closed/merged PRs
+permanently terminate their started sessions, kill their provider process groups,
+retire pending questions and preserve history and workspaces. Synced closure also
+stops active work. Dirty cleanup cannot make a terminated session resumable.
+
+Source fixtures cover these boundaries, fresh-cache revalidation, same-thread
+context delivery and changed-head validity, with Stopped/disabled-send/cleanup
+browser assertions in both themes. Deployment and real-provider observations are
+recorded separately after installation; fixture success does not establish them.
+
+
+## Automatic continuation after daemon startup · 2026-10-24
+
+The source now distinguishes unfinished sessions from completed idle work and
+explicit user interrupts. Startup continues pending work through its retained
+thread, workspace, authority, saved artifacts and workflow/reviewer checkpoints.
+It checks retained turn completion before adding a continuation, leaves unanswered
+questions pending and expires lost native approvals without replaying their answers.
+An unavailable workspace fails visibly without creating a replacement task.
+Prepared drafts remain unstarted; already accepted work without a provider thread
+starts once, including when workspace creation had already completed.
+
+This change is local source with fixture verification. The installed daemon and
+historical review runs have not been changed by this work. Real-provider checkpoint
+reuse across an installed-daemon restart remains an acceptance gap. Check unrelated
+live work before deploying or restarting any service.
+
 ## Conversational question queue · 2026-10-24
 
 Plugin 0.2.6 exposes `list_attention` to both the model and app. It lists the

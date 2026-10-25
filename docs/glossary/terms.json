@@ -342,7 +342,7 @@
       "name": "Interrupted",
       "aliases": [],
       "category": "state",
-      "definition": "Active work has stopped and requires explicit continuation."
+      "definition": "Active work has stopped with its session retained for continuation."
     },
     {
       "id": "state-failed",
@@ -4161,6 +4161,13 @@
       "category": "element",
       "definition": "The control requesting an observation of submitted reviews.",
       "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "state-terminated",
+      "name": "Stopped",
+      "aliases": [],
+      "category": "state",
+      "definition": "Work has ended because its source item closed or merged; the retained session cannot continue."
     }
   ]
 }

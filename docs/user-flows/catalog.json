@@ -1141,7 +1141,8 @@
         "S6",
         "S7",
         "S8",
-        "S9"
+        "S9",
+        "S10"
       ],
       "implementation": [
         {
@@ -1229,6 +1230,16 @@
           "path": "internal/providers/github_reviews.go",
           "anchor": "func (g *GitHub) PublishedReviews(",
           "purpose": "Read submitted review and inline-comment pages; omit pending drafts."
+        },
+        {
+          "path": "internal/app/continuation.go",
+          "anchor": "func (m *Manager) continuationContext(",
+          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+        },
+        {
+          "path": "internal/providers/continuation.go",
+          "anchor": "func (g *GitHub) CurrentWorkItem(",
+          "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
         }
       ],
       "tests": [
@@ -1494,6 +1505,46 @@
             "S9"
           ],
           "purpose": "Model/app discovery exposes read_pr_reviews; authenticated read_pr_reviews/read_run preserve receipt URL, reviewed head and inline findings."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestContinuationProvidesFreshChangesWithoutReplacingSession(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "terminated work retains history and cleanup without allowing continuation",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
         }
       ],
       "suites": [
@@ -1556,7 +1607,8 @@
         "github-request-budget",
         "github-request-reserve",
         "github-review-notification",
-        "published-review"
+        "published-review",
+        "state-terminated"
       ],
       "graph": {
         "start": "n0",
@@ -1623,6 +1675,16 @@
             "id": "posted_reviews",
             "label": "Observe submitted reviews with receipts, findings and explicit freshness",
             "scenario": "S9"
+          },
+          {
+            "id": "source_lifecycle_check",
+            "label": "Verify current source and report changed scope or head before continuation",
+            "scenario": "S10"
+          },
+          {
+            "id": "source_lifecycle_terminal",
+            "label": "Closed or merged source; terminate session and retain history/workspace",
+            "terminal": true
           }
         ],
         "edges": [
@@ -1730,6 +1792,21 @@
             "from": "posted_reviews",
             "to": "n5",
             "label": "Show provider receipts or retained stale result"
+          },
+          {
+            "from": "n0",
+            "to": "source_lifecycle_check",
+            "label": "start or continue retained work"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "source_lifecycle_terminal",
+            "label": "source closed or merged"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "n0",
+            "label": "open source; agent assesses fresh changes"
           }
         ]
       }
@@ -2777,7 +2854,8 @@
         "S4",
         "S5",
         "S6",
-        "S7"
+        "S7",
+        "S8"
       ],
       "implementation": [
         {
@@ -2947,6 +3025,16 @@
           "path": "internal/app/native_context.go",
           "anchor": "func prepareNativeContext(",
           "purpose": "Keep durable native child sessions, writer locks and nonsecret installation state in task-private storage, with read-only references to existing owner authentication/configuration and no owner-history access."
+        },
+        {
+          "path": "internal/app/continuation.go",
+          "anchor": "func (m *Manager) continuationContext(",
+          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+        },
+        {
+          "path": "internal/providers/continuation.go",
+          "anchor": "func (g *GitHub) CurrentWorkItem(",
+          "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
         }
       ],
       "tests": [
@@ -3153,7 +3241,7 @@
           "scenarios": [
             "S7"
           ],
-          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+          "purpose": "Start and automatic startup continuation retain the same bounded process profile and thread without a legacy policy override; explicit cleanup removes private scratch."
         },
         {
           "path": "internal/app/sandbox_test.go",
@@ -3341,6 +3429,46 @@
             "S7"
           ],
           "purpose": "UI displays explicit full access, never approvals and authorized publishing; opens without Start, starts once on explicit action, and Settings describes selected authority."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestContinuationProvidesFreshChangesWithoutReplacingSession(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "terminated work retains history and cleanup without allowing continuation",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
         }
       ],
       "suites": [
@@ -3425,7 +3553,8 @@
         "agent-pipeline",
         "review-policy",
         "review-request-claim",
-        "repository-review-prompt"
+        "repository-review-prompt",
+        "state-terminated"
       ],
       "graph": {
         "start": "draft",
@@ -3502,6 +3631,16 @@
             "id": "owner_full_access",
             "label": "Honor explicit full access, never command approvals and authorized task publishing",
             "scenario": "S7"
+          },
+          {
+            "id": "source_lifecycle_check",
+            "label": "Verify current source and report changed scope or head before continuation",
+            "scenario": "S8"
+          },
+          {
+            "id": "source_lifecycle_terminal",
+            "label": "Closed or merged source; terminate session and retain history/workspace",
+            "terminal": true
           }
         ],
         "edges": [
@@ -3632,6 +3771,21 @@
             "from": "owner_full_access",
             "to": "accepted",
             "label": "same retained task; ask only for unresolved material decisions"
+          },
+          {
+            "from": "draft",
+            "to": "source_lifecycle_check",
+            "label": "start or continue retained work"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "source_lifecycle_terminal",
+            "label": "source closed or merged"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "draft",
+            "label": "open source; agent assesses fresh changes"
           }
         ]
       }
@@ -3756,6 +3910,16 @@
         {
           "path": "internal/codex/sandbox.go",
           "purpose": "Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes."
+        },
+        {
+          "path": "internal/app/continuation.go",
+          "anchor": "func (m *Manager) continuationContext(",
+          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+        },
+        {
+          "path": "internal/providers/continuation.go",
+          "anchor": "func (g *GitHub) CurrentWorkItem(",
+          "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
         }
       ],
       "tests": [
@@ -3845,7 +4009,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Cold daemon recovery preserves run/thread/worktree/authority and delivers exactly the submitted message; eight simultaneous sends accept one wake only."
+          "purpose": "An explicitly interrupted session remains stopped across startup; a follow-up retains run/thread/worktree/authority and eight concurrent messages accept exactly one submitted turn."
         },
         {
           "path": "internal/app/app_test.go",
@@ -3910,7 +4074,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+          "purpose": "Start and automatic startup continuation retain the same bounded process profile and thread without a legacy policy override; explicit cleanup removes private scratch."
         },
         {
           "path": "internal/app/sandbox_test.go",
@@ -3935,6 +4099,46 @@
             "S5"
           ],
           "purpose": "Independent workspace/scratch filesystem and network permissions reject invalid or global roots; proxy allowlist excludes arbitrary hosts."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestContinuationProvidesFreshChangesWithoutReplacingSession(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "terminated work retains history and cleanup without allowing continuation",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
         }
       ],
       "suites": [
@@ -3980,7 +4184,8 @@
         "coverage-gap",
         "unverified-behavior",
         "question-recovery",
-        "session-console"
+        "session-console",
+        "state-terminated"
       ],
       "graph": {
         "start": "n0",
@@ -4030,6 +4235,16 @@
           {
             "id": "sandbox_refused",
             "label": "Sandbox initialization failed; retained work and authority preserved",
+            "terminal": true
+          },
+          {
+            "id": "source_lifecycle_check",
+            "label": "Verify current source and report changed scope or head before continuation",
+            "scenario": "S4"
+          },
+          {
+            "id": "source_lifecycle_terminal",
+            "label": "Closed or merged source; terminate session and retain history/workspace",
             "terminal": true
           }
         ],
@@ -4108,6 +4323,21 @@
             "from": "bounded_sandbox",
             "to": "sandbox_refused",
             "label": "invalid policy; fail before provider launch"
+          },
+          {
+            "from": "n0",
+            "to": "source_lifecycle_check",
+            "label": "start or continue retained work"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "source_lifecycle_terminal",
+            "label": "source closed or merged"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "n0",
+            "label": "open source; agent assesses fresh changes"
           }
         ]
       }
@@ -4233,6 +4463,16 @@
         {
           "path": "plugin/skills/code-factory/SKILL.md",
           "purpose": "Conversational queue discovery, exact user/question matching, safe one-time answer, fresh queue/run verification and explicit host subscription limits."
+        },
+        {
+          "path": "internal/app/continuation.go",
+          "anchor": "func (m *Manager) continuationContext(",
+          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+        },
+        {
+          "path": "internal/providers/continuation.go",
+          "anchor": "func (g *GitHub) CurrentWorkItem(",
+          "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
         }
       ],
       "tests": [
@@ -4271,11 +4511,11 @@
         },
         {
           "path": "internal/app/app_test.go",
-          "anchor": "func TestRecoveryStalesRequestsAndIdleRuns(",
+          "anchor": "func TestRecoveryStalesRequestsAndPreservesIdleRuns(",
           "scenarios": [
             "S3"
           ],
-          "purpose": "Recovery invalidates pending request identity."
+          "purpose": "Completed idle sessions retain their status and workspace; expired native requests become stale and reject answers."
         },
         {
           "path": "web/tests/factory.spec.ts",
@@ -4390,6 +4630,46 @@
             "S5"
           ],
           "purpose": "Authenticated discovery advertises list_attention to model/app as a read-only local operation; unauthenticated discovery rejects."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestContinuationProvidesFreshChangesWithoutReplacingSession(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "terminated work retains history and cleanup without allowing continuation",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
         }
       ],
       "suites": [
@@ -4451,7 +4731,8 @@
         "keyboard-focus",
         "modal-dialog",
         "question-recovery",
-        "session-console"
+        "session-console",
+        "state-terminated"
       ],
       "graph": {
         "start": "n0",
@@ -4672,12 +4953,13 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
           "path": "internal/app/runs.go",
-          "purpose": "Recovery and retained-session continuation by message. Cleanup retires the provider, stales pending requests and persists interrupted before worktree removal. Dirty refusal preserves files/history; sending a message restores that retained thread without a separate Resume action.",
+          "purpose": "Startup continues pending work in its retained thread and workspace with saved progress and reviewer checkpoints. Completed idle work, explicit interrupts and unanswered questions are preserved without automatic task replay. Cleanup retains the clean-workspace boundary and dirty refusal permits message continuation.",
           "anchor": "func (m *Manager) Recover("
         },
         {
@@ -4739,16 +5021,26 @@
           "path": "internal/app/cleanup.go",
           "anchor": "func removeRunScratch(",
           "purpose": "Confine removal to one run; make sealed scratch directories removable without chmod of files or following owner references. Missing worktree permits an explicit retry after partial cleanup."
+        },
+        {
+          "path": "internal/app/continuation.go",
+          "anchor": "func (m *Manager) continuationContext(",
+          "purpose": "Revalidate current source before initial start or retained-session continuation; supply deterministic changes as untrusted context and terminate all sessions on source closure/merge."
+        },
+        {
+          "path": "internal/providers/continuation.go",
+          "anchor": "func (g *GitHub) CurrentWorkItem(",
+          "purpose": "Targeted conditional GitHub source read bypasses local TTL while retaining shared budget and cooldown enforcement."
         }
       ],
       "tests": [
         {
           "path": "internal/app/app_test.go",
-          "anchor": "func TestRecoveryStalesRequestsAndIdleRuns(",
+          "anchor": "func TestRecoveryStalesRequestsAndPreservesIdleRuns(",
           "scenarios": [
             "S1"
           ],
-          "purpose": "Stored dead session and attention become interrupted/stale."
+          "purpose": "Completed idle sessions retain their status and workspace; expired native requests become stale and reject answers."
         },
         {
           "path": "internal/app/app_test.go",
@@ -4781,7 +5073,7 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "Cold daemon recovery preserves run/thread/worktree/authority and delivers exactly the submitted message; eight simultaneous sends accept one wake only."
+          "purpose": "An explicitly interrupted session remains stopped across startup; a follow-up retains run/thread/worktree/authority and eight concurrent messages accept exactly one submitted turn."
         },
         {
           "path": "internal/app/app_test.go",
@@ -4846,7 +5138,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+          "purpose": "Start and automatic startup continuation retain the same bounded process profile and thread without a legacy policy override; explicit cleanup removes private scratch."
         },
         {
           "path": "internal/app/sandbox_test.go",
@@ -4888,6 +5180,148 @@
             "S5"
           ],
           "purpose": "Injected scratch failure leaves interrupted record after worktree removal; explicit retry removes remaining sealed scratch, marks cleaned and retains original thread."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupContinuesPendingSessionFromRetainedProgress(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Running/queued/starting and process-interrupted work resumes the identical thread/workspace/profile, retains a completed-reviewer artifact, and repeated recovery cannot create a duplicate session or replay the original task."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupLeavesFinishedStoppedAndUnstartedWorkAlone(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Idle, explicitly interrupted, failed, prepared and cleaned snapshots remain unchanged; no provider invocation or new workspace occurs."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupRetainsQuestionsAndNeverReplaysApprovalAnswers(",
+          "scenarios": [
+            "S1",
+            "S4"
+          ],
+          "purpose": "Lost native questions remain unanswered text; expired native approvals become stale and continuation requests fresh native approval without textual authorization."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupReconcilesProviderCompletionWithoutAnotherTurn(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "A durably completed retained turn becomes idle after thread resume with no additional model turn."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupHonorsInterruptBeforeProviderAcknowledges(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A persisted interrupt request prevents automatic continuation even before the provider acknowledges stopping."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupIsolatesUnavailableWorkAndContinuesOtherSessions(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Unavailable retained workspace fails visibly without creating a replacement task; another pending session continues independently."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupStartsOnlyPreviouslyAcceptedUnstartedWork(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Previously accepted queued work with no provider thread is launched once before or after workspace creation; prepared drafts are independently excluded."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupNeverReplacesAnUnavailableRetainedThread(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "An unavailable retained provider thread produces a visible failure while preserving its identity; neither a fresh thread nor another task turn is created."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupHonorsCleanupEvenWhenDirtyRemovalFails(",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Explicit cleanup clears pending continuation before dirty removal fails; startup leaves the interrupted run stopped with its unsaved file intact."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestContinuationProvidesFreshChangesWithoutReplacingSession(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Fresh title/body/update/assignment changes reach the retained agent in structured source context while thread, workspace and original task remain unchanged."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestChangedPRHeadInvalidatesCheckpointsWithoutRetargetingWorkspace(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Changed PR head and previous/current identities reach the agent for checkpoint validity decisions without silently changing workspace, base or thread."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestClosedOrMergedSourcePermanentlyTerminatesContinuation(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Closed issue, closed PR and merged PR prevent another provider invocation; messages/resume are refused and dirty cleanup preserves terminal state and unsaved files."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestUnverifiedSourceNeverStartsProviderOrReplaysTask(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Failed fresh source reads fail visibly before provider or workspace creation with no stale fallback."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestSyncedClosureStopsActiveWorkAndRetiresQuestions(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestStartupTerminatesClosedWorkEvenWithPendingQuestion(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Startup checks source closure even for a session awaiting input and terminates it without leaving an actionable question."
+        },
+        {
+          "path": "internal/providers/continuation_test.go",
+          "anchor": "func TestCurrentWorkItemRevalidatesCachedLifecycleAndFailsClosed(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Targeted lifecycle revalidation bypasses a cached open state and never falls back after a failed fresh read."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "terminated work retains history and cleanup without allowing continuation",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Both themes show Stopped and terminal reason, retain cleanup and history, disable Send and expose no Interrupt or launch action."
         }
       ],
       "suites": [
@@ -4901,8 +5335,8 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "user-flow-maintainer",
-          "reason": "Prepared-run recovery persistence is implemented but lacks a targeted assertion.",
-          "next_verification": "Persist a prepared run, reconstruct recovery state, and assert that its prepared snapshot survives without launching or creating a workspace."
+          "reason": "Prepared snapshots, automatic same-thread fixture continuation, saved reviewer artifacts and excluded inactive states are asserted. Installed-daemon restart with real-provider progress and workflow-checkpoint reuse remains unverified for this change.",
+          "next_verification": "Observe a dedicated pilot session through an installed-daemon restart, verify identical thread/workspace and retained reviewer checkpoint reuse, and verify no duplicate task, answer or publication; fixtures alone do not establish real-provider continuation."
         },
         {
           "version": 1,
@@ -4947,7 +5381,8 @@
         "coverage-gap",
         "unverified-behavior",
         "question-recovery",
-        "session-console"
+        "session-console",
+        "state-terminated"
       ],
       "graph": {
         "start": "n0",
@@ -5012,6 +5447,31 @@
           {
             "id": "n12",
             "label": "Interrupted cleanup retains history; explicitly retry remaining scratch removal",
+            "terminal": true
+          },
+          {
+            "id": "startup_pending",
+            "label": "Automatically restore the same session and last unfinished step",
+            "scenario": "S1"
+          },
+          {
+            "id": "startup_unchanged",
+            "label": "Keep completed, explicitly stopped and unanswered work unchanged",
+            "terminal": true
+          },
+          {
+            "id": "startup_failed",
+            "label": "Continuation unavailable; retain work and report failure",
+            "terminal": true
+          },
+          {
+            "id": "source_lifecycle_check",
+            "label": "Verify current source and report changed scope or head before continuation",
+            "scenario": "S6"
+          },
+          {
+            "id": "source_lifecycle_terminal",
+            "label": "Closed or merged source; terminate session and retain history/workspace",
             "terminal": true
           }
         ],
@@ -5095,6 +5555,41 @@
             "from": "n0",
             "to": "n11",
             "label": "explicit retry after workspace already removed"
+          },
+          {
+            "from": "n0",
+            "to": "startup_pending",
+            "label": "pending work after daemon startup"
+          },
+          {
+            "from": "startup_pending",
+            "to": "n2",
+            "label": "retained session available; reuse saved results"
+          },
+          {
+            "from": "startup_pending",
+            "to": "startup_failed",
+            "label": "retained state unavailable; no replacement task"
+          },
+          {
+            "from": "n0",
+            "to": "startup_unchanged",
+            "label": "completed, explicitly stopped, failed, prepared or input pending"
+          },
+          {
+            "from": "n0",
+            "to": "source_lifecycle_check",
+            "label": "start or continue retained work"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "source_lifecycle_terminal",
+            "label": "source closed or merged"
+          },
+          {
+            "from": "source_lifecycle_check",
+            "to": "n0",
+            "label": "open source; agent assesses fresh changes"
           }
         ]
       }
@@ -6148,7 +6643,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Start and wake retain the same bounded process profile without a legacy policy override; explicit clean cleanup removes scratch."
+          "purpose": "Start and automatic startup continuation retain the same bounded process profile and thread without a legacy policy override; explicit cleanup removes private scratch."
         },
         {
           "path": "internal/app/sandbox_test.go",

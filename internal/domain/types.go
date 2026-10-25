@@ -219,6 +219,9 @@ type Run struct {
 	TurnID               string    `json:"turnId"`
 	Status               string    `json:"status"`
 	Error                string    `json:"error"`
+	ResumePending        bool      `json:"resumePending"`
+	InterruptRequested   bool      `json:"interruptRequested"`
+	SourceSnapshot       *Item     `json:"sourceSnapshot,omitempty"`
 	Created              time.Time `json:"created"`
 }
 type Attention struct {

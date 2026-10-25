@@ -99,9 +99,7 @@ func TestTaskSandboxRetainsIsolationAcrossSessionWake(t *testing.T) {
 	if err := a.Runs.Recover(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if err := a.Runs.Message(ctx, r.ID, "Continue the same isolated task.", ""); err != nil {
-		t.Fatal(err)
-	}
+	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", r.ID, &r); return r.Status == "running" && r.TurnID != "" })
 	b, err := os.ReadFile(argsPath)
 	if err != nil {
 		t.Fatal(err)
