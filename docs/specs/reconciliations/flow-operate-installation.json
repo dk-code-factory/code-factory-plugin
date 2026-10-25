@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "ab0c2188e60af792afddbab49f2799412a7a49d1",
-  "fingerprint": "acd4e50f4e3afd12414efb76f7d525ddd86042b8a9a4de161264f2d54b253c88",
+  "base": "2b62eca579e4cdc5c21b1c1b58ecc6d32bdcc956",
+  "fingerprint": "c802ca464d280cee5d7ebe0fb2a89704287b4d70cee175e131f95cc657978358",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Inspect health, upgrade, roll back and uninstall retains its existing scenarios and authority boundaries; shared domain/transport/build inputs now also carry independent PR-review observations. No existing contract is rewritten to imply publication or close live acceptance gaps.",
-    "implementation": "Reviewed the additive receipt structs and read-only transport tool, metadata-only snapshot versions and after-turn background refresh. Existing launch, answer, cleanup, relationship, priority and credential paths retain their prior transitions; review retrieval makes GET requests only and honors pause and budget.",
-    "tests": "Retain the existing mapped assertions for S1, S2, S3, S4, S5. Fresh common Go/browser/release suites cover shared inputs; new publication assertions establish only submitted receipt visibility, cadence and failure retention, and do not supply unrelated host/soak/login evidence."
+    "description": "S1-S5 retain release installation, recovery and provider administration. The dated fresh-browser setup is operator context with initial sign-in and graphical-login restoration explicitly unverified.",
+    "implementation": "Installer, stable launcher and daemon/gateway paths are unchanged. Only the portable plugin manifests/bundle move to 0.2.6 and the daily skill gains queue instructions.",
+    "tests": "Existing release/installer/recovery/smoke suites remain declared and will run freshly. Browser debugger readiness evidence is kept separate from authenticated Work, callback, soak and logout/login results."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.141
+      "seconds": 0.181
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 99.124
+      "seconds": 98.202
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 10.33
+      "seconds": 9.852
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.65
+      "seconds": 3.151
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 3.412
+      "seconds": 2.769
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.695
+      "seconds": 21.339
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.161
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.185
     },
     {
       "command": [
@@ -131,11 +131,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.323
+      "seconds": 24.423
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "64507b0583a1446e97e1ad0dff9c8e39fb3dfb726b944b2571689bdfbce32282",
+    "flow:operate-installation": "5968798724dd33b59eed8b4a7372e4841998991b51d6072f46053eb962e062a3",
     "term:connection-refreshes": "ab87051dc19b4f61c0569c0170847df2956181944da0e775798e937d8eccc0f6",
     "term:connection-submits": "87ebe8ee548523b39f3c64eaff217e2e1285dd3012d48640b92763d28729bb95",
     "term:coverage-gap": "c2209335435caaaab7f6f7eece643dc3abfa1a44b65ad2bd177dd304043af7c7",
@@ -172,12 +172,12 @@
     "term:ui-w-diagnostics": "3d741551455ef042a56eae37981e30d1e67a816c98e7d618797f96272ebb5573",
     "term:unverified-behavior": "d8552957dca64a6dcc6c1f2855c5ca0cfb41c2db47e1158d08f2734916e5541e",
     "term:verification": "3f6a50c4bc79ba54cc2c2690c956922d518754daba035f5dfd38fb5988c2c184",
-    "ui:C-BROWSER-LAB": "d600bb1648adf8146f961dbf7ae872b83bf374f72a0322b5fec56e2bbb4751e8",
-    "ui:C-DIAGNOSE": "b3fa89fb981812c204c43130cc096ecbc69fed66e2c9c200b418ced2e287af5b",
-    "ui:P-BROWSER-LAB": "35aeb7babdeec73ae0960965ca3d2aa7a4c300ee25a90ff54ca3db986140944a",
-    "ui:P-DIAGNOSTICS": "784b2ec95c11430232fc782b1b25aa9c55ad80c94cbcf920514d281aa9128762",
-    "ui:PAGE-BROWSER-LAB": "8d98188f1fd45367fdc1bc661988e8151a54bd5aecc4da6e36eb4181b41660a5",
-    "ui:W-BROWSER-LAB": "0db4130df070a5c295b405d3c1a2d094e9e019128b6570c029a44607e439e689",
-    "ui:W-DIAGNOSTICS": "5ff63aa9de12f1c364e5efe77a071926e213ae51966cdf134e730e14c7784ca1"
+    "ui:C-BROWSER-LAB": "b7b0e271d48a37bdf87323898f036413e655eaf71aee567b792e4ee01aa9d6be",
+    "ui:C-DIAGNOSE": "6d02efdda729dd8efb1bac47135997b2d583560cfc2f3380a5f915e6f542f43a",
+    "ui:P-BROWSER-LAB": "870d99c3ff516f4891afdfc42f413ca194edfada10ac10d8e7a30f0fc2b6aea0",
+    "ui:P-DIAGNOSTICS": "ce5671815d64216182c58826b1d372befa96af7aa567be354d2c48ef6b3dbf2e",
+    "ui:PAGE-BROWSER-LAB": "6128f85388d77e2e4c8c35ffbd052a95e63673abefe7b73c83c0a65b0a8a677b",
+    "ui:W-BROWSER-LAB": "bb33c336adb9ab143038d510ee75c8af42bc2e01346bcb91f3e514be5351499f",
+    "ui:W-DIAGNOSTICS": "523d012a76ff4f359962a8e6b92a3ee597eeadee5a9ab31dfd8830ed042af439"
   }
 }

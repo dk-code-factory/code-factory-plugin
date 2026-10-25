@@ -14,6 +14,14 @@ An agent has requested a question, approval, permission grant or supported form 
 2. Choose an answer or complete the supported form.
 3. Submit the answer and return to the owning run’s conversation.
 
+In chat, ask which agents need an answer. The connected plugin lists the same
+answerable requests with their item, profile, exact questions and options. It
+asks for your response, sends it to the matching request once, and checks the
+fresh queue and owning run before reporting continuation. An empty queue means
+no answerable requests now, not that every task finished. Reads and pagination
+never start work or answer for you; secret fields stay in the embedded form.
+On-demand queue access does not imply background host notifications.
+
 ## Alternatives and recovery
 
 Keyboard focus stays within the dialog through updates. Escape defers the answer and restores its connected opener; it does not submit a response.
@@ -29,6 +37,8 @@ When an agent stops with a textual question, the application first checks whethe
 - **S1** A blocking question is visible and answered exactly once, including concurrent submissions.
 - **S2** Approval choices and form content are validated without broadening permissions.
 - **S3** Nonblocking requests leave the run active; stale requests reject responses after recovery.
+
+- **S5** The chat queue is discoverable, read only, oldest first and paginated without skipping requests when earlier asks resolve. It preserves owning context and exact options, excludes stale/answered/orphaned requests, and verifies that an accepted answer resumes the same agent without removing another agent’s ask.
 
 - **S4** Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.
 
@@ -59,6 +69,9 @@ flowchart TD
     N10["Show the pending question with a free-text answer"]
     N11["Open the same retained session console"]
     N12["Cancel further repair and return control to the user"]
+    N13["Read the current question queue in chat with owning item, profile and exact choices #40;S5#41;"]
+    N14(["No pending requests#59; do not infer task completion"])
+    N15["Read a fresh queue and owning run#59; report continuation or another wait"]
     N0 -->|"answer"| N1
     N0 -->|"nonblocking"| N7
     N7 -->|"respond"| N1
@@ -79,6 +92,12 @@ flowchart TD
     N9 -->|"explicit user takeover"| N12
     N12 -->|"retain session and draft"| N11
     N10 -->|"No reply needed#59; dismiss local attention only"| N3
+    N0 -->|"Ask which agents need input"| N13
+    N13 -->|"Show selected current request and ask the user"| N0
+    N13 -->|"No answerable requests"| N14
+    N2 -->|"Chat answer accepted"| N15
+    N15 -->|"Owning agent continued#59; report observed status"| N3
+    N15 -->|"Another request is pending"| N13
 ```
 
 ## Implementation references
@@ -107,6 +126,8 @@ flowchart TD
 - [web/src/modal-focus.ts](../../web/src/modal-focus.ts) — Initial modal focus, visible-control Tab containment, Escape dismissal, focus preservation across updates and conditional opener restoration. (`export function useModalFocus(`)
 - [internal/app/questions.go](../../internal/app/questions.go) — Durable native/message/text question routing, bounded form repair, redaction and retained continuation. (`func (m *Manager) answerSynthetic(`)
 - [internal/app/plugins.go](../../internal/app/plugins.go) — Plugin maintenance excludes new answer delivery without replay. (`func (m *Manager) PluginAction(`)
+- [internal/app/attention.go](../../internal/app/attention.go) — Read-only oldest-first actionable question/approval queue with compact owning context, run filtering, bounded cursor pagination and no provider RPC IDs or answer data. (`func (a *App) ListAttention(`)
+- [plugin/skills/code-factory/SKILL.md](../../plugin/skills/code-factory/SKILL.md) — Conversational queue discovery, exact user/question matching, safe one-time answer, fresh queue/run verification and explicit host subscription limits.
 
 ## Test references
 
@@ -126,11 +147,15 @@ flowchart TD
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestTextQuestionDismissalCannotAnswerOrApproveNativeRequests(`; S4. Text-only dismissal cannot approve a native request or launch work.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `an uncertain textual reply can be dismissed without advancing`; S4. Uncertain helper output is reviewable and dismissible without sending another task turn.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginMaintenanceCannotRaceStartsOrAcceptInjectedArguments(`; S1. An answer call is refused during exclusive plugin maintenance before any request can be delivered.
+- [internal/app/attention_test.go](../../internal/app/attention_test.go) — `func TestAttentionQueueFiltersAndPaginatesWithoutSkippingResolvedRequests(`; S5. Queue includes live RPC and retained text/message asks; excludes answered/stale/orphaned/prepared/cleaned requests, preserves options and blocking status, strips unrelated run content, validates cursors/limits and never skips asks when a preceding page is resolved.
+- [internal/transport/attention_test.go](../../internal/transport/attention_test.go) — `func TestMCPAttentionQueueWaitAnswerContinueAndStaleRecovery(`; S1, S3, S5. Independent MCP SDK fixture prepares and starts two agents, observes blocking questions, rejects wrong IDs/malformed/duplicate answers, resumes the owning session, preserves the other ask and rejects interrupted RPC answers.
+- [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S5. Authenticated discovery advertises list_attention to model/app as a read-only local operation; unauthenticated discovery rejects.
 
 ## Verification and gaps
 
 Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-answer-attention-s2-01` · Unverified behavior · P1 · owner: specification-coordinator. External native user-verification and every supported approval/dialog variant lack real-host coverage. Next verification: Record actual-host native user-verification and supported approval/dialog variants using version-bound nonsecret observations; preserve fixture and real-host distinctions.
+- **S5** — `gap-flow-answer-attention-s5-01` · Unverified behavior · P2 · owner: specification-coordinator. Actual ChatGPT Work presented a real native question, delivered the selected answer and observed queue removal plus same-thread continuation on the installed release. Host activity did not expose the selected RPC method name, so direct list_attention invocation by ChatGPT remains unverified; multi-agent pagination and stale-answer cases have independent SDK/fixture coverage only. Next verification: Capture a nonsecret actual-host tool trace identifying list_attention and exercise paginated multi-agent queue refresh and stale-answer recovery in ChatGPT; retain the passed ordinary question/answer evidence and separate SDK/fixture results.
 
 <!-- /flow-references -->

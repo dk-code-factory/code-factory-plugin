@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "ab0c2188e60af792afddbab49f2799412a7a49d1",
-  "fingerprint": "e95ca21befa7606816da1575071c27cde2056975edd6c0dd643458fe22f82f33",
+  "base": "2b62eca579e4cdc5c21b1c1b58ecc6d32bdcc956",
+  "fingerprint": "01cbe1787fed73f69eab92a9b120764e466efb4fb765bfb05cfe58513878b55f",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Subscribe to host notifications and manage delivery retains its existing scenarios and authority boundaries; shared domain/transport/build inputs now also carry independent PR-review observations. No existing contract is rewritten to imply publication or close live acceptance gaps.",
-    "implementation": "Reviewed the additive receipt structs and read-only transport tool, metadata-only snapshot versions and after-turn background refresh. Existing launch, answer, cleanup, relationship, priority and credential paths retain their prior transitions; review retrieval makes GET requests only and honors pause and budget.",
-    "tests": "Retain the existing mapped assertions for S1, S2, S3, S4. Fresh common Go/browser/release suites cover shared inputs; new publication assertions establish only submitted receipt visibility, cadence and failure retention, and do not supply unrelated host/soak/login evidence."
+    "description": "S1-S4 retain subscription verification, signed callbacks and retry/delivery limits. An on-demand queue is explicitly distinct from background attention notifications.",
+    "implementation": "registerEvents and delivery implementation are unchanged. The revised skill explains that attention.required needs actual host subscription support; ListAttention performs only local store reads.",
+    "tests": "Read-only queue assertions establish no new events or subscriptions. Existing event fixtures still own signing/filter/dedup assertions, and the stored real-host S3 callback limitation remains open."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 10.33
+      "seconds": 9.852
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.185
     },
     {
       "command": [
@@ -44,11 +44,11 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.323
+      "seconds": 24.423
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "e0c42295acddc800a3caae114399a03e441ab401aa854f49e5ea1a5dd1c75d40",
+    "flow:receive-notifications": "2800465bb97ab3d90ea398aab1bb62be8952dc9bf1810a45535fd5bfdf3ad2e7",
     "term:attention-request": "c913804704d8999778b008ee70fc8b34a1132d9eab22398c17202298beba653e",
     "term:coverage-gap": "c2209335435caaaab7f6f7eece643dc3abfa1a44b65ad2bd177dd304043af7c7",
     "term:host": "247a926b729a89c1adce1871b67d434e16795ddb8b09e5272f02a11c4386fc50",

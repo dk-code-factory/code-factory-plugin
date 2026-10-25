@@ -181,7 +181,7 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 func ptr[T any](v T) *T { return &v }
 func New(a *app.App, ev *events.Service) *Server {
 	s := &Server{App: a, Events: ev}
-	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. To run a PR review pipeline: find the PR itemId with list_inbox, call prepare_pr_review, inspect the returned profile, skills, prompt and authority, then call start_run with the returned run id when authorized. prepare_pr_review resolves repository then system review defaults automatically. Use prepare_launch for other or customized launches. An explicit request to run a review authorizes starting the matching prepared review; ask only if authority or scope needs clarification. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
+	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. For agents waiting for human input, call list_attention with a fresh marker, show the exact questions and options, and use answer_request only with the user’s answer and the request ID. Never invent an answer, replay uncertain delivery or collect secrets in chat. Re-read the queue and owning run after answering. To run a PR review pipeline: find the PR itemId with list_inbox, call prepare_pr_review, inspect the returned profile, skills, prompt and authority, then call start_run with the returned run id when authorized. prepare_pr_review resolves repository then system review defaults automatically. Use prepare_launch for other or customized launches. An explicit request to run a review authorizes starting the matching prepared review; ask only if authority or scope needs clarification. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
 	s.MCP = m
 	uri := registerUIResource(m, web.HTML)
 	settingsURI := registerSettingsUIResource(m, web.SettingsHTML())
@@ -298,6 +298,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return runs, e
 	})
+	bind(m, uri, "list_attention", "List the Messages queue of unanswered agent questions and approvals, oldest first, with request id, exact question IDs/options and owning run/item/profile. Includes retained textual asks; excludes answered, stale and orphaned requests. Blocking requests pause the agent; nonblocking requests do not. Use runId to filter, nextCursor for more pages, and a new freshness marker on fresh reads. Read only: never answers or starts work. Ask the user before answering; send the request.id, not run.id, to answer_request.", false, true, func(ctx context.Context, in app.AttentionInput) (any, error) { return a.ListAttention(ctx, in) })
 	bind(m, uri, "read_run", "Read a run snapshot, pending attention and saved postedReviews for its PR. Run completion is not publication proof. Use read_pr_reviews with run.itemId to refresh verified receipts, verdicts and findings; reviews include all authors and are not attributed to this run.", false, true, func(ctx context.Context, in IDInput) (any, error) {
 		var run domain.Run
 		if e := a.Store.Get(ctx, "run", in.ID, &run); e != nil {
@@ -329,7 +330,7 @@ func New(a *app.App, ev *events.Service) *Server {
 	bind(m, uri, "send_message", "Send a message, restoring an inactive retained session when needed. Provide expectedTurn for an active turn to steer safely.", false, false, func(ctx context.Context, in MessageInput) (any, error) {
 		return nil, a.Runs.Message(ctx, in.ID, in.Text, in.ExpectedTurn)
 	})
-	bind(m, uri, "answer_request", "Answer a matching live question or approval once. Stale answers are rejected.", false, false, func(ctx context.Context, in AnswerInput) (any, error) {
+	bind(m, uri, "answer_request", "Answer one pending request from list_attention/read_run, using its request id (not run id). For questions send answer: {answers: {questionId: {answers: [userAnswer]}}}, including each exact question ID and selected option label or permitted free text. Ask the user; never invent their answer or approval. Secret answers belong in the embedded form, not chat. Stale/duplicate answers reject; after uncertain delivery refresh list_attention and read_run instead of replaying. Valid answers continue the originating session.", false, false, func(ctx context.Context, in AnswerInput) (any, error) {
 		b, e := json.Marshal(in.Answer)
 		if e != nil {
 			return nil, e

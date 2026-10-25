@@ -4120,7 +4120,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -4223,6 +4224,15 @@
           "path": "internal/app/plugins.go",
           "anchor": "func (m *Manager) PluginAction(",
           "purpose": "Plugin maintenance excludes new answer delivery without replay."
+        },
+        {
+          "path": "internal/app/attention.go",
+          "anchor": "func (a *App) ListAttention(",
+          "purpose": "Read-only oldest-first actionable question/approval queue with compact owning context, run filtering, bounded cursor pagination and no provider RPC IDs or answer data."
+        },
+        {
+          "path": "plugin/skills/code-factory/SKILL.md",
+          "purpose": "Conversational queue discovery, exact user/question matching, safe one-time answer, fresh queue/run verification and explicit host subscription limits."
         }
       ],
       "tests": [
@@ -4354,6 +4364,32 @@
             "S1"
           ],
           "purpose": "An answer call is refused during exclusive plugin maintenance before any request can be delivered."
+        },
+        {
+          "path": "internal/app/attention_test.go",
+          "anchor": "func TestAttentionQueueFiltersAndPaginatesWithoutSkippingResolvedRequests(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Queue includes live RPC and retained text/message asks; excludes answered/stale/orphaned/prepared/cleaned requests, preserves options and blocking status, strips unrelated run content, validates cursors/limits and never skips asks when a preceding page is resolved."
+        },
+        {
+          "path": "internal/transport/attention_test.go",
+          "anchor": "func TestMCPAttentionQueueWaitAnswerContinueAndStaleRecovery(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S5"
+          ],
+          "purpose": "Independent MCP SDK fixture prepares and starts two agents, observes blocking questions, rejects wrong IDs/malformed/duplicate answers, resumes the owning session, preserves the other ask and rejects interrupted RPC answers."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestAuthenticatedMCPDiscoveryToolsAndUI(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Authenticated discovery advertises list_attention to model/app as a read-only local operation; unauthenticated discovery rejects."
         }
       ],
       "suites": [
@@ -4370,6 +4406,16 @@
           "owner": "specification-coordinator",
           "reason": "External native user-verification and every supported approval/dialog variant lack real-host coverage.",
           "next_verification": "Record actual-host native user-verification and supported approval/dialog variants using version-bound nonsecret observations; preserve fixture and real-host distinctions."
+        },
+        {
+          "version": 1,
+          "id": "gap-flow-answer-attention-s5-01",
+          "scenario": "S5",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "specification-coordinator",
+          "reason": "Actual ChatGPT Work presented a real native question, delivered the selected answer and observed queue removal plus same-thread continuation on the installed release. Host activity did not expose the selected RPC method name, so direct list_attention invocation by ChatGPT remains unverified; multi-agent pagination and stale-answer cases have independent SDK/fixture coverage only.",
+          "next_verification": "Capture a nonsecret actual-host tool trace identifying list_attention and exercise paginated multi-agent queue refresh and stale-answer recovery in ChatGPT; retain the passed ordinary question/answer evidence and separate SDK/fixture results."
         }
       ],
       "ui": [
@@ -4467,6 +4513,20 @@
           {
             "id": "takeover",
             "label": "Cancel further repair and return control to the user"
+          },
+          {
+            "id": "chat_queue",
+            "label": "Read the current question queue in chat with owning item, profile and exact choices",
+            "scenario": "S5"
+          },
+          {
+            "id": "queue_empty",
+            "label": "No pending requests; do not infer task completion",
+            "terminal": true
+          },
+          {
+            "id": "verify_chat",
+            "label": "Read a fresh queue and owning run; report continuation or another wait"
           }
         ],
         "edges": [
@@ -4569,6 +4629,36 @@
             "from": "text_fallback",
             "to": "n3",
             "label": "No reply needed; dismiss local attention only"
+          },
+          {
+            "from": "n0",
+            "to": "chat_queue",
+            "label": "Ask which agents need input"
+          },
+          {
+            "from": "chat_queue",
+            "to": "n0",
+            "label": "Show selected current request and ask the user"
+          },
+          {
+            "from": "chat_queue",
+            "to": "queue_empty",
+            "label": "No answerable requests"
+          },
+          {
+            "from": "n2",
+            "to": "verify_chat",
+            "label": "Chat answer accepted"
+          },
+          {
+            "from": "verify_chat",
+            "to": "n3",
+            "label": "Owning agent continued; report observed status"
+          },
+          {
+            "from": "verify_chat",
+            "to": "chat_queue",
+            "label": "Another request is pending"
           }
         ]
       }

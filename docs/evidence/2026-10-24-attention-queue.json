@@ -1,0 +1,145 @@
+{
+  "date": "2026-10-24",
+  "sourceBase": "2b62eca579e4cdc5c21b1c1b58ecc6d32bdcc956",
+  "feature": "Model-visible Messages queue and conversational question/answer workflow",
+  "pluginVersion": "0.2.6",
+  "focusedVerification": {
+    "queueFilteringPaginationContextAndReadOnly": "passed Go race test",
+    "mcpSDKTwoAgentsWaitAnswerContinueAndStaleRejection": "passed Go race test",
+    "authenticatedDiscoveryAndLocalReadAnnotations": "passed Go race test",
+    "bundledSkillValidation": "passed"
+  },
+  "specificationReconciliation": "passed 15 affected subjects, fixture suites only",
+  "branchCI": {
+    "command": "make ci FLOW_BASE=2b62eca",
+    "state": "passed",
+    "browserFixtures": 85,
+    "goRace": "passed",
+    "staticBuildPackagingInstallerRecoverySmoke": "passed"
+  },
+  "installation": {
+    "state": "verified",
+    "at": "2026-10-24T19:01:37.292026+00:00",
+    "version": "0.1.0-d67ef9657a5c",
+    "queueReadSucceeded": true,
+    "observedExistingRequests": 1,
+    "existingRequestsPreservedAndUnanswered": true,
+    "retainedRuns": 31,
+    "protectedConfigurationUnchanged": {
+      "registered-app.json": true,
+      "gateway-auth.json": true,
+      "runtime.json": true,
+      "tailscale.json": true,
+      "globalCodexConfig": true
+    },
+    "selectedForkCodexPreserved": true,
+    "tailscaleServePreserved": true,
+    "modelAndAppQueueToolVisible": true,
+    "readOnlyLocalAnnotations": true,
+    "installedPluginVersion": "0.2.6",
+    "installedDailySkillMatchesSource": true
+  },
+  "actualChatGPT": {
+    "state": "passed ordinary question discovery, presentation, user answer delivery, queue removal and same-thread agent continuation in actual ChatGPT Work",
+    "at": "2026-10-24T19:16:07.157965+00:00",
+    "browserProfile": "~/.local/share/code-factory/browser-pilot/profile",
+    "observed": [
+      "Owner confirmed sign-in; actual signed-in ChatGPT home and Work controls observed.",
+      "Existing personal Code Factory packages and the registered app were present.",
+      "App Manage navigation loaded the existing connected OAuth account; Refresh tools was invoked and returned to its enabled state.",
+      "Desktop session then ended and pilot browser exited. Headless reopening of the same actual profile reached a Cloudflare manual browser verification challenge.",
+      "Owner completed graphical browser verification and explicitly confirmed sign-in; subsequent browser inspection resumed.",
+      "Installed Code Factory Questions E2E 0.2.6 presented the exact real-agent Continue/Stop question and paused for the response.",
+      "Continue was submitted in the Work chat. ChatGPT reported once-only delivery, empty run question queue, idle agent and CHATGPT_QUEUE_ANSWER_OK Continue.",
+      "Independent deployed MCP read confirmed the same native thread, idle status, zero pending requests and exact continuation marker."
+    ],
+    "blocker": null,
+    "testPackagePrepared": {
+      "name": "code-factory-questions-e2e",
+      "displayName": "Code Factory Questions E2E",
+      "version": "0.2.6",
+      "sameRegisteredAppMapping": true,
+      "uploaded": true
+    },
+    "queueToolCallByChatGPT": null,
+    "answerDeliveredByChatGPT": true,
+    "chat": "https://chatgpt.com/c/6add488e-6dc8-83ea-bb14-d6c14caa25ed",
+    "cloudPackageId": "Plugin_9a8b0a21d05881919fa009488e26a45a",
+    "cloudPackageVersion": "0.2.6",
+    "cloudPackageDisplayName": "Code Factory Questions E2E",
+    "cloudPackageInstalled": true,
+    "observedQuestion": "Should the ChatGPT question-queue test continue or stop?",
+    "observedChoices": [
+      "Continue",
+      "Stop"
+    ],
+    "readOnlyPresentationPausedForAnswer": true,
+    "answerSubmittedInChat": "Continue",
+    "verifiedAt": "2026-10-25T00:27:46.100315+00:00",
+    "toolAttributionLimit": "Host activity exposed generic Code Factory integration usage, not the selected RPC method name. Dedicated list_attention discovery/calls are proven separately by authenticated MCP and SDK checks.",
+    "afterAnswer": {
+      "status": "idle",
+      "pendingRequests": 0,
+      "sameNativeThread": true,
+      "threadId": "01a16f4b-8879-7053-b498-435926634bb4",
+      "marker": "CHATGPT_QUEUE_ANSWER_OK Continue",
+      "independentlyVerifiedVia": "deployed owner MCP API",
+      "unrelatedOwnerQuestion": "preserved and unanswered"
+    }
+  },
+  "existingHostCallbackAccessibilitySoakAndLoginGaps": "preserved",
+  "updatedAt": "2026-10-25T00:27:46.100315+00:00",
+  "realProvider": {
+    "state": "native question, deployed queue read, one accepted answer, queue removal and same-session continuation verified",
+    "at": "2026-10-24T19:03:39.340641+00:00",
+    "installedVersion": "0.1.0-d67ef9657a5c",
+    "runId": "6e7bd8b8b06225d04d2d2583819d3d7b",
+    "itemId": "dkropachev/code-factory-pilot-20261019#1",
+    "profileId": "pilot-attention-queue-20261024",
+    "mode": "plan",
+    "sandbox": "read-only",
+    "publishing": "ask",
+    "status": "waiting",
+    "method": "item/tool/requestUserInput",
+    "blocking": true,
+    "requestId": "931d017bf5813d5004e895b13fcc3be0",
+    "questions": [
+      {
+        "header": "Queue test",
+        "id": "queue_acceptance",
+        "isOther": true,
+        "isSecret": false,
+        "options": [
+          {
+            "description": "Continue the queue acceptance test.",
+            "label": "Continue"
+          },
+          {
+            "description": "Stop the queue acceptance test.",
+            "label": "Stop"
+          }
+        ],
+        "question": "Should this queue acceptance test continue or stop?"
+      }
+    ],
+    "mutatingExternalActions": false,
+    "unrelatedOwnerQuestion": "preserved and unanswered",
+    "answeredAt": "2026-10-24T19:17:57.476132+00:00",
+    "answerInterface": "Deployed owner MCP API; not ChatGPT",
+    "syntheticAnswer": "Continue",
+    "afterAnswerStatus": "idle",
+    "afterAnswerPendingRequests": 0,
+    "threadId": "01a16f4b-8879-7053-b498-435926634bb4",
+    "finalMarkerMessages": [
+      "QUEUE_ANSWER_OK Continue"
+    ]
+  },
+  "hostTestPrepared": {
+    "runId": "6e7bd8b8b06225d04d2d2583819d3d7b",
+    "threadId": "01a16f4b-8879-7053-b498-435926634bb4",
+    "requestId": "25f0e521b5ce5607e15a3b4837779842",
+    "state": "completed through actual ChatGPT Work; same agent resumed and question removed",
+    "owningSessionPreserved": true,
+    "at": "2026-10-24T19:19:15.133960+00:00"
+  }
+}

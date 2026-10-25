@@ -1443,3 +1443,78 @@ receipts with error/freshness feedback. Plugin 0.2.5 explains receipt verificati
 to its daily-use skill. The [dated evidence](evidence/2026-10-23-review-publication-visibility.json)
 separates deterministic source checks from installation and actual Work results.
 Existing real-host callback, soak, login and broader accessibility gaps remain.
+
+# Fresh persistent pilot Chrome · 2026-10-24
+
+The owner requested a new Chrome instance and a reusable persistent profile.
+The [setup evidence](evidence/2026-10-24-persistent-pilot-browser.json) records
+an active persistent user service and debugger readiness only on loopback 9224.
+The runbook identifies the current profile and reconnect command. The previous
+profile, main browser and lab remain preserved. The owner confirmed sign-in and
+the signed-in ChatGPT home/Work controls were observed. A pre-existing runtime
+override had selected the original `browser-pilot/profile`, so the earlier dated
+profile claim was corrected; no authentication was copied. After the graphical
+desktop ended, headless reuse reached a manual Cloudflare check. The later
+persistent desktop and owner-confirmed graphical sign-in supersede that blocker.
+Automatic Chrome restart retained the authenticated Work conversation without
+another sign-in. A full desktop login cycle and OS reboot remain untested.
+
+# Conversational agent question queue · 2026-10-24
+
+Messages already queues native, structured-message and recovered textual asks;
+blocking native questions pause their agent and answers are claimed once.
+The new model-visible `list_attention` tool exposes that queue directly with
+owning item/profile context, exact question options, bounded pagination and fresh
+read markers. Plugin 0.2.6 documents question presentation, user answer delivery,
+queue removal and same-session continuation checks. Focused Go race/MCP SDK and
+skill validation, reviewed fixture reconciliation and full
+`make ci FLOW_BASE=2b62eca` passed (85 browser fixtures). Installed build
+**0.1.0-d67ef9657a5c** exposes the queue to model/app and includes plugin 0.2.6
+with the exact daily skill. All 31 retained runs, existing unanswered requests,
+provider selection, authentication, registration and Tailscale routes were
+preserved. The
+[queue evidence](evidence/2026-10-24-attention-queue.json) records full CI,
+installation and actual ChatGPT results separately. Installed private package
+**Code Factory Questions E2E 0.2.6** presented the real pilot agent's exact
+Continue/Stop question and waited for the response in Work. ChatGPT delivered
+Continue, reported queue removal and observed `CHATGPT_QUEUE_ANSWER_OK Continue`.
+An independent deployed MCP read confirmed idle status, zero pending requests
+and the same native thread. The unrelated owner question remained unanswered.
+Host activity exposed generic integration usage rather than the selected RPC
+method name: direct `list_attention` attribution and multi-agent pagination/stale
+host cases remain explicit gaps. Background callback acceptance remains open.
+
+# Persistent GNOME desktop and direct RDP · 2026-10-24
+
+The owner authorized an always-running desktop. Native
+`gnome-headless-session@dkropachev.service` is enabled at boot, with a scoped
+static-GDM D-Bus identity fix and restart after exit. A permanent 1920×1080 virtual
+monitor keeps graphical Chrome usable without an attached RDP client. The
+approved pilot profile is reused; no authentication was copied.
+
+Direct RDP is **192.168.0.100:3390** or **100.83.203.0:3390** with the existing
+private RDP credentials. Legacy 3389 remains available. A dedicated port-3390
+filter permits loopback, the local LAN and Tailscale source ranges only; existing
+Tailscale Serve routes and protected credential/configuration hashes match the
+private preflight baseline. Code Factory application services were not restarted
+and the waiting pilot agent was not interrupted.
+
+The [desktop evidence](evidence/2026-10-24-persistent-desktop.json) records two
+local pinned-TLS FreeRDP streams, disconnect/reconnect, unchanged desktop/Shell/
+Chrome PIDs and retained fixed display size with no client. Unit/firewall
+configuration checks passed. A host reboot and off-host RDP client were not part
+of this verification. This supersedes the earlier requirement to keep the RDP
+client active for the pilot browser. Actual ChatGPT question/answer acceptance is
+recorded separately above.
+
+The owner authorized automatic keyring unlock using the existing private RDP
+credential and confirmed matching passwords. The encrypted login keyring unlocked
+automatically after a controlled keyring-daemon restart. Pilot Chrome now waits
+for the display and unlocked keyring, automatically reopens after exit and
+restores the approved profile. A graceful Chrome exit changed only its PID;
+desktop/Shell stayed running. Its restored private Work conversation showed the
+answer marker, Work controls and composer without login buttons or a browser
+challenge. No password was copied into source/evidence or added to command
+arguments. Native keyring contents remain encrypted. A host reboot/full desktop
+login cycle is still open; site-imposed expiry or security challenges may require
+manual verification later.

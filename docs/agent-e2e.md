@@ -1,5 +1,30 @@
 # Continue development through the real Chrome session
 
+## Conversational question queue · 2026-10-24
+
+Plugin 0.2.6 exposes `list_attention` to both the model and app. It lists the
+answerable Messages requests with compact owning run/item/profile context and
+the original question IDs/options. Read pages with `limit` (default 25, maximum
+100), optional `runId`, and `cursor` from `nextCursor`. Use a new `freshness`
+marker for each fresh read and omit the cursor to refresh from the start.
+Listing is local and read only; it neither starts work nor answers anything.
+
+For ordinary questions, `answer_request` takes the attention `request.id`, not
+the run ID, and `answer: {answers: {questionId: {answers: [userAnswer]}}}`.
+The daily skill presents the actual choices, waits for the user's response,
+sends once, and reads a fresh queue plus owning run to verify continuation.
+Keep secret fields in the embedded form. After uncertain delivery, inspect
+current state rather than replaying. The existing Messages UI, native waiting,
+retained question recovery and original once-only delivery remain in use.
+
+The [queue evidence](evidence/2026-10-24-attention-queue.json) separates fixture,
+installed-version and actual ChatGPT results. On-demand queue discovery is not
+evidence of background `attention.required` callbacks. Actual Work presented the
+real pilot question, delivered Continue, removed the request and resumed the same
+native agent. Host activity did not identify the selected RPC method; dedicated
+`list_attention` attribution and multi-agent host cases remain explicit gaps.
+The retained pilot profile and manual initial-sign-in requirement are below.
+
 ## Posted review visibility · 2026-10-23
 
 The PR conversation includes a visible **Posted reviews** section with actual
@@ -497,14 +522,23 @@ must first inspect unrelated live runs and preserve the approved browser session
 | Wi-Fi | `192.168.0.101` |
 | Tailscale IPv4 | `100.83.203.0` |
 | Tailscale hostname | `dkropachev-ai-rig.tail62c9f9.ts.net` |
-| Remote desktop | RDP `192.168.0.100:3389`; system `gnome-remote-desktop.service` |
+| Persistent desktop (preferred) | Direct RDP `192.168.0.100:3390` or `100.83.203.0:3390`; user `gnome-remote-desktop-headless.service` |
+| Legacy remote login | RDP `192.168.0.100:3389`; system `gnome-remote-desktop.service`, preserved |
 | Browser | Google Chrome Stable; installed through Google's official Debian package |
 | Node at setup | `~/.nvm/versions/node/v24.16.0/bin/node`; use `command -v node` to recheck |
 
 The owner connects from another computer on the LAN using an RDP client
 (Windows Remote Desktop Connection, Linux Remmina, or another compatible client).
-First authenticate as **`remote`**. At the Ubuntu login screen, sign in as
-**`dkropachev`**. The server uses GNOME Remote Login, not xrdp.
+For the persistent desktop, connect to **`192.168.0.100:3390`** (or
+**`100.83.203.0:3390`** through Tailscale), authenticating as **`remote`** with
+the existing private RDP password. This joins the already running `dkropachev`
+desktop directly; no second GDM login is needed. Disconnect the RDP client to
+leave the desktop and Chrome running. Use the direct endpoint to reconnect;
+do not choose to terminate an existing session as a reconnect method.
+
+The preserved legacy port **3389** still uses GNOME Remote Login: authenticate
+as `remote`, then use the Ubuntu login screen as `dkropachev`. Neither mode uses
+xrdp. The direct persistent endpoint is preferred for browser testing.
 
 The RDP credential record is **`~/.local/state/remote-desktop/credentials.json`**,
 mode 0600 in a private directory. It contains `host`, `username`, and `password`.
@@ -514,6 +548,10 @@ its password in commands, this document, screenshots, chat, or test evidence.
 At the owner's last explicit password change, RDP and Ubuntu login passwords were
 set equal. This file tracks RDP; do not assume Linux still matches after later
 rotation. Do not reset either password without the owner's instruction.
+The credential file's `host` field belongs to the preserved legacy endpoint;
+use port 3390 explicitly for the persistent desktop. A private nonsecret
+connection descriptor is saved at
+`~/.local/state/remote-desktop/persistent-desktop.json`.
 
 RDP is enabled at boot. Useful read-only checks:
 
@@ -620,13 +658,112 @@ The separate browser lab, when running, uses private 8445. Never use
 `tailscale serve reset`, `tailscale funnel reset`, or whole-port 443 `off` to
 repair/remove this app. Keep existing login/lingering policy.
 
-## Approved persistent pilot browser mode
+## Persistent desktop and pilot browser · 2026-10-24
+
+The owner explicitly authorized an always-running desktop that can be joined
+through RDP without leaving the client connected. The native system service
+`gnome-headless-session@dkropachev.service` is enabled at boot and restarts after
+exit with a five-second delay. This is a full GNOME desktop with a permanent
+1920×1080 virtual monitor; Google Chrome runs normally, without `--headless`.
+Closing an RDP client does not stop this desktop or Chrome.
+
+The packaged DynamicUser helper failed system D-Bus authentication. A scoped
+`/etc/systemd/system/gnome-headless-session@dkropachev.service.d/10-dbus-identity.conf`
+uses the existing static `gdm` account and explicitly retains private temporary
+storage, IPC cleanup and strict/read-only filesystem protections. The vendor
+unit is unchanged. The virtual monitor comes from
+`~/.config/systemd/user/org.gnome.Shell@ubuntu.service.d/20-persistent-monitor.conf`.
+Native headless RDP extends the desktop with another monitor. The scoped user
+`gnome-persistent-monitor.service` makes that RDP monitor the sole logical primary
+at 0,0 while connected, then restores the fixed fallback on disconnect. This
+moves existing Chrome windows and native prompts into the client's visible
+screen. Its helper is `~/.local/lib/persistent-desktop/monitor.py`; it watches
+Mutter display metadata only and never reads browser or credential contents.
+
+Direct persistent RDP uses port **3390** with the existing private RDP username
+and password. The original port **3389** and its credentials remain available.
+Only port 3390 is constrained by the dedicated nftables table
+`inet code_factory_persistent_rdp`: IPv4 loopback, LAN `192.168.0.0/24`, Tailscale
+IPv4 `100.64.0.0/10`, IPv6 loopback and Tailscale IPv6 `fd7a:115c:a1e0::/48`.
+`code-factory-persistent-rdp-access.service` loads this table before the persistent
+desktop. Existing firewall tables, public/private Code Factory routes and all
+Tailscale Serve routes are preserved. Its RDP certificate/key are private local
+service resources; the private key is mode 0600. Never log credential contents.
+
+The [dated desktop evidence](evidence/2026-10-24-persistent-desktop.json) records
+local FreeRDP connections through the LAN and Tailscale addresses using pinned
+TLS. Both authenticated desktop streams succeeded, and desktop, Shell and Chrome
+PIDs stayed identical during and after disconnect/reconnect. The fixed monitor
+remained present without a client. This does not claim an actual host reboot or
+off-host reachability, and it is separate from ChatGPT queue/browser acceptance.
+A client-side `ERRCONNECT_CONNECT_CANCELLED` after intentionally stopping the test
+client is expected; it does not establish that the desktop logged out.
+
+The current approved signed-in profile is
+`~/.local/share/code-factory/browser-pilot/profile`, managed by
+`code-factory-pilot-browser.service`. The debugger remains loopback-only at
+`127.0.0.1:9224`. The user browser unit is enabled under `graphical-session.target`
+and automatically starts when the persistent GNOME session starts. The scoped
+`~/.config/systemd/user/code-factory-pilot-browser.service.d/zz-persistent-desktop.conf`
+selects graphical Chrome, this exact profile, session restoration and a normal
+window size. The old runtime `recovery.conf` is preserved; the owned temporary
+`zz-e2e-headless.conf` has been removed.
+
+The owner originally requested a fresh profile and confirmed sign-in. Inspection
+found that the pre-existing recovery override had selected the original approved
+profile instead; that is where the confirmed sign-in was observed. Preserve it.
+The unused `browser-pilot-20261024/profile` directory is not a signed-in replacement.
+No authentication was copied. Main Chrome and the separate browser lab are not
+part of this service.
+
+Reconnect with `node scripts/browser_control.mjs --pilot`, discovering fresh page
+IDs and element UIDs. Start a stopped pilot with
+`systemctl --user start code-factory-pilot-browser.service`. Start a stopped
+persistent desktop with
+`sudo systemctl start gnome-headless-session@dkropachev.service`. Do not restart
+GDM, the system RDP listener or unrelated services merely to attach the browser.
+
+A manual Cloudflare check had blocked the temporary headless-Chrome fallback.
+Do not automate that challenge or infer ChatGPT acceptance from desktop health.
+The owner handles any native challenge or sign-in in the persistent desktop;
+pause inspection during that manual step and resume after confirmation.
+The owner confirmed that the login keyring and existing RDP passwords match and
+authorized automatic unlock using that private credential. The enabled user
+`persistent-desktop-keyring.service` reads the existing owner-only credential
+file and calls GNOME's native `UnlockWithMasterPassword` operation over the
+private user session bus. The keyring stays encrypted on disk; no additional
+password copy is created, and no secret enters argv, environment or logs.
+The helper is `~/.local/lib/persistent-desktop/unlock_keyring.py`. It checks the
+actual collection lock state, records only nonsecret status and fails closed if
+the credential or native API is unavailable. GNOME's internal API may require
+compatibility review after an OS upgrade.
+
+Pilot Chrome starts after this service. Its
+`~/.local/lib/persistent-desktop/browser_ready.py` guard waits for both an actual
+logical display and the unlocked login keyring. Chrome automatically reopens
+after exit and restores the same approved profile. Controlled keyring-daemon
+restart/unlock and graceful Chrome exit/automatic restart passed; the existing
+private Work conversation and composer remained signed in without another
+prompt. The desktop and Shell PIDs stayed unchanged. A complete desktop login
+cycle and host reboot remain untested.
+
+Do not reset the keyring, change Chrome's password store, collect its password in
+chat or copy browser authentication. If the RDP or keyring password changes,
+update the private credential through an owner-controlled local entry, then
+restart `persistent-desktop-keyring.service`. A failed unlock leaves Chrome
+waiting; the owner can still use the native unlock prompt. ChatGPT may expire
+its session or require manual verification independently. Pause browser
+inspection during any manual sign-in and resume after owner confirmation.
+
+The first sign-in in the fresh profile is manual. Pause browser inspection until
+the owner explicitly confirms sign-in is complete. A listening debugger only
+proves browser readiness, not an authenticated ChatGPT session. After confirmation,
+discover current page IDs and element UIDs again; never reuse terminal session IDs.
 
 The owner explicitly approved a separate persistent pilot profile to avoid native
 Allow prompts on every controller reconnect. Its private profile is
-`~/.local/share/code-factory/browser-pilot/profile`, with debugging bound only to
-`127.0.0.1:9224`. The root operator owns setup and the transient user unit
-`code-factory-pilot-browser`; do not alter the main browser on 9222, the separate
+the current path above, with debugging bound only to
+`127.0.0.1:9224`. Do not alter the main browser on 9222, the separate
 lab on 9223, existing authentication or unrelated tabs.
 
 The owner completes the first ChatGPT sign-in manually in that profile. Pause all

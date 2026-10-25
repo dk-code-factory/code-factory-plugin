@@ -106,9 +106,18 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	tools := request("tools/list", nil, true, "2026-07-28")["tools"].([]any)
 	found := false
 	reviewFound := false
+	attentionFound := false
 	for _, v := range tools {
 		tool := v.(map[string]any)
 		metadata := tool["_meta"].(map[string]any)
+		if tool["name"] == "list_attention" {
+			attentionFound = true
+			vis := metadata["ui"].(map[string]any)["visibility"].([]any)
+			annotations := tool["annotations"].(map[string]any)
+			if len(vis) != 2 || vis[0] != "model" || vis[1] != "app" || annotations["readOnlyHint"] != true || annotations["openWorldHint"] != false {
+				t.Fatal("question queue is not discoverable as a local read", tool)
+			}
+		}
 		if tool["name"] == "prepare_pr_review" {
 			reviewFound = true
 			vis := metadata["ui"].(map[string]any)["visibility"].([]any)
@@ -146,8 +155,8 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 			found = true
 		}
 	}
-	if !found || !reviewFound {
-		t.Fatal("missing credential or PR review tool")
+	if !found || !reviewFound || !attentionFound {
+		t.Fatal("missing credential, PR review or attention queue tool")
 	}
 	res := request("tools/call", map[string]any{"name": "read_snapshot", "arguments": map[string]any{"freshness": "view-first"}}, true, "2026-07-28")
 	if res["isError"] == true || res["structuredContent"] == nil {

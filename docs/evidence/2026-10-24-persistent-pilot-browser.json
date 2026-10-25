@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-24",
+  "purpose": "Owner-requested fresh Chrome profile retained for future sessions",
+  "profile": "~/.local/share/code-factory/browser-pilot/profile",
+  "unit": "code-factory-pilot-browser.service",
+  "enabledUnder": "graphical-session.target",
+  "debugAddress": "127.0.0.1:9224",
+  "browser": "Chrome/155.0.8059.84",
+  "observations": {
+    "unitActive": true,
+    "debuggerReady": true,
+    "loopbackOnly": true,
+    "restartsOnFailure": true,
+    "restoreLastSession": true,
+    "previousProfilePreserved": true,
+    "mainAndLabBrowsersPreserved": true,
+    "restartsAfterSuccessfulExit": true,
+    "waitsForUnlockedKeyringAndDisplay": true
+  },
+  "chatgptSignIn": "Owner-confirmed manual sign-in; actual authenticated Work conversation, composer and previous answer marker remained accessible after automatic Chrome restart without another sign-in",
+  "limits": "Full desktop login cycle and OS reboot remain untested. ChatGPT may expire sessions or request manual security verification independently.",
+  "observedAt": "2026-10-24T18:49:58.442510+00:00",
+  "signInObservedAt": "2026-10-24T19:08:13.440764+00:00",
+  "requestedProfile": "~/.local/share/code-factory/browser-pilot-20261024/profile",
+  "profileSelectionCorrection": "Pre-existing runtime recovery.conf overrode the new base unit. The owner-confirmed sign-in and observed Work session used the original approved profile; dated profile directory was unused. Base unit now records actual signed-in profile. No authentication was copied.",
+  "desktopSessionEnded": "Historical earlier desktop loss; superseded by the current persistent GNOME service and disconnect/reconnect checks",
+  "currentBrowserMode": "Graphical Chrome on the native persistent GNOME desktop with a fixed 1920x1080 virtual monitor, same approved profile, loopback debugger 9224; owned temporary headless override removed.",
+  "updatedAt": "2026-10-25T00:27:46.100315+00:00",
+  "persistentDesktopEvidence": "2026-10-24-persistent-desktop.json",
+  "automaticKeyringUnlock": "Owner-authorized existing private RDP credential; controlled locked-daemon restart automatically unlocked the encrypted login keyring",
+  "chromeRestartVerification": {
+    "before": {
+      "desktop": 782432,
+      "shell": 782552,
+      "chrome": 782899
+    },
+    "after": {
+      "desktop": 782432,
+      "shell": 782552,
+      "chrome": 1373892
+    },
+    "automaticallyRestarted": true,
+    "debuggerReady": true,
+    "desktopPreserved": true,
+    "atUnix": 1792887965.1215506
+  }
+}

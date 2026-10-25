@@ -1,0 +1,192 @@
+{
+  "date": "2026-10-24",
+  "configuredAt": "2026-10-24T21:59:00.126043+00:00",
+  "purpose": "Owner-authorized always-running GNOME desktop with RDP reconnect and persistent pilot Chrome",
+  "desktopService": "gnome-headless-session@dkropachev.service",
+  "desktopServiceEnabledAtBoot": true,
+  "desktopRestartPolicy": "always, 5-second delay",
+  "nativeStartupFix": "Per-instance static gdm account replaces failing DynamicUser D-Bus identity, preserving the original protections explicitly; vendor unit unchanged.",
+  "virtualMonitor": {
+    "size": "1920x1080",
+    "persistentWithoutRDPClient": true,
+    "unitOverride": "~/.config/systemd/user/org.gnome.Shell@ubuntu.service.d/20-persistent-monitor.conf"
+  },
+  "rdp": {
+    "lan": "192.168.0.100:3390",
+    "tailscale": "100.83.203.0:3390",
+    "username": "remote",
+    "password": "Existing private RDP credential reused; value intentionally omitted",
+    "credentialsFile": "~/.local/state/remote-desktop/credentials.json",
+    "directDesktopNoGDMLogin": true,
+    "legacy3389Preserved": true,
+    "tlsFingerprint": {
+      "sha256": "06:9F:C9:BE:C1:46:08:1F:73:DA:3C:50:34:C7:3C:83:43:52:99:5D:0F:5F:29:0D:8E:5F:90:C4:4D:9B:A7:2C",
+      "sha1": "C9:E9:55:BC:9F:02:F3:58:8A:82:1A:71:41:0B:43:4C:AC:0E:51:C4"
+    },
+    "certificateExpires": "Oct 13 21:52:40 2028 GMT",
+    "networkScope": "Port 3390 only: IPv4 loopback, 192.168.0.0/24, Tailscale IPv4 100.64.0.0/10 and IPv6 fd7a:115c:a1e0::/48, plus IPv6 loopback; other sources dropped",
+    "firewallTable": "inet code_factory_persistent_rdp",
+    "firewallService": "code-factory-persistent-rdp-access.service"
+  },
+  "browser": {
+    "service": "code-factory-pilot-browser.service",
+    "profile": "~/.local/share/code-factory/browser-pilot/profile",
+    "mode": "Graphical Google Chrome on the persistent GNOME display; no --headless",
+    "debugger": "127.0.0.1:9224",
+    "restoreLastSession": true,
+    "authenticationCopied": false,
+    "preExistingRecoveryOverridePreserved": true,
+    "ownedHeadlessOverrideRemoved": true
+  },
+  "verification": {
+    "initial": {
+      "desktopPID": 782432,
+      "shellPID": 782552,
+      "chromePID": 782899
+    },
+    "connections": [
+      {
+        "endpoint": "192.168.0.100:3390",
+        "authenticatedDesktopStream": true,
+        "clientWindowPresent": true,
+        "remoteFramebufferNegotiated": true,
+        "samePIDsDuringAndAfterDisconnect": true,
+        "pidsAfterDisconnect": {
+          "desktopPID": 782432,
+          "shellPID": 782552,
+          "chromePID": 782899
+        },
+        "errorCodes": [
+          "ERRCONNECT_CONNECT_CANCELLED"
+        ]
+      },
+      {
+        "endpoint": "100.83.203.0:3390",
+        "authenticatedDesktopStream": true,
+        "clientWindowPresent": true,
+        "remoteFramebufferNegotiated": true,
+        "samePIDsDuringAndAfterDisconnect": true,
+        "pidsAfterDisconnect": {
+          "desktopPID": 782432,
+          "shellPID": 782552,
+          "chromePID": 782899
+        },
+        "errorCodes": [
+          "ERRCONNECT_CONNECT_CANCELLED"
+        ]
+      }
+    ],
+    "state": "passed",
+    "interface": "Local FreeRDP clients connecting to LAN and Tailscale listener addresses; no off-host reachability claim"
+  },
+  "screenAfterDisconnect": "Screen 0: minimum 16 x 16, current 1920 x 1080, maximum 32767 x 32767",
+  "protectedConfigurationUnchanged": {
+    "credentials.json": true,
+    "registered-app.json": true,
+    "gateway-auth.json": false,
+    "runtime.json": true,
+    "config.toml": true
+  },
+  "tailscaleServeRoutesUnchanged": true,
+  "applicationServicesRestarted": false,
+  "applicationAgentRunsInterrupted": false,
+  "limits": [
+    "Actual host reboot was not performed; boot services are enabled and ordering is configured.",
+    "RDP tests used local FreeRDP clients with pinned TLS, connected to LAN and Tailscale addresses; off-host client reachability is not claimed.",
+    "Desktop verification remains separate from the successful ordinary ChatGPT queue E2E; background callbacks, soak and broader accessibility remain open."
+  ],
+  "displayRouting": {
+    "service": "gnome-persistent-monitor.service",
+    "implementation": "~/.local/lib/persistent-desktop/monitor.py",
+    "purpose": "When native RDP creates an extended display, disable the fallback logical display and make the RDP display primary at 0,0 so existing windows migrate into view. Restore the fixed fallback when RDP disappears.",
+    "currentObservedDisplays": [
+      {
+        "x": 0,
+        "y": 0,
+        "primary": true,
+        "connectors": [
+          "Meta-0"
+        ]
+      }
+    ],
+    "nativeScreenChangeApplied": true,
+    "automaticDisconnectRoutingVerification": {
+      "state": "passed",
+      "at": "2026-10-24T23:50:22.288552+00:00",
+      "solePrimaryReturnedToFallback": true,
+      "sameDesktopShellAndChromePIDs": true,
+      "pids": {
+        "desktopPID": 782432,
+        "shellPID": 782552,
+        "chromePID": 782899
+      }
+    },
+    "credentialFieldsInspected": false,
+    "connectedObservedDisplays": [
+      {
+        "x": 0,
+        "y": 0,
+        "scale": 1.0,
+        "primary": true,
+        "connectors": [
+          "Meta-1"
+        ]
+      }
+    ]
+  },
+  "browserAuthentication": {
+    "ownerConfirmedManualSignInComplete": true,
+    "ownerAuthorizedExistingRDPPasswordReuse": true,
+    "keyringService": "persistent-desktop-keyring.service",
+    "keyringHelper": "~/.local/lib/persistent-desktop/unlock_keyring.py",
+    "credentialSource": "Existing owner-only RDP credential; no new password copy, argv, environment or credential logging",
+    "keyringRemainsEncrypted": true,
+    "nativeOperation": "GNOME UnlockWithMasterPassword over the private user D-Bus session; password checked by the native keyring daemon",
+    "nativeSource": "https://raw.githubusercontent.com/GNOME/gnome-keyring/50.0/daemon/dbus/gkd-secret-service.c",
+    "controlledLockedToUnlockedCheck": "passed",
+    "keyringDaemonRestartAndAutomaticUnlock": "passed",
+    "pilotBrowserStartGuard": "Waits for a logical display and unlocked login keyring before Chrome opens the approved profile",
+    "chromeGracefulExitAndAutomaticRestart": {
+      "before": {
+        "desktop": 782432,
+        "shell": 782552,
+        "chrome": 782899
+      },
+      "after": {
+        "desktop": 782432,
+        "shell": 782552,
+        "chrome": 1373892
+      },
+      "automaticallyRestarted": true,
+      "debuggerReady": true,
+      "desktopPreserved": true,
+      "atUnix": 1792887965.1215506
+    },
+    "actualBrowserAfterRestart": {
+      "ownPrivateWorkConversationRestored": true,
+      "agentAnswerMarkerVisible": true,
+      "noLoginButtons": true,
+      "workVisible": true,
+      "composerVisible": true,
+      "browserChallengeVisible": false
+    },
+    "limits": "No complete desktop login cycle or OS reboot tested. ChatGPT can independently expire authentication or require manual security verification."
+  },
+  "updatedAt": "2026-10-25T00:27:46.100315+00:00",
+  "nonsecretConfigurationHashes": {
+    "/etc/systemd/system/gnome-headless-session@dkropachev.service.d/10-dbus-identity.conf": "0e00c15ce40aa18ae559dc01b33d3b25cc771f4336ab4c02b6ca448ca674a85e",
+    "/etc/systemd/system/gnome-headless-session@dkropachev.service.d/20-rdp-access.conf": "fffb95b76d31b5ca63a358c112cb0aeb2b2dc6651eac8a88e025ea67b582e7d4",
+    "/etc/systemd/system/code-factory-persistent-rdp-access.service": "890b86bd0acaa27584b1b8f1043a067e923fdea1624dfa0a2062cd5c1b4b8a93",
+    "/etc/code-factory/persistent-rdp.nft": "2014f44abb6fa921b20bfd3ae578a4403fdd596a65b5b02545341613a57c55fd",
+    "/home/dkropachev/.config/systemd/user/org.gnome.Shell@ubuntu.service.d/20-persistent-monitor.conf": "92b38db2f8a2a65f6bfcb4cc8f5b27c2e23ebe1b6aaa22623386f9c5b408c7bb",
+    "/home/dkropachev/.config/systemd/user/code-factory-pilot-browser.service.d/zz-persistent-desktop.conf": "022b155619a015947fa572dcc6f7e16d780aa305cfa77ab46bdca14771feb751",
+    "/home/dkropachev/.config/systemd/user/gnome-persistent-monitor.service": "778d5a43554868561470d0c302e3b3a1777e7b9b102da5c8f13a2491d1d38540",
+    "/home/dkropachev/.local/lib/persistent-desktop/monitor.py": "984600e8ab88658099fab5580bab1774f54545fbdefc99c987c4501c84a5d1d7",
+    "/home/dkropachev/.local/lib/persistent-desktop/unlock_keyring.py": "375b42ea9f9145a7259637ae855e8a96226e304ce69a11cc6b2598973ce9a725",
+    "/home/dkropachev/.local/lib/persistent-desktop/browser_ready.py": "5d3756851ce8523d21aab7a6f02c6c2e9118c4b2e07f50ed3434c40267226bfd",
+    "/home/dkropachev/.config/systemd/user/persistent-desktop-keyring.service": "8a4988def1d8129bccea4b7d384c0b5f40ece611a2d543a20d5d22e89ee23ca1",
+    "/home/dkropachev/.config/systemd/user/code-factory-pilot-browser.service": "9dc935ff80b23b55018cb6da0730c5a9b275c3ab0c45a32f253495bd673dd973",
+    "/home/dkropachev/.config/systemd/user/code-factory-pilot-browser.service.d/20-keyring.conf": "50573cdbc9a2c59b3d802e11dea01b10cd325eac5e24ced696f7d5cce37380a1"
+  },
+  "gatewayAuthenticationState": "Private file hash changed during actual OAuth/MCP use; contents not inspected or exported. Existing connected account continued to work."
+}
