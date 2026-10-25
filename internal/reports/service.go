@@ -682,8 +682,16 @@ func (s *Service) finishIssue(ctx context.Context, id string, issue Issue, outco
 		if e := t.Get("report-runtime", id, &rt); e != nil && !errors.Is(e, store.ErrNotFound) {
 			return e
 		}
+		if rt.AdmissionID != admissionID && rt.CreateAttempted {
+			return nil // A newer claimed effect owns issue reconciliation.
+		}
+		if r.Issue != nil && (rt.AdmissionID != admissionID || r.Processing != "filing" || *r.Issue != issue || r.Outcome != outcome) {
+			return nil // An established identity and outcome belong to current work.
+		}
 		r.Issue = &issue
-		r.Outcome = outcome
+		if rt.AdmissionID == admissionID || r.Outcome == "" {
+			r.Outcome = outcome
+		}
 		r.Updated = time.Now().UTC()
 		if rt.AdmissionID != admissionID {
 			return save(t, r) // A newer generation owns its processing state.

@@ -7354,7 +7354,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Real child-process interruption before and after durable creation claims persists actionable recovery despite cancellation, lets queued investigation proceed and reconciles a claimed effect once without replay."
+          "purpose": "Real child-process interruption before and after durable creation claims persists actionable recovery despite cancellation, lets queued investigation proceed and reconciles a claimed effect once without replay. Owned child execution has its own bounded context/test timeout and termination/reaping proof; parent cancellation remains an independent recovery stimulus."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7374,6 +7374,33 @@
             "S4"
           ],
           "purpose": "Recovered issue identities and claim state survive late rejection, uncertain creation and reconciliation failure/empty-result paths."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestHTTPPublicationFailuresBeforeDispatchAreDefinite(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Known encoding, request-configuration, token and cooldown-storage failures before HTTP dispatch retain a sanitized actionable definite-rejection outcome and send zero POSTs."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual HTTP and SQLite preserve a durable claim before token failure, clear it with zero dispatched POSTs, then recover to exactly one POST after authentication returns; a dispatched lost response retains uncertainty and cannot repeat creation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestDelayedPublicationSuccessPreservesEstablishedIssue(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Delayed duplicate successes preserve newer/same-generation established identities, outcomes, timestamps and Runtime; a newer claimed creation retains ownership while safe missing-identity recovery preserves newer processing/outcome."
         }
       ],
       "suites": [

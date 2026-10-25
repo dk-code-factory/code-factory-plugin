@@ -784,6 +784,13 @@ func TestLedgerPaginationSearchAndVersionFilters(t *testing.T) {
 
 func TestPublicationCommandInterruptionRecovery(t *testing.T) {
 	if dir := os.Getenv("CODE_FACTORY_PUBLISH_INTERRUPTION_FIXTURE"); dir != "" {
+		if os.Getenv("CODE_FACTORY_PUBLISH_INTERRUPTION_PHASE") == "hung-child" {
+			if err := os.WriteFile(filepath.Join(dir, "child-started"), []byte("ready"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Minute)
+			os.Exit(23)
+		}
 		if os.Getenv("CODE_FACTORY_PUBLISH_INTERRUPTION_PHASE") == "before-claim" {
 			os.Exit(23)
 		}
@@ -804,7 +811,7 @@ func TestPublicationCommandInterruptionRecovery(t *testing.T) {
 		}
 		t.Fatal("fixture publication did not reach its interruption")
 	}
-	for _, phase := range []string{"before-claim", "after-claim"} {
+	for _, phase := range []string{"before-claim", "after-claim", "hung-child"} {
 		t.Run(phase, func(t *testing.T) {
 			s, ctx := fixture(t)
 			engine, github := setupEngine(s)
@@ -819,9 +826,29 @@ func TestPublicationCommandInterruptionRecovery(t *testing.T) {
 			stepCtx, cancel := context.WithCancel(ctx)
 			defer cancel()
 			s.PublishCommand = func(ctx context.Context, id string) error {
-				cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestPublicationCommandInterruptionRecovery$")
+				childLimit := 5 * time.Second
+				if phase == "hung-child" {
+					childLimit = 2 * time.Second
+				}
+				childCtx, stopChild := context.WithTimeout(ctx, childLimit)
+				defer stopChild()
+				cmd := exec.CommandContext(childCtx, os.Args[0], "-test.run=^TestPublicationCommandInterruptionRecovery$", "-test.timeout=10s")
+				cmd.WaitDelay = time.Second
 				cmd.Env = append(os.Environ(), "CODE_FACTORY_PUBLISH_INTERRUPTION_FIXTURE="+s.Dir, "CODE_FACTORY_PUBLISH_INTERRUPTION_PHASE="+phase, "CODE_FACTORY_PUBLISH_INTERRUPTION_REPORT="+id)
 				err := cmd.Run()
+				if phase == "hung-child" {
+					if !errors.Is(childCtx.Err(), context.DeadlineExceeded) || err == nil || cmd.ProcessState == nil {
+						t.Fatal("owned hung child was not killed and reaped at its local deadline", err, cmd.ProcessState)
+					}
+					if data, err := os.ReadFile(filepath.Join(s.Dir, "child-started")); err != nil || string(data) != "ready" {
+						t.Fatal("hung-child regression did not establish child execution", string(data), err)
+					}
+				} else {
+					var exited *exec.ExitError
+					if childCtx.Err() != nil || !errors.As(err, &exited) || exited.ExitCode() != 23 {
+						t.Fatal("fixture did not reach its intended publication interruption", err)
+					}
+				}
 				cancel() // Shutdown cancellation must still retain the recovery state.
 				return err
 			}
@@ -958,6 +985,93 @@ func TestObsoletePublicationFailuresPreserveActiveGeneration(t *testing.T) {
 		currentRuntime, _ := s.runtime(ctx, r.ID)
 		if newerRuntime.Generation != 2 || !newerRuntime.CreateAttempted || github.creates != 1 || oldMarkerReads != 1 || hash(newer) != hash(get(t, s, ctx, r.ID)) || hash(newerRuntime) != hash(currentRuntime) {
 			t.Fatal("obsolete publisher adopted a newer generation's publication claim")
+		}
+	})
+}
+
+func TestDelayedPublicationSuccessPreservesEstablishedIssue(t *testing.T) {
+	for _, phase := range []string{"newer-generation", "newer-claimed", "same-generation", "same-identity-outcome"} {
+		t.Run(phase, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			engine.findings.Classification = "duplicate"
+			engine.findings.DuplicateNumber = github.issue.Number
+			r := submit(t, s, ctx)
+			step(t, s, ctx)
+			originalRuntime, _ := s.runtime(ctx, r.ID)
+			var established Report
+			var establishedRuntime Runtime
+			github.onRead = func() {
+				if strings.HasPrefix(phase, "newer") {
+					if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "newer-verified-issue", Text: "Updated evidence changes the investigated issue"}); err != nil {
+						t.Fatal(err)
+					}
+					engine.findings = findings()
+					newGitHub := &fakeGitHub{issue: Issue{Repository: DefaultRepository, Number: 31, URL: "https://github.com/" + DefaultRepository + "/issues/31", State: "open"}}
+					if phase == "newer-claimed" {
+						newGitHub.onCreate = func() {
+							claimed := get(t, s, ctx, r.ID)
+							claimedRuntime, _ := s.runtime(ctx, r.ID)
+							if err := s.finishIssue(ctx, r.ID, github.issue, "duplicate", originalRuntime.AdmissionID); err != nil {
+								t.Fatal(err)
+							}
+							afterRuntime, _ := s.runtime(ctx, r.ID)
+							if !claimedRuntime.CreateAttempted || hash(claimed) != hash(get(t, s, ctx, r.ID)) || hash(claimedRuntime) != hash(afterRuntime) {
+								t.Fatal("older success replaced a newer effect still awaiting its issue identity")
+							}
+						}
+					}
+					other := &Service{Store: s.Store, Vault: s.Vault, Dir: s.Dir, Engine: engine, GitHub: newGitHub}
+					step(t, other, ctx)
+					step(t, other, ctx)
+					if newGitHub.creates != 1 {
+						t.Fatal("newer generation did not establish its own verified issue")
+					}
+				} else {
+					rt, err := s.runtime(ctx, r.ID)
+					if err != nil {
+						t.Fatal(err)
+					}
+					issue := github.issue
+					if phase == "same-generation" {
+						issue.Number, issue.URL = 31, "https://github.com/"+DefaultRepository+"/issues/31"
+					}
+					other := &Service{Store: s.Store, Dir: s.Dir}
+					if err := other.finishIssue(ctx, r.ID, issue, "filed", rt.AdmissionID); err != nil {
+						t.Fatal(err)
+					}
+				}
+				established = get(t, s, ctx, r.ID)
+				establishedRuntime, _ = s.runtime(ctx, r.ID)
+			}
+			step(t, s, ctx) // The older duplicate read now returns its original issue.
+			currentRuntime, _ := s.runtime(ctx, r.ID)
+			if established.Processing != "complete" || established.Outcome != "filed" || hash(established) != hash(get(t, s, ctx, r.ID)) || hash(establishedRuntime) != hash(currentRuntime) || github.creates != 0 {
+				t.Fatal("delayed success overwrote an established identity, outcome, timestamp or runtime")
+			}
+		})
+	}
+	t.Run("unrecorded-effect-retains-newer-outcome", func(t *testing.T) {
+		s, ctx := fixture(t)
+		engine, github := setupEngine(s)
+		engine.findings.Classification = "insufficient_information"
+		r := submit(t, s, ctx)
+		step(t, s, ctx)
+		oldRuntime, _ := s.runtime(ctx, r.ID)
+		if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "explanation", Text: "The host supplied the missing contract detail"}); err != nil {
+			t.Fatal(err)
+		}
+		engine.findings.Classification = "explained"
+		step(t, s, ctx)
+		newerRuntime, _ := s.runtime(ctx, r.ID)
+		before := get(t, s, ctx, r.ID)
+		if err := s.finishIssue(ctx, r.ID, github.issue, "filed", oldRuntime.AdmissionID); err != nil {
+			t.Fatal(err)
+		}
+		after := get(t, s, ctx, r.ID)
+		currentRuntime, _ := s.runtime(ctx, r.ID)
+		if after.Issue == nil || *after.Issue != github.issue || after.Outcome != before.Outcome || after.Processing != before.Processing || hash(currentRuntime) != hash(newerRuntime) {
+			t.Fatal("safe recovery lost an unrecorded issue or overwrote newer processing/outcome", after)
 		}
 	})
 }

@@ -56,11 +56,18 @@ func reportingRateLimit(method string, until time.Time) error {
 }
 
 func (g *GitHubAdapter) request(ctx context.Context, method, endpoint string, input any, accept string) ([]byte, error) {
+	// Only failures returned before Client.Do prove that creation was not sent.
+	beforeDispatch := func(reason string) error {
+		if method == http.MethodPost {
+			return &publicationRejected{Reason: reason}
+		}
+		return errors.New(reason)
+	}
 	var body io.Reader
 	if input != nil {
 		b, e := json.Marshal(input)
 		if e != nil {
-			return nil, e
+			return nil, beforeDispatch("GitHub request could not be encoded; correct the draft and resume")
 		}
 		body = bytes.NewReader(b)
 	}
@@ -68,19 +75,19 @@ func (g *GitHubAdapter) request(ctx context.Context, method, endpoint string, in
 	defer cancel()
 	req, e := http.NewRequestWithContext(ctx, method, g.Client.BaseURL+endpoint, body)
 	if e != nil {
-		return nil, e
+		return nil, beforeDispatch("GitHub request configuration is invalid; restore the adapter settings and resume")
 	}
 	token, e := g.Client.Token(ctx)
 	if e != nil {
-		return nil, e
+		return nil, beforeDispatch("GitHub authentication unavailable; restore GitHub CLI authentication and resume")
 	}
 	if g.Store == nil {
-		return nil, fmt.Errorf("Reporting GitHub cooldown storage unavailable")
+		return nil, beforeDispatch("Reporting GitHub cooldown storage unavailable; restore the private ledger and resume")
 	}
 	cooldownID := githubCooldownKey(g.Client.BaseURL, token)
 	var retryAt time.Time
 	if e = g.Store.Get(ctx, githubCooldownKind, cooldownID, &retryAt); e != nil && !errors.Is(e, store.ErrNotFound) {
-		return nil, fmt.Errorf("Reporting GitHub cooldown state unavailable")
+		return nil, beforeDispatch("Reporting GitHub cooldown state unavailable; restore readable private ledger storage and resume")
 	}
 	if time.Now().Before(retryAt) {
 		return nil, reportingRateLimit(method, retryAt)

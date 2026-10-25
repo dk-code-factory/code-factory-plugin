@@ -330,6 +330,122 @@ func TestHTTPPublicationRejectsKnownFailuresAndRetainsServerUncertainty(t *testi
 	}
 }
 
+func TestHTTPPublicationFailuresBeforeDispatchAreDefinite(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		change func(*GitHubAdapter) any
+	}{
+		{"encoding", func(g *GitHubAdapter) any { return make(chan int) }},
+		{"request configuration", func(g *GitHubAdapter) any { g.Client.BaseURL = "http://[private-fixture-value"; return nil }},
+		{"authentication", func(g *GitHubAdapter) any {
+			g.Client.Token = func(context.Context) (string, error) { return "", errors.New("private-fixture-value") }
+			return nil
+		}},
+		{"missing cooldown store", func(g *GitHubAdapter) any { g.Store = nil; return nil }},
+		{"unreadable cooldown store", func(g *GitHubAdapter) any { _ = g.Store.Close(); return nil }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var requests atomic.Int64
+			g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
+				requests.Add(1)
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+			_, err := g.request(context.Background(), http.MethodPost, "/repos/"+DefaultRepository+"/issues", test.change(g), "")
+			var rejected *publicationRejected
+			if !errors.As(err, &rejected) || requests.Load() != 0 || strings.Contains(err.Error(), "private-fixture-value") || !strings.Contains(err.Error(), "resume") {
+				t.Fatal("pre-dispatch failure lost safe actionable recovery", err, requests.Load())
+			}
+		})
+	}
+}
+
+func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(t *testing.T) {
+	for _, lostResponse := range []bool{false, true} {
+		name := "token failure before dispatch"
+		if lostResponse {
+			name = "lost response after dispatch"
+		}
+		t.Run(name, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, _ := setupEngine(s)
+			engine.findings.SourceCommit = strings.Repeat("a", 40)
+			engine.findings.SourcePath = "internal/app/app.go"
+			engine.findings.OwnershipReason = "Implementation is in this source path"
+			var posts, markerReads atomic.Int64
+			var failToken, sawClaim atomic.Bool
+			g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
+				switch {
+				case r.Method == http.MethodPost:
+					posts.Add(1)
+					if lostResponse {
+						connection, _, err := w.(http.Hijacker).Hijack()
+						if err != nil {
+							t.Error(err)
+							return
+						}
+						_ = connection.Close()
+						return
+					}
+					reply(w, map[string]any{"number": 17, "html_url": "https://github.com/" + DefaultRepository + "/issues/17", "state": "open"})
+				case strings.Contains(r.URL.Path, "/contents/"):
+					reply(w, map[string]string{"type": "file", "sha": strings.Repeat("a", 40)})
+				case strings.HasSuffix(r.URL.Path, "/issues"):
+					if markerReads.Add(1) == 1 && !lostResponse {
+						failToken.Store(true)
+					}
+					reply(w, []any{})
+				default:
+					reply(w, map[string]any{"full_name": DefaultRepository, "has_issues": true, "archived": false})
+				}
+			})
+			s.GitHub = g
+			r := submit(t, s, ctx)
+			g.Client.Token = func(context.Context) (string, error) {
+				if failToken.Load() {
+					rt, err := s.runtime(ctx, r.ID)
+					if err == nil && rt.CreateAttempted && rt.Intent != nil {
+						sawClaim.Store(true)
+					}
+					return "", errors.New("private-fixture-value")
+				}
+				return "fixture-token", nil
+			}
+			step(t, s, ctx)
+			step(t, s, ctx)
+			current := get(t, s, ctx, r.ID)
+			rt, err := s.runtime(ctx, r.ID)
+			if err != nil || markerReads.Load() != 1 || rt.Intent == nil || current.Issue != nil {
+				t.Fatal("fixture did not retain the publication boundary", current, rt, err)
+			}
+			if lostResponse {
+				if current.Processing != "needs_attention" || !rt.CreateAttempted || posts.Load() != 1 {
+					t.Fatal("potentially dispatched publication became retryable", current, rt, posts.Load())
+				}
+			} else if current.Processing != "blocked" || rt.CreateAttempted || posts.Load() != 0 || !sawClaim.Load() || !strings.Contains(current.Message, "authentication") || strings.Contains(current.Message, "private-fixture-value") {
+				t.Fatal("known undispatched publication retained an uncertain claim or unsafe diagnostic", current, rt, posts.Load())
+			}
+			failToken.Store(false)
+			if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
+				t.Fatal(err)
+			}
+			if lostResponse {
+				current = get(t, s, ctx, r.ID)
+				rt, err = s.runtime(ctx, r.ID)
+				if err != nil || current.Processing != "needs_attention" || !rt.CreateAttempted || markerReads.Load() != 2 || posts.Load() != 1 {
+					t.Fatal("empty marker recovery permitted another potentially dispatched creation", current, rt, err)
+				}
+				return
+			}
+			step(t, s, ctx)
+			step(t, s, ctx)
+			current = get(t, s, ctx, r.ID)
+			if current.Processing != "complete" || current.Outcome != "filed" || current.Issue == nil || current.Issue.Number != 17 || markerReads.Load() != 2 || posts.Load() != 1 {
+				t.Fatal("restored authentication did not recover to exactly one dispatched creation", current, posts.Load())
+			}
+		})
+	}
+}
+
 func TestGitHubReportingCooldownSurvivesRestartAndSeparatesCredentials(t *testing.T) {
 	s, ctx := fixture(t)
 	reset := time.Now().Add(10 * time.Minute).Truncate(time.Second)
