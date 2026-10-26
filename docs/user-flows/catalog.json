@@ -809,7 +809,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Both themes assert installed/enabled status, old/available versions, metadata-only check, explicit keyboard update, install/remove targets, marketplace/ref payloads, narrow layout and scoped axe scans."
+          "purpose": "Both themes use memoized plugin reads with distinct freshness markers to observe check/install/update/remove completion, final inventory and enabled controls without replaying maintenance."
         },
         {
           "path": "web/tests/factory.spec.ts",
@@ -933,6 +933,38 @@
             "S4"
           ],
           "purpose": "UI displays explicit full access, never approvals and authorized publishing; opens without Start, starts once on explicit action, and Settings describes selected authority."
+        },
+        {
+          "path": "internal/app/plugins_test.go",
+          "anchor": "func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "plugin status polling clears recovered read failures while retaining drafts",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Failed plugin read recovers through a later successful poll, removes only its read alert, retains selector draft/inventory and issues no maintenance mutation."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "system defaults display and retain a supported nonpreset plugin interval",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Saved supported30-minute interval is displayed accurately and retained through an unrelated budget save."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestAuthenticatedMCPDiscoveryToolsAndUI(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "MCP schema accepts distinct plugin-read freshness markers and sees a newly saved operation without changing the journal; existing auth/settings/selector guards remain."
         }
       ],
       "suites": [
@@ -2445,6 +2477,15 @@
             "S6"
           ],
           "purpose": "Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "saved unread details remain unread when refresh is",
+          "scenarios": [
+            "S5",
+            "S6"
+          ],
+          "purpose": "Paused/cooldown/unavailable observations with no error retain visible saved details and unread state; draft editing does not mark read or launch."
         }
       ],
       "suites": [
@@ -3935,6 +3976,14 @@
             "S6"
           ],
           "purpose": "Preparation remains saved-state only and explicit nonreview Start makes no User call while retaining its existing source check."
+        },
+        {
+          "path": "internal/app/plugins_test.go",
+          "anchor": "func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables."
         }
       ],
       "suites": [
@@ -4727,6 +4776,32 @@
             "S6"
           ],
           "purpose": "An invalid helper decision leaves both original requests pending after delivery and continuation."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestTextQuestionFollowupRejectsStaleActiveTurnBeforeClaim(",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "Wrong or empty active-turn tokens reject a textual follow-up before attention/Vault claim or provider request; pending question remains."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "chunked owner and agent completions remain normal conversation across journal pages",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Long owner/unstreamed agent Unicode and escaped completions across a journal page retain You/Agent roles and ID coalescing in the normal conversation; raw partial/malformed and command output stay under initially collapsed Details."
         },
         {
           "path": "internal/app/questions_test.go",
@@ -5525,6 +5600,32 @@
             "S4"
           ],
           "purpose": "A missing recovery record rolls back both the encrypted answer and native answer claim, leaving the unanswered request visible and answerable."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestRestartMaterializesAlreadyPersistedFallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A stored fallback checkpoint without attention is materialized once across repeated restarts, preserving original question/episode IDs and attempt count without provider invocation."
+        },
+        {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestTextQuestionFollowupRejectsStaleActiveTurnBeforeClaim(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Wrong or empty active-turn tokens reject a textual follow-up before attention/Vault claim or provider request; pending question remains."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects."
         },
         {
           "path": "internal/app/attention_test.go",
@@ -6868,6 +6969,23 @@
           "purpose": "An unanswered provider RPC and earlier Start/busy/Cleanup waiter cannot block source termination or independent run lookup; accepted message delivery becomes uncertain without replay, and retired work remains terminal."
         },
         {
+          "path": "internal/app/questions_test.go",
+          "anchor": "func TestRestartMaterializesAlreadyPersistedFallback(",
+          "scenarios": [
+            "S1",
+            "S4"
+          ],
+          "purpose": "A stored fallback checkpoint without attention is materialized once across repeated restarts, preserving original question/episode IDs and attempt count without provider invocation."
+        },
+        {
+          "path": "internal/app/messages_test.go",
+          "anchor": "func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects."
+        },
+        {
           "path": "internal/app/app_test.go",
           "anchor": "func TestRecoveryStalesRequestsAndIdleRuns(",
           "scenarios": [
@@ -7739,7 +7857,7 @@
           "scenarios": [
             "S6"
           ],
-          "purpose": "Indexed startup backfill reassembles chunked final messages and returns a bounded excerpt; partial chunks never become output."
+          "purpose": "Startup backfill reconstructs a roughly7MiB escaped/Unicode completion across more than200 chunks before projection; bounded excerpt and final-chunk cursor/time persist, partial chunks never become output."
         },
         {
           "path": "internal/app/tracking_test.go",
@@ -7748,6 +7866,30 @@
             "S6"
           ],
           "purpose": "Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestCompletionChunksPreserveEscapesAndWaitForValidWholeObjects(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Legacy completion framing preserves escaped quotes/braces/backslashes and Unicode at valid split positions, waits for valid whole objects and isolates adjacent objects without repeated prefix validation."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestProgressBackfillDiscardsPartialAndMalformedChunksAtMethodBoundary(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Partial/malformed completion history stays unavailable until method reset; newer actual journal projection wins against stale reconstructed progress through its cursor guard."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "chunked owner and agent completions remain normal conversation across journal pages",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Long owner/unstreamed agent Unicode and escaped completions across a journal page retain You/Agent roles and ID coalescing in the normal conversation; raw partial/malformed and command output stay under initially collapsed Details."
         }
       ],
       "suites": [
@@ -8776,6 +8918,14 @@
             "S4"
           ],
           "purpose": "A missing recovery record rolls back both the encrypted answer and native answer claim, leaving the unanswered request visible and answerable."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestGitHubSkillUpgradeRejectsNestedNativePackages(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup."
         }
       ],
       "suites": [
@@ -9541,6 +9691,14 @@
             "S4"
           ],
           "purpose": "Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records."
+        },
+        {
+          "path": "internal/app/dependencies_test.go",
+          "anchor": "func TestGitHubSkillUpgradeRejectsNestedNativePackages(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup."
         }
       ],
       "suites": [

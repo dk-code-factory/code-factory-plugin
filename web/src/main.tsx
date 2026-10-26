@@ -1321,13 +1321,16 @@ function ItemDetail({
     };
   }, [id, entry?.item.revision, linkedRevision, detailVersion]);
   useEffect(() => {
-    if (detail?.item.id === id && !detail.refreshError)
+    if (
+      detail?.item.id === id && !detail.refreshError &&
+      (!detail.observation || detail.observation.refresh === "fresh")
+    )
       void action("item_action", {
         id,
         action: "read",
         revision: detail.item.revision,
       });
-  }, [detail?.item.id, detail?.item.revision, detail?.refreshError, id, action]);
+  }, [detail?.item.id, detail?.item.revision, detail?.refreshError, detail?.observation?.refresh, id, action]);
   if (!detail || detail.item.id !== id || !entry)
     return (
       <>
@@ -1896,6 +1899,51 @@ function Launch({
     </div>
   );
 }
+// Older journals split a provider's JSON params into contiguous chunks without
+// an end marker. Frame once, then decode once, including across fetched pages.
+function transcriptEvents(events: JournalEvent[]) {
+  const decoded: JournalEvent[] = [];
+  let pending: JournalEvent[] = [];
+  let depth = 0, quoted = false, escaped = false;
+  const flush = () => {
+    decoded.push(...pending);
+    pending = [];
+    depth = 0;
+    quoted = escaped = false;
+  };
+  for (const event of events) {
+    const method = event.data.method ?? "";
+    if (!method.endsWith("/chunk")) {
+      flush();
+      decoded.push(event);
+      continue;
+    }
+    if (pending.length &&
+        (pending[0].data.method !== method || pending[0].entity !== event.entity)) flush();
+    pending.push(event);
+    for (const char of String(event.data.params?.delta ?? "")) {
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (char === "\\") escaped = true;
+        else if (char === '"') quoted = false;
+      } else if (char === '"') quoted = true;
+      else if (char === "{" || char === "[") depth++;
+      else if (char === "}" || char === "]") depth--;
+    }
+    if (depth === 0 && !quoted) {
+      try {
+        const params: unknown = JSON.parse(pending.map((part) => part.data.params?.delta ?? "").join(""));
+        if (!params || typeof params !== "object" || Array.isArray(params)) throw new Error("Invalid provider params");
+        decoded.push({ ...pending[0], data: { method: method.slice(0, -6), params: params as Record<string, unknown> } });
+        pending = [];
+      } catch {
+        flush();
+      }
+    } else if (depth < 0) flush();
+  }
+  flush();
+  return decoded;
+}
 function transcriptBlocks(events: JournalEvent[]) {
   const blocks: {
     key: number;
@@ -1904,7 +1952,7 @@ function transcriptBlocks(events: JournalEvent[]) {
     text: string;
     details?: string;
   }[] = [];
-  for (const e of events) {
+  for (const e of transcriptEvents(events)) {
     const p = e.data.params ?? {};
     const m = e.data.method ?? "";
     const item = p.item as

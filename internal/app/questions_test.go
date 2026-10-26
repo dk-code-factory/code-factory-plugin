@@ -29,6 +29,85 @@ func pendingQuestion(t *testing.T, a *App, origin string) domain.Attention {
 	return found
 }
 
+func TestRestartMaterializesAlreadyPersistedFallback(t *testing.T) {
+	for _, episode := range []struct {
+		id       string
+		attempts int
+	}{{"repair-fallback", 2}, {"lost-question:native", 0}} {
+		t.Run(episode.id, func(t *testing.T) {
+			record := filepath.Join(t.TempDir(), "provider.jsonl")
+			t.Setenv("CF_FAKE_RECORD", record)
+			a, ctx := fixture(t)
+			run := prepareRun(t, a, ctx)
+			run.Status, run.InterruptRequested = "interrupted", true
+			if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
+				t.Fatal(err)
+			}
+			// Simulate the durable first write from either fallback producer,
+			// followed by a crash before its separate attention write.
+			recovery := domain.QuestionRecovery{ID: episode.id, RunID: run.ID, SourceTurnID: "source-turn", Stage: "fallback", Question: "Which retained scope?", Attempts: episode.attempts}
+			if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
+				t.Fatal(err)
+			}
+			for range 2 {
+				if err := a.Runs.Recover(ctx); err != nil {
+					t.Fatal(err)
+				}
+			}
+			page, err := a.ListAttention(ctx, AttentionInput{RunID: run.ID})
+			if err != nil || len(page.Requests) != 1 {
+				t.Fatal("persisted fallback was lost or duplicated", err, len(page.Requests))
+			}
+			at := page.Requests[0].Request
+			var content struct{ Questions []question }
+			_ = json.Unmarshal(at.Params, &content)
+			if at.ID != recovery.ID+":text" || at.RecoveryID != recovery.ID || at.Origin != "text" || len(at.RequestID) != 0 || len(content.Questions) != 1 || content.Questions[0].Question != recovery.Question {
+				t.Fatal("fallback identity or original question changed", at)
+			}
+			if err := a.Store.Get(ctx, "question-recovery", recovery.ID, &recovery); err != nil || recovery.Stage != "fallback" || recovery.Attempts != episode.attempts {
+				t.Fatal("restart replayed or replaced repair attempts", recovery, err)
+			}
+			if _, err := os.Stat(record); !os.IsNotExist(err) {
+				t.Fatal("fallback materialization invoked provider", err)
+			}
+		})
+	}
+}
+
+func TestTextQuestionFollowupRejectsStaleActiveTurnBeforeClaim(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "hold")
+	record := filepath.Join(t.TempDir(), "provider.jsonl")
+	t.Setenv("CF_FAKE_RECORD", record)
+	a, ctx := fixture(t)
+	run := prepareRun(t, a, ctx)
+	if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		_ = a.Store.Get(ctx, "run", run.ID, &run)
+		return run.Status == "running" && run.TurnID != ""
+	})
+	request := domain.Attention{ID: "active-text", RunID: run.ID, Origin: "text", Method: questionMethod, Status: "pending", TurnID: run.TurnID, Params: raw(map[string]any{"questions": []question{{ID: "reply", Question: "Which retained scope?", IsOther: true}}})}
+	if err := a.Store.Put(ctx, "attention", request.ID, request, ""); err != nil {
+		t.Fatal(err)
+	}
+	before := len(recordedCalls(t, record))
+	for _, expected := range []string{"", "stale-turn"} {
+		if err := a.Runs.Message(ctx, run.ID, "Do not claim this answer", expected); err == nil {
+			t.Fatal("active question accepted a stale turn", expected)
+		}
+	}
+	if err := a.Store.Get(ctx, "attention", request.ID, &request); err != nil || request.Status != "pending" {
+		t.Fatal("stale active message claimed question", request.Status, err)
+	}
+	if _, err := a.Vault.Get(ctx, "attention-answer:"+request.ID); err != store.ErrNotFound {
+		t.Fatal("stale active message retained an answer claim", err)
+	}
+	if len(recordedCalls(t, record)) != before {
+		t.Fatal("stale active message contacted provider")
+	}
+}
+
 func TestStoppedQuestionRecoveryNativeAndFallback(t *testing.T) {
 	for _, tc := range []struct {
 		mode, origin string

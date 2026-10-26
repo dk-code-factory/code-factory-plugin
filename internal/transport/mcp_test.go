@@ -306,9 +306,18 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	if !config.AutoReview || config.ReviewProfileID != "review" || config.PluginCheckMinutes != 60 || config.GitHubRequestsPerHour != 120 || config.GitHubReserve == nil || *config.GitHubReserve != 42 || config.GitHubPollSeconds != 300 {
 		t.Fatal("older settings form overwrote system review defaults")
 	}
-	admin := request("tools/call", map[string]any{"name": "read_plugin_admin", "arguments": map[string]any{}}, true, "2026-07-28")
+	admin := request("tools/call", map[string]any{"name": "read_plugin_admin", "arguments": map[string]any{"freshness": "before-operation"}}, true, "2026-07-28")
 	if admin["isError"] == true || admin["structuredContent"] == nil {
 		t.Fatal("admin inventory read failed", admin)
+	}
+	if err := db.Put(ctx, "plugin-operation", "fresh-operation", domain.PluginOperation{ID: "fresh-operation", Action: "refresh", Status: "succeeded"}, ""); err != nil {
+		t.Fatal(err)
+	}
+	beforePluginRead := db.Latest(ctx)
+	admin = request("tools/call", map[string]any{"name": "read_plugin_admin", "arguments": map[string]any{"freshness": "after-operation"}}, true, "2026-07-28")
+	adminJSON, _ := json.Marshal(admin["structuredContent"])
+	if admin["isError"] == true || !bytes.Contains(adminJSON, []byte("fresh-operation")) || db.Latest(ctx) != beforePluginRead {
+		t.Fatal("fresh plugin read missed saved operation or changed journal", admin)
 	}
 	invalid := request("tools/call", map[string]any{"name": "manage_codex_plugins", "arguments": map[string]any{"action": "install", "target": "--config=invalid"}}, true, "2026-07-28")
 	if invalid["isError"] != true {

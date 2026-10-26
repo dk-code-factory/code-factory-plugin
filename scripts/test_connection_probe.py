@@ -9,7 +9,7 @@ from connection_probe import DEFAULT_BASE, Server, configuration, handler
 
 class ProbeTests(unittest.TestCase):
     def test_configuration(self):
-        configuration()
+        self.assertEqual(configuration()[0], "https://example.invalid/code-factory-probe")
         for base in ['http://host/path', 'https://user:pass@host/path', 'https://host/path?key=secret',
                      'https://host/path#secret', 'https://host/../unsafe', 'https://host/a%2fb', 'https://host:99999/a']:
             with self.assertRaises(ValueError):

@@ -610,7 +610,7 @@ async function host(
   await page.route("**/host", (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>const readCache=new Map();window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{const key=JSON.stringify(m.params);if(${options.memoizeReads ?? false}&&['read_snapshot','read_changes'].includes(m.params.name)){if(readCache.has(key))result=readCache.get(key);else{result=await window.hostCall(m.params);readCache.set(key,structuredClone(result))}}else result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
+      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>const readCache=new Map();window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{const key=JSON.stringify(m.params);if(${options.memoizeReads ?? false}&&['read_snapshot','read_changes','read_plugin_admin'].includes(m.params.name)){if(readCache.has(key))result=readCache.get(key);else{result=await window.hostCall(m.params);readCache.set(key,structuredClone(result))}}else result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
     }),
   );
   await page.goto("/host");
@@ -3979,7 +3979,7 @@ for (const theme of ["light", "dark"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    const { ui, calls } = await host(page, { surface: "settings", theme });
+    const { ui, calls } = await host(page, { surface: "settings", theme, memoizeReads: true });
     await ui.getByText("Plugins & skills", { exact: true }).click();
     const plugin = ui.locator(".plugin-row").filter({
       has: ui.getByRole("heading", { name: "review-kit", exact: true }),
@@ -4058,6 +4058,10 @@ for (const theme of ["light", "dark"] as const) {
     expect(
       await ui.locator("body").evaluate((e) => e.scrollWidth <= e.clientWidth),
     ).toBe(true);
+    const reads = calls.filter((c) => c.name === "read_plugin_admin");
+    expect(reads.length).toBeGreaterThan(2);
+    expect(reads.every((c) => typeof c.arguments.freshness === "string")).toBe(true);
+    expect(new Set(reads.map((c) => c.arguments.freshness)).size).toBe(reads.length);
   });
 }
 
@@ -4084,7 +4088,10 @@ test("uncertain plugin mutations preserve drafts and never replay automatically"
   await expect(ui.getByLabel("Plugin selector", { exact: true })).toHaveValue(
     "my-review@my-market",
   );
-  await page.waitForTimeout(1500);
+  const reads = calls.filter((c) => c.name === "read_plugin_admin").length;
+  await ui.getByLabel("Search Codex plugins").fill("review");
+  await expect.poll(() => calls.filter((c) => c.name === "read_plugin_admin").length).toBeGreaterThan(reads);
+  await expect(ui.getByRole("alert")).toContainText("Delivery could not be confirmed");
   expect(calls.filter((c) => c.name === "manage_codex_plugins")).toHaveLength(
     1,
   );
@@ -4771,6 +4778,38 @@ test("reported issues paginates and filters processing component and version", a
     ui.getByRole("button", { name: "Load more reports" }),
   ).toBeEnabled();
 });
+test("plugin status polling clears recovered read failures while retaining drafts", async ({ page }) => {
+  let unavailable = true;
+  const { ui, calls } = await host(page, {
+    surface: "settings",
+    transportFault: (name) => unavailable && name === "read_plugin_admin",
+  });
+  await ui.getByText("Plugins & skills", { exact: true }).click();
+  await ui.getByLabel("Plugin selector", { exact: true }).fill("retained@draft");
+  const readError = ui.getByRole("alert").filter({ hasText: "Could not read plugin status" });
+  await expect(readError).toBeVisible();
+  unavailable = false;
+  await expect(readError).toHaveCount(0, { timeout: 15000 });
+  await expect(ui.getByRole("heading", { name: "review-kit", exact: true })).toBeVisible();
+  await expect(ui.getByLabel("Plugin selector", { exact: true })).toHaveValue("retained@draft");
+  expect(calls.filter((c) => c.name === "manage_codex_plugins")).toHaveLength(0);
+});
+
+test("system defaults display and retain a supported nonpreset plugin interval", async ({ page }) => {
+  const snapshot = initial();
+  snapshot.config.pluginCheckMinutes = 30;
+  const { ui, calls, state } = await host(page, { snapshot, surface: "settings" });
+  await ui.getByText("System defaults", { exact: true }).click();
+  const interval = ui.getByLabel("Plugin update check interval");
+  await expect(interval).toHaveValue("30");
+  await expect(interval.locator("option:checked")).toHaveText("Every 30 minutes");
+  await ui.getByLabel("Request budget per hour", { exact: true }).fill("120");
+  await ui.getByRole("button", { name: "Save system defaults", exact: true }).click();
+  await expect.poll(() => state.config.githubRequestsPerHour).toBe(120);
+  expect(calls.find((c) => c.name === "save_settings")?.arguments.pluginCheckMinutes).toBe(30);
+  expect(state.config.pluginCheckMinutes).toBe(30);
+});
+
 test("repository review pipeline overrides system defaults and plugin skills remain selectable", async ({
   page,
 }) => {
@@ -5039,11 +5078,75 @@ for (const theme of ["light", "dark"] as const) {
     await expect(ui.getByText("Refreshing saved details…",{exact:true})).toBeVisible();
     await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toBeVisible();
     await expect(ui.getByText("Saved receipt available immediately",{exact:true})).toBeVisible();
+    expect(calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read")).toHaveLength(0);
     pending=false;
     await expect(ui.getByText("Refreshing saved details…",{exact:true})).toHaveCount(0);
     await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toHaveCount(0);
+    await expect.poll(()=>calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read").length).toBe(1);
     expect(calls.filter(c=>["start_run","prepare_launch","prepare_pr_review"].includes(c.name))).toHaveLength(0);
     expect(new Set(calls.filter(c=>c.name==="read_pr_reviews").map(c=>c.arguments.freshness)).size).toBeGreaterThan(1);
     await scanOwnedApp(page,`${theme}-saved-observations`);
   });
 }
+
+for (const refresh of ["paused", "cooldown", "unavailable"] as const) {
+  test(`saved unread details remain unread when refresh is ${refresh} without an error`, async ({ page }) => {
+    const { ui, calls, state } = await host(page, {
+      readItem: async (detail) => ({ ...detail, observation: { observedAt: "2026-10-24T01:00:00Z", refresh } }),
+    });
+    await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+    await expect(ui.getByRole("heading", { name: "Fix reconnect regression", exact: true })).toBeVisible();
+    await ui.getByLabel("Agent pipeline", { exact: true }).selectOption("implement");
+    await ui.getByRole("textbox", { name: "Message agent", exact: true }).fill("Keep the saved conversation draft.");
+    expect(state.inbox[0].unread).toBe(true);
+    expect(calls.filter((c) => c.name === "item_action" && c.arguments.action === "read")).toHaveLength(0);
+    expect(calls.filter((c) => ["prepare_launch", "start_run"].includes(c.name))).toHaveLength(0);
+  });
+}
+
+test("chunked owner and agent completions remain normal conversation across journal pages", async ({ page }) => {
+  const snapshot = initial();
+  snapshot.runs = [retained(snapshot, "chunked-conversation")];
+  const transcript: JournalEvent[] = [];
+  const event = (method: string, params: Record<string, unknown>) => transcript.push({
+    seq: transcript.length + 1, kind: "run.output", entity: "chunked-conversation",
+    at: "2026-10-24T01:00:00Z", data: { method, params },
+  });
+  for (let n = 0; n < 99; n++) event("ignored", {});
+  const chunk = (params: Record<string, unknown>) => {
+    const bytes = Buffer.from(JSON.stringify(params));
+    for (let start = 0; start < bytes.length;) {
+      let end = Math.min(start + (32 << 10), bytes.length);
+      while (end < bytes.length && (bytes[end] & 0xc0) === 0x80) end--;
+      event("item/completed/chunk", { delta: bytes.subarray(start, end).toString() });
+      start = end;
+    }
+  };
+  const owner = `Owner message ${'é {quoted "value"} \\ '.repeat(2200)}owner end`;
+  const agent = `Agent reply ${'🧭 [nested] "reply" \\ '.repeat(2200)}agent end`;
+  chunk({ item: { id: "owner-large", type: "userMessage", content: [{ text: owner }] } });
+  event("item/agentMessage/delta", { itemId: "agent-large", delta: "Temporary streamed prefix" });
+  chunk({ item: { id: "agent-large", type: "agentMessage", text: agent } });
+  chunk({ item: { id: "owner-next", type: "userMessage", content: [{ text: "Adjacent completed owner message" }] } });
+  event("item/completed/chunk", { delta: '{"item":{"type":"agentMessage","text":"partial secret' });
+  event("item/completed", { item: { id: "command", type: "commandExecution", command: "fixture command", aggregatedOutput: "Technical output only" } });
+  event("item/completed/chunk", { delta: "malformed provider JSON" });
+  const { ui, calls } = await host(page, { snapshot, transcript });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  const conversation = ui.locator('[aria-label="Conversation"]');
+  await expect(conversation.getByText(owner, { exact: true })).toBeVisible();
+  await expect(conversation.getByText(agent, { exact: true })).toBeVisible();
+  await expect(conversation.getByText("Adjacent completed owner message", { exact: true })).toBeVisible();
+  await expect(conversation.locator("article").filter({ has: ui.getByText(owner, { exact: true }) }).locator("small")).toHaveText("You");
+  await expect(conversation.locator("article").filter({ has: ui.getByText(agent, { exact: true }) }).locator("small")).toHaveText("Agent");
+  await expect(conversation.getByText("Temporary streamed prefix", { exact: true })).toHaveCount(0);
+  await expect(conversation).not.toContainText("partial secret");
+  await expect(conversation).not.toContainText("Technical output only");
+  await expect(conversation).not.toContainText("malformed provider JSON");
+  const details = ui.locator("details").filter({ has: ui.locator("summary").getByText("Details", { exact: true }) });
+  await expect(details).not.toHaveAttribute("open");
+  await details.locator("summary").click();
+  await expect(ui.getByText(/partial secret/)).toBeVisible();
+  await expect(ui.getByText("malformed provider JSON", { exact: true })).toBeVisible();
+  expect(calls.filter((c) => c.name === "read_transcript").some((c) => c.arguments.after === 100)).toBe(true);
+});

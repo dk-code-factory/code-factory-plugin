@@ -214,6 +214,7 @@ flowchart TD
 - [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestReviewExecutionReadsFreshPrincipalWithoutSavedLogin(`; S6, S8. Managed execution uses the active principal even without a saved login and never falls back to old singleton evidence.
 - [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestReviewStartReturnsWhileActiveIdentityReadIsBlocked(`; S2, S6. Start returns queued while a controlled User request is blocked; no workspace exists until asynchronous current-principal validation completes.
 - [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestNonReviewPreparationAndStartDoNotReadPrincipal(`; S6. Preparation remains saved-state only and explicit nonreview Start makes no User call while retaining its existing source check.
+- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(`; S3. Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables.
 
 ## Verification and gaps
 

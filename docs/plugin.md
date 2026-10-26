@@ -170,13 +170,14 @@ request attempts.
 Legacy zero/unset budget or interval values use those defaults; an unset reserve
 uses 100. The counter is a cached Settings snapshot and reads no quota endpoint.
 
-All daemon REST/GraphQL reads, manual polls and selected details use one persistent
-serialized gate. Request attempts, including conditional requests, count against
+REST and GraphQL requests through the daemon's GitHub provider, including
+manual polls and selected details, use one persistent serialized gate. Request attempts, including conditional requests, count against
 the local allowance; cached reads do not. GitHub reset/Retry-After/polling headers
 and conditional validators are honored. Normal polling imports summaries rather
 than every PR's reviews, comments, commits and checks. Full details refresh for
 selected/tracked work; unavailable details retain saved content and explicit Retry.
 
-Plugins, skills, agent commands and other clients use GitHub independently of this
-cap. Inspect their usage separately before increasing the allowance. Verify each
-installation separately using the [acceptance guide](acceptance.md).
+Explicit Codex dependency checks and updates fetch release metadata and artifacts
+outside this gate. Plugins, skills, agent commands and other clients also use
+GitHub independently of this cap. Inspect their usage separately before increasing
+the allowance. Verify each installation separately using the [acceptance guide](acceptance.md).

@@ -210,10 +210,12 @@ an API repository lookup. No global authentication configuration is replaced.
 Notification GET includes read threads and never marks them read/done. Changed
 configured PRs are fetched once per observed notification update; periodic lists
 cover absent notifications. Saved details and unread state survive deferred reads.
-Do not force repeated polls during a server cooldown. Independent plugin/skill/
-agent commands and other GitHub clients are outside the daemon cap. The optional,
-disabled alternate-tunnel installer has one explicit unauthenticated release
-lookup when its client is absent; it is not a background poll of this pilot.
+Do not force repeated polls during a server cooldown. Explicit Codex dependency
+checks and updates fetch release metadata and artifacts outside the provider gate.
+Independent plugin/skill/agent commands and other GitHub clients are also outside
+the daemon provider cap. The optional, disabled alternate-tunnel installer has
+one explicit unauthenticated release lookup when its client is absent; it is
+not a background poll of this pilot.
 
 Verify quota controls on each installation and retain private evidence outside
 the checkout. Callback, soak, login and manual accessibility acceptance remain
@@ -230,7 +232,9 @@ configuration remain readable. Unrelated owner files are excluded.
 
 The enforced command proxy allows `api.github.com`, `github.com`,
 `raw.githubusercontent.com`, `objects.githubusercontent.com`,
-`codeload.github.com`, `api.openai.com`, `chatgpt.com` and `auth.openai.com`.
+`codeload.github.com`, `api.openai.com`, `chatgpt.com`, `auth.openai.com`,
+`ab.chatgpt.com`, `sdmntprcentralus.oaiusercontent.com`,
+`developers.openai.com` and `learn.chatgpt.com`.
 Other destinations, localhost and private-network access remain blocked. Temporary
 artifacts and isolated review clones belong under `TMPDIR`. Skill data indexes for
 repository rules and PR decisions are bounded per-run copies under `XDG_DATA_HOME`;

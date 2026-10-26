@@ -27,7 +27,7 @@ Closing the view or transport does not stop work. Startup leaves completed idle 
 - **S2** Sending a message restores retained work and starts exactly that message instead of replaying its original task.
 - **S3** Dirty cleanup retains the workspace after interrupting the retained session; continuation happens by sending a message. Clean stopped workspace cleanup retains history.
 
-- **S4** Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.
+- **S4** Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. A restart between saving a fallback episode and presenting its question restores the unanswered question once, without replaying repair attempts or reopening a claimed answer.
 
 Plugin maintenance also survives view closure. Startup marks queued/running operations uncertain without replay; a failed/null inventory response retains the previous observations. Refreshing actual provider state precedes any user-chosen retry. Existing run recovery and cleanup do not remove plugin installation history.
 
@@ -169,6 +169,8 @@ flowchart TD
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationHelperFailureRetainsQuestions(`; S1. An invalid helper decision leaves both original requests pending after delivery and continuation.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestClientlessCleanupSerializesWakeWithoutBlockingManager(`; S2, S3. A real-store blocked cleanup serializes the same run's wake without blocking independent manager lookup; invalid IDs create no bookkeeping owner and disconnected attachment semantics remain.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSourceTerminationUnblocksProviderAndIndependentOperations(`; S6. An unanswered provider RPC and earlier Start/busy/Cleanup waiter cannot block source termination or independent run lookup; accepted message delivery becomes uncertain without replay, and retired work remains terminal.
+- [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestRestartMaterializesAlreadyPersistedFallback(`; S1, S4. A stored fallback checkpoint without attention is materialized once across repeated restarts, preserving original question/episode IDs and attempt count without provider invocation.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(`; S2. Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects.
 
 ## Verification and gaps
 

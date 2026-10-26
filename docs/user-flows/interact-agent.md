@@ -42,6 +42,7 @@ Take over after a repair answer preserves the claimed answer while cancelling it
 Takeover waiting for a busy recovery turn leaves other runs available to start and present their questions.
 Take over also cancels recovery before its first question-only turn. Late questions from that cancelled recovery do not return; a later explicit continuation can ask new genuine questions.
 Conversation rendering keeps human-facing agent messages and your replies visible. Technical activity remains under Details, with structured error data there and the readable error message visible. Streaming updates preserve that distinction; a technical-only active stream shows a concise waiting status. Pending questions and approvals remain actionable outside Details.
+Conversation rendering keeps human-facing agent messages and your replies visible, including long messages retained across multiple transcript pages. Technical activity remains under Details, with structured error data there and the readable error message visible. Streaming updates preserve that distinction; a technical-only active stream shows a concise waiting status. Pending questions and approvals remain actionable outside Details.
 
 - **S4** Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.
 
@@ -182,6 +183,9 @@ flowchart TD
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(`; S6. Partial acknowledgement retires only Q1, retains actionable Q2 and permits its answer; full same-run acknowledged completion clears the group; unrelated continuation preserves both.
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(`; S6. Other-run review completion, forged quotes/IDs, reversed evidence order and an intervening run turn cannot retire the original requests.
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationHelperFailureRetainsQuestions(`; S6. An invalid helper decision leaves both original requests pending after delivery and continuation.
+- [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestTextQuestionFollowupRejectsStaleActiveTurnBeforeClaim(`; S2, S6. Wrong or empty active-turn tokens reject a textual follow-up before attention/Vault claim or provider request; pending question remains.
+- [internal/app/messages_test.go](../../internal/app/messages_test.go) — `func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(`; S1, S6. Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `chunked owner and agent completions remain normal conversation across journal pages`; S1. Long owner/unstreamed agent Unicode and escaped completions across a journal page retain You/Agent roles and ID coalescing in the normal conversation; raw partial/malformed and command output stay under initially collapsed Details.
 
 ## Verification and gaps
 

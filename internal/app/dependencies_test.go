@@ -193,6 +193,97 @@ func TestGitHubSkillUpgradePreservesBackupRejectsEditsAndUnsafeSource(t *testing
 	}
 }
 
+func TestGitHubSkillUpgradeRejectsNestedNativePackages(t *testing.T) {
+	for _, tc := range []struct {
+		name, skillPath, manifest string
+	}{
+		{"root-native", "skills/example", ".codex-plugin/plugin.json"},
+		{"nested-native", "plugin/skills/example", "plugin/.codex-plugin/plugin.json"},
+		{"deep-standalone", "nested/skills/example", "unrelated/.codex-plugin/plugin.json"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			t.Setenv("HOME", home)
+			target := filepath.Join(home, ".codex/skills/example")
+			if err := os.MkdirAll(target, 0700); err != nil {
+				t.Fatal(err)
+			}
+			original := "---\nname: example\n---\noriginal"
+			if err := os.WriteFile(filepath.Join(target, "SKILL.md"), []byte(original), 0600); err != nil {
+				t.Fatal(err)
+			}
+			var archive bytes.Buffer
+			gz := gzip.NewWriter(&archive)
+			tw := tar.NewWriter(gz)
+			updated := "---\nname: example\n---\nupdated"
+			for name, body := range map[string]string{
+				tc.skillPath + "/SKILL.md": updated,
+				tc.manifest:                `{"name":"fixture","skills":"./skills"}`,
+				"plugin/assets/helper":     "package resource",
+			} {
+				if err := tw.WriteHeader(&tar.Header{Name: "repo/" + name, Mode: 0644, Size: int64(len(body)), Typeflag: tar.TypeReg}); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := tw.Write([]byte(body)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := tw.Close(); err != nil {
+				t.Fatal(err)
+			}
+			if err := gz.Close(); err != nil {
+				t.Fatal(err)
+			}
+			archivePath := filepath.Join(t.TempDir(), "repo.tar.gz")
+			if err := os.WriteFile(archivePath, archive.Bytes(), 0600); err != nil {
+				t.Fatal(err)
+			}
+			sha := strings.Repeat("a", 40)
+			gh := filepath.Join(t.TempDir(), "gh")
+			quote := func(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'" }
+			script := "#!/bin/sh\ncase \"$2\" in */tarball/*) exec cat " + quote(archivePath) + ";; *) printf '%s\\n' " + quote(sha) + ";; esac\n"
+			if err := os.WriteFile(gh, []byte(script), 0700); err != nil {
+				t.Fatal(err)
+			}
+			a, ctx := fixture(t)
+			a.Runs.ProviderPaths = map[string]string{"gh": gh}
+			source, err := a.Runs.RegisterGitHubSkill(ctx, GitHubSkillSource{Name: "example", Root: "codex", Repository: "owner/repo", Path: tc.skillPath, Ref: "main"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			op, err := a.Runs.UpdateDependencies(ctx, DependencyRequest{ID: "package-check", Action: "update", Targets: []string{"skills"}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			done := dependencyDone(t, a, op.ID)
+			current, err := os.ReadFile(filepath.Join(target, "SKILL.md"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var stored GitHubSkillSource
+			if err := a.Store.Get(ctx, "dependency-skill-source", source.id(), &stored); err != nil {
+				t.Fatal(err)
+			}
+			if tc.name != "deep-standalone" {
+				if done.Status != "partial" || len(done.Results) != 1 || done.Results[0].Status != "failed" || !strings.Contains(done.Results[0].Detail, "native plugin") {
+					t.Fatal("native skill leaf was not rejected", done)
+				}
+				if string(current) != original || string(raw(stored)) != string(raw(source)) {
+					t.Fatal("native rejection changed installed skill or provenance")
+				}
+				if _, err := os.Stat(filepath.Join(a.DataDir, "dependency-backups", op.ID)); !os.IsNotExist(err) {
+					t.Fatal("native rejection began replacement", err)
+				}
+			} else {
+				backup, err := os.ReadFile(filepath.Join(a.DataDir, "dependency-backups", op.ID, "skills/codex/example/SKILL.md"))
+				if done.Status != "succeeded" || string(current) != updated || stored.Revision != sha || err != nil || string(backup) != original {
+					t.Fatal("deep standalone skill lost update or backup", done, err)
+				}
+			}
+		})
+	}
+}
+
 func TestCodexActivationUpdatesRecordedProviderAndKeepsPriorRuntime(t *testing.T) {
 	a, ctx := fixture(t)
 	bin := a.Runs.CodexBinary()

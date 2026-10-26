@@ -1035,7 +1035,11 @@ func (m *Manager) answerSynthetic(ctx context.Context, a domain.Attention, resul
 			s.mu.Unlock()
 		}
 	}()
-	if expected != nil && (locked && *expected != s.run.TurnID || !locked && *expected != "") {
+	activeTurn := ""
+	if locked && !s.disconnected && !s.stopped() && (s.run.Status == "running" || s.run.Status == "waiting") {
+		activeTurn = s.run.TurnID
+	}
+	if expected != nil && *expected != activeTurn {
 		return fmt.Errorf("active turn changed; refresh before sending")
 	}
 	// Retain redaction values encrypted, including fallback answers whose

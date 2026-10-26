@@ -42,6 +42,7 @@ export function PluginAdmin({ skills }: { skills: Snapshot["skills"] }) {
   const [ref, setRef] = useState("");
   const [selector, setSelector] = useState("");
   const [error, setError] = useState("");
+  const [readError, setReadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [request, setRequest] = useState<Operation>();
   const load = useCallback(
@@ -63,6 +64,7 @@ export function PluginAdmin({ skills }: { skills: Snapshot["skills"] }) {
         const next = await load();
         if (!stop) {
           setState(next);
+          setReadError("");
           busy = next.operations.some((op) =>
             ["queued", "running"].includes(op.status),
           );
@@ -70,7 +72,7 @@ export function PluginAdmin({ skills }: { skills: Snapshot["skills"] }) {
             setRequest(undefined);
         }
       } catch (e) {
-        if (!stop) setError(`Could not read plugin status: ${String(e)}`);
+        if (!stop) setReadError(`Could not read plugin status: ${String(e)}`);
       }
       if (!stop) timer = setTimeout(refresh, busy ? 1000 : 10000);
     }
@@ -122,6 +124,7 @@ export function PluginAdmin({ skills }: { skills: Snapshot["skills"] }) {
         </button>
       </div>
       {error && <p role="alert">{error}</p>}
+      {readError && <p role="alert">{readError}</p>}
       {state?.inventory.error && <p role="alert">{state.inventory.error}</p>}
       <p role="status">
         {busy
@@ -607,6 +610,11 @@ export function SystemReviewSettings({
             change({ ...config, pluginCheckMinutes: Number(e.target.value) })
           }
         >
+          {![0, 15, 60, 1440].includes(config.pluginCheckMinutes ?? 0) && (
+            <option value={config.pluginCheckMinutes}>
+              Every {config.pluginCheckMinutes} minutes
+            </option>
+          )}
           <option value={0}>Manual checks</option>
           <option value={15}>Every 15 minutes</option>
           <option value={60}>Every hour</option>

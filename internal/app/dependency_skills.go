@@ -214,10 +214,15 @@ func (m *Manager) installGitHubSkill(ctx context.Context, opID string, source Gi
 		return fmt.Errorf("GitHub archive must have one repository root")
 	}
 	repo := filepath.Join(extracted, roots[0].Name())
-	if _, err = os.Stat(filepath.Join(repo, ".codex-plugin", "plugin.json")); err == nil {
-		return fmt.Errorf("source is a native plugin; update it through the plugin manager to retain package resources")
-	}
 	candidate := filepath.Join(repo, filepath.FromSlash(source.Path))
+	for owner := candidate; ; owner = filepath.Dir(owner) {
+		if _, err = os.Stat(filepath.Join(owner, ".codex-plugin", "plugin.json")); err == nil {
+			return fmt.Errorf("source is a native plugin; update it through the plugin manager to retain package resources")
+		}
+		if owner == repo {
+			break
+		}
+	}
 	digest, err := dependencies.TreeDigest(candidate)
 	if err != nil {
 		return fmt.Errorf("GitHub skill path is missing or invalid")

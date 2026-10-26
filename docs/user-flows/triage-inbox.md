@@ -132,6 +132,7 @@ flowchart TD
 - [internal/transport/reads_bench_test.go](../../internal/transport/reads_bench_test.go) — `func TestReadPerformancePilotFixture(`; S6. Opt-in loopback latency and size assertions, measured separately; ordinary Go verification skips this benchmark.
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestFreshDetailKeepsMonitoringFocusWithoutProviderRefresh(`; S6. A fresh local detail read retains the original selected-item monitoring focus without scheduling provider work.
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(`; S6. Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `saved unread details remain unread when refresh is`; S5, S6. Paused/cooldown/unavailable observations with no error retain visible saved details and unread state; draft editing does not mark read or launch.
 
 ## Verification and gaps
 

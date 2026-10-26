@@ -3,6 +3,7 @@ package app
 import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -269,6 +270,77 @@ func TestSelectedDiscoveredSkillKeepsItsBundleAndAutomaticChecksDoNotInstall(t *
 	commands, _ := os.ReadFile(filepath.Join(root, "commands"))
 	if strings.Contains(string(commands), `"add"`) {
 		t.Fatal("scheduled check installed a plugin")
+	}
+}
+
+func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(t *testing.T) {
+	root := pluginFixture(t)
+	skillRoot := filepath.Join(root, "skills", "example")
+	if err := os.MkdirAll(skillRoot, 0700); err != nil {
+		t.Fatal(err)
+	}
+	entry := filepath.Join(skillRoot, "SKILL.md")
+	if err := os.WriteFile(entry, []byte("---\nname: example\n---\nretained content"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("CF_FAKE_SKILL_ROOT", skillRoot)
+	a, ctx := fixture(t)
+	if err := a.Runs.SaveSkill(ctx, domain.Skill{Name: "managed", Content: "---\nname: managed\n---\nowner content"}); err != nil {
+		t.Fatal(err)
+	}
+	operate := func(action string) {
+		t.Helper()
+		target := ""
+		if action == "remove" {
+			target = "fixture@fixture"
+		}
+		op, err := a.Runs.PluginAction(ctx, PluginAction{Action: action, Target: target})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if done := pluginDone(t, a, op.ID); done.Status != "succeeded" {
+			t.Fatal(done)
+		}
+	}
+	operate("discover-skills")
+	run := prepareRun(t, a, ctx)
+	prepared, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: run.ItemID, ProfileID: "review", SkillIDs: []string{entry}})
+	if err != nil || len(prepared.Skills) != 1 {
+		t.Fatal("discovered skill was unavailable before removal", err)
+	}
+	failed, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, err := a.Runs.discoverAdminSkills(failed); err == nil {
+		t.Fatal("cancelled discovery reported a complete result")
+	}
+	var skill domain.Skill
+	if err := a.Store.Get(ctx, "skill", entry, &skill); err != nil || skill.Disabled {
+		t.Fatal("failed discovery disabled the known skill", skill, err)
+	}
+	// Successful native removal omits this skill, although package/cache files
+	// remain available for retained snapshots and possible future reinstallation.
+	t.Setenv("CF_FAKE_SKILL_ROOT", "")
+	operate("remove")
+	if _, err := os.Stat(entry); err != nil {
+		t.Fatal("probe removed the cached skill files", err)
+	}
+	if err := a.Store.Get(ctx, "skill", entry, &skill); err != nil || !skill.Disabled {
+		t.Fatal("omitted skill remained enabled", skill, err)
+	}
+	if _, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: run.ItemID, ProfileID: "review", SkillIDs: []string{entry}}); err == nil {
+		t.Fatal("removed plugin skill was newly prepared from cached files")
+	}
+	var retained domain.Run
+	if err := a.Store.Get(ctx, "run", prepared.ID, &retained); err != nil || string(raw(retained)) != string(raw(prepared)) {
+		t.Fatal("removal changed a frozen prepared snapshot", err)
+	}
+	if _, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: run.ItemID, ProfileID: "review", SkillIDs: []string{"managed:managed"}}); err != nil {
+		t.Fatal("discovery disabled owner-managed skill", err)
+	}
+	t.Setenv("CF_FAKE_SKILL_ROOT", skillRoot)
+	operate("discover-skills")
+	if _, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: run.ItemID, ProfileID: "review", SkillIDs: []string{entry}}); err != nil {
+		t.Fatal("rediscovered skill remained unavailable", err)
 	}
 }
 

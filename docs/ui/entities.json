@@ -18,7 +18,6 @@
         "PAGE-AGENTS",
         "D-LAUNCH",
         "D-ATTENTION",
-        "PAGE-REPORTS",
         "PAGE-AGENT",
         "PAGE-MY-PRS",
         "PAGE-REVIEW-PRS",
@@ -69,7 +68,6 @@
         "API-UI",
         "UI-AXE-CORE",
         "API-UI-CONTENT",
-        "UI-REPORTS-NAV-NARROW",
         "UI-SINGLE-PAGE",
         "UI-NO-INLINE-SETTINGS",
         "UI-WORK-QUEUES",
@@ -223,10 +221,6 @@
           "term": "element-w-navigation-attention-count"
         },
         {
-          "id": "W-NAVIGATION.reports",
-          "term": "element-w-navigation-reports"
-        },
-        {
           "id": "W-NAVIGATION.back",
           "term": "element-w-navigation-back"
         },
@@ -292,8 +286,6 @@
         "UI-ASSEMBLED",
         "API-UI",
         "API-UI-CONTENT",
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-NAV-NARROW",
         "UI-NO-MATCHES",
         "UI-ATTENTION-CONTEXT",
         "UI-SINGLE-PAGE",
@@ -500,89 +492,6 @@
       "element_description": "**connecting** status and persistent **blocker** feedback while reads retry.",
       "state_description": "Initial handshake failures are retried with a fresh bridge instance. Transient failures show Reconnecting; repeated failures show automatic-retry feedback. Success clears only connection/read feedback.",
       "interactions": "Known read operations retry bounded transient transport failures; startup polling keeps retrying instead of retaining a rejected initialization promise. No credentials or reconnect-consent prompt is introduced."
-    },
-    {
-      "id": "W-CONTINUITY-NOTICE",
-      "kind": "widget",
-      "terms": [
-        "ui-w-continuity-notice",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [
-        {
-          "id": "W-CONTINUITY-NOTICE.runs-survive-close",
-          "term": "element-w-continuity-notice-runs-survive-close"
-        },
-        {
-          "id": "W-CONTINUITY-NOTICE.computer-online",
-          "term": "element-w-continuity-notice-computer-online"
-        }
-      ],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-TRIAGE",
-        "UI-ASSEMBLED",
-        "API-UI",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-w-continuity-notice-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Core light/dark iframe states have automated A/AA-tag scans and keyboard modal fixtures. Initial/poll failures, all attention variants, responsive layouts, assistive technology and installed-host accessibility remain unverified; incomplete automated nodes need manual review.",
-          "next_verification": "Review incomplete scan nodes and exercise remaining failure/attention variants, screen-reader use and responsive layouts in the installed host; retain separate automated and manual evidence."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser",
-        "go"
-      ],
-      "element_description": "**runs-survive-close** notice; **computer-online** notice.",
-      "state_description": "Always displayed in the shell footer.",
-      "interactions": "Informational; closing the host view is not an interrupt action."
     },
     {
       "id": "W-INBOX-QUERY",
@@ -1079,7 +988,8 @@
         "UI-CONNECT-HOST-WRAP",
         "UI-CONNECT-HOST-MUTATION",
         "UI-DETAIL-DEFERRED",
-        "UI-ITEM-SUMMARY-MARKDOWN"
+        "UI-ITEM-SUMMARY-MARKDOWN",
+        "UI-DETAIL-OBSERVATION-READ"
       ],
       "gaps": [
         {
@@ -1099,7 +1009,7 @@
       ],
       "element_description": "**loading**, **title** once, compact **id**/**state** and optional PR **kind**, nonempty **body**. Local **read-error** feedback and a **retry** button for nontransport failures.",
       "state_description": "Item summary and context on the conversation page. Transient loading failures retry with bounded backoff while Back remains available; stale responses are ignored. Tool/business failures require explicit Retry loading item.",
-      "interactions": "Shows the matching item title, identifier and the first substantive source-description paragraph above chat, skipping Markdown-only headings; full description is available in Item details. A successful matching read clears its own failure before the displayed revision is marked read. A deferred provider refresh retains saved information and offers Retry without marking it read until a successful refresh."
+      "interactions": "Shows the matching item title, identifier and the first substantive source-description paragraph above chat, skipping Markdown-only headings; full description is available in Item details. A successful matching read clears its own failure before the displayed revision is marked read. A deferred provider refresh retains saved information and offers Retry without marking it read until a successful refresh. Saved pending, paused, cooldown and unavailable observations remain unread until a successful fresh display; legacy details without observation metadata retain their existing read behavior."
     },
     {
       "id": "W-ITEM-ACTIONS",
@@ -2321,7 +2231,8 @@
         "UI-CONNECT-TRANSCRIPT",
         "UI-CONVERSATION-EMPTY",
         "UI-SESSION-CONSOLE",
-        "UI-QUEUED-MESSAGE"
+        "UI-QUEUED-MESSAGE",
+        "UI-CONVERSATION-CHUNKS"
       ],
       "gaps": [
         {
@@ -2339,7 +2250,7 @@
         "browser"
       ],
       "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too.",
-      "state_description": "The normal conversation contains agent progress/final messages, user replies, saved-message delivery status and readable errors. Saved messages show queued, delivering, delivered or uncertain feedback; changes replace the same message status block. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role.",
+      "state_description": "The normal conversation contains agent progress/final messages, user replies, saved-message delivery status and readable errors. Saved messages show queued, delivering, delivered or uncertain feedback; changes replace the same message status block. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role. Completed owner and agent messages remain normal Conversation content across fetched journal pages; incomplete or malformed raw fragments remain technical activity under Details.",
       "interactions": "Details reveals retained technical activity without starting or changing agent work. Pending question/approval controls remain outside the collapsed data. History paging/reset and the 1,000-event retained limit remain unchanged. Session console reveals the full event stream using the same session and reply draft."
     },
     {
@@ -2425,6 +2336,8 @@
         "UI-WAKE-MESSAGE",
         "UI-TERMINATED-WORK",
         "UI-QUEUED-MESSAGE",
+        "API-QUESTION-ACTIVE-TURN",
+        "API-INACTIVE-QUESTION-FOLLOWUP",
         "UI-ANSWER-CONFIRMATION",
         "UI-QUESTION-RECOVERY",
         "UI-CLARIFICATION"
@@ -2678,7 +2591,8 @@
         "UI-AXE-CORE",
         "API-UI-CONTENT",
         "UI-DRAFT-LAUNCHES",
-        "UI-READABLE-APPROVALS"
+        "UI-READABLE-APPROVALS",
+        "ADMIN-REMOVED-SKILL"
       ],
       "gaps": [
         {
@@ -2806,7 +2720,8 @@
         "UI-START-CONFIRMED",
         "UI-READABLE-APPROVALS",
         "ADMIN-PLUGIN-GATE",
-        "UI-FULL-ACCESS"
+        "UI-FULL-ACCESS",
+        "ADMIN-REMOVED-SKILL"
       ],
       "gaps": [
         {
@@ -2920,7 +2835,9 @@
         "UI-KEYBOARD-ATTENTION",
         "UI-AXE-CORE",
         "API-UI-CONTENT",
-        "UI-TEXT-DISMISS"
+        "UI-TEXT-DISMISS",
+        "API-FALLBACK-RESTART",
+        "API-QUESTION-ACTIVE-TURN"
       ],
       "gaps": [
         {
@@ -3479,99 +3396,6 @@
       "element_description": "Repeated **priority-labels** label/priority rows with **add-label**/**remove-label**, **assessment-prompt**, **notifications**, **save**, **save-result**. Optional question helper model, defaulting to the session model.",
       "state_description": "Collapsed initially. Each label maps to P0/P1/P2/P3; empty or duplicate labels are rejected inline. Saving disables the form; success/errors stay beside it.",
       "interactions": "Save changes policy/configuration, invalidating dependent assessments. The notifications checkbox is not a subscription-management UI and cannot make an unsupported host subscribe."
-    },
-    {
-      "id": "W-JIRA-CREDENTIAL",
-      "kind": "widget",
-      "terms": [
-        "ui-w-jira-credential",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [
-        {
-          "id": "W-JIRA-CREDENTIAL.token",
-          "term": "element-w-jira-credential-token"
-        },
-        {
-          "id": "W-JIRA-CREDENTIAL.save-securely",
-          "term": "element-w-jira-credential-save-securely"
-        },
-        {
-          "id": "W-JIRA-CREDENTIAL.read-only-notice",
-          "term": "element-w-jira-credential-read-only-notice"
-        }
-      ],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Settings(",
-          "purpose": "Drafts are component-local; most saves use shared `action`, while credential/diagnostic requests use direct bridge calls."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-SETTINGS",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-w-jira-credential-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "`UI-SETTINGS` covers password/clear/no-echo success. Save failures and remount behavior need additional UI coverage.",
-          "next_verification": "For W-JIRA-CREDENTIAL: Reject a credential save in the browser fixture, assert the retained password draft and shell error without body-text echo, then remount and verify the expected empty local input."
-        },
-        {
-          "version": 1,
-          "id": "gap-ui-w-jira-credential-02",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Repeated Jira saves and empty-token rejection lack focused browser assertions; local setup-form expiry/reachability/single-use fixtures do not cover this widget. Jira remains disabled in the pilot.",
-          "next_verification": "For W-JIRA-CREDENTIAL: Exercise repeated saves and empty-token rejection through the reusable credential widget and app tool using fixture values; retain the disabled Jira pilot scope."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser"
-      ],
-      "element_description": "**token** password input with autocomplete off; **save-securely** button; **read-only-notice**.",
-      "state_description": "Required nonempty value in a reusable password input. Success clears the field; ordinary settings never display stored token content. This widget has no separate form expiry, reachability challenge or single-use session.",
-      "interactions": "Dedicated private save operation; failures use the shell alert. There is no explicit success toast or credential-readback control."
     },
     {
       "id": "W-PROFILE-SETTINGS",
@@ -4424,8 +4248,7 @@
         "UI-TRIAGE",
         "UI-ASSEMBLED",
         "API-UI",
-        "API-UI-CONTENT",
-        "UI-REPORTS-NAV-NARROW"
+        "API-UI-CONTENT"
       ],
       "gaps": [
         {
@@ -4520,81 +4343,6 @@
       ],
       "composition": "`W-GLOBAL-ERROR`, `W-CONNECTION-BLOCKER`",
       "context": "Shell-wide operation errors and initial connection state. Blocker replaces the page body until initial data is available."
-    },
-    {
-      "id": "P-CONTINUITY",
-      "kind": "pane",
-      "terms": [
-        "ui-p-continuity",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [
-        "state-loading"
-      ],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-TRIAGE",
-        "UI-ASSEMBLED",
-        "API-UI",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-p-continuity-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Core light/dark iframe states have automated A/AA-tag scans and keyboard modal fixtures. Initial/poll failures, all attention variants, responsive layouts, assistive technology and installed-host accessibility remain unverified; incomplete automated nodes need manual review.",
-          "next_verification": "Review incomplete scan nodes and exercise remaining failure/attention variants, screen-reader use and responsive layouts in the installed host; retain separate automated and manual evidence."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser",
-        "go"
-      ],
-      "composition": "`W-CONTINUITY-NOTICE`",
-      "context": "Footer shared by all embedded pages, including initial loading."
     },
     {
       "id": "P-INBOX-QUERY",
@@ -4808,7 +4556,8 @@
         "UI-DIRECT-CHAT",
         "UI-CONNECT-ITEM",
         "UI-CONNECT-TOOL-ERROR",
-        "UI-DETAIL-DEFERRED"
+        "UI-DETAIL-DEFERRED",
+        "UI-DETAIL-OBSERVATION-READ"
       ],
       "gaps": [
         {
@@ -6874,8 +6623,6 @@
         "UI-ASSEMBLED",
         "API-UI",
         "API-UI-CONTENT",
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-NAV-NARROW",
         "UI-SINGLE-PAGE",
         "UI-NO-INLINE-SETTINGS",
         "UI-WORKING-MONITOR"
@@ -6904,10 +6651,9 @@
       ],
       "to": [
         "PAGE-INBOX",
-        "PAGE-AGENTS",
-        "PAGE-REPORTS",
         "PAGE-MY-PRS",
         "PAGE-REVIEW-PRS",
+        "PAGE-AGENTS",
         "PAGE-WORKING"
       ],
       "connection_type": "connection-navigates",
@@ -7057,7 +6803,8 @@
         "API-UI-CONTENT",
         "UI-SINGLE-PAGE",
         "UI-DIRECT-CHAT",
-        "UI-DETAIL-DEFERRED"
+        "UI-DETAIL-DEFERRED",
+        "UI-DETAIL-OBSERVATION-READ"
       ],
       "gaps": [
         {
@@ -7085,89 +6832,6 @@
         "PAGE-AGENT"
       ],
       "connection_type": "connection-selects",
-      "external_boundary": false
-    },
-    {
-      "id": "C-EMPTY-SETUP",
-      "kind": "connection",
-      "terms": [
-        "ui-c-empty-setup",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [
-        "state-empty"
-      ],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-TRIAGE",
-        "ITEM-STATE",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-c-empty-setup-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Local fixtures cover independent read/New/action indicators, action history and retained drafts. Search/filter combinations, empty results, disappearing selections and rejected action variants remain unverified.",
-          "next_verification": "Exercise combined search/filter/empty states, disappearing selected items and rejected mutations; assert independent indicators, matching detail/history and retained drafts."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser",
-        "go"
-      ],
-      "endpoint_description": "`W-INBOX-EMPTY` → `PAGE-SETTINGS`",
-      "trigger": "Add repository click.",
-      "interactions": "Navigates without saving settings or automatically focusing a field.",
-      "from": [
-        "W-INBOX-EMPTY.add-repository"
-      ],
-      "to": [
-        "PAGE-SETTINGS"
-      ],
-      "connection_type": "connection-navigates",
       "external_boundary": false
     },
     {
@@ -7226,7 +6890,8 @@
         "ITEM-STATE",
         "UI-ITEM-ACTIONS",
         "API-UI-CONTENT",
-        "UI-DETAIL-DEFERRED"
+        "UI-DETAIL-DEFERRED",
+        "UI-DETAIL-OBSERVATION-READ"
       ],
       "gaps": [
         {
@@ -8148,7 +7813,9 @@
         "UI-WAKE-MESSAGE",
         "ADMIN-PLUGIN-GATE",
         "UI-QUEUED-MESSAGE",
-        "API-ATTENTION-RECONCILIATION"
+        "API-ATTENTION-RECONCILIATION",
+        "API-QUESTION-ACTIVE-TURN",
+        "API-INACTIVE-QUESTION-FOLLOWUP"
       ],
       "gaps": [
         {
@@ -8502,7 +8169,8 @@
         "API-UI-CONTENT",
         "UI-ATTENTION-CONTEXT",
         "UI-READABLE-APPROVALS",
-        "API-ATTENTION-RECONCILIATION"
+        "API-ATTENTION-RECONCILIATION",
+        "API-INACTIVE-QUESTION-FOLLOWUP"
       ],
       "gaps": [
         {
@@ -8878,94 +8546,6 @@
       ],
       "to": [
         "W-PRIORITY"
-      ],
-      "connection_type": "connection-submits",
-      "external_boundary": false
-    },
-    {
-      "id": "C-CREDENTIAL-SAVE",
-      "kind": "connection",
-      "terms": [
-        "ui-c-credential-save",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Settings(",
-          "purpose": "Drafts are component-local; most saves use shared `action`, while credential/diagnostic requests use direct bridge calls."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-SETTINGS",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-c-credential-save-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "`UI-SETTINGS` covers password/clear/no-echo success. Save failures and remount behavior need additional UI coverage.",
-          "next_verification": "For C-CREDENTIAL-SAVE: Reject a credential save in the browser fixture, assert the retained password draft and shell error without body-text echo, then remount and verify the expected empty local input."
-        },
-        {
-          "version": 1,
-          "id": "gap-ui-c-credential-save-02",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Repeated Jira saves and empty-token rejection lack focused browser assertions; local setup-form expiry/reachability/single-use fixtures do not cover this widget. Jira remains disabled in the pilot.",
-          "next_verification": "For C-CREDENTIAL-SAVE: Exercise repeated saves and empty-token rejection through the reusable credential widget and app tool using fixture values; retain the disabled Jira pilot scope."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser"
-      ],
-      "endpoint_description": "`W-JIRA-CREDENTIAL` → private credential store",
-      "trigger": "Dedicated password-field submission.",
-      "interactions": "Saves a nonempty token through the authenticated app tool and clears the reusable password field on success. Stored value is not supplied back to a widget. This is separate from the temporary local setup form and its expiry/single-use checks.",
-      "from": [
-        "W-JIRA-CREDENTIAL"
-      ],
-      "to": [
-        "W-JIRA-CREDENTIAL"
       ],
       "connection_type": "connection-submits",
       "external_boundary": false
@@ -9740,861 +9320,6 @@
       "external_boundary": false
     },
     {
-      "id": "C-QUESTION-RECOVERY",
-      "kind": "connection",
-      "terms": [
-        "ui-c-question-recovery",
-        "question-recovery"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Recovery records bind stage and attempt progress to the owning run and its recovered question."
-        },
-        {
-          "path": "internal/app/questions.go",
-          "anchor": "func (m *Manager) DismissQuestion(",
-          "purpose": "Durable dismissal and question recovery state."
-        },
-        {
-          "path": "internal/app/questions.go",
-          "anchor": "func (m *Manager) repairQuestion(",
-          "purpose": "Constrained clarification and form recovery share durable attempts and gate text fallback on positive evidence."
-        }
-      ],
-      "assertions": [
-        "UI-QUESTION-RECOVERY",
-        "UI-CLARIFICATION",
-        "RUN-CLASSIFIER-FAILURE"
-      ],
-      "gaps": [],
-      "suites": [
-        "go",
-        "browser"
-      ],
-      "endpoint_description": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
-      "trigger": "Owning recovery or attention identity.",
-      "interactions": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
-      "from": [
-        "W-RUN-CONTROLS.recovery-progress"
-      ],
-      "to": [
-        "W-QUESTIONS",
-        "W-RUN-CONTROLS"
-      ],
-      "connection_type": "connection-refreshes",
-      "external_boundary": false
-    },
-    {
-      "id": "C-DISMISS-QUESTION",
-      "kind": "connection",
-      "terms": [
-        "ui-c-dismiss-question",
-        "question-recovery"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work."
-        },
-        {
-          "path": "internal/app/questions.go",
-          "anchor": "func (m *Manager) DismissQuestion(",
-          "purpose": "Durable dismissal and question recovery state."
-        }
-      ],
-      "assertions": [
-        "UI-QUESTION-RECOVERY"
-      ],
-      "gaps": [],
-      "suites": [
-        "go",
-        "browser"
-      ],
-      "endpoint_description": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
-      "trigger": "Owning recovery or attention identity.",
-      "interactions": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
-      "from": [
-        "W-QUESTIONS.dismiss"
-      ],
-      "to": [
-        "D-ATTENTION",
-        "P-RUN-DETAIL"
-      ],
-      "connection_type": "connection-submits",
-      "external_boundary": false
-    },
-    {
-      "id": "PAGE-REPORTS",
-      "kind": "page",
-      "terms": [
-        "ui-page-reports",
-        "issue-report",
-        "report-ledger",
-        "delivery-evidence"
-      ],
-      "contains": [
-        "P-REPORT-LIST",
-        "P-REPORT-DETAIL"
-      ],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-PAGE",
-        "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER",
-        "UI-REPORTS-DETAIL-PROGRESS",
-        "UI-REPORTS-PAGE-PROGRESS"
-      ],
-      "gaps": [],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "purpose": "Discover suspected defects and inspect investigation and delivery evidence.",
-      "composition": "Report list and selected report details.",
-      "interactions": "Entered from Reported issues navigation; journal changes refresh both panes."
-    },
-    {
-      "id": "P-REPORT-LIST",
-      "kind": "pane",
-      "terms": [
-        "ui-p-report-list",
-        "issue-report",
-        "report-ledger",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-PAGE",
-        "UI-REPORTS-PAGE-PROGRESS"
-      ],
-      "gaps": [],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "composition": "Search, processing/component/version filters, report rows, pagination and manual refresh.",
-      "context": "The shared persistent report ledger."
-    },
-    {
-      "id": "P-REPORT-DETAIL",
-      "kind": "pane",
-      "terms": [
-        "ui-p-report-detail",
-        "issue-report",
-        "report-ledger",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER",
-        "UI-REPORTS-DETAIL-PROGRESS"
-      ],
-      "gaps": [],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "composition": "Observation, findings, missing information, evidence, GitHub and delivery, freshness and recovery.",
-      "context": "The selected durable report ID."
-    },
-    {
-      "id": "W-REPORT-LIST",
-      "kind": "widget",
-      "terms": [
-        "ui-w-report-list",
-        "issue-report",
-        "report-ledger",
-        "report-processing",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [
-        {
-          "id": "W-REPORT-LIST.heading",
-          "term": "element-w-report-list-heading"
-        },
-        {
-          "id": "W-REPORT-LIST.subtitle",
-          "term": "element-w-report-list-subtitle"
-        },
-        {
-          "id": "W-REPORT-LIST.refresh",
-          "term": "element-w-report-list-refresh"
-        },
-        {
-          "id": "W-REPORT-LIST.error",
-          "term": "element-w-report-list-error"
-        },
-        {
-          "id": "W-REPORT-LIST.search",
-          "term": "element-w-report-list-search"
-        },
-        {
-          "id": "W-REPORT-LIST.processing-filter",
-          "term": "element-w-report-list-processing-filter"
-        },
-        {
-          "id": "W-REPORT-LIST.component-filter",
-          "term": "element-w-report-list-component-filter"
-        },
-        {
-          "id": "W-REPORT-LIST.version-filter",
-          "term": "element-w-report-list-version-filter"
-        },
-        {
-          "id": "W-REPORT-LIST.empty",
-          "term": "element-w-report-list-empty"
-        },
-        {
-          "id": "W-REPORT-LIST.select",
-          "term": "element-w-report-list-select"
-        },
-        {
-          "id": "W-REPORT-LIST.row-processing",
-          "term": "element-w-report-list-row-processing"
-        },
-        {
-          "id": "W-REPORT-LIST.row-component",
-          "term": "element-w-report-list-row-component"
-        },
-        {
-          "id": "W-REPORT-LIST.row-id",
-          "term": "element-w-report-list-row-id"
-        },
-        {
-          "id": "W-REPORT-LIST.load-more",
-          "term": "element-w-report-list-load-more"
-        }
-      ],
-      "states": [
-        "state-loading",
-        "state-empty",
-        "state-ready",
-        "state-error"
-      ],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-PAGE",
-        "UI-REPORTS-PAGE-PROGRESS",
-        "UI-REPORTS-MUTATION-PROGRESS"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-w-report-list-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Local browser fixtures assert search/empty results, combined processing/component/version filters, 30-to-32-row pagination and journal refresh. Exhaustive filter combinations, list request failures and report-specific accessibility and installed-host rendering remain unverified.",
-          "next_verification": "Exercise failed list reads and combined filter/pagination variants; run report-specific keyboard/accessibility checks and separately observe the approved installed host."
-        }
-      ],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "element_description": "**heading**, **subtitle**, **refresh** “Refresh issues and releases”; shared **error** alert; **search** “Search reports”, **processing-filter**, **component-filter**, **version-filter**; **empty** result message; repeated **select** report button, **row-processing**, **row-component**, **row-id**; conditional **load-more** “Load more reports”.",
-      "state_description": "Rows show independent processing and component identity, with an Unknown component fallback and aria-pressed selection. Zero results show the empty message, including while an initial query is pending. Load more is present only with a next cursor and disabled only while its requested additional page is pending; background refresh keeps it usable; refresh is disabled during a mutation. The shared error alert also reports detail, mutation and external-link failures.",
-      "interactions": "Query changes reset pagination through C-REPORT-QUERY. C-REPORT-MORE extends the loaded range; journal updates preserve and refresh it, including a pending Load more request. C-REPORT-SELECT reads the selected report. C-REPORT-REFRESH reads issue and release evidence without starting an agent. Continuing slow background refreshes do not prevent an additional page request; repeated clicks while that request is pending do not add extra pages."
-    },
-    {
-      "id": "W-REPORT-DETAIL",
-      "kind": "widget",
-      "terms": [
-        "ui-w-report-detail",
-        "issue-report",
-        "report-ledger",
-        "report-processing",
-        "report-outcome",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [
-        {
-          "id": "W-REPORT-DETAIL.surface",
-          "term": "element-w-report-detail-surface"
-        },
-        {
-          "id": "W-REPORT-DETAIL.id",
-          "term": "element-w-report-detail-id"
-        },
-        {
-          "id": "W-REPORT-DETAIL.processing",
-          "term": "element-w-report-detail-processing"
-        },
-        {
-          "id": "W-REPORT-DETAIL.outcome",
-          "term": "element-w-report-detail-outcome"
-        },
-        {
-          "id": "W-REPORT-DETAIL.observed",
-          "term": "element-w-report-detail-observed"
-        },
-        {
-          "id": "W-REPORT-DETAIL.expected",
-          "term": "element-w-report-detail-expected"
-        },
-        {
-          "id": "W-REPORT-DETAIL.actual",
-          "term": "element-w-report-detail-actual"
-        },
-        {
-          "id": "W-REPORT-DETAIL.reproduction",
-          "term": "element-w-report-detail-reproduction"
-        },
-        {
-          "id": "W-REPORT-DETAIL.message",
-          "term": "element-w-report-detail-message"
-        },
-        {
-          "id": "W-REPORT-DETAIL.findings",
-          "term": "element-w-report-detail-findings"
-        },
-        {
-          "id": "W-REPORT-DETAIL.missing-information",
-          "term": "element-w-report-detail-missing-information"
-        },
-        {
-          "id": "W-REPORT-DETAIL.open-issue",
-          "term": "element-w-report-detail-open-issue"
-        },
-        {
-          "id": "W-REPORT-DETAIL.issue-state",
-          "term": "element-w-report-detail-issue-state"
-        },
-        {
-          "id": "W-REPORT-DETAIL.closure-reason",
-          "term": "element-w-report-detail-closure-reason"
-        },
-        {
-          "id": "W-REPORT-DETAIL.open-fix",
-          "term": "element-w-report-detail-open-fix"
-        },
-        {
-          "id": "W-REPORT-DETAIL.open-release",
-          "term": "element-w-report-detail-open-release"
-        },
-        {
-          "id": "W-REPORT-DETAIL.linked-fix",
-          "term": "element-w-report-detail-linked-fix"
-        },
-        {
-          "id": "W-REPORT-DETAIL.stable-availability",
-          "term": "element-w-report-detail-stable-availability"
-        },
-        {
-          "id": "W-REPORT-DETAIL.prerelease-availability",
-          "term": "element-w-report-detail-prerelease-availability"
-        },
-        {
-          "id": "W-REPORT-DETAIL.installed-version",
-          "term": "element-w-report-detail-installed-version"
-        },
-        {
-          "id": "W-REPORT-DETAIL.observed-version",
-          "term": "element-w-report-detail-observed-version"
-        },
-        {
-          "id": "W-REPORT-DETAIL.issue-freshness",
-          "term": "element-w-report-detail-issue-freshness"
-        },
-        {
-          "id": "W-REPORT-DETAIL.release-freshness",
-          "term": "element-w-report-detail-release-freshness"
-        },
-        {
-          "id": "W-REPORT-DETAIL.additions",
-          "term": "element-w-report-detail-additions"
-        },
-        {
-          "id": "W-REPORT-DETAIL.evidence",
-          "term": "element-w-report-detail-evidence"
-        },
-        {
-          "id": "W-REPORT-DETAIL.add-evidence",
-          "term": "element-w-report-detail-add-evidence"
-        },
-        {
-          "id": "W-REPORT-DETAIL.recovery-note",
-          "term": "element-w-report-detail-recovery-note"
-        },
-        {
-          "id": "W-REPORT-DETAIL.effects-acknowledgement",
-          "term": "element-w-report-detail-effects-acknowledgement"
-        },
-        {
-          "id": "W-REPORT-DETAIL.resume",
-          "term": "element-w-report-detail-resume"
-        },
-        {
-          "id": "W-REPORT-DETAIL.evidence-history",
-          "term": "element-w-report-detail-evidence-history"
-        },
-        {
-          "id": "W-REPORT-DETAIL.evidence-manifest",
-          "term": "element-w-report-detail-evidence-manifest"
-        },
-        {
-          "id": "W-REPORT-DETAIL.history",
-          "term": "element-w-report-detail-history"
-        }
-      ],
-      "states": [
-        "state-loading",
-        "state-ready",
-        "state-error"
-      ],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        },
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "function Freshness({",
-          "purpose": "Displays the last successful issue/release verification and conditional error/retry feedback, retaining Unknown for absent times."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER",
-        "UI-REPORTS-DETAIL-PROGRESS",
-        "UI-REPORTS-MUTATION-PROGRESS",
-        "UI-REPORTS-EVIDENCE-RETRY"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-w-report-detail-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Local browser fixtures assert information requests and evidence payloads, independent closure/prerelease/Unknown displays, recovery gating and ordered detail responses. Evidence disclosure contents, fix/stable-release link variants, rejected recovery requests, draft retention across other failures and report-specific accessibility and installed-host behavior remain unverified.",
-          "next_verification": "Exercise disclosure contents, stable/fix link variants and failed evidence/recovery requests with retained drafts; separately check report keyboard/accessibility behavior and the approved installed host."
-        }
-      ],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "element_description": "**surface** heading, **id**, **processing**, **outcome**, **observed**, **expected**, **actual**, **reproduction**, **message**, conditional **findings** and **missing-information**; **open-issue**, **issue-state**, **closure-reason**; repeated **open-fix**, **open-release**, **linked-fix**, **stable-availability**, **prerelease-availability**, **installed-version**, repeated **observed-version**; **issue-freshness**, **release-freshness**; repeated **additions**, **evidence** input and **add-evidence**; conditional **recovery-note**, **effects-acknowledgement**, **resume**; **evidence-history** disclosure with repeated **evidence-manifest** and **history**.",
-      "state_description": "No detail article is displayed until the selected report is read. Unknown evidence remains Unknown; processing and outcome stay independent of issue closure, fix, stable, prerelease and installed versions. Freshness shows last successful verification and, on error, its retry time. Add evidence requires a nonblank draft and is disabled during a mutation. Resume is shown for blocked, needs attention or needs information; needs attention shows the note and acknowledgement, both required when a workflow ID exists. Evidence/history starts collapsed. Only current selected-report detail reads can update findings, processing and recovery controls; superseded reads are discarded. Journal detail refreshes coalesce while a read is pending, allowing a slow response to display before the queued refresh.",
-      "interactions": "C-REPORT-EVIDENCE appends host observations and can queue information requests. C-REPORT-RECOVER submits the note and acknowledgement for retained work. Successful mutations reread details and the loaded list. Changing selection resets local evidence/recovery drafts. C-REPORT-OPEN-LINK opens retained issue, fix and release URLs through the host; it does not establish external delivery. Mutation controls become usable after their own detail/list refresh, independently of continuing queued journal refreshes."
-    },
-    {
-      "id": "C-REPORT-SELECT",
-      "kind": "connection",
-      "terms": [
-        "ui-c-report-select",
-        "issue-report",
-        "report-ledger",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-SELECTION-ORDER",
-        "UI-REPORTS-DETAIL-PROGRESS"
-      ],
-      "gaps": [],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "from": [
-        "W-REPORT-LIST.select"
-      ],
-      "to": [
-        "W-REPORT-DETAIL"
-      ],
-      "connection_type": "connection-selects",
-      "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.select` → `W-REPORT-DETAIL`",
-      "trigger": "Report row selection",
-      "interactions": "Reads selected report without starting an agent. Selection and mutation ordering discard superseded details; journal updates queue a refresh behind a pending read so details can progress during ongoing changes."
-    },
-    {
-      "id": "C-REPORT-EVIDENCE",
-      "kind": "connection",
-      "terms": [
-        "ui-c-report-evidence",
-        "issue-report",
-        "report-ledger",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-MUTATION-PROGRESS",
-        "UI-REPORTS-EVIDENCE-RETRY"
-      ],
-      "gaps": [],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "from": [
-        "W-REPORT-DETAIL.add-evidence"
-      ],
-      "to": [
-        "W-REPORT-DETAIL",
-        "W-REPORT-LIST"
-      ],
-      "connection_type": "connection-submits",
-      "external_boundary": false,
-      "endpoint_description": "`W-REPORT-DETAIL.add-evidence` → `W-REPORT-DETAIL`, `W-REPORT-LIST`",
-      "trigger": "Add evidence; selected report ID, draft text and retained idempotency key.",
-      "interactions": "Append idempotent host observations and queue reports waiting for information. After an uncertain response, an unchanged draft can be retried without duplicate additions; editing the retained draft permits another observation."
-    },
-    {
-      "id": "C-REPORT-RECOVER",
-      "kind": "connection",
-      "terms": [
-        "ui-c-report-recover",
-        "issue-report",
-        "report-ledger",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-DETAIL-ORDER",
-        "UI-REPORTS-MUTATION-PROGRESS"
-      ],
-      "gaps": [],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "from": [
-        "W-REPORT-DETAIL.resume"
-      ],
-      "to": [
-        "W-REPORT-DETAIL",
-        "W-REPORT-LIST"
-      ],
-      "connection_type": "connection-submits",
-      "external_boundary": false,
-      "endpoint_description": "`W-REPORT-DETAIL.resume` → `W-REPORT-DETAIL`, `W-REPORT-LIST`",
-      "trigger": "Resume or reconcile report; selected report ID, recovery note and effects acknowledgement.",
-      "interactions": "Validate recovery prerequisites and acknowledgement before resuming retained work."
-    },
-    {
-      "id": "C-REPORT-REFRESH",
-      "kind": "connection",
-      "terms": [
-        "ui-c-report-refresh",
-        "issue-report",
-        "report-ledger",
-        "delivery-evidence"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-MUTATION-PROGRESS"
-      ],
-      "gaps": [],
-      "suites": [
-        "browser",
-        "go"
-      ],
-      "from": [
-        "W-REPORT-LIST.refresh"
-      ],
-      "to": [
-        "W-REPORT-LIST",
-        "W-REPORT-DETAIL"
-      ],
-      "connection_type": "connection-refreshes",
-      "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.refresh` → `W-REPORT-LIST`, `W-REPORT-DETAIL`",
-      "trigger": "Refresh issues and releases",
-      "interactions": "Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent."
-    },
-    {
-      "id": "C-REPORT-QUERY",
-      "terms": [
-        "ui-c-report-query",
-        "issue-report",
-        "report-ledger",
-        "report-processing"
-      ],
-      "from": [
-        "W-REPORT-LIST.search",
-        "W-REPORT-LIST.processing-filter",
-        "W-REPORT-LIST.component-filter",
-        "W-REPORT-LIST.version-filter"
-      ],
-      "to": [
-        "W-REPORT-LIST"
-      ],
-      "connection_type": "connection-selects",
-      "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.search/processing-filter/component-filter/version-filter` → `W-REPORT-LIST`",
-      "trigger": "Search or processing/component/version filter changes; current query values.",
-      "interactions": "Loads the matching report subset and resets the loaded range to its first page. Existing selected detail remains independently selected.",
-      "assertions": [
-        "UI-REPORTS-INFO",
-        "UI-REPORTS-PAGE"
-      ],
-      "kind": "connection",
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "suites": [
-        "browser"
-      ],
-      "gaps": []
-    },
-    {
-      "id": "C-REPORT-MORE",
-      "terms": [
-        "ui-c-report-more",
-        "issue-report",
-        "report-ledger"
-      ],
-      "from": [
-        "W-REPORT-LIST.load-more"
-      ],
-      "to": [
-        "W-REPORT-LIST"
-      ],
-      "connection_type": "connection-refreshes",
-      "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.load-more` → `W-REPORT-LIST`",
-      "trigger": "Load more reports; current query, next cursor and loaded range.",
-      "interactions": "Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range. Background refresh leaves pagination available; an already pending page request suppresses duplicate clicks.",
-      "assertions": [
-        "UI-REPORTS-PAGE",
-        "UI-REPORTS-PAGE-PROGRESS"
-      ],
-      "kind": "connection",
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "suites": [
-        "browser"
-      ],
-      "gaps": []
-    },
-    {
-      "id": "C-REPORT-OPEN-LINK",
-      "terms": [
-        "ui-c-report-open-link",
-        "issue-report",
-        "delivery-evidence"
-      ],
-      "from": [
-        "W-REPORT-DETAIL.open-issue",
-        "W-REPORT-DETAIL.open-fix",
-        "W-REPORT-DETAIL.open-release"
-      ],
-      "to": [
-        "W-REPORT-DETAIL"
-      ],
-      "connection_type": "connection-external",
-      "external_boundary": true,
-      "endpoint_description": "`W-REPORT-DETAIL.open-issue/open-fix/open-release` → external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL`",
-      "trigger": "Open a retained issue, fix or release URL through the host.",
-      "interactions": "Sends the stored URL to the host open-link boundary; a fix without a PR uses its repository/commit URL. Failures use the shared report error alert. Opening a link does not verify issue, fix or release state.",
-      "assertions": [
-        "UI-REPORTS-RECOVERY"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-c-report-open-link-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "The local browser fixture asserts the selected issue's exact URL reaches the host open-link boundary. Fix PR/commit and release URLs, failed host opens and installed-host navigation remain unverified.",
-          "next_verification": "Assert exact fix PR/commit and stable/prerelease URLs plus failed opens in the fixture, then separately observe approved installed-host navigation."
-        }
-      ],
-      "kind": "connection",
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/reports.tsx",
-          "anchor": "export function ReportedIssues(",
-          "purpose": "Reads the shared paginated ledger, selects details, appends evidence and performs explicit recovery; independent delivery and freshness displays."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "export interface IssueReport",
-          "purpose": "Shared report view types preserve separate processing, outcome, issue and delivery states."
-        }
-      ],
-      "suites": [
-        "browser"
-      ]
-    },
-    {
       "id": "PAGE-AGENT",
       "kind": "page",
       "terms": [
@@ -11050,7 +9775,8 @@
         }
       ],
       "assertions": [
-        "UI-WAITING-MESSAGES"
+        "UI-WAITING-MESSAGES",
+        "API-FALLBACK-RESTART"
       ],
       "gaps": [],
       "suites": [
@@ -11401,7 +10127,8 @@
         "API-QUESTION-REPAIR",
         "API-ASYNC-QUESTION",
         "API-REPAIR-TAKEOVER",
-        "UI-REPAIR-TAKEOVER"
+        "UI-REPAIR-TAKEOVER",
+        "API-FALLBACK-RESTART"
       ],
       "gaps": [
         {
@@ -11499,7 +10226,8 @@
       "id": "C-DISMISS-QUESTION",
       "kind": "connection",
       "terms": [
-        "ui-c-dismiss-question"
+        "ui-c-dismiss-question",
+        "question-recovery"
       ],
       "contains": [],
       "elements": [],
@@ -11507,30 +10235,35 @@
       "implementation": [
         {
           "path": "web/src/main.tsx",
-          "anchor": "function AttentionDialog(",
-          "purpose": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval."
+          "anchor": "function Factory(",
+          "purpose": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) DismissQuestion(",
+          "purpose": "Durable dismissal and question recovery state."
         }
       ],
       "assertions": [
-        "UI-TEXT-DISMISS"
+        "UI-QUESTION-RECOVERY"
       ],
       "gaps": [],
       "suites": [
+        "go",
         "browser"
       ],
+      "endpoint_description": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
+      "trigger": "Owning recovery or attention identity.",
+      "interactions": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
       "from": [
         "W-QUESTIONS.dismiss"
       ],
       "to": [
-        "PAGE-AGENT",
-        "W-ATTENTION-NOTICE",
-        "P-WAITING-QUEUE"
+        "D-ATTENTION",
+        "P-RUN-DETAIL"
       ],
       "connection_type": "connection-submits",
-      "external_boundary": false,
-      "endpoint_description": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
-      "trigger": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
-      "interactions": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval."
+      "external_boundary": false
     },
     {
       "id": "W-PLUGIN-ADMIN",
@@ -11646,7 +10379,10 @@
         "UI-ADMIN-UNCERTAIN",
         "ADMIN-PLUGINS",
         "ADMIN-PLUGIN-RECOVERY",
-        "ADMIN-PLUGIN-GATE"
+        "ADMIN-PLUGIN-GATE",
+        "UI-PLUGIN-READ-RECOVERY",
+        "ADMIN-REMOVED-SKILL",
+        "API-UI"
       ],
       "gaps": [
         {
@@ -11674,7 +10410,7 @@
         "go"
       ],
       "element_description": "Installed/available plugin rows, enabled state, observed versions and update status; marketplace sources and refs; search/pagination; explicit refresh, update check, discovery, install, update and removal controls; operation status and errors.",
-      "state_description": "Cached inventory is readable without installation. Queued/running maintenance disables mutations. Failed and uncertain operations preserve previous observations and drafts; unknown remote update/authentication readiness remains explicit.",
+      "state_description": "Cached inventory is readable without installation. Queued/running maintenance disables mutations. Failed and uncertain operations preserve previous observations and drafts; unknown remote update/authentication readiness remains explicit. Status-read errors clear after successful polling while mutation uncertainty and drafts remain; recovering a read never repeats a mutation.",
       "interactions": "Read-only status polling uses the host bridge. Management returns one durable operation; uncertain calls never replay automatically. Update checks refresh metadata without installing a release. Agent work and maintenance cannot start concurrently."
     },
     {
@@ -11736,7 +10472,8 @@
         "ADMIN-PLUGIN-SKILLS",
         "ADMIN-REVIEW-POLICY",
         "ADMIN-REVIEW-ELIGIBILITY",
-        "UI-FULL-ACCESS"
+        "UI-FULL-ACCESS",
+        "UI-PLUGIN-INTERVAL"
       ],
       "gaps": [],
       "suites": [
@@ -11745,7 +10482,7 @@
         "go"
       ],
       "element_description": "System review-request policy, default review and implementation pipelines, plugin-check interval and save feedback.",
-      "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins.",
+      "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins. A supported saved interval outside the offered presets displays its actual minutes and is preserved by unrelated saves.",
       "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review honors a configured read-only/ask profile or an explicit full-access/never/authorized profile. Selecting authority does not enable automatic review by itself."
     },
     {
@@ -11782,7 +10519,9 @@
       ],
       "assertions": [
         "UI-ADMIN-PLUGINS",
-        "ADMIN-PLUGINS"
+        "ADMIN-PLUGINS",
+        "UI-PLUGIN-READ-RECOVERY",
+        "API-UI"
       ],
       "gaps": [],
       "suites": [
@@ -11824,7 +10563,8 @@
       "assertions": [
         "UI-ADMIN-REPO",
         "ADMIN-PLUGIN-SKILLS",
-        "UI-GITHUB-USAGE"
+        "UI-GITHUB-USAGE",
+        "UI-PLUGIN-INTERVAL"
       ],
       "gaps": [],
       "suites": [
@@ -11867,7 +10607,10 @@
         "UI-ADMIN-PLUGINS",
         "UI-ADMIN-UNCERTAIN",
         "ADMIN-PLUGINS",
-        "ADMIN-PLUGIN-RECOVERY"
+        "ADMIN-PLUGIN-RECOVERY",
+        "UI-PLUGIN-READ-RECOVERY",
+        "ADMIN-REMOVED-SKILL",
+        "API-UI"
       ],
       "gaps": [],
       "suites": [
@@ -12143,6 +10886,478 @@
         "W-REPOSITORY-SETTINGS"
       ],
       "connection_type": "connection-submits",
+      "external_boundary": false
+    },
+    {
+      "id": "W-CONTINUITY-NOTICE",
+      "kind": "widget",
+      "terms": [
+        "ui-w-continuity-notice",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-CONTINUITY-NOTICE.runs-survive-close",
+          "term": "element-w-continuity-notice-runs-survive-close"
+        },
+        {
+          "id": "W-CONTINUITY-NOTICE.computer-online",
+          "term": "element-w-continuity-notice-computer-online"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Factory(",
+          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+        },
+        {
+          "path": "web/src/style.css",
+          "anchor": ".overlay",
+          "purpose": "Presentation adapts without creating different page entities."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "Snapshot",
+          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function connect(",
+          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "var ResourceURI = resourceURI(web.HTML)",
+          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) Inbox(",
+          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) Prepare(",
+          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        }
+      ],
+      "assertions": [
+        "UI-TRIAGE",
+        "UI-ASSEMBLED",
+        "API-UI",
+        "API-UI-CONTENT"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-w-continuity-notice-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Core light/dark iframe states have automated A/AA-tag scans and keyboard modal fixtures. Initial/poll failures, all attention variants, responsive layouts, assistive technology and installed-host accessibility remain unverified; incomplete automated nodes need manual review.",
+          "next_verification": "Review incomplete scan nodes and exercise remaining failure/attention variants, screen-reader use and responsive layouts in the installed host; retain separate automated and manual evidence."
+        }
+      ],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "element_description": "**runs-survive-close** notice; **computer-online** notice.",
+      "state_description": "Always displayed in the shell footer.",
+      "interactions": "Informational; closing the host view is not an interrupt action."
+    },
+    {
+      "id": "W-JIRA-CREDENTIAL",
+      "kind": "widget",
+      "terms": [
+        "ui-w-jira-credential",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-JIRA-CREDENTIAL.token",
+          "term": "element-w-jira-credential-token"
+        },
+        {
+          "id": "W-JIRA-CREDENTIAL.save-securely",
+          "term": "element-w-jira-credential-save-securely"
+        },
+        {
+          "id": "W-JIRA-CREDENTIAL.read-only-notice",
+          "term": "element-w-jira-credential-read-only-notice"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Settings(",
+          "purpose": "Drafts are component-local; most saves use shared `action`, while credential/diagnostic requests use direct bridge calls."
+        },
+        {
+          "path": "web/src/style.css",
+          "anchor": ".overlay",
+          "purpose": "Presentation adapts without creating different page entities."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "Snapshot",
+          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function connect(",
+          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "var ResourceURI = resourceURI(web.HTML)",
+          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) Inbox(",
+          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) Prepare(",
+          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        }
+      ],
+      "assertions": [
+        "UI-SETTINGS",
+        "API-UI-CONTENT"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-w-jira-credential-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "`UI-SETTINGS` covers password/clear/no-echo success. Save failures and remount behavior need additional UI coverage.",
+          "next_verification": "For W-JIRA-CREDENTIAL: Reject a credential save in the browser fixture, assert the retained password draft and shell error without body-text echo, then remount and verify the expected empty local input."
+        },
+        {
+          "version": 1,
+          "id": "gap-ui-w-jira-credential-02",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Repeated Jira saves and empty-token rejection lack focused browser assertions; local setup-form expiry/reachability/single-use fixtures do not cover this widget. Jira remains disabled in the pilot.",
+          "next_verification": "For W-JIRA-CREDENTIAL: Exercise repeated saves and empty-token rejection through the reusable credential widget and app tool using fixture values; retain the disabled Jira pilot scope."
+        }
+      ],
+      "suites": [
+        "tooling",
+        "browser"
+      ],
+      "element_description": "**token** password input with autocomplete off; **save-securely** button; **read-only-notice**.",
+      "state_description": "Required nonempty value in a reusable password input. Success clears the field; ordinary settings never display stored token content. This widget has no separate form expiry, reachability challenge or single-use session.",
+      "interactions": "Dedicated private save operation; failures use the shell alert. There is no explicit success toast or credential-readback control."
+    },
+    {
+      "id": "P-CONTINUITY",
+      "kind": "pane",
+      "terms": [
+        "ui-p-continuity",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [
+        "state-loading"
+      ],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Factory(",
+          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+        },
+        {
+          "path": "web/src/style.css",
+          "anchor": ".overlay",
+          "purpose": "Presentation adapts without creating different page entities."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "Snapshot",
+          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function connect(",
+          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "var ResourceURI = resourceURI(web.HTML)",
+          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) Inbox(",
+          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) Prepare(",
+          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        }
+      ],
+      "assertions": [
+        "UI-TRIAGE",
+        "UI-ASSEMBLED",
+        "API-UI",
+        "API-UI-CONTENT"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-p-continuity-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Core light/dark iframe states have automated A/AA-tag scans and keyboard modal fixtures. Initial/poll failures, all attention variants, responsive layouts, assistive technology and installed-host accessibility remain unverified; incomplete automated nodes need manual review.",
+          "next_verification": "Review incomplete scan nodes and exercise remaining failure/attention variants, screen-reader use and responsive layouts in the installed host; retain separate automated and manual evidence."
+        }
+      ],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "composition": "`W-CONTINUITY-NOTICE`",
+      "context": "Footer shared by all embedded pages, including initial loading."
+    },
+    {
+      "id": "C-EMPTY-SETUP",
+      "kind": "connection",
+      "terms": [
+        "ui-c-empty-setup",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [
+        "state-empty"
+      ],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Factory(",
+          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
+        },
+        {
+          "path": "web/src/style.css",
+          "anchor": ".overlay",
+          "purpose": "Presentation adapts without creating different page entities."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "Snapshot",
+          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function connect(",
+          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "var ResourceURI = resourceURI(web.HTML)",
+          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) Inbox(",
+          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) Prepare(",
+          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        }
+      ],
+      "assertions": [
+        "UI-TRIAGE",
+        "ITEM-STATE",
+        "API-UI-CONTENT"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-c-empty-setup-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Local fixtures cover independent read/New/action indicators, action history and retained drafts. Search/filter combinations, empty results, disappearing selections and rejected action variants remain unverified.",
+          "next_verification": "Exercise combined search/filter/empty states, disappearing selected items and rejected mutations; assert independent indicators, matching detail/history and retained drafts."
+        }
+      ],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "endpoint_description": "`W-INBOX-EMPTY` → `PAGE-SETTINGS`",
+      "trigger": "Add repository click.",
+      "interactions": "Navigates without saving settings or automatically focusing a field.",
+      "from": [
+        "W-INBOX-EMPTY.add-repository"
+      ],
+      "to": [
+        "PAGE-SETTINGS"
+      ],
+      "connection_type": "connection-navigates",
+      "external_boundary": false
+    },
+    {
+      "id": "C-CREDENTIAL-SAVE",
+      "kind": "connection",
+      "terms": [
+        "ui-c-credential-save",
+        "coverage-gap",
+        "unverified-behavior"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Settings(",
+          "purpose": "Drafts are component-local; most saves use shared `action`, while credential/diagnostic requests use direct bridge calls."
+        },
+        {
+          "path": "web/src/style.css",
+          "anchor": ".overlay",
+          "purpose": "Presentation adapts without creating different page entities."
+        },
+        {
+          "path": "web/src/types.ts",
+          "anchor": "Snapshot",
+          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function connect(",
+          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "var ResourceURI = resourceURI(web.HTML)",
+          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) Inbox(",
+          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) Prepare(",
+          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        }
+      ],
+      "assertions": [
+        "UI-SETTINGS",
+        "API-UI-CONTENT"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-ui-c-credential-save-01",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "`UI-SETTINGS` covers password/clear/no-echo success. Save failures and remount behavior need additional UI coverage.",
+          "next_verification": "For C-CREDENTIAL-SAVE: Reject a credential save in the browser fixture, assert the retained password draft and shell error without body-text echo, then remount and verify the expected empty local input."
+        },
+        {
+          "version": 1,
+          "id": "gap-ui-c-credential-save-02",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "Repeated Jira saves and empty-token rejection lack focused browser assertions; local setup-form expiry/reachability/single-use fixtures do not cover this widget. Jira remains disabled in the pilot.",
+          "next_verification": "For C-CREDENTIAL-SAVE: Exercise repeated saves and empty-token rejection through the reusable credential widget and app tool using fixture values; retain the disabled Jira pilot scope."
+        }
+      ],
+      "suites": [
+        "tooling",
+        "browser"
+      ],
+      "endpoint_description": "`W-JIRA-CREDENTIAL` → private credential store",
+      "trigger": "Dedicated password-field submission.",
+      "interactions": "Saves a nonempty token through the authenticated app tool and clears the reusable password field on success. Stored value is not supplied back to a widget. This is separate from the temporary local setup form and its expiry/single-use checks.",
+      "from": [
+        "W-JIRA-CREDENTIAL"
+      ],
+      "to": [
+        "W-JIRA-CREDENTIAL"
+      ],
+      "connection_type": "connection-submits",
+      "external_boundary": false
+    },
+    {
+      "id": "C-QUESTION-RECOVERY",
+      "kind": "connection",
+      "terms": [
+        "ui-c-question-recovery",
+        "question-recovery"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/main.tsx",
+          "anchor": "function Factory(",
+          "purpose": "Recovery records bind stage and attempt progress to the owning run and its recovered question."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) DismissQuestion(",
+          "purpose": "Durable dismissal and question recovery state."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) repairQuestion(",
+          "purpose": "Constrained clarification and form recovery share durable attempts and gate text fallback on positive evidence."
+        }
+      ],
+      "assertions": [
+        "UI-QUESTION-RECOVERY",
+        "UI-CLARIFICATION",
+        "RUN-CLASSIFIER-FAILURE"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser"
+      ],
+      "endpoint_description": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
+      "trigger": "Owning recovery or attention identity.",
+      "interactions": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
+      "from": [
+        "W-RUN-CONTROLS.recovery-progress"
+      ],
+      "to": [
+        "W-QUESTIONS",
+        "W-RUN-CONTROLS"
+      ],
+      "connection_type": "connection-refreshes",
       "external_boundary": false
     }
   ],
@@ -12501,7 +11716,7 @@
       "id": "API-UI",
       "path": "internal/transport/mcp_test.go",
       "anchor": "TestAuthenticatedMCPDiscoveryToolsAndUI",
-      "assertion": "Authenticated SDK discovery checks each tool’s correct inbox or settings resource association, both open output templates, separate resource identities/bodies, settings save inputs and app-only credential visibility."
+      "assertion": "Authenticated SDK discovery checks correct inbox/settings resources and templates, settings inputs and app-only credentials. Plugin-status freshness arguments observe a newly saved operation while leaving the journal unchanged."
     },
     {
       "id": "ITEM-STATE",
@@ -13083,13 +12298,13 @@
       "id": "UI-ADMIN-PLUGINS",
       "path": "web/tests/factory.spec.ts",
       "anchor": "plugin admin tracks installs, versions and explicit updates",
-      "assertion": "Both themes assert installed/enabled status, old/available versions, metadata-only check, explicit keyboard update, install/remove targets, marketplace/ref payloads, narrow layout and scoped axe scans."
+      "assertion": "Both narrow themes use a memoizing host while checking installed/enabled/version state, metadata-only checks, explicit keyboard update and install/remove/marketplace payloads. Status reads carry distinct freshness markers and observe completed operations; layout and scoped Axe remain fixture evidence."
     },
     {
       "id": "UI-ADMIN-UNCERTAIN",
       "path": "web/tests/factory.spec.ts",
       "anchor": "uncertain plugin mutations preserve drafts and never replay automatically",
-      "assertion": "An uncertain management response displays feedback, retains the selector and submits only once after polling."
+      "assertion": "An uncertain management response retains selector and mutation feedback after a later successful status read; exactly one management call occurs, with no mutation replay."
     },
     {
       "id": "UI-ADMIN-PIPELINE",
@@ -13245,7 +12460,7 @@
       "id": "UI-SAVED-OBSERVATIONS",
       "path": "web/tests/factory.spec.ts",
       "anchor": "saved details and receipts render during background refresh",
-      "assertion": "Both themes show saved details/receipts and pending feedback immediately, then automatically reread without launching work; receipt reads carry distinct freshness markers and scoped Axe passes."
+      "assertion": "Both themes display saved details/receipts and pending feedback immediately with zero read marks, then automatically reread and mark the fresh matching revision once without launching. Receipt reads carry distinct freshness markers; scoped Axe remains separate from manual acceptance."
     },
     {
       "id": "UI-QUEUED-MESSAGE",
@@ -13282,6 +12497,54 @@
       "path": "internal/providers/github_cache_test.go",
       "anchor": "func TestGitHubCacheExpiryInvalidationLiveWriteThroughAndRestart(",
       "assertion": "Ordinary queries reuse persisted successful data; expiry, invalidation and live mode refresh it without crossing endpoint/principal scope."
+    },
+    {
+      "id": "UI-PLUGIN-READ-RECOVERY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "plugin status polling clears recovered read failures while retaining drafts",
+      "assertion": "Automatic status polling recovers after transport failures, removes only the plugin read alert, shows cached inventory and preserves the selector draft without any management mutation."
+    },
+    {
+      "id": "UI-PLUGIN-INTERVAL",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "system defaults display and retain a supported nonpreset plugin interval",
+      "assertion": "The saved 30-minute interval is visibly selected as Every 30 minutes and remains 30 in the payload and fixture config after an unrelated request-budget save to 120."
+    },
+    {
+      "id": "UI-DETAIL-OBSERVATION-READ",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "saved unread details remain unread when refresh is",
+      "assertion": "Paused, cooldown and unavailable saved detail without an error remains visible and unread, accepts a local message draft and performs no read mark, preparation or Start."
+    },
+    {
+      "id": "UI-CONVERSATION-CHUNKS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "chunked owner and agent completions remain normal conversation across journal pages",
+      "assertion": "Large Unicode/escaped owner and agent completions cross a 100-event page with correct You/Agent roles; completed content replaces a streamed prefix. Adjacent completion remains separate; incomplete/malformed chunks and command output stay outside Conversation and visible in initially collapsed Details."
+    },
+    {
+      "id": "API-FALLBACK-RESTART",
+      "path": "internal/app/questions_test.go",
+      "anchor": "func TestRestartMaterializesAlreadyPersistedFallback(",
+      "assertion": "Repair and lost-native fallback checkpoints reconstitute exactly one original-ID textual question after two Recover calls, preserve attempt count/question text and never invoke a provider."
+    },
+    {
+      "id": "API-QUESTION-ACTIVE-TURN",
+      "path": "internal/app/questions_test.go",
+      "anchor": "func TestTextQuestionFollowupRejectsStaleActiveTurnBeforeClaim(",
+      "assertion": "Wrong or empty active expected-turn tokens reject before question claim, leave pending parameters and Vault answer absent, and contact no provider."
+    },
+    {
+      "id": "API-INACTIVE-QUESTION-FOLLOWUP",
+      "path": "internal/app/messages_test.go",
+      "anchor": "func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(",
+      "assertion": "After actual provider loss, inactive nonempty token rejects while empty-token followup resumes the same thread/workspace/profile/prompt with exactly one submitted question-reply turn; question becomes answered and encrypted reply remains in Vault without original-task replay."
+    },
+    {
+      "id": "ADMIN-REMOVED-SKILL",
+      "path": "internal/app/plugins_test.go",
+      "anchor": "func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(",
+      "assertion": "Successful native removal/discovery omission disables cached unmanaged skill and blocks new Prepare while entrypoint files and prior prepared snapshots remain. Cancelled discovery preserves known availability; managed skill remains selectable and rediscovery re-enables."
     }
   ],
   "source_map": [

@@ -112,9 +112,73 @@ func (t *Tx) ProjectProgress(id, method string, params json.RawMessage, seq int6
 	return t.Put("run-progress", id, next)
 }
 
+// completionChunks frames the legacy object payload without rescanning earlier
+// deltas. JSON validation remains authoritative once the whole object arrives.
+type completionChunks struct {
+	text                     strings.Builder
+	depth                    int
+	started, quoted, escaped bool
+	complete, invalid        bool
+}
+
+func (c *completionChunks) append(delta string) json.RawMessage {
+	if c.invalid {
+		return nil
+	}
+	c.text.WriteString(delta)
+	for i := 0; i < len(delta); i++ {
+		b := delta[i]
+		if c.complete || !c.started {
+			if b == ' ' || b == '\n' || b == '\r' || b == '\t' {
+				continue
+			}
+			if c.complete || b != '{' {
+				c.invalid = true
+				return nil
+			}
+			c.started, c.depth = true, 1
+			continue
+		}
+		if c.quoted {
+			if c.escaped {
+				c.escaped = false
+			} else if b == '\\' {
+				c.escaped = true
+			} else if b == '"' {
+				c.quoted = false
+			}
+			continue
+		}
+		switch b {
+		case '"':
+			c.quoted = true
+		case '{', '[':
+			c.depth++
+		case '}', ']':
+			c.depth--
+			c.complete = c.depth == 0
+		}
+	}
+	if !c.complete {
+		return nil
+	}
+	params := json.RawMessage(c.text.String())
+	if !json.Valid(params) {
+		c.invalid = true
+		return nil
+	}
+	*c = completionChunks{}
+	return params
+}
+
 // Backfill runs once at startup, outside any read request. The cursor guard
 // prevents older history from replacing concurrent live projections.
 func (s *Store) BackfillProgress(ctx context.Context) error {
+	type projection struct {
+		method string
+		params json.RawMessage
+		event  domain.Event
+	}
 	runs, err := ListWithout[struct{ ID string }](ctx, s, "run", "$.skills", "$.sourceSnapshot", "$.prompt", "$.profile", "$.reviewPromptSnapshot")
 	if err != nil {
 		return err
@@ -125,42 +189,48 @@ func (s *Store) BackfillProgress(ctx context.Context) error {
 			return err
 		}
 		after := progress.Cursor
-		var chunks strings.Builder
+		var chunks completionChunks
 		for {
 			page, err := s.RunEvents(ctx, run.ID, after, 200)
 			if err != nil {
 				return err
 			}
 			events := page["events"].([]domain.Event)
-			if err = s.Write(ctx, func(tx *Tx) error {
-				for _, event := range events {
-					var body struct {
-						Method string
-						Params json.RawMessage
+			var projections []projection
+			for _, event := range events {
+				var body struct {
+					Method string
+					Params json.RawMessage
+				}
+				if json.Unmarshal(event.Data, &body) != nil {
+					continue
+				}
+				if body.Method == "item/completed/chunk" {
+					var chunk struct{ Delta string }
+					if json.Unmarshal(body.Params, &chunk) != nil {
+						continue
 					}
-					if json.Unmarshal(event.Data, &body) == nil {
-						if body.Method == "item/completed/chunk" {
-							var chunk struct{ Delta string }
-							if json.Unmarshal(body.Params, &chunk) == nil {
-								chunks.WriteString(chunk.Delta)
-							}
-							if !json.Valid([]byte(chunks.String())) {
-								continue
-							}
-							body.Method = "item/completed"
-							body.Params = json.RawMessage(chunks.String())
-							chunks.Reset()
-						} else {
-							chunks.Reset()
-						}
-						if e := tx.ProjectProgress(run.ID, body.Method, body.Params, event.Seq, event.At); e != nil {
+					body.Params = chunks.append(chunk.Delta)
+					if body.Params == nil {
+						continue
+					}
+					body.Method = "item/completed"
+				} else {
+					chunks = completionChunks{}
+				}
+				projections = append(projections, projection{body.Method, body.Params, event})
+			}
+			if len(projections) != 0 {
+				if err = s.Write(ctx, func(tx *Tx) error {
+					for _, p := range projections {
+						if e := tx.ProjectProgress(run.ID, p.method, p.params, p.event.Seq, p.event.At); e != nil {
 							return e
 						}
 					}
+					return nil
+				}); err != nil {
+					return err
 				}
-				return nil
-			}); err != nil {
-				return err
 			}
 			after = page["cursor"].(int64)
 			if !page["hasMore"].(bool) {

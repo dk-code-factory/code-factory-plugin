@@ -36,6 +36,7 @@ type PluginAdminInput struct {
 	Available bool   `json:"available,omitempty"`
 	Offset    int    `json:"offset,omitempty"`
 	Limit     int    `json:"limit,omitempty"`
+	Freshness string `json:"freshness,omitempty" jsonschema:"Unique read request marker; ignored by saved plugin-status reads."`
 }
 
 func (m *Manager) PluginState(ctx context.Context, in PluginAdminInput) (map[string]any, error) {
@@ -368,12 +369,16 @@ func (m *Manager) discoverAdminSkills(ctx context.Context) ([]domain.Skill, erro
 		}
 	}
 	out := []domain.Skill{}
+	discovered := map[string]bool{}
 	for _, root := range roots {
 		s, err := m.DiscoverSkills(ctx, root)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, s...)
+		for _, skill := range s {
+			discovered[skill.ID] = true
+		}
 	}
 	existing, err := store.List[domain.Skill](ctx, m.app.Store, "skill")
 	if err != nil {
@@ -383,7 +388,7 @@ func (m *Manager) discoverAdminSkills(ctx context.Context) ([]domain.Skill, erro
 		if skill.Managed {
 			continue
 		}
-		if _, err := os.Stat(skill.Path); os.IsNotExist(err) {
+		if !discovered[skill.ID] {
 			skill.Disabled = true
 			if err = m.app.Store.Put(ctx, "skill", skill.ID, skill, "skill.changed"); err != nil {
 				return nil, err

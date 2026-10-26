@@ -70,6 +70,7 @@ const retryableReads = new Set([
   "read_transcript",
   "list_runs",
   "get_settings",
+  "read_plugin_admin",
 ]);
 export async function call<T>(
   name: string,

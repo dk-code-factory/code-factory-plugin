@@ -160,6 +160,7 @@ flowchart TD
 - [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogActualOwnerHandlerRecordsRejectedInput(`; S4. The actual private owner handler logs rejected dependency parameters and HTTP status without executing maintenance.
 - [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRotationConcurrencyAndFailurePreserveAPI(`; S4. Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response.
 - [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogBoundsMalformedBodiesAndPreservesPanic(`; S4. Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestGitHubSkillUpgradeRejectsNestedNativePackages(`; S5. Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup.
 
 ## Verification and gaps
 

@@ -18,6 +18,74 @@ import (
 	"codefactory/internal/testutil"
 )
 
+func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "question")
+	record := filepath.Join(t.TempDir(), "provider.jsonl")
+	t.Setenv("CF_FAKE_RECORD", record)
+	a, ctx := fixture(t)
+	run := prepareRun(t, a, ctx)
+	if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	_ = pendingQuestion(t, a, "rpc")
+	live, err := a.Runs.get(run.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-live.started:
+	case <-time.After(time.Second):
+		t.Fatal("initial question turn did not finish starting")
+	}
+	live.mu.Lock()
+	client := live.client
+	live.mu.Unlock()
+	_ = client.Close()
+	waitFor(t, func() bool {
+		_ = a.Store.Get(ctx, "run", run.ID, &run)
+		return run.Status == "interrupted" && run.TurnID != ""
+	})
+	question := pendingQuestion(t, a, "text")
+	original := run
+	before := len(recordedCalls(t, record))
+	if _, err := a.Runs.QueueMessage(ctx, run.ID, "Do not use the inactive turn as authority", run.TurnID); err == nil {
+		t.Fatal("inactive historical turn was accepted as active authority")
+	}
+	const reply = "Use the focused retained scope"
+	accepted, err := a.Runs.QueueMessage(ctx, run.ID, reply, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		delivery, _ := a.MessageDelivery(ctx, run.ID)
+		if delivery != nil && delivery.State == "uncertain" {
+			t.Fatal("inactive question follow-up became uncertain before restoration")
+		}
+		return delivery != nil && delivery.ID == accepted.ID && delivery.State == "delivered"
+	})
+	if err := a.Store.Get(ctx, "run", run.ID, &run); err != nil {
+		t.Fatal(err)
+	}
+	if run.ThreadID != original.ThreadID || run.Worktree != original.Worktree || run.Prompt != original.Prompt || string(raw(run.Profile)) != string(raw(original.Profile)) {
+		t.Fatal("question follow-up replaced retained work or authority")
+	}
+	requests := recordedCalls(t, record)
+	if len(requests) != before+2 || requests[before].Method != "thread/resume" || requests[before+1].Method != "turn/start" {
+		t.Fatal("follow-up replayed or substituted provider turns", requests)
+	}
+	var inputs []struct{ Text string }
+	_ = json.Unmarshal(requests[before+1].Params["input"], &inputs)
+	if len(inputs) != 1 || !strings.Contains(inputs[0].Text, reply) || strings.Contains(inputs[0].Text, original.Prompt) || strings.Contains(inputs[0].Text, "Continue this same session") {
+		t.Fatal("restoration did not submit only the owner question reply")
+	}
+	if err := a.Store.Get(ctx, "attention", question.ID, &question); err != nil || question.Status != "answered" {
+		t.Fatal("successful follow-up did not claim its retained question", question.Status, err)
+	}
+	if _, err := a.Vault.Get(ctx, "attention-answer:"+question.ID); err != nil {
+		t.Fatal("retained question reply was not stored privately", err)
+	}
+}
+
 func TestMessageQueueCommitsBeforeBlockedAgentAndSurvivesCallerCancellation(t *testing.T) {
 	t.Setenv("CF_FAKE_MODE", "hold")
 	a, ctx := fixture(t)
