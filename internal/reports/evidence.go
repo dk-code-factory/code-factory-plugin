@@ -22,9 +22,9 @@ import (
 	"codefactory/internal/store"
 )
 
-var credentialPattern = regexp.MustCompile(`(?i)(?:["']?(?:access_token|refresh_token|id_token|password|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')|["']?(?:proxy-)?authorization["']?\s*[:=]\s*["']?(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:gh[pousr]_[a-z0-9_]+|github_pat_[a-z0-9_]+|sk-[a-z0-9_-]{12,})|(?:["']?(?:access_token|refresh_token|id_token|password|authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*["']?)[^\s"',}]+`)
+var credentialPattern = regexp.MustCompile(`(?i)(?:["']?(?:access_token|refresh_token|id_token|password|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|client_secret|secret)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')|["']?(?:proxy-)?authorization["']?\s*[:=]\s*["']?(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:gh[pousr]_[a-z0-9_]+|github_pat_[a-z0-9_]+|sk-[a-z0-9_-]{12,})|(?:["']?(?:access_token|refresh_token|id_token|password|authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|client_secret|secret)["']?\s*[:=]\s*["']?)[^\s"',}]+`)
 var headerPattern = regexp.MustCompile(`(?i)\b(?:set-cookie|cookie)[ \t]*:[^\r\n]*|\b(?:(?:proxy-)?authorization|(?:x[_-])?api[_-]?key)[ \t]*[:=][^\r\n]*|["'](?:set-cookie|cookie|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key)["']\s*:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*'|\[(?:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')\s*,?)*\s*\])`)
-var secretKeyPattern = regexp.MustCompile(`(?i)^(access_token|refresh_token|id_token|cookie|set-cookie|password|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|secret)$`)
+var secretKeyPattern = regexp.MustCompile(`(?i)^(access_token|refresh_token|id_token|cookie|set-cookie|password|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|client_secret|secret)$`)
 
 func redactCredentialText(text string) string {
 	return redactCredentialValue(text, 0).(string)

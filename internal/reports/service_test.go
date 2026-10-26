@@ -375,7 +375,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	nestedTool, _ := json.Marshal(map[string]any{"content": []any{map[string]any{"type": "text", "text": string(nestedText)}}, "isError": true})
 	o.ToolEvidence += "\nMCP response: " + string(nestedTool) + `
 [["Authorization", "Negotiate unknown-text-tuple-proof"], ["X-Diagnostic", "retained-text-tuple-neighbor"]]`
-	headerEvidence := `{"headers":{"X-Api-Key":"unknown-text-api-proof"},"pairs":[["X-Api-Key","unknown-text-api-tuple-proof"]],"records":[{"name":"Authorization","value":"Negotiate unknown-text-record-proof","adjacent":"retained-text-record-neighbor"},{"key":"Cookie","value":"session=unknown-text-record-cookie"},{"name":"X-Api-Key","value":"unknown-text-api-record-proof"}],"sequence":9007199254740993}`
+	headerEvidence := `{"headers":{"X-Api-Key":"unknown-text-api-proof"},"pairs":[["X-Api-Key","unknown-text-api-tuple-proof"]],"records":[{"name":"Authorization","value":"Negotiate unknown-text-record-proof","adjacent":"retained-text-record-neighbor"},{"key":"Cookie","value":"session=unknown-text-record-cookie"},{"name":"X-Api-Key","value":"unknown-text-api-record-proof"}],"oauth":{"client_secret":"unknown-text-client-secret","adjacent":"retained-oauth-diagnostic"},"sequence":9007199254740993}`
 	o.ToolEvidence += "\n" + headerEvidence
 	o.Errors += "\nX-Api-Key: unknown-raw-api-proof\nretained-api-header-neighbor"
 	o.RunIDs = []string{"run-1", "missing-run"}
@@ -387,7 +387,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 			t.Fatal(e)
 		}
 	}
-	if err := s.Store.Put(ctx, "attention", "attention-1", domain.Attention{ID: "attention-1", RunID: "run-1", Params: json.RawMessage(`{"sequence":9007199254740993,"headers":{"X-Api-Key":"unknown-attention-api-proof"},"records":[{"name":"Authorization","value":"Negotiate unknown-attention-record-proof","adjacent":"retained-attention-record-neighbor"}]}`)}, ""); err != nil {
+	if err := s.Store.Put(ctx, "attention", "attention-1", domain.Attention{ID: "attention-1", RunID: "run-1", Params: json.RawMessage(`{"sequence":9007199254740993,"client_secret":"unknown-attention-client-secret","headers":{"X-Api-Key":"unknown-attention-api-proof"},"records":[{"name":"Authorization","value":"Negotiate unknown-attention-record-proof","adjacent":"retained-attention-record-neighbor"}]}`)}, ""); err != nil {
 		t.Fatal(err)
 	}
 	if e := s.Store.Write(ctx, func(t *store.Tx) error {
@@ -399,6 +399,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 			"Proxy-Authorization": "Negotiate unknown-structured-proxy-proof",
 			"id_token":            "unknown-map-id-token",
 			"sequence":            json.Number("9007199254740993"),
+			"oauth":               map[string]string{"client_secret": "unknown-event-client-secret", "adjacent": "retained-event-oauth-diagnostic"},
 		})
 	}); e != nil {
 		t.Fatal(e)
@@ -451,6 +452,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	secrets = append(secrets, "unknown-escaped-proof", "unknown-escaped-cookie", "unknown-text-tuple-proof", "unknown-structured-tuple-proof", "unknown-structured-proxy-tuple-proof")
 	secrets = append(secrets, "unknown-inline-cookie-json", "unknown-inline-auth-json")
 	secrets = append(secrets, "unknown-text-api-proof", "unknown-text-api-tuple-proof", "unknown-text-api-record-proof", "unknown-text-record-proof", "unknown-text-record-cookie", "unknown-raw-api-proof", "unknown-attention-api-proof", "unknown-attention-record-proof", "unknown-structured-api-proof", "unknown-structured-api-tuple-proof", "unknown-structured-record-proof", "unknown-structured-record-cookie")
+	secrets = append(secrets, "unknown-text-client-secret", "unknown-attention-client-secret", "unknown-event-client-secret")
 	stored, _ := json.Marshal(get(t, s, ctx, r.ID))
 	for _, secret := range secrets {
 		if strings.Contains(string(b), secret) || strings.Contains(string(stored), secret) {
@@ -466,7 +468,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	if !strings.Contains(string(b), "retained-auth-array-neighbor") || !strings.Contains(string(b), "retained-proxy-array-neighbor") {
 		t.Error("authorization array redaction swallowed adjacent evidence", string(b))
 	}
-	for _, adjacent := range []string{"retained-nested-tool-neighbor", "retained-text-tuple-neighbor", "retained-structured-tuple-neighbor", "retained-inline-header-neighbor", "retained-api-header-neighbor", "retained-text-record-neighbor", "retained-header-record-neighbor", "retained-attention-record-neighbor"} {
+	for _, adjacent := range []string{"retained-nested-tool-neighbor", "retained-text-tuple-neighbor", "retained-structured-tuple-neighbor", "retained-inline-header-neighbor", "retained-api-header-neighbor", "retained-text-record-neighbor", "retained-header-record-neighbor", "retained-attention-record-neighbor", "retained-oauth-diagnostic", "retained-event-oauth-diagnostic"} {
 		if !strings.Contains(string(b), adjacent) {
 			t.Error("serialized evidence redaction swallowed adjacent data", adjacent)
 		}
@@ -519,7 +521,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	if len(github.created) == 1 && (!strings.Contains(github.created[0].Body, "retained-nested-tool-neighbor") || !strings.Contains(github.created[0].Body, "retained-draft-tuple-neighbor") || !strings.Contains(github.created[0].Body, "retained-inline-header-neighbor")) {
 		t.Error("serialized evidence redaction swallowed adjacent publication data", github.created)
 	}
-	if len(github.created) == 1 && (!strings.Contains(github.created[0].Body, `"sequence":9007199254740993`) || !strings.Contains(github.created[0].Body, "retained-text-record-neighbor")) {
+	if len(github.created) == 1 && (!strings.Contains(github.created[0].Body, `"sequence":9007199254740993`) || !strings.Contains(github.created[0].Body, "retained-text-record-neighbor") || !strings.Contains(github.created[0].Body, "retained-oauth-diagnostic")) {
 		t.Error("header record redaction changed neighboring publication diagnostics", github.created)
 	}
 	prepared, _ := json.Marshal(engine.preparedReports[0])
@@ -533,6 +535,9 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	}
 	if !strings.Contains(string(prepared), "retained-inline-header-neighbor") {
 		t.Error("raw header redaction swallowed adjacent investigator evidence", string(prepared))
+	}
+	if !strings.Contains(string(prepared), "retained-oauth-diagnostic") {
+		t.Error("OAuth credential redaction swallowed adjacent investigator evidence", string(prepared))
 	}
 }
 

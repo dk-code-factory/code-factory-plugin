@@ -7051,7 +7051,7 @@
             "S2",
             "S3"
           ],
-          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain. Structured/serialized header pairs, X-Api-Key aliases, named header-value records and escaped nested MCP text are excluded before all retained/external boundaries, while adjacent fields and complete raw header association survive. Captured Event.Data and Attention.Params retain the exact large integer JSON token without rounding or conversion to a string."
+          "purpose": "Unknown authorization schemes, OAuth client_secret values and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain. Structured/serialized header pairs, X-Api-Key aliases, named header-value records and escaped nested MCP text are excluded before all retained/external boundaries, while adjacent fields and complete raw header association survive. Captured Event.Data and Attention.Params retain the exact large integer JSON token without rounding or conversion to a string."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7220,7 +7220,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "Definite GitHub rejections recover after correction; ambiguous server/network results never permit a repeated issue creation."
+          "purpose": "A definite rejected creation leaves the report blocked with no uncertain creation claim; after correcting the rejection, explicit resume permits a second creation attempt and completes the report."
         },
         {
           "path": "internal/reports/github_test.go",
@@ -7228,7 +7228,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "Definite GitHub rejections recover after correction; ambiguous server/network results never permit a repeated issue creation."
+          "purpose": "Single HTTP 400/403/422/429 responses classify as definite rejections, HTTP 500 remains uncertain, and HTTP 429 retains a future retry deadline. This fixture does not exercise recovery or repeated creation attempts."
         },
         {
           "path": "internal/reports/engine_test.go",
