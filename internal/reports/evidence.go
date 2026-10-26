@@ -27,7 +27,78 @@ var headerPattern = regexp.MustCompile(`(?i)\b(?:set-cookie|cookie)[ \t]*:[^\r\n
 var secretKeyPattern = regexp.MustCompile(`(?i)^(access_token|refresh_token|id_token|cookie|set-cookie|password|(?:proxy-)?authorization|api[_-]?key|owner[_-]?token|secret)$`)
 
 func redactCredentialText(text string) string {
-	return credentialPattern.ReplaceAllString(headerPattern.ReplaceAllString(text, "[redacted]"), "[redacted]")
+	return redactCredentialValue(text, 0).(string)
+}
+
+func redactCredentialValue(v any, depth int) any {
+	switch x := v.(type) {
+	case string:
+		// Tool text can itself contain serialized MCP results and header records.
+		// Bound repeated decoding and fail closed on the remaining private text.
+		if depth >= 32 {
+			return "[redacted]"
+		}
+		plain := func(text string) string {
+			return credentialPattern.ReplaceAllString(headerPattern.ReplaceAllString(text, "[redacted]"), "[redacted]")
+		}
+		var out strings.Builder
+		start, attempts := 0, 0
+		headers, header := headerPattern.FindAllStringIndex(x, -1), 0
+		for i := 0; i < len(x); i++ {
+			if x[i] != '{' && x[i] != '[' && (x[i] != '"' || i+1 == len(x) || !strings.ContainsRune(`{[\`, rune(x[i+1]))) {
+				continue
+			}
+			// A JSON-looking proof still belongs to its entire raw header value.
+			// Matches inside an already decoded structure are handled recursively.
+			for header < len(headers) && (headers[header][1] <= i || headers[header][0] < start) {
+				header++
+			}
+			if header < len(headers) && headers[header][0] < i {
+				startOfTail := headers[header][1]
+				out.WriteString(plain(x[start:startOfTail]))
+				i, start = startOfTail-1, startOfTail
+				continue
+			}
+			if attempts >= 256 {
+				out.WriteString(plain(x[start:i]))
+				out.WriteString("[redacted]")
+				return out.String()
+			}
+			attempts++
+			decoder := json.NewDecoder(strings.NewReader(x[i:]))
+			decoder.UseNumber() // Preserve adjacent diagnostic integers exactly.
+			var nested any
+			if err := decoder.Decode(&nested); err != nil {
+				continue
+			}
+			out.WriteString(plain(x[start:i]))
+			b, _ := json.Marshal(redactCredentialValue(nested, depth+1))
+			out.Write(b)
+			i += int(decoder.InputOffset()) - 1
+			start = i + 1
+		}
+		out.WriteString(plain(x[start:]))
+		return out.String()
+	case []any:
+		if len(x) == 2 {
+			if name, ok := x[0].(string); ok && secretKeyPattern.MatchString(name) {
+				x[1] = "[redacted]"
+				return x
+			}
+		}
+		for i := range x {
+			x[i] = redactCredentialValue(x[i], depth)
+		}
+	case map[string]any:
+		for k, value := range x {
+			if secretKeyPattern.MatchString(k) {
+				x[k] = "[redacted]"
+			} else {
+				x[k] = redactCredentialValue(value, depth)
+			}
+		}
+	}
+	return v
 }
 
 func (s *Service) sanitize(ctx context.Context, v any) error {
@@ -50,32 +121,12 @@ func (s *Service) sanitize(ctx context.Context, v any) error {
 			text = strings.ReplaceAll(text, string(q[1:len(q)-1]), "[redacted]")
 		}
 	}
-	// Apply pattern redaction to string VALUES rather than serialized JSON syntax.
+	// Redact decoded values, including serialized tool text and header tuples.
 	var tree any
 	if e = json.Unmarshal([]byte(text), &tree); e != nil {
 		return e
 	}
-	var walk func(any) any
-	walk = func(v any) any {
-		switch x := v.(type) {
-		case string:
-			return redactCredentialText(x)
-		case []any:
-			for i := range x {
-				x[i] = walk(x[i])
-			}
-		case map[string]any:
-			for k, value := range x {
-				if secretKeyPattern.MatchString(k) {
-					x[k] = "[redacted]"
-				} else {
-					x[k] = walk(value)
-				}
-			}
-		}
-		return v
-	}
-	b, e = json.Marshal(walk(tree))
+	b, e = json.Marshal(redactCredentialValue(tree, 0))
 	if e != nil {
 		return e
 	}

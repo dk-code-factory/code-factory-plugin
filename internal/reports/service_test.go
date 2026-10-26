@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -233,8 +234,41 @@ func TestPrivateInputsAreRejectedBeforeCheckoutPersistence(t *testing.T) {
 	}
 }
 
+// Store.Write acquires an uncancellable mutex. Isolate these concurrent workers
+// so a regression cannot outlive the test and race fixture database cleanup.
+func runConcurrentReportChild(t *testing.T) bool {
+	t.Helper()
+	if os.Getenv("CODE_FACTORY_CONCURRENT_REPORT_TEST") == t.Name() {
+		return false
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^"+t.Name()+"$", "-test.timeout=15s", "-test.v")
+	cmd.Env = append(os.Environ(), "CODE_FACTORY_CONCURRENT_REPORT_TEST="+t.Name(), "TMPDIR="+t.TempDir())
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.Cancel = func() error {
+		err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		if errors.Is(err, syscall.ESRCH) {
+			return os.ErrProcessDone
+		}
+		return err
+	}
+	cmd.WaitDelay = time.Second
+	output, err := cmd.CombinedOutput() // Wait reaps the owned child before TempDir cleanup.
+	if ctx.Err() != nil || err != nil {
+		t.Fatalf("concurrent report child failed (deadline=%v, reaped=%v): %v\n%s", ctx.Err(), cmd.ProcessState != nil, err, output)
+	}
+	t.Logf("%s", output)
+	return true
+}
+
 func TestSubmissionValidationConcurrentIdempotencyAndConflicts(t *testing.T) {
+	if runConcurrentReportChild(t) {
+		return
+	}
 	s, ctx := fixture(t)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	for _, change := range []func(*Submission){func(o *Submission) { o.IdempotencyKey = "" }, func(o *Submission) { o.ObservedAt = time.Time{} }, func(o *Submission) { o.Surface = " " }, func(o *Submission) { o.Expected = "" }, func(o *Submission) { o.Actual = "" }, func(o *Submission) { o.ReproductionUnknown = "" }, func(o *Submission) { o.EventAfter = -1 }, func(o *Submission) { o.Steps = []string{" "} }} {
 		o := observation()
 		change(&o)
@@ -279,6 +313,39 @@ func TestSubmissionValidationConcurrentIdempotencyAndConflicts(t *testing.T) {
 		t.Fatal("repeat submissions added journal events", events)
 	}
 }
+
+func TestRedactCredentialCandidateStormOmitsPrivateTail(t *testing.T) {
+	const prefix = "Inspected diagnostic prefix\n"
+	text := prefix + strings.Repeat("{invalid ", 10_000) + "uninspected-private-tail"
+	got := redactCredentialText(text)
+	if !strings.HasPrefix(got, prefix) || !strings.HasSuffix(got, "[redacted]") || strings.Contains(got, "uninspected-private-tail") {
+		t.Fatal("candidate exhaustion did not preserve inspected evidence and omit the unresolved tail", got)
+	}
+}
+
+func TestRedactCredentialExhaustedDepthOmitsPrivateText(t *testing.T) {
+	// Enter an already exhausted state without building exponentially escaped JSON.
+	if got := redactCredentialValue("uninspected-private-text", 1<<20); got != "[redacted]" {
+		t.Fatal("exhausted decoding returned unresolved private text", got)
+	}
+}
+
+func TestRedactCredentialPreservesLargeDiagnosticInteger(t *testing.T) {
+	const prefix, suffix = "Diagnostic prefix ", " diagnostic suffix"
+	got := redactCredentialText(prefix + `{"sequence":9007199254740993,"Authorization":"Negotiate unknown-integer-proof","adjacent":"kept diagnostic field"}` + suffix)
+	if !strings.HasPrefix(got, prefix) || !strings.HasSuffix(got, suffix) || strings.Contains(got, "unknown-integer-proof") {
+		t.Fatal("credential redaction lost neighboring text or retained its proof", got)
+	}
+	var diagnostic struct {
+		Sequence json.Number `json:"sequence"`
+		Adjacent string      `json:"adjacent"`
+	}
+	encoded := strings.TrimSuffix(strings.TrimPrefix(got, prefix), suffix)
+	if err := json.Unmarshal([]byte(encoded), &diagnostic); err != nil || diagnostic.Sequence.String() != "9007199254740993" || diagnostic.Adjacent != "kept diagnostic field" {
+		t.Fatal("decoded diagnostic values changed during redaction", diagnostic, err)
+	}
+}
+
 func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	s, ctx := fixture(t)
 	if e := s.Vault.Set(ctx, "jira", "private-jira-secret"); e != nil {
@@ -302,6 +369,12 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 {"Authorization": ["Negotiate unknown-text-array-proof",
 "Custom unknown-text-array-second"], "adjacent": "retained-auth-array-neighbor"}
 {'Proxy-Authorization': ['Custom unknown-text-proxy-array-proof', 'Negotiate unknown-text-proxy-array-second'], 'adjacent': 'retained-proxy-array-neighbor'}`
+	inlineHeaders := "Cookie: state={\"opaque\":\"unknown-inline-cookie-json\"}\nAuthorization: Negotiate {\"opaque\":\"unknown-inline-auth-json\"}\nretained-inline-header-neighbor"
+	o.Errors += "\n" + inlineHeaders
+	nestedText, _ := json.Marshal(map[string]any{"headers": map[string]string{"Authorization": "Negotiate unknown-escaped-proof", "Cookie": "session=unknown-escaped-cookie"}, "raw": inlineHeaders, "adjacent": "retained-nested-tool-neighbor"})
+	nestedTool, _ := json.Marshal(map[string]any{"content": []any{map[string]any{"type": "text", "text": string(nestedText)}}, "isError": true})
+	o.ToolEvidence += "\nMCP response: " + string(nestedTool) + `
+[["Authorization", "Negotiate unknown-text-tuple-proof"], ["X-Diagnostic", "retained-text-tuple-neighbor"]]`
 	o.RunIDs = []string{"run-1", "missing-run"}
 	if err := s.Store.Put(ctx, "item", "repo#1", domain.Item{ID: "repo#1", Revision: "captured-associated-item-revision"}, ""); err != nil {
 		t.Fatal(err)
@@ -312,7 +385,7 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 		}
 	}
 	if e := s.Store.Write(ctx, func(t *store.Tx) error {
-		return t.Event("run.output", "run-1", map[string]any{"text": "private-jira-secret\nCookie: session=unknown-event-cookie\nAuthorization: Custom unknown-event-proof\nretained-event-line", "headers": map[string]any{"Cookie": []string{"unknown-map-cookie", "unknown-map-second"}, "Set-Cookie": "unknown-map-response", "Proxy-Authorization": []string{"Negotiate unknown-map-proxy-proof", "Custom unknown-map-proxy-second"}}, "Proxy-Authorization": "Negotiate unknown-structured-proxy-proof", "id_token": "unknown-map-id-token"})
+		return t.Event("run.output", "run-1", map[string]any{"text": "private-jira-secret\nCookie: session=unknown-event-cookie\nAuthorization: Custom unknown-event-proof\nretained-event-line", "headers": map[string]any{"Cookie": []string{"unknown-map-cookie", "unknown-map-second"}, "Set-Cookie": "unknown-map-response", "Proxy-Authorization": []string{"Negotiate unknown-map-proxy-proof", "Custom unknown-map-proxy-second"}}, "headerPairs": [][]string{{"Authorization", "Negotiate unknown-structured-tuple-proof"}, {"Proxy-Authorization", "Custom unknown-structured-proxy-tuple-proof"}, {"X-Diagnostic", "retained-structured-tuple-neighbor"}}, "Proxy-Authorization": "Negotiate unknown-structured-proxy-proof", "id_token": "unknown-map-id-token"})
 	}); e != nil {
 		t.Fatal(e)
 	}
@@ -339,6 +412,8 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	secrets = append(secrets, "unknown-single-password", "secret-single-suffix", "unknown-double-password", "secret-double-suffix")
 	secrets = append(secrets, "unknown-observation-proof", "unknown-proxy-user", "unknown-proxy-proof", "unknown-tool-proxy-proof", "unknown-event-proof", "unknown-map-proxy-proof", "unknown-map-proxy-second", "unknown-structured-proxy-proof")
 	secrets = append(secrets, "unknown-text-array-proof", "unknown-text-array-second", "unknown-text-proxy-array-proof", "unknown-text-proxy-array-second")
+	secrets = append(secrets, "unknown-escaped-proof", "unknown-escaped-cookie", "unknown-text-tuple-proof", "unknown-structured-tuple-proof", "unknown-structured-proxy-tuple-proof")
+	secrets = append(secrets, "unknown-inline-cookie-json", "unknown-inline-auth-json")
 	stored, _ := json.Marshal(get(t, s, ctx, r.ID))
 	for _, secret := range secrets {
 		if strings.Contains(string(b), secret) || strings.Contains(string(stored), secret) {
@@ -353,6 +428,11 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	}
 	if !strings.Contains(string(b), "retained-auth-array-neighbor") || !strings.Contains(string(b), "retained-proxy-array-neighbor") {
 		t.Error("authorization array redaction swallowed adjacent evidence", string(b))
+	}
+	for _, adjacent := range []string{"retained-nested-tool-neighbor", "retained-text-tuple-neighbor", "retained-structured-tuple-neighbor", "retained-inline-header-neighbor"} {
+		if !strings.Contains(string(b), adjacent) {
+			t.Error("serialized evidence redaction swallowed adjacent data", adjacent)
+		}
 	}
 	info, _ := os.Stat(filepath.Join(s.Dir, "issue-reports", r.ID, "evidence.json"))
 	if info.Mode().Perm() != 0600 {
@@ -376,7 +456,10 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	engine.findings.Body += `
 {"Authorization": ["Custom unknown-draft-array-proof"], "adjacent": "retained-draft-array-neighbor"}
 {'Proxy-Authorization': ['Negotiate unknown-draft-proxy-array-proof'], 'adjacent': 'retained-draft-proxy-array-neighbor'}`
-	if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "redacted-addition", Text: "Cookie: session=unknown-added-cookie\nAuthorization: Custom unknown-added-proof\nretained-addition-line\n" + `{"Proxy-Authorization": ["Custom unknown-added-array-proof"], "adjacent": "retained-added-array-neighbor"}`}); err != nil {
+	engine.findings.Body += "\nHost tool response: " + string(nestedTool) + `
+[["Proxy-Authorization", "Negotiate unknown-draft-tuple-proof"], ["X-Diagnostic", "retained-draft-tuple-neighbor"]]`
+	engine.findings.Body += "\n" + inlineHeaders
+	if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "redacted-addition", Text: "Cookie: session=unknown-added-cookie\nAuthorization: Custom unknown-added-proof\nretained-addition-line\n" + `{"Proxy-Authorization": ["Custom unknown-added-array-proof"], "adjacent": "retained-added-array-neighbor"}` + "\n" + string(nestedTool)}); err != nil {
 		t.Fatal(err)
 	}
 	step(t, s, ctx)
@@ -395,6 +478,9 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	if len(github.created) == 1 && (!strings.Contains(github.created[0].Body, "retained-draft-array-neighbor") || !strings.Contains(github.created[0].Body, "retained-draft-proxy-array-neighbor")) {
 		t.Error("authorization array redaction swallowed adjacent publication evidence", github.created)
 	}
+	if len(github.created) == 1 && (!strings.Contains(github.created[0].Body, "retained-nested-tool-neighbor") || !strings.Contains(github.created[0].Body, "retained-draft-tuple-neighbor") || !strings.Contains(github.created[0].Body, "retained-inline-header-neighbor")) {
+		t.Error("serialized evidence redaction swallowed adjacent publication data", github.created)
+	}
 	prepared, _ := json.Marshal(engine.preparedReports[0])
 	for _, secret := range append(secrets, "unknown-added-cookie", "unknown-added-proof", "unknown-added-array-proof") {
 		if strings.Contains(string(prepared), secret) {
@@ -403,6 +489,9 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	}
 	if !strings.Contains(string(prepared), "retained-added-array-neighbor") {
 		t.Error("authorization array redaction swallowed adjacent investigator evidence", string(prepared))
+	}
+	if !strings.Contains(string(prepared), "retained-inline-header-neighbor") {
+		t.Error("raw header redaction swallowed adjacent investigator evidence", string(prepared))
 	}
 }
 
@@ -1149,7 +1238,12 @@ func TestPublicationFailuresPreserveRecoveredIssueAndClaim(t *testing.T) {
 }
 
 func TestConcurrentPublicationCommandsClaimOneExternalEffect(t *testing.T) {
+	if runConcurrentReportChild(t) {
+		return
+	}
 	s, ctx := fixture(t)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	_, github := setupEngine(s)
 	r := submit(t, s, ctx)
 	step(t, s, ctx)

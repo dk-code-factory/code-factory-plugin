@@ -7027,6 +7027,11 @@
         {
           "path": "internal/reports/provider.py",
           "purpose": "Restores the full retained dk-workflows receipt and lifecycle environment at the native provider boundary while preserving native Codex authentication."
+        },
+        {
+          "path": "internal/reports/evidence.go",
+          "anchor": "func redactCredentialValue(",
+          "purpose": "Shared traversal redacts structured header pairs and decoded embedded JSON/MCP text, retaining full raw-header association and bounded fail-closed omission guards."
         }
       ],
       "tests": [
@@ -7036,7 +7041,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+          "purpose": "Twenty concurrent submissions retain one queued report identity, reject changed-payload conflicts and emit exactly the expected journal events; cancellable workers execute in an owned child with a local kill/reap deadline before fixture cleanup."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7046,7 +7051,7 @@
             "S2",
             "S3"
           ],
-          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain."
+          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain. Structured/serialized header pairs and escaped nested MCP text are excluded before all retained/external boundaries, while adjacent fields and complete raw header association survive."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7191,7 +7196,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Concurrent publication claims one external create, and interrupted lifecycle preparation cannot replay without explicit reconciliation."
+          "purpose": "Two service instances concurrently publish the same retained report, claim exactly one external creation and retain its completed issue identity; the owned child bounds and reaps stalled workers before private fixture cleanup."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7429,6 +7434,30 @@
             "S6"
           ],
           "purpose": "A controlled accepted addition returns two lost acknowledgements; unchanged retries preserve one retained addition and identity, while an edited draft uses a distinct identity and successfully appends another observation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRedactCredentialCandidateStormOmitsPrivateTail(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Malformed serialized candidate storms preserve inspected diagnostic text and omit unresolved private tails instead of returning uninspected material."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRedactCredentialExhaustedDepthOmitsPrivateText(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "An exhausted serialized-decoding state omits unresolved private text without allocating exponentially escaped input."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRedactCredentialPreservesLargeDiagnosticInteger(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Decoded serialized evidence removes an unknown credential while preserving adjacent fields, surrounding prose and the exact diagnostic integer above2^53."
         }
       ],
       "suites": [
