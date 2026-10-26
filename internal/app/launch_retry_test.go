@@ -60,16 +60,17 @@ func (s *launchRetrySource) PublishedReviews(context.Context, domain.Item) ([]do
 }
 
 type launchRetryFixture struct {
-	a      *App
-	pr     domain.Item
-	run    domain.Run
-	github *providers.GitHub
-	source *launchRetrySource
-	budget atomic.Int32
-	calls  atomic.Int32
-	live   atomic.Value
-	record string
-	status atomic.Int32
+	a         *App
+	pr        domain.Item
+	run       domain.Run
+	github    *providers.GitHub
+	source    *launchRetrySource
+	budget    atomic.Int32
+	calls     atomic.Int32
+	live      atomic.Value
+	principal atomic.Value
+	record    string
+	status    atomic.Int32
 }
 
 func deferredReviewFixture(t *testing.T, automatic bool) *launchRetryFixture {
@@ -83,13 +84,14 @@ func deferredProfileReviewFixture(t *testing.T, automatic bool, profile *domain.
 	t.Setenv("CF_FAKE_MODE", "hold")
 	f := &launchRetryFixture{a: a, pr: pr, record: filepath.Join(t.TempDir(), "calls.jsonl")}
 	f.live.Store(pr)
+	f.principal.Store("me")
 	f.budget.Store(1)
 	f.status.Store(http.StatusOK)
 	t.Setenv("CF_FAKE_RECORD", f.record)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.calls.Add(1)
 		if r.URL.Path == "/user" {
-			fmt.Fprint(w, `{"login":"me"}`)
+			_ = json.NewEncoder(w).Encode(map[string]string{"login": f.principal.Load().(string)})
 			return
 		}
 		number := 2
@@ -1464,5 +1466,304 @@ func TestRecoveredLegacyCustomReviewStillChecksLiveEligibility(t *testing.T) {
 				t.Fatal("manual recovery created a claim")
 			}
 		})
+	}
+}
+
+func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(t *testing.T) {
+	f := deferredReviewFixture(t, true)
+	ctx := context.Background()
+	f.budget.Store(100)
+	f.expire(t)
+	root := t.TempDir()
+	entered, releasePath := filepath.Join(root, "interrupt-entered"), filepath.Join(root, "interrupt-release")
+	release := sync.OnceFunc(func() {
+		if err := os.WriteFile(releasePath, []byte("release"), 0600); err != nil {
+			t.Error(err)
+		}
+	})
+	defer release()
+	t.Setenv("CF_FAKE_INTERRUPT_ENTERED", entered)
+	t.Setenv("CF_FAKE_INTERRUPT_RELEASE", releasePath)
+	slow, err := f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.a.Runs.Start(ctx, slow.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", slow.ID, &slow)
+		return slow.Status == "running" && slow.TurnID != ""
+	})
+	// Only this already-running fake process inherits the slow interruption gate.
+	t.Setenv("CF_FAKE_INTERRUPT_ENTERED", "")
+	t.Setenv("CF_FAKE_INTERRUPT_RELEASE", "")
+	interruptDone := make(chan error, 1)
+	go func() { interruptDone <- f.a.Runs.Interrupt(ctx, slow.ID) }()
+	defer func() {
+		release()
+		waitLaunchRetry(t, func() {
+			if err := <-interruptDone; err != nil {
+				t.Error(err)
+			}
+		})
+	}()
+	waitFor(t, func() bool { _, err := os.Stat(entered); return err == nil })
+	responsive := func(label string, fn func() error) {
+		t.Helper()
+		done := make(chan error, 1)
+		go func() { done <- fn() }()
+		select {
+		case err := <-done:
+			if err != nil {
+				t.Fatal(label, err)
+			}
+		case <-time.After(2 * time.Second):
+			release()
+			waitLaunchRetry(t, func() { <-done })
+			t.Fatal(label + " blocked behind another run's provider interruption")
+		}
+	}
+	// This snapshots manager membership then scans session locks. Holding either
+	// lock across the provider call fails even if direct lookups still succeed.
+	responsive("deferred admission poll", func() error { return f.a.Runs.RetryDeferredLaunches(ctx) })
+	var waiting domain.Run
+	if err := f.a.Store.Get(ctx, "run", f.run.ID, &waiting); err != nil || waiting.Status != "deferred" {
+		t.Fatal("busy retry was lost", err)
+	}
+	t.Setenv("CF_FAKE_MODE", "question")
+	var questionRun domain.Run
+	responsive("unrelated Start", func() error {
+		var err error
+		questionRun, err = f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+		if err == nil {
+			_, err = f.a.Runs.Start(ctx, questionRun.ID, false)
+		}
+		return err
+	})
+	var question domain.Attention
+	waitFor(t, func() bool {
+		atts, _ := store.List[domain.Attention](ctx, f.a.Store, "attention")
+		for _, at := range atts {
+			if at.RunID == questionRun.ID && at.Status == "pending" {
+				question = at
+				return true
+			}
+		}
+		return false
+	})
+	responsive("unrelated Answer", func() error {
+		return f.a.Runs.Answer(ctx, question.ID, json.RawMessage(`{"answers":{"scope":{"answers":["Focused"]}}}`))
+	})
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", questionRun.ID, &questionRun)
+		return questionRun.Status == "idle"
+	})
+	t.Setenv("CF_FAKE_MODE", "hold")
+	var other domain.Run
+	responsive("another Start", func() error {
+		var err error
+		other, err = f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+		if err == nil {
+			_, err = f.a.Runs.Start(ctx, other.ID, false)
+		}
+		return err
+	})
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", other.ID, &other)
+		return other.Status == "running" && other.TurnID != ""
+	})
+	responsive("unrelated Interrupt", func() error { return f.a.Runs.Interrupt(ctx, other.ID) })
+	waitFor(t, func() bool { _ = f.a.Store.Get(ctx, "run", other.ID, &other); return other.Status == "interrupted" })
+	// Cancellation intent and the original RPC target were retained before any
+	// reply; later sessions cannot redirect the delayed request to a newer turn.
+	var saved domain.Run
+	if err := f.a.Store.Get(ctx, "run", slow.ID, &saved); err != nil || !saved.InterruptRequested || saved.ResumePending {
+		t.Fatal("interrupt intent was not durable", err)
+	}
+	payload, err := os.ReadFile(entered)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var target map[string]string
+	if err := json.Unmarshal(payload, &target); err != nil || target["threadId"] != slow.ThreadID || target["turnId"] != slow.TurnID {
+		t.Fatal("interrupt lost its original turn target", target, err)
+	}
+	release()
+	waitFor(t, func() bool { _ = f.a.Store.Get(ctx, "run", slow.ID, &saved); return saved.Status == "interrupted" })
+	responsive("eventual deferred admission", func() error { return f.a.Runs.RetryDeferredLaunches(ctx) })
+	waitFor(t, func() bool {
+		_ = f.a.Store.Get(ctx, "run", f.run.ID, &f.run)
+		return f.run.Status == "running" && f.run.TurnID != ""
+	})
+	if claimCount(t, f.a) != 1 {
+		t.Fatal("interruption responsiveness duplicated an accepted claim")
+	}
+}
+
+func TestSlowInterruptCannotChangeReplacementOrCleanedSession(t *testing.T) {
+	for _, action := range []string{"replace", "cleanup"} {
+		t.Run(action, func(t *testing.T) {
+			f := deferredReviewFixture(t, true)
+			ctx := context.Background()
+			f.budget.Store(100)
+			root := t.TempDir()
+			entered, releasePath := filepath.Join(root, "entered"), filepath.Join(root, "release")
+			release := sync.OnceFunc(func() {
+				if err := os.WriteFile(releasePath, []byte("release"), 0600); err != nil {
+					t.Error(err)
+				}
+			})
+			defer release()
+			t.Setenv("CF_FAKE_INTERRUPT_ENTERED", entered)
+			t.Setenv("CF_FAKE_INTERRUPT_RELEASE", releasePath)
+			run, err := f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err = f.a.Runs.Start(ctx, run.ID, false); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool {
+				_ = f.a.Store.Get(ctx, "run", run.ID, &run)
+				return run.Status == "running" && run.TurnID != ""
+			})
+			old, err := f.a.Runs.get(run.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			turn := run.TurnID
+			t.Setenv("CF_FAKE_INTERRUPT_ENTERED", "")
+			t.Setenv("CF_FAKE_INTERRUPT_RELEASE", "")
+			interruptDone := make(chan error, 1)
+			go func() { interruptDone <- f.a.Runs.Interrupt(ctx, run.ID) }()
+			defer func() {
+				release()
+				waitLaunchRetry(t, func() {
+					if err := <-interruptDone; err == nil {
+						t.Error("retired client interruption should report disconnect")
+					}
+				})
+			}()
+			waitFor(t, func() bool { _, err := os.Stat(entered); return err == nil })
+			// A turn may complete before the response to its interrupt arrives.
+			transitionDone := make(chan error, 1)
+			go func() {
+				f.a.Runs.onMessage(old, codex.Message{Method: "turn/completed", Params: raw(map[string]any{"turn": map[string]string{"id": turn, "status": "interrupted"}})})
+				if action == "cleanup" {
+					transitionDone <- f.a.Runs.Cleanup(ctx, run.ID)
+				} else {
+					_, err := f.a.Runs.Start(ctx, run.ID, true)
+					transitionDone <- err
+				}
+			}()
+			select {
+			case err := <-transitionDone:
+				if err != nil {
+					t.Fatal(err)
+				}
+			case <-time.After(2 * time.Second):
+				release()
+				waitLaunchRetry(t, func() { <-transitionDone })
+				t.Fatal("session retirement blocked behind its old interrupt RPC")
+			}
+			want := "cleaned"
+			if action == "replace" {
+				want = "running"
+			}
+			waitFor(t, func() bool {
+				_ = f.a.Store.Get(ctx, "run", run.ID, &run)
+				return run.Status == want && (action == "cleanup" || run.TurnID != "")
+			})
+			// Delayed old-session events must not overwrite the replacement or
+			// resurrect work whose clean workspace was deliberately removed.
+			f.a.Runs.onMessage(old, codex.Message{Method: "turn/completed", Params: raw(map[string]any{"turn": map[string]string{"id": turn, "status": "interrupted"}})})
+			if err := f.a.Store.Get(ctx, "run", run.ID, &run); err != nil || run.Status != want {
+				t.Fatal("old interruption changed retired work", run.Status, err)
+			}
+			if action == "replace" && (!run.ResumePending || run.InterruptRequested) {
+				t.Fatal("old cancellation intent overwrote the replacement")
+			}
+			if action == "cleanup" && (run.ResumePending || !run.InterruptRequested) {
+				t.Fatal("cleanup regained continuation authority")
+			}
+		})
+	}
+}
+
+// Use the real managed identity path added on the advanced target, rather than
+// the source fixture's synchronized-viewer stub used by the retry-only cases.
+func TestDeferredReviewRevalidatesActivePrincipal(t *testing.T) {
+	for _, changed := range []bool{false, true} {
+		t.Run(fmt.Sprint(changed), func(t *testing.T) {
+			f := deferredReviewFixture(t, false)
+			f.a.GitHub = providers.NewCachedGitHub(f.github)
+			if changed {
+				f.principal.Store(f.pr.Author)
+			}
+			f.budget.Store(100)
+			f.expire(t)
+			// A queued accepted retry must use current credentials even without
+			// synchronized identity; no probe may recreate that saved identity.
+			ctx := context.Background()
+			if err := f.a.Store.Write(ctx, func(tx *store.Tx) error { return tx.Delete("identity", "github") }); err != nil {
+				t.Fatal(err)
+			}
+			if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if changed {
+				waitFor(t, func() bool { _ = f.a.Store.Get(ctx, "run", f.run.ID, &f.run); return f.run.Status == "failed" })
+				if !strings.Contains(f.run.Error, "cannot review your own pull request") || f.run.ResumePending || !f.run.LaunchRetryAt.IsZero() {
+					t.Fatal("changed principal retained launch authority", f.run)
+				}
+				f.assertNoAgent(t)
+				if _, err := os.Stat(f.run.Worktree); !os.IsNotExist(err) {
+					t.Fatal("rejected active principal created workspace", err)
+				}
+			} else {
+				f.assertSingleLaunch(t)
+			}
+			if f.calls.Load() != 3 {
+				t.Fatal("retry did not read both live source and principal", f.calls.Load())
+			}
+			var saved domain.GitHubViewer
+			if err := f.a.Store.Get(ctx, "identity", "github", &saved); err != store.ErrNotFound {
+				t.Fatal("execution wrote synchronized identity", err)
+			}
+		})
+	}
+}
+
+func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(t *testing.T) {
+	f := deferredReviewFixture(t, true)
+	f.a.GitHub = providers.NewCachedGitHub(f.github)
+	// The initial fixture identity consumed one request. Permit the fresh source
+	// read, then exhaust the shared budget at the required live identity read.
+	f.budget.Store(2)
+	f.expire(t)
+	ctx := context.Background()
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _ = f.a.Store.Get(ctx, "run", f.run.ID, &f.run); return f.run.Status == "deferred" })
+	usage, err := f.github.UsageStatus(ctx)
+	if err != nil || !f.run.ResumePending || !f.run.LaunchRetryAt.Equal(usage.NextRequest) || !strings.Contains(f.run.Error, "cannot verify active GitHub review identity") || !strings.Contains(f.run.Error, "Code Factory GitHub budget reached") {
+		t.Fatal("identity budget denial lost accepted retry", f.run, usage, err)
+	}
+	f.assertNoAgent(t)
+	if f.calls.Load() != 2 || claimCount(t, f.a) != 1 {
+		t.Fatal("identity denial bypassed accounting or duplicated claim", f.calls.Load())
+	}
+	f.restart(t)
+	f.assertNoAgent(t)
+	f.budget.Store(100)
+	f.expire(t)
+	if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	f.assertSingleLaunch(t)
+	if f.calls.Load() != 4 {
+		t.Fatal("due recovery did not revalidate source and principal", f.calls.Load())
 	}
 }

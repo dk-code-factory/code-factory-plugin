@@ -164,17 +164,13 @@ func (m *Manager) RetryDeferredLaunches(ctx context.Context) error {
 }
 
 func (m *Manager) validateLaunchPolicy(ctx context.Context, r domain.Run, source domain.Item) error {
-	if r.ThreadID != "" || source.Kind != "pr" {
+	if !r.AutomaticReview || r.ThreadID != "" || source.Kind != "pr" {
 		return nil
 	}
 	return m.app.Store.Write(ctx, func(tx *store.Tx) error {
-		if err := validatePRReviewRun(tx.Get, r, source); err != nil {
-			return err
-		}
-		if r.AutomaticReview {
-			return validateAutomaticPolicy(tx, r, source, false)
-		}
-		return nil
+		// continuationContext already checked the fresh author against the live
+		// authenticated principal. Saved identity cannot replace that evidence.
+		return validateAutomaticPolicy(tx, r, source, false)
 	})
 }
 

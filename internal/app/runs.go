@@ -1524,47 +1524,59 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 	return m.persist(s, "run.state")
 }
 func (m *Manager) Interrupt(ctx context.Context, id string) error {
-	s, unlock, err := m.lockRun(ctx, id, false)
-	if err != nil {
-		return err
-	}
-	defer unlock()
-	if s.clientless {
-		var r domain.Run
-		if err := m.app.Store.Get(ctx, "run", id, &r); err != nil {
+	var interruptClient, closeClient *codex.Client
+	var target map[string]string
+	// Persist cancellation under the current run owner, then release its lock
+	// before provider I/O. Manager membership remains a brief lockRun check.
+	err := func() error {
+		s, unlock, err := m.lockRun(ctx, id, false)
+		if err != nil {
 			return err
 		}
-		if r.Status == "deferred" {
-			r.Status, r.ResumePending, r.InterruptRequested = "interrupted", false, true
-			r.LaunchRetryAt = time.Time{}
-			s.run = r
-			return m.app.Store.Put(ctx, "run", id, r, "run.state")
-		}
-		return m.cancelUnattachedRecovery(ctx, id)
-	}
-	s.ownerRevision++
-	m.cancelRecoveryLocked(s)
-	if s.run.TurnID == "" || s.client == nil {
-		if s.run.Status == "deferred" || s.run.Status == "queued" || s.run.Status == "starting" || s.recovery != nil && s.recovery.Stage == "cancelled" {
-			s.retired = true
-			if s.cancel != nil {
-				s.cancel()
+		defer unlock()
+		if s.clientless {
+			var r domain.Run
+			if err := m.app.Store.Get(ctx, "run", id, &r); err != nil {
+				return err
 			}
-			if s.client != nil {
-				_ = s.client.Close()
+			if r.Status == "deferred" {
+				r.Status, r.ResumePending, r.InterruptRequested = "interrupted", false, true
+				r.LaunchRetryAt = time.Time{}
+				s.run = r
+				return m.app.Store.Put(ctx, "run", id, r, "run.state")
 			}
-			s.run.Status, s.run.ResumePending, s.run.InterruptRequested = "interrupted", false, true
-			s.run.LaunchRetryAt = time.Time{}
-			return m.persist(s, "run.state")
+			return m.cancelUnattachedRecovery(ctx, id)
 		}
-		return nil
+		s.ownerRevision++
+		m.cancelRecoveryLocked(s)
+		if s.run.TurnID == "" || s.client == nil {
+			if s.run.Status == "deferred" || s.run.Status == "queued" || s.run.Status == "starting" || s.recovery != nil && s.recovery.Stage == "cancelled" {
+				s.retired = true
+				if s.cancel != nil {
+					s.cancel()
+				}
+				s.run.Status, s.run.ResumePending, s.run.InterruptRequested = "interrupted", false, true
+				s.run.LaunchRetryAt = time.Time{}
+				closeClient = s.client
+				return m.persist(s, "run.state")
+			}
+			return nil
+		}
+		s.run.InterruptRequested = true
+		s.run.ResumePending = false
+		interruptClient = s.client
+		target = map[string]string{"threadId": s.run.ThreadID, "turnId": s.run.TurnID}
+		return m.persist(s, "run.state")
+	}()
+	if closeClient != nil {
+		_ = closeClient.Close()
 	}
-	s.run.InterruptRequested = true
-	s.run.ResumePending = false
-	if e := m.persist(s, "run.state"); e != nil {
-		return e
+	if err != nil || interruptClient == nil {
+		return err
 	}
-	return s.client.Call(ctx, "turn/interrupt", map[string]string{"threadId": s.run.ThreadID, "turnId": s.run.TurnID}, nil)
+	// The captured client and IDs target only the original turn, even if the
+	// session is replaced or advances while the provider response is pending.
+	return interruptClient.Call(ctx, "turn/interrupt", target, nil)
 }
 func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage) error {
 	if !m.adminGate.TryRLock() {

@@ -326,6 +326,18 @@ func main() {
 				}
 			}
 		case "turn/interrupt":
+			if entered := os.Getenv("CF_FAKE_INTERRUPT_ENTERED"); entered != "" {
+				params, _ := json.Marshal(m.Params)
+				if err := os.WriteFile(entered, params, 0600); err != nil {
+					os.Exit(5)
+				}
+				for {
+					if _, err := os.Stat(os.Getenv("CF_FAKE_INTERRUPT_RELEASE")); err == nil {
+						break
+					}
+					time.Sleep(5 * time.Millisecond)
+				}
+			}
 			reply(map[string]any{})
 			complete("interrupted")
 		default:

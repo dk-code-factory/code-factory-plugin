@@ -81,7 +81,10 @@ func (m *Manager) activeReviewPrincipal(ctx context.Context, run domain.Run, ite
 		return nil, "", fmt.Errorf("cannot verify active GitHub review identity")
 	}
 	login, err := m.app.GitHub.User(providers.WithGitHubRead(bounded, providers.RequireLive))
-	if err != nil || strings.TrimSpace(login) == "" {
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot verify active GitHub review identity: %w", err)
+	}
+	if strings.TrimSpace(login) == "" {
 		return nil, "", fmt.Errorf("cannot verify active GitHub review identity")
 	}
 	current, err := m.app.GitHub.CacheScope(bounded)

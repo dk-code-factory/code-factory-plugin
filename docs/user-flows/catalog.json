@@ -1937,6 +1937,24 @@
             "S8"
           ],
           "purpose": "Persisted historical custom-review intent keeps live head and own/unknown author checks after defaults change; mismatched cached source identity remains stopped without promotion or a new claim."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewRevalidatesActivePrincipal(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Due accepted manual retry reads the actual active principal under current credentials, permits eligible execution without synchronized identity and rejects self-review before workspace/provider creation without restoring saved identity."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch."
         }
       ],
       "suites": [
@@ -4393,6 +4411,42 @@
             "S8"
           ],
           "purpose": "Persisted historical custom-review intent keeps live head and own/unknown author checks after defaults change; mismatched cached source identity remains stopped without promotion or a new claim."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "A real fake-provider interrupt stays blocked behind a controlled process barrier while deferred polling, unrelated Start, Answer and Interrupt complete; cancellation intent and exact original RPC IDs persist, then the same accepted deferred claim starts after capacity clears."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptCannotChangeReplacementOrCleanedSession(",
+          "scenarios": [
+            "S5",
+            "S8"
+          ],
+          "purpose": "A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewRevalidatesActivePrincipal(",
+          "scenarios": [
+            "S5",
+            "S6"
+          ],
+          "purpose": "Due accepted manual retry reads the actual active principal under current credentials, permits eligible execution without synchronized identity and rejects self-review before workspace/provider creation without restoring saved identity."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(",
+          "scenarios": [
+            "S5",
+            "S6"
+          ],
+          "purpose": "Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch."
         }
       ],
       "suites": [
@@ -5373,6 +5427,22 @@
             "S3"
           ],
           "purpose": "Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A real fake-provider interrupt stays blocked behind a controlled process barrier while deferred polling, unrelated Start, Answer and Interrupt complete; cancellation intent and exact original RPC IDs persist, then the same accepted deferred claim starts after capacity clears."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptCannotChangeReplacementOrCleanedSession(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work."
         }
       ],
       "suites": [
@@ -6451,6 +6521,22 @@
             "S4"
           ],
           "purpose": "Interrupt completes while restored completion classification is gated; releasing and joining that callback before daemon shutdown preserves cancelled recovery with no attention or question-only repair."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A real fake-provider interrupt stays blocked behind a controlled process barrier while deferred polling, unrelated Start, Answer and Interrupt complete; cancellation intent and exact original RPC IDs persist, then the same accepted deferred claim starts after capacity clears."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptCannotChangeReplacementOrCleanedSession(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work."
         }
       ],
       "suites": [
@@ -7701,6 +7787,38 @@
             "S6"
           ],
           "purpose": "Persisted historical custom-review intent keeps live head and own/unknown author checks after defaults change; mismatched cached source identity remains stopped without promotion or a new claim."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A real fake-provider interrupt stays blocked behind a controlled process barrier while deferred polling, unrelated Start, Answer and Interrupt complete; cancellation intent and exact original RPC IDs persist, then the same accepted deferred claim starts after capacity clears."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestSlowInterruptCannotChangeReplacementOrCleanedSession(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewRevalidatesActivePrincipal(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Due accepted manual retry reads the actual active principal under current credentials, permits eligible execution without synchronized identity and rejects self-review before workspace/provider creation without restoring saved identity."
+        },
+        {
+          "path": "internal/app/launch_retry_test.go",
+          "anchor": "func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch."
         }
       ],
       "suites": [

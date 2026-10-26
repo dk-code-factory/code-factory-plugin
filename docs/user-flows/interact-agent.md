@@ -29,7 +29,7 @@ Delivered messages and completed turns reconcile retained questions against expl
 
 - **S1** Follow-up after idle completes through the same run.
 - **S2** Active steering requires the current turn identity and rejects stale steering.
-- **S3** Interrupt preserves the run and invalidates outstanding requests. Cancel retry also interrupts a deferred pre-agent PR review and clears its pending deadline even when no agent session is attached; scheduler ticks and restart leave it stopped.
+- **S3** Interrupt preserves the run and invalidates outstanding requests. Cancel retry also interrupts a deferred pre-agent PR review and clears its pending deadline even when no agent session is attached; scheduler ticks and restart leave it stopped. A slow provider acknowledgment for one run's interruption does not block unrelated starts, answers, interruptions or accepted retry admission.
 
 Conversation rendering keeps human-facing agent messages and your replies visible, including long messages retained across multiple transcript pages. Technical activity remains under Details, with structured error data there and the readable error message visible. Streaming updates preserve that distinction; a technical-only active stream shows a concise waiting status. Pending questions and approvals remain actionable outside Details.
 
@@ -204,6 +204,8 @@ flowchart TD
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchInterruptAndCleanupCancelAttachedAndDetachedRuns(`; S3. Interrupt and cleanup clear retry deadline/pending authority for attached and detached launches; restart and later ticks start no agent.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchProjectionRetainsWorkingQueueAndRetryDeadline(`; S3. Deferred work stays in Working with Waiting for GitHub; tracking retains launchRetryAt and cancellation clears the waiting projection.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchCancelAndCloseDuringSourceVerification(`; S3. Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(`; S3. A real fake-provider interrupt stays blocked behind a controlled process barrier while deferred polling, unrelated Start, Answer and Interrupt complete; cancellation intent and exact original RPC IDs persist, then the same accepted deferred claim starts after capacity clears.
+- [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestSlowInterruptCannotChangeReplacementOrCleanedSession(`; S3. A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work.
 
 ## Verification and gaps
 
