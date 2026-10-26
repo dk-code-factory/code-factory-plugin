@@ -18,7 +18,12 @@ type githubHeadContext struct{}
 
 // graph only accepts application-owned queries, never mutations or source text.
 func (g *GitHub) graph(ctx context.Context, query string, variables any, out any) error {
-	token, err := g.Token(ctx)
+	ctx = g.Operation(ctx, nil, false)
+	op := ctx.Value(operationKey{}).(*operation)
+	g.dispatch.Lock()
+	defer g.dispatch.Unlock()
+	err := g.resolve(ctx, op)
+	token := op.token
 	if err != nil {
 		return err
 	}
@@ -32,9 +37,13 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-GitHub-Api-Version", apiVersion)
 	if g.Managed() {
-		g.requestMu.Lock()
-		defer g.requestMu.Unlock()
+		unlock, err := g.lockUsage(ctx)
+		if err != nil {
+			return err
+		}
+		defer unlock()
 	}
 	key := fmt.Sprintf("graphql:%x:%x", sha256.Sum256([]byte(token)), sha256.Sum256(append(b, []byte(fmt.Sprint(ctx.Value(githubHeadContext{})))...)))
 	cached, ok, err := g.cached(ctx, key)

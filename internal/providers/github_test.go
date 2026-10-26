@@ -139,7 +139,7 @@ func TestConditionalCacheKeepsPaginationAndScopesAuthentication(t *testing.T) {
 	}
 }
 
-func TestSyncEnrichmentHasBoundedParallelismAndCancelsOnFailure(t *testing.T) {
+func TestSyncEnrichmentSerializesRequestsAndCancelsOnFailure(t *testing.T) {
 	for _, fail := range []bool{false, true} {
 		t.Run(fmt.Sprint(fail), func(t *testing.T) {
 			var active, peak atomic.Int32
@@ -184,18 +184,18 @@ func TestSyncEnrichmentHasBoundedParallelismAndCancelsOnFailure(t *testing.T) {
 			finished := make(chan error, 1)
 			var items []domain.Item
 			go func() { var err error; items, err = g.Sync(ctx, domain.Repository{ID: "o/r"}, true); finished <- err }()
-			for n := 0; n < 4; n++ {
+			for n := 0; n < 1; n++ {
 				select {
 				case <-entered:
 				case <-ctx.Done():
 					close(release)
-					t.Fatal("independent items did not make progress")
+					t.Fatal("first item did not make progress")
 				}
 			}
 			close(release)
 			err := <-finished
-			if peak.Load() != 4 {
-				t.Fatalf("worker bound: %d", peak.Load())
+			if peak.Load() != 1 {
+				t.Fatalf("shared transport request bound: %d", peak.Load())
 			}
 			if fail {
 				if err == nil || items != nil {

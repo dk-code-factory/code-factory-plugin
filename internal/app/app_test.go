@@ -657,6 +657,9 @@ func TestSharedGitHubCooldownPreservesInboxCheckpoints(t *testing.T) {
 			defer server.Close()
 			tokens := 0
 			a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { tokens++; return "token", nil }}
+			a.GitHub.ConfigureUsage(a.Store, func(context.Context) (providers.GitHubPolicy, error) {
+				return providers.GitHubPolicy{RequestsPerHour: 100}, nil
+			})
 			_ = a.Sync(ctx)
 			for _, id := range []string{"owner/a", "owner/b"} {
 				var r domain.Repository

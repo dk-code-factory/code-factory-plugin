@@ -80,10 +80,11 @@ func NewGitHub() *GitHub {
 
 type githubRedirect struct{ location string }
 type requireFreshRead struct{}
+type indexRead struct{}
 
 func (r *githubRedirect) Error() string { return "GitHub repository redirected" }
 func (g *GitHub) get(ctx context.Context, path string, out any) (http.Header, error) {
-	if !g.Managed() {
+	if !g.Managed() && ctx.Value(indexRead{}) != true {
 		b, h, err := g.Request(ctx, http.MethodGet, path, nil, "")
 		if err != nil {
 			return h, err
@@ -122,6 +123,9 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 	if e != nil {
 		return nil, e
 	}
+	if e = g.indexCooldown(ctx, token); e != nil {
+		return nil, e
+	}
 	req, e := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if e != nil {
 		return nil, e
@@ -132,8 +136,11 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 	tokenHash := sha256.Sum256([]byte(token))
 	cacheKey := fmt.Sprintf("%s#%x", u, tokenHash)
 	if g.Managed() {
-		g.requestMu.Lock()
-		defer g.requestMu.Unlock()
+		unlock, err := g.lockUsage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer unlock()
 	}
 	cached, hasCache, err := g.cached(ctx, cacheKey)
 	if err != nil {
@@ -165,7 +172,7 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		return nil, fmt.Errorf("GitHub request budget unavailable")
 	}
 	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "") || res.StatusCode >= 500 && res.Header.Get("Retry-After") != "" {
-		return nil, g.rateLimited(ctx, token, "core", res.Header)
+		return nil, g.indexRateLimited(ctx, token, res.Header)
 	}
 	body, e := io.ReadAll(io.LimitReader(res.Body, (16<<20)+1))
 	if e != nil {
@@ -175,10 +182,10 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		return nil, fmt.Errorf("GitHub response too large")
 	}
 	if res.StatusCode >= 500 && res.Header.Get("Retry-After") != "" {
-		return nil, g.rateLimited(ctx, token, "core", res.Header)
+		return nil, g.indexRateLimited(ctx, token, res.Header)
 	}
 	if res.StatusCode == 429 || (res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "" || rateBody(body))) {
-		return nil, g.rateLimited(ctx, token, "core", res.Header)
+		return nil, g.indexRateLimited(ctx, token, res.Header)
 	}
 	if res.StatusCode == 301 || res.StatusCode == 302 || res.StatusCode == 307 || res.StatusCode == 308 {
 		next, e := url.Parse(res.Header.Get("Location"))
@@ -260,8 +267,19 @@ func (g *GitHub) pages(ctx context.Context, path string) ([]json.RawMessage, err
 	return out, nil
 }
 func (g *GitHub) User(ctx context.Context) (string, error) {
+	ctx = g.Operation(ctx, nil, false)
+	scope, e := g.Scope(ctx)
+	if e != nil {
+		return "", e
+	}
+	if b, ok := g.CachedBlob("identity:" + scope); !g.Managed() && ctx.Value(requireFreshRead{}) != true && ok {
+		return string(b), nil
+	}
 	var u struct{ Login string }
-	_, e := g.get(ctx, "/user", &u)
+	_, e = g.get(ctx, "/user", &u)
+	if !g.Managed() && e == nil && u.Login != "" {
+		g.CacheBlob("identity:"+scope, []byte(u.Login), 5*time.Minute)
+	}
 	return u.Login, e
 }
 
@@ -431,6 +449,7 @@ func baseItem(repo domain.Repository, i ghIssue) domain.Item {
 
 // SyncIndex uses list payloads; rich per-item history is never part of polling.
 func (g *GitHub) SyncIndex(ctx context.Context, repo domain.Repository, full bool) ([]domain.Item, time.Time, error) {
+	ctx = context.WithValue(ctx, indexRead{}, true)
 	ctx, observed := observeReads(ctx, g.now())
 	raw, err := g.listItems(ctx, repo, full)
 	if err != nil {

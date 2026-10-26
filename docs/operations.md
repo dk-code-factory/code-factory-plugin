@@ -200,7 +200,7 @@ counts HTTP request attempts. See [GitHub’s GraphQL quota documentation](https
 obey the same budget and server cooldowns. Limits, conditional cache and recorded
 attempts survive service restart; raising a limit does not erase prior usage.
 
-The gate serializes REST/GraphQL requests, reads quota headers instead of polling
+A cancellable process-shared gate serializes REST/GraphQL and report publication requests across the daemon and publisher, reads quota headers instead of polling
 `/rate_limit`, and persists safe credential-scoped validators. Failed repository
 reads back off; paused/deferred monitoring is distinct from a missing provider.
 Diagnostics check local GitHub credential availability without `gh auth status`.

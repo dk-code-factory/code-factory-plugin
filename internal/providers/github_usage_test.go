@@ -2,6 +2,7 @@ package providers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +17,95 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 )
+
+func TestManagedTransportsShareProcessGateAndPreserveCooldown(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	path := filepath.Join(t.TempDir(), "state.db")
+	firstStore, err := store.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer firstStore.Close()
+	secondStore, err := store.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer secondStore.Close()
+	var calls atomic.Int32
+	entered := make(chan string, 3)
+	release := make(chan struct{})
+	var releaseOnce sync.Once
+	defer releaseOnce.Do(func() { close(release) })
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		entered <- r.URL.Path
+		if r.URL.Path == "/first" {
+			select {
+			case <-release:
+			case <-r.Context().Done():
+				return
+			}
+			fmt.Fprint(w, `{"ok":true}`)
+			return
+		}
+		w.Header().Set("Retry-After", "120")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+	newClient := func(db *store.Store) *GitHub {
+		g := &GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "shared", nil }}
+		g.ConfigureUsage(db, func(context.Context) (GitHubPolicy, error) { return GitHubPolicy{RequestsPerHour: 2}, nil })
+		return g
+	}
+	first, second := newClient(firstStore), newClient(secondStore)
+	firstDone := make(chan error, 1)
+	go func() { var result any; _, err := first.get(ctx, "/first", &result); firstDone <- err }()
+	select {
+	case <-entered:
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	}
+	// A distinct connection/process must be cancellable while the first request
+	// owns the gate, without issuing an uncertain publication request.
+	waitCtx, stopWait := context.WithTimeout(ctx, 30*time.Millisecond)
+	_, _, err = second.Request(waitCtx, http.MethodPost, "/cancelled", map[string]string{"title": "retained"}, "")
+	stopWait()
+	var outcome *RequestError
+	if !errors.Is(err, context.DeadlineExceeded) || !errors.As(err, &outcome) || outcome.Phase != BeforeDispatch || calls.Load() != 1 {
+		t.Fatal("lock cancellation dispatched a publication", err, calls.Load())
+	}
+	secondDone := make(chan error, 1)
+	attempted := make(chan struct{})
+	second.Token = func(context.Context) (string, error) { close(attempted); return "shared", nil }
+	go func() { _, _, err := second.Request(ctx, http.MethodGet, "/second", nil, ""); secondDone <- err }()
+	select {
+	case <-attempted:
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	}
+	select {
+	case target := <-entered:
+		t.Fatal("independent managed transports overlapped", target)
+	case <-time.After(50 * time.Millisecond):
+	}
+	releaseOnce.Do(func() { close(release) })
+	if err := <-firstDone; err != nil {
+		t.Fatal(err)
+	}
+	var rate *RateLimitError
+	if err := <-secondDone; !errors.As(err, &rate) {
+		t.Fatal("missing shared rate limit", err)
+	}
+	var result any
+	if _, err := first.get(ctx, "/third", &result); !errors.As(err, &rate) || calls.Load() != 2 {
+		t.Fatal("earlier success erased a later cooldown", err, calls.Load())
+	}
+	usage, err := first.UsageStatus(ctx)
+	if err != nil || usage.RequestsLastHour != 2 || !usage.NextRequest.After(time.Now()) {
+		t.Fatal("managed transports lost attempts or cooldown", usage, err)
+	}
+}
 
 func managedFixture(t *testing.T, server *httptest.Server, db *store.Store, now *time.Time, budget, reserve int) *GitHub {
 	t.Helper()

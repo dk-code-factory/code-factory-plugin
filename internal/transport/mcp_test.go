@@ -224,6 +224,19 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	if err := db.Get(ctx, "attention", "text", &text); err != nil || text.Status != "dismissed" {
 		t.Fatal("dismissal lost")
 	}
+	if err := db.Write(ctx, func(tx *store.Tx) error {
+		for _, id := range []string{"r1", "r2"} {
+			if err := tx.Delete("run", id); err != nil {
+				return err
+			}
+			if err := tx.Delete("question-recovery", id); err != nil {
+				return err
+			}
+		}
+		return tx.Delete("attention", "text")
+	}); err != nil {
+		t.Fatal(err)
+	}
 	res := request("tools/call", map[string]any{"name": "read_snapshot", "arguments": map[string]any{"freshness": "view-first"}}, true, "2026-07-28")
 	if res["isError"] == true || res["structuredContent"] == nil {
 		t.Fatal(res)

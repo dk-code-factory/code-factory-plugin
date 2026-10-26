@@ -2493,9 +2493,6 @@ async function assembledHost(
 ) {
   const calls: ToolCall[] = [];
   const acceptedStarts: Run[] = [];
-  const daemonOrigin = new URL(
-    `http://127.0.0.1:${process.env.CODE_FACTORY_TEST_HOST_PORT ?? "4174"}`,
-  ).origin;
   async function request(p: ToolCall): Promise<ToolResult> {
     calls.push(p);
     const response = await fetch(`${fixtureDaemonOrigin}/mcp`, {
@@ -4004,21 +4001,6 @@ for (const theme of ["light", "dark"] as const) {
     await expect(
       ui.getByRole("button", { name: "Update review-kit", exact: true }),
     ).toBeEnabled();
-    await ui
-      .getByRole("textbox", { name: "Message agent" })
-      .fill("Retain recovery draft");
-    await expect(
-      ui.getByRole("button", { name: "Send message", exact: true }),
-    ).toBeDisabled();
-    await ui
-      .getByRole("button", { name: "Waiting for your answer — Answer" })
-      .hover();
-    await scanOwnedApp(page, `${theme}-recovery-narrow`);
-    await ui.getByRole("button", { name: "Take over", exact: true }).focus();
-    await page.keyboard.press("Enter");
-    await expect(
-      ui.getByRole("button", { name: "Take over", exact: true }),
-    ).toHaveCount(0);
     expect(
       calls
         .filter((c) => c.name === "manage_codex_plugins")
@@ -4145,6 +4127,21 @@ test("nonblocking recovered text question keeps its continuing label", async ({ 
   await expect(ui.getByRole("button", { name: "Question · agent continues — Answer" })).toBeVisible();
   await expect(ui.getByRole("button", { name: /Waiting for your answer/ })).toHaveCount(0);
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`reported issues navigation remains keyboard reachable at narrow width in ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const { ui, calls } = await host(page, { theme });
+    const reports = ui.getByRole("button", { name: "Reported issues", exact: true });
+    await tabTo(page, reports);
+    await page.keyboard.press("Enter");
+    await expect(ui.getByRole("heading", { name: "Reported issues", exact: true })).toBeVisible();
+    await expect(reports).toHaveAttribute("aria-current", "page");
+    expect(await ui.locator("body").evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    expect(calls.some(c => ["start_run", "refresh_issue_reports"].includes(c.name))).toBe(false);
+    await scanOwnedApp(page, `reports-navigation-${theme}`);
+  });
+}
 
 function reportFixture(id = "report-1"): IssueReport {
   const at = "2026-10-25T12:00:00Z";

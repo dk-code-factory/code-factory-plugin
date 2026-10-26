@@ -130,23 +130,28 @@ flowchart TD
     N69["PAGE-OWNER-CONSENT"]
     N70["PAGE-LOCAL-TUNNEL-SETUP"]
     N71["PAGE-BROWSER-LAB"]
-    N104["PAGE-AGENT"]
-    N107["S-SETTINGS"]
-    N109["PAGE-MY-PRS"]
-    N110["PAGE-REVIEW-PRS"]
-    N111["P-WAITING-QUEUE"]
-    N112["P-NEW-CHAT"]
-    N113["W-WAITING-ROW"]
-    N114["W-NEW-CHAT"]
-    N116["W-WORK-STATUS"]
-    N117["PAGE-WORKING"]
-    N118["W-SESSION-CONSOLE"]
-    N119["W-QUESTION-RECOVERY"]
-    N123["W-PLUGIN-ADMIN"]
-    N124["W-SYSTEM-DEFAULTS"]
-    N125["P-PLUGIN-ADMIN"]
-    N126["P-SYSTEM-DEFAULTS"]
-    N130["W-GITHUB-USAGE"]
+    N105["PAGE-REPORTS"]
+    N106["P-REPORT-LIST"]
+    N107["P-REPORT-DETAIL"]
+    N108["W-REPORT-LIST"]
+    N109["W-REPORT-DETAIL"]
+    N117["PAGE-AGENT"]
+    N120["S-SETTINGS"]
+    N122["PAGE-MY-PRS"]
+    N123["PAGE-REVIEW-PRS"]
+    N124["P-WAITING-QUEUE"]
+    N125["P-NEW-CHAT"]
+    N126["W-WAITING-ROW"]
+    N127["W-NEW-CHAT"]
+    N129["W-WORK-STATUS"]
+    N130["PAGE-WORKING"]
+    N131["W-SESSION-CONSOLE"]
+    N132["W-QUESTION-RECOVERY"]
+    N135["W-PLUGIN-ADMIN"]
+    N136["W-SYSTEM-DEFAULTS"]
+    N137["P-PLUGIN-ADMIN"]
+    N138["P-SYSTEM-DEFAULTS"]
+    N142["W-GITHUB-USAGE"]
     N0 --> N38
     N0 --> N39
     N0 --> N40
@@ -154,20 +159,21 @@ flowchart TD
     N0 --> N64
     N0 --> N66
     N0 --> N67
-    N0 --> N104
-    N0 --> N109
-    N0 --> N110
+    N0 --> N105
     N0 --> N117
+    N0 --> N122
+    N0 --> N123
+    N0 --> N130
     N63 --> N41
     N63 --> N42
-    N64 --> N111
+    N64 --> N124
     N65 --> N46
     N65 --> N47
     N65 --> N48
     N65 --> N49
     N65 --> N50
-    N65 --> N125
-    N65 --> N126
+    N65 --> N137
+    N65 --> N138
     N66 --> N51
     N66 --> N52
     N66 --> N53
@@ -180,19 +186,21 @@ flowchart TD
     N69 --> N60
     N70 --> N61
     N71 --> N62
-    N104 --> N43
-    N104 --> N45
-    N104 --> N112
-    N104 --> N44
-    N107 --> N38
-    N107 --> N40
-    N107 --> N65
-    N109 --> N41
-    N109 --> N42
-    N110 --> N41
-    N110 --> N42
-    N117 --> N41
-    N117 --> N42
+    N105 --> N106
+    N105 --> N107
+    N117 --> N43
+    N117 --> N45
+    N117 --> N125
+    N117 --> N44
+    N120 --> N38
+    N120 --> N40
+    N120 --> N65
+    N122 --> N41
+    N122 --> N42
+    N123 --> N41
+    N123 --> N42
+    N130 --> N41
+    N130 --> N42
     I0["P-IDENTITY/W-IDENTITY"]
     N38 --> I0
     I0 -.->|"type"| N1
@@ -313,45 +321,51 @@ flowchart TD
     I39["P-BROWSER-LAB/W-BROWSER-LAB"]
     N62 --> I39
     I39 -.->|"type"| N37
-    I40["P-ITEM-DETAIL/W-NAVIGATION-back"]
-    N43 --> I40
-    I40 -.->|"type"| N2
-    I41["P-RUN-DETAIL/W-NAVIGATION-back"]
-    N45 --> I41
-    I41 -.->|"type"| N2
-    I42["P-WAITING-QUEUE/W-WAITING-ROW"]
-    N111 --> I42
-    I42 -.->|"type"| N113
-    I43["P-NEW-CHAT/W-NEW-CHAT"]
-    N112 --> I43
-    I43 -.->|"type"| N114
-    I44["P-INBOX-LIST/W-WORK-STATUS"]
-    N42 --> I44
-    I44 -.->|"type"| N116
-    I45["P-ITEM-DETAIL/W-WORK-STATUS"]
-    N43 --> I45
-    I45 -.->|"type"| N116
-    I46["P-RUN-DETAIL/W-WORK-STATUS"]
-    N45 --> I46
-    I46 -.->|"type"| N116
-    I47["P-INBOX-LIST/W-PR-EVIDENCE"]
-    N42 --> I47
-    I47 -.->|"type"| N14
-    I48["P-RUN-DETAIL/W-SESSION-CONSOLE"]
+    I40["P-REPORT-LIST/W-REPORT-LIST"]
+    N106 --> I40
+    I40 -.->|"type"| N108
+    I41["P-REPORT-DETAIL/W-REPORT-DETAIL"]
+    N107 --> I41
+    I41 -.->|"type"| N109
+    I42["P-ITEM-DETAIL/W-NAVIGATION-back"]
+    N43 --> I42
+    I42 -.->|"type"| N2
+    I43["P-RUN-DETAIL/W-NAVIGATION-back"]
+    N45 --> I43
+    I43 -.->|"type"| N2
+    I44["P-WAITING-QUEUE/W-WAITING-ROW"]
+    N124 --> I44
+    I44 -.->|"type"| N126
+    I45["P-NEW-CHAT/W-NEW-CHAT"]
+    N125 --> I45
+    I45 -.->|"type"| N127
+    I46["P-INBOX-LIST/W-WORK-STATUS"]
+    N42 --> I46
+    I46 -.->|"type"| N129
+    I47["P-ITEM-DETAIL/W-WORK-STATUS"]
+    N43 --> I47
+    I47 -.->|"type"| N129
+    I48["P-RUN-DETAIL/W-WORK-STATUS"]
     N45 --> I48
-    I48 -.->|"type"| N118
-    I49["P-RUN-DETAIL/W-QUESTION-RECOVERY"]
-    N45 --> I49
-    I49 -.->|"type"| N119
-    I50["P-PLUGIN-ADMIN/W-PLUGIN-ADMIN"]
-    N125 --> I50
-    I50 -.->|"type"| N123
-    I51["P-SYSTEM-DEFAULTS/W-SYSTEM-DEFAULTS"]
-    N126 --> I51
-    I51 -.->|"type"| N124
-    I52["P-SYSTEM-DEFAULTS/W-GITHUB-USAGE"]
-    N126 --> I52
-    I52 -.->|"type"| N130
+    I48 -.->|"type"| N129
+    I49["P-INBOX-LIST/W-PR-EVIDENCE"]
+    N42 --> I49
+    I49 -.->|"type"| N14
+    I50["P-RUN-DETAIL/W-SESSION-CONSOLE"]
+    N45 --> I50
+    I50 -.->|"type"| N131
+    I51["P-RUN-DETAIL/W-QUESTION-RECOVERY"]
+    N45 --> I51
+    I51 -.->|"type"| N132
+    I52["P-PLUGIN-ADMIN/W-PLUGIN-ADMIN"]
+    N137 --> I52
+    I52 -.->|"type"| N135
+    I53["P-SYSTEM-DEFAULTS/W-SYSTEM-DEFAULTS"]
+    N138 --> I53
+    I53 -.->|"type"| N136
+    I54["P-SYSTEM-DEFAULTS/W-GITHUB-USAGE"]
+    N138 --> I54
+    I54 -.->|"type"| N142
 ```
 <!-- /specs:containment -->
 
@@ -420,6 +434,8 @@ No installed UI, authentication, service or browser-session change is implied.
 | `P-OWNER-CONSENT/W-OWNER-CONSENT` | `W-OWNER-CONSENT` | `P-OWNER-CONSENT` | one per displayed pane |
 | `P-LOCAL-TUNNEL-KEY/W-LOCAL-TUNNEL-KEY` | `W-LOCAL-TUNNEL-KEY` | `P-LOCAL-TUNNEL-KEY` | one per displayed pane |
 | `P-BROWSER-LAB/W-BROWSER-LAB` | `W-BROWSER-LAB` | `P-BROWSER-LAB` | one per displayed pane |
+| `P-REPORT-LIST/W-REPORT-LIST` | `W-REPORT-LIST` | `P-REPORT-LIST` | one per report page |
+| `P-REPORT-DETAIL/W-REPORT-DETAIL` | `W-REPORT-DETAIL` | `P-REPORT-DETAIL` | one per report page |
 | `P-ITEM-DETAIL/W-NAVIGATION-back` | `W-NAVIGATION` | `P-ITEM-DETAIL` | one contextual Back-only instance on the focused record page |
 | `P-RUN-DETAIL/W-NAVIGATION-back` | `W-NAVIGATION` | `P-RUN-DETAIL` | one contextual Back-only instance on the focused record page |
 | `P-WAITING-QUEUE/W-WAITING-ROW` | `W-WAITING-ROW` | `P-WAITING-QUEUE` | one per pending request |
@@ -544,6 +560,19 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="C-EXTERNAL-AUTH"></a>`C-EXTERNAL-AUTH` | connection | [External auth connection](../glossary/README.md#ui-c-external-auth), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="C-TUNNEL-KEY"></a>`C-TUNNEL-KEY` | connection | [Tunnel key connection](../glossary/README.md#ui-c-tunnel-key), [Coverage gap](../glossary/README.md#coverage-gap), [Known limitation](../glossary/README.md#known-limitation) |
 | <a id="C-BROWSER-LAB"></a>`C-BROWSER-LAB` | connection | [Browser lab connection](../glossary/README.md#ui-c-browser-lab), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
+| <a id="C-DISMISS-QUESTION"></a>`C-DISMISS-QUESTION` | connection | [Text question dismissal connection](../glossary/README.md#ui-c-dismiss-question) |
+| <a id="PAGE-REPORTS"></a>`PAGE-REPORTS` | page | [Reported issues page](../glossary/README.md#ui-page-reports), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="P-REPORT-LIST"></a>`P-REPORT-LIST` | pane | [Report list pane](../glossary/README.md#ui-p-report-list), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="P-REPORT-DETAIL"></a>`P-REPORT-DETAIL` | pane | [Report detail pane](../glossary/README.md#ui-p-report-detail), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="W-REPORT-LIST"></a>`W-REPORT-LIST` | widget | [Report list widget](../glossary/README.md#ui-w-report-list), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Report processing state](../glossary/README.md#report-processing), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="W-REPORT-DETAIL"></a>`W-REPORT-DETAIL` | widget | [Report detail widget](../glossary/README.md#ui-w-report-detail), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Report processing state](../glossary/README.md#report-processing), [Report outcome](../glossary/README.md#report-outcome), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-SELECT"></a>`C-REPORT-SELECT` | connection | [Report selection connection](../glossary/README.md#ui-c-report-select), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-EVIDENCE"></a>`C-REPORT-EVIDENCE` | connection | [Report evidence connection](../glossary/README.md#ui-c-report-evidence), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-RECOVER"></a>`C-REPORT-RECOVER` | connection | [Report recovery connection](../glossary/README.md#ui-c-report-recover), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-REFRESH"></a>`C-REPORT-REFRESH` | connection | [Report refresh connection](../glossary/README.md#ui-c-report-refresh), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Delivery evidence](../glossary/README.md#delivery-evidence) |
+| <a id="C-REPORT-QUERY"></a>`C-REPORT-QUERY` | connection | [Report query connection](../glossary/README.md#ui-c-report-query), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger), [Report processing state](../glossary/README.md#report-processing) |
+| <a id="C-REPORT-MORE"></a>`C-REPORT-MORE` | connection | [Report pagination connection](../glossary/README.md#ui-c-report-more), [Issue report](../glossary/README.md#issue-report), [Report ledger](../glossary/README.md#report-ledger) |
+| <a id="C-REPORT-OPEN-LINK"></a>`C-REPORT-OPEN-LINK` | connection | [Report external link connection](../glossary/README.md#ui-c-report-open-link), [Issue report](../glossary/README.md#issue-report), [Delivery evidence](../glossary/README.md#delivery-evidence) |
 | <a id="PAGE-AGENT"></a>`PAGE-AGENT` | page | [Agent page](../glossary/README.md#ui-page-agent) |
 | <a id="C-BACK"></a>`C-BACK` | connection | [Back navigation](../glossary/README.md#ui-c-back) |
 | <a id="C-ITEM-SOURCE"></a>`C-ITEM-SOURCE` | connection | [Original item navigation](../glossary/README.md#ui-c-item-source) |
@@ -562,7 +591,6 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="W-QUESTION-RECOVERY"></a>`W-QUESTION-RECOVERY` | widget | [Question recovery widget](../glossary/README.md#ui-w-question-recovery) |
 | <a id="C-SESSION-CONSOLE"></a>`C-SESSION-CONSOLE` | connection | [Session console connection](../glossary/README.md#ui-c-session-console) |
 | <a id="C-PIPELINE-SELECT"></a>`C-PIPELINE-SELECT` | connection | [Pipeline selection connection](../glossary/README.md#ui-c-pipeline-select) |
-| <a id="C-DISMISS-QUESTION"></a>`C-DISMISS-QUESTION` | connection | [Text question dismissal connection](../glossary/README.md#ui-c-dismiss-question) |
 | <a id="W-PLUGIN-ADMIN"></a>`W-PLUGIN-ADMIN` | widget | [Codex plugin admin widget](../glossary/README.md#ui-w-plugin-admin), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Codex plugin](../glossary/README.md#codex-plugin), [Plugin marketplace](../glossary/README.md#plugin-marketplace), [Plugin inventory](../glossary/README.md#plugin-inventory), [Plugin maintenance](../glossary/README.md#plugin-maintenance) |
 | <a id="W-SYSTEM-DEFAULTS"></a>`W-SYSTEM-DEFAULTS` | widget | [System review defaults widget](../glossary/README.md#ui-w-system-defaults), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="P-PLUGIN-ADMIN"></a>`P-PLUGIN-ADMIN` | pane | [Plugin administration pane](../glossary/README.md#ui-p-plugin-admin), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Codex plugin](../glossary/README.md#codex-plugin), [Plugin marketplace](../glossary/README.md#plugin-marketplace), [Plugin inventory](../glossary/README.md#plugin-inventory), [Plugin maintenance](../glossary/README.md#plugin-maintenance) |

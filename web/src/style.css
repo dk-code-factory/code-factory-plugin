@@ -481,6 +481,13 @@ article {
   min-width: 0;
 }
 
+.reports-page > .toolbar {
+  flex-wrap: wrap;
+}
+.reports-page > .toolbar > * {
+  min-width: 0;
+  max-width: 100%;
+}
 .report-layout {
   display: grid;
   grid-template-columns: minmax(200px, 1fr) minmax(280px, 2fr);

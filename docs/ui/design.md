@@ -4,7 +4,7 @@ Owner workflow and layout contract, updated 2026-10-21.
 
 ## Navigation
 
-Use five compact tabs: **Working**, **Issues**, **My PRs**, **Review PRs**, **Messages**. Issues remains the initial view.
+Use compact tabs: **Working**, **Issues**, **My PRs**, **Review PRs**, **Messages** and **Reported issues**. Issues remains the initial view.
 Settings opens as its own Code Factory view in chat through `open_settings`.
 No branding block, sidebar, split view, permanent footer or empty detail pane.
 Show one full-width page at a time. Back restores its originating tab, query,

@@ -25,7 +25,7 @@ for a clickable navigation control.
 <!-- specs:connections-0 -->
 | ID | From → to | Trigger and carried context | Result/type |
 | --- | --- | --- | --- |
-| `C-NAVIGATE` | `W-NAVIGATION` → one embedded `PAGE-*` | Working, Issues, My PRs, Review PRs or Messages tab. | Navigates between four task queues with independent query state; configuration remains a separate document. |
+| `C-NAVIGATE` | `W-NAVIGATION` → one embedded `PAGE-*` | Working, Issues, My PRs, Review PRs, Messages or Reported issues tab. | Navigates between four task queues with independent query state; configuration remains a separate document. |
 | `C-FILTER` | `W-INBOX-QUERY` → `P-INBOX-LIST` | Search text and filter value. | Applies per-tab kind/ownership/review membership, filter and query. Pending issues exclude linked PRs; lists sort by priority then update time. |
 | `C-SELECT-ITEM` | Work row → item conversation | Click a row; item ID. | Loads and marks the displayed item revision read, continues the newest retained conversation or shows a prefilled first message. Never starts or prepares on selection. |
 | `C-ITEM-STATE` | `W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read. | Unread, acknowledge New or record action; item ID. | Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. A deferred provider refresh leaves the displayed saved information unread until a successful retry. |
@@ -57,13 +57,20 @@ for a clickable navigation control.
 | `C-EXTERNAL-AUTH` | `W-ELICITATION.open-authorization` → external authorization page | Request-supplied URL opened through host. | External. Continue reports the user's completion decision; it does not independently prove external success. |
 | `C-TUNNEL-KEY` | `W-LOCAL-TUNNEL-KEY` → alternate local transport session | Single-use private setup input. | Submits and removes form on success; does not navigate into Settings or activate Jira. |
 | `C-BROWSER-LAB` | `W-BROWSER-LAB` controls → isolated browser → screenshot/location | Explicit lab navigation/click/key/scroll operations. | Developer utility feedback loop; never an Inbox/Agents page transition. |
+| `C-DISMISS-QUESTION` | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. |
+| `C-REPORT-SELECT` | `W-REPORT-LIST.select` → `W-REPORT-DETAIL` | Report row selection | Reads selected report without starting an agent. Selection and mutation ordering discard superseded details; journal updates queue a refresh behind a pending read so details can progress during ongoing changes. |
+| `C-REPORT-EVIDENCE` | `W-REPORT-DETAIL.add-evidence` → `W-REPORT-DETAIL`, `W-REPORT-LIST` | Add evidence; selected report ID, draft text and retained idempotency key. | Append idempotent host observations and queue reports waiting for information. After an uncertain response, an unchanged draft can be retried without duplicate additions; editing the retained draft permits another observation. |
+| `C-REPORT-RECOVER` | `W-REPORT-DETAIL.resume` → `W-REPORT-DETAIL`, `W-REPORT-LIST` | Resume or reconcile report; selected report ID, recovery note and effects acknowledgement. | Validate recovery prerequisites and acknowledgement before resuming retained work. |
+| `C-REPORT-REFRESH` | `W-REPORT-LIST.refresh` → `W-REPORT-LIST`, `W-REPORT-DETAIL` | Refresh issues and releases | Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent. |
+| `C-REPORT-QUERY` | `W-REPORT-LIST.search/processing-filter/component-filter/version-filter` → `W-REPORT-LIST` | Search or processing/component/version filter changes; current query values. | Loads the matching report subset and resets the loaded range to its first page. Existing selected detail remains independently selected. |
+| `C-REPORT-MORE` | `W-REPORT-LIST.load-more` → `W-REPORT-LIST` | Load more reports; current query, next cursor and loaded range. | Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range. Background refresh leaves pagination available; an already pending page request suppresses duplicate clicks. |
+| `C-REPORT-OPEN-LINK` | `W-REPORT-DETAIL.open-issue/open-fix/open-release` → external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL` | Open a retained issue, fix or release URL through the host. | Sends the stored URL to the host open-link boundary; a fix without a PR uses its repository/commit URL. Failures use the shared report error alert. Opening a link does not verify issue, fix or release state. |
 | `C-BACK` | Conversation Back → originating work or Messages tab | Back action on the record page. | Restores list query, scroll and row focus when the row exists; missing rows leave a usable focus fallback. Ordinary drafts remain keyed to their records. |
 | `C-ITEM-SOURCE` | Owned issue, PR and check links open their original GitHub or CI-provider destination through the host browser. | Activate an item identifier, linked PR identifier or individual CI check link. Activate a posted-review receipt or inline-comment link. | Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list. |
 | `C-OPEN-SETTINGS` | Host open_settings invocation → independent settings document | The settings entry tool advertises its own content-specific resource and output template. | Opens configuration in its own view. The inbox entry and legacy resource remain inbox-only. Both surfaces reuse authenticated bridged tools without owner credentials or direct iframe localhost access. |
 | `C-START-CHAT` | First-message Start → retained run conversation | Explicit Start with the visible message and authority. | Prepares then starts once; verifies the same run after an uncertain response. Preserves per-item draft and recovery state. |
 | `C-SESSION-CONSOLE` | Conversation presentation to the same session console. | View session console, or Open session console from a textual fallback. | Switches presentation without launching or resuming another process. |
 | `C-PIPELINE-SELECT` | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. | Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal. |
-| `C-DISMISS-QUESTION` | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. | No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval. |
 | `C-PLUGIN-MAINTENANCE` | Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay. | Explicit owner configuration or management choice; opted-in successful repository polls. | Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay. |
 | `C-REVIEW-POLICY` | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed reviews once under the configured authority. | Explicit owner configuration or management choice; opted-in successful repository polls. | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed reviews once under the configured authority. |
 | `C-REPOSITORY-REVIEW-PROMPT` | Append owner repository instructions to the generic review prompt during immutable launch preparation. | Explicit owner configuration or management choice; opted-in successful repository polls. | Append owner repository instructions to the generic review prompt during immutable launch preparation. |
@@ -77,14 +84,15 @@ for a clickable navigation control.
 flowchart LR
     N2["W-NAVIGATION"]
     N63["PAGE-INBOX"]
-    N109["PAGE-MY-PRS"]
-    N110["PAGE-REVIEW-PRS"]
     N64["PAGE-AGENTS"]
-    N117["PAGE-WORKING"]
+    N105["PAGE-REPORTS"]
+    N122["PAGE-MY-PRS"]
+    N123["PAGE-REVIEW-PRS"]
+    N130["PAGE-WORKING"]
     N5["W-INBOX-QUERY"]
     N42["P-INBOX-LIST"]
     N7["W-ITEM-ROW"]
-    N104["PAGE-AGENT"]
+    N117["PAGE-AGENT"]
     N10["W-ITEM-ACTIONS"]
     N43["P-ITEM-DETAIL"]
     N11["W-PRIORITY"]
@@ -97,14 +105,14 @@ flowchart LR
     N52["P-LAUNCH-EDITOR"]
     N16["W-RUN-ROW"]
     N18["W-RUN-CONTROLS"]
-    N119["W-QUESTION-RECOVERY"]
+    N132["W-QUESTION-RECOVERY"]
     N45["P-RUN-DETAIL"]
     N44["P-RUN-LIST"]
     N21["W-MESSAGE"]
     N20["W-TRANSCRIPT"]
     N19["W-ATTENTION-NOTICE"]
     N67["D-ATTENTION"]
-    N113["W-WAITING-ROW"]
+    N126["W-WAITING-ROW"]
     N22["W-DIALOG-FRAME"]
     N25["W-QUESTIONS"]
     N26["W-APPROVAL"]
@@ -117,7 +125,7 @@ flowchart LR
     N32["W-DIAGNOSTICS"]
     N0["S-FACTORY"]
     N65["PAGE-SETTINGS"]
-    N130["W-GITHUB-USAGE"]
+    N142["W-GITHUB-USAGE"]
     N33["W-PACKAGE-OVERVIEW"]
     N34["W-CONNECTION-GUIDE"]
     N68["PAGE-PACKAGE"]
@@ -127,21 +135,24 @@ flowchart LR
     N70["PAGE-LOCAL-TUNNEL-SETUP"]
     N37["W-BROWSER-LAB"]
     N71["PAGE-BROWSER-LAB"]
+    N124["P-WAITING-QUEUE"]
+    N108["W-REPORT-LIST"]
+    N109["W-REPORT-DETAIL"]
     N14["W-PR-EVIDENCE"]
-    N107["S-SETTINGS"]
-    N114["W-NEW-CHAT"]
-    N118["W-SESSION-CONSOLE"]
-    N111["P-WAITING-QUEUE"]
-    N123["W-PLUGIN-ADMIN"]
-    N124["W-SYSTEM-DEFAULTS"]
-    N116["W-WORK-STATUS"]
+    N120["S-SETTINGS"]
+    N127["W-NEW-CHAT"]
+    N131["W-SESSION-CONSOLE"]
+    N135["W-PLUGIN-ADMIN"]
+    N136["W-SYSTEM-DEFAULTS"]
+    N129["W-WORK-STATUS"]
     N2 -->|"C-NAVIGATE"| N63
-    N2 -->|"C-NAVIGATE"| N109
-    N2 -->|"C-NAVIGATE"| N110
     N2 -->|"C-NAVIGATE"| N64
-    N2 -->|"C-NAVIGATE"| N117
+    N2 -->|"C-NAVIGATE"| N105
+    N2 -->|"C-NAVIGATE"| N122
+    N2 -->|"C-NAVIGATE"| N123
+    N2 -->|"C-NAVIGATE"| N130
     N5 -->|"C-FILTER"| N42
-    N7 -->|"C-SELECT-ITEM"| N104
+    N7 -->|"C-SELECT-ITEM"| N117
     N10 -->|"C-ITEM-STATE"| N42
     N10 -->|"C-ITEM-STATE"| N43
     N11 -->|"C-PRIORITY"| N11
@@ -153,18 +164,18 @@ flowchart LR
     N23 -->|"C-PREPARE"| N53
     N10 -->|"C-PREPARE"| N53
     N24 -->|"C-LAUNCH-EDIT"| N52
-    N24 -->|"C-START"| N104
-    N16 -->|"C-SELECT-RUN"| N104
+    N24 -->|"C-START"| N117
+    N16 -->|"C-SELECT-RUN"| N117
     N16 -->|"C-SELECT-RUN"| N66
     N18 -->|"C-RUN-ACTION"| N45
     N18 -->|"C-RUN-ACTION"| N44
-    N119 -->|"C-RUN-ACTION"| N45
-    N119 -->|"C-RUN-ACTION"| N44
+    N132 -->|"C-RUN-ACTION"| N45
+    N132 -->|"C-RUN-ACTION"| N44
     N21 -->|"C-FOLLOW-UP"| N20
     N19 -->|"C-RUN-ATTENTION"| N67
-    N113 -->|"C-GLOBAL-ATTENTION"| N104
-    N113 -->|"C-GLOBAL-ATTENTION"| N67
-    N22 -->|"C-ATTENTION-CHAT"| N104
+    N126 -->|"C-GLOBAL-ATTENTION"| N117
+    N126 -->|"C-GLOBAL-ATTENTION"| N67
+    N22 -->|"C-ATTENTION-CHAT"| N117
     N25 -->|"C-ANSWER"| N67
     N25 -->|"C-ANSWER"| N45
     N26 -->|"C-ANSWER"| N67
@@ -183,14 +194,14 @@ flowchart LR
     N31 -->|"C-SKILL-SAVE"| N23
     N32 -->|"C-DIAGNOSE"| N32
     N0 -->|"C-STATE-REFRESH"| N63
-    N0 -->|"C-STATE-REFRESH"| N109
-    N0 -->|"C-STATE-REFRESH"| N110
+    N0 -->|"C-STATE-REFRESH"| N122
+    N0 -->|"C-STATE-REFRESH"| N123
     N0 -->|"C-STATE-REFRESH"| N64
-    N0 -->|"C-STATE-REFRESH"| N104
+    N0 -->|"C-STATE-REFRESH"| N117
     N0 -->|"C-STATE-REFRESH"| N65
     N0 -->|"C-STATE-REFRESH"| N2
-    N0 -->|"C-STATE-REFRESH"| N117
     N0 -->|"C-STATE-REFRESH"| N130
+    N0 -->|"C-STATE-REFRESH"| N142
     N20 -->|"C-TRANSCRIPT"| N20
     N33 -->|"C-PACKAGE"| N68
     N34 -->|"C-PACKAGE"| N68
@@ -198,11 +209,29 @@ flowchart LR
     N27 -->|"C-EXTERNAL-AUTH"| N27
     N36 -->|"C-TUNNEL-KEY"| N70
     N37 -->|"C-BROWSER-LAB"| N71
+    N25 -->|"C-DISMISS-QUESTION"| N117
+    N25 -->|"C-DISMISS-QUESTION"| N19
+    N25 -->|"C-DISMISS-QUESTION"| N124
+    N108 -->|"C-REPORT-SELECT"| N109
+    N109 -->|"C-REPORT-EVIDENCE"| N109
+    N109 -->|"C-REPORT-EVIDENCE"| N108
+    N109 -->|"C-REPORT-RECOVER"| N109
+    N109 -->|"C-REPORT-RECOVER"| N108
+    N108 -->|"C-REPORT-REFRESH"| N108
+    N108 -->|"C-REPORT-REFRESH"| N109
+    N108 -->|"C-REPORT-QUERY"| N108
+    N108 -->|"C-REPORT-QUERY"| N108
+    N108 -->|"C-REPORT-QUERY"| N108
+    N108 -->|"C-REPORT-QUERY"| N108
+    N108 -->|"C-REPORT-MORE"| N108
+    N109 -->|"C-REPORT-OPEN-LINK"| N109
+    N109 -->|"C-REPORT-OPEN-LINK"| N109
+    N109 -->|"C-REPORT-OPEN-LINK"| N109
     N2 -->|"C-BACK"| N63
-    N2 -->|"C-BACK"| N109
-    N2 -->|"C-BACK"| N110
+    N2 -->|"C-BACK"| N122
+    N2 -->|"C-BACK"| N123
     N2 -->|"C-BACK"| N64
-    N2 -->|"C-BACK"| N117
+    N2 -->|"C-BACK"| N130
     N7 -->|"C-ITEM-SOURCE"| N7
     N7 -->|"C-ITEM-SOURCE"| N14
     N7 -->|"C-ITEM-SOURCE"| N14
@@ -219,37 +248,34 @@ flowchart LR
     N14 -->|"C-ITEM-SOURCE"| N14
     N14 -->|"C-ITEM-SOURCE"| N14
     N14 -->|"C-ITEM-SOURCE"| N14
-    N107 -->|"C-OPEN-SETTINGS"| N65
-    N114 -->|"C-START-CHAT"| N104
-    N114 -->|"C-START-CHAT"| N104
-    N20 -->|"C-SESSION-CONSOLE"| N118
-    N22 -->|"C-SESSION-CONSOLE"| N118
-    N114 -->|"C-PIPELINE-SELECT"| N114
-    N114 -->|"C-PIPELINE-SELECT"| N114
-    N25 -->|"C-DISMISS-QUESTION"| N104
-    N25 -->|"C-DISMISS-QUESTION"| N19
-    N25 -->|"C-DISMISS-QUESTION"| N111
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N123 -->|"C-PLUGIN-MAINTENANCE"| N123
-    N28 -->|"C-REVIEW-POLICY"| N116
+    N120 -->|"C-OPEN-SETTINGS"| N65
+    N127 -->|"C-START-CHAT"| N117
+    N127 -->|"C-START-CHAT"| N117
+    N20 -->|"C-SESSION-CONSOLE"| N131
+    N22 -->|"C-SESSION-CONSOLE"| N131
+    N127 -->|"C-PIPELINE-SELECT"| N127
+    N127 -->|"C-PIPELINE-SELECT"| N127
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N135 -->|"C-PLUGIN-MAINTENANCE"| N135
+    N28 -->|"C-REVIEW-POLICY"| N129
     N28 -->|"C-REVIEW-POLICY"| N28
-    N124 -->|"C-REVIEW-POLICY"| N116
-    N124 -->|"C-REVIEW-POLICY"| N28
+    N136 -->|"C-REVIEW-POLICY"| N129
+    N136 -->|"C-REVIEW-POLICY"| N28
     N28 -->|"C-REPOSITORY-REVIEW-PROMPT"| N24
-    N130 -->|"C-GITHUB-USAGE"| N130
-    N130 -->|"C-GITHUB-USAGE"| N28
-    N130 -->|"C-GITHUB-USAGE"| N130
-    N130 -->|"C-GITHUB-USAGE"| N28
-    N130 -->|"C-GITHUB-USAGE"| N130
-    N130 -->|"C-GITHUB-USAGE"| N28
-    N124 -->|"C-GITHUB-USAGE"| N130
-    N124 -->|"C-GITHUB-USAGE"| N28
+    N142 -->|"C-GITHUB-USAGE"| N142
+    N142 -->|"C-GITHUB-USAGE"| N28
+    N142 -->|"C-GITHUB-USAGE"| N142
+    N142 -->|"C-GITHUB-USAGE"| N28
+    N142 -->|"C-GITHUB-USAGE"| N142
+    N142 -->|"C-GITHUB-USAGE"| N28
+    N136 -->|"C-GITHUB-USAGE"| N142
+    N136 -->|"C-GITHUB-USAGE"| N28
 ```
 <!-- /specs:connections -->
 

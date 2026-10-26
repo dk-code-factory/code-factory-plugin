@@ -2744,6 +2744,496 @@ The tunnel key connection within the application interface.
 
 The browser lab connection within the application interface.
 
+<a id="question-recovery"></a>
+## Question recovery
+
+`question-recovery` · domain
+
+A bounded dialogue that turns an unresolved textual request for human input into an answerable question.
+
+<a id="element-w-questions-dismiss"></a>
+## no-reply
+
+`element-w-questions-dismiss` · element · scope: ui-w-questions
+
+The control dismissing a textual fallback that needs no user answer.
+
+<a id="element-w-policy-settings-question-helper-model"></a>
+## question-helper-model
+
+`element-w-policy-settings-question-helper-model` · element · scope: ui-w-policy-settings
+
+The optional model used for question recovery.
+
+<a id="ui-c-dismiss-question"></a>
+## Text question dismissal connection
+
+`ui-c-dismiss-question` · ui-connection
+
+The text question dismissal connection within the application interface.
+
+<a id="issue-report"></a>
+## Issue report
+
+`issue-report` · domain
+
+A retained observation of suspected defective behavior with its investigation and delivery evidence.
+
+<a id="report-ledger"></a>
+## Report ledger
+
+`report-ledger` · domain
+
+The persistent collection of issue reports and their independent histories.
+
+<a id="report-processing"></a>
+## Report processing state
+
+`report-processing` · domain
+
+The progress of an observation through investigation, information requests, publication and recovery.
+
+<a id="report-outcome"></a>
+## Report outcome
+
+`report-outcome` · domain
+
+The investigation disposition identifying a filed issue, a duplicate or explained behavior.
+
+<a id="evidence-manifest"></a>
+## Evidence manifest
+
+`evidence-manifest` · domain
+
+An inventory of evidence origins, capture times, content identities, omissions and truncation.
+
+<a id="delivery-evidence"></a>
+## Delivery evidence
+
+`delivery-evidence` · domain
+
+Verified relationships among a fix, its component version and a published package.
+
+<a id="fixed-issue"></a>
+## Fixed-issue reference
+
+`fixed-issue` · domain
+
+An explicit association of an issue with the source commit that corrects it.
+
+<a id="element-w-navigation-reports"></a>
+## reported issues
+
+`element-w-navigation-reports` · element · scope: ui-w-navigation
+
+The reported issues destination control in the navigation widget.
+
+<a id="ui-page-reports"></a>
+## Reported issues page
+
+`ui-page-reports` · ui-page
+
+The page presenting retained issue reports.
+
+<a id="ui-p-report-list"></a>
+## Report list pane
+
+`ui-p-report-list` · ui-pane
+
+The pane containing report discovery and filtering controls.
+
+<a id="ui-p-report-detail"></a>
+## Report detail pane
+
+`ui-p-report-detail` · ui-pane
+
+The pane presenting the selected report and its recovery controls.
+
+<a id="ui-w-report-list"></a>
+## Report list widget
+
+`ui-w-report-list` · ui-widget
+
+The searchable and paginated presentation of retained reports.
+
+<a id="ui-w-report-detail"></a>
+## Report detail widget
+
+`ui-w-report-detail` · ui-widget
+
+The presentation of one report, its investigation, evidence and delivery state.
+
+<a id="ui-c-report-select"></a>
+## Report selection connection
+
+`ui-c-report-select` · ui-connection
+
+The transition from a report row to its details.
+
+<a id="ui-c-report-evidence"></a>
+## Report evidence connection
+
+`ui-c-report-evidence` · ui-connection
+
+The addition of an observation to a retained report.
+
+<a id="ui-c-report-recover"></a>
+## Report recovery connection
+
+`ui-c-report-recover` · ui-connection
+
+The explicit recovery of retained report work.
+
+<a id="ui-c-report-refresh"></a>
+## Report refresh connection
+
+`ui-c-report-refresh` · ui-connection
+
+The refresh of issue and delivery evidence.
+
+<a id="element-w-report-list-heading"></a>
+## heading
+
+`element-w-report-list-heading` · element · scope: ui-w-report-list
+
+The heading naming the retained report collection in the report list widget.
+
+<a id="element-w-report-list-subtitle"></a>
+## subtitle
+
+`element-w-report-list-subtitle` · element · scope: ui-w-report-list
+
+The description of investigation, issue state and verified delivery in the report list widget.
+
+<a id="element-w-report-list-refresh"></a>
+## refresh
+
+`element-w-report-list-refresh` · element · scope: ui-w-report-list
+
+The action requesting refreshed issue and release evidence in the report list widget.
+
+<a id="element-w-report-list-error"></a>
+## error
+
+`element-w-report-list-error` · element · scope: ui-w-report-list
+
+The alert displaying a report read, mutation or external-link failure in the report list widget.
+
+<a id="element-w-report-list-search"></a>
+## search
+
+`element-w-report-list-search` · element · scope: ui-w-report-list
+
+The text input matching a report identifier, observation surface or actual behavior, processing explanation or investigation summary in the report list widget.
+
+<a id="element-w-report-list-processing-filter"></a>
+## processing-filter
+
+`element-w-report-list-processing-filter` · element · scope: ui-w-report-list
+
+The selector narrowing reports by their processing state in the report list widget.
+
+<a id="element-w-report-list-component-filter"></a>
+## component-filter
+
+`element-w-report-list-component-filter` · element · scope: ui-w-report-list
+
+The input narrowing reports by component in the report list widget.
+
+<a id="element-w-report-list-version-filter"></a>
+## version-filter
+
+`element-w-report-list-version-filter` · element · scope: ui-w-report-list
+
+The input narrowing reports by an observed plugin, installed or component version, or a retained release package or component version, in the report list widget.
+
+<a id="element-w-report-list-empty"></a>
+## empty
+
+`element-w-report-list-empty` · element · scope: ui-w-report-list
+
+The message displayed when the report list widget has no matching records.
+
+<a id="element-w-report-list-select"></a>
+## select
+
+`element-w-report-list-select` · element · scope: ui-w-report-list
+
+The repeated action selecting a retained report by its observation surface and actual behavior in the report list widget.
+
+<a id="element-w-report-list-row-processing"></a>
+## row-processing
+
+`element-w-report-list-row-processing` · element · scope: ui-w-report-list
+
+The processing state displayed for each retained report in the report list widget.
+
+<a id="element-w-report-list-row-component"></a>
+## row-component
+
+`element-w-report-list-row-component` · element · scope: ui-w-report-list
+
+The component identity or unknown-component fallback displayed for each retained report in the report list widget.
+
+<a id="element-w-report-list-row-id"></a>
+## row-id
+
+`element-w-report-list-row-id` · element · scope: ui-w-report-list
+
+The durable identifier displayed for each retained report in the report list widget.
+
+<a id="element-w-report-list-load-more"></a>
+## load-more
+
+`element-w-report-list-load-more` · element · scope: ui-w-report-list
+
+The action requesting the next page of retained reports in the report list widget.
+
+<a id="element-w-report-detail-surface"></a>
+## surface
+
+`element-w-report-detail-surface` · element · scope: ui-w-report-detail
+
+The heading identifying the selected observation's surface in the report detail widget.
+
+<a id="element-w-report-detail-id"></a>
+## id
+
+`element-w-report-detail-id` · element · scope: ui-w-report-detail
+
+The durable identifier of the selected report in the report detail widget.
+
+<a id="element-w-report-detail-processing"></a>
+## processing
+
+`element-w-report-detail-processing` · element · scope: ui-w-report-detail
+
+The selected report's investigation and publication progress displayed in the report detail widget.
+
+<a id="element-w-report-detail-outcome"></a>
+## outcome
+
+`element-w-report-detail-outcome` · element · scope: ui-w-report-detail
+
+The selected report's investigation disposition or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-observed"></a>
+## observed
+
+`element-w-report-detail-observed` · element · scope: ui-w-report-detail
+
+The observation time or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-expected"></a>
+## expected
+
+`element-w-report-detail-expected` · element · scope: ui-w-report-detail
+
+The expected behavior of the selected observation displayed in the report detail widget.
+
+<a id="element-w-report-detail-actual"></a>
+## actual
+
+`element-w-report-detail-actual` · element · scope: ui-w-report-detail
+
+The actual behavior of the selected observation displayed in the report detail widget.
+
+<a id="element-w-report-detail-reproduction"></a>
+## reproduction
+
+`element-w-report-detail-reproduction` · element · scope: ui-w-report-detail
+
+The reproduction steps, explanation of unknown reproduction or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-message"></a>
+## message
+
+`element-w-report-detail-message` · element · scope: ui-w-report-detail
+
+The current processing explanation displayed in the report detail widget.
+
+<a id="element-w-report-detail-findings"></a>
+## findings
+
+`element-w-report-detail-findings` · element · scope: ui-w-report-detail
+
+The retained investigation summary displayed in the report detail widget.
+
+<a id="element-w-report-detail-missing-information"></a>
+## missing-information
+
+`element-w-report-detail-missing-information` · element · scope: ui-w-report-detail
+
+The request for additional information displayed in the report detail widget.
+
+<a id="element-w-report-detail-open-issue"></a>
+## open-issue
+
+`element-w-report-detail-open-issue` · element · scope: ui-w-report-detail
+
+The action opening the selected report's retained GitHub issue through the host from the report detail widget.
+
+<a id="element-w-report-detail-issue-state"></a>
+## issue-state
+
+`element-w-report-detail-issue-state` · element · scope: ui-w-report-detail
+
+The retained GitHub issue's open or closed state displayed in the report detail widget.
+
+<a id="element-w-report-detail-closure-reason"></a>
+## closure-reason
+
+`element-w-report-detail-closure-reason` · element · scope: ui-w-report-detail
+
+The retained GitHub issue's closure reason or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-open-fix"></a>
+## open-fix
+
+`element-w-report-detail-open-fix` · element · scope: ui-w-report-detail
+
+The repeated action opening a retained fix pull request or commit through the host from the report detail widget.
+
+<a id="element-w-report-detail-open-release"></a>
+## open-release
+
+`element-w-report-detail-open-release` · element · scope: ui-w-report-detail
+
+The repeated action opening a retained stable or prerelease URL through the host from the report detail widget.
+
+<a id="element-w-report-detail-linked-fix"></a>
+## linked-fix
+
+`element-w-report-detail-linked-fix` · element · scope: ui-w-report-detail
+
+The retained fix repository, commit and component version or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-stable-availability"></a>
+## stable-availability
+
+`element-w-report-detail-stable-availability` · element · scope: ui-w-report-detail
+
+The stable release repository, package version, component version and publication time or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-prerelease-availability"></a>
+## prerelease-availability
+
+`element-w-report-detail-prerelease-availability` · element · scope: ui-w-report-detail
+
+The prerelease repository, package version, component version and publication time or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-installed-version"></a>
+## installed-version
+
+`element-w-report-detail-installed-version` · element · scope: ui-w-report-detail
+
+The observed installed Code Factory version or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-observed-version"></a>
+## observed-version
+
+`element-w-report-detail-observed-version` · element · scope: ui-w-report-detail
+
+The repeated observed component version or Unknown fallback displayed in the report detail widget.
+
+<a id="element-w-report-detail-issue-freshness"></a>
+## issue-freshness
+
+`element-w-report-detail-issue-freshness` · element · scope: ui-w-report-detail
+
+The last successful GitHub verification and any error and retry time displayed in the report detail widget.
+
+<a id="element-w-report-detail-release-freshness"></a>
+## release-freshness
+
+`element-w-report-detail-release-freshness` · element · scope: ui-w-report-detail
+
+The last successful release verification and any error and retry time displayed in the report detail widget.
+
+<a id="element-w-report-detail-additions"></a>
+## additions
+
+`element-w-report-detail-additions` · element · scope: ui-w-report-detail
+
+The retained additional host observations displayed in the report detail widget.
+
+<a id="element-w-report-detail-evidence"></a>
+## evidence
+
+`element-w-report-detail-evidence` · element · scope: ui-w-report-detail
+
+The draft input for an additional host observation in the report detail widget.
+
+<a id="element-w-report-detail-add-evidence"></a>
+## add-evidence
+
+`element-w-report-detail-add-evidence` · element · scope: ui-w-report-detail
+
+The action adding an additional host observation to the selected report in the report detail widget.
+
+<a id="element-w-report-detail-recovery-note"></a>
+## recovery-note
+
+`element-w-report-detail-recovery-note` · element · scope: ui-w-report-detail
+
+The draft explanation of inspected and reconciled workflow effects in the report detail widget.
+
+<a id="element-w-report-detail-effects-acknowledgement"></a>
+## effects-acknowledgement
+
+`element-w-report-detail-effects-acknowledgement` · element · scope: ui-w-report-detail
+
+The checkbox recording that retained workflow effects were inspected and reconciled in the report detail widget.
+
+<a id="element-w-report-detail-resume"></a>
+## resume
+
+`element-w-report-detail-resume` · element · scope: ui-w-report-detail
+
+The action requesting explicit recovery of the selected retained report from the report detail widget.
+
+<a id="element-w-report-detail-evidence-history"></a>
+## evidence-history
+
+`element-w-report-detail-evidence-history` · element · scope: ui-w-report-detail
+
+The disclosure control revealing the evidence manifest and processing history in the report detail widget.
+
+<a id="element-w-report-detail-evidence-manifest"></a>
+## evidence-manifest
+
+`element-w-report-detail-evidence-manifest` · element · scope: ui-w-report-detail
+
+The repeated evidence origin, time, digest or omission and truncation marker displayed in the report detail widget.
+
+<a id="element-w-report-detail-history"></a>
+## history
+
+`element-w-report-detail-history` · element · scope: ui-w-report-detail
+
+The repeated processing time, state and explanation displayed in the report detail widget.
+
+<a id="ui-c-report-query"></a>
+## Report query connection
+
+`ui-c-report-query` · ui-connection
+
+The transition selecting the displayed report subset from search and filter values.
+
+<a id="ui-c-report-more"></a>
+## Report pagination connection
+
+`ui-c-report-more` · ui-connection
+
+The transition extending the displayed range of retained reports.
+
+<a id="ui-c-report-open-link"></a>
+## Report external link connection
+
+`ui-c-report-open-link` · ui-connection
+
+The transition opening a retained report issue, fix or release through the host.
+
 <a id="element-w-sync-health-details"></a>
 ## details
 
@@ -3213,13 +3703,6 @@ The collection of launched work whose issue remains open without a merged implem
 
 A selected reusable profile for one retained agent session.
 
-<a id="question-recovery"></a>
-## Question recovery
-
-`question-recovery` · domain
-
-A bounded dialogue that turns an unresolved textual request for human input into an answerable question.
-
 <a id="session-console"></a>
 ## Session console
 
@@ -3339,26 +3822,12 @@ The control returning session control to the user.
 
 The control switching between conversation and session console.
 
-<a id="element-w-policy-settings-question-helper-model"></a>
-## question-helper-model
-
-`element-w-policy-settings-question-helper-model` · element · scope: ui-w-policy-settings
-
-The optional model used for question recovery.
-
 <a id="element-w-run-controls-session-status"></a>
 ## session-status
 
 `element-w-run-controls-session-status` · element · scope: ui-w-run-controls
 
 The displayed lifecycle status of the currently selected session.
-
-<a id="element-w-questions-dismiss"></a>
-## no-reply
-
-`element-w-questions-dismiss` · element · scope: ui-w-questions
-
-The control dismissing a textual fallback that needs no user answer.
 
 <a id="element-w-pr-evidence-check-link"></a>
 ## check-link
@@ -3373,13 +3842,6 @@ A source link to an individual CI check or status provider.
 `ui-c-pipeline-select` · ui-connection
 
 The pipeline selection connection within the application interface.
-
-<a id="ui-c-dismiss-question"></a>
-## Text question dismissal connection
-
-`ui-c-dismiss-question` · ui-connection
-
-The text question dismissal connection within the application interface.
 
 <a id="codex-plugin"></a>
 ## Codex plugin

@@ -53,6 +53,21 @@ func (g *GitHub) ConfigureUsage(s *store.Store, policy func(context.Context) (Gi
 	g.policy = policy
 }
 func (g *GitHub) Managed() bool { return g.policy != nil }
+
+// All managed transports, including publication subprocesses, hold the same
+// request lock through reservation, HTTP response and durable observations.
+func (g *GitHub) lockUsage(ctx context.Context) (func(), error) {
+	g.requestMu.Lock()
+	if g.usageStore == nil {
+		return g.requestMu.Unlock, nil
+	}
+	unlock, err := g.usageStore.ProcessLock(ctx, "github-request")
+	if err != nil {
+		g.requestMu.Unlock()
+		return nil, err
+	}
+	return func() { unlock(); g.requestMu.Unlock() }, nil
+}
 func (g *GitHub) usage(ctx context.Context) (githubUsage, error) {
 	u := githubUsage{Retry: map[string]time.Time{}, Limits: map[string]githubRemoteLimit{}}
 	if g.usageStore != nil {
@@ -392,8 +407,11 @@ func restTTL(path string, h http.Header) time.Duration {
 }
 
 func (g *GitHub) SeedCooldown(ctx context.Context, until time.Time) error {
-	g.requestMu.Lock()
-	defer g.requestMu.Unlock()
+	unlock, err := g.lockUsage(ctx)
+	if err != nil {
+		return err
+	}
+	defer unlock()
 	u, err := g.usage(ctx)
 	if err != nil {
 		return err

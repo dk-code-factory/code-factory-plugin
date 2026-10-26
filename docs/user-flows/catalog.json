@@ -1340,7 +1340,7 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "Cold 73 and warm 62 requests including identity; independent reviews/CI, head/base invalidation, hourly commit reconciliation and stable incremental buckets."
+          "purpose": "Cold 83 and warm 72 requests including identity and ten PR metadata reads; independent reviews/CI, head/base invalidation, hourly commit reconciliation and stable incremental buckets."
         },
         {
           "path": "internal/providers/github_requests_test.go",
@@ -1468,13 +1468,13 @@
         },
         {
           "path": "internal/providers/github_test.go",
-          "anchor": "func TestSyncEnrichmentHasBoundedParallelismAndCancelsOnFailure(",
+          "anchor": "func TestSyncEnrichmentSerializesRequestsAndCancelsOnFailure(",
           "scenarios": [
             "S2",
             "S3",
             "S6"
           ],
-          "purpose": "Four independent items hydrate concurrently; the worker bound holds and a failed worker returns no partial repository."
+          "purpose": "Hydration uses the serialized shared transport; all items complete and a failed worker returns no partial repository."
         },
         {
           "path": "internal/app/work_queues_test.go",
@@ -1774,6 +1774,23 @@
             "S5"
           ],
           "purpose": "Repeated automatic eligibility reads only owning-run metadata: all four persisted busy states prevent claims and pipeline validation despite unrelated/private frozen payloads; idle ownership reaches normal pipeline validation without provider work."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestManagedInboxAndReportingSharePersistentRequestBudget(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A managed inbox read exhausts the shared persisted request budget; report reads and a separate publication transport fail before dispatch, retain the one consumed request and never create an issue."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestManagedTransportsShareProcessGateAndPreserveCooldown(",
+          "scenarios": [
+            "S3",
+            "S6"
+          ],
+          "purpose": "Separate database connections and transports cannot overlap managed HTTP; a cancelled waiting publication remains BeforeDispatch, exactly two attempts survive, and a later rate-limit deadline is preserved."
         }
       ],
       "suites": [
@@ -12591,6 +12608,24 @@
             "S4"
           ],
           "purpose": "Atomic entity comparison across independent SQLite connections accepts current bytes, rejects stale/absence overwrites and retains the newer generation."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestManagedInboxAndReportingSharePersistentRequestBudget(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A managed inbox read exhausts the shared persisted request budget; report reads and a separate publication transport fail before dispatch, retain the one consumed request and never create an issue."
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestManagedTransportsShareProcessGateAndPreserveCooldown(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Separate database connections and transports cannot overlap managed HTTP; a cancelled waiting publication remains BeforeDispatch, exactly two attempts survive, and a later rate-limit deadline is preserved."
         }
       ],
       "suites": [

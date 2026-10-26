@@ -8,7 +8,6 @@ import (
 	"codefactory/internal/events"
 	"codefactory/internal/gateway"
 	"codefactory/internal/providers"
-	"codefactory/internal/reports"
 	"codefactory/internal/setup"
 	"codefactory/internal/store"
 	"codefactory/internal/transport"
@@ -226,8 +225,14 @@ func run() error {
 		return result
 	}
 	if command == "report-publish" {
-		service := &reports.Service{Store: s, Vault: vault, Dir: *dir, GitHub: &reports.GitHubAdapter{Client: providers.NewGitHub(), Store: s}}
-		return service.PublishReport(ctx, *tunnelID)
+		publisher := &app.App{Store: s, Vault: vault, DataDir: *dir, GitHub: providers.NewGitHub()}
+		if e = publisher.Init(ctx); e != nil {
+			return e
+		}
+		if e = publisher.EnableGitHubUsage(ctx); e != nil {
+			return e
+		}
+		return publisher.Reports.PublishReport(ctx, *tunnelID)
 	}
 	if command != "serve" {
 		return fmt.Errorf("unknown command %s", command)

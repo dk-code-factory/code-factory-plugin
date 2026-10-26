@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "fc80b2e2cb61568835c66fdaefc770df0e19c3b1",
-  "fingerprint": "2e9ac9c5ebd9787d216d1a881d74d21123466aad9db35f3e13ddd90afa13702e",
+  "base": "9c549ce811deaa26034ffa8ede5c56990af0241d",
+  "fingerprint": "d9ea6a94a2ad8de4ebfb06a24571b58153d80bdcc76c4d3d29b19a132026986c",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Durable callback and attention notification behavior remains accurate; report changes add journal notifications containing report identity and processing state only.",
-    "implementation": "Existing Events transport/delivery code is unchanged. Report persistence uses the existing transactional journal rather than introducing output-token callbacks. Reviewed the shared GitHub transport and private marker CAS addition: only inbox synchronization/report operations use these paths; this contract retains its existing API, transitions and assertion ownership.",
-    "tests": "Existing event delivery fixtures retain their scope; new report journal assertions reject full evidence content. No fixture result closes real callback or host acceptance."
+    "kind": "behavior",
+    "description": "Retained prior reviewed evidence for unchanged branch inputs: Against advanced main, PR3 S4 metadata-only PR/recovered-question event mapping remains changed behavior; stable delivery IDs, callback validation, retries and unavailable real-host subscription stay. Target confirmation prevents false local asks without adding host capability.",
+    "implementation": "Retained prior reviewed evidence for unchanged branch inputs: Current events code still constructs metadata instead of copying private event body. Integrated atomic attention resolution/replacement preserves history and request identity; recovery completion/uncertainty never answers or authorizes notifications. No callback/auth/signing or host subscription behavior is broadened. Rebase comparison against9c549ce retains these owning source paths; conflict changes concern the shared transport, reporting shell and reconciliation context rather than changing this contract.",
+    "tests": "Retained prior reviewed evidence for unchanged branch inputs: Changed event fixture injects private question context, checks absent body and exactly one inbox+attention notification over repeated ticks. Existing challenge/signature/entity/503-ID/expiry assertions retain limits. All inherited confirmed/unconfirmed request tests are local agent fixtures and do not supply callback receipt or renewal/host proof. Existing host and delivery-variant gaps remain unchanged; combined full-base verification is recorded separately; restored question detection reuses existing metadata-only attention events and grants no host notification acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 22.205
+      "seconds": 33.487
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.239
+      "seconds": 25.337
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.582
+      "seconds": 0.642
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "31a199edc3e5181d37693044e9437e12851639fc0b357a5483556aca48e8ea7c",
-    "term:attention-request": "66ec3c547e81044a57e6a72cc5435a692c46ae6bc335e84620105bdbac78eea2",
-    "term:coverage-gap": "a38740977513a9d32ee20fd7453728cf839647d0acc6e576b4b9b74901cfd27d",
-    "term:host": "32089dbcb76600b2357814ddf0acd761f611d35e4f85ed8eb6bf237c89a2692b",
-    "term:known-limitation": "7967daa4b452ba23438fd79763948532878ffbb595be663a37656031b9760a0a",
-    "term:subscription": "85bf943335c46d7d33211c2cf9449321cba4586b33af6c5b9016737a95b2f227",
-    "term:unverified-behavior": "3b5c3eed81f4988dfbce60a9fe4d485212fc539b326e1d4808b989f12fd199cb"
+    "flow:receive-notifications": "249df7bcbd398913fd33d84c367b90f0ea566e14b0b9e07da3d84e4bdb8d5865",
+    "term:attention-request": "ce3f13b61f610d086c1906e647877b28ae44de5185a7a59f4a94145ee2d32a47",
+    "term:coverage-gap": "ccbf07b80548ed376bedb52bcbe46534584e802a3e4f65c3052371f73314dfba",
+    "term:host": "efd0f6a4b1a865319857870d215dafc37e01c9beb7ea601b262532b396141569",
+    "term:known-limitation": "9051ddae14a10deb2cab2af7d09ffe4069360b15951e6dafcd79e2511975d532",
+    "term:subscription": "eefb5215a077fb3c8eb9d20de9b18661d4b20597ccf53d8f68930a2d221e6379",
+    "term:unverified-behavior": "3afc30668916671f9a25f4b0055efe4c34e50ff7352baccc2eeea64286203a89"
   }
 }

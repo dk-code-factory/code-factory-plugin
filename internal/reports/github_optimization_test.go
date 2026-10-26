@@ -383,6 +383,40 @@ func TestCrossConsumerCooldownStopsInboxAndPublication(t *testing.T) {
 	}
 }
 
+func TestManagedInboxAndReportingSharePersistentRequestBudget(t *testing.T) {
+	calls := 0
+	g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		fmt.Fprint(w, `{"login":"owner"}`)
+	})
+	policy := func(context.Context) (providers.GitHubPolicy, error) {
+		return providers.GitHubPolicy{RequestsPerHour: 1}, nil
+	}
+	g.Client.ConfigureUsage(g.Store, policy)
+	ctx := context.Background()
+	if _, err := g.Client.User(ctx); err != nil {
+		t.Fatal(err)
+	}
+	_, err := g.ReadIssue(ctx, DefaultRepository, 17)
+	var rate *providers.RateLimitError
+	if !errors.As(err, &rate) || calls != 1 {
+		t.Fatal("report bypassed the inbox budget", err, calls)
+	}
+	// A publication process opens a new transport against the same private store.
+	client := &providers.GitHub{BaseURL: g.Client.BaseURL, Client: g.Client.Client, Token: g.Client.Token}
+	client.ConfigureUsage(g.Store, policy)
+	restarted := &GitHubAdapter{Client: client, Store: g.Store}
+	_, err = restarted.Create(ctx, findings(), marker("budget-blocked"))
+	var rejected *publicationRejected
+	if !errors.As(err, &rejected) || calls != 1 {
+		t.Fatal("publication transport bypassed the retained budget", err, calls)
+	}
+	usage, err := client.UsageStatus(ctx)
+	if err != nil || usage.RequestsLastHour != 1 {
+		t.Fatal("shared budget lost dispatch accounting", usage, err)
+	}
+}
+
 func TestMarkerIndexConcurrentWriters(t *testing.T) {
 	// Two clients and database connections model daemon/publication processes.
 	entered := make(chan struct{}, 2)

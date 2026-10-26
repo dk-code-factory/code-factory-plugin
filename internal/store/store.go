@@ -13,14 +13,16 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
 var ErrNotFound = errors.New("record not found")
 
 type Store struct {
-	db *sql.DB
-	mu sync.Mutex
+	db   *sql.DB
+	mu   sync.Mutex
+	path string
 }
 type Tx struct {
 	tx  *sql.Tx
@@ -40,6 +42,10 @@ func Open(path string) (*Store, error) {
 		return nil, err
 	}
 	absolute, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+	absolute, err = filepath.EvalSymlinks(absolute)
 	if err != nil {
 		return nil, err
 	}
@@ -63,9 +69,44 @@ func Open(path string) (*Store, error) {
 			return nil, err
 		}
 	}
-	return &Store{db: db}, nil
+	return &Store{db: db, path: absolute}, nil
 }
 func (s *Store) Close() error { return s.db.Close() }
+
+// ProcessLock coordinates external effects across connections and processes.
+// No database transaction remains open while the caller holds the lock. Closing
+// its descriptor, including on process exit, releases ownership automatically.
+func (s *Store) ProcessLock(ctx context.Context, name string) (func(), error) {
+	if name == "" || strings.Trim(name, "abcdefghijklmnopqrstuvwxyz0123456789-") != "" {
+		return nil, fmt.Errorf("invalid process lock name")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	f, err := os.OpenFile(s.path+".lock-"+name, os.O_CREATE|os.O_RDWR, 0600)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		if err == nil {
+			var once sync.Once
+			return func() { once.Do(func() { _ = f.Close() }) }, nil
+		}
+		if !errors.Is(err, syscall.EWOULDBLOCK) && !errors.Is(err, syscall.EAGAIN) {
+			_ = f.Close()
+			return nil, err
+		}
+		timer := time.NewTimer(10 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			_ = f.Close()
+			return nil, ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
 func decode(row *sql.Row, out any) error {
 	var b []byte
 	if err := row.Scan(&b); err != nil {

@@ -181,7 +181,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
     }
   }
   return (
-    <section aria-label="Reported issues">
+    <section className="page reports-page" aria-label="Reported issues">
       <div className="toolbar">
         <div>
           <h2>Reported issues</h2>

@@ -2968,12 +2968,27 @@
       "definition": "A bounded dialogue that turns an unresolved textual request for human input into an answerable question."
     },
     {
+      "id": "element-w-questions-dismiss",
+      "name": "no-reply",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control dismissing a textual fallback that needs no user answer.",
+      "scope": "ui-w-questions"
+    },
+    {
       "id": "element-w-policy-settings-question-helper-model",
       "name": "question-helper-model",
       "aliases": [],
       "category": "element",
       "definition": "The optional model used for question recovery.",
       "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "ui-c-dismiss-question",
+      "name": "Text question dismissal connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The text question dismissal connection within the application interface."
     },
     {
       "id": "issue-report",
@@ -4142,14 +4157,6 @@
       "scope": "ui-w-run-controls"
     },
     {
-      "id": "element-w-questions-dismiss",
-      "name": "no-reply",
-      "aliases": [],
-      "category": "element",
-      "definition": "The control dismissing a textual fallback that needs no user answer.",
-      "scope": "ui-w-questions"
-    },
-    {
       "id": "element-w-pr-evidence-check-link",
       "name": "check-link",
       "aliases": [],
@@ -4163,13 +4170,6 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The pipeline selection connection within the application interface."
-    },
-    {
-      "id": "ui-c-dismiss-question",
-      "name": "Text question dismissal connection",
-      "aliases": [],
-      "category": "ui-connection",
-      "definition": "The text question dismissal connection within the application interface."
     },
     {
       "id": "codex-plugin",

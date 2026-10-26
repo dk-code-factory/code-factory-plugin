@@ -509,7 +509,11 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 		}
 	}
 	ctx = providers.StartGitHubOperation(ctx, a.GitHub, a.Store, false)
-	user, e := a.GitHub.User(ctx)
+	identityCtx := ctx
+	if !a.GitHub.Managed() {
+		identityCtx = providers.WithGitHubRead(ctx, providers.RequireLive)
+	}
+	user, e := a.GitHub.User(identityCtx)
 	if e != nil {
 		for _, r := range repos {
 			if err := a.saveSyncError(ctx, r.ID, e); err != nil {
@@ -589,7 +593,13 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 	var workers sync.WaitGroup
 	var firstErr error
 	var failed sync.Once
-	for worker := 0; worker < min(3, len(repos)); worker++ {
+	workerCount := min(3, len(repos))
+	if a.GitHub.Managed() {
+		// Managed requests already serialize at the transport budget. Preserve
+		// repository order so a limit stops later checkpoint advancement.
+		workerCount = min(1, len(repos))
+	}
+	for worker := 0; worker < workerCount; worker++ {
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
