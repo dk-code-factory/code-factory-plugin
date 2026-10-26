@@ -148,7 +148,7 @@ func TestRestartCheckingAutomaticallyClarifiesRetainedThread(t *testing.T) {
 	run := prepareRun(t, a, ctx)
 	run.Status = "interrupted"
 	run.ThreadID = "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	_ = a.Store.Put(ctx, "run", run.ID, run, "")
@@ -204,13 +204,15 @@ func TestRestartClarificationPreservesClaimedAttempt(t *testing.T) {
 	t.Setenv("CF_FAKE_MODE", "complete")
 	t.Setenv("CF_FAKE_HELPER_FAILURE", "invalid")
 	t.Setenv("CF_FAKE_CLARIFICATION", "malformed")
+	record := filepath.Join(t.TempDir(), "protocol.jsonl")
+	t.Setenv("CF_FAKE_RECORD", record)
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
-	run.Status = "interrupted"
+	run.Status, run.TurnID = "running", "interrupted-clarification"
 	run.ThreadID = "thread-1"
-	_ = os.MkdirAll(run.Worktree, 0700)
+	_ = a.Runs.workspace(ctx, run)
 	_ = a.Store.Put(ctx, "run", run.ID, run, "")
-	r := domain.QuestionRecovery{ID: "in-flight-clarification", RunID: run.ID, Stage: "clarifying", SourceText: "Task complete", Attempts: 1}
+	r := domain.QuestionRecovery{ID: "in-flight-clarification", RunID: run.ID, Stage: "clarifying", SourceText: "Task complete", Attempts: 1, RepairTurnID: run.TurnID}
 	_ = a.Store.Put(ctx, "question-recovery", r.ID, r, "")
 	for n := 0; n < 2; n++ {
 		if err := a.Runs.Recover(ctx); err != nil {
@@ -222,6 +224,20 @@ func TestRestartClarificationPreservesClaimedAttempt(t *testing.T) {
 		t.Fatalf("restart lost budget: %+v", r)
 	}
 	assertNoAttention(t, a)
+	for _, call := range recordedCalls(t, record) {
+		if call.Method != "turn/start" {
+			continue
+		}
+		var input []struct{ Text string }
+		if err := json.Unmarshal(call.Params["input"], &input); err != nil {
+			t.Fatal(err)
+		}
+		for _, part := range input {
+			if strings.HasPrefix(part.Text, "Continue this same session from its last unfinished step") {
+				t.Fatal("question clarification replayed ordinary task continuation")
+			}
+		}
+	}
 }
 
 func TestLegacyCompletionRequestReconcilesWithoutDiscardingRealQuestion(t *testing.T) {
@@ -232,7 +248,7 @@ func TestLegacyCompletionRequestReconcilesWithoutDiscardingRealQuestion(t *testi
 			run := prepareRun(t, a, ctx)
 			run.Status = "interrupted"
 			run.ThreadID = "thread-1"
-			_ = os.MkdirAll(run.Worktree, 0700)
+			_ = a.Runs.workspace(ctx, run)
 			_ = a.Store.Put(ctx, "run", run.ID, run, "")
 			source := "Task complete"
 			if later {
@@ -475,7 +491,7 @@ func TestLegacyClarificationSupersedesOnlyMatchingSynthetic(t *testing.T) {
 	run := prepareRun(t, a, ctx)
 	run.Status = "interrupted"
 	run.ThreadID = "thread-1"
-	_ = os.MkdirAll(run.Worktree, 0700)
+	_ = a.Runs.workspace(ctx, run)
 	_ = a.Store.Put(ctx, "run", run.ID, run, "")
 	legacy := domain.QuestionRecovery{ID: "legacy", RunID: run.ID, Stage: "fallback", Question: "Task complete"}
 	_ = a.Store.Put(ctx, "question-recovery", legacy.ID, legacy, "")
@@ -581,10 +597,10 @@ func TestLegacyClarificationSupersedesOnlyMatchingSynthetic(t *testing.T) {
 func TestRestartClaimedRecoveryAnswerDoesNotAskAgain(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
-	run.Status = "interrupted"
+	run.Status, run.TurnID = "running", "claimed-repair-turn"
 	run.ThreadID = "thread-1"
 	_ = a.Store.Put(ctx, "run", run.ID, run, "")
-	r := domain.QuestionRecovery{ID: "answered", RunID: run.ID, Stage: "answered", Question: "Which target?", Confirmation: "native", Attempts: 1}
+	r := domain.QuestionRecovery{ID: "answered", RunID: run.ID, Stage: "answered", Question: "Which target?", Confirmation: "native", Attempts: 1, RepairTurnID: run.TurnID}
 	_ = a.Store.Put(ctx, "question-recovery", r.ID, r, "")
 	if err := a.Runs.Recover(ctx); err != nil {
 		t.Fatal(err)
@@ -697,7 +713,7 @@ func TestStartupTakeoverCancelsRecoveryBeforeSessionAttachment(t *testing.T) {
 			a, ctx := fixture(t)
 			run := prepareRun(t, a, ctx)
 			run.Status, run.ThreadID = "interrupted", "thread-1"
-			if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+			if err := a.Runs.workspace(ctx, run); err != nil {
 				t.Fatal(err)
 			}
 			if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -754,7 +770,7 @@ func TestStartupTakeoverCancelsAfterSessionAttachment(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -876,7 +892,7 @@ func TestRetainedSetupFailureExhaustsSharedBudget(t *testing.T) {
 				run.ThreadID = ""
 			}
 			if method != "missing-worktree" {
-				if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+				if err := a.Runs.workspace(ctx, run); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -939,7 +955,7 @@ func TestStalledRecoveryTakeoverDoesNotBlockAnotherRunsQuestion(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1162,7 +1178,7 @@ func TestAsyncRecoveryRetainsSingleRouteAcrossRestart(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1244,7 +1260,7 @@ func TestAsyncRecoveryRetiresOnlyMatchingDuplicate(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1326,7 +1342,7 @@ func TestOriginatingRecoveryClaimsExcludeSiblingAnswers(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1401,7 +1417,7 @@ func TestRetainedSetupReusesClaimForLastPermittedTurn(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1427,7 +1443,7 @@ func TestRestartUnavailableSetupUsesRemainingBudget(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1559,7 +1575,7 @@ func TestAsyncRecoveryDisconnectRetainsOnlyAsyncRoute(t *testing.T) {
 	}
 	waitFor(t, func() bool {
 		var current domain.Run
-		return a.Store.Get(ctx, "run", run.ID, &current) == nil && current.Status == "interrupted" && current.TurnID == ""
+		return a.Store.Get(ctx, "run", run.ID, &current) == nil && current.Status == "interrupted" && current.TurnID == r.RepairTurnID
 	})
 	// process/closed persists interrupted state before fallback. Joining its
 	// session lock waits for the complete callback before counting answer routes.
@@ -1838,13 +1854,17 @@ func TestTakeoverAfterClaimPreventsQueuedRepairContinuation(t *testing.T) {
 			case <-takeoverCtx.Done():
 				t.Fatal("queued repair continuation did not finish")
 			}
-			waitRecoveryWork(t, a.Runs)
 			if err := a.Store.Get(ctx, "question-recovery", r.ID, &r); err != nil || r.Stage != "resolved" || r.Attempts != 1 {
 				t.Fatalf("takeover failed to finalise the claim and invalidate continuation: %+v %v", r, err)
 			}
 			if err := a.Store.Get(ctx, "attention", at.ID, &at); err != nil || at.Status != "answered" {
 				t.Fatalf("takeover lost durable answer claim: %+v %v", at, err)
 			}
+			// Claims are checked before teardown. Stop the completed provider before
+			// joining workers: its dispatch loop can otherwise admit new background
+			// attention work concurrently with a zero-count WaitGroup.Wait.
+			a.Runs.Close()
+			waitRecoveryWork(t, a.Runs)
 			data, err := os.ReadFile(record)
 			if err != nil {
 				t.Fatal(err)
@@ -1918,7 +1938,7 @@ func TestRetiredResumeCannotOverwriteOwnerReplacement(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -2027,5 +2047,34 @@ func TestTakeoverInvalidatesEntireQueuedCompletion(t *testing.T) {
 	data, err := os.ReadFile(record)
 	if err != nil || strings.Count(string(data), "outputSchema") != 1 {
 		t.Fatalf("stale completion launched another automatic classifier: %s %v", data, err)
+	}
+}
+
+func TestStartupStillContinuesNewerOwnerWorkBesideOldRecoveryDiagnostics(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "hold")
+	record := filepath.Join(t.TempDir(), "protocol.jsonl")
+	t.Setenv("CF_FAKE_RECORD", record)
+	a, ctx := fixture(t)
+	run := prepareRun(t, a, ctx)
+	if err := a.Runs.workspace(ctx, run); err != nil {
+		t.Fatal(err)
+	}
+	run.Status, run.ThreadID, run.TurnID, run.ResumePending = "running", "thread-1", "newer-owner-turn", true
+	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
+		t.Fatal(err)
+	}
+	recovery := domain.QuestionRecovery{ID: "older-unresolved", RunID: run.ID, Stage: "unresolved", SourceTurnID: "older-source", RepairTurnID: "older-repair", SourceText: "Task complete", Attempts: 2, DiagnosticError: clarificationUnavailable}
+	if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.Recover(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		return a.Store.Get(ctx, "run", run.ID, &run) == nil && run.Status == "running" && run.TurnID != ""
+	})
+	calls := recordedCalls(t, record)
+	if len(calls) != 2 || calls[0].Method != "thread/resume" || calls[1].Method != "turn/start" || !strings.Contains(string(calls[1].Params["input"]), "last unfinished step") || strings.Contains(string(calls[1].Params["input"]), "question-only recovery") {
+		t.Fatal("old diagnostics prevented or replaced newer owner work", calls)
 	}
 }

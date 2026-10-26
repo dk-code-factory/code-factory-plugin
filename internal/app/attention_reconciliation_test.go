@@ -336,7 +336,7 @@ func TestAttentionReconciliationRetiresRecoveryAndPreservesNativeApprovals(t *te
 	if err := a.Store.Put(ctx, "run", r.ID, r, ""); err != nil {
 		t.Fatal(err)
 	}
-	recovery := domain.QuestionRecovery{ID: "recovery", RunID: r.ID, Stage: "fallback", Question: "Which scope?"}
+	recovery := domain.QuestionRecovery{ID: "recovery", RunID: r.ID, Stage: "fallback", Confirmation: "native", Question: "Which scope?"}
 	if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
 		t.Fatal(err)
 	}

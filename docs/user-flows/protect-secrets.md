@@ -32,7 +32,7 @@ Incoming API diagnostics record call names, bounded safe parameters and processi
 - **S2** Private values are encrypted at rest and known secrets are redacted before journaling, including split output chunks.
 - **S3** Secret-answer redaction survives message-triggered session restoration without journaling the answer body.
 
-- **S4** Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.
+- **S4** Render native and structured-message questions; classify stopped text and share at most two setup, clarification and form attempts. Offer textual continuation only for a confirmed unanswered question, retaining its delivery status and the same session console. Unconfirmed exhaustion remains diagnostic without attention or automatic task continuation. Preserve answer claims and redaction across recovery.
 
 Codex plugin management uses literal CLI arguments, bounded output and process-group cancellation. Credential-bearing marketplace URLs and selector/option injection are rejected. Arbitrary provider stdout/stderr is never copied into operation errors or journal entries; generic status preserves uncertain outcomes without replay. Existing Codex/GitHub authentication is reused without readback.
 
@@ -57,7 +57,7 @@ flowchart TD
     N4["Reject invalid origin, expired or reused form"]
     N5["Obtain a valid form through authorized setup"]
     N6(["Private value withheld from ordinary output"])
-    N7["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
+    N7["Classify stopped text#59; share two setup, clarification and form attempts. Offer only confirmed unanswered textual continuation#59; unresolved stays diagnostic without attention or task replay. Preserve claims, redaction and console. #40;S4#41;"]
     N8["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
     N9(["Sandbox initialization failed#59; retained work and authority preserved"])
     N10["Authenticate owner and inspect or update identified managed dependencies #40;S6#41;"]

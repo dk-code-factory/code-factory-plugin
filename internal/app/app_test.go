@@ -729,33 +729,20 @@ func TestMessageRestoresRetainedSessionWithOneSubmittedTurn(t *testing.T) {
 	if r.Status != "running" || r.ThreadID != original.ThreadID || r.Worktree != original.Worktree || r.Prompt != original.Prompt || string(raw(r.Profile)) != string(raw(original.Profile)) {
 		t.Fatalf("retained session changed: %#v", r)
 	}
-	b, err := os.ReadFile(record)
-	if err != nil {
-		t.Fatal(err)
+	calls := recordedCalls(t, record)
+	if len(calls) != 4 {
+		t.Fatalf("expected original start and one resume/turn pair, got %d", len(calls))
 	}
-	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
-	if len(lines) != 4 {
-		t.Fatalf("expected original start and one resume/turn pair, got %d", len(lines))
-	}
-	var resume, turn struct {
-		Method string
-		Params map[string]json.RawMessage
-	}
-	if err = json.Unmarshal([]byte(lines[2]), &resume); err != nil {
-		t.Fatal(err)
-	}
-	if err = json.Unmarshal([]byte(lines[3]), &turn); err != nil {
-		t.Fatal(err)
-	}
+	resume, turn := calls[2], calls[3]
 	if resume.Method != "thread/resume" || string(resume.Params["threadId"]) != string(raw(original.ThreadID)) || string(resume.Params["cwd"]) != string(raw(original.Worktree)) || len(resume.Params["sandbox"]) != 0 {
-		t.Fatalf("wrong resume parameters: %s", lines[2])
+		t.Fatalf("wrong resume parameters: %#v", resume)
 	}
 	var input []struct{ Type, Text string }
-	if err = json.Unmarshal(turn.Params["input"], &input); err != nil {
+	if err := json.Unmarshal(turn.Params["input"], &input); err != nil {
 		t.Fatal(err)
 	}
 	if turn.Method != "turn/start" || len(input) == 0 || input[0].Text != message {
-		t.Fatalf("wake did not use submitted message: %s", lines[3])
+		t.Fatalf("wake did not use submitted message: %#v", turn)
 	}
 }
 

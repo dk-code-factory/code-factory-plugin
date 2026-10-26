@@ -31,20 +31,9 @@ Delivered messages and completed turns reconcile retained questions against expl
 - **S2** Active steering requires the current turn identity and rejects stale steering.
 - **S3** Interrupt preserves the run and invalidates outstanding requests.
 
-Recovery progress shows readable labels and decorative icons. Clarification shows its shared attempt count without adding attention. Take over cancels clarification and repair before manual continuation; late callbacks cannot recreate questions or continue work. Unresolved classification stops progress and leaves continuation to the owner. Automatic inputs are labelled Question recovery in the technical transcript; real replies retain their author. Drafts stay with their run across navigation and clear only if unchanged after a successful send. A recovered text answer can restore an interrupted retained session using the answer as its continuation, without a generic resume turn.
-
-Take over also cancels retained startup recovery before its session reconnects. Cancellation remains effective when reconnect and takeover overlap; later classification cannot recreate attention or restart clarification.
-
-Completion checks queued before takeover cannot start new recovery after an older check finishes. A retired startup session cannot replace the state or active turn of later owner-directed work.
-
-Take over after a repair answer preserves the claimed answer while cancelling its pending automatic task continuation, before or after acknowledgement.
-
-Takeover waiting for a busy recovery turn leaves other runs available to start and present their questions.
-Take over also cancels recovery before its first question-only turn. Late questions from that cancelled recovery do not return; a later explicit continuation can ask new genuine questions.
-Conversation rendering keeps human-facing agent messages and your replies visible. Technical activity remains under Details, with structured error data there and the readable error message visible. Streaming updates preserve that distinction; a technical-only active stream shows a concise waiting status. Pending questions and approvals remain actionable outside Details.
 Conversation rendering keeps human-facing agent messages and your replies visible, including long messages retained across multiple transcript pages. Technical activity remains under Details, with structured error data there and the readable error message visible. Streaming updates preserve that distinction; a technical-only active stream shows a concise waiting status. Pending questions and approvals remain actionable outside Details.
 
-- **S4** Render native and structured-message questions; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery.
+- **S4** Render native and structured-message questions; classify stopped text and share at most two setup, clarification and form attempts. Offer textual continuation only for a confirmed unanswered question, retaining its delivery status and the same session console. Unconfirmed exhaustion remains diagnostic without attention or automatic task continuation. Preserve answer claims and redaction across recovery.
 
 Automatic recovery exchanges appear as technical activity under Details or in the session console. Your responses keep their ordinary conversation role.
 
@@ -55,6 +44,17 @@ During explicit plugin maintenance, a new Start, message or answer is temporaril
 Conversational follow-up normally uses one saved-state tracking read to identify the retained run and expected active turn, then one message operation. Its response includes durable queue acceptance, a message ID and pending attention for that same run; acceptance does not establish agent delivery or task completion.
 
 - **S6** Save a follow-up durably before contacting its agent and return queue acceptance immediately. A blocked agent or unavailable GitHub cannot delay acceptance. Deliver in the background to the same retained session using explicitly unverified saved source context; the agent performs GitHub reads when required by the task. Show queued, delivering, delivered or uncertain status in the conversation and tracking. Recover saved queued messages after restart, but never automatically replay a delivery whose acknowledgement is uncertain or replace it with a generic continuation.
+
+
+
+Take over also cancels retained startup recovery before its session reconnects. Cancellation remains effective when reconnect and takeover overlap; later classification cannot recreate attention or restart clarification.
+
+Completion checks queued before takeover cannot start new recovery after an older check finishes. A retired startup session cannot replace the state or active turn of later owner-directed work.
+
+Take over after a repair answer preserves the claimed answer while cancelling its pending automatic task continuation, before or after acknowledgement.
+
+Takeover waiting for a busy recovery turn leaves other runs available to start and present their questions.
+Take over also cancels recovery before its first question-only turn. Late questions from that cancelled recovery do not return; a later explicit continuation can ask new genuine questions.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -73,7 +73,7 @@ flowchart TD
     N4["Reject outdated turn message"]
     N5["Send a message to restore inactive retained work"]
     N6(["Retained same-run conversation"])
-    N7["Render native and structured-message questions#59; repair a stopped textual ask at most twice, then offer free-text continuation and the same session console. Preserve answer claims and redaction across recovery. #40;S4#41;"]
+    N7["Classify stopped text#59; share two setup, clarification and form attempts. Offer only confirmed unanswered textual continuation#59; unresolved stays diagnostic without attention or task replay. Preserve claims, redaction and console. #40;S4#41;"]
     N8["Keep source access bounded, private scratch writable and network destinations scoped #40;S5#41;"]
     N9(["Sandbox initialization failed#59; retained work and authority preserved"])
     N10["Verify current source and report changed scope or head before initial or automatic continuation #40;S7#41;"]
@@ -190,6 +190,15 @@ flowchart TD
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationRejectsChunkedConversationChanges(`; S6. Actual oversized completion producer changes journal version while run status/turn stay fixed; stale inference preserves the exact pending request. Unchanged/other-run/ordinary-tool controls still settle; opaque tool chunks conservatively preserve uncertainty.
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingContinuationUsesOnlyActiveTurnTokens(`; S1, S6. Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a late first-message Start cannot replace another item's draft`; S1. With a delayed immutable accepted Start response and lagging saved reads, the Messages badge proves React processed the response before asserting another item and exact draft remain selected; private guard removal fails after this barrier.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestClarificationTakeoverAndAnswerRace(`; S3. Locally bounded concurrent owner takeover and native answer preserve the durable claim; cancellation stays reachable on stall and late recovery callbacks cannot recreate questions.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestTakeoverInvalidatesLegacyClassifierCallback(`; S3. An explicit provider gate holds legacy classification pending until takeover completes; the later callback cannot establish a question, with a bounded completion wait and reachable cleanup.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestStartupTakeoverCancelsRecoveryBeforeSessionAttachment(`; S3. Provider-gated startup checking/clarifying classification remains pending until zero-attempt takeover commits before attachment; released callbacks cannot create attention or reconnect.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestStartupTakeoverCancelsAfterSessionAttachment(`; S3. An initialization gate proves one durable claimed attempt with no delivered turn; takeover suppresses late native/async setup callbacks and later explicit continuation can ask a fresh genuine question.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestStalledRecoveryTakeoverDoesNotBlockAnotherRunsQuestion(`; S3. A blocked-goroutine stack proves takeover reached the session mutex held by gated recovery turn/start before another run starts and presents its genuine question; release lets takeover finish.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestLiveAsyncRecoveryAnswerRestoresOriginalPolicy(`; S1. A live async repair-turn answer retires matching duplicate store/session routes, completes the repair and continues with original mode/model/effort/sandbox/approval policy while retaining the durable claim.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestTakeoverAfterClaimPreventsQueuedRepairContinuation(`; S3. Before and after acknowledgement, takeover finalizes the claimed async answer and prevents a causally released queued continuation before provider shutdown. Private missing-cancellation mutation fails claim and actual continuation assertions.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestRetiredResumeCannotOverwriteOwnerReplacement(`; S3. An actual successful retained thread/resume response is held at its session lock; a staged lock-owned retirement/replacement transition proves the retired launch cannot overwrite the replacement's running state, turn or identity.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestTakeoverInvalidatesEntireQueuedCompletion(`; S3. Takeover during provider-gated historical reconciliation invalidates the entire queued completion callback, preventing the subsequent stopped-turn classifier from creating fresh recovery or attention.
 
 ## Verification and gaps
 

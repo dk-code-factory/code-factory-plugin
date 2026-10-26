@@ -1974,14 +1974,7 @@
         "UI-CONVERSATION-DETAILS",
         "UI-CONVERSATION-DETAILS",
         "UI-WAKE-MESSAGE",
-        "UI-TERMINATED-WORK",
-        "UI-ANSWER-CONFIRMATION",
-        "UI-ANSWER-REFRESH",
-        "UI-RESPONSE-CONFIRMATION",
-        "UI-QUESTION-RECOVERY",
-        "RUN-QUESTION-RECOVERY",
-        "UI-CLARIFICATION",
-        "RUN-CLASSIFIER-FAILURE"
+        "UI-TERMINATED-WORK"
       ],
       "gaps": [
         {
@@ -2009,7 +2002,7 @@
         "go"
       ],
       "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
-      "state_description": "Interrupt exists when a turn identity exists; Resume for interrupted/failed; Cleanup for idle/interrupted/failed. Waiting uses a clock; recovery uses a circular arrow and readable stage/attempt text. Icons are decorative and inherit theme colors. Successful answers show ✓ Answer sent, other forms ✓ Response sent for five seconds from delivery success; polling cannot extend it and reopening cannot recreate it. Clarification displays the shared attempt count and Take over without creating attention; unresolved classification stops progress.",
+      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable.",
       "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible."
     },
     {
@@ -2095,10 +2088,7 @@
         "RUN-RECOVERY-2",
         "API-UI-CONTENT",
         "API-ATTENTION-RECONCILIATION",
-        "UI-QUESTION-RECOVERY",
-        "UI-CLARIFICATION",
-        "UI-NONBLOCKING-TEXT",
-        "RUN-CLASSIFIER-FAILURE"
+        "UI-NONBLOCKING-TEXT"
       ],
       "gaps": [
         {
@@ -2117,7 +2107,7 @@
         "go"
       ],
       "element_description": "Whole-notice **answer** button; **blocking-label** or **continuing-label**.",
-      "state_description": "Repeated for pending requests belonging to the selected run. Blocking notices show a decorative clock beside Waiting for your answer. Explicitly nonblocking recovered text retains Question · agent continues. Unconfirmed completion or unresolved clarification creates no notice.",
+      "state_description": "Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question · agent continues; unconfirmed completion and unresolved clarification create no notice.",
       "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them."
     },
     {
@@ -2338,8 +2328,6 @@
         "UI-QUEUED-MESSAGE",
         "API-QUESTION-ACTIVE-TURN",
         "API-INACTIVE-QUESTION-FOLLOWUP",
-        "UI-ANSWER-CONFIRMATION",
-        "UI-QUESTION-RECOVERY",
         "UI-CLARIFICATION"
       ],
       "gaps": [
@@ -2358,7 +2346,7 @@
         "browser"
       ],
       "element_description": "**text** “Message agent” textarea; **send** button.",
-      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens.",
+      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft. Unresolved classification permits explicit owner messaging.",
       "interactions": "Active messages require the displayed expected turn. A successful send records the message durably and clears only unchanged submitted text before agent delivery; failed acceptance preserves the draft. Background delivery restores the retained session using this submitted message as its first new turn and makes no GitHub preflight. The UI never calls Resume separately or automatically replays a mutation. Later delivery status remains visible in the conversation."
     },
     {
@@ -10121,6 +10109,11 @@
           "path": "web/src/main.tsx",
           "anchor": "function Agent(",
           "purpose": "Owns W-QUESTION-RECOVERY rendering and interaction."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) repairQuestion(",
+          "purpose": "Owns constrained clarification, confirmed fallback, shared durable budget and original task policy restoration."
         }
       ],
       "assertions": [
@@ -10128,7 +10121,9 @@
         "API-ASYNC-QUESTION",
         "API-REPAIR-TAKEOVER",
         "UI-REPAIR-TAKEOVER",
-        "API-FALLBACK-RESTART"
+        "API-FALLBACK-RESTART",
+        "RUN-CLASSIFIER-FAILURE",
+        "UI-CLARIFICATION"
       ],
       "gaps": [
         {
@@ -10145,8 +10140,8 @@
         "browser",
         "go"
       ],
-      "element_description": "Checking/form-repair progress, attempt count and Take over session.",
-      "state_description": "At most two question-only repair turns; form success waits for the user, failure exposes a free-text question and console.",
+      "element_description": "Checking, clarification and native-form progress, shared attempt count and Take over session.",
+      "state_description": "Classification failure asks the retained agent for question-only clarification. Clarification and native-form repair share at most two durably claimed attempts, including setup failure and restart. Only confirmed unanswered questions become text with original blocking status. Unresolved classification stops progress without adding attention.",
       "interactions": "Takeover interrupts/cancels further repair. Answers are claimed once and restore the original task mode."
     },
     {
@@ -10226,8 +10221,7 @@
       "id": "C-DISMISS-QUESTION",
       "kind": "connection",
       "terms": [
-        "ui-c-dismiss-question",
-        "question-recovery"
+        "ui-c-dismiss-question"
       ],
       "contains": [],
       "elements": [],
@@ -10235,35 +10229,30 @@
       "implementation": [
         {
           "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work."
-        },
-        {
-          "path": "internal/app/questions.go",
-          "anchor": "func (m *Manager) DismissQuestion(",
-          "purpose": "Durable dismissal and question recovery state."
+          "anchor": "function AttentionDialog(",
+          "purpose": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval."
         }
       ],
       "assertions": [
-        "UI-QUESTION-RECOVERY"
+        "UI-TEXT-DISMISS"
       ],
       "gaps": [],
       "suites": [
-        "go",
         "browser"
       ],
-      "endpoint_description": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
-      "trigger": "Owning recovery or attention identity.",
-      "interactions": "No reply needed dismisses a pending textual fallback without submitting an answer or advancing work.",
       "from": [
         "W-QUESTIONS.dismiss"
       ],
       "to": [
-        "D-ATTENTION",
-        "P-RUN-DETAIL"
+        "PAGE-AGENT",
+        "W-ATTENTION-NOTICE",
+        "P-WAITING-QUEUE"
       ],
       "connection_type": "connection-submits",
-      "external_boundary": false
+      "external_boundary": false,
+      "endpoint_description": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
+      "trigger": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
+      "interactions": "No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval."
     },
     {
       "id": "W-PLUGIN-ADMIN",
@@ -10887,478 +10876,6 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false
-    },
-    {
-      "id": "W-CONTINUITY-NOTICE",
-      "kind": "widget",
-      "terms": [
-        "ui-w-continuity-notice",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [
-        {
-          "id": "W-CONTINUITY-NOTICE.runs-survive-close",
-          "term": "element-w-continuity-notice-runs-survive-close"
-        },
-        {
-          "id": "W-CONTINUITY-NOTICE.computer-online",
-          "term": "element-w-continuity-notice-computer-online"
-        }
-      ],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-TRIAGE",
-        "UI-ASSEMBLED",
-        "API-UI",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-w-continuity-notice-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Core light/dark iframe states have automated A/AA-tag scans and keyboard modal fixtures. Initial/poll failures, all attention variants, responsive layouts, assistive technology and installed-host accessibility remain unverified; incomplete automated nodes need manual review.",
-          "next_verification": "Review incomplete scan nodes and exercise remaining failure/attention variants, screen-reader use and responsive layouts in the installed host; retain separate automated and manual evidence."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser",
-        "go"
-      ],
-      "element_description": "**runs-survive-close** notice; **computer-online** notice.",
-      "state_description": "Always displayed in the shell footer.",
-      "interactions": "Informational; closing the host view is not an interrupt action."
-    },
-    {
-      "id": "W-JIRA-CREDENTIAL",
-      "kind": "widget",
-      "terms": [
-        "ui-w-jira-credential",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [
-        {
-          "id": "W-JIRA-CREDENTIAL.token",
-          "term": "element-w-jira-credential-token"
-        },
-        {
-          "id": "W-JIRA-CREDENTIAL.save-securely",
-          "term": "element-w-jira-credential-save-securely"
-        },
-        {
-          "id": "W-JIRA-CREDENTIAL.read-only-notice",
-          "term": "element-w-jira-credential-read-only-notice"
-        }
-      ],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Settings(",
-          "purpose": "Drafts are component-local; most saves use shared `action`, while credential/diagnostic requests use direct bridge calls."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-SETTINGS",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-w-jira-credential-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "`UI-SETTINGS` covers password/clear/no-echo success. Save failures and remount behavior need additional UI coverage.",
-          "next_verification": "For W-JIRA-CREDENTIAL: Reject a credential save in the browser fixture, assert the retained password draft and shell error without body-text echo, then remount and verify the expected empty local input."
-        },
-        {
-          "version": 1,
-          "id": "gap-ui-w-jira-credential-02",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Repeated Jira saves and empty-token rejection lack focused browser assertions; local setup-form expiry/reachability/single-use fixtures do not cover this widget. Jira remains disabled in the pilot.",
-          "next_verification": "For W-JIRA-CREDENTIAL: Exercise repeated saves and empty-token rejection through the reusable credential widget and app tool using fixture values; retain the disabled Jira pilot scope."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser"
-      ],
-      "element_description": "**token** password input with autocomplete off; **save-securely** button; **read-only-notice**.",
-      "state_description": "Required nonempty value in a reusable password input. Success clears the field; ordinary settings never display stored token content. This widget has no separate form expiry, reachability challenge or single-use session.",
-      "interactions": "Dedicated private save operation; failures use the shell alert. There is no explicit success toast or credential-readback control."
-    },
-    {
-      "id": "P-CONTINUITY",
-      "kind": "pane",
-      "terms": [
-        "ui-p-continuity",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [
-        "state-loading"
-      ],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-TRIAGE",
-        "UI-ASSEMBLED",
-        "API-UI",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-p-continuity-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Core light/dark iframe states have automated A/AA-tag scans and keyboard modal fixtures. Initial/poll failures, all attention variants, responsive layouts, assistive technology and installed-host accessibility remain unverified; incomplete automated nodes need manual review.",
-          "next_verification": "Review incomplete scan nodes and exercise remaining failure/attention variants, screen-reader use and responsive layouts in the installed host; retain separate automated and manual evidence."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser",
-        "go"
-      ],
-      "composition": "`W-CONTINUITY-NOTICE`",
-      "context": "Footer shared by all embedded pages, including initial loading."
-    },
-    {
-      "id": "C-EMPTY-SETUP",
-      "kind": "connection",
-      "terms": [
-        "ui-c-empty-setup",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [
-        "state-empty"
-      ],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Owns tab/selection/search/filter/overlay IDs and shared snapshot polling. Main inline JSX is part of the UI specification even without named child components."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-TRIAGE",
-        "ITEM-STATE",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-c-empty-setup-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Local fixtures cover independent read/New/action indicators, action history and retained drafts. Search/filter combinations, empty results, disappearing selections and rejected action variants remain unverified.",
-          "next_verification": "Exercise combined search/filter/empty states, disappearing selected items and rejected mutations; assert independent indicators, matching detail/history and retained drafts."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser",
-        "go"
-      ],
-      "endpoint_description": "`W-INBOX-EMPTY` → `PAGE-SETTINGS`",
-      "trigger": "Add repository click.",
-      "interactions": "Navigates without saving settings or automatically focusing a field.",
-      "from": [
-        "W-INBOX-EMPTY.add-repository"
-      ],
-      "to": [
-        "PAGE-SETTINGS"
-      ],
-      "connection_type": "connection-navigates",
-      "external_boundary": false
-    },
-    {
-      "id": "C-CREDENTIAL-SAVE",
-      "kind": "connection",
-      "terms": [
-        "ui-c-credential-save",
-        "coverage-gap",
-        "unverified-behavior"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Settings(",
-          "purpose": "Drafts are component-local; most saves use shared `action`, while credential/diagnostic requests use direct bridge calls."
-        },
-        {
-          "path": "web/src/style.css",
-          "anchor": ".overlay",
-          "purpose": "Presentation adapts without creating different page entities."
-        },
-        {
-          "path": "web/src/types.ts",
-          "anchor": "Snapshot",
-          "purpose": "Item/run/request identifiers are domain context, not entity specification IDs or routes."
-        },
-        {
-          "path": "web/src/bridge.ts",
-          "anchor": "export function connect(",
-          "purpose": "MCP Apps host bridge only; the iframe receives no daemon owner token. Host theme updates affect the whole shell."
-        },
-        {
-          "path": "internal/transport/mcp.go",
-          "anchor": "var ResourceURI = resourceURI(web.HTML)",
-          "purpose": "Every UI tool references the advertised content-SHA256 embedded resource; unchanged content keeps its URI and changed HTML/JS/CSS selects a new host cache identity. Tabs remain within one resource. The original exact URI is a read-only unadvertised compatibility alias."
-        },
-        {
-          "path": "internal/app/app.go",
-          "anchor": "func (a *App) Inbox(",
-          "purpose": "Service-side validation and state changes are separate from widget visibility/disabled-state rules."
-        },
-        {
-          "path": "internal/app/runs.go",
-          "anchor": "func (m *Manager) Prepare(",
-          "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
-        }
-      ],
-      "assertions": [
-        "UI-SETTINGS",
-        "API-UI-CONTENT"
-      ],
-      "gaps": [
-        {
-          "version": 1,
-          "id": "gap-ui-c-credential-save-01",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "`UI-SETTINGS` covers password/clear/no-echo success. Save failures and remount behavior need additional UI coverage.",
-          "next_verification": "For C-CREDENTIAL-SAVE: Reject a credential save in the browser fixture, assert the retained password draft and shell error without body-text echo, then remount and verify the expected empty local input."
-        },
-        {
-          "version": 1,
-          "id": "gap-ui-c-credential-save-02",
-          "kind": "unverified-behavior",
-          "severity": "P2",
-          "owner": "ui-specification-maintainer",
-          "reason": "Repeated Jira saves and empty-token rejection lack focused browser assertions; local setup-form expiry/reachability/single-use fixtures do not cover this widget. Jira remains disabled in the pilot.",
-          "next_verification": "For C-CREDENTIAL-SAVE: Exercise repeated saves and empty-token rejection through the reusable credential widget and app tool using fixture values; retain the disabled Jira pilot scope."
-        }
-      ],
-      "suites": [
-        "tooling",
-        "browser"
-      ],
-      "endpoint_description": "`W-JIRA-CREDENTIAL` → private credential store",
-      "trigger": "Dedicated password-field submission.",
-      "interactions": "Saves a nonempty token through the authenticated app tool and clears the reusable password field on success. Stored value is not supplied back to a widget. This is separate from the temporary local setup form and its expiry/single-use checks.",
-      "from": [
-        "W-JIRA-CREDENTIAL"
-      ],
-      "to": [
-        "W-JIRA-CREDENTIAL"
-      ],
-      "connection_type": "connection-submits",
-      "external_boundary": false
-    },
-    {
-      "id": "C-QUESTION-RECOVERY",
-      "kind": "connection",
-      "terms": [
-        "ui-c-question-recovery",
-        "question-recovery"
-      ],
-      "contains": [],
-      "elements": [],
-      "states": [],
-      "implementation": [
-        {
-          "path": "web/src/main.tsx",
-          "anchor": "function Factory(",
-          "purpose": "Recovery records bind stage and attempt progress to the owning run and its recovered question."
-        },
-        {
-          "path": "internal/app/questions.go",
-          "anchor": "func (m *Manager) DismissQuestion(",
-          "purpose": "Durable dismissal and question recovery state."
-        },
-        {
-          "path": "internal/app/questions.go",
-          "anchor": "func (m *Manager) repairQuestion(",
-          "purpose": "Constrained clarification and form recovery share durable attempts and gate text fallback on positive evidence."
-        }
-      ],
-      "assertions": [
-        "UI-QUESTION-RECOVERY",
-        "UI-CLARIFICATION",
-        "RUN-CLASSIFIER-FAILURE"
-      ],
-      "gaps": [],
-      "suites": [
-        "go",
-        "browser"
-      ],
-      "endpoint_description": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
-      "trigger": "Owning recovery or attention identity.",
-      "interactions": "Recovery records bind classification and clarification stage, shared attempt count and confirmed question evidence to the owning run. Unresolved classification stops progress without adding attention.",
-      "from": [
-        "W-RUN-CONTROLS.recovery-progress"
-      ],
-      "to": [
-        "W-QUESTIONS",
-        "W-RUN-CONTROLS"
-      ],
-      "connection_type": "connection-refreshes",
-      "external_boundary": false
     }
   ],
   "instances": [
@@ -11833,58 +11350,10 @@
       "assertion": "Actual in-memory MCP SDK asserts deterministic full-content SHA256 URI; same bytes stable and revised bytes changed; one current resource/tools/output-template/HTML match; exact legacy read alias unadvertised; unknown/previous hash/query variants reject; empty CSP domains remain."
     },
     {
-      "id": "UI-ANSWER-CONFIRMATION",
-      "path": "web/tests/factory.spec.ts",
-      "anchor": "test(\"answer confirmation expires despite polling, stays with its run and never alters transcript text\"",
-      "assertion": "Successful question answer opens the owner; five-second confirmation survives navigation, expires despite polling, disappears on reload, preserves per-run drafts and literal UI_ANSWER_OK agent text."
-    },
-    {
-      "id": "UI-ANSWER-FAILURE",
-      "path": "web/tests/factory.spec.ts",
-      "anchor": "`${failure} answers retain error feedback without confirmation or replay`",
-      "assertion": "Failed and uncertain answer calls show feedback without confirmation or automatic replay."
-    },
-    {
-      "id": "UI-ANSWER-REFRESH",
-      "path": "web/tests/factory.spec.ts",
-      "anchor": "test(\"successful answer keeps confirmation when the following refresh fails\"",
-      "assertion": "Successful delivery closes the dialog and confirms the owner even if refresh fails; the refresh error is separate."
-    },
-    {
-      "id": "UI-RESPONSE-CONFIRMATION",
-      "path": "web/tests/factory.spec.ts",
-      "anchor": "test(\"approval responses use Response sent and keep other run attention\"",
-      "assertion": "An approval response uses Response sent and preserves another run request."
-    },
-    {
-      "id": "UI-QUESTION-RECOVERY",
-      "path": "web/tests/factory.spec.ts",
-      "anchor": "`recovery icons, fallback controls and keyboard navigation at narrow width in ${theme}`",
-      "assertion": "390px light/dark fixtures assert clock and circular-arrow SVGs hidden from assistive technology, recovery label and attempt bound, takeover, recovery input label, draft preservation, fallback inspection/dismissal, keyboard controls and scoped WCAG scans."
-    },
-    {
-      "id": "UI-FALLBACK-ANSWER",
-      "path": "web/tests/factory.spec.ts",
-      "anchor": "test(\"text fallback submits its answer through the owning request\"",
-      "assertion": "Text fallback sends its form answer exactly through its owning attention identity and shows Answer sent."
-    },
-    {
-      "id": "RUN-QUESTION-RECOVERY",
-      "path": "internal/app/questions_test.go",
-      "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
-      "assertion": "First/second native repair success and two-attempt text fallback retain thread/worktree, reject duplicates, restore task mode and classify internal input separately."
-    },
-    {
-      "id": "RUN-QUESTION-HELPER",
-      "path": "internal/app/questions_test.go",
-      "anchor": "func TestQuestionHelperIsolationAndModelSelection(",
-      "assertion": "Helper uses an ephemeral read-only thread without approvals/apps and selects the configured helper model or task model."
-    },
-    {
       "id": "UI-CLARIFICATION",
       "path": "web/tests/factory.spec.ts",
       "anchor": "test(\"clarification progress has no attention badge and stops when unresolved\"",
-      "assertion": "Clarification shows shared attempts and takeover with zero attention badges; unresolved classification stops progress and permits owner messaging."
+      "assertion": "Active clarification shows shared attempt 1 of 2 and takeover with zero attention badges; a filled draft cannot Send. Unresolved classification removes progress and takeover, retains the draft and permits Send without sending or starting work automatically."
     },
     {
       "id": "UI-NONBLOCKING-TEXT",
@@ -11896,7 +11365,7 @@
       "id": "RUN-CLASSIFIER-FAILURE",
       "path": "internal/app/question_classification_test.go",
       "anchor": "func TestClassifierFailuresClarifyCompletionWithoutAttention(",
-      "assertion": "Classifier startup, disconnect, timeout and invalid results trigger one original-agent clarification; completion creates no attention."
+      "assertion": "Classifier startup, disconnect, timeout, invalid result and configuration failures trigger one retained-agent clarification; completion resolves without a question or attention while preserving diagnostic provenance and the claimed attempt."
     },
     {
       "id": "UI-REPORTS-INFO",

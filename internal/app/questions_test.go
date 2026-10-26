@@ -45,7 +45,10 @@ func TestRestartMaterializesAlreadyPersistedFallback(t *testing.T) {
 			}
 			// Simulate the durable first write from either fallback producer,
 			// followed by a crash before its separate attention write.
-			recovery := domain.QuestionRecovery{ID: episode.id, RunID: run.ID, SourceTurnID: "source-turn", Stage: "fallback", Question: "Which retained scope?", Attempts: episode.attempts}
+			recovery := domain.QuestionRecovery{ID: episode.id, RunID: run.ID, SourceTurnID: "source-turn", Stage: "fallback", Question: "Which retained scope?", Confirmation: "native", Attempts: episode.attempts}
+			if episode.attempts > 0 {
+				recovery.Confirmation = "classifier"
+			}
 			if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
 				t.Fatal(err)
 			}

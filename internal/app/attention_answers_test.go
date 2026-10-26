@@ -16,7 +16,7 @@ func TestAnsweredRepairNeverReappearsAfterRecovery(t *testing.T) {
 		t.Run(stage, func(t *testing.T) {
 			a, ctx := fixture(t)
 			run := domain.Run{ID: "answered-repair", Status: "interrupted", InterruptRequested: true}
-			recovery := domain.QuestionRecovery{ID: "repair", RunID: run.ID, Stage: stage, Question: "Which target?"}
+			recovery := domain.QuestionRecovery{ID: "repair", RunID: run.ID, Stage: stage, Confirmation: "native", Question: "Which target?"}
 			at := domain.Attention{ID: "original", RunID: run.ID, Origin: "rpc", Method: questionMethod, Status: "answered", RecoveryID: recovery.ID}
 			for kind, record := range map[string]struct {
 				id string
@@ -134,7 +134,7 @@ func TestAttentionRepliesPersistEncryptedAndStayOutOfQueue(t *testing.T) {
 func TestUncertainAttentionReplyIsRetainedWithoutReopening(t *testing.T) {
 	a, ctx := fixture(t)
 	run := domain.Run{ID: "lost-session", Status: "interrupted", InterruptRequested: true}
-	recovery := domain.QuestionRecovery{ID: "lost-repair", RunID: run.ID, Stage: "fallback", Question: "Which target?"}
+	recovery := domain.QuestionRecovery{ID: "lost-repair", RunID: run.ID, Stage: "fallback", Confirmation: "native", Question: "Which target?"}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
 		t.Fatal(err)
 	}

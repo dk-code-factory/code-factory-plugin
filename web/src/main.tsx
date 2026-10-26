@@ -784,7 +784,7 @@ function Factory() {
                         recovery={snap.questionRecoveries?.find(
                           (r) =>
                             r.runId === runId &&
-                            !["resolved", "cancelled"].includes(r.stage),
+                            ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(r.stage),
                         )}
                         key={runId}
                         embedded
@@ -844,7 +844,7 @@ function Factory() {
                   recovery={snap.questionRecoveries?.find(
                     (r) =>
                       r.runId === runId &&
-                      !["resolved", "cancelled"].includes(r.stage),
+                      ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(r.stage),
                   )}
                   key={runId}
                   run={currentRun}
@@ -2154,12 +2154,14 @@ function Agent({
         )}
       </div>
       {recovery &&
-        !["resolved", "cancelled", "fallback"].includes(recovery.stage) && (
+        ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(recovery.stage) && (
           <section aria-label="Question recovery">
             <p role="status">
               {recovery.stage === "checking"
                 ? "Checking whether the agent needs input…"
-                : recovery.stage === "awaiting-answer"
+                : recovery.stage === "clarifying"
+                  ? `Clarifying whether input is needed · attempt ${recovery.attempts} of 2`
+                  : recovery.stage === "awaiting-answer"
                   ? "Question ready for your answer."
                   : recovery.stage === "answered"
                     ? "Returning to the selected task mode…"
@@ -2265,7 +2267,7 @@ function Agent({
             !message.trim() ||
             !["idle", "running", "waiting", "interrupted", "failed"].includes(
               run.status,
-            )
+            ) || !!recovery && ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(recovery.stage)
           }
         >
           Send message

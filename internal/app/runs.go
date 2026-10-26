@@ -45,7 +45,7 @@ type session struct {
 	mu                  sync.Mutex
 	ctx                 context.Context
 	cancel              context.CancelFunc
-	clientless          bool
+	clientless          bool // Immutable lock owner, not an attached provider session.
 	run                 domain.Run
 	client              *codex.Client
 	pending             map[string]domain.Attention
@@ -139,9 +139,20 @@ func (m *Manager) Recover(ctx context.Context) error {
 	if e != nil {
 		return e
 	}
+	questions := map[string]bool{}
 	for _, r := range recoveries {
 		if attached[r.RunID] {
 			continue
+		}
+		var recoveryRun domain.Run
+		if err := m.app.Store.Get(ctx, "run", r.RunID, &recoveryRun); err != nil {
+			return err
+		}
+		ownsTurn := recoveryRun.TurnID == "" || recoveryRun.TurnID == r.SourceTurnID || recoveryRun.TurnID == r.RepairTurnID
+		if ownsTurn && (r.Stage == "checking" || automaticRecovery(&r) || r.Stage == "unresolved" || r.Stage == "awaiting-answer" || r.Stage == "answered") {
+			// Recovery has its own constrained continuation. A crash cannot turn
+			// that dialogue into an ordinary task replay, nor block newer owner work.
+			questions[r.RunID] = true
 		}
 		retained := false
 		if e = m.app.Store.Write(ctx, func(t *store.Tx) error {
@@ -176,6 +187,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 			}
 			if !claimed && asyncID == "" {
 				return nil
+			}
+			if claimed && ownsTurn {
+				questions[r.RunID] = true
 			}
 			retained = true
 			for _, current := range owned {
@@ -244,7 +258,6 @@ func (m *Manager) Recover(ctx context.Context) error {
 	if e != nil {
 		return e
 	}
-	questions := map[string]bool{}
 	for _, a := range atts {
 		if a.Status == "pending" {
 			questions[a.RunID] = true
@@ -377,6 +390,13 @@ func (m *Manager) lockRun(ctx context.Context, id string, stop bool) (*session, 
 
 func (s *session) stopped() bool {
 	return s.retired || s.ctx != nil && s.ctx.Err() != nil
+}
+
+func (m *Manager) sessionContext(s *session) context.Context {
+	if s.ctx != nil {
+		return s.ctx
+	}
+	return m.ctx
 }
 
 type LaunchInput struct {
@@ -614,7 +634,7 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 			r.TurnID = ""
 		}
 		r.Error = ""
-		r.ResumePending = true
+		r.ResumePending = recovery == nil
 		r.InterruptRequested = false
 		if e := t.Put("run", id, r); e != nil {
 			return e
@@ -951,7 +971,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.mu.Lock()
-	if s.retired {
+	if s.stopped() {
 		s.mu.Unlock()
 		return
 	}
@@ -963,7 +983,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 			return
 		}
 		recovery := s.recovery
-		recoveryCtx, recoveryCancel := context.WithCancel(m.ctx)
+		recoveryCtx, recoveryCancel := context.WithCancel(m.sessionContext(s))
 		s.recoveryCancel = recoveryCancel
 		s.run.Status = "idle"
 		_ = m.persist(s, "run.state")
@@ -1357,7 +1377,7 @@ func (m *Manager) message(ctx context.Context, id, text, expected string, routeQ
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.retired {
+	if s.stopped() {
 		return fmt.Errorf("session changed; refresh before sending")
 	}
 	if s.started != nil {
@@ -1428,31 +1448,22 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 	return m.persist(s, "run.state")
 }
 func (m *Manager) Interrupt(ctx context.Context, id string) error {
-	var s, retired *session
-	for {
-		m.mu.Lock()
-		s = m.live[id]
-		if s == nil || s == retired {
-			err := m.cancelUnattachedRecovery(ctx, id)
-			m.mu.Unlock()
-			return err
-		}
-		m.mu.Unlock()
-		// A busy recovery session must not hold unrelated runs behind the
-		// manager lock. Reconnect retires its previous session under s.mu.
-		s.mu.Lock()
-		if !s.retired {
-			break
-		}
-		s.mu.Unlock()
-		retired = s
+	s, unlock, err := m.lockRun(ctx, id, false)
+	if err != nil {
+		return err
 	}
-	defer s.mu.Unlock()
+	defer unlock()
+	if s.clientless {
+		return m.cancelUnattachedRecovery(ctx, id)
+	}
 	s.ownerRevision++
 	m.cancelRecoveryLocked(s)
 	if s.run.TurnID == "" || s.client == nil {
 		if s.recovery != nil && s.recovery.Stage == "cancelled" {
 			s.retired = true
+			if s.cancel != nil {
+				s.cancel()
+			}
 			if s.client != nil {
 				_ = s.client.Close()
 			}
@@ -1843,52 +1854,7 @@ func permissionSubset(grant, requested any) bool {
 }
 
 func (m *Manager) saveAttention(ctx context.Context, a domain.Attention, event string) error {
-	return m.app.Store.Write(ctx, func(t *store.Tx) error {
-		if event == "attention.required" {
-			var current domain.Attention
-			if err := t.Get("attention", a.ID, &current); err == nil {
-				if current.Status != "pending" {
-					return fmt.Errorf("attention request is stale or already answered")
-				}
-				a = current
-			} else if !errors.Is(err, store.ErrNotFound) {
-				return err
-			}
-			if a.RecoveryID != "" {
-				var r domain.QuestionRecovery
-				if err := t.Get("question-recovery", a.RecoveryID, &r); err != nil {
-					return err
-				}
-				if r.Stage == "answered" || r.Stage == "resolved" {
-					return fmt.Errorf("question recovery is already resolved")
-				}
-			}
-		}
-		if event == "attention.required" && a.RecoveryID != "" && a.Origin != "text" && a.Method == questionMethod {
-			r := domain.QuestionRecovery{ID: a.RecoveryID}
-			if err := t.Get("question-recovery", r.ID, &r); err != nil && !errors.Is(err, store.ErrNotFound) {
-				return err
-			}
-			var old domain.Attention
-			if err := t.Get("attention", recoveryTextID(r), &old); err == nil {
-				if old.Status == "pending" && old.Origin == "text" && old.RecoveryID == a.RecoveryID && old.RunID == a.RunID {
-					old.Status = "superseded"
-					if err := t.Put("attention", old.ID, old); err != nil {
-						return err
-					}
-					if err := t.Event("attention.resolved", old.RunID, map[string]any{"id": old.ID, "runId": old.RunID, "status": old.Status, "blocking": old.Blocking}); err != nil {
-						return err
-					}
-				}
-			} else if !errors.Is(err, store.ErrNotFound) {
-				return err
-			}
-		}
-		if e := t.Put("attention", a.ID, a); e != nil {
-			return e
-		}
-		return t.Event(event, a.RunID, map[string]any{"id": a.ID, "runId": a.RunID, "status": a.Status, "blocking": a.Blocking})
-	})
+	return m.app.Store.Write(ctx, func(t *store.Tx) error { return putAttention(t, a, event) })
 }
 
 // Plan mode provides Codex's supported request_user_input path. The resolved
@@ -1919,8 +1885,48 @@ func cloneRepository(ctx context.Context, repo, checkout string) error {
 }
 
 func putAttention(t *store.Tx, a domain.Attention, event string) error {
-	if err := t.Put("attention", a.ID, a); err != nil {
-		return err
+	if event == "attention.required" {
+		var current domain.Attention
+		if err := t.Get("attention", a.ID, &current); err == nil {
+			if current.Status != "pending" {
+				return fmt.Errorf("attention request is stale or already answered")
+			}
+			a = current
+		} else if !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+		if a.RecoveryID != "" {
+			var r domain.QuestionRecovery
+			if err := t.Get("question-recovery", a.RecoveryID, &r); err != nil {
+				return err
+			}
+			if r.Stage == "answered" || r.Stage == "resolved" {
+				return fmt.Errorf("question recovery is already resolved")
+			}
+		}
+	}
+	if event == "attention.required" && a.RecoveryID != "" && a.Origin != "text" && a.Method == questionMethod {
+		r := domain.QuestionRecovery{ID: a.RecoveryID}
+		if err := t.Get("question-recovery", r.ID, &r); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+		var old domain.Attention
+		if err := t.Get("attention", recoveryTextID(r), &old); err == nil {
+			if old.Status == "pending" && old.Origin == "text" && old.RecoveryID == a.RecoveryID && old.RunID == a.RunID {
+				old.Status = "superseded"
+				if err := t.Put("attention", old.ID, old); err != nil {
+					return err
+				}
+				if err := t.Event("attention.resolved", old.RunID, map[string]any{"id": old.ID, "runId": old.RunID, "status": old.Status, "blocking": old.Blocking}); err != nil {
+					return err
+				}
+			}
+		} else if !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+	}
+	if e := t.Put("attention", a.ID, a); e != nil {
+		return e
 	}
 	return t.Event(event, a.RunID, map[string]any{"id": a.ID, "runId": a.RunID, "status": a.Status, "blocking": a.Blocking})
 }

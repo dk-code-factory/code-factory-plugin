@@ -4106,71 +4106,44 @@ test("uncertain plugin mutations preserve drafts and never replay automatically"
   );
 });
 
-test("clarification progress has no attention badge and stops when unresolved", async ({
-  page,
-}) => {
-  const snap = questionSnapshot();
-  snap.attention = [];
-  snap.runs = [snap.runs[0]];
-  snap.runs[0].status = "idle";
-  snap.runs[0].turnId = "";
-  snap.questionRecoveries = [
-    { id: "clarify-1", runId: "run-1", stage: "clarifying", attempts: 1 },
-  ];
-  const { ui, state } = await host(page, {
-    snapshot: snap,
-    recoveryInput: true,
-  });
-  await ui.getByRole("button", { name: /^Agents/ }).click();
-  await ui.getByRole("button").filter({ hasText: "Agent 1 · idle" }).click();
-  await expect(
-    ui.getByText("Clarifying whether input is needed · attempt 1 of 2"),
-  ).toBeVisible();
-  await expect(
-    ui.getByRole("button", { name: "Take over", exact: true }),
-  ).toBeVisible();
-  await expect(
-    ui.getByRole("button", { name: /Waiting for your answer/ }),
-  ).toHaveCount(0);
-  await expect(
-    ui.locator(".badge").filter({ hasText: "Needs attention" }),
-  ).toHaveCount(0);
-  await expect(ui.locator(".attention b")).toHaveText("0");
-  await expect(
-    ui.getByRole("button", { name: "Send message", exact: true }),
-  ).toBeDisabled();
+test("clarification progress has no attention badge and stops when unresolved", async ({ page }) => {
+  const snapshot = initial();
+  const run = retained(snapshot, "clarifying", "idle");
+  run.turnId = "";
+  snapshot.runs = [run];
+  snapshot.questionRecoveries = [{ id: "clarify-1", runId: run.id, stage: "clarifying", attempts: 1 }];
+  const { ui, state, calls } = await host(page, { snapshot });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  const progress = ui.getByRole("region", { name: "Question recovery" });
+  await expect(progress).toContainText("Clarifying whether input is needed · attempt 1 of 2");
+  await expect(ui.getByRole("button", { name: "Take over session", exact: true })).toBeVisible();
+  await expect(ui.getByRole("button", { name: "Messages", exact: true })).toBeVisible();
+  await expect(ui.getByRole("button", { name: /Waiting for your answer/ })).toHaveCount(0);
+  await expect(ui.locator(".badge").filter({ hasText: "Needs attention" })).toHaveCount(0);
+  // Filled draft proves that recovery, rather than empty-input validation, blocks Send.
+  await ui.getByLabel("Message agent").fill("Owner direction");
+  const send = ui.getByRole("button", { name: "Send message", exact: true });
+  await expect(send).toBeDisabled();
   state.questionRecoveries![0].stage = "unresolved";
   state.questionRecoveries![0].attempts = 2;
   state.cursor++;
-  await expect(ui.locator(".recovery-progress")).toHaveCount(0);
-  await expect(
-    ui.getByRole("button", { name: "Take over", exact: true }),
-  ).toHaveCount(0);
-  await expect(ui.locator(".attention b")).toHaveText("0");
-  await ui
-    .getByRole("textbox", { name: "Message agent" })
-    .fill("Owner direction");
-  await expect(
-    ui.getByRole("button", { name: "Send message", exact: true }),
-  ).toBeEnabled();
+  await expect(progress).toHaveCount(0);
+  await expect(ui.getByRole("button", { name: "Take over session", exact: true })).toHaveCount(0);
+  await expect(ui.getByRole("button", { name: "Messages", exact: true })).toBeVisible();
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Owner direction");
+  await expect(send).toBeEnabled();
+  expect(calls.filter((c) => c.name === "send_message" || c.name === "start_run")).toHaveLength(0);
 });
 
-test("nonblocking recovered text question keeps its continuing label", async ({
-  page,
-}) => {
-  const snap = questionSnapshot();
-  snap.attention = [snap.attention[0]];
-  snap.attention[0].origin = "text";
-  snap.attention[0].blocking = false;
-  const { ui } = await host(page, { snapshot: snap });
-  await ui.getByRole("button", { name: /^Agents/ }).click();
-  await ui.getByRole("button").filter({ hasText: "Agent 1 · waiting" }).click();
-  await expect(
-    ui.getByRole("button", { name: "Question · agent continues — Answer" }),
-  ).toBeVisible();
-  await expect(
-    ui.getByRole("button", { name: /Waiting for your answer/ }),
-  ).toHaveCount(0);
+test("nonblocking recovered text question keeps its continuing label", async ({ page }) => {
+  const snapshot = initial();
+  const run = retained(snapshot, "nonblocking", "idle");
+  snapshot.runs = [run];
+  snapshot.attention = [{ id: "nonblocking-text", runId: run.id, origin: "text", method: "item/tool/requestUserInput", blocking: false, status: "pending", params: { questions: [{id: "reply", question: "Which target?", isOther: true}] } }];
+  const { ui } = await host(page, { snapshot });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  await expect(ui.getByRole("button", { name: "Question · agent continues — Answer" })).toBeVisible();
+  await expect(ui.getByRole("button", { name: /Waiting for your answer/ })).toHaveCount(0);
 });
 
 function reportFixture(id = "report-1"): IssueReport {
