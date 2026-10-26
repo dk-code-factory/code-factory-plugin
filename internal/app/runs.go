@@ -96,6 +96,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 	acceptedTaskStarts := map[string]bool{}
 	attached := map[string]bool{}
 	for _, r := range runs {
+		if err := m.recoverDeferredLaunch(ctx, r); err != nil {
+			return err
+		}
 		if r.ResumePending && !r.InterruptRequested && r.TurnID == "" &&
 			(r.Status == "queued" || r.Status == "starting" || r.Status == "running") {
 			acceptedTaskStarts[r.ID] = true
@@ -108,10 +111,20 @@ func (m *Manager) Recover(ctx context.Context) error {
 		if attached[r.ID] {
 			continue
 		}
-		if r.Status == "running" || r.Status == "waiting" || r.Status == "queued" || r.Status == "starting" {
-			r.ResumePending = !r.InterruptRequested
+		retryLaunch := r.ResumePending && !r.InterruptRequested && r.ThreadID == "" && r.TurnID == "" && !r.LaunchRetryAt.IsZero() && (r.Status == "queued" || r.Status == "starting" || r.Status == "interrupted")
+		if retryLaunch || r.Status == "running" || r.Status == "waiting" || r.Status == "queued" || r.Status == "starting" {
+			// A pre-thread starting run can have durably relinquished automatic
+			// retry before provider creation. Never restore that uncertain intent.
+			if r.Status != "starting" || r.ThreadID != "" || r.TurnID != "" {
+				r.ResumePending = true
+			}
+			r.ResumePending = r.ResumePending && !r.InterruptRequested
 			r.Status = "interrupted"
 			r.Error = ""
+			if retryLaunch {
+				r.Status = "deferred"
+				r.Error = "Launch preparation was interrupted by daemon restart; waiting to retry."
+			}
 			if e = m.app.Store.Write(ctx, func(t *store.Tx) error {
 				if e := t.Put("run", r.ID, r); e != nil {
 					return e
@@ -307,7 +320,7 @@ func (m *Manager) Recover(ctx context.Context) error {
 		id := run.ID
 		m.background(func() { m.recheckAmbiguous(id, "", true) })
 	}
-	return nil
+	return m.RetryDeferredLaunches(ctx)
 }
 func (m *Manager) Close() {
 	m.mu.Lock()
@@ -494,22 +507,9 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 		prompt = strings.NewReplacer("{{title}}", item.Title, "{{body}}", item.Body, "{{url}}", item.URL).Replace(p.Prompt)
 	}
 	if prReview {
-		prompt += "\nReview target: " + item.URL + "\nPinned PR head: " + item.Head + "\nCompare this head with the pull request's target branch; report evidence-backed findings."
-		if strings.TrimSpace(repo.ReviewPrompt) != "" {
-			extra := "\nRepository review instructions:\n" + repo.ReviewPrompt
-			if !strings.Contains(prompt, extra) {
-				prompt += extra
-			}
-		}
+		prompt = appendPRReviewPrompt(prompt, item, repo.ReviewPrompt)
 	}
-	if p.Publishing == "ask" {
-		prompt += "\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems."
-	} else {
-		prompt += "\nPublishing authority: publishing is authorized when needed to fulfill the task, subject to stricter local and managed policies."
-	}
-	if p.Sandbox == "read-only" || p.Sandbox == "workspace-write" {
-		prompt += "\nSandbox: " + p.Sandbox + " project access; private writable scratch via TMPDIR; GitHub and Codex service domains through an enforced network proxy. Other destinations and unrelated files are blocked. Save review artifacts and temporary checkouts under TMPDIR. Private skill indexes are isolated per run; shared owner settings are not writable."
-	}
+	prompt = appendLaunchAuthority(prompt, p)
 	r := domain.Run{PRReview: &prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
 	r.Branch = "code-factory/" + r.ID
 	r.Worktree = filepath.Join(m.app.DataDir, "worktrees", r.ID)
@@ -549,6 +549,29 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 		return t.Event("run.prepared", r.ID, map[string]string{"id": r.ID, "status": r.Status})
 	})
 }
+func appendPRReviewPrompt(prompt string, item domain.Item, repositoryPrompt string) string {
+	prompt += "\nReview target: " + item.URL + "\nPinned PR head: " + item.Head + "\nCompare this head with the pull request's target branch; report evidence-backed findings."
+	if strings.TrimSpace(repositoryPrompt) != "" {
+		extra := "\nRepository review instructions:\n" + repositoryPrompt
+		if !strings.Contains(prompt, extra) {
+			prompt += extra
+		}
+	}
+	return prompt
+}
+
+func appendLaunchAuthority(prompt string, p domain.Profile) string {
+	if p.Publishing == "ask" {
+		prompt += "\nPublishing authority: ask the user before pushing, posting comments, creating or merging PRs, or changing external systems."
+	} else {
+		prompt += "\nPublishing authority: publishing is authorized when needed to fulfill the task, subject to stricter local and managed policies."
+	}
+	if p.Sandbox == "read-only" || p.Sandbox == "workspace-write" {
+		prompt += "\nSandbox: " + p.Sandbox + " project access; private writable scratch via TMPDIR; GitHub and Codex service domains through an enforced network proxy. Other destinations and unrelated files are blocked. Save review artifacts and temporary checkouts under TMPDIR. Private skill indexes are isolated per run; shared owner settings are not writable."
+	}
+	return prompt
+}
+
 func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run, error) {
 	if !m.adminGate.TryRLock() {
 		return domain.Run{}, fmt.Errorf("plugin maintenance in progress; try again when it finishes")
@@ -597,16 +620,19 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 		if err := t.Get("item", r.ItemID, &item); err != nil {
 			return err
 		}
-		if err := validatePRReviewRun(t.Get, r, item); err != nil {
-			return err
+		deferred := recovering && r.Status == "deferred" && r.ResumePending && !r.InterruptRequested && r.ThreadID == "" && r.TurnID == "" && !time.Now().Before(r.LaunchRetryAt)
+		if !deferred {
+			if err := validatePRReviewRun(t.Get, r, item); err != nil {
+				return err
+			}
 		}
-		if r.AutomaticReview && !resume {
+		if r.AutomaticReview && !resume && !deferred {
 			if err := validateAutomaticStart(t, r); err != nil {
 				return err
 			}
 		}
 		detachedIdle := r.Status == "idle" && (old == nil || old.disconnected || old.retired)
-		if (!resume && r.Status != "prepared" && !(recovering && r.Status == "interrupted" && r.ResumePending)) || (resume && r.Status != "interrupted" && r.Status != "failed" && !(message != "" && detachedIdle)) {
+		if (!resume && r.Status != "prepared" && !(recovering && r.Status == "interrupted" && r.ResumePending) && !deferred) || (resume && r.Status != "interrupted" && r.Status != "failed" && !(message != "" && detachedIdle)) {
 			return fmt.Errorf("run cannot start from %s", r.Status)
 		}
 		if resume && message != "" && recovery == nil && r.ThreadID == "" {
@@ -640,6 +666,9 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 			r.TurnID = ""
 		}
 		r.Error = ""
+		if !deferred {
+			r.LaunchRetryAt = time.Time{}
+		}
 		r.ResumePending = recovery == nil
 		r.InterruptRequested = false
 		if e := t.Put("run", id, r); e != nil {
@@ -783,6 +812,7 @@ func (m *Manager) fail(s *session, e error) {
 	s.run.Status = "failed"
 	s.run.Error = e.Error()
 	s.run.ResumePending = false
+	s.run.LaunchRetryAt = time.Time{}
 	if s.recovery != nil && automaticRecovery(s.recovery) {
 		s.recovery.DiagnosticError = clarificationUnavailable
 		m.fallbackLocked(s, s.recovery)
@@ -824,6 +854,9 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		source, sourceContext, e = m.continuationContext(ctx, r)
 	}
 	if e != nil {
+		if message == "" && m.deferLaunch(s, e) {
+			return
+		}
 		m.fail(s, e)
 		return
 	}
@@ -835,6 +868,16 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		if err := m.stopClosedItem(terminal, *source); err != nil {
 			m.fail(s, err)
 		}
+		return
+	}
+	if e := m.validateLaunchPolicy(ctx, r, *source); e != nil {
+		m.fail(s, e)
+		return
+	}
+	s.mu.Lock()
+	stopped := s.retired || m.ctx.Err() != nil
+	s.mu.Unlock()
+	if stopped {
 		return
 	}
 	if _, e := codex.Version(ctx, m.CodexBinary()); e != nil {
@@ -887,6 +930,24 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	if s.stopped() {
 		s.mu.Unlock()
 		return
+	}
+	// Recheck current policy after sandbox preparation, before creating a provider.
+	if e := m.validateLaunchPolicy(ctx, r, *source); e != nil {
+		s.mu.Unlock()
+		m.fail(s, e)
+		return
+	}
+	if !s.run.LaunchRetryAt.IsZero() {
+		// Source/workspace preparation is replayable. Provider creation is not:
+		// a lost response cannot prove whether a thread was created. Persist this
+		// boundary first and leave uncertain startup stopped after a restart.
+		s.run.LaunchRetryAt = time.Time{}
+		s.run.ResumePending = false
+		if e := m.persist(s, "run.state"); e != nil {
+			s.mu.Unlock()
+			m.fail(s, e)
+			return
+		}
 	}
 	c, e := codex.Start(s.ctx, m.CodexBinary(), sandboxArgs, func(msg codex.Message) { m.onMessage(s, msg) })
 	if e != nil {
@@ -945,6 +1006,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.run.ThreadID = result.Thread.ID
+	s.run.ResumePending = true
 	s.run.SourceSnapshot = source
 	if s.run.Profile.Model == "" {
 		s.run.Profile.Model = result.Model
@@ -1093,7 +1155,10 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 			s.recoveryCancel()
 		}
 		if s.run.Status == "running" || s.run.Status == "waiting" || s.run.Status == "queued" || s.run.Status == "starting" {
-			s.run.ResumePending = !s.run.InterruptRequested
+			if s.run.Status != "starting" || s.run.ThreadID != "" || s.run.TurnID != "" {
+				s.run.ResumePending = true
+			}
+			s.run.ResumePending = s.run.ResumePending && !s.run.InterruptRequested
 			s.run.Status = "interrupted"
 			s.run.Error = ""
 		}
@@ -1459,36 +1524,59 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 	return m.persist(s, "run.state")
 }
 func (m *Manager) Interrupt(ctx context.Context, id string) error {
-	s, unlock, err := m.lockRun(ctx, id, false)
-	if err != nil {
+	var interruptClient, closeClient *codex.Client
+	var target map[string]string
+	// Persist cancellation under the current run owner, then release its lock
+	// before provider I/O. Manager membership remains a brief lockRun check.
+	err := func() error {
+		s, unlock, err := m.lockRun(ctx, id, false)
+		if err != nil {
+			return err
+		}
+		defer unlock()
+		if s.clientless {
+			var r domain.Run
+			if err := m.app.Store.Get(ctx, "run", id, &r); err != nil {
+				return err
+			}
+			if r.Status == "deferred" {
+				r.Status, r.ResumePending, r.InterruptRequested = "interrupted", false, true
+				r.LaunchRetryAt = time.Time{}
+				s.run = r
+				return m.app.Store.Put(ctx, "run", id, r, "run.state")
+			}
+			return m.cancelUnattachedRecovery(ctx, id)
+		}
+		s.ownerRevision++
+		m.cancelRecoveryLocked(s)
+		if s.run.TurnID == "" || s.client == nil {
+			if s.run.Status == "deferred" || s.run.Status == "queued" || s.run.Status == "starting" || s.recovery != nil && s.recovery.Stage == "cancelled" {
+				s.retired = true
+				if s.cancel != nil {
+					s.cancel()
+				}
+				s.run.Status, s.run.ResumePending, s.run.InterruptRequested = "interrupted", false, true
+				s.run.LaunchRetryAt = time.Time{}
+				closeClient = s.client
+				return m.persist(s, "run.state")
+			}
+			return nil
+		}
+		s.run.InterruptRequested = true
+		s.run.ResumePending = false
+		interruptClient = s.client
+		target = map[string]string{"threadId": s.run.ThreadID, "turnId": s.run.TurnID}
+		return m.persist(s, "run.state")
+	}()
+	if closeClient != nil {
+		_ = closeClient.Close()
+	}
+	if err != nil || interruptClient == nil {
 		return err
 	}
-	defer unlock()
-	if s.clientless {
-		return m.cancelUnattachedRecovery(ctx, id)
-	}
-	s.ownerRevision++
-	m.cancelRecoveryLocked(s)
-	if s.run.TurnID == "" || s.client == nil {
-		if s.recovery != nil && s.recovery.Stage == "cancelled" {
-			s.retired = true
-			if s.cancel != nil {
-				s.cancel()
-			}
-			if s.client != nil {
-				_ = s.client.Close()
-			}
-			s.run.Status = "interrupted"
-			return m.persist(s, "run.state")
-		}
-		return nil
-	}
-	s.run.InterruptRequested = true
-	s.run.ResumePending = false
-	if e := m.persist(s, "run.state"); e != nil {
-		return e
-	}
-	return s.client.Call(ctx, "turn/interrupt", map[string]string{"threadId": s.run.ThreadID, "turnId": s.run.TurnID}, nil)
+	// The captured client and IDs target only the original turn, even if the
+	// session is replaced or advances while the provider response is pending.
+	return interruptClient.Call(ctx, "turn/interrupt", target, nil)
 }
 func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage) error {
 	if !m.adminGate.TryRLock() {
@@ -1776,7 +1864,7 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 	if e := m.app.Store.Get(ctx, "run", id, &r); e != nil {
 		return e
 	}
-	if r.Status != "interrupted" && r.Status != "failed" && r.Status != "idle" && r.Status != "terminated" {
+	if r.Status != "interrupted" && r.Status != "failed" && r.Status != "idle" && r.Status != "terminated" && r.Status != "deferred" {
 		return fmt.Errorf("run must be stopped before cleanup")
 	}
 	if s != nil {
@@ -1807,6 +1895,7 @@ func (m *Manager) Cleanup(ctx context.Context, id string) error {
 		r.Status = "interrupted"
 	}
 	r.ResumePending = false
+	r.LaunchRetryAt = time.Time{}
 	r.InterruptRequested = true
 	if e := m.app.Store.Put(ctx, "run", id, r, "run.state"); e != nil {
 		return e

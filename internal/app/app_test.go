@@ -39,7 +39,7 @@ func fixture(t *testing.T) (*App, context.Context) {
 	if e = a.Init(ctx); e != nil {
 		t.Fatal(e)
 	}
-	t.Cleanup(func() { cancel(); a.Runs.Close(); s.Close() })
+	t.Cleanup(func() { cancel(); defer s.Close(); waitLaunchRetry(t, a.Runs.Close) })
 	return a, ctx
 }
 func item() domain.Item {

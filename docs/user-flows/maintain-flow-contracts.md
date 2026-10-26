@@ -15,7 +15,7 @@ The contributor has the source checkout, an available comparison base and the lo
 3. When the described behavior changes, update related implementation and tests in the same change.
 4. Keep open gaps typed with stable identity, ownership, severity and the next verification; run required suites and record subject-specific decisions.
 5. Run the local gate against the intended working tree, index or committed branch comparison.
-6. A pull request to main, a push to main or a manual check on main selects exact comparison commits, installs locked prerequisites and runs the same fixture suites without model credentials. Feature branches receive remote verification through a PR to main; without one they receive no automatic checks or package artifacts. Manual verification on a feature branch fails before checks or artifact creation. A narrowly pinned, reviewed first public root has no predecessor; it receives full source checks without a fabricated Git comparison.
+6. A pull request to main or sync/local-development, a push to main or a manual check on main selects exact comparison commits, installs locked prerequisites and runs the same fixture suites without model credentials. Feature branches receive remote verification through a PR to main or sync/local-development; without one they receive no automatic checks or package artifacts. Manual verification on a feature branch fails before checks or artifact creation. A narrowly pinned, reviewed first public root has no predecessor; it receives full source checks without a fabricated Git comparison.
 7. Package delivery promotes unchanged checksummed artifacts only from successful main-branch push verification for the exact tagged source; dry-run delivery verifies without publishing or installing. Component versions come from those exact package bytes; explicit fixed-issue references require ancestor fix commits with matching fixing or closing references.
 
 ## Alternatives and recovery
@@ -33,7 +33,7 @@ may receive separate explicit contract decisions without waiving behavior tests.
 - **S2** Behavior changes, including flow addition/removal, require changed implementation and tests; reviewed corrections preserve accurate outcomes.
 - **S3** Broken references, unmapped files, unknown comparisons and stale or failed verification fail closed.
 - **S4** The same checker evaluates working changes, the staged index, and explicit committed branch/PR comparisons. Default verification uses fixtures; provider execution requires a separate explicit opt-in.
-- **S5** Remote verification covers PRs to main and main pushes or manual checks, preserving exact comparisons and a single reviewed public-root bootstrap. Feature branches without a PR receive no automatic checks or artifacts; feature-branch manual verification is rejected. Release delivery requires successful main push verification, exact artifact provenance, packaged component versions, commit-backed fixed-issue references and checksums. Unknown comparisons, failed checks, changed artifacts or existing releases stop delivery.
+- **S5** Remote verification covers PRs to main or sync/local-development and main pushes or manual checks, preserving exact comparisons and a single reviewed public-root bootstrap. Feature branches without a PR receive no automatic checks or artifacts; feature-branch manual verification is rejected. Release delivery requires successful main push verification, exact artifact provenance, packaged component versions, commit-backed fixed-issue references and checksums. Unknown comparisons, failed checks, changed artifacts or existing releases stop delivery.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -54,7 +54,7 @@ flowchart TD
     N6["Reject broken mappings, stale records or failed verification #40;S3#41;"]
     N7["Correct artifacts and rerun verification"]
     N8(["Reviewed contracts aligned"])
-    N9["Verify a PR to main or a main push/manual check with exact comparisons or the single reviewed root import #40;S5#41;"]
+    N9["Verify a PR to main or sync/local-development or a main push/manual check with exact comparisons or the single reviewed root import #40;S5#41;"]
     N10["Verify exact main CI artifact source and checksums before delivery #40;S5#41;"]
     N11(["Publish unchanged release assets or report a successful dry run #40;S5#41;"])
     N12(["Report successful checks and retain verified build artifacts #40;S5#41;"])
@@ -328,7 +328,7 @@ flowchart TD
 - [scripts/test_browser_control.mjs](../../scripts/test_browser_control.mjs) — `test('endpoint validation rejects remote hosts, normalized aliases and URL metadata'`; S3. Remote/alias/credential/path/query/fragment/invalid-port endpoint spellings reject without echoing the supplied secret value. Pure argument fixtures do not attach Chrome, read profiles or establish host acceptance.
 - [scripts/test_browser_control.mjs](../../scripts/test_browser_control.mjs) — `test('argument parsing is deterministic and cannot mutate inputs or later calls'`; S3. Option parsing is deterministic, read-only and isolated from prior result mutation. Pure argument fixtures do not attach Chrome, read profiles or establish host acceptance.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `class HostedCITests(`; S5. Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before verification or artifact creation; fixture mode, artifact identities and main-push-only release proof fail closed.
-- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_workflow_routes_features_through_pull_requests(`; S5. The hosted workflow subscribes to main pushes, PRs targeting main and manual dispatch, with no feature-push verification route.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_workflow_routes_features_through_pull_requests(`; S5. The checked workflow admits PRs to main and sync/local-development only, retains main-only pushes and keeps manual dispatch available under its main guard.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_feature_push_and_dispatch_reject_before_verification(`; S5. CLI feature/tag push and manual attempts exit nonzero with a PR/main explanation before invoking verification or artifact-manifest creation.
 
 ## Verification and gaps

@@ -637,6 +637,9 @@ func (a *App) syncLoop(ctx context.Context, ticks <-chan time.Time) {
 			return
 		}
 		_ = a.sync(ctx, true)
+		if a.Runs != nil {
+			_ = a.Runs.RetryDeferredLaunches(ctx)
+		}
 		// Reference backfill yields to the next repository poll and resumes from
 		// its last attempted PR, rather than restarting a large reference list.
 		references, cancel := context.WithTimeout(ctx, 10*time.Second)

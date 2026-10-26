@@ -68,7 +68,7 @@ class HostedCITests(unittest.TestCase):
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci.yml").read_text()
         triggers = workflow.split("\npermissions:", 1)[0]
         self.assertIn("  push:\n    branches: [main]\n", triggers)
-        self.assertIn("  pull_request:\n    branches: [main]\n", triggers)
+        self.assertIn("  pull_request:\n    branches: [main, sync/local-development]\n", triggers)
         self.assertIn("  workflow_dispatch:\n", triggers)
 
     def test_feature_push_and_dispatch_reject_before_verification(self):
@@ -95,6 +95,46 @@ class HostedCITests(unittest.TestCase):
             ci.comparison({"before": "f" * 40, "after": second}, "push", "", "refs/heads/main")
         with self.assertRaises(ValueError):
             ci.commit("main; echo unsafe")
+
+    def test_missing_event_base_fetches_exact_orphaned_commit(self):
+        before = self.change("orphaned previous head")
+        remote_temp = tempfile.TemporaryDirectory()
+        self.addCleanup(remote_temp.cleanup)
+        remote = Path(remote_temp.name) / "origin.git"
+        self.git("clone", "--bare", ".", str(remote))
+        self.git("reset", "--hard", self.first)
+        after = self.change("rewritten current head")
+        self.git("push", "--force", str(remote), "HEAD:refs/heads/main")
+        for name in ("push", "pull_request"):
+            with self.subTest(event=name):
+                checkout = Path(remote_temp.name) / name
+                self.git("clone", "--no-local", str(remote), str(checkout))
+                with patch.object(ci, "ROOT", checkout):
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        ci.commit(before)
+                    # Neither an unavailable object, invalid input nor a wrong
+                    # checkout may fall back to a parent or another comparison.
+                    for base in ("f" * 40, "main; echo unsafe"):
+                        event = {"before": base, "after": after} if name == "push" else {
+                            "pull_request": {"base": {"sha": base}, "head": {"sha": after}}}
+                        with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                            ci.comparison(event, name, "", "refs/heads/main")
+                    wrong = {"before": before, "after": self.first} if name == "push" else {
+                        "pull_request": {"base": {"sha": before}, "head": {"sha": self.first}}}
+                    with self.assertRaises(ValueError):
+                        ci.comparison(wrong, name, "", "refs/heads/main")
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        ci.commit(before)
+                    event = {"before": before, "after": after} if name == "push" else {
+                        "pull_request": {"base": {"sha": before}, "head": {"sha": after}}}
+                    plan = ci.comparison(event, name, "", "refs/heads/main")
+                    self.assertEqual(plan, {"base": before, "head": after, "bootstrap": False})
+                    self.assertEqual(ci.git("show", before + ":source"), "orphaned previous head")
+                    self.assertEqual(ci.git("rev-parse", "HEAD"), after)
+                    commands = []
+                    ci.run_verification(plan, lambda argv, **kwargs: commands.append(argv))
+                    self.assertEqual(commands, [["make", "verify",
+                        "FLOW_ARGS=--base " + before + " --head " + after]])
 
     def test_every_verification_command_forces_fixture_mode(self):
         calls = []

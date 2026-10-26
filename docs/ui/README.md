@@ -474,10 +474,10 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="W-ITEM-HISTORY"></a>`W-ITEM-HISTORY` | widget | [Item history widget](../glossary/README.md#ui-w-item-history), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-RUN-ROW"></a>`W-RUN-ROW` | widget | [Run row widget](../glossary/README.md#ui-w-run-row), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-RUN-EMPTY"></a>`W-RUN-EMPTY` | widget | [Run empty widget](../glossary/README.md#ui-w-run-empty), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
-| <a id="W-RUN-CONTROLS"></a>`W-RUN-CONTROLS` | widget | [Run controls widget](../glossary/README.md#ui-w-run-controls), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
+| <a id="W-RUN-CONTROLS"></a>`W-RUN-CONTROLS` | widget | [Run controls widget](../glossary/README.md#ui-w-run-controls), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Waiting for GitHub](../glossary/README.md#state-deferred) |
 | <a id="W-ATTENTION-NOTICE"></a>`W-ATTENTION-NOTICE` | widget | [Attention notice widget](../glossary/README.md#ui-w-attention-notice), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-TRANSCRIPT"></a>`W-TRANSCRIPT` | widget | [Transcript widget](../glossary/README.md#ui-w-transcript), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
-| <a id="W-MESSAGE"></a>`W-MESSAGE` | widget | [Message widget](../glossary/README.md#ui-w-message), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
+| <a id="W-MESSAGE"></a>`W-MESSAGE` | widget | [Message widget](../glossary/README.md#ui-w-message), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Waiting for GitHub](../glossary/README.md#state-deferred) |
 | <a id="W-DIALOG-FRAME"></a>`W-DIALOG-FRAME` | widget | [Dialog frame widget](../glossary/README.md#ui-w-dialog-frame), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Keyboard focus](../glossary/README.md#keyboard-focus), [Modal dialog](../glossary/README.md#modal-dialog) |
 | <a id="W-LAUNCH-EDITOR"></a>`W-LAUNCH-EDITOR` | widget | [Launch editor widget](../glossary/README.md#ui-w-launch-editor), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-LAUNCH-REVIEW"></a>`W-LAUNCH-REVIEW` | widget | [Launch review widget](../glossary/README.md#ui-w-launch-review), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
@@ -585,9 +585,9 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="W-WAITING-ROW"></a>`W-WAITING-ROW` | widget | [Waiting message widget](../glossary/README.md#ui-w-waiting-row) |
 | <a id="W-NEW-CHAT"></a>`W-NEW-CHAT` | widget | [First message widget](../glossary/README.md#ui-w-new-chat) |
 | <a id="C-START-CHAT"></a>`C-START-CHAT` | connection | [First message start connection](../glossary/README.md#ui-c-start-chat) |
-| <a id="W-WORK-STATUS"></a>`W-WORK-STATUS` | widget | [Work status widget](../glossary/README.md#ui-w-work-status) |
+| <a id="W-WORK-STATUS"></a>`W-WORK-STATUS` | widget | [Work status widget](../glossary/README.md#ui-w-work-status), [Waiting for GitHub](../glossary/README.md#state-deferred) |
 | <a id="PAGE-WORKING"></a>`PAGE-WORKING` | page | [Working page](../glossary/README.md#ui-page-working) |
-| <a id="W-SESSION-CONSOLE"></a>`W-SESSION-CONSOLE` | widget | [Session console widget](../glossary/README.md#ui-w-session-console) |
+| <a id="W-SESSION-CONSOLE"></a>`W-SESSION-CONSOLE` | widget | [Session console widget](../glossary/README.md#ui-w-session-console), [Waiting for GitHub](../glossary/README.md#state-deferred) |
 | <a id="W-QUESTION-RECOVERY"></a>`W-QUESTION-RECOVERY` | widget | [Question recovery widget](../glossary/README.md#ui-w-question-recovery) |
 | <a id="C-SESSION-CONSOLE"></a>`C-SESSION-CONSOLE` | connection | [Session console connection](../glossary/README.md#ui-c-session-console) |
 | <a id="C-PIPELINE-SELECT"></a>`C-PIPELINE-SELECT` | connection | [Pipeline selection connection](../glossary/README.md#ui-c-pipeline-select) |

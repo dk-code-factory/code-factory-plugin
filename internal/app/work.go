@@ -100,6 +100,8 @@ func (a *App) projectWorkRecords(ctx context.Context, items []domain.Item, links
 				e.Work.RunIDs = append(e.Work.RunIDs, r.ID)
 				state := "Inactive"
 				switch r.Status {
+				case "deferred":
+					state = "Waiting for GitHub"
 				case "queued", "starting":
 					state = "Starting"
 				case "running", "waiting":
@@ -160,7 +162,7 @@ func (a *App) projectWorkRecords(ctx context.Context, items []domain.Item, links
 }
 
 func workRank(s string) int {
-	return map[string]int{"Not started": 0, "Session closed": 1, "Stopped": 1, "Inactive": 2, "Interrupted": 3, "Failed": 4, "Starting": 5, "Active": 6, "Waiting for you": 7}[s]
+	return map[string]int{"Not started": 0, "Session closed": 1, "Stopped": 1, "Inactive": 2, "Interrupted": 3, "Failed": 4, "Waiting for GitHub": 5, "Starting": 5, "Active": 6, "Waiting for you": 7}[s]
 }
 func summary(i domain.Item) domain.PullRequest {
 	if i.PR != nil {

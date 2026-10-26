@@ -1881,7 +1881,8 @@
       "terms": [
         "ui-w-run-controls",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -1927,7 +1928,8 @@
         "state-idle",
         "state-interrupted",
         "state-failed",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "implementation": [
         {
@@ -1983,7 +1985,10 @@
         "UI-CONVERSATION-DETAILS",
         "UI-CONVERSATION-DETAILS",
         "UI-WAKE-MESSAGE",
-        "UI-TERMINATED-WORK"
+        "UI-TERMINATED-WORK",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW",
+        "RUN-LAUNCH-DEFERRED-CANCEL"
       ],
       "gaps": [
         {
@@ -2011,7 +2016,7 @@
         "go"
       ],
       "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
-      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable.",
+      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable. Deferred pre-agent launches expose Cancel retry; interruption or cleanup cancels their retained retry even when no agent session is attached.",
       "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible."
     },
     {
@@ -2258,7 +2263,8 @@
       "terms": [
         "ui-w-message",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -2276,7 +2282,8 @@
         "state-running",
         "state-waiting",
         "state-idle",
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "implementation": [
         {
@@ -2337,7 +2344,9 @@
         "UI-QUEUED-MESSAGE",
         "API-QUESTION-ACTIVE-TURN",
         "API-INACTIVE-QUESTION-FOLLOWUP",
-        "UI-CLARIFICATION"
+        "UI-CLARIFICATION",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW"
       ],
       "gaps": [
         {
@@ -2355,7 +2364,7 @@
         "browser"
       ],
       "element_description": "**text** “Message agent” textarea; **send** button.",
-      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft. Unresolved classification permits explicit owner messaging.",
+      "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/deferred/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft. Unresolved classification permits explicit owner messaging. A cancelled pre-agent launch without a retained thread also keeps the composer disabled.",
       "interactions": "Active messages require the displayed expected turn. A successful send records the message durably and clears only unchanged submitted text before agent delivery; failed acceptance preserves the draft. Background delivery restores the retained session using this submitted message as its first new turn and makes no GitHub preflight. The UI never calls Resume separately or automatically replays a mutation. Later delivery status remains visible in the conversation."
     },
     {
@@ -10255,7 +10264,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Conversation Back → originating work or Messages tab",
+      "endpoint_description": "Conversation Back \u2192 originating work or Messages tab",
       "trigger": "Back action on the record page.",
       "interactions": "Restores list query, scroll and row focus when the row exists; missing rows leave a usable focus fallback. Ordinary drafts remain keyed to their records.",
       "from": [
@@ -10784,7 +10793,8 @@
       "id": "W-WORK-STATUS",
       "kind": "widget",
       "terms": [
-        "ui-w-work-status"
+        "ui-w-work-status",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -10794,7 +10804,8 @@
         }
       ],
       "states": [
-        "state-terminated"
+        "state-terminated",
+        "state-deferred"
       ],
       "implementation": [
         {
@@ -10806,6 +10817,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Recover(",
           "purpose": "Restore pending same-thread progress at startup while preserving completed, explicitly interrupted and input-waiting work."
+        },
+        {
+          "path": "internal/app/launch_retry.go",
+          "anchor": "func (m *Manager) RetryDeferredLaunches(",
+          "purpose": "Retain scheduled launch state across daemon ticks/restart without duplicate execution."
         }
       ],
       "assertions": [
@@ -10816,7 +10832,11 @@
         "API-WORKING",
         "UI-WORKING-MONITOR",
         "RUN-AUTO-CONTINUE",
-        "UI-TERMINATED-WORK"
+        "UI-TERMINATED-WORK",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW",
+        "RUN-LAUNCH-DEFERRED",
+        "RUN-LAUNCH-DEFERRED-PROJECTION"
       ],
       "gaps": [
         {
@@ -10833,7 +10853,7 @@
         "browser"
       ],
       "element_description": "Compact **value** in issue/PR metadata.",
-      "state_description": "Server aggregate across started sessions: Not started, Starting, Active, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent. After daemon startup, pending sessions continue from their retained progress automatically. Completed idle work stays idle; explicit interrupts and unanswered questions stay stopped. A closed issue or closed/merged PR terminates its retained sessions and displays Stopped; history and workspaces remain available.",
+      "state_description": "Server aggregate across started sessions: Not started, Starting, Active, Waiting for GitHub, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent. After daemon startup, pending sessions continue from their retained progress automatically. Completed idle work stays idle; explicit interrupts and unanswered questions stay stopped. A closed issue or closed/merged PR terminates its retained sessions and displays Stopped; history and workspaces remain available. Accepted launch preflight delayed by the request budget, quota reserve or rate limit displays Waiting for GitHub while its automatic retry remains pending.",
       "interactions": "Display only; no separate activity control or Resume action."
     },
     {
@@ -10872,7 +10892,8 @@
       "id": "W-SESSION-CONSOLE",
       "kind": "widget",
       "terms": [
-        "ui-w-session-console"
+        "ui-w-session-console",
+        "state-deferred"
       ],
       "contains": [],
       "elements": [
@@ -10881,7 +10902,9 @@
           "term": "element-w-session-console-output"
         }
       ],
-      "states": [],
+      "states": [
+        "state-deferred"
+      ],
       "implementation": [
         {
           "path": "web/src/main.tsx",
@@ -10890,7 +10913,9 @@
         }
       ],
       "assertions": [
-        "UI-SESSION-CONSOLE"
+        "UI-SESSION-CONSOLE",
+        "UI-GITHUB-DEFERRED",
+        "UI-FAILED-REVIEW"
       ],
       "gaps": [],
       "suites": [
@@ -10898,7 +10923,7 @@
         "go"
       ],
       "element_description": "Paged messages, commands/output, plans, changes and errors from the selected retained session.",
-      "state_description": "Selected instead of the concise conversation; preserves per-run reply draft and existing paging bounds.",
+      "state_description": "Selected instead of the concise conversation; preserves per-run reply draft and existing paging bounds. Deferred work shows Waiting for GitHub, the retained provider reason and next retry time in both conversation and console views. Cancel retry stops the scheduled launch without creating an input request.",
       "interactions": "Uses the same answer, message and interrupt operations; does not open another process or terminal transport."
     },
     {
@@ -12798,6 +12823,36 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "cooldown without an error keeps a retry action and saved details unread until fresh",
       "assertion": "Error-free cooldown renders saved details, deferred status, optional retry time and the existing Retry control. Retrying while deferred keeps unread and the message draft; retrying after fresh data is allowed marks the displayed revision once, clears deferred feedback and retains the draft without launching work."
+    },
+    {
+      "id": "UI-GITHUB-DEFERRED",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
+      "assertion": "Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations."
+    },
+    {
+      "id": "UI-FAILED-REVIEW",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "failed reviews keep failure status and alert instead of GitHub retry controls",
+      "assertion": "An ordinary failed review keeps Failed in list and detail, displays its original alert, exposes no retry control and permits messaging its retained session."
+    },
+    {
+      "id": "RUN-LAUNCH-DEFERRED",
+      "path": "internal/app/launch_retry_test.go",
+      "anchor": "func TestDeferredReviewLaunchRespectsDeadlineAndRetriesExactlyOnce(",
+      "assertion": "Persist reason/deadline before workspace or agent startup; twelve concurrent due retries produce exactly one run, one automatic claim and one thread/turn start."
+    },
+    {
+      "id": "RUN-LAUNCH-DEFERRED-CANCEL",
+      "path": "internal/app/launch_retry_test.go",
+      "anchor": "func TestDeferredLaunchInterruptAndCleanupCancelAttachedAndDetachedRuns(",
+      "assertion": "Interrupt and cleanup clear retry deadline/pending authority for attached and detached launches; restart and later ticks start no agent."
+    },
+    {
+      "id": "RUN-LAUNCH-DEFERRED-PROJECTION",
+      "path": "internal/app/launch_retry_test.go",
+      "anchor": "func TestDeferredLaunchProjectionRetainsWorkingQueueAndRetryDeadline(",
+      "assertion": "Deferred work stays in Working with Waiting for GitHub; tracking retains launchRetryAt and cancellation clears the waiting projection."
     }
   ],
   "source_map": [

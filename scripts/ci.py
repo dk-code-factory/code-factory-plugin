@@ -27,6 +27,15 @@ def commit(value):
     return value
 
 
+def comparison_commit(value):
+    """Recover an event-pinned base omitted by checkout after a branch rewrite."""
+    try:
+        return commit(value)
+    except subprocess.CalledProcessError:
+        git("fetch", "--no-tags", "origin", value)
+        return commit(value)
+
+
 def comparison(event, name, bootstrap_sha, ref):
     """Only an explicitly pinned reviewed root import can omit a Git diff."""
     if name in ("push", "workflow_dispatch") and ref != "refs/heads/main":
@@ -36,13 +45,13 @@ def comparison(event, name, bootstrap_sha, ref):
         pr = event["pull_request"]
         if commit(pr["head"]["sha"]) != head:
             raise ValueError("Checkout does not match the pull-request head")
-        return {"base": commit(pr["base"]["sha"]), "head": head, "bootstrap": False}
+        return {"base": comparison_commit(pr["base"]["sha"]), "head": head, "bootstrap": False}
     if name == "push":
         if commit(event["after"]) != head:
             raise ValueError("Checkout does not match the pushed head")
         before = event.get("before", "")
         if before != "0" * 40:
-            return {"base": commit(before), "head": head, "bootstrap": False}
+            return {"base": comparison_commit(before), "head": head, "bootstrap": False}
     elif name != "workflow_dispatch":
         raise ValueError("Unsupported CI event")
     root = git("rev-list", "--count", head) == "1"

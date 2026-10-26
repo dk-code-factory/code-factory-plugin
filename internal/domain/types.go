@@ -224,6 +224,7 @@ type Run struct {
 	Status               string    `json:"status"`
 	Error                string    `json:"error"`
 	ResumePending        bool      `json:"resumePending"`
+	LaunchRetryAt        time.Time `json:"launchRetryAt"`
 	InterruptRequested   bool      `json:"interruptRequested"`
 	SourceSnapshot       *Item     `json:"sourceSnapshot,omitempty"`
 	Created              time.Time `json:"created"`

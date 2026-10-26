@@ -13,7 +13,7 @@ import (
 )
 
 func sourceSnapshot(i domain.Item) *domain.Item {
-	return &domain.Item{ID: i.ID, Repository: i.Repository, Number: i.Number, Kind: i.Kind, Title: i.Title, Body: i.Body, State: i.State, URL: i.URL, Head: i.Head, Branch: i.Branch, Draft: i.Draft, Updated: i.Updated, Labels: i.Labels, Assignees: i.Assignees, ReviewRequests: i.ReviewRequests, ReviewTeams: i.ReviewTeams}
+	return &domain.Item{ID: i.ID, Repository: i.Repository, Number: i.Number, Kind: i.Kind, Title: i.Title, Body: i.Body, State: i.State, URL: i.URL, Author: i.Author, Head: i.Head, Branch: i.Branch, Draft: i.Draft, Updated: i.Updated, Labels: i.Labels, Assignees: i.Assignees, ReviewRequests: i.ReviewRequests, ReviewTeams: i.ReviewTeams}
 }
 
 func closedWork(i domain.Item) bool { return i.State == "closed" || i.State == "merged" }
@@ -120,6 +120,7 @@ func (m *Manager) terminateLocked(ctx context.Context, id string, s *session, re
 		}
 		run.Status, run.Error, run.TurnID = "terminated", reason, ""
 		run.ResumePending, run.InterruptRequested = false, true
+		run.LaunchRetryAt = time.Time{}
 		if err := tx.Put("run", id, run); err != nil {
 			return err
 		}

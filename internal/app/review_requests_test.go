@@ -406,7 +406,19 @@ func TestAutomaticStartRevalidatesPolicyAndMonitoringPreservesCheckpoint(t *test
 		t.Fatal(err)
 	}
 	run.AutomaticReview = true
-	_ = a.Store.Put(ctx, "run", run.ID, run, "")
+	state := reviewRequestState{ID: pr.ID, Active: true, Head: pr.Head, Generation: 1}
+	claim := reviewClaim{ID: reviewClaimID(pr.ID, pr.Head, state.Generation), ItemID: pr.ID, RunID: run.ID, Head: pr.Head, Status: "claimed"}
+	if err := a.Store.Write(ctx, func(tx *store.Tx) error {
+		if err := tx.Put("review-request", state.ID, state); err != nil {
+			return err
+		}
+		if err := tx.Put("review-claim", claim.ID, claim); err != nil {
+			return err
+		}
+		return tx.Put("run", run.ID, run)
+	}); err != nil {
+		t.Fatal(err)
+	}
 	var repo domain.Repository
 	_ = a.Store.Get(ctx, "repository", pr.Repository, &repo)
 	before := repo.LastSync
@@ -416,8 +428,8 @@ func TestAutomaticStartRevalidatesPolicyAndMonitoringPreservesCheckpoint(t *test
 	if err := a.SaveRepository(ctx, repo); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := a.Runs.Start(ctx, run.ID, false); err == nil {
-		t.Fatal("disabled policy launched prepared auto review")
+	if _, err := a.Runs.Start(ctx, run.ID, false); err == nil || !strings.Contains(err.Error(), "automatic review policy or target changed") {
+		t.Fatal("disabled policy did not reject the accepted automatic review", err)
 	}
 	_ = a.Store.Get(ctx, "repository", pr.Repository, &repo)
 	if repo.LastSync != before {

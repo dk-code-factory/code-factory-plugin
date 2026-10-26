@@ -31,6 +31,15 @@ func validatePRReviewRun(get func(string, string, any) error, run domain.Run, it
 		return err
 	}
 	if review {
+		// Base is the selected checkout reference, which may be a branch such
+		// as main. New preparations retain the accepted PR head separately.
+		head := run.Base
+		if run.SourceSnapshot != nil && run.SourceSnapshot.Head != "" {
+			head = run.SourceSnapshot.Head
+		}
+		if run.ThreadID == "" && head != "" && item.Head != head {
+			return fmt.Errorf("PR head changed from the pinned review target; prepare a new review")
+		}
 		return validatePRReviewAuthor(get, item)
 	}
 	return nil
@@ -72,7 +81,10 @@ func (m *Manager) activeReviewPrincipal(ctx context.Context, run domain.Run, ite
 		return nil, "", fmt.Errorf("cannot verify active GitHub review identity")
 	}
 	login, err := m.app.GitHub.User(providers.WithGitHubRead(bounded, providers.RequireLive))
-	if err != nil || strings.TrimSpace(login) == "" {
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot verify active GitHub review identity: %w", err)
+	}
+	if strings.TrimSpace(login) == "" {
 		return nil, "", fmt.Errorf("cannot verify active GitHub review identity")
 	}
 	current, err := m.app.GitHub.CacheScope(bounded)
