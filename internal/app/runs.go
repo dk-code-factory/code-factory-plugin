@@ -21,32 +21,39 @@ import (
 )
 
 type Manager struct {
-	app      *App
-	ctx      context.Context
-	Binary   string
-	mu       sync.Mutex
-	answerMu sync.Mutex
-	live     map[string]*session
-	wg       sync.WaitGroup
-	closing  bool
-	cancel   context.CancelFunc
+	app                  *App
+	ctx                  context.Context
+	Binary               string
+	mu                   sync.Mutex
+	answerMu             sync.Mutex
+	recheckMu            sync.Mutex
+	rechecks             map[string]*sync.Mutex
+	questionCheckTimeout time.Duration
+	live                 map[string]*session
+	wg                   sync.WaitGroup
+	closing              bool
+	cancel               context.CancelFunc
 }
 type session struct {
-	mu                sync.Mutex
-	run               domain.Run
-	client            *codex.Client
-	pending           map[string]domain.Attention
-	retired           bool
-	secrets           []string
-	completed         map[string]bool
-	tails             map[string]string
-	started           chan struct{}
-	finalText         string
-	lastCompletedTurn string
-	internalInputs    map[string]string
-	recovery          *domain.QuestionRecovery
-	recoveryCancel    context.CancelFunc
-	recoveryWake      chan struct{}
+	mu                  sync.Mutex
+	run                 domain.Run
+	client              *codex.Client
+	pending             map[string]domain.Attention
+	retired             bool
+	secrets             []string
+	completed           map[string]bool
+	tails               map[string]string
+	started             chan struct{}
+	finalText           string
+	lastCompletedTurn   string
+	lastCompletedStatus string
+	internalInputs      map[string]string
+	recovery            *domain.QuestionRecovery
+	recoveryCancel      context.CancelFunc
+	recoveryWake        chan struct{}
+	reconnectRecovery   bool
+	recoveryClaimed     bool
+	ownerRevision       uint64
 }
 
 func NewManager(ctx context.Context, a *App, binary string) *Manager {
@@ -65,7 +72,16 @@ func (m *Manager) Recover(ctx context.Context) error {
 	if e != nil {
 		return e
 	}
+	attached := map[string]bool{}
 	for _, r := range runs {
+		if live, err := m.get(r.ID); err == nil {
+			live.mu.Lock()
+			attached[r.ID] = !live.retired && live.client != nil
+			live.mu.Unlock()
+		}
+		if attached[r.ID] {
+			continue
+		}
 		if r.Status == "idle" || r.Status == "running" || r.Status == "waiting" || r.Status == "queued" || r.Status == "starting" || (r.Status == "interrupted" && (r.Error == "Daemon stopped; resume explicitly" || r.Error == "Codex process disconnected; resume explicitly")) {
 			r.Status = "interrupted"
 			r.Error = ""
@@ -85,6 +101,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 		return e
 	}
 	for _, a := range atts {
+		if attached[a.RunID] {
+			continue
+		}
 		if a.Status == "pending" && a.Origin != "async" && a.Origin != "text" {
 			a.Status = "stale"
 			if e = m.saveAttention(ctx, a, "attention.resolved"); e != nil {
@@ -100,15 +119,107 @@ func (m *Manager) Recover(ctx context.Context) error {
 		return e
 	}
 	for _, r := range recoveries {
-		if r.Stage != "resolved" && r.Stage != "cancelled" {
+		if attached[r.RunID] {
+			continue
+		}
+		retained := false
+		if e = m.app.Store.Write(ctx, func(t *store.Tx) error {
+			if err := t.Get("question-recovery", r.ID, &r); err != nil {
+				return err
+			}
+			previous := string(raw(r))
+			claimed := r.Stage == "answered" || r.Stage == "resolved"
+			var owned []domain.Attention
+			asyncID := ""
+			for _, saved := range atts {
+				if saved.RunID != r.RunID || saved.RecoveryID != r.ID || saved.Method != questionMethod {
+					continue
+				}
+				var current domain.Attention
+				if err := t.Get("attention", saved.ID, &current); err != nil {
+					return err
+				}
+				if current.RunID != r.RunID || current.RecoveryID != r.ID || current.Method != questionMethod {
+					continue
+				}
+				owned = append(owned, current)
+				if current.Status == "answered" || current.Status == "uncertain" {
+					claimed = true
+				}
+				if asyncID == "" && current.Origin == "async" && current.Status == "pending" && validQuestions(current.Params) {
+					asyncID = current.ID
+					r.Question, r.Confirmation = questionText(current.Params), "native"
+					blocking := current.Blocking
+					r.OriginalBlocking = &blocking
+				}
+			}
+			if !claimed && asyncID == "" {
+				return nil
+			}
+			retained = true
+			for _, current := range owned {
+				if current.Status != "pending" || !claimed && current.ID == asyncID {
+					continue
+				}
+				current.Status = "superseded"
+				if claimed {
+					current.Status = "resolved"
+				}
+				if err := t.Put("attention", current.ID, current); err != nil {
+					return err
+				}
+				if err := t.Event("attention.resolved", current.RunID, map[string]any{"id": current.ID, "runId": current.RunID, "status": current.Status, "blocking": current.Blocking}); err != nil {
+					return err
+				}
+			}
+			if claimed {
+				if r.Stage != "cancelled" {
+					r.Stage = "resolved"
+				}
+			} else if r.Stage != "cancelled" {
+				r.Stage = "awaiting-answer"
+			}
+			if string(raw(r)) == previous {
+				return nil
+			}
+			if err := t.Put("question-recovery", r.ID, r); err != nil {
+				return err
+			}
+			return t.Event("run.recovery", r.RunID, r)
+		}); e != nil {
+			return e
+		}
+		if retained || r.Stage == "cancelled" {
+			continue
+		}
+		for _, at := range atts {
+			matchingNative := at.RecoveryID == r.ID && at.Status == "pending"
+			lostNative := r.ID == "lost-question:"+at.ID && at.Status != "answered"
+			if (matchingNative || lostNative) && at.Method == questionMethod && at.Origin != "text" && at.Origin != "async" && validQuestions(at.Params) {
+				r.Question, r.Confirmation = questionText(at.Params), "native"
+				b := at.Blocking
+				r.OriginalBlocking = &b
+				break
+			}
+		}
+		migrateRecovery(&r)
+		if confirmedQuestion(r) {
 			r.Stage = "fallback"
-			if e = m.app.Store.Put(ctx, "question-recovery", r.ID, r, "run.recovery"); e != nil {
+			if e = m.saveRecovery(&r); e != nil {
 				return e
 			}
-			if e = m.recoverTextQuestion(ctx, r); e != nil {
+			if e = m.recoverTextQuestion(ctx, &r); e != nil {
+				return e
+			}
+		} else {
+			if e = m.saveRecovery(&r); e != nil {
 				return e
 			}
 		}
+	}
+	for _, run := range runs {
+		id := run.ID
+		m.background(func() { m.recheckAmbiguous(id, "", true) })
 	}
 	return nil
 }
@@ -222,13 +333,13 @@ func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, erro
 	return r, m.app.Store.Put(ctx, "run", r.ID, r, "")
 }
 func (m *Manager) Start(ctx context.Context, id string, resume bool) (domain.Run, error) {
-	r, _, err := m.start(ctx, id, resume, "")
+	r, _, err := m.start(ctx, id, resume, "", nil)
 	return r, err
 }
 
 // start claims the retained run before launching its process. A wake message is
 // the resumed turn itself, never a second turn following a generic resume prompt.
-func (m *Manager) start(ctx context.Context, id string, resume bool, message string) (domain.Run, *session, error) {
+func (m *Manager) start(ctx context.Context, id string, resume bool, message string, recovery *domain.QuestionRecovery) (domain.Run, *session, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.ctx.Err() != nil {
@@ -240,14 +351,25 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 		defer old.mu.Unlock()
 	}
 	var r domain.Run
+	var claimedRecovery domain.QuestionRecovery
 	err := m.app.Store.Write(ctx, func(t *store.Tx) error {
 		if e := t.Get("run", id, &r); e != nil {
 			return e
 		}
+		if recovery != nil {
+			var current domain.QuestionRecovery
+			if err := t.Get("question-recovery", recovery.ID, &current); err != nil {
+				return err
+			}
+			if current.Stage != "clarifying" || current.Attempts != recovery.Attempts || current.Attempts >= 2 {
+				return fmt.Errorf("question recovery changed")
+			}
+			claimedRecovery = current
+		}
 		if (!resume && r.Status != "prepared") || (resume && r.Status != "interrupted" && r.Status != "failed") {
 			return fmt.Errorf("run cannot start from %s", r.Status)
 		}
-		if resume && message != "" && r.ThreadID == "" {
+		if resume && message != "" && recovery == nil && r.ThreadID == "" {
 			return fmt.Errorf("retained Codex session is unavailable; start a new run")
 		}
 		if old != nil {
@@ -264,6 +386,15 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 				}
 			}
 		}
+		if recovery != nil {
+			claimedRecovery.Attempts++
+			if err := t.Put("question-recovery", claimedRecovery.ID, claimedRecovery); err != nil {
+				return err
+			}
+			if err := t.Event("run.recovery", r.ID, claimedRecovery); err != nil {
+				return err
+			}
+		}
 		r.Status = "queued"
 		r.TurnID = ""
 		r.Error = ""
@@ -276,7 +407,13 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 		return r, nil, err
 	}
 	if old != nil {
-		m.cancelRecoveryLocked(old)
+		if recovery != nil {
+			if old.recoveryCancel != nil {
+				old.recoveryCancel()
+			}
+		} else {
+			m.cancelRecoveryLocked(old)
+		}
 		old.retired = true
 		if old.client != nil {
 			_ = old.client.Close()
@@ -291,6 +428,11 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 		if at.RunID == id && at.Status == "pending" && (at.Origin == "async" || at.Origin == "text") {
 			s.pending[at.ID] = at
 		}
+	}
+	if recovery != nil {
+		*recovery = claimedRecovery
+		s.recovery = recovery
+		s.recoveryClaimed = true
 	}
 	m.live[id] = s
 	m.wg.Add(1)
@@ -365,9 +507,19 @@ func (m *Manager) persist(s *session, event string) error {
 }
 func (m *Manager) fail(s *session, e error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
+	defer func() {
+		s.mu.Unlock()
+		m.reconnectClarification(s)
+	}()
+	if s.retired {
+		return
+	}
 	s.run.Status = "failed"
 	s.run.Error = e.Error()
+	if s.recovery != nil && automaticRecovery(s.recovery) {
+		s.recovery.DiagnosticError = clarificationUnavailable
+		m.fallbackLocked(s, s.recovery)
+	}
 	_ = m.persist(s, "run.state")
 	if s.client != nil {
 		_ = s.client.Close()
@@ -377,10 +529,19 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	ctx, cancel := context.WithTimeout(m.ctx, 2*time.Minute)
 	defer cancel()
 	s.mu.Lock()
+	if s.retired {
+		s.mu.Unlock()
+		return
+	}
 	r := s.run
+	recovering := s.recovery != nil
 	s.run.Status = "starting"
 	_ = m.persist(s, "run.state")
 	s.mu.Unlock()
+	if resume && recovering && r.ThreadID == "" {
+		m.fail(s, fmt.Errorf("retained Codex session is unavailable"))
+		return
+	}
 	if _, e := codex.Version(ctx, m.Binary); e != nil {
 		m.fail(s, e)
 		return
@@ -441,6 +602,11 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.mu.Lock()
+	if s.retired {
+		s.mu.Unlock()
+		_ = c.Close()
+		return
+	}
 	s.client = c
 	s.run.Skills = r.Skills
 	s.mu.Unlock()
@@ -474,6 +640,10 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.mu.Lock()
+	if s.retired {
+		s.mu.Unlock()
+		return
+	}
 	s.run.ThreadID = result.Thread.ID
 	if s.run.Profile.Model == "" {
 		s.run.Profile.Model = result.Model
@@ -485,6 +655,28 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		m.fail(s, e)
 		return
 	}
+	s.mu.Lock()
+	if s.retired {
+		s.mu.Unlock()
+		return
+	}
+	if s.recovery != nil {
+		if s.recovery.Stage != "clarifying" {
+			s.run.Status = "interrupted"
+			_ = m.persist(s, "run.state")
+			s.mu.Unlock()
+			return
+		}
+		recovery := s.recovery
+		recoveryCtx, recoveryCancel := context.WithCancel(m.ctx)
+		s.recoveryCancel = recoveryCancel
+		s.run.Status = "idle"
+		_ = m.persist(s, "run.state")
+		s.mu.Unlock()
+		m.background(func() { m.repairQuestion(recoveryCtx, s, recovery) })
+		return
+	}
+	s.mu.Unlock()
 	text := r.Prompt
 	if resume {
 		text = message
@@ -509,6 +701,10 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.mu.Lock()
+	if s.retired {
+		s.mu.Unlock()
+		return
+	}
 	if !s.completed[response.Turn.ID] {
 		s.run.TurnID = response.Turn.ID
 	}
@@ -578,10 +774,21 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 		_ = m.persist(s, "run.state")
 		if s.recovery != nil && s.recovery.Stage != "resolved" && s.recovery.Stage != "cancelled" {
 			m.fallbackLocked(s, s.recovery)
+			if s.reconnectRecovery {
+				after = func() { m.reconnectClarification(s) }
+			}
 		}
 		return
 	}
 	if len(msg.ID) > 0 {
+		var requestSource struct{ TurnID string }
+		_ = json.Unmarshal(msg.Params, &requestSource)
+		if r := s.recovery; r != nil && r.RepairTurnID != "" && (r.RepairTurnID == requestSource.TurnID || r.RepairTurnID == s.run.TurnID) {
+			if (!automaticRecovery(r) && r.Stage != "awaiting-answer") || msg.Method != questionMethod {
+				_ = s.client.Reject(msg.ID, "Question-only recovery cannot request actions")
+				return
+			}
+		}
 		if !supportedRequest(msg.Method) {
 			_ = s.client.Reject(msg.ID, "Unsupported Code Factory request; use supported questions or approvals")
 			return
@@ -602,8 +809,12 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 		_ = json.Unmarshal(msg.Params, &source)
 		a.TurnID = source.TurnID
 		a.ItemID = source.ItemID
-		if s.recovery != nil && s.recovery.Stage == "requesting-form" {
+		if s.recovery != nil && automaticRecovery(s.recovery) && msg.Method == questionMethod {
 			a.RecoveryID = s.recovery.ID
+			s.recovery.Confirmation = "native"
+			b := a.Blocking
+			s.recovery.OriginalBlocking = &b
+			s.recovery.Question = questionText(a.Params)
 			s.recovery.Stage = "awaiting-answer"
 			_ = m.saveRecovery(s.recovery)
 			m.wakeRecovery(s)
@@ -611,6 +822,9 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 		if e := m.saveAttention(ctx, a, "attention.required"); e != nil {
 			_ = s.client.Close()
 			return
+		}
+		if s.recovery != nil && a.RecoveryID == s.recovery.ID {
+			delete(s.pending, recoveryTextID(*s.recovery))
 		}
 		s.pending[a.ID] = a
 		if a.Blocking {
@@ -648,6 +862,7 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 	}
 	if msg.Method == "turn/completed" {
 		s.lastCompletedTurn = p.Turn.ID
+		s.lastCompletedStatus = p.Turn.Status
 		s.completed[p.Turn.ID] = true
 		s.run.TurnID = ""
 		s.run.Status = "idle"
@@ -668,8 +883,9 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 				delete(s.pending, id)
 				if p.Turn.Status == "completed" {
 					_ = m.retainLostQuestion(ctx, a)
+					var recovery domain.QuestionRecovery
 					var retained domain.Attention
-					if m.app.Store.Get(ctx, "attention", "lost-question:"+a.ID+":text", &retained) == nil && retained.Status == "pending" {
+					if m.app.Store.Get(ctx, "question-recovery", "lost-question:"+a.ID, &recovery) == nil && m.app.Store.Get(ctx, "attention", recoveryTextID(recovery), &retained) == nil && retained.Status == "pending" {
 						s.pending[retained.ID] = retained
 					}
 				}
@@ -677,16 +893,20 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 		}
 		m.wakeRecovery(s)
 		if s.recovery != nil && s.recovery.RepairTurnID == p.Turn.ID {
-			if s.recovery.Stage == "awaiting-answer" && !hasPendingQuestions(s) {
+			if s.recovery.Stage == "awaiting-answer" {
 				m.fallbackLocked(s, s.recovery)
 			}
 			if s.recovery.Stage == "answered" {
 				r := s.recovery
 				after = func() { m.continueAfterRepair(s, r) }
 			}
-		} else if p.Turn.Status == "completed" && strings.TrimSpace(s.finalText) != "" && !hasPendingQuestions(s) {
-			turnID, text := p.Turn.ID, s.finalText
-			after = func() { m.checkStoppedTurn(s, turnID, text) }
+		} else if p.Turn.Status == "completed" && strings.TrimSpace(s.finalText) != "" {
+			turnID, text, runID := p.Turn.ID, s.finalText, s.run.ID
+			ownerRevision := s.ownerRevision
+			after = func() {
+				m.recheckAmbiguousForOwner(runID, text, false, s, ownerRevision)
+				m.checkStoppedTurn(s, turnID, text, ownerRevision)
+			}
 		}
 	}
 	if msg.Method == "serverRequest/resolved" {
@@ -761,7 +981,7 @@ func (m *Manager) message(ctx context.Context, id, text, expected string, routeQ
 		if expected != "" {
 			return fmt.Errorf("active turn changed; refresh before sending")
 		}
-		_, s, e := m.start(ctx, id, true, text)
+		_, s, e := m.start(ctx, id, true, text, nil)
 		if e != nil {
 			return e
 		}
@@ -803,9 +1023,10 @@ func (m *Manager) message(ctx context.Context, id, text, expected string, routeQ
 	if s.run.Status != "idle" && s.run.Status != "running" && s.run.Status != "waiting" {
 		return fmt.Errorf("run is %s", s.run.Status)
 	}
-	if s.recovery != nil && (s.recovery.Stage == "requesting-form" || s.recovery.Stage == "awaiting-answer" || s.recovery.Stage == "answered") {
+	if s.recovery != nil && (automaticRecovery(s.recovery) || s.recovery.Stage == "awaiting-answer" || s.recovery.Stage == "answered") {
 		return fmt.Errorf("question recovery is active; answer its form or interrupt to take over")
 	}
+	s.ownerRevision++
 	m.cancelRecoveryLocked(s)
 	return m.sendLocked(ctx, s, text, expected)
 }
@@ -824,6 +1045,19 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 		}
 		params["startIfIdle"] = true
 		applyMode(params, s.run.Profile)
+		if s.recovery != nil {
+			// turn/start overrides persist on the retained thread. Restore the
+			// original policy only when the owner resumes or answers a question.
+			params["approvalPolicy"] = s.run.Profile.Approval
+			policy := map[string]any{"type": "readOnly"}
+			switch s.run.Profile.Sandbox {
+			case "workspace-write":
+				policy["type"] = "workspaceWrite"
+			case "danger-full-access":
+				policy["type"] = "dangerFullAccess"
+			}
+			params["sandboxPolicy"] = policy
+		}
 	}
 	var result struct {
 		Turn   struct{ ID string }
@@ -839,14 +1073,37 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 	return m.persist(s, "run.state")
 }
 func (m *Manager) Interrupt(ctx context.Context, id string) error {
-	s, e := m.get(id)
-	if e != nil {
-		return e
+	var s, retired *session
+	for {
+		m.mu.Lock()
+		s = m.live[id]
+		if s == nil || s == retired {
+			err := m.cancelUnattachedRecovery(ctx, id)
+			m.mu.Unlock()
+			return err
+		}
+		m.mu.Unlock()
+		// A busy recovery session must not hold unrelated runs behind the
+		// manager lock. Reconnect retires its previous session under s.mu.
+		s.mu.Lock()
+		if !s.retired {
+			break
+		}
+		s.mu.Unlock()
+		retired = s
 	}
-	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.ownerRevision++
 	m.cancelRecoveryLocked(s)
 	if s.run.TurnID == "" || s.client == nil {
+		if s.recovery != nil && s.recovery.Stage == "cancelled" {
+			s.retired = true
+			if s.client != nil {
+				_ = s.client.Close()
+			}
+			s.run.Status = "interrupted"
+			return m.persist(s, "run.state")
+		}
 		return nil
 	}
 	return s.client.Call(ctx, "turn/interrupt", map[string]string{"threadId": s.run.ThreadID, "turnId": s.run.TurnID}, nil)
@@ -908,6 +1165,7 @@ func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage)
 	if e = m.saveAttention(ctx, a, "attention.resolved"); e != nil {
 		return e
 	}
+	s.ownerRevision++
 	delete(s.pending, id)
 	if s.recovery != nil && a.RecoveryID == s.recovery.ID && s.recovery.Stage == "awaiting-answer" {
 		s.recovery.Stage = "answered"
@@ -1232,6 +1490,46 @@ func permissionSubset(grant, requested any) bool {
 
 func (m *Manager) saveAttention(ctx context.Context, a domain.Attention, event string) error {
 	return m.app.Store.Write(ctx, func(t *store.Tx) error {
+		if event == "attention.required" {
+			var current domain.Attention
+			if err := t.Get("attention", a.ID, &current); err == nil {
+				if current.Status != "pending" {
+					return fmt.Errorf("attention request is stale or already answered")
+				}
+				a = current
+			} else if !errors.Is(err, store.ErrNotFound) {
+				return err
+			}
+			if a.RecoveryID != "" {
+				var r domain.QuestionRecovery
+				if err := t.Get("question-recovery", a.RecoveryID, &r); err != nil {
+					return err
+				}
+				if r.Stage == "answered" || r.Stage == "resolved" {
+					return fmt.Errorf("question recovery is already resolved")
+				}
+			}
+		}
+		if event == "attention.required" && a.RecoveryID != "" && a.Origin != "text" && a.Method == questionMethod {
+			r := domain.QuestionRecovery{ID: a.RecoveryID}
+			if err := t.Get("question-recovery", r.ID, &r); err != nil && !errors.Is(err, store.ErrNotFound) {
+				return err
+			}
+			var old domain.Attention
+			if err := t.Get("attention", recoveryTextID(r), &old); err == nil {
+				if old.Status == "pending" && old.Origin == "text" && old.RecoveryID == a.RecoveryID && old.RunID == a.RunID {
+					old.Status = "superseded"
+					if err := t.Put("attention", old.ID, old); err != nil {
+						return err
+					}
+					if err := t.Event("attention.resolved", old.RunID, map[string]any{"id": old.ID, "runId": old.RunID, "status": old.Status, "blocking": old.Blocking}); err != nil {
+						return err
+					}
+				}
+			} else if !errors.Is(err, store.ErrNotFound) {
+				return err
+			}
+		}
 		if e := t.Put("attention", a.ID, a); e != nil {
 			return e
 		}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -41,7 +42,7 @@ func main() {
 		if json.Unmarshal(scanner.Bytes(), &m) != nil {
 			os.Exit(3)
 		}
-		if path := os.Getenv("CF_FAKE_RECORD"); path != "" && (m.Method == "thread/start" || m.Method == "thread/resume" || m.Method == "turn/start") {
+		if path := os.Getenv("CF_FAKE_RECORD"); path != "" && (m.Method == "initialize" || m.Method == "thread/start" || m.Method == "thread/resume" || m.Method == "turn/start") {
 			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 			if err != nil {
 				os.Exit(5)
@@ -52,6 +53,22 @@ func main() {
 				os.Exit(5)
 			}
 		}
+		if method := os.Getenv("CF_FAKE_GATE_METHOD"); method != "" && m.Method == method {
+			path := os.Getenv("CF_FAKE_GATE_FILE")
+			if err := os.WriteFile(path+".waiting", []byte(m.Method), 0600); err != nil {
+				os.Exit(5)
+			}
+			for {
+				if _, err := os.Stat(path); err == nil {
+					break
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+		}
+		if method := os.Getenv("CF_FAKE_SETUP_FAILURE"); method != "" && m.Method == method {
+			send(map[string]any{"id": m.ID, "error": map[string]any{"code": -1, "message": "fixture retained-agent setup failure"}})
+			continue
+		}
 		reply := func(v any) { send(map[string]any{"id": m.ID, "result": v}) }
 		switch m.Method {
 		case "initialize":
@@ -60,6 +77,10 @@ func main() {
 		case "thread/start", "thread/resume":
 			reply(map[string]any{"thread": map[string]string{"id": "thread-1"}})
 		case "config/read":
+			if os.Getenv("CF_FAKE_HELPER_FAILURE") == "startup" {
+				send(map[string]any{"id": m.ID, "error": map[string]any{"code": -1, "message": "fixture classifier startup failure"}})
+				continue
+			}
 			reply(map[string]any{"config": map[string]any{}})
 		case "model/list":
 			reply(map[string]any{"data": []any{}})
@@ -70,7 +91,7 @@ func main() {
 			reply(map[string]any{"data": []any{}})
 		case "turn/start":
 			turnNumber++
-			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || mode == "async-question" {
+			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || mode == "async-question" || os.Getenv("CF_FAKE_COMPLETE_STEER") == "1" {
 				turnID = fmt.Sprintf("turn-%d", turnNumber)
 			}
 			var inputs []struct{ Text string }
@@ -79,10 +100,55 @@ func main() {
 			for _, in := range inputs {
 				inputText += in.Text
 			}
+			if strings.Contains(inputText, "question-only recovery clarification") {
+				turnID = fmt.Sprintf("clarify-%d", turnNumber)
+				reply(map[string]any{"turn": map[string]string{"id": turnID}})
+				notify("turn/started", map[string]any{"turn": map[string]string{"id": turnID}})
+				notify("item/completed", map[string]any{"turnId": turnID, "item": map[string]any{"type": "userMessage", "content": []any{map[string]string{"type": "text", "text": inputText}}}})
+				switch os.Getenv("CF_FAKE_CLARIFICATION") {
+				case "native":
+					send(map[string]any{"id": 7, "method": "item/tool/requestUserInput", "params": map[string]any{"turnId": turnID, "questions": []any{map[string]any{"id": "target", "question": "Which target?", "isOther": true}}}})
+					continue
+				case "disconnect":
+					os.Exit(4)
+				case "hold":
+					continue
+				}
+				text := `{"needsInput":false,"question":""}`
+				if os.Getenv("CF_FAKE_CLARIFICATION") == "question" || os.Getenv("CF_FAKE_CLARIFICATION") == "failed" {
+					text = `{"needsInput":true,"question":"Which target?"}`
+				}
+				if os.Getenv("CF_FAKE_CLARIFICATION") == "malformed" {
+					text = "Task complete (not a structured result)"
+				}
+				notify("item/completed", map[string]any{"item": map[string]string{"type": "agentMessage", "text": text}})
+				if os.Getenv("CF_FAKE_CLARIFICATION") == "failed" {
+					complete("failed")
+				} else {
+					complete("completed")
+				}
+				continue
+			}
 			if strings.Contains(string(m.Params["outputSchema"]), "needsInput") {
+				if delay, _ := strconv.Atoi(os.Getenv("CF_FAKE_HELPER_DELAY_MS")); delay > 0 {
+					time.Sleep(time.Duration(delay) * time.Millisecond)
+				}
+				if os.Getenv("CF_FAKE_HELPER_FAILURE") == "disconnect" {
+					os.Exit(4)
+				}
+				if os.Getenv("CF_FAKE_HELPER_FAILURE") == "timeout" {
+					time.Sleep(time.Minute)
+					continue
+				}
 				reply(map[string]any{"turn": map[string]string{"id": turnID}})
 				needs := strings.Contains(inputText, "Which target") || strings.Contains(inputText, "Please pick")
 				text, _ := json.Marshal(map[string]any{"needsInput": needs, "question": "Which target should I use?"})
+				if os.Getenv("CF_FAKE_HELPER_FAILURE") == "invalid" {
+					text = []byte(`{"needsInput":"false","question":""}`)
+				}
+				if strings.Contains(inputText, "superseded completion") {
+					text = []byte(`{"needsInput":false,"question":""}`)
+				}
 				notify("item/completed", map[string]any{"item": map[string]string{"id": "helper", "type": "agentMessage", "text": string(text)}})
 				complete("completed")
 				continue
@@ -139,10 +205,14 @@ func main() {
 		case "turn/steer":
 			var expected string
 			_ = json.Unmarshal(m.Params["expectedTurnId"], &expected)
-			if expected != "turn-1" {
+			if expected != turnID {
 				send(map[string]any{"id": m.ID, "error": map[string]any{"code": -1, "message": "wrong turn"}})
 			} else {
-				reply(map[string]string{"turnId": "turn-1"})
+				reply(map[string]string{"turnId": turnID})
+				if os.Getenv("CF_FAKE_COMPLETE_STEER") == "1" {
+					notify("item/completed", map[string]any{"item": map[string]string{"type": "agentMessage", "text": "Answer received."}})
+					complete("completed")
+				}
 			}
 		case "turn/interrupt":
 			reply(map[string]any{})

@@ -74,6 +74,9 @@ These references identify existing assertions and explicit remaining gaps.
 | `UI-FALLBACK-ANSWER` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("text fallback submits its answer through the owning request"` | Text fallback sends its form answer exactly through its owning attention identity and shows Answer sent. |
 | `RUN-QUESTION-RECOVERY` | [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestStoppedQuestionRecoveryNativeAndFallback(` | First/second native repair success and two-attempt text fallback retain thread/worktree, reject duplicates, restore task mode and classify internal input separately. |
 | `RUN-QUESTION-HELPER` | [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestQuestionHelperIsolationAndModelSelection(` | Helper uses an ephemeral read-only thread without approvals/apps and selects the configured helper model or task model. |
+| `UI-CLARIFICATION` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("clarification progress has no attention badge and stops when unresolved"` | Clarification shows shared attempts and takeover with zero attention badges; unresolved classification stops progress and permits owner messaging. |
+| `UI-NONBLOCKING-TEXT` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("nonblocking recovered text question keeps its continuing label"` | A recovered explicitly nonblocking text question retains its continuing label without a waiting notice. |
+| `RUN-CLASSIFIER-FAILURE` | [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestClassifierFailuresClarifyCompletionWithoutAttention(` | Classifier startup, disconnect, timeout and invalid results trigger one original-agent clarification; completion creates no attention. |
 <!-- /specs:references-assertions -->
 
 ## Entity coverage

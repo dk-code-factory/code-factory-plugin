@@ -72,6 +72,12 @@ export interface Run {
   created: string;
 }
 export interface QuestionRecovery {
+  sourceText?: string;
+  question?: string;
+  confirmation?: string;
+  originalBlocking?: boolean;
+  diagnosticError?: string;
+  textAttentionId?: string;
   id: string;
   runId: string;
   stage: string;

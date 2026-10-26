@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-relate-items",
-  "base": "9cd2c99bb972009ed2f5b5d35f0f2fa141077111",
-  "fingerprint": "c71010dd4f323e1b3ef1775e8a69de7319cc4f8f6c9a6b540678bb11c066d54a",
+  "base": "cdf6df8f81b499f0b59a2b9e4e4ea2b48cfeeee2",
+  "fingerprint": "c12e07bc69bb44b1f893bb198ec78cf4eb8b28855665571bf9b88b660650e64a",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1/S2 derived/manual relationships and unlink behavior remain unchanged. The pilot PR-tracking helper and work-state projection are excluded, so answering or recovering a question introduces no GitHub relationship side effect.",
-    "implementation": "Verified questions.go contains no recordPullReferences helper and onMessage contains no PR URL handling; app.go and provider relationship code match published main. Existing ItemDetail relationship drafts and source/target validation are unchanged.",
-    "tests": "Read unlink visible-row/draft retention and delayed relationship selection browser assertions with existing backend link priority tests. They remain mapped and rerun; the new question fixture does not substitute for relationship coverage or claim work-tracking behavior."
+    "description": "S1-S3 retain reference evidence, local-link removal and read-only ticket context. Shared UI and domain inputs select review without any relationship behavior change.",
+    "implementation": "Relationship discovery, Link and item-detail refresh handlers remain unchanged. Recovery UI changes are limited to Agent controls/notices and do not alter relationship drafts or provider writes. Approved CI trigger selection now runs pushes only on main and retains PR-to-main/manual events. Exact comparison, fixture, bootstrap and main-push release implementations are unchanged; feature branches without PRs and manual parent-base limitations are documented. Current cycle changes only failed synthetic delivery cancellation and disconnected awaiting-answer takeover in questions.go. Reviewed this consumer against those narrow changes; its authored behavior and implementation remain consistent, with existing gaps retained.",
+    "tests": "Read TestInboxRevisionStatesPriorityAndLinks local unlink assertion preserving independently discovered APP-42 evidence and initial reference count. Existing browser late-selection/draft assertions remain mapped and unchanged."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 3.853
+      "seconds": 8.788
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.184
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.546
+      "seconds": 24.715
     },
     {
       "command": [
@@ -52,36 +52,36 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.442
+      "seconds": 0.462
     }
   ],
   "dependencies": {
-    "flow:relate-items": "266a755df8c24a331a7b1dcaf08c31ecc3906f8e87f793e89d0de90b34964052",
-    "term:connection-submits": "513893c6dbce7b8bb2ffc22af73802055ec7ce8f68071ff741dc09f9387cfb6b",
-    "term:coverage-gap": "5439d412988ad17087a17eb704c07da38244d510612b7bc26bbc493a177c807d",
-    "term:element-w-pr-evidence-branch": "888efeaba5886fc9e1e39f08c886f75dde8aa0a3542f3c7bc4001022f992aa64",
-    "term:element-w-pr-evidence-checks-content": "7715d7233fabe4374e10a7aa04ece74bb284dd55b050aa1d2992adad6252432c",
-    "term:element-w-pr-evidence-checks-disclosure": "e79242da00dff95b5a582acaab63752050677ce793b273e444c817b76549a6eb",
-    "term:element-w-pr-evidence-head": "d17c448e76e3eb81273c0b750c24ebb2025546c6d7a510fc48f8ad84dcf07f0b",
-    "term:element-w-relationships-add": "7cfb2b23e13901b519cf28f49135b917c89dd5774b1fb969aecf66774a0ec079",
-    "term:element-w-relationships-evidence-or-local": "55f019b471a811d15815eff7dbf9c5e744e3991683fc3605e0dd6d3cae12cdfb",
-    "term:element-w-relationships-remove": "c75356f1ee02b3d35eabe8f589d11be7e0260413325f9dfc41b1d9520b11f383",
-    "term:element-w-relationships-target": "a8ddd75629517099377ca818b2b2179d89587a72e246836446487024d3c82016",
-    "term:element-w-relationships-target-input": "2859d01c60e9925250ca2f26268d78e1fbdb53fd36696a043862e7d2c4d1daf1",
-    "term:element-w-ticket-context-status": "b892007bdebe1626e11fa924facf63043fc69a1dd97e096b5a759a39c03b9728",
-    "term:element-w-ticket-context-summary-or-error": "a87856a8b2e164afa79ffbb7b480a2a72ba6377245924d2e95b0d4b8dfcaf783",
-    "term:element-w-ticket-context-ticket-id": "972a172691da15a250c2acace057bd472c31ebc1492b1e1653e1a3cdaa4c9d51",
-    "term:relationship": "52703cccc85f9c899a194dd58745464d472f04ce85944e8cbb7cec6412a4adfe",
-    "term:state-error": "1e70839e2eeda3a0b20478f11384193b361547f5259ce5bd505dfb3ed9e2131f",
-    "term:ui-c-link": "4820501843d173c0dc344f2277dc57ee8be6734f2d26ea0abd605f5ce766d207",
-    "term:ui-w-pr-evidence": "0f1266adc7d68ff279d7a4aff79c9fd7ceff829c8d426093f295bc6aaacd873b",
-    "term:ui-w-relationships": "bceddce1975204f3f59354c1d7e81450384f6f4a33290bbcff7ac201a6dfbc95",
-    "term:ui-w-ticket-context": "d95a38db7d10e3eee4599376c83a8d5650669660342602733cd3fef44b6adcab",
-    "term:unverified-behavior": "f2f4dca98d1595e41c32c5a73dddf26ba84c1d557f7d5956f2ca37b537d8596c",
-    "term:work-item": "cc029a1e8a75edf2b8f5ede2018a56477f6786197f4ff46a267a10ced343bccc",
-    "ui:C-LINK": "6da0e016f24d2c4f0c13ecdeb11e9a7df9a4c49ff31c58cc4f42a226ec8e543e",
-    "ui:W-PR-EVIDENCE": "a27240b0a56a6c62e99b785e046758ef469df5dcdbc357715fc36ad4b4264bf5",
-    "ui:W-RELATIONSHIPS": "70908bfd72e4eaf890744ccd8f8061fcd5ac1bde0ce0a949bff708ec52cdc9cf",
-    "ui:W-TICKET-CONTEXT": "18a60d0b11b05de1ff89dcf83a3821438ec8542133d16566c04bcf91f09e98fa"
+    "flow:relate-items": "9093f6d8fc3d1bbf6828d2ed6a8c024bd4e4dc73df343aba0511af95746498c5",
+    "term:connection-submits": "936fe3512ff42748c5952360cd6be85044cf8d1b396f623fcfe43494d5cb16b8",
+    "term:coverage-gap": "4a7577550d83ddf6e0f8de27dffbd5b26a23ef973d93e9d58685eee6b2a66de6",
+    "term:element-w-pr-evidence-branch": "f7033b0163008ac2d14fe62ed9d92fd3823086a0d16492b042b794e8944c4e70",
+    "term:element-w-pr-evidence-checks-content": "091cf261a0594d5d177daec04081b9cf98016676e3ba7a7132044e4bfb1db291",
+    "term:element-w-pr-evidence-checks-disclosure": "2e4a3065628a76d2fa9e625c139ff03cd336aa995f5b447808f6bbc94558d253",
+    "term:element-w-pr-evidence-head": "70f25f2393fb4d92be2a7d88da38497370a8189dcddb59b3b30144c3b8040002",
+    "term:element-w-relationships-add": "dd57384cd6c5499d67e09a2c8ebd4febc6bce90c3c6a2293951ebaf1766decdd",
+    "term:element-w-relationships-evidence-or-local": "3b641e6249991a5d50822f23a65f7d6266a106045956b9c70fe4fde2358b83c6",
+    "term:element-w-relationships-remove": "a224fd35c156d89ce5c487772ea06f09c09a2e3157796aa6ed362c5ebeb2c926",
+    "term:element-w-relationships-target": "c15b2e1676029ca842da3bcaae5bc9bf1b8c398a7737e837cc179b3666c8fd40",
+    "term:element-w-relationships-target-input": "a9a64885f8d38aba0be0036bf6bc011e6477c5bc7bc04bab952e476479d89dd4",
+    "term:element-w-ticket-context-status": "8ff05d1208e6059440ac412e228311c8f79aa957490211fc1e0d9e8e4e04c844",
+    "term:element-w-ticket-context-summary-or-error": "83b3052f5f67b4e83cde703083a2fc3f1622b83443b746834535b72922360431",
+    "term:element-w-ticket-context-ticket-id": "2f724faef5503ab2bf3944454374a54b1b1810fd11e3a24de4ac401af8355c8b",
+    "term:relationship": "831298d903aac600c7d77551ba2ff35b79dfcc3fcfed745623a512d3ffaffb2a",
+    "term:state-error": "050fb7c9021011b86697999403a700459d85bd38b383dc85027f0d2296999b02",
+    "term:ui-c-link": "c424949f8b327b0d712694eda69ca0d0d1c2f9e2ce058f6bfc96dd49375b1d5b",
+    "term:ui-w-pr-evidence": "27a24fa106c206f970fe924650a4622427e0ffefe2fea9fee22d571224c17cb3",
+    "term:ui-w-relationships": "01cc7f9057eae92a1d111caf75a941674a33ae50a7299f85fc5799faf7b9e315",
+    "term:ui-w-ticket-context": "98cc0837576ceaf8db5e568ca74a0a11870c3d2fea75b9e4dab343653a7caa33",
+    "term:unverified-behavior": "36e7e9a3831e32de218b4cbee09bcd7b7d52b78070781da4a96ffa2f7046a25e",
+    "term:work-item": "8dd81f01639d1457547737621920727a8aa4c0af84d6526f28e18569f95d230b",
+    "ui:C-LINK": "0f53a86e14514ab19a543aa8faecfb01e6e12e69e606c26e9e886112851d6345",
+    "ui:W-PR-EVIDENCE": "deffa95ebb02a8bbb6df0298955b8f97d62480d8e1f301236d872a2888688e76",
+    "ui:W-RELATIONSHIPS": "ebfc051478223988e6d0fc2427cc3de6234e41ee35ad7c257b7dfc779511b9ad",
+    "ui:W-TICKET-CONTEXT": "9967f2e7eb081e090a4cd67981ae3d4fb1d4bdd0cfd4548b6f74e5f65ccc55f8"
   }
 }

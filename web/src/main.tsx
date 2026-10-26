@@ -1004,9 +1004,13 @@ function Agent({
     if (inspect) transcript.current?.focus();
   }, [inspect]);
   const recovery = recoveries.find((r) =>
-    ["checking", "requesting-form", "awaiting-answer", "answered"].includes(
-      r.stage,
-    ),
+    [
+      "checking",
+      "clarifying",
+      "requesting-form",
+      "awaiting-answer",
+      "answered",
+    ].includes(r.stage),
   );
   const pageCursor = useRef(0);
   const [historyVersion, setHistoryVersion] = useState(0);
@@ -1062,11 +1066,13 @@ function Agent({
           <StatusIcon recovery />
           {recovery.stage === "checking"
             ? "Checking for a pending question"
-            : recovery.stage === "requesting-form"
-              ? `Recovering question · attempt ${recovery.attempts} of 2`
-              : recovery.stage === "awaiting-answer"
-                ? "Question recovered · waiting for your answer"
-                : "Restoring original task mode"}
+            : recovery.stage === "clarifying"
+              ? `Clarifying whether input is needed · attempt ${recovery.attempts} of 2`
+              : recovery.stage === "requesting-form"
+                ? `Recovering question · attempt ${recovery.attempts} of 2`
+                : recovery.stage === "awaiting-answer"
+                  ? "Question recovered · waiting for your answer"
+                  : "Restoring original task mode"}
           <button onClick={() => void action("interrupt_run", { id: run.id })}>
             Take over
           </button>
@@ -1104,8 +1110,8 @@ function Agent({
           key={a.id}
           onClick={() => openAttention(a.id)}
         >
-          {(a.blocking || a.origin === "text") && <StatusIcon />}
-          {a.blocking || a.origin === "text"
+          {a.blocking && <StatusIcon />}
+          {a.blocking
             ? "Waiting for your answer"
             : "Question · agent continues"}{" "}
           — Answer

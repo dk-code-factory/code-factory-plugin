@@ -41,6 +41,8 @@ func TestStoppedQuestionRecoveryNativeAndFallback(t *testing.T) {
 			a, ctx := fixture(t)
 			run := prepareRun(t, a, ctx)
 			run.Profile.Model = "fixture-model"
+			run.Profile.Sandbox = "workspace-write"
+			run.Profile.Approval = "untrusted"
 			if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
 				t.Fatal(err)
 			}
@@ -103,7 +105,11 @@ func TestStoppedQuestionRecoveryNativeAndFallback(t *testing.T) {
 			for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
 				var call struct {
 					Method string
-					Params struct{ CollaborationMode struct{ Mode string } }
+					Params struct {
+						CollaborationMode struct{ Mode string }
+						SandboxPolicy     struct{ Type string }
+						ApprovalPolicy    string
+					}
 				}
 				_ = json.Unmarshal([]byte(line), &call)
 				if call.Method == "turn/start" {
@@ -112,6 +118,9 @@ func TestStoppedQuestionRecoveryNativeAndFallback(t *testing.T) {
 						plans++
 					case "default":
 						defaults++
+						if defaults > 1 && (call.Params.SandboxPolicy.Type != "workspaceWrite" || call.Params.ApprovalPolicy != "untrusted") {
+							t.Fatal("original task policy was not restored after constrained recovery")
+						}
 					}
 				}
 			}
@@ -355,6 +364,9 @@ func TestCompletedTurnRetainsUnansweredNativeQuestionAsText(t *testing.T) {
 	}
 	a.Runs.onMessage(live, codex.Message{Method: "turn/completed", Params: raw(map[string]any{"turn": map[string]string{"id": at.TurnID, "status": "completed"}})})
 	fallback := pendingQuestion(t, a, "text")
+	if fallback.Blocking {
+		t.Fatal("lost explicitly nonblocking question became blocking")
+	}
 	if fallback.RunID != run.ID || fallback.Method != questionMethod {
 		t.Fatal("completed turn lost the unanswered question")
 	}

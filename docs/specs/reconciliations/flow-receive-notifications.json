@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "9cd2c99bb972009ed2f5b5d35f0f2fa141077111",
-  "fingerprint": "49f1c7cb90850523d1244f1dc1d211615a084e8cdb7db234f834e04701b883a5",
+  "base": "cdf6df8f81b499f0b59a2b9e4e4ea2b48cfeeee2",
+  "fingerprint": "8fccb8fb6c4e2affe8512a6917f89f6edff2bd6c0eb50a324b34bc1f7cb066a1",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S3 subscription challenge, delivery, filtering and refresh behavior remain unchanged. Recovery writes ordinary journal attention/run events; host callback acceptance remains explicitly open and is not inferred from UI confirmation.",
-    "implementation": "Compared events service and notification transport with the baseline: no event subscription/callback code changed. Recovery uses existing Store event writes and the confirmation is view-local React state, with no new host notification call or background delivery mechanism.",
-    "tests": "Inspected subscription verification/retry/dedup/refresh/expiry and callback safety assertions. They rerun in fixture mode, while browser response confirmation checks only local owning-run status. No fixture receipt closes real host callback challenge/delivery gaps."
+    "description": "S1-S3 retain verified subscriptions, stable retry identity and host-specific delivery acceptance. Correctly reducing false attention and emitting matching resolution events uses the existing event contract.",
+    "implementation": "Event subscription and delivery services are unchanged. Reviewed matching synthetic retirement and native replacement events for run entity identity and transaction boundaries; native and approval delivery policies remain. Approved CI trigger selection now runs pushes only on main and retains PR-to-main/manual events. Exact comparison, fixture, bootstrap and main-push release implementations are unchanged; feature branches without PRs and manual parent-base limitations are documented. Matching async/text sibling retirement emits attention.resolved inside the same Store.Write as terminal status/history changes; unrelated request/run identities remain unchanged. Current cycle changes only failed synthetic delivery cancellation and disconnected awaiting-answer takeover in questions.go. Reviewed this consumer against those narrow changes; its authored behavior and implementation remain consistent, with existing gaps retained.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry signature, entity-filter, same-event retry, acknowledged no-replay and expiry assertions. New legacy tests assert emitted matching attention.resolved events; real host notification gaps remain."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 3.853
+      "seconds": 8.788
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.184
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.546
+      "seconds": 24.715
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.442
+      "seconds": 0.462
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "6c16ee68d34ceabebf2a9316dddd95c6a4fb9e12d53080d43bd477c22b04db98",
-    "term:attention-request": "dba51ce6eae05ceeb63ad01e7846d1669a1f0d616004ad591c22def72478377c",
-    "term:coverage-gap": "5439d412988ad17087a17eb704c07da38244d510612b7bc26bbc493a177c807d",
-    "term:host": "a1c725004b05372e6bd51356a91bb0f855bc92b786ff6b4a15f5bf93247816d8",
-    "term:known-limitation": "488e665e326093ccdb0dee9a96d518e966eaf77ce35ed68bcd7d9e682a5ccd7e",
-    "term:subscription": "ab6a22fb1d1c11a9da3f09b9f78b5025e2139cb1135c64fb3e3aede706f21be2",
-    "term:unverified-behavior": "f2f4dca98d1595e41c32c5a73dddf26ba84c1d557f7d5956f2ca37b537d8596c"
+    "flow:receive-notifications": "0ab113e403aa8f30d6521a9aa744304a942c32318452fb0264fcccaf3d8d57a6",
+    "term:attention-request": "534264b55402395c5a110f23b94cb1092eda39ee24997c62ca9abe838e0315a5",
+    "term:coverage-gap": "4a7577550d83ddf6e0f8de27dffbd5b26a23ef973d93e9d58685eee6b2a66de6",
+    "term:host": "1492ee69fac214eaf706b1b367b5cb3027f8249d879f9bf39809f0b672b7a67f",
+    "term:known-limitation": "15fffe1efa009d53fa73c56a8075fea07d1ec94bcb15a731489f6c95aa747515",
+    "term:subscription": "9a8aa1e6c9e0c934c87f2fc442bd93a8796f3289f3d0af4761d621cce7b66eac",
+    "term:unverified-behavior": "36e7e9a3831e32de218b4cbee09bcd7b7d52b78070781da4a96ffa2f7046a25e"
   }
 }

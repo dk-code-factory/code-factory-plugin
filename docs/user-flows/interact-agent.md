@@ -25,7 +25,16 @@ A message for an outdated active turn is rejected. Interrupted or failed session
 - **S2** Active steering requires the current turn identity and rejects stale steering.
 - **S3** Interrupt preserves the run and invalidates outstanding requests.
 
-Recovery progress shows readable labels and decorative icons. Take over cancels repair before manual continuation. Automatic inputs are labelled Question recovery in the technical transcript; real replies retain their author. Drafts stay with their run across navigation and clear only if unchanged after a successful send. A recovered text answer can restore an interrupted retained session using the answer as its continuation, without a generic resume turn.
+Recovery progress shows readable labels and decorative icons. Clarification shows its shared attempt count without adding attention. Take over cancels clarification and repair before manual continuation; late callbacks cannot recreate questions or continue work. Unresolved classification stops progress and leaves continuation to the owner. Automatic inputs are labelled Question recovery in the technical transcript; real replies retain their author. Drafts stay with their run across navigation and clear only if unchanged after a successful send. A recovered text answer can restore an interrupted retained session using the answer as its continuation, without a generic resume turn.
+
+Take over also cancels retained startup recovery before its session reconnects. Cancellation remains effective when reconnect and takeover overlap; later classification cannot recreate attention or restart clarification.
+
+Completion checks queued before takeover cannot start new recovery after an older check finishes. A retired startup session cannot replace the state or active turn of later owner-directed work.
+
+Take over after a repair answer preserves the claimed answer while cancelling its pending automatic task continuation, before or after acknowledgement.
+
+Takeover waiting for a busy recovery turn leaves other runs available to start and present their questions.
+Take over also cancels recovery before its first question-only turn. Late questions from that cancelled recovery do not return; a later explicit continuation can ask new genuine questions.
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -86,6 +95,15 @@ flowchart TD
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestQuestionRepairUserTakeoverCancelsFurtherAttempts(`; S3. Takeover interrupts recovery, restores the retained session and rejects old form answers.
 - [internal/app/questions_test.go](../../internal/app/questions_test.go) — `func TestHumanReplyInRepairTurnKeepsItsConversationRole(`; S1. Exact automatic input text is distinguished from a human reply in the same turn.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("answer confirmation expires despite polling, stays with its run and never alters transcript text"`; S1. Per-run drafts and literal transcript survive answer navigation and polling.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestClarificationTakeoverAndAnswerRace(`; S3. Locally bounded concurrent owner takeover and native answer preserve the durable claim; cancellation stays reachable on stall and late recovery callbacks cannot recreate questions.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestTakeoverInvalidatesLegacyClassifierCallback(`; S3. An explicit provider gate holds legacy classification pending until takeover completes; the later callback cannot establish a question, with a bounded completion wait and reachable cleanup.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestStartupTakeoverCancelsRecoveryBeforeSessionAttachment(`; S3. Provider-gated startup checking/clarifying classification remains pending until zero-attempt takeover commits before attachment; released callbacks cannot create attention or reconnect.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestStartupTakeoverCancelsAfterSessionAttachment(`; S3. An initialization gate proves one durable claimed attempt with no delivered turn; takeover suppresses late native/async setup callbacks and later explicit continuation can ask a fresh genuine question.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestStalledRecoveryTakeoverDoesNotBlockAnotherRunsQuestion(`; S3. A blocked-goroutine stack proves takeover reached the session mutex held by gated recovery turn/start before another run starts and presents its genuine question; release lets takeover finish.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestLiveAsyncRecoveryAnswerRestoresOriginalPolicy(`; S1. A live async repair-turn answer retires matching duplicate store/session routes, completes the repair and continues with original mode/model/effort/sandbox/approval policy while retaining the durable claim.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestTakeoverAfterClaimPreventsQueuedRepairContinuation(`; S3. A live async repair answer is durably claimed; takeover before acknowledgement or before a queued post-acknowledgement continuation finalises that claim and prevents automatic task resumption.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestRetiredResumeCannotOverwriteOwnerReplacement(`; S3. An actual successful retained thread/resume response is held at its session lock; a staged lock-owned retirement/replacement transition proves the retired launch cannot overwrite the replacement's running state, turn or identity.
+- [internal/app/question_classification_test.go](../../internal/app/question_classification_test.go) — `func TestTakeoverInvalidatesEntireQueuedCompletion(`; S3. Takeover during provider-gated historical reconciliation invalidates the entire queued completion callback, preventing the subsequent stopped-turn classifier from creating fresh recovery or attention.
 
 ## Verification and gaps
 

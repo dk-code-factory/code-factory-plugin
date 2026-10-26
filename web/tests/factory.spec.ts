@@ -1476,3 +1476,70 @@ test("text fallback submits its answer through the owning request", async ({
     },
   ]);
 });
+
+test("clarification progress has no attention badge and stops when unresolved", async ({
+  page,
+}) => {
+  const snap = questionSnapshot();
+  snap.attention = [];
+  snap.runs = [snap.runs[0]];
+  snap.runs[0].status = "idle";
+  snap.runs[0].turnId = "";
+  snap.questionRecoveries = [
+    { id: "clarify-1", runId: "run-1", stage: "clarifying", attempts: 1 },
+  ];
+  const { ui, state } = await host(page, {
+    snapshot: snap,
+    recoveryInput: true,
+  });
+  await ui.getByRole("button", { name: /^Agents/ }).click();
+  await ui.getByRole("button").filter({ hasText: "Agent 1 · idle" }).click();
+  await expect(
+    ui.getByText("Clarifying whether input is needed · attempt 1 of 2"),
+  ).toBeVisible();
+  await expect(
+    ui.getByRole("button", { name: "Take over", exact: true }),
+  ).toBeVisible();
+  await expect(
+    ui.getByRole("button", { name: /Waiting for your answer/ }),
+  ).toHaveCount(0);
+  await expect(
+    ui.locator(".badge").filter({ hasText: "Needs attention" }),
+  ).toHaveCount(0);
+  await expect(ui.locator(".attention b")).toHaveText("0");
+  await expect(
+    ui.getByRole("button", { name: "Send message", exact: true }),
+  ).toBeDisabled();
+  state.questionRecoveries![0].stage = "unresolved";
+  state.questionRecoveries![0].attempts = 2;
+  state.cursor++;
+  await expect(ui.locator(".recovery-progress")).toHaveCount(0);
+  await expect(
+    ui.getByRole("button", { name: "Take over", exact: true }),
+  ).toHaveCount(0);
+  await expect(ui.locator(".attention b")).toHaveText("0");
+  await ui
+    .getByRole("textbox", { name: "Message agent" })
+    .fill("Owner direction");
+  await expect(
+    ui.getByRole("button", { name: "Send message", exact: true }),
+  ).toBeEnabled();
+});
+
+test("nonblocking recovered text question keeps its continuing label", async ({
+  page,
+}) => {
+  const snap = questionSnapshot();
+  snap.attention = [snap.attention[0]];
+  snap.attention[0].origin = "text";
+  snap.attention[0].blocking = false;
+  const { ui } = await host(page, { snapshot: snap });
+  await ui.getByRole("button", { name: /^Agents/ }).click();
+  await ui.getByRole("button").filter({ hasText: "Agent 1 · waiting" }).click();
+  await expect(
+    ui.getByRole("button", { name: "Question · agent continues — Answer" }),
+  ).toBeVisible();
+  await expect(
+    ui.getByRole("button", { name: /Waiting for your answer/ }),
+  ).toHaveCount(0);
+});
