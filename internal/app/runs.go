@@ -43,6 +43,9 @@ type Manager struct {
 }
 type session struct {
 	mu                  sync.Mutex
+	ctx                 context.Context
+	cancel              context.CancelFunc
+	clientless          bool
 	run                 domain.Run
 	client              *codex.Client
 	pending             map[string]domain.Attention
@@ -313,9 +316,7 @@ func (m *Manager) busy() bool {
 		return true
 	}
 	defer m.adminGate.RUnlock()
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	for _, s := range m.live {
+	for _, s := range m.sessions() {
 		s.mu.Lock()
 		busy := s.run.Status == "queued" || s.run.Status == "running" || s.run.Status == "starting" || s.run.Status == "waiting"
 		s.mu.Unlock()
@@ -324,6 +325,58 @@ func (m *Manager) busy() bool {
 		}
 	}
 	return false
+}
+
+func (m *Manager) sessions() []*session {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	result := make([]*session, 0, len(m.live))
+	for _, s := range m.live {
+		result = append(result, s)
+	}
+	return result
+}
+
+// Only the session lock is returned held. A retired, clientless owner serializes
+// wake and cleanup for an existing stored run before it has a live generation.
+// Manager membership is checked briefly, never across storage or provider I/O.
+func (m *Manager) lockRun(ctx context.Context, id string, stop bool) (*session, func(), error) {
+	m.mu.Lock()
+	s := m.live[id]
+	m.mu.Unlock()
+	if s == nil {
+		var run domain.Run
+		if err := m.app.Store.Get(ctx, "run", id, &run); err != nil {
+			return nil, nil, err
+		}
+		m.mu.Lock()
+		s = m.live[id]
+		if s == nil && !m.closing && m.ctx.Err() == nil {
+			lifetime, cancel := context.WithCancel(m.ctx)
+			s = &session{ctx: lifetime, cancel: cancel, clientless: true, run: run, retired: true}
+			m.live[id] = s
+		}
+		m.mu.Unlock()
+		if s == nil {
+			return nil, nil, fmt.Errorf("daemon is stopping")
+		}
+	}
+	if stop && s.cancel != nil {
+		s.cancel()
+	}
+	s.mu.Lock()
+	m.mu.Lock()
+	current := m.live[id] == s
+	m.mu.Unlock()
+	if !current {
+		s.mu.Unlock()
+		return nil, nil, fmt.Errorf("session changed; refresh before retrying")
+	}
+	return s, s.mu.Unlock, nil
+}
+
+func (s *session) stopped() bool {
+	return s.retired || s.ctx != nil && s.ctx.Err() != nil
 }
 
 type LaunchInput struct {
@@ -486,19 +539,21 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 }
 
 func (m *Manager) startRun(ctx context.Context, id string, resume bool, message string, recovering bool, recovery *domain.QuestionRecovery) (domain.Run, *session, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.ctx.Err() != nil {
-		return domain.Run{}, nil, fmt.Errorf("daemon is stopping")
+	old, unlock, err := m.lockRun(ctx, id, false)
+	if err != nil {
+		return domain.Run{}, nil, err
 	}
-	old := m.live[id]
-	if old != nil {
-		old.mu.Lock()
-		defer old.mu.Unlock()
+	defer unlock()
+	m.mu.Lock()
+	parent := m.ctx
+	stopping := m.closing || parent.Err() != nil
+	m.mu.Unlock()
+	if stopping || old.ctx != nil && old.ctx.Err() != nil && !old.retired {
+		return domain.Run{}, nil, fmt.Errorf("daemon is stopping")
 	}
 	var r domain.Run
 	var claimedRecovery domain.QuestionRecovery
-	err := m.app.Store.Write(ctx, func(t *store.Tx) error {
+	err = m.app.Store.Write(ctx, func(t *store.Tx) error {
 		if e := t.Get("run", id, &r); e != nil {
 			return e
 		}
@@ -570,6 +625,9 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 		return r, nil, err
 	}
 	if old != nil {
+		if old.cancel != nil {
+			old.cancel()
+		}
 		if recovery != nil {
 			if old.recoveryCancel != nil {
 				old.recoveryCancel()
@@ -582,9 +640,11 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 			_ = old.client.Close()
 		}
 	}
-	s := &session{run: r, pending: map[string]domain.Attention{}, completed: map[string]bool{}, started: make(chan struct{}), recoveryWake: make(chan struct{}, 1), recovering: recovering, resumeTurnID: r.TurnID}
+	lifetime, cancel := context.WithCancel(parent)
+	s := &session{ctx: lifetime, cancel: cancel, run: r, pending: map[string]domain.Attention{}, completed: map[string]bool{}, started: make(chan struct{}), recoveryWake: make(chan struct{}, 1), recovering: recovering, resumeTurnID: r.TurnID}
 	atts, e := store.List[domain.Attention](ctx, m.app.Store, "attention")
 	if e != nil {
+		cancel()
 		return r, nil, e
 	}
 	for _, at := range atts {
@@ -597,8 +657,15 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 		s.recovery = recovery
 		s.recoveryClaimed = true
 	}
+	m.mu.Lock()
+	if m.live[id] != old || m.closing || m.ctx.Err() != nil {
+		m.mu.Unlock()
+		cancel()
+		return r, nil, fmt.Errorf("session changed or daemon is stopping; inspect the retained run")
+	}
 	m.live[id] = s
 	m.wg.Add(1)
+	m.mu.Unlock()
 	go func() {
 		defer m.wg.Done()
 		defer close(s.started)
@@ -661,6 +728,17 @@ func (m *Manager) workspace(ctx context.Context, r domain.Run) error {
 }
 func (m *Manager) persist(s *session, event string) error {
 	return m.app.Store.Write(m.ctx, func(t *store.Tx) error {
+		var saved domain.Run
+		if err := t.Get("run", s.run.ID, &saved); err != nil {
+			return err
+		}
+		if saved.Status == "terminated" || saved.Status == "cleaned" {
+			s.run, s.retired = saved, true
+			if s.cancel != nil {
+				s.cancel()
+			}
+			return fmt.Errorf("retained run is %s", saved.Status)
+		}
 		if e := t.Put("run", s.run.ID, s.run); e != nil {
 			return e
 		}
@@ -673,7 +751,7 @@ func (m *Manager) fail(s *session, e error) {
 		s.mu.Unlock()
 		m.reconnectClarification(s)
 	}()
-	if s.retired {
+	if s.stopped() {
 		return
 	}
 	s.run.Status = "failed"
@@ -689,17 +767,21 @@ func (m *Manager) fail(s *session, e error) {
 	}
 }
 func (m *Manager) launch(s *session, resume bool, message string) {
-	ctx, cancel := context.WithTimeout(m.ctx, 2*time.Minute)
+	ctx, cancel := context.WithTimeout(s.ctx, 2*time.Minute)
 	defer cancel()
 	s.mu.Lock()
-	if s.retired {
+	if s.stopped() {
 		s.mu.Unlock()
 		return
 	}
 	r := s.run
 	recovering := s.recovery != nil
 	s.run.Status = "starting"
-	_ = m.persist(s, "run.state")
+	if err := m.persist(s, "run.state"); err != nil {
+		s.mu.Unlock()
+		m.fail(s, err)
+		return
+	}
 	s.mu.Unlock()
 	if resume && recovering && r.ThreadID == "" {
 		m.fail(s, fmt.Errorf("retained Codex session is unavailable"))
@@ -720,7 +802,11 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	if closedWork(*source) {
-		if err := m.stopClosedItem(ctx, *source); err != nil {
+		// Retirement stops this session's lifetime; its terminal commit needs
+		// a separate bounded daemon context rather than the lifetime it cancels.
+		terminal, finish := context.WithTimeout(m.ctx, 5*time.Second)
+		defer finish()
+		if err := m.stopClosedItem(terminal, *source); err != nil {
 			m.fail(s, err)
 		}
 		return
@@ -772,11 +858,11 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.mu.Lock()
-	if s.retired {
+	if s.stopped() {
 		s.mu.Unlock()
 		return
 	}
-	c, e := codex.Start(m.ctx, m.CodexBinary(), sandboxArgs, func(msg codex.Message) { m.onMessage(s, msg) })
+	c, e := codex.Start(s.ctx, m.CodexBinary(), sandboxArgs, func(msg codex.Message) { m.onMessage(s, msg) })
 	if e != nil {
 		s.mu.Unlock()
 		m.fail(s, e)
@@ -828,7 +914,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.mu.Lock()
-	if s.retired {
+	if s.stopped() {
 		s.mu.Unlock()
 		return
 	}
@@ -910,7 +996,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 		return
 	}
 	s.mu.Lock()
-	if s.retired {
+	if s.stopped() {
 		s.mu.Unlock()
 		return
 	}
@@ -940,7 +1026,7 @@ func (m *Manager) onMessage(s *session, msg codex.Message) {
 			m.app.queueReviewsAfterTurn(refreshReviewsFor)
 		}
 	}()
-	if s.retired {
+	if s.stopped() {
 		return
 	}
 	ctx := m.ctx
@@ -1189,7 +1275,7 @@ func (m *Manager) get(id string) (*session, error) {
 	m.mu.Lock()
 	s := m.live[id]
 	m.mu.Unlock()
-	if s == nil {
+	if s == nil || s.clientless {
 		return nil, fmt.Errorf("run is disconnected")
 	}
 	return s, nil
@@ -1329,6 +1415,9 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 	}
 	if e := s.client.Call(ctx, method, params, &result); e != nil {
 		return e
+	}
+	if s.stopped() {
+		return fmt.Errorf("session stopped during delivery; inspect its retained state")
 	}
 	if result.Turn.ID != "" {
 		s.run.TurnID = result.Turn.ID
@@ -1656,13 +1745,11 @@ func regexpSkillName(s string) bool {
 }
 func (m *Manager) Cleanup(ctx context.Context, id string) error {
 	// Serialize workspace removal against session wake-up and message delivery.
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	s := m.live[id]
-	if s != nil {
-		s.mu.Lock()
-		defer s.mu.Unlock()
+	s, unlock, err := m.lockRun(ctx, id, false)
+	if err != nil {
+		return err
 	}
+	defer unlock()
 	var r domain.Run
 	if e := m.app.Store.Get(ctx, "run", id, &r); e != nil {
 		return e

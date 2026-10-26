@@ -23,7 +23,7 @@ Normal provider reads reuse successful saved query results until expiry or inval
 
 ## Scenarios
 
-- **S10** An observed closed issue or closed/merged PR terminates all started sessions belonging to that source, retires their provider processes and questions, and retains history/workspaces. Reopening the source does not revive terminated sessions.
+- **S10** An observed closed issue or closed/merged PR terminates all started sessions belonging to that source, retires their provider processes and questions, and retains history/workspaces. Reopening the source does not revive terminated sessions. Interrupted or partial termination retries from accepted saved closure even when remote information is fresh, paused or cooling down. An unresponsive provider cannot indefinitely block source retirement or unrelated session operations.
 
 - **S1** Initial import is unread without a New badge; later discoveries receive New.
 - **S2** Pagination and pull-request enrichment preserve content revisions and item history.
@@ -172,6 +172,10 @@ flowchart TD
 - [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestJSONByteSizesPreservePaddingStorageKeysAndBuckets(`; S8. Read-only byte-size projection preserves database-key identity and exact decoded lengths across base64 padding, null and missing bodies; bucket and JSON-path parameters remain bound and stored records stay unchanged.
 - [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestContinuationUsesLiveSourceDespiteWarmGitHubCache(`; S10. A cached open item does not authorize execution after remote closure; preflight fetches live, terminates before workspace/provider creation and updates the cache.
 - [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewHonorsExplicitFullAccess(`; S5. Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSourceTerminationUnblocksProviderAndIndependentOperations(`; S10. An unanswered provider RPC and earlier Start/busy/Cleanup waiter cannot block source termination or independent run lookup; accepted message delivery becomes uncertain without replay, and retired work remains terminal.
+- [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestSavedClosureRetriesBeforeFreshnessCooldownAndPause(`; S10. Cancelled retirement after accepted closure retries from saved source state despite fresh metadata, cooldown or pause, without another provider read.
+- [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestReferenceRefreshDoesNotDecodeRetainedSnapshots(`; S6. Reference candidates project only run identity/status, excluding incompatible immutable skill/profile/prompt/source snapshot fields before decoding.
+- [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestSavedClosureContinuesAfterPartialRetirementFailure(`; S10. Failure retiring one source run still permits another retirement; the returned error remains truthful and a later pass completes remaining source work.
 
 ## Verification and gaps
 

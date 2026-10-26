@@ -11406,9 +11406,9 @@
       "gaps": [
         {
           "version": 1,
-          "id": "gap-ui-question-recovery-01",
+          "id": "gap-ui-w-run-controls-recovery-host-01",
           "kind": "unverified-behavior",
-          "severity": "P2",
+          "severity": "P1",
           "owner": "ui-specification-maintainer",
           "reason": "Native repair and takeover have provider fixtures; the complete installed-host timing and accessibility matrix remains unverified.",
           "next_verification": "Exercise helper timing, keyboard takeover and both native form variants in the installed pilot and record version-bound evidence."

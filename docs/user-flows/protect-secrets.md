@@ -36,7 +36,7 @@ Incoming API diagnostics record call names, bounded safe parameters and processi
 
 Codex plugin management uses literal CLI arguments, bounded output and process-group cancellation. Credential-bearing marketplace URLs and selector/option injection are rejected. Arbitrary provider stdout/stderr is never copied into operation errors or journal entries; generic status preserves uncertain outcomes without replay. Existing Codex/GitHub authentication is reused without readback.
 
-- **S6** The private owner dependency API requires the owner bearer credential and is absent from the public connection and embedded browser access. It rejects browser origins, ambiguous or unknown request fields and unsafe GitHub skill sources. Upgrades retain authentication and exclude credentials or arbitrary command output from status. Download verification, private backups and local-edit checks constrain replacement; interrupted maintenance never supplies successful evidence or automatically repeats external changes.
+- **S6** The private owner dependency API requires the owner bearer credential and is absent from the public connection and embedded browser access. It rejects browser origins, ambiguous or unknown request fields and unsafe GitHub skill sources. Upgrades retain authentication and exclude credentials or arbitrary command output from status. Download verification, private backups and checks for edits after a recorded baseline constrain replacement. Automatic standalone-skill lock import may still adopt and replace earlier edits; the ambiguous-baseline adoption repair is excluded throughout this PR. Other dependency safeguards remain required; interrupted maintenance never supplies successful evidence or automatically repeats external changes.
 
 - **S5** Bounded command execution cannot read unrelated owner files or change shared authentication and skill settings. Existing GitHub and native Codex authentication and host registry metadata are readable only where needed. Shared credential stores remain read-only and are not copied into scratch or logs. Refreshable private review indexes use isolated per-run copies; scratch paths and native permission configuration contain no exported credentials. Network permission is independent of filesystem writes. Existing publishing and approval authority remains in effect. An explicit owner full-access profile intentionally omits those bounded execution gates; browser transport authentication and credential handling remain unchanged.
 
@@ -81,7 +81,7 @@ flowchart TD
     N8 -->|"invalid policy#59; fail before provider launch"| N9
     N0 -->|"explicit owner dependency maintenance"| N10
     N10 -->|"authorized idle operation and verified changes"| N11
-    N10 -->|"unauthorized, active work, local edits, failed probe or interruption"| N12
+    N10 -->|"unauthorized, active work, edits after baseline, failed probe or interruption"| N12
     N0 -->|"incoming MCP or private owner API call"| N13
     N13 -->|"safe bounded record appended#59; rotate older entries"| N14
     N13 -->|"unsafe path or log write failure"| N15
@@ -122,7 +122,7 @@ flowchart TD
 - [internal/app/sandbox.go](../../internal/app/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/codex/sandbox.go](../../internal/codex/sandbox.go) — Invocation-local native filesystem and destination policy; isolated writable scratch and private skill indexes without global configuration changes.
 - [internal/app/dependencies.go](../../internal/app/dependencies.go) — Serialize identified dependency jobs; stage and probe Codex before activation, update registered plugins and retain uncertain outcomes. (`func (m *Manager) UpdateDependencies(`)
-- [internal/app/dependency_skills.go](../../internal/app/dependency_skills.go) — Register known GitHub origins; pin downloads, detect local edits, retain backups and atomically exchange skill directories. (`func (m *Manager) RegisterGitHubSkill(`)
+- [internal/app/dependency_skills.go](../../internal/app/dependency_skills.go) — Register GitHub origins, detect edits after the recorded baseline, retain backups and atomically exchange pinned skill directories. Automatic lock import can adopt earlier edits; the ambiguous-baseline repair is excluded throughout this PR. (`func (m *Manager) RegisterGitHubSkill(`)
 - [internal/app/dependency_migration.go](../../internal/app/dependency_migration.go) — Explicitly migrate canonical legacy DK skill duplicates, rebind profiles and recover archived referenced paths after interruption. (`func (m *Manager) migrateLegacyDKSkills(`)
 - [internal/dependencies/codex.go](../../internal/dependencies/codex.go) — Verify stable dkropachev/codex fork release asset SHA256 and retain full CLI/companion package layout before probing. (`func StageCodex(`)
 - [internal/dependencies/files.go](../../internal/dependencies/files.go) — Bound archives and reject traversal, links, duplicate files and special entries; fingerprint installed content. (`func Extract(`)

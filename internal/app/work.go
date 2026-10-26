@@ -190,14 +190,28 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	runs, err := store.List[domain.Run](ctx, a.Store, "run")
+	runs, err := store.ListWithout[struct{ ID, ItemID, Status string }](ctx, a.Store, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
 	if err != nil {
 		return err
 	}
 	tracked := map[string]bool{}
+	retirement := map[string]bool{}
 	for _, r := range runs {
 		if r.Status != "prepared" {
 			tracked[r.ItemID] = true
+			if r.Status != "cleaned" && r.Status != "terminated" {
+				retirement[r.ItemID] = true
+			}
+		}
+	}
+	// Accepted source closure is a local retirement obligation, even while
+	// remote metadata is fresh, cooling down or paused after an interrupted pass.
+	for id := range retirement {
+		var saved domain.Item
+		if a.Runs != nil && a.Store.Get(ctx, "item", id, &saved) == nil && closedWork(saved) {
+			if err := a.Runs.stopClosedItem(ctx, saved); err != nil {
+				return err
+			}
 		}
 	}
 	focuses, err := store.List[detailFocus](ctx, a.Store, "github-detail-focus")

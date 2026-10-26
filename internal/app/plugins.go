@@ -101,21 +101,20 @@ func (m *Manager) PluginAction(ctx context.Context, in PluginAction) (domain.Plu
 	if !m.adminGate.TryLock() {
 		return op, fmt.Errorf("agent or plugin activity is in progress; wait until inactive before maintenance")
 	}
+	for _, s := range m.sessions() {
+		s.mu.Lock()
+		busy := activeDependencyRun(s.run.Status)
+		s.mu.Unlock()
+		if busy {
+			m.adminGate.Unlock()
+			return op, fmt.Errorf("wait for active agent work before plugin maintenance")
+		}
+	}
 	m.mu.Lock()
 	if m.closing || m.ctx.Err() != nil {
 		m.mu.Unlock()
 		m.adminGate.Unlock()
 		return op, fmt.Errorf("daemon is stopping")
-	}
-	for _, s := range m.live {
-		s.mu.Lock()
-		busy := s.run.Status == "queued" || s.run.Status == "starting" || s.run.Status == "running" || s.run.Status == "waiting"
-		s.mu.Unlock()
-		if busy {
-			m.mu.Unlock()
-			m.adminGate.Unlock()
-			return op, fmt.Errorf("wait for active agent work before plugin maintenance")
-		}
 	}
 	op = domain.PluginOperation{ID: ID(), Action: in.Action, Target: in.Target, Status: "queued", Created: time.Now().UTC()}
 	if err := m.app.Store.Put(ctx, "plugin-operation", op.ID, op, "plugin.operation"); err != nil {

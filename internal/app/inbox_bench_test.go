@@ -88,4 +88,13 @@ func BenchmarkInboxRetainedHistory(b *testing.B) {
 			}
 		})
 	}
+	b.Run("dashboard-attention", func(b *testing.B) {
+		b.ReportAllocs()
+		for n := 0; n < b.N; n++ {
+			page, err := a.ListAttention(ctx, AttentionInput{Limit: 1})
+			if err != nil || len(page.Requests) != 0 {
+				b.Fatal("unexpected attention from unrelated retained histories", page, err)
+			}
+		}
+	})
 }

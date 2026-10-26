@@ -1,6 +1,7 @@
 package app
 
 import (
+	"codefactory/internal/codex"
 	"codefactory/internal/domain"
 	"codefactory/internal/providers"
 	"codefactory/internal/store"
@@ -13,8 +14,231 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
+
+func TestClientlessCleanupSerializesWakeWithoutBlockingManager(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "hold")
+	a, ctx := fixture(t)
+	run := prepareRun(t, a, ctx)
+	if err := a.Runs.workspace(ctx, run); err != nil {
+		t.Fatal(err)
+	}
+	run.Status, run.ThreadID = "idle", "retained-thread"
+	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
+		t.Fatal(err)
+	}
+	entered, release := make(chan struct{}), make(chan struct{})
+	var once sync.Once
+	unblock := func() { once.Do(func() { close(release) }) }
+	writer := make(chan error, 1)
+	go func() { writer <- a.Store.Write(ctx, func(*store.Tx) error { close(entered); <-release; return nil }) }()
+	defer unblock()
+	select {
+	case <-entered:
+	case <-time.After(time.Second):
+		t.Fatal("controlled store writer did not enter")
+	}
+	cleaned := make(chan error, 1)
+	go func() { cleaned <- a.Runs.Cleanup(ctx, run.ID) }()
+	waitFor(t, func() bool {
+		a.Runs.mu.Lock()
+		s := a.Runs.live[run.ID]
+		a.Runs.mu.Unlock()
+		if s == nil {
+			return false
+		}
+		if s.mu.TryLock() {
+			s.mu.Unlock()
+			return false
+		}
+		return true
+	})
+	wake := make(chan error, 1)
+	go func() { _, err := a.Runs.Start(ctx, run.ID, true); wake <- err }()
+	independent := make(chan struct{})
+	go func() { _, _ = a.Runs.get("another-run"); close(independent) }()
+	select {
+	case <-independent:
+	case <-time.After(time.Second):
+		t.Fatal("clientless cleanup held the manager during store I/O")
+	}
+	unblock()
+	select {
+	case err := <-writer:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("controlled writer did not finish")
+	}
+	select {
+	case err := <-cleaned:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("clientless cleanup did not finish")
+	}
+	select {
+	case err := <-wake:
+		if err == nil {
+			t.Fatal("wake raced workspace removal")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("wake remained blocked after cleanup")
+	}
+	_ = a.Store.Get(ctx, "run", run.ID, &run)
+	if run.Status != "cleaned" || run.ThreadID != "retained-thread" {
+		t.Fatal("cleanup lost retained history or allowed resurrection", run.Status)
+	}
+	if _, unlock, err := a.Runs.lockRun(ctx, "missing-run", false); err == nil {
+		unlock()
+		t.Fatal("invalid run acquired an owner")
+	}
+	if _, err := a.Runs.get("missing-run"); err == nil {
+		t.Fatal("invalid run leaked a clientless owner")
+	}
+}
+
+func blockFakeRPC(t *testing.T, method string) (string, func()) {
+	t.Helper()
+	dir := t.TempDir()
+	entered, release := filepath.Join(dir, "entered"), filepath.Join(dir, "release")
+	t.Setenv("CF_FAKE_BLOCK_RPC", method)
+	t.Setenv("CF_FAKE_RPC_ENTERED", entered)
+	t.Setenv("CF_FAKE_RPC_RELEASE", release)
+	return entered, func() {
+		if err := os.WriteFile(release, nil, 0600); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
+func TestSourceTerminationUnblocksProviderAndIndependentOperations(t *testing.T) {
+	for _, waiter := range []string{"start", "busy", "cleanup"} {
+		t.Run(waiter, func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", "hold")
+			entered, release := blockFakeRPC(t, "turn/steer")
+			a, ctx := fixture(t)
+			defer release()
+			run := prepareRun(t, a, ctx)
+			if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool {
+				_ = a.Store.Get(ctx, "run", run.ID, &run)
+				return run.Status == "running" && run.TurnID != ""
+			})
+			live, err := a.Runs.get(run.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			select {
+			case <-live.started:
+			case <-time.After(time.Second):
+				t.Fatal("initial turn acknowledgement did not finish")
+			}
+			if err := os.WriteFile(filepath.Join(run.Worktree, "unsaved.txt"), []byte("retained"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := a.Runs.QueueMessage(ctx, run.ID, "saved owner clarification", run.TurnID); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool { _, err := os.Stat(entered); return err == nil })
+			operation := make(chan struct{})
+			started := make(chan struct{})
+			go func() {
+				close(started)
+				switch waiter {
+				case "start":
+					_, _ = a.Runs.Start(ctx, run.ID, true)
+				case "busy":
+					_ = a.Runs.busy()
+				case "cleanup":
+					_ = a.Runs.Cleanup(ctx, run.ID)
+				}
+				close(operation)
+			}()
+			select {
+			case <-started:
+			case <-time.After(time.Second):
+				t.Fatal("queued session operation did not enter")
+			}
+			independent := make(chan struct{})
+			go func() { _, _ = a.Runs.get("another-session"); close(independent) }()
+			select {
+			case <-independent:
+			case <-time.After(time.Second):
+				t.Fatal("blocked provider held the global manager lock")
+			}
+			limited, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+			done := make(chan error, 1)
+			go func() { done <- a.Runs.terminateRun(limited, run.ID, "source closed") }()
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Fatal(err)
+				}
+			case <-time.After(2 * time.Second):
+				t.Fatal("termination waited for withheld provider acknowledgement")
+			}
+			select {
+			case <-operation:
+			case <-time.After(time.Second):
+				t.Fatal("queued session operation did not finish after termination")
+			}
+			waitFor(t, func() bool {
+				delivery, _ := a.MessageDelivery(ctx, run.ID)
+				return delivery != nil && delivery.State == "uncertain"
+			})
+			if err := a.Runs.Recover(ctx); err != nil {
+				t.Fatal(err)
+			}
+			_ = a.Store.Get(ctx, "run", run.ID, &run)
+			if run.Status != "terminated" || run.ResumePending {
+				t.Fatal("delivery or recovery resurrected terminated work", run.Status)
+			}
+		})
+	}
+}
+
+func TestTerminatedLaunchCannotPublishLateProviderResult(t *testing.T) {
+	for _, method := range []string{"thread/start", "turn/start"} {
+		t.Run(method, func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", "hold")
+			entered, release := blockFakeRPC(t, method)
+			a, ctx := fixture(t)
+			defer release()
+			run := prepareRun(t, a, ctx)
+			if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool { _, err := os.Stat(entered); return err == nil })
+			live, err := a.Runs.get(run.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := a.Runs.terminateRun(ctx, run.ID, "source closed during launch"); err != nil {
+				t.Fatal(err)
+			}
+			release()
+			select {
+			case <-live.started:
+			case <-time.After(time.Second):
+				t.Fatal("cancelled launch did not finish")
+			}
+			a.Runs.onMessage(live, codex.Message{Method: "turn/completed", Params: raw(map[string]any{"turn": map[string]string{"id": "late", "status": "completed"}})})
+			_ = a.Store.Get(ctx, "run", run.ID, &run)
+			if run.Status != "terminated" || run.TurnID != "" || run.ResumePending {
+				t.Fatal("late launch result overwrote terminal state", run.Status)
+			}
+		})
+	}
+}
 
 func currentItemProvider(t *testing.T, a *App, body string, status int) {
 	t.Helper()
@@ -23,6 +247,12 @@ func currentItemProvider(t *testing.T, a *App, body string, status int) {
 			t.Error("preflight mutated GitHub", r.Method)
 		}
 		w.WriteHeader(status)
+		if r.URL.Path == "/user" {
+			var viewer domain.GitHubViewer
+			_ = a.Store.Get(r.Context(), "identity", "github", &viewer)
+			_ = json.NewEncoder(w).Encode(map[string]string{"login": viewer.Login})
+			return
+		}
 		fmt.Fprint(w, body)
 	}))
 	t.Cleanup(server.Close)

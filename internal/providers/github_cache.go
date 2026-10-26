@@ -191,7 +191,7 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 		}
 	}
 	// Composite reads can exceed the per-entry bound; return their live data
-	// without making an unbounded persistent or memory allocation for the cache.
+	// without retaining the oversized serialized result in either cache.
 	if len(body) > 64<<20 {
 		return nil
 	}

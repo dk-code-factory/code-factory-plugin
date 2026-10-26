@@ -167,6 +167,8 @@ flowchart TD
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(`; S1. Partial acknowledgement retires only Q1, retains actionable Q2 and permits its answer; full same-run acknowledged completion clears the group; unrelated continuation preserves both.
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(`; S1. Other-run review completion, forged quotes/IDs, reversed evidence order and an intervening run turn cannot retire the original requests.
 - [internal/app/attention_reconciliation_test.go](../../internal/app/attention_reconciliation_test.go) — `func TestAttentionReconciliationHelperFailureRetainsQuestions(`; S1. An invalid helper decision leaves both original requests pending after delivery and continuation.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestClientlessCleanupSerializesWakeWithoutBlockingManager(`; S2, S3. A real-store blocked cleanup serializes the same run's wake without blocking independent manager lookup; invalid IDs create no bookkeeping owner and disconnected attachment semantics remain.
+- [internal/app/continuation_test.go](../../internal/app/continuation_test.go) — `func TestSourceTerminationUnblocksProviderAndIndependentOperations(`; S6. An unanswered provider RPC and earlier Start/busy/Cleanup waiter cannot block source termination or independent run lookup; accepted message delivery becomes uncertain without replay, and retired work remains terminal.
 
 ## Verification and gaps
 

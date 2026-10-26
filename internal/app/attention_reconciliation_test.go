@@ -141,15 +141,52 @@ func TestAttentionReconciliationPreservesUnprovenOrOtherRunRequests(t *testing.T
 			t.Fatal("unproven decision accepted")
 		}
 	}
-	changed := r
-	changed.Status = "running"
-	changed.TurnID = "new-turn"
-	if err := a.Store.Put(ctx, "run", r.ID, changed, ""); err != nil {
+	// Journal the owning conversation so version validation succeeds and only
+	// the changed run snapshot can reject this otherwise valid inference.
+	for n := range evidence {
+		e := evidence[n]
+		kind := "agentMessage"
+		if e.Role == "user" {
+			kind = "userMessage"
+		}
+		if err := a.Store.Write(ctx, func(tx *store.Tx) error {
+			return tx.Event("run.output", r.ID, map[string]any{"method": "item/completed", "params": map[string]any{"item": map[string]any{"type": kind, "text": e.Text}}})
+		}); err != nil {
+			t.Fatal(err)
+		}
+		evidence[n].Seq = a.Store.Latest(ctx)
+	}
+	d := attentionDecision{QuestionID: "q1", Status: "resolved", UserEvent: evidence[0].Seq, AgentEvent: evidence[1].Seq, UserQuote: evidence[0].Text, AgentQuote: evidence[1].Text}
+	for _, change := range []string{"status", "turn"} {
+		t.Run("stale-"+change, func(t *testing.T) {
+			changed := r
+			if change == "status" {
+				changed.Status = "running"
+			} else {
+				changed.TurnID = "new-turn"
+			}
+			if err := a.Store.Put(ctx, "run", r.ID, changed, ""); err != nil {
+				t.Fatal(err)
+			}
+			if err := a.Runs.applyAttentionDecisions(ctx, r, at, evidence, []attentionDecision{d}); err == nil {
+				t.Fatal("stale inference overwrote changed run", change)
+			}
+			if err := a.Store.Get(ctx, "attention", at.ID, &current); err != nil {
+				t.Fatal(err)
+			}
+			if current.Status != "pending" || len(current.Resolutions) != 0 || string(current.Params) != string(at.Params) {
+				t.Fatal("stale inference changed pending questions", current)
+			}
+		})
+	}
+	if err := a.Store.Put(ctx, "run", r.ID, r, ""); err != nil {
 		t.Fatal(err)
 	}
-	d := attentionDecision{QuestionID: "q1", Status: "resolved", UserEvent: 1, AgentEvent: 2, UserQuote: "Use stable IDs", AgentQuote: "Decision accepted"}
-	if err := a.Runs.applyAttentionDecisions(ctx, r, at, evidence, []attentionDecision{d}); err == nil {
-		t.Fatal("stale inference overwrote a new turn")
+	if err := a.Runs.applyAttentionDecisions(ctx, r, at, evidence, []attentionDecision{d}); err != nil {
+		t.Fatal("unchanged owning conversation rejected", err)
+	}
+	if err := a.Store.Get(ctx, "attention", at.ID, &current); err != nil || current.Status != "resolved" || len(current.Resolutions) != 1 || current.Resolutions[0].QuestionID != "q1" {
+		t.Fatal("valid owning conversation did not settle its question", current, err)
 	}
 }
 

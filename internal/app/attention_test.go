@@ -17,6 +17,12 @@ func TestAttentionQueueFiltersAndPaginatesWithoutSkippingResolvedRequests(t *tes
 			t.Fatal(err)
 		}
 	}
+	// Retained work without a pending question does not own this read. Even an
+	// unrelated invalid summary must not force run-history decoding on dashboard
+	// reads or on filtered queue pages.
+	if err := a.Store.Put(ctx, "run", "unrelated-history", map[string]any{"id": "unrelated-history", "status": map[string]string{"legacy": "unreadable"}}, ""); err != nil {
+		t.Fatal(err)
+	}
 	requests := []domain.Attention{
 		{ID: "a", RunID: "waiting", Status: "pending", Blocking: true, RequestID: json.RawMessage(`7`), Method: questionMethod, Params: raw(map[string]any{"questions": []question{{ID: "scope", Question: "Which scope?", Options: []questionOption{{Label: "Focused"}}}}})},
 		{ID: "b", RunID: "running", Status: "pending", Blocking: false, Method: "item/commandExecution/requestApproval"},
@@ -68,7 +74,19 @@ func TestAttentionQueueFiltersAndPaginatesWithoutSkippingResolvedRequests(t *tes
 	if err != nil || len(filtered.Requests) != 1 || filtered.Requests[0].Request.ID != "c" {
 		t.Fatal("retained question cannot be discovered", filtered, err)
 	}
-	empty, err := a.ListAttention(ctx, AttentionInput{RunID: "missing"})
+	filtered, err = a.ListAttention(ctx, AttentionInput{ItemID: "pilot/repo#1", Limit: 1})
+	if err != nil || len(filtered.Requests) != 1 || filtered.Requests[0].Request.ID != "b" || filtered.NextCursor == "" {
+		t.Fatal("item-filtered queue changed pending ownership or pagination", filtered, err)
+	}
+	next, err = a.ListAttention(ctx, AttentionInput{ItemID: "pilot/repo#1", Cursor: filtered.NextCursor})
+	if err != nil || len(next.Requests) != 2 || next.Requests[0].Request.ID != "c" || next.Requests[1].Request.ID != "d" {
+		t.Fatal("item-filtered continuation skipped pending requests", next, err)
+	}
+	empty, err := a.ListAttention(ctx, AttentionInput{ItemID: "other/repo#1"})
+	if err != nil || len(empty.Requests) != 0 {
+		t.Fatal("item filter leaked another item's questions", empty, err)
+	}
+	empty, err = a.ListAttention(ctx, AttentionInput{RunID: "missing"})
 	if err != nil || empty.Requests == nil || len(empty.Requests) != 0 {
 		t.Fatal("empty queue must be an explicit array", empty, err)
 	}

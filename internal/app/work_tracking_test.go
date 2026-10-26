@@ -3,6 +3,7 @@ package app
 import (
 	"codefactory/internal/domain"
 	"codefactory/internal/providers"
+	"codefactory/internal/store"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,9 +11,170 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 )
+
+type closureRefreshSource struct {
+	providers.GitHubSource
+	item  domain.Item
+	calls atomic.Int32
+}
+
+func (p *closureRefreshSource) PullRequest(context.Context, string, int) (domain.Item, error) {
+	p.calls.Add(1)
+	return p.item, nil
+}
+
+func TestSavedClosureRetriesBeforeFreshnessCooldownAndPause(t *testing.T) {
+	for _, mode := range []string{"fresh", "cooldown", "paused"} {
+		t.Run(mode, func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			t.Setenv("CF_FAKE_MODE", "hold")
+			ctx := a.Runs.ctx
+			run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+				t.Fatal(err)
+			}
+			waitFor(t, func() bool {
+				_ = a.Store.Get(ctx, "run", run.ID, &run)
+				return run.Status == "running" && run.TurnID != ""
+			})
+			pr.State = "closed"
+			pr.PR = &domain.PullRequest{ID: pr.ID, State: "closed", SyncedAt: time.Now()}
+			links, _ := store.List[domain.Relationship](ctx, a.Store, "relationship")
+			if err := a.Store.Write(ctx, func(tx *store.Tx) error {
+				for _, link := range links {
+					if err := tx.Delete("relationship", link.ID); err != nil {
+						return err
+					}
+				}
+				return nil
+			}); err != nil {
+				t.Fatal(err)
+			}
+			source := &closureRefreshSource{GitHubSource: a.GitHub, item: pr}
+			a.GitHub = source
+			live, _ := a.Runs.get(run.ID)
+			live.mu.Lock()
+			locked := true
+			defer func() {
+				if locked {
+					live.mu.Unlock()
+				}
+			}()
+			limited, cancel := context.WithCancel(ctx)
+			defer cancel()
+			done := make(chan error, 1)
+			go func() { done <- a.RefreshPullRequests(limited) }()
+			waitFor(t, func() bool {
+				var saved domain.Item
+				return a.Store.Get(ctx, "item", pr.ID, &saved) == nil && saved.State == "closed"
+			})
+			cancel()
+			live.mu.Unlock()
+			locked = false
+			select {
+			case err := <-done:
+				if err == nil {
+					t.Fatal("cancelled retirement reported success")
+				}
+			case <-time.After(time.Second):
+				t.Fatal("cancelled refresh did not finish")
+			}
+			var saved domain.Item
+			_ = a.Store.Get(ctx, "item", pr.ID, &saved)
+			if mode == "cooldown" {
+				saved.PR.RetryAt = time.Now().Add(time.Hour)
+				if err := a.Store.Put(ctx, "item", pr.ID, saved, ""); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if mode == "paused" {
+				var repo domain.Repository
+				_ = a.Store.Get(ctx, "repository", pr.Repository, &repo)
+				repo.Paused = true
+				if err := a.SaveRepository(ctx, repo); err != nil {
+					t.Fatal(err)
+				}
+			}
+			// A second source session has not yet been retired by the cancelled pass.
+			second := run
+			second.ID = "remaining-source-session"
+			if err := a.Store.Put(ctx, "run", second.ID, second, ""); err != nil {
+				t.Fatal(err)
+			}
+			if err := a.RefreshPullRequests(ctx); err != nil {
+				t.Fatal(err)
+			}
+			for _, id := range []string{run.ID, second.ID} {
+				var current domain.Run
+				_ = a.Store.Get(ctx, "run", id, &current)
+				if current.Status != "terminated" || current.ResumePending {
+					t.Fatal("saved closure retirement was skipped", mode, id, current.Status)
+				}
+			}
+			if source.calls.Load() != 1 {
+				t.Fatal("local retirement retried the remote read", source.calls.Load())
+			}
+		})
+	}
+}
+
+func TestReferenceRefreshDoesNotDecodeRetainedSnapshots(t *testing.T) {
+	a, ctx := fixture(t)
+	// Candidate fields are valid while irrelevant private snapshot fields are
+	// deliberately incompatible with Run. Routine polling must not decode them.
+	row := json.RawMessage(`{"id":"retained","itemId":"owner/repo#1","status":"idle","skills":{},"profile":"private","prompt":{},"reviewPromptSnapshot":[],"sourceSnapshot":"private"}`)
+	if err := a.Store.Put(ctx, "run", "retained", row, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.RefreshPullRequests(ctx); err != nil {
+		t.Fatal("reference polling decoded irrelevant retained snapshots", err)
+	}
+	// Normal retained-run reads still reject the malformed snapshot; this is
+	// projection for candidate selection, not relaxed persistence validation.
+	if _, err := store.List[domain.Run](ctx, a.Store, "run"); err == nil {
+		t.Fatal("probe no longer distinguishes projected and full run reads")
+	}
+}
+
+func TestSavedClosureContinuesAfterPartialRetirementFailure(t *testing.T) {
+	a, ctx := fixture(t)
+	pr := item()
+	pr.Kind, pr.State = "pr", "closed"
+	if err := a.Store.Put(ctx, "item", pr.ID, pr, ""); err != nil {
+		t.Fatal(err)
+	}
+	bad := json.RawMessage(fmt.Sprintf(`{"id":"a-bad","itemId":%q,"status":"running","profile":"unreadable snapshot"}`, pr.ID))
+	if err := a.Store.Put(ctx, "run", "a-bad", bad, ""); err != nil {
+		t.Fatal(err)
+	}
+	good := domain.Run{ID: "z-good", ItemID: pr.ID, Status: "running"}
+	if err := a.Store.Put(ctx, "run", good.ID, good, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.stopClosedItem(ctx, pr); err == nil {
+		t.Fatal("partial retirement failure was hidden")
+	}
+	if err := a.Store.Get(ctx, "run", good.ID, &good); err != nil || good.Status != "terminated" {
+		t.Fatal("earlier failure prevented another source session retirement", good.Status, err)
+	}
+	repaired := domain.Run{ID: "a-bad", ItemID: pr.ID, Status: "running"}
+	if err := a.Store.Put(ctx, "run", repaired.ID, repaired, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.stopClosedItem(ctx, pr); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Store.Get(ctx, "run", repaired.ID, &repaired); err != nil || repaired.Status != "terminated" {
+		t.Fatal("retry did not finish remaining source session", repaired.Status, err)
+	}
+}
 
 func TestRefreshPullRequestsTerminatesOnlyClosedSourceSessions(t *testing.T) {
 	for _, merged := range []bool{false, true} {

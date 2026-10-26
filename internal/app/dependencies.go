@@ -138,14 +138,14 @@ func (m *Manager) UpdateDependencies(ctx context.Context, in DependencyRequest) 
 	if !m.adminGate.TryLock() {
 		return previous, ErrMaintenanceBusy
 	}
-	m.mu.Lock()
-	busy := m.closing || m.ctx.Err() != nil
-	for _, s := range m.live {
+	busy := false
+	for _, s := range m.sessions() {
 		s.mu.Lock()
 		busy = busy || activeDependencyRun(s.run.Status)
 		s.mu.Unlock()
 	}
-	if busy {
+	m.mu.Lock()
+	if busy || m.closing || m.ctx.Err() != nil {
 		m.mu.Unlock()
 		m.adminGate.Unlock()
 		return previous, ErrMaintenanceBusy

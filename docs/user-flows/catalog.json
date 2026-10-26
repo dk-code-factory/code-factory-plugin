@@ -1702,6 +1702,38 @@
             "S5"
           ],
           "purpose": "Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestSourceTerminationUnblocksProviderAndIndependentOperations(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "An unanswered provider RPC and earlier Start/busy/Cleanup waiter cannot block source termination or independent run lookup; accepted message delivery becomes uncertain without replay, and retired work remains terminal."
+        },
+        {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestSavedClosureRetriesBeforeFreshnessCooldownAndPause(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Cancelled retirement after accepted closure retries from saved source state despite fresh metadata, cooldown or pause, without another provider read."
+        },
+        {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestReferenceRefreshDoesNotDecodeRetainedSnapshots(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Reference candidates project only run identity/status, excluding incompatible immutable skill/profile/prompt/source snapshot fields before decoding."
+        },
+        {
+          "path": "internal/app/work_tracking_test.go",
+          "anchor": "func TestSavedClosureContinuesAfterPartialRetirementFailure(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Failure retiring one source run still permits another retirement; the returned error remains truthful and a later pass completes remaining source work."
         }
       ],
       "suites": [
@@ -2364,7 +2396,7 @@
           "scenarios": [
             "S3"
           ],
-          "purpose": "Synthetic retained-history benchmark at452items/1372links/265externalPRs/27large skill snapshots. Measures full and compact latency/allocations; no user data or provider calls and no flaky timing pass threshold."
+          "purpose": "Synthetic retained-history fixture at452items/1372links/265externalPRs/27large skill snapshots measures full/compact reads plus dashboard attention lookup latency and allocations. No user data, provider calls or timing pass threshold."
         },
         {
           "path": "internal/app/tracking_test.go",
@@ -3851,6 +3883,58 @@
             "S8"
           ],
           "purpose": "Execution preflight bypasses a warm query cache and stops a newly closed source before provider/workspace creation."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestTerminatedLaunchCannotPublishLateProviderResult(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Termination while thread/start or turn/start is withheld rejects late provider results and completed callbacks without reviving terminal work."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestReviewStartUsesActiveGitHubPrincipal(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "A review prepared under a different account cannot execute after switching to its author's active account, including warm caches; failed identity/scope checks leave no workspace or provider."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestReviewExecutionRechecksPrincipalAfterStart(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Active-account changes during source and principal validation fail before provider creation rather than trusting the saved singleton login."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestReviewExecutionReadsFreshPrincipalWithoutSavedLogin(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Managed execution uses the active principal even without a saved login and never falls back to old singleton evidence."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestReviewStartReturnsWhileActiveIdentityReadIsBlocked(",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "Start returns queued while a controlled User request is blocked; no workspace exists until asynchronous current-principal validation completes."
+        },
+        {
+          "path": "internal/app/review_eligibility_test.go",
+          "anchor": "func TestNonReviewPreparationAndStartDoNotReadPrincipal(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Preparation remains saved-state only and explicit nonreview Start makes no User call while retaining its existing source check."
         }
       ],
       "suites": [
@@ -5285,7 +5369,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Queue includes live RPC and retained text/message asks; excludes answered/stale/orphaned/prepared/cleaned requests, preserves options and blocking status, strips unrelated run content, validates cursors/limits and never skips asks when a preceding page is resolved."
+          "purpose": "Queue reads only pending-request owners, so unrelated retained run snapshots cannot affect lookup work. Preserves live and retained asks, orphan/status filtering, options/blocking privacy and RunID/ItemID-bound pagination even after preceding requests resolve."
         },
         {
           "path": "internal/transport/attention_test.go",
@@ -5441,6 +5525,14 @@
             "S4"
           ],
           "purpose": "A missing recovery record rolls back both the encrypted answer and native answer claim, leaving the unanswered request visible and answerable."
+        },
+        {
+          "path": "internal/app/attention_test.go",
+          "anchor": "func TestAttentionQueueFiltersAndPaginatesWithoutSkippingResolvedRequests(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Queue includes live RPC and retained text/message asks; excludes answered/stale/orphaned/prepared/cleaned requests, preserves options and blocking status, strips unrelated run content, validates cursors/limits and never skips asks when a preceding page is resolved."
         },
         {
           "path": "internal/app/app_test.go",
@@ -6757,6 +6849,23 @@
             "S1"
           ],
           "purpose": "An invalid helper decision leaves both original requests pending after delivery and continuation."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestClientlessCleanupSerializesWakeWithoutBlockingManager(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "A real-store blocked cleanup serializes the same run's wake without blocking independent manager lookup; invalid IDs create no bookkeeping owner and disconnected attachment semantics remain."
+        },
+        {
+          "path": "internal/app/continuation_test.go",
+          "anchor": "func TestSourceTerminationUnblocksProviderAndIndependentOperations(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "An unanswered provider RPC and earlier Start/busy/Cleanup waiter cannot block source termination or independent run lookup; accepted message delivery becomes uncertain without replay, and retired work remains terminal."
         },
         {
           "path": "internal/app/app_test.go",
@@ -8253,7 +8362,7 @@
         },
         {
           "path": "internal/app/dependency_skills.go",
-          "purpose": "Register known GitHub origins; pin downloads, detect local edits, retain backups and atomically exchange skill directories.",
+          "purpose": "Register GitHub origins, detect edits after the recorded baseline, retain backups and atomically exchange pinned skill directories. Automatic lock import can adopt earlier edits; the ambiguous-baseline repair is excluded throughout this PR.",
           "anchor": "func (m *Manager) RegisterGitHubSkill("
         },
         {
@@ -8879,7 +8988,7 @@
           {
             "from": "dependency_admin",
             "to": "dependency_preserved",
-            "label": "unauthorized, active work, local edits, failed probe or interruption"
+            "label": "unauthorized, active work, edits after baseline, failed probe or interruption"
           },
           {
             "from": "n0",
@@ -9019,7 +9128,7 @@
         },
         {
           "path": "internal/app/dependency_skills.go",
-          "purpose": "Register known GitHub origins; pin downloads, detect local edits, retain backups and atomically exchange skill directories.",
+          "purpose": "Register GitHub origins, detect edits after the recorded baseline, retain backups and atomically exchange pinned skill directories. Automatic lock import can adopt earlier edits; the ambiguous-baseline repair is excluded throughout this PR.",
           "anchor": "func (m *Manager) RegisterGitHubSkill("
         },
         {
@@ -9468,6 +9577,16 @@
           "owner": "user-flow-maintainer",
           "reason": "The hard-kill fixture covers only the boundary after release activation and before installation commit at the process-backed service-restart gate. Other interruption stages, power-loss or storage-durability failures and recovery through real user systemd remain unverified. The separate returned-failure fixture completes deferred automatic recovery before rollback and does not establish interruption coverage at additional stages.",
           "next_verification": "Extend interruption tests to additional durable-operation boundaries and storage/power-loss failure models; separately verify recovery through real user systemd without broadening the existing single-boundary fixture claim."
+        },
+        {
+          "version": 1,
+          "id": "gap-flow-operate-installation-s5-skill-baseline-01",
+          "scenario": "S5",
+          "kind": "known-limitation",
+          "severity": "P2",
+          "owner": "user-flow-maintainer",
+          "reason": "Automatic standalone-skill lock import records the current local tree as its baseline. First-time or previously imported skills may have earlier local edits replaced. The user explicitly excluded the ambiguous-baseline adoption repair throughout PR3, including later cycles/resumes, preserving registration compatibility.",
+          "next_verification": "No follow-up fix or issue is scheduled. Reconsider this limitation only under separately authorized scope; do not claim existing post-registration edit assertions prove pre-import edit protection."
         }
       ],
       "ui": [
@@ -9637,7 +9756,7 @@
           {
             "from": "dependency_admin",
             "to": "dependency_preserved",
-            "label": "unauthorized, active work, local edits, failed probe or interruption"
+            "label": "unauthorized, active work, edits after baseline, failed probe or interruption"
           },
           {
             "from": "n0",

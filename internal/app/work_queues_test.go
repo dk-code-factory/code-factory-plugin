@@ -186,6 +186,8 @@ func TestFailedPollCannotOverwriteConcurrentRepositoryPolicyChanges(t *testing.T
 	go func() { done <- a.Sync(ctx) }()
 	select {
 	case <-entered:
+	case err := <-done:
+		t.Fatal("provider poll exited before reaching fixture", err)
 	case <-time.After(8 * time.Second):
 		t.Fatal("provider poll did not reach fixture")
 	}
@@ -197,8 +199,13 @@ func TestFailedPollCannotOverwriteConcurrentRepositoryPolicyChanges(t *testing.T
 		t.Fatal(err)
 	}
 	releaseOnce.Do(func() { close(release) })
-	if err := <-done; err != nil {
-		t.Fatal(err)
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("synchronization did not finish after fixture release")
 	}
 	var current domain.Repository
 	_ = a.Store.Get(ctx, "repository", repo.ID, &current)
@@ -246,6 +253,8 @@ func TestSyncImportsOtherRepositoryWhileOneIsBlocked(t *testing.T) {
 	go func() { done <- a.Sync(ctx) }()
 	select {
 	case <-blocked:
+	case err := <-done:
+		t.Fatal("slow sync exited before reaching fixture", err)
 	case <-time.After(5 * time.Second):
 		t.Fatal("slow sync did not enter")
 	}
@@ -266,8 +275,13 @@ func TestSyncImportsOtherRepositoryWhileOneIsBlocked(t *testing.T) {
 		t.Fatal("blocked checkpoint advanced", err)
 	}
 	once.Do(func() { close(release) })
-	if err := <-done; err != nil {
-		t.Fatal(err)
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("synchronization did not finish after fixture release")
 	}
 }
 

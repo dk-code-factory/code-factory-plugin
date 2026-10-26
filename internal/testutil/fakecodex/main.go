@@ -63,6 +63,17 @@ func main() {
 		if json.Unmarshal(scanner.Bytes(), &m) != nil {
 			os.Exit(3)
 		}
+		if method := os.Getenv("CF_FAKE_BLOCK_RPC"); method != "" && m.Method == method {
+			if err := os.WriteFile(os.Getenv("CF_FAKE_RPC_ENTERED"), []byte(method), 0600); err != nil {
+				os.Exit(5)
+			}
+			for {
+				if _, err := os.Stat(os.Getenv("CF_FAKE_RPC_RELEASE")); err == nil {
+					break
+				}
+				time.Sleep(5 * time.Millisecond)
+			}
+		}
 		if path := os.Getenv("CF_FAKE_RECORD"); path != "" && (m.Method == "initialize" || m.Method == "thread/start" || m.Method == "thread/resume" || m.Method == "turn/start") {
 			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 			if err != nil {

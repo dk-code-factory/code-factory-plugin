@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -109,6 +110,7 @@ func TestPostedReviewRefreshCoalescesPostTurnHintsDuringPendingRead(t *testing.T
 	importOne(t, a, ctx, i)
 	entered := make(chan struct{})
 	release := make(chan struct{})
+	unblock := sync.OnceFunc(func() { close(release) })
 	var reads atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/reviews") {
@@ -125,6 +127,7 @@ func TestPostedReviewRefreshCoalescesPostTurnHintsDuringPendingRead(t *testing.T
 		fmt.Fprint(w, `[]`)
 	}))
 	defer server.Close()
+	defer unblock()
 	a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
 	a.GitHub.ConfigureUsage(a.Store, func(context.Context) (providers.GitHubPolicy, error) {
 		return providers.GitHubPolicy{RequestsPerHour: 600}, nil
@@ -136,17 +139,15 @@ func TestPostedReviewRefreshCoalescesPostTurnHintsDuringPendingRead(t *testing.T
 	select {
 	case <-entered:
 	case <-time.After(time.Second):
-		close(release)
 		t.Fatal("no background read")
 	}
 	for n := 0; n < 10; n++ {
 		a.queueReviewsAfterTurn(i.ID)
 	}
 	if reads.Load() != 1 {
-		close(release)
 		t.Fatal("pending observation duplicated HTTP work")
 	}
-	close(release)
+	unblock()
 	deadline := time.Now().Add(3 * time.Second)
 	var saved domain.PRReviews
 	for time.Now().Before(deadline) {

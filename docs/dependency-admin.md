@@ -85,7 +85,12 @@ records its current fingerprint. Known GitHub source entries in the skills CLI's
 owner `.skill-lock.json` files are also imported during explicit skill maintenance.
 Unknown/local skills are retained. GitHub updates resolve the requested ref to a
 full commit SHA, fetch that archive through existing gh authentication and check
-the installed fingerprint again. Local edits cause a conflict. Links, traversal,
+the installed fingerprint again. Edits after a recorded baseline cause a conflict.
+Automatic lock import records the current local tree; it cannot distinguish
+earlier local edits from an approved baseline. First-time or previously imported
+skills can therefore have those edits replaced. This PR preserves that behavior
+and excludes the explicit-adoption repair; it schedules no follow-up fix or issue.
+Links, traversal,
 oversized content and native-plugin leaf-only installations are rejected. Regular
 content is backed up and replaced with an atomic Linux directory exchange; changed
 provenance is persisted. A failed provenance write attempts to restore the original.

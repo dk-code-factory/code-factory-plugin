@@ -65,37 +65,35 @@ func (a *App) ListAttention(ctx context.Context, in AttentionInput) (AttentionPa
 			return out, fmt.Errorf("invalid attention cursor for this run filter")
 		}
 	}
-	var runs []domain.Run
+	var requests []domain.Attention
 	var err error
-	paths := []string{"$.skills", "$.prompt", "$.reviewPromptSnapshot", "$.profile.prompt", "$.sourceSnapshot"}
 	if in.RunID != "" {
-		runs, err = store.Select[domain.Run](ctx, a.Store, "run", "id", in.RunID, paths...)
-	} else if in.ItemID != "" {
-		runs, err = store.Select[domain.Run](ctx, a.Store, "run", "itemId", in.ItemID, paths...)
+		requests, err = store.Select[domain.Attention](ctx, a.Store, "attention", "runId", in.RunID)
 	} else {
-		runs, err = store.ListWithout[domain.Run](ctx, a.Store, "run", paths...)
+		requests, err = store.List[domain.Attention](ctx, a.Store, "attention")
 	}
 	if err != nil {
 		return out, err
 	}
-	requests := []domain.Attention{}
-	for _, r := range runs {
-		if in.ItemID != "" && r.ItemID != in.ItemID {
+	paths := []string{"$.skills", "$.prompt", "$.reviewPromptSnapshot", "$.profile.prompt", "$.sourceSnapshot"}
+	byID := map[string]domain.Run{}
+	for _, request := range requests {
+		if request.Status != "pending" {
 			continue
 		}
-		ats, e := store.Select[domain.Attention](ctx, a.Store, "attention", "runId", r.ID)
-		if e != nil {
-			return out, e
+		r, loaded := byID[request.RunID]
+		if !loaded {
+			runs, err := store.Select[domain.Run](ctx, a.Store, "run", "id", request.RunID, paths...)
+			if err != nil {
+				return out, err
+			}
+			if len(runs) != 0 {
+				r = runs[0]
+			}
+			// Remember missing owners too; orphaned requests remain invisible.
+			byID[request.RunID] = r
 		}
-		requests = append(requests, ats...)
-	}
-	byID := map[string]domain.Run{}
-	for _, r := range runs {
-		byID[r.ID] = r
-	}
-	for _, request := range requests {
-		r, ok := byID[request.RunID]
-		if !ok || request.Status != "pending" || in.RunID != "" && r.ID != in.RunID {
+		if r.ID == "" || r.ID != request.RunID || in.ItemID != "" && r.ItemID != in.ItemID {
 			continue
 		}
 		if request.Origin == "async" || request.Origin == "text" {

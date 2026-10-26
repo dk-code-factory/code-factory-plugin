@@ -64,13 +64,14 @@ func (m *Manager) RegisterGitHubSkill(ctx context.Context, s GitHubSkillSource) 
 		return s, ErrMaintenanceBusy
 	}
 	defer m.adminGate.Unlock()
-	m.mu.Lock()
-	busy := m.closing
-	for _, run := range m.live {
+	busy := false
+	for _, run := range m.sessions() {
 		run.mu.Lock()
 		busy = busy || activeDependencyRun(run.run.Status)
 		run.mu.Unlock()
 	}
+	m.mu.Lock()
+	busy = busy || m.closing || m.ctx.Err() != nil
 	m.mu.Unlock()
 	if busy {
 		return s, ErrMaintenanceBusy

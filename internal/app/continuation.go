@@ -35,19 +35,35 @@ func (m *Manager) continuationContext(ctx context.Context, r domain.Run) (*domai
 		return nil, "", fmt.Errorf("current work item is unavailable")
 	}
 	fresh := cached
+	scope := ""
 	if m.app.GitHub != nil && m.app.GitHub.Managed() {
 		bounded, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 		var err error
+		scope, err = m.app.GitHub.CacheScope(bounded)
+		if err != nil {
+			return nil, "", err
+		}
 		fresh, err = m.app.GitHub.CurrentWorkItem(providers.WithGitHubRead(bounded, providers.RequireLive), cached)
 		if err != nil {
 			return nil, "", fmt.Errorf("cannot verify current work item; work remains stopped: %w", err)
 		}
 	}
 	if !closedWork(fresh) {
-		if err := validatePRReviewRun(func(kind, id string, out any) error {
+		principal, currentScope, err := m.activeReviewPrincipal(ctx, r, fresh)
+		if err != nil {
+			return nil, "", err
+		}
+		if principal != nil && currentScope != scope {
+			return nil, "", fmt.Errorf("GitHub identity changed during source validation; refresh before starting")
+		}
+		get := func(kind, id string, out any) error {
 			return m.app.Store.Get(ctx, kind, id, out)
-		}, r, fresh); err != nil {
+		}
+		if m.app.GitHub != nil && m.app.GitHub.Managed() {
+			get = withReviewPrincipal(get, principal)
+		}
+		if err := validatePRReviewRun(get, r, fresh); err != nil {
 			return nil, "", err
 		}
 	}
@@ -77,13 +93,11 @@ func (m *Manager) continuationContext(ctx context.Context, r domain.Run) (*domai
 }
 
 func (m *Manager) terminateRun(ctx context.Context, id, reason string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	s := m.live[id]
-	if s != nil {
-		s.mu.Lock()
-		defer s.mu.Unlock()
+	s, unlock, err := m.lockRun(ctx, id, true)
+	if err != nil {
+		return err
 	}
+	defer unlock()
 	return m.terminateLocked(ctx, id, s, reason)
 }
 
@@ -147,16 +161,19 @@ func (m *Manager) stopClosedItem(ctx context.Context, item domain.Item) error {
 	if !closedWork(item) {
 		return nil
 	}
-	runs, err := store.ListWithout[domain.Run](ctx, m.app.Store, "run", "$.skills", "$.profile", "$.prompt", "$.sourceSnapshot")
+	runs, err := store.Select[domain.Run](ctx, m.app.Store, "run", "itemId", item.ID, "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
 	if err != nil {
 		return err
 	}
+	var firstErr error
 	for _, r := range runs {
 		if r.ItemID == item.ID && r.Status != "prepared" && r.Status != "cleaned" && r.Status != "terminated" {
 			if err := m.terminateRun(ctx, r.ID, strings.ToUpper(item.Kind)+" is "+item.State+"; work terminated. History and workspace are retained."); err != nil {
-				return err
+				if firstErr == nil {
+					firstErr = err
+				}
 			}
 		}
 	}
-	return nil
+	return firstErr
 }
