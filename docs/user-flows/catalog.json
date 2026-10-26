@@ -7051,7 +7051,7 @@
             "S2",
             "S3"
           ],
-          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain. Structured/serialized header pairs and escaped nested MCP text are excluded before all retained/external boundaries, while adjacent fields and complete raw header association survive."
+          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain. Structured/serialized header pairs, X-Api-Key aliases, named header-value records and escaped nested MCP text are excluded before all retained/external boundaries, while adjacent fields and complete raw header association survive. Captured Event.Data and Attention.Params retain the exact large integer JSON token without rounding or conversion to a string."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7204,7 +7204,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "Concurrent publication claims one external create, and interrupted lifecycle preparation cannot replay without explicit reconciliation."
+          "purpose": "Retained Preparing state becomes needs attention without starting an engine; unacknowledged resume fails, and explicit lifecycle reconciliation with a recovery note permits one fresh engine start."
         },
         {
           "path": "internal/reports/service_test.go",

@@ -22,9 +22,9 @@ import (
 	"codefactory/internal/store"
 )
 
-var credentialPattern = regexp.MustCompile(`(?i)(?:["']?(?:access_token|refresh_token|id_token|password|(?:proxy-)?authorization|api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')|["']?(?:proxy-)?authorization["']?\s*[:=]\s*["']?(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:gh[pousr]_[a-z0-9_]+|github_pat_[a-z0-9_]+|sk-[a-z0-9_-]{12,})|(?:["']?(?:access_token|refresh_token|id_token|password|authorization|api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*["']?)[^\s"',}]+`)
-var headerPattern = regexp.MustCompile(`(?i)\b(?:set-cookie|cookie)[ \t]*:[^\r\n]*|\b(?:proxy-)?authorization[ \t]*[:=][^\r\n]*|["'](?:set-cookie|cookie|(?:proxy-)?authorization)["']\s*:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*'|\[(?:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')\s*,?)*\s*\])`)
-var secretKeyPattern = regexp.MustCompile(`(?i)^(access_token|refresh_token|id_token|cookie|set-cookie|password|(?:proxy-)?authorization|api[_-]?key|owner[_-]?token|secret)$`)
+var credentialPattern = regexp.MustCompile(`(?i)(?:["']?(?:access_token|refresh_token|id_token|password|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')|["']?(?:proxy-)?authorization["']?\s*[:=]\s*["']?(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:bearer|basic)\s+[a-z0-9._~+/=-]+|(?:gh[pousr]_[a-z0-9_]+|github_pat_[a-z0-9_]+|sk-[a-z0-9_-]{12,})|(?:["']?(?:access_token|refresh_token|id_token|password|authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|secret)["']?\s*[:=]\s*["']?)[^\s"',}]+`)
+var headerPattern = regexp.MustCompile(`(?i)\b(?:set-cookie|cookie)[ \t]*:[^\r\n]*|\b(?:(?:proxy-)?authorization|(?:x[_-])?api[_-]?key)[ \t]*[:=][^\r\n]*|["'](?:set-cookie|cookie|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key)["']\s*:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*'|\[(?:\s*(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*')\s*,?)*\s*\])`)
+var secretKeyPattern = regexp.MustCompile(`(?i)^(access_token|refresh_token|id_token|cookie|set-cookie|password|(?:proxy-)?authorization|(?:x[_-])?api[_-]?key|owner[_-]?token|secret)$`)
 
 func redactCredentialText(text string) string {
 	return redactCredentialValue(text, 0).(string)
@@ -90,8 +90,17 @@ func redactCredentialValue(v any, depth int) any {
 			x[i] = redactCredentialValue(x[i], depth)
 		}
 	case map[string]any:
+		secretValue := false
+		for key, value := range x {
+			if strings.EqualFold(key, "name") || strings.EqualFold(key, "key") {
+				if name, ok := value.(string); ok && secretKeyPattern.MatchString(name) {
+					secretValue = true
+					break
+				}
+			}
+		}
 		for k, value := range x {
-			if secretKeyPattern.MatchString(k) {
+			if secretKeyPattern.MatchString(k) || secretValue && strings.EqualFold(k, "value") {
 				x[k] = "[redacted]"
 			} else {
 				x[k] = redactCredentialValue(value, depth)
@@ -123,14 +132,18 @@ func (s *Service) sanitize(ctx context.Context, v any) error {
 	}
 	// Redact decoded values, including serialized tool text and header tuples.
 	var tree any
-	if e = json.Unmarshal([]byte(text), &tree); e != nil {
+	decoder := json.NewDecoder(strings.NewReader(text))
+	decoder.UseNumber()
+	if e = decoder.Decode(&tree); e != nil {
 		return e
 	}
 	b, e = json.Marshal(redactCredentialValue(tree, 0))
 	if e != nil {
 		return e
 	}
-	return json.Unmarshal(b, v)
+	decoder = json.NewDecoder(bytes.NewReader(b))
+	decoder.UseNumber()
+	return decoder.Decode(v)
 }
 func privateWrite(path string, data []byte) error {
 	if e := os.MkdirAll(filepath.Dir(path), 0700); e != nil {
