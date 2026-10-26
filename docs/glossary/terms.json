@@ -342,7 +342,7 @@
       "name": "Interrupted",
       "aliases": [],
       "category": "state",
-      "definition": "Active work has stopped and requires explicit continuation."
+      "definition": "Active work has stopped with its session retained for continuation."
     },
     {
       "id": "state-failed",
@@ -2657,17 +2657,21 @@
     },
     {
       "id": "ui-page-inbox",
-      "name": "Inbox page",
-      "aliases": [],
+      "name": "Issues page",
+      "aliases": [
+        "Inbox page"
+      ],
       "category": "ui-page",
-      "definition": "The inbox page within the application interface."
+      "definition": "The issues page within the application interface."
     },
     {
       "id": "ui-page-agents",
-      "name": "Agents page",
-      "aliases": [],
+      "name": "Messages page",
+      "aliases": [
+        "Agents page"
+      ],
       "category": "ui-page",
-      "definition": "The agents page within the application interface."
+      "definition": "The messages page within the application interface."
     },
     {
       "id": "ui-page-settings",
@@ -2961,69 +2965,14 @@
       "name": "Question recovery",
       "aliases": [],
       "category": "domain",
-      "definition": "A bounded effort to recover an unanswered human question while preserving the original task and authority."
-    },
-    {
-      "id": "state-recovering",
-      "name": "Recovering",
-      "aliases": [],
-      "category": "state",
-      "definition": "A pending human question is being checked or restated before task continuation."
-    },
-    {
-      "id": "element-w-run-controls-waiting-icon",
-      "name": "waiting-icon",
-      "aliases": [],
-      "category": "element",
-      "definition": "The decorative clock beside a readable waiting status.",
-      "scope": "ui-w-run-controls"
-    },
-    {
-      "id": "element-w-run-controls-recovery-progress",
-      "name": "recovery-progress",
-      "aliases": [],
-      "category": "element",
-      "definition": "The readable status of question recovery and its bounded attempts.",
-      "scope": "ui-w-run-controls"
-    },
-    {
-      "id": "element-w-run-controls-recovery-icon",
-      "name": "recovery-icon",
-      "aliases": [],
-      "category": "element",
-      "definition": "The decorative circular arrow beside recovery progress.",
-      "scope": "ui-w-run-controls"
-    },
-    {
-      "id": "element-w-run-controls-takeover",
-      "name": "takeover",
-      "aliases": [],
-      "category": "element",
-      "definition": "The control that stops question recovery for owner takeover.",
-      "scope": "ui-w-run-controls"
-    },
-    {
-      "id": "element-w-run-controls-confirmation",
-      "name": "confirmation",
-      "aliases": [],
-      "category": "element",
-      "definition": "The temporary acknowledgement of a successful response in its owning run.",
-      "scope": "ui-w-run-controls"
-    },
-    {
-      "id": "element-w-attention-notice-waiting-icon",
-      "name": "waiting-icon",
-      "aliases": [],
-      "category": "element",
-      "definition": "The decorative clock beside a readable waiting request label.",
-      "scope": "ui-w-attention-notice"
+      "definition": "A bounded dialogue that turns an unresolved textual request for human input into an answerable question."
     },
     {
       "id": "element-w-questions-dismiss",
-      "name": "dismiss",
+      "name": "no-reply",
       "aliases": [],
       "category": "element",
-      "definition": "The control that dismisses a textual question without replying or granting authority.",
+      "definition": "The control dismissing a textual fallback that needs no user answer.",
       "scope": "ui-w-questions"
     },
     {
@@ -3031,22 +2980,15 @@
       "name": "question-helper-model",
       "aliases": [],
       "category": "element",
-      "definition": "The optional model used to check stopped task questions, with an empty value meaning the task model.",
+      "definition": "The optional model used for question recovery.",
       "scope": "ui-w-policy-settings"
     },
     {
-      "id": "ui-c-question-recovery",
-      "name": "Question recovery data connection",
-      "aliases": [],
-      "category": "ui-connection",
-      "definition": "The connection between question recovery progress and its owning question and run."
-    },
-    {
       "id": "ui-c-dismiss-question",
-      "name": "Question dismissal connection",
+      "name": "Text question dismissal connection",
       "aliases": [],
       "category": "ui-connection",
-      "definition": "The local dismissal connection for a textual question."
+      "definition": "The text question dismissal connection within the application interface."
     },
     {
       "id": "issue-report",
@@ -3556,6 +3498,1185 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The transition opening a retained report issue, fix or release through the host."
+    },
+    {
+      "id": "element-w-sync-health-details",
+      "name": "details",
+      "aliases": [],
+      "category": "element",
+      "definition": "The disclosure containing routine repository synchronization times.",
+      "scope": "ui-w-sync-health"
+    },
+    {
+      "id": "element-w-inbox-empty-no-matches",
+      "name": "no-matches",
+      "aliases": [],
+      "category": "element",
+      "definition": "Feedback that the current search and filter have no matching items.",
+      "scope": "ui-w-inbox-empty"
+    },
+    {
+      "id": "element-w-inbox-empty-clear-filters",
+      "name": "clear-filters",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control that resets search and includes all item states.",
+      "scope": "ui-w-inbox-empty"
+    },
+    {
+      "id": "element-w-item-actions-open-agent",
+      "name": "open-agent",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control for continuing the most recent retained agent run for an item.",
+      "scope": "ui-w-item-actions"
+    },
+    {
+      "id": "element-w-priority-save-status",
+      "name": "save-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "Feedback for an immediate priority save or its failure.",
+      "scope": "ui-w-priority"
+    },
+    {
+      "id": "element-w-run-row-draft-launches",
+      "name": "draft-launches",
+      "aliases": [],
+      "category": "element",
+      "definition": "The collapsed group of prepared launches awaiting an explicit start.",
+      "scope": "ui-w-run-row"
+    },
+    {
+      "id": "element-w-run-controls-task-title",
+      "name": "task-title",
+      "aliases": [],
+      "category": "element",
+      "definition": "The title of the work item associated with the selected run.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-details",
+      "name": "details",
+      "aliases": [],
+      "category": "element",
+      "definition": "The disclosure containing workspace location and secondary agent actions.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-run-controls-cleanup-effect",
+      "name": "cleanup-effect",
+      "aliases": [],
+      "category": "element",
+      "definition": "An explanation that cleanup retires the retained session and removes only a clean workspace.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-transcript-command-disclosure",
+      "name": "command-disclosure",
+      "aliases": [],
+      "category": "element",
+      "definition": "The disclosure containing a command or its output in conversation history.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-launch-editor-advanced",
+      "name": "advanced",
+      "aliases": [],
+      "category": "element",
+      "definition": "The disclosure containing optional model, effort, skills and base customization.",
+      "scope": "ui-w-launch-editor"
+    },
+    {
+      "id": "element-w-launch-review-profile",
+      "name": "profile",
+      "aliases": [],
+      "category": "element",
+      "definition": "The work profile captured in the prepared launch.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-mode",
+      "name": "mode",
+      "aliases": [],
+      "category": "element",
+      "definition": "The agent mode captured in the prepared launch.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-launch-review-check-status",
+      "name": "check-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control for verifying whether an uncertain Start was accepted.",
+      "scope": "ui-w-launch-review"
+    },
+    {
+      "id": "element-w-dialog-frame-owning-task",
+      "name": "owning-task",
+      "aliases": [],
+      "category": "element",
+      "definition": "The item title and work profile identifying the task requesting attention.",
+      "scope": "ui-w-dialog-frame"
+    },
+    {
+      "id": "element-w-approval-command",
+      "name": "command",
+      "aliases": [],
+      "category": "element",
+      "definition": "The command requested by an approval.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "element-w-approval-reason",
+      "name": "reason",
+      "aliases": [],
+      "category": "element",
+      "definition": "The reason supplied for an approval request.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "element-w-approval-requested-access",
+      "name": "requested-access",
+      "aliases": [],
+      "category": "element",
+      "definition": "The permission or file access requested by the agent.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "element-w-approval-technical-details",
+      "name": "technical-details",
+      "aliases": [],
+      "category": "element",
+      "definition": "The collapsed original approval request payload.",
+      "scope": "ui-w-approval"
+    },
+    {
+      "id": "element-w-repository-settings-save-result",
+      "name": "save-result",
+      "aliases": [],
+      "category": "element",
+      "definition": "The local saving, success or failure feedback for the settings form.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-policy-settings-save-result",
+      "name": "save-result",
+      "aliases": [],
+      "category": "element",
+      "definition": "The local saving, success or failure feedback for the settings form.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-profile-settings-save-result",
+      "name": "save-result",
+      "aliases": [],
+      "category": "element",
+      "definition": "The local saving, success or failure feedback for the settings form.",
+      "scope": "ui-w-profile-settings"
+    },
+    {
+      "id": "element-w-skill-settings-save-result",
+      "name": "save-result",
+      "aliases": [],
+      "category": "element",
+      "definition": "The local saving, success or failure feedback for the settings form.",
+      "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "element-w-policy-settings-add-label",
+      "name": "add-label",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control to add a label and priority mapping row.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-policy-settings-remove-label",
+      "name": "remove-label",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control to remove a label and priority mapping row.",
+      "scope": "ui-w-policy-settings"
+    },
+    {
+      "id": "element-w-jira-credential-jira-url",
+      "name": "jira-url",
+      "aliases": [],
+      "category": "element",
+      "definition": "The configured Jira tenant address.",
+      "scope": "ui-w-jira-credential"
+    },
+    {
+      "id": "element-w-jira-credential-jira-email",
+      "name": "jira-email",
+      "aliases": [],
+      "category": "element",
+      "definition": "The configured Jira account email.",
+      "scope": "ui-w-jira-credential"
+    },
+    {
+      "id": "element-w-jira-credential-disabled-notice",
+      "name": "disabled-notice",
+      "aliases": [],
+      "category": "element",
+      "definition": "The explanation that Jira is disabled for the pilot.",
+      "scope": "ui-w-jira-credential"
+    },
+    {
+      "id": "ui-p-integrations",
+      "name": "Integrations pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The group of external service configuration controls within the application interface."
+    },
+    {
+      "id": "element-w-package-overview-advanced",
+      "name": "advanced",
+      "aliases": [],
+      "category": "element",
+      "definition": "The disclosure containing portable packages, checksums and manifests.",
+      "scope": "ui-w-package-overview"
+    },
+    {
+      "id": "ui-page-item",
+      "name": "Item page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "A focused application surface for one work item."
+    },
+    {
+      "id": "ui-page-agent",
+      "name": "Agent page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "A focused application surface for one retained agent run."
+    },
+    {
+      "id": "element-w-navigation-back",
+      "name": "back",
+      "aliases": [],
+      "category": "element",
+      "definition": "The action returning from a focused record to its originating page.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "ui-c-back",
+      "name": "Back navigation",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "A return from focused work to its originating application surface."
+    },
+    {
+      "id": "element-w-item-row-source-link",
+      "name": "source-link",
+      "aliases": [],
+      "category": "element",
+      "definition": "The link to the original provider page for a work item.",
+      "scope": "ui-w-item-row"
+    },
+    {
+      "id": "ui-c-item-source",
+      "name": "Original item navigation",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "A transition to the original provider page for a work item."
+    },
+    {
+      "id": "ui-s-settings",
+      "name": "Settings surface",
+      "aliases": [],
+      "category": "ui-shell",
+      "definition": "The independent application surface for configuration."
+    },
+    {
+      "id": "ui-c-open-settings",
+      "name": "Dedicated settings entry",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "An entry into the independent configuration surface."
+    },
+    {
+      "id": "ui-page-my-prs",
+      "name": "My pull requests page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The my pull requests page within the application interface."
+    },
+    {
+      "id": "ui-page-review-prs",
+      "name": "Review pull requests page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The review pull requests page within the application interface."
+    },
+    {
+      "id": "element-w-navigation-my-prs",
+      "name": "my-prs",
+      "aliases": [],
+      "category": "element",
+      "definition": "The my-prs control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-review-prs",
+      "name": "review-prs",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review-prs control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-navigation-messages",
+      "name": "messages",
+      "aliases": [],
+      "category": "element",
+      "definition": "The messages control or displayed value in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "ui-p-waiting-queue",
+      "name": "Waiting messages pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The waiting messages pane within the application interface."
+    },
+    {
+      "id": "ui-p-new-chat",
+      "name": "First conversation pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The first conversation pane within the application interface."
+    },
+    {
+      "id": "ui-w-waiting-row",
+      "name": "Waiting message widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The waiting message widget within the application interface."
+    },
+    {
+      "id": "element-w-waiting-row-select",
+      "name": "select",
+      "aliases": [],
+      "category": "element",
+      "definition": "The select control or displayed value in the waiting message widget.",
+      "scope": "ui-w-waiting-row"
+    },
+    {
+      "id": "element-w-waiting-row-title",
+      "name": "title",
+      "aliases": [],
+      "category": "element",
+      "definition": "The title control or displayed value in the waiting message widget.",
+      "scope": "ui-w-waiting-row"
+    },
+    {
+      "id": "element-w-waiting-row-profile",
+      "name": "profile",
+      "aliases": [],
+      "category": "element",
+      "definition": "The profile control or displayed value in the waiting message widget.",
+      "scope": "ui-w-waiting-row"
+    },
+    {
+      "id": "element-w-waiting-row-question",
+      "name": "question",
+      "aliases": [],
+      "category": "element",
+      "definition": "The question control or displayed value in the waiting message widget.",
+      "scope": "ui-w-waiting-row"
+    },
+    {
+      "id": "element-w-waiting-row-state",
+      "name": "state",
+      "aliases": [],
+      "category": "element",
+      "definition": "The state control or displayed value in the waiting message widget.",
+      "scope": "ui-w-waiting-row"
+    },
+    {
+      "id": "ui-w-new-chat",
+      "name": "First message widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The first message widget within the application interface."
+    },
+    {
+      "id": "element-w-new-chat-message",
+      "name": "message",
+      "aliases": [],
+      "category": "element",
+      "definition": "The message control or displayed value in the first message widget.",
+      "scope": "ui-w-new-chat"
+    },
+    {
+      "id": "element-w-new-chat-authority",
+      "name": "authority",
+      "aliases": [],
+      "category": "element",
+      "definition": "The authority control or displayed value in the first message widget.",
+      "scope": "ui-w-new-chat"
+    },
+    {
+      "id": "element-w-new-chat-start",
+      "name": "start",
+      "aliases": [],
+      "category": "element",
+      "definition": "The start control or displayed value in the first message widget.",
+      "scope": "ui-w-new-chat"
+    },
+    {
+      "id": "element-w-new-chat-check-status",
+      "name": "check-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The check-status control or displayed value in the first message widget.",
+      "scope": "ui-w-new-chat"
+    },
+    {
+      "id": "element-w-new-chat-error",
+      "name": "error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The error control or displayed value in the first message widget.",
+      "scope": "ui-w-new-chat"
+    },
+    {
+      "id": "ui-c-start-chat",
+      "name": "First message start connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The first message start connection within the application interface."
+    },
+    {
+      "id": "element-w-item-overview-retry",
+      "name": "retry",
+      "aliases": [],
+      "category": "element",
+      "definition": "The retry control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-item-overview-read-error",
+      "name": "read-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The read-error control or displayed value in the item overview widget.",
+      "scope": "ui-w-item-overview"
+    },
+    {
+      "id": "element-w-transcript-read-error",
+      "name": "read-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The read-error control or displayed value in the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-technical-activity",
+      "name": "technical-activity",
+      "aliases": [],
+      "category": "element",
+      "definition": "The technical-activity content within the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-error-details",
+      "name": "error-details",
+      "aliases": [],
+      "category": "element",
+      "definition": "The error-details content within the transcript widget.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "ui-w-work-status",
+      "name": "Work status widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "A compact display of activity or waiting state attached to a work item."
+    },
+    {
+      "id": "element-w-work-status-value",
+      "name": "value",
+      "aliases": [],
+      "category": "element",
+      "definition": "The displayed activity or waiting state in a work status widget.",
+      "scope": "ui-w-work-status"
+    },
+    {
+      "id": "working-queue",
+      "name": "Working queue",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The collection of launched work whose issue remains open without a merged implementation pull request, or whose pull request remains open."
+    },
+    {
+      "id": "agent-pipeline",
+      "name": "Agent pipeline",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A selected reusable profile for one retained agent session."
+    },
+    {
+      "id": "session-console",
+      "name": "Session console",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An alternative view of one retained agent conversation and its technical activity."
+    },
+    {
+      "id": "implementation-relationship",
+      "name": "Implementation relationship",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An explicit association between an issue and a pull request intended to address it."
+    },
+    {
+      "id": "ui-page-working",
+      "name": "Working page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The page displaying launched work awaiting GitHub completion."
+    },
+    {
+      "id": "ui-w-session-console",
+      "name": "Session console widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The widget displaying a retained session and its technical activity."
+    },
+    {
+      "id": "ui-w-question-recovery",
+      "name": "Question recovery widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The widget displaying question repair progress and user takeover."
+    },
+    {
+      "id": "ui-c-session-console",
+      "name": "Session console connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection selecting a retained session presentation."
+    },
+    {
+      "id": "element-w-navigation-working",
+      "name": "working",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control opening the Working queue.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "element-w-pr-evidence-lifecycle",
+      "name": "lifecycle",
+      "aliases": [],
+      "category": "element",
+      "definition": "The independently displayed open, closed or merged pull request state.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-review",
+      "name": "review",
+      "aliases": [],
+      "category": "element",
+      "definition": "The authoritative pull request review decision.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-ci",
+      "name": "ci",
+      "aliases": [],
+      "category": "element",
+      "definition": "The current-head check rollup.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-linked-pr",
+      "name": "linked-pr",
+      "aliases": [],
+      "category": "element",
+      "definition": "A related pull request summary and source link.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-error",
+      "name": "error",
+      "aliases": [],
+      "category": "element",
+      "definition": "A visible unavailable or stale synchronization result.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-new-chat-pipeline",
+      "name": "pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The selected reusable launch profile.",
+      "scope": "ui-w-new-chat"
+    },
+    {
+      "id": "element-w-session-console-output",
+      "name": "output",
+      "aliases": [],
+      "category": "element",
+      "definition": "The redacted technical activity and conversation stream.",
+      "scope": "ui-w-session-console"
+    },
+    {
+      "id": "element-w-question-recovery-progress",
+      "name": "progress",
+      "aliases": [],
+      "category": "element",
+      "definition": "The current question recovery stage and attempt count.",
+      "scope": "ui-w-question-recovery"
+    },
+    {
+      "id": "element-w-question-recovery-takeover",
+      "name": "takeover",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control returning session control to the user.",
+      "scope": "ui-w-question-recovery"
+    },
+    {
+      "id": "element-w-transcript-console",
+      "name": "console",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control switching between conversation and session console.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-run-controls-session-status",
+      "name": "session-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The displayed lifecycle status of the currently selected session.",
+      "scope": "ui-w-run-controls"
+    },
+    {
+      "id": "element-w-pr-evidence-check-link",
+      "name": "check-link",
+      "aliases": [],
+      "category": "element",
+      "definition": "A source link to an individual CI check or status provider.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "ui-c-pipeline-select",
+      "name": "Pipeline selection connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The pipeline selection connection within the application interface."
+    },
+    {
+      "id": "codex-plugin",
+      "name": "Codex plugin",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An installed or available Codex extension containing skills, tools or hooks from a chosen source."
+    },
+    {
+      "id": "plugin-marketplace",
+      "name": "Plugin marketplace",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A local, Git-backed or remote catalog from which Codex plugins are selected."
+    },
+    {
+      "id": "plugin-inventory",
+      "name": "Plugin inventory",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The last observed plugin installation, enablement and version state."
+    },
+    {
+      "id": "plugin-maintenance",
+      "name": "Plugin maintenance",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An explicit operation that observes or changes Codex plugin state."
+    },
+    {
+      "id": "review-policy",
+      "name": "Review policy",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The effective system default or repository override controlling whether requested reviews are queued or started automatically."
+    },
+    {
+      "id": "repository-review-prompt",
+      "name": "Repository review prompt",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Owner-defined repository instructions appended to a generic review prompt."
+    },
+    {
+      "id": "review-request-claim",
+      "name": "Review request claim",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A durable association between a review-request episode, pull-request head and one retained review run."
+    },
+    {
+      "id": "ui-w-plugin-admin",
+      "name": "Codex plugin admin widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The plugin inventory and maintenance controls in the administration interface."
+    },
+    {
+      "id": "element-w-plugin-admin-inventory",
+      "name": "inventory",
+      "aliases": [],
+      "category": "element",
+      "definition": "The inventory control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-search",
+      "name": "search",
+      "aliases": [],
+      "category": "element",
+      "definition": "The search control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-available",
+      "name": "available",
+      "aliases": [],
+      "category": "element",
+      "definition": "The available control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-previous",
+      "name": "previous",
+      "aliases": [],
+      "category": "element",
+      "definition": "The previous control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-next",
+      "name": "next",
+      "aliases": [],
+      "category": "element",
+      "definition": "The next control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-refresh",
+      "name": "refresh",
+      "aliases": [],
+      "category": "element",
+      "definition": "The refresh control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-check-updates",
+      "name": "check-updates",
+      "aliases": [],
+      "category": "element",
+      "definition": "The check updates control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-discover-skills",
+      "name": "discover-skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The discover skills control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-plugin-selector",
+      "name": "plugin-selector",
+      "aliases": [],
+      "category": "element",
+      "definition": "The plugin selector control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-install",
+      "name": "install",
+      "aliases": [],
+      "category": "element",
+      "definition": "The install control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-update",
+      "name": "update",
+      "aliases": [],
+      "category": "element",
+      "definition": "The update control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-remove",
+      "name": "remove",
+      "aliases": [],
+      "category": "element",
+      "definition": "The remove control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-marketplace-source",
+      "name": "marketplace-source",
+      "aliases": [],
+      "category": "element",
+      "definition": "The marketplace source control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-marketplace-ref",
+      "name": "marketplace-ref",
+      "aliases": [],
+      "category": "element",
+      "definition": "The marketplace ref control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-add-marketplace",
+      "name": "add-marketplace",
+      "aliases": [],
+      "category": "element",
+      "definition": "The add marketplace control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-remove-marketplace",
+      "name": "remove-marketplace",
+      "aliases": [],
+      "category": "element",
+      "definition": "The remove marketplace control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-operation-status",
+      "name": "operation-status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The operation status control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-error",
+      "name": "error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The error control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "element-w-plugin-admin-skills",
+      "name": "skills",
+      "aliases": [],
+      "category": "element",
+      "definition": "The skills control or observed value in Codex plugin administration.",
+      "scope": "ui-w-plugin-admin"
+    },
+    {
+      "id": "ui-w-system-defaults",
+      "name": "System review defaults widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The system-level defaults for review processing and plugin metadata checks."
+    },
+    {
+      "id": "element-w-system-defaults-auto-review",
+      "name": "auto-review",
+      "aliases": [],
+      "category": "element",
+      "definition": "The auto review setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-review-pipeline",
+      "name": "review-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review pipeline setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-implementation-pipeline",
+      "name": "implementation-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The implementation pipeline setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-plugin-check-interval",
+      "name": "plugin-check-interval",
+      "aliases": [],
+      "category": "element",
+      "definition": "The plugin check interval setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-save",
+      "name": "save",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "element-w-system-defaults-save-result",
+      "name": "save-result",
+      "aliases": [],
+      "category": "element",
+      "definition": "The save result setting or result in system review defaults.",
+      "scope": "ui-w-system-defaults"
+    },
+    {
+      "id": "ui-p-plugin-admin",
+      "name": "Plugin administration pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The plugin administration pane within the settings page."
+    },
+    {
+      "id": "ui-p-system-defaults",
+      "name": "System defaults pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The system defaults pane within the settings page."
+    },
+    {
+      "id": "element-w-repository-settings-edit-repository",
+      "name": "edit-repository",
+      "aliases": [],
+      "category": "element",
+      "definition": "The edit repository control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-last-poll",
+      "name": "last-poll",
+      "aliases": [],
+      "category": "element",
+      "definition": "The last poll control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-paused",
+      "name": "paused",
+      "aliases": [],
+      "category": "element",
+      "definition": "The paused control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-auto-review",
+      "name": "auto-review",
+      "aliases": [],
+      "category": "element",
+      "definition": "The auto review control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-review-pipeline",
+      "name": "review-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review pipeline control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-implementation-pipeline",
+      "name": "implementation-pipeline",
+      "aliases": [],
+      "category": "element",
+      "definition": "The implementation pipeline control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-review-prompt",
+      "name": "review-prompt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review prompt control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-poll",
+      "name": "poll",
+      "aliases": [],
+      "category": "element",
+      "definition": "The poll control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-review-error",
+      "name": "review-error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The review error control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "element-w-repository-settings-skill-directory",
+      "name": "skill-directory",
+      "aliases": [],
+      "category": "element",
+      "definition": "The skill directory control or value for repository monitoring.",
+      "scope": "ui-w-repository-settings"
+    },
+    {
+      "id": "ui-c-plugin-maintenance",
+      "name": "Plugin maintenance connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between owner plugin-management choices and observed operation state."
+    },
+    {
+      "id": "ui-c-review-policy",
+      "name": "Review policy connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between inherited review policy and eligible requested-review work."
+    },
+    {
+      "id": "ui-c-repository-review-prompt",
+      "name": "Repository review prompt connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between owner repository review instructions and the prepared review prompt."
+    },
+    {
+      "id": "github-request-budget",
+      "name": "GitHub request budget",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The maximum HTTP requests sent directly to the GitHub API by Code Factory during the preceding hour, including conditional requests."
+    },
+    {
+      "id": "github-request-reserve",
+      "name": "GitHub request reserve",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The threshold at or below which reported remaining GitHub quota causes Code Factory to defer further requests."
+    },
+    {
+      "id": "github-review-notification",
+      "name": "GitHub review notification",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A GitHub notification associated with a requested pull-request review."
+    },
+    {
+      "id": "ui-w-github-usage",
+      "name": "GitHub API usage",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The GitHub request-budget, reserve, polling and cached quota controls."
+    },
+    {
+      "id": "ui-c-github-usage",
+      "name": "GitHub usage settings connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection between owner GitHub usage choices and bounded application requests."
+    },
+    {
+      "id": "element-w-github-usage-budget",
+      "name": "budget",
+      "aliases": [],
+      "category": "element",
+      "definition": "The maximum application API requests allowed per hour.",
+      "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "element-w-github-usage-reserve",
+      "name": "reserve",
+      "aliases": [],
+      "category": "element",
+      "definition": "The amount of reported GitHub quota reserved for other work.",
+      "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "element-w-github-usage-poll-interval",
+      "name": "poll-interval",
+      "aliases": [],
+      "category": "element",
+      "definition": "The interval between scheduled review-notification checks.",
+      "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "element-w-github-usage-usage",
+      "name": "request-statistics",
+      "aliases": [
+        "usage"
+      ],
+      "category": "element",
+      "definition": "The cached application request count, observed remaining quota and deferral information.",
+      "scope": "ui-w-github-usage"
+    },
+    {
+      "id": "dependency-operation",
+      "name": "Dependency operation",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An identified maintenance request with retained per-dependency observations and a lifecycle outcome."
+    },
+    {
+      "id": "github-skill-source",
+      "name": "GitHub skill source",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The recorded repository, revision selection and skill location identifying the origin of an installed standalone skill."
+    },
+    {
+      "id": "published-review",
+      "name": "Published review",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A submitted pull-request assessment identified by a provider receipt, author, verdict and reviewed commit."
+    },
+    {
+      "id": "element-w-pr-evidence-review-receipt",
+      "name": "Review receipt",
+      "aliases": [],
+      "category": "element",
+      "definition": "The provider link identifying a submitted review.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-review-content",
+      "name": "Review content",
+      "aliases": [],
+      "category": "element",
+      "definition": "The text and inline comments belonging to a submitted review.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-review-freshness",
+      "name": "Review freshness",
+      "aliases": [],
+      "category": "element",
+      "definition": "The last successful observation time and any later observation failure for submitted reviews.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "element-w-pr-evidence-refresh-reviews",
+      "name": "Refresh reviews",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control requesting an observation of submitted reviews.",
+      "scope": "ui-w-pr-evidence"
+    },
+    {
+      "id": "state-terminated",
+      "name": "Stopped",
+      "aliases": [],
+      "category": "state",
+      "definition": "Work has ended because its source item closed or merged; the retained session cannot continue."
     }
   ]
 }

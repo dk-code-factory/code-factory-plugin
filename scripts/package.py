@@ -39,7 +39,7 @@ with tempfile.TemporaryDirectory(dir=OUT) as temporary:
     shutil.copytree(ROOT / 'docs', stage / 'docs')
     manifest = {'version': version, 'os': 'linux', 'arch': 'amd64', 'dependencies':
                 {'git': 'existing installation', 'gh': 'existing authenticated installation',
-                 'codex': '0.161.0', 'tailscale': 'authenticated Tailscale installation for Funnel and Serve', 'tunnel-client': 'optional alternate OpenAI tunnel transport', 'systemctl': 'user session'}}
+                 'codex': 'dkropachev/codex stable >=0.161.0; managed upgrades require compatibility probe', 'tailscale': 'authenticated Tailscale installation for Funnel and Serve', 'tunnel-client': 'optional alternate OpenAI tunnel transport', 'systemctl': 'user session'}}
     (stage / 'release.json').write_text(json.dumps(manifest, indent=2)+'\n')
     files = sorted(p for p in stage.rglob('*') if p.is_file())
     (stage / 'SHA256SUMS').write_text(''.join(digest(p)+'  '+str(p.relative_to(stage))+'\n' for p in files))

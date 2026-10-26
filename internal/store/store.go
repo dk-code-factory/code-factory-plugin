@@ -8,17 +8,21 @@ import (
 	"errors"
 	"fmt"
 	_ "modernc.org/sqlite"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
 var ErrNotFound = errors.New("record not found")
 
 type Store struct {
-	db *sql.DB
-	mu sync.Mutex
+	db   *sql.DB
+	mu   sync.Mutex
+	path string
 }
 type Tx struct {
 	tx  *sql.Tx
@@ -37,20 +41,72 @@ func Open(path string) (*Store, error) {
 	if err = os.Chmod(path, 0600); err != nil {
 		return nil, err
 	}
-	db, err := sql.Open("sqlite", path)
+	absolute, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(1)
-	for _, q := range []string{"PRAGMA journal_mode=WAL", "PRAGMA foreign_keys=ON", "PRAGMA busy_timeout=5000", `CREATE TABLE IF NOT EXISTS migrations(version INTEGER PRIMARY KEY)`, `CREATE TABLE IF NOT EXISTS entities(kind TEXT NOT NULL,id TEXT NOT NULL,data BLOB NOT NULL,PRIMARY KEY(kind,id))`, `CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,kind TEXT NOT NULL,entity TEXT NOT NULL,data BLOB NOT NULL,at TEXT NOT NULL)`, `INSERT OR IGNORE INTO migrations VALUES(1)`} {
+	absolute, err = filepath.EvalSymlinks(absolute)
+	if err != nil {
+		return nil, err
+	}
+	uri := url.URL{Scheme: "file", Path: absolute, RawQuery: url.Values{"_pragma": []string{"busy_timeout(5000)", "foreign_keys(1)"}}.Encode()}
+	db, err := sql.Open("sqlite", uri.String())
+	if err != nil {
+		return nil, err
+	}
+	// WAL readers must not queue behind an uncommitted synchronization write.
+	// Store.Write still serializes writers; DSN pragmas apply to every connection.
+	db.SetMaxOpenConns(4)
+	db.SetMaxIdleConns(4)
+	for _, q := range []string{"PRAGMA journal_mode=WAL", "PRAGMA foreign_keys=ON", "PRAGMA busy_timeout=5000", `CREATE TABLE IF NOT EXISTS migrations(version INTEGER PRIMARY KEY)`, `CREATE TABLE IF NOT EXISTS entities(kind TEXT NOT NULL,id TEXT NOT NULL,data BLOB NOT NULL,PRIMARY KEY(kind,id))`, `CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,kind TEXT NOT NULL,entity TEXT NOT NULL,data BLOB NOT NULL,at TEXT NOT NULL)`, `INSERT OR IGNORE INTO migrations VALUES(1)`,
+		`CREATE INDEX IF NOT EXISTS entities_item ON entities(kind,json_extract(data,'$.itemId'))`,
+		`CREATE INDEX IF NOT EXISTS entities_run ON entities(kind,json_extract(data,'$.runId'))`,
+		`CREATE INDEX IF NOT EXISTS entities_source ON entities(kind,json_extract(data,'$.source'))`,
+		`CREATE INDEX IF NOT EXISTS entities_target ON entities(kind,json_extract(data,'$.target'))`,
+		`CREATE INDEX IF NOT EXISTS events_run_output ON events(entity,kind,seq)`} {
 		if _, err = db.Exec(q); err != nil {
 			db.Close()
 			return nil, err
 		}
 	}
-	return &Store{db: db}, nil
+	return &Store{db: db, path: absolute}, nil
 }
 func (s *Store) Close() error { return s.db.Close() }
+
+// ProcessLock coordinates external effects across connections and processes.
+// No database transaction remains open while the caller holds the lock. Closing
+// its descriptor, including on process exit, releases ownership automatically.
+func (s *Store) ProcessLock(ctx context.Context, name string) (func(), error) {
+	if name == "" || strings.Trim(name, "abcdefghijklmnopqrstuvwxyz0123456789-") != "" {
+		return nil, fmt.Errorf("invalid process lock name")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	f, err := os.OpenFile(s.path+".lock-"+name, os.O_CREATE|os.O_RDWR, 0600)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		if err == nil {
+			var once sync.Once
+			return func() { once.Do(func() { _ = f.Close() }) }, nil
+		}
+		if !errors.Is(err, syscall.EWOULDBLOCK) && !errors.Is(err, syscall.EAGAIN) {
+			_ = f.Close()
+			return nil, err
+		}
+		timer := time.NewTimer(10 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			_ = f.Close()
+			return nil, ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
 func decode(row *sql.Row, out any) error {
 	var b []byte
 	if err := row.Scan(&b); err != nil {
@@ -68,7 +124,28 @@ func (t *Tx) Get(kind, id string, out any) error {
 	return decode(t.tx.QueryRowContext(t.ctx, "SELECT data FROM entities WHERE kind=? AND id=?", kind, id), out)
 }
 func (s *Store) List(ctx context.Context, kind string) ([]json.RawMessage, error) {
-	rows, e := s.db.QueryContext(ctx, "SELECT data FROM entities WHERE kind=? ORDER BY id", kind)
+	return s.list(ctx, kind, "data", nil)
+}
+
+// ListWithout removes large fields inside SQLite before transferring/decoding
+// summary records. Paths are bound parameters, never SQL fragments.
+func ListWithout[T any](ctx context.Context, s *Store, kind string, paths ...string) ([]T, error) {
+	if len(paths) == 0 {
+		return List[T](ctx, s, kind)
+	}
+	args := make([]any, len(paths))
+	for i, path := range paths {
+		args[i] = path
+	}
+	rows, err := s.list(ctx, kind, "json_remove(data,"+strings.TrimSuffix(strings.Repeat("?,", len(paths)), ",")+")", args)
+	if err != nil {
+		return nil, err
+	}
+	return decodeList[T](rows)
+}
+
+func (s *Store) list(ctx context.Context, kind, expression string, args []any) ([]json.RawMessage, error) {
+	rows, e := s.db.QueryContext(ctx, "SELECT "+expression+" FROM entities WHERE kind=? ORDER BY id", append(args, kind)...)
 	if e != nil {
 		return nil, e
 	}
@@ -88,16 +165,61 @@ func List[T any](ctx context.Context, s *Store, kind string) ([]T, error) {
 	if e != nil {
 		return nil, e
 	}
+	return decodeList[T](rows)
+}
+
+func decodeList[T any](rows []json.RawMessage) ([]T, error) {
 	out := make([]T, 0, len(rows))
 	for _, b := range rows {
 		var v T
-		if e = json.Unmarshal(b, &v); e != nil {
-			return nil, e
+		if err := json.Unmarshal(b, &v); err != nil {
+			return nil, err
 		}
 		out = append(out, v)
 	}
 	return out, nil
 }
+
+// Records reads a bucket once and keeps the database key authoritative, even for
+// older records whose embedded ID is missing. Decode only the records needed.
+func (s *Store) Records(ctx context.Context, kind string) (map[string]json.RawMessage, error) {
+	rows, err := s.db.QueryContext(ctx, "SELECT id,data FROM entities WHERE kind=?", kind)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]json.RawMessage{}
+	for rows.Next() {
+		var id string
+		var data []byte
+		if err := rows.Scan(&id, &data); err != nil {
+			return nil, err
+		}
+		out[id] = data
+	}
+	return out, rows.Err()
+}
+
+// JSONByteSizes counts JSON-encoded byte slices without transferring or decoding
+// their base64 values. Missing/null fields count as zero; storage keys own identity.
+func (s *Store) JSONByteSizes(ctx context.Context, kind, path string) (map[string]int64, error) {
+	rows, err := s.db.QueryContext(ctx, "SELECT id,coalesce(length(rtrim(json_extract(data, ?), '='))*3/4,0) FROM entities WHERE kind=?", path, kind)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]int64{}
+	for rows.Next() {
+		var id string
+		var size int64
+		if err := rows.Scan(&id, &size); err != nil {
+			return nil, err
+		}
+		out[id] = size
+	}
+	return out, rows.Err()
+}
+
 func (t *Tx) Put(kind, id string, v any) error {
 	b, e := json.Marshal(v)
 	if e != nil {
@@ -115,8 +237,25 @@ func (t *Tx) Event(kind, id string, v any) error {
 	if e != nil {
 		return e
 	}
-	_, e = t.tx.ExecContext(t.ctx, "INSERT INTO events(kind,entity,data,at) VALUES(?,?,?,?)", kind, id, b, time.Now().UTC().Format(time.RFC3339Nano))
-	return e
+	at := time.Now().UTC()
+	result, e := t.tx.ExecContext(t.ctx, "INSERT INTO events(kind,entity,data,at) VALUES(?,?,?,?)", kind, id, b, at.Format(time.RFC3339Nano))
+	if e != nil {
+		return e
+	}
+	if kind == "run.output" {
+		var body struct {
+			Method string
+			Params json.RawMessage
+		}
+		if json.Unmarshal(b, &body) == nil {
+			seq, e := result.LastInsertId()
+			if e != nil {
+				return e
+			}
+			return t.ProjectProgress(id, body.Method, body.Params, seq, at)
+		}
+	}
+	return nil
 }
 func (s *Store) Write(ctx context.Context, f func(*Tx) error) error {
 	s.mu.Lock()

@@ -25,6 +25,8 @@ Unavailable host subscriptions remain an explicit blocker. Unsafe callbacks and 
 - **S2** Eligible retries preserve event identity within the attempt limit; other delivery failures advance or disable the subscription. Disabled notifications skip processed events without later replay. Refresh rotates signing material, and expiry/unsubscribe stop delivery.
 - **S3** The real host receives signed alerts and responds to matching attention after reconnect.
 
+- **S4** PR watcher changes and recovered questions use existing metadata-only notifications, preserving private message content and acknowledged-delivery deduplication.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -46,6 +48,7 @@ flowchart TD
     N8["Advance past undelivered event without replay"]
     N9(["Gone response disables subscription"])
     N10["Advance past events without delivery while notifications disabled"]
+    N11["Deliver PR monitoring and recovered-question metadata without private message content #40;S4#41;"]
     N0 -->|"host supports subscription"| N1
     N0 -->|"host unavailable"| N7
     N1 -->|"verified"| N2
@@ -61,6 +64,8 @@ flowchart TD
     N2 -->|"gone response"| N9
     N2 -->|"notifications disabled"| N10
     N10 -->|"reenabled#59; future events only"| N2
+    N0 -->|"watched PR or recovered question"| N11
+    N11 -->|"delivered or bounded retry"| N4
 ```
 
 ## Implementation references
@@ -78,6 +83,7 @@ flowchart TD
 
 - [internal/events/events_test.go](../../internal/events/events_test.go) — `func TestSubscriptionVerificationRetryDedupRefreshAndExpiry(`; S1, S2. Signature verification, duplicate creation, entity filtering, stable identity across a 503 retry, expiry and idempotent unsubscribe fixtures; other failure classes and notification disabling are not asserted.
 - [internal/events/events_test.go](../../internal/events/events_test.go) — `func TestCallbackSafetyAndFailedChallenge(`; S1. Callback destination and challenge safety.
+- [internal/events/events_test.go](../../internal/events/events_test.go) — `func TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications(`; S4. PR watcher changes and recovered question attention use existing signed event names with metadata only and no duplicate acknowledged delivery.
 
 ## Verification and gaps
 

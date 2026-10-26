@@ -69,14 +69,14 @@ func TestInboxRequestBudgetAndIndependentFreshness(t *testing.T) {
 		return items
 	}
 	first := run(false)
-	if calls != 73 || tokens != 1 || details != 0 || commitReads != 10 {
+	if calls != 83 || tokens != 1 || details != 0 || commitReads != 10 {
 		t.Fatal("cold request budget", calls, tokens, details, commitReads)
 	}
 	calls = 0
 	now = now.Add(30 * time.Second)
 	repo.LastSync = now
 	warm := run(false)
-	if calls != 62 || tokens != 2 || commitReads != 10 || since[0] != since[1] {
+	if calls != 72 || tokens != 2 || commitReads != 10 || since[0] != since[1] {
 		t.Fatal("warm request budget or bucket reuse", calls, tokens, commitReads, since)
 	}
 	revisions := map[int]string{}
@@ -112,7 +112,7 @@ func TestInboxRequestBudgetAndIndependentFreshness(t *testing.T) {
 	now = now.Add(5 * time.Minute)
 	calls = 0
 	run(false)
-	if calls != 63 {
+	if calls != 73 {
 		t.Fatal("identity did not expire", calls)
 	}
 	for _, boundary := range []struct{ last, want string }{{"2026-10-26T10:01:59Z", "2026-10-26T09:58:00Z"}, {"2026-10-26T10:02:00Z", "2026-10-26T10:00:00Z"}} {

@@ -1,5 +1,22 @@
 # Acceptance and verification
 
+## Development port fixture verification · 2026-10-25
+
+The development source port adds work queues, direct item conversations, retained
+continuations, dependency and plugin administration, bounded GitHub reads, API
+observations and durable attention replies. It preserves published history and
+hosted CI/release delivery. Private pilot history and operational evidence are
+excluded from the port.
+
+Fresh reviewed reconciliation and `make ci FLOW_BASE=main` pass locally against
+the published base `cdf6df8f81b499f0b59a2b9e4e4ea2b48cfeeee2`, including uncached
+Go race tests, 92 Playwright fixtures, retained-history benchmarking, packaging,
+installer recovery and smoke checks. These deterministic provider and browser-host
+fixtures establish source results only. Local worktree verification does not
+establish hosted CI for a subsequently pushed commit; keep the PR in draft until
+its branch checks pass. No installed-host, real-provider, callback, soak, login or
+manual accessibility acceptance is established by this port.
+
 This public repository contains source, deterministic fixtures and specification
 contracts. Personal pilot logs, hostnames, app registrations, conversation links,
 credentials and installation state are intentionally not published.

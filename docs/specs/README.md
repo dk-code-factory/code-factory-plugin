@@ -117,9 +117,8 @@ flow IDs when checking references after a rename or deletion.
 
 Python 3.11+ (including standard-library TOML support) and Git suffice for the
 fast checks. Verification suites also require the Go/Node/Playwright prerequisites
-in the root README. No model credentials, agents or network calls are part of the specification gate.
-[Hosted CI](../ci.md) installs prerequisites, runs that gate and the fixture suites,
-and publishes checked build artifacts.
+in the root README. No model credentials, agents, network calls or hosted workflow
+are part of the specification gate.
 
 ```sh
 python3 scripts/specs.py render

@@ -150,9 +150,7 @@ func New(cfg Config, dir, token string) (*Gateway, error) {
 		pr.Out.Header.Del("X-Forwarded-For")
 		pr.Out.Header.Del("X-Forwarded-Host")
 		pr.Out.Header.Del("X-Forwarded-Proto")
-	}, ErrorHandler: func(w http.ResponseWriter, r *http.Request, e error) {
-		http.Error(w, "Local daemon unavailable", http.StatusBadGateway)
-	}}
+	}, ErrorHandler: proxyError}
 	return g, nil
 }
 func (g *Gateway) save() error {
@@ -206,8 +204,7 @@ func harden(next http.Handler) http.Handler {
 func (g *Gateway) resource() string { return g.cfg.PublicURL + "/mcp" }
 func (g *Gateway) Public() http.Handler {
 	mux := http.NewServeMux()
-	g.bundle.Register(mux)
-	g.bundle.RegisterBrowser(mux, func() (string, error) {
+	lookupRegistration := func() (string, error) {
 		var mapping struct {
 			ID string `json:"id"`
 		}
@@ -219,7 +216,9 @@ func (g *Gateway) Public() http.Handler {
 			return "", e
 		}
 		return mapping.ID, nil
-	})
+	}
+	g.bundle.Register(mux, lookupRegistration)
+	g.bundle.RegisterBrowser(mux, lookupRegistration)
 	resourceMetadata := func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{"resource": g.resource(), "authorization_servers": []string{g.cfg.PublicURL}, "scopes_supported": []string{"code-factory"}})
 	}

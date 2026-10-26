@@ -32,8 +32,9 @@ def verify():
         assert (installed / 'mcp.json').is_file()
         assert (installed / 'skills/code-factory/SKILL.md').is_file()
         assert (installed / 'skills/code-factory-setup/SKILL.md').is_file()
+        assert (installed / 'skills/code-factory-admin/SKILL.md').is_file()
         assert results[-1]['version'] == json.loads((ROOT / 'plugin/plugin.json').read_text())['version']
-        return {'result': 'passed', 'plugin': results[-1]['pluginId'], 'version': results[-1]['version'], 'checks': ['real marketplace discovery', 'real isolated plugin install', 'cached MCP configuration and both skills'], 'workAcceptance': 'not verified'}
+        return {'result': 'passed', 'plugin': results[-1]['pluginId'], 'version': results[-1]['version'], 'checks': ['real marketplace discovery', 'real isolated plugin install', 'cached MCP configuration and all three skills'], 'workAcceptance': 'not verified'}
 
 if __name__ == '__main__':
     print(json.dumps(verify(), indent=2))

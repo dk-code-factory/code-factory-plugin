@@ -9,8 +9,10 @@ import re
 from pathlib import Path
 import subprocess
 import shutil
+import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from unittest.mock import patch
 
 import ci
@@ -62,10 +64,33 @@ class HostedCITests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ci.comparison({"before": second, "after": self.first}, "push", "", "refs/heads/main")
 
-    def test_new_branches_use_merge_base_and_missing_refs_fail(self):
+    def test_workflow_routes_features_through_pull_requests(self):
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci.yml").read_text()
+        triggers = workflow.split("\npermissions:", 1)[0]
+        self.assertIn("  push:\n    branches: [main]\n", triggers)
+        self.assertIn("  pull_request:\n    branches: [main]\n", triggers)
+        self.assertIn("  workflow_dispatch:\n", triggers)
+
+    def test_feature_push_and_dispatch_reject_before_verification(self):
+        event = self.root / "event.json"
+        event.write_text(json.dumps({"before": self.first, "after": self.first}))
+        for name in ("push", "workflow_dispatch"):
+            for ref in ("refs/heads/feature", "refs/tags/v1.0.0"):
+                errors = io.StringIO()
+                with self.subTest(event=name, ref=ref), patch.dict(os.environ, {
+                    "GITHUB_EVENT_NAME": name, "GITHUB_REF": ref,
+                }), patch.object(sys, "argv", ["ci.py", "verify", "--event", str(event)]), \
+                        patch.object(ci, "run_verification") as verify, \
+                        patch.object(ci, "artifact_manifest") as manifest, redirect_stderr(errors):
+                    with self.assertRaises(SystemExit) as stopped:
+                        ci.main()
+                    self.assertEqual(stopped.exception.code, 1)
+                    self.assertIn("only on main; open a pull request", errors.getvalue())
+                    verify.assert_not_called()
+                    manifest.assert_not_called()
+
+    def test_missing_comparison_commits_fail(self):
         second = self.change("two")
-        result = ci.comparison({"before": "0" * 40, "after": second}, "push", "", "refs/heads/feature")
-        self.assertEqual(result["base"], self.first)
         with self.assertRaises((ValueError, subprocess.CalledProcessError)):
             ci.comparison({"before": "f" * 40, "after": second}, "push", "", "refs/heads/main")
         with self.assertRaises(ValueError):

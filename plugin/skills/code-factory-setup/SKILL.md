@@ -5,7 +5,8 @@ description: Connect and verify the Code Factory plugin and its local Linux serv
 
 Start with the MCP connection bundled in this package. Its endpoint is in root
 `mcp.json`; OAuth is discovered from the server. If tools are available, call
-`diagnostics` and `open_factory` and guide configuration in the embedded app.
+`diagnostics` and `open_settings` and guide configuration in that dedicated view.
+Use `open_factory` separately to verify the inbox.
 Do not make the user reenter a working server URL or recreate existing resources.
 
 For OAuth, guide the user to **Connect Code Factory** on the private Tailscale

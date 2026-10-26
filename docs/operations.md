@@ -13,7 +13,7 @@ Unpack the versioned `dist/code-factory-…-linux-amd64.tar.gz` archive and veri
 adjacent SHA256, then its `SHA256SUMS`. From the extracted directory run
 `./code-factory install-dependencies` and `./code-factory install`.
 The installer needs no Go or Node. It reuses Git, authenticated GitHub CLI and
-Codex 0.161.0. Missing provider executables are reported without replacing them.
+stable Codex 0.161.0 or later. Managed Codex updates require a compatibility probe. Missing provider executables are reported without replacing them.
 The tunnel downloader uses the official latest-release metadata and requires a
 matching SHA256 digest. The checksum establishes integrity against that official
 HTTPS source; it is not an independent release signature.
@@ -37,7 +37,7 @@ existing working connection rather than creating another.
 Record the registered remote app ID shown by its plugin page. Run
 `code-factory link-plugin --app-id OBSERVED`; then upload the linked browser ZIP
 from `/code-factory/plugin-browser.zip` through **Add → Upload plugin archive**
-and install it. The browser package contains both skills and the required app
+and install it. The browser package contains all three skills and the required app
 reference. The portable `/code-factory/plugin.zip` is a separate artifact with
 MCP launch configuration for compatible local plugin hosts. A cloud `Plugin_...`
 package ID cannot replace the remote `asdk_app_...` connection ID.
@@ -50,17 +50,13 @@ custom connections and event-triggered tasks. Follow the
 
 ## Daily use
 
-Open the embedded inbox and configure only the dedicated private pilot repository.
-Initial records are unread without New; new discoveries get New. Opening detail
-marks the displayed revision read. Action history is independent of unread state.
-Sync runs every 30 seconds; visible UI polling runs every second after successful
-responses. Network failures defer those updates and appear in diagnostics.
+Open the embedded inbox and configure monitored repositories in Settings. Use the dedicated private pilot repository for synthetic browser/model acceptance. Working tracks launched work until its GitHub completion; Issues includes linked PR information; My PRs and Review PRs follow GitHub author/reviewer identity. Each queue retains its query and Back context. Item selection opens the conversation without starting an agent.
 
-Edit a profile, select skills, review the prepared launch and explicitly Start.
-Use **Plan · interactive questions** for the supported Codex question path.
-Answer in the attention dialog. Follow up in agent chat. Interrupt and Resume are
-separate operations. Opening an item never starts work. Closing the UI leaves work
-running; the computer and both services must remain available.
+For manual work, choose a pipeline, review its mode, permissions and publishing authority, and explicitly Start. System defaults can instead opt into automatically starting eligible requested PR reviews; queue-only is the default, and repository policy can inherit or override it. Review/implementation pipeline defaults and additional repository review instructions are configured in Settings. Automatic reviews wait for current work and are durably claimed once per observed request/head. They support read-only profiles with publishing set to ask, or explicitly selected danger-full-access profiles with approvals set to never and publishing set to authorized. Publishing requires owner approval under ask and may proceed autonomously under authorized. Selecting a profile does not enable automatic review or implementation. Each pipeline is one retained Codex session. New run and prepared proposals remain under Item details. Follow up by sending a message; the service saves it durably and acknowledges queue acceptance before background delivery. Inactive work restores its original thread and workspace using saved source context, with task-required GitHub reads left to the agent. Tracking and the conversation distinguish queued, delivering, delivered and uncertain state. Interrupt remains explicit and cleanup refuses dirty worktrees.
+
+Messages lists native, structured-message and recovered textual questions and approvals. Answer the displayed form. If a stopped agent fails to produce a form, the helper gets at most two question-only repair attempts before offering a free-text answer and Open session console. The console shows the same session's technical activity and retains its draft. Take over session cancels further repair. Unknown delivery is never retried automatically; inspect the console first.
+
+PR lifecycle, review approval and current-head CI are independent. Linked implementation PRs can complete issue work on merge without changing the issue on GitHub. Incidental references cannot. Inaccessible or stale PR information remains visibly unknown. GitHub review-notification checks default to two minutes, with repository summary reconciliation every 15 minutes and an initial baseline for new repositories. Full histories/checks refresh only for selected or tracked work and bounded explicit references. Visible UI refreshes through the host bridge; closing the UI leaves work running, while observing source closure or merge terminates its sessions. Dashboard reads use summaries and load full history/check lists only for the selected item. A GitHub rate limit preserves imported rows and delays retries; do not force repeated manual polls during its cooldown.
 
 ## Diagnostics and evidence
 
@@ -75,6 +71,30 @@ startup errors. Never enable raw tunnel HTTP logging. Runtime keys and secret
 answers must not appear in diagnostics or transcripts. Streaming redaction
 withholds a suffix that could be the start of a known secret; an unfinished suffix
 is discarded on process loss.
+
+Incoming Code Factory MCP and private owner API calls are recorded in
+`$XDG_DATA_HOME/code-factory/logs/api-calls.jsonl` (normally
+`~/.local/share/code-factory/logs/api-calls.jsonl`). Each JSON line contains UTC
+`startedAt`, the API/tool name, optional JSON-RPC method, HTTP method,
+`parameters`, `httpStatus` and `durationMs`. Timing covers server request handling,
+including validation and response writing; it excludes client/WAN orchestration,
+background agent execution and writing the log itself. HTTP 200 can still carry
+a tool-level error; this field is transport status, not task completion proof.
+
+Credential fields, answer payloads, free-form messages/prompts/content and
+metadata are redacted. URLs omit userinfo, queries and fragments; known service
+credentials and common token forms are masked. Other parameters retain bounded
+values; oversized or malformed input is represented by safe markers. Responses,
+headers, raw request bodies and exception text are not logged. Rejected requests
+that reach these endpoints are recorded too, without reading an unauthorized
+request body. This does not enable raw gateway/tunnel or outbound GitHub logging.
+
+The log directory is private (0700), files are 0600, and rotation retains the
+current 10 MiB file plus up to three numbered backups. A failed log write emits
+one generic service warning and never retries or changes the API operation.
+Logging observes request reads without consuming or replacing their body/limits.
+Newly built logging is source-only until a release containing it is installed;
+prior calls are not reconstructed.
 
 Record a nonsecret evidence reference for each observed acceptance checkpoint:
 
@@ -114,10 +134,17 @@ pre-upgrade profile. The canonical MCP URL can therefore change back; check the
 restored profile before reconnecting Work. Old installation records without a
 gateway snapshot retain their current profile and need a compatibility check.
 
-After daemon/app-server loss, old attention IDs are stale. Refresh, inspect the
-retained run/worktree, and Resume explicitly. Answers are never replayed. Clean up
-only stopped, clean worktrees; dirty ones are refused. A missing worktree or a
-provider authentication failure needs repair before resume.
+After daemon loss, pending work continues from its retained session and saved
+progress. Completed turns remain idle; explicit interrupts and unanswered questions
+remain paused. Before initial execution or automatic unfinished-work restoration, a targeted fresh
+source check compares scope, state, head and assignments. An explicit follow-up
+message is saved first and restores its retained session without a GitHub preflight;
+the agent receives explicitly unverified saved context and checks GitHub as needed. The agent assesses
+changes and reuses only still-valid checkpoints. Failed reads keep work stopped.
+Closed issues and closed/merged PRs permanently terminate their sessions and retire
+pending requests. Reopening a source requires new work rather than reviving its
+terminated sessions. History and workspaces remain; explicit cleanup refuses dirty
+files. Answers and completed external actions are never replayed automatically.
 
 ## Uninstall
 
@@ -153,3 +180,95 @@ daemon smoke test. Use the explicit `make test-real-provider` target for real mo
 `python3 scripts/test_systemd.py` separately tests the package under isolated Ubuntu
 with a real user systemd manager and fixture provider executables. The container has
 no Go or Node. Neither fixtures nor real Codex alone establish Work acceptance.
+
+## Plugin administration
+
+Settings → Plugins & skills lists observed installed plugins, versions, enabled
+state, update availability and maintenance operations. Sources, explicit installs/
+updates/removals and periodic metadata-check cadence are configurable through the
+widget, owner tools and bundled admin skill. See [the administration guide](plugin.md#repository-monitoring-and-plugin-administration). No plugin update is
+automatically installed. Unknown remote version metadata stays unknown, and
+failed or interrupted operations require inventory inspection before a retry.
+
+## GitHub request budget
+
+Use **Settings → System defaults → GitHub API usage** for the shared rolling-hour
+allowance, reported-quota reserve and notification interval. Defaults are
+600 requests/hour, 100 reported quota units reserved, and 120 seconds. REST
+quota is reported in requests and GraphQL quota in points; the local allowance
+counts HTTP request attempts. See [GitHub’s GraphQL quota documentation](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api). Manual polls
+obey the same budget and server cooldowns. Limits, conditional cache and recorded
+attempts survive service restart; raising a limit does not erase prior usage.
+
+A cancellable process-shared gate serializes REST/GraphQL and report publication requests across the daemon and publisher, reads quota headers instead of polling
+`/rate_limit`, and persists safe credential-scoped validators. Failed repository
+reads back off; paused/deferred monitoring is distinct from a missing provider.
+Diagnostics check local GitHub credential availability without `gh auth status`.
+Managed clones use Git transport and the existing credential helper instead of
+an API repository lookup. No global authentication configuration is replaced.
+
+Notification GET includes read threads and never marks them read/done. Changed
+configured PRs are fetched once per observed notification update; periodic lists
+cover absent notifications. Saved details and unread state survive deferred reads.
+Do not force repeated polls during a server cooldown. Explicit Codex dependency
+checks and updates fetch release metadata and artifacts outside the provider gate.
+Independent plugin/skill/agent commands and other GitHub clients are also outside
+the daemon provider cap. The optional, disabled alternate-tunnel installer has
+one explicit unauthenticated release lookup when its client is absent; it is
+not a background poll of this pilot.
+
+Verify quota controls on each installation and retain private evidence outside
+the checkout. Callback, soak, login and manual accessibility acceptance remain
+separate; see [acceptance](acceptance.md).
+
+## Bounded review command sandbox · 2026-10-23
+
+Read-only and workspace-write tasks now use an invocation-local native permission
+profile in pinned Codex 0.161.0. Source permissions, private writable scratch and
+network access are independent. Reviews cannot change their source checkout or
+Git metadata; implementations can change their own checkout. Required executables,
+selected-repository Git metadata, installed skills and existing GitHub auth
+configuration remain readable. Unrelated owner files are excluded.
+
+The enforced command proxy allows `api.github.com`, `github.com`,
+`raw.githubusercontent.com`, `objects.githubusercontent.com`,
+`codeload.github.com`, `api.openai.com`, `chatgpt.com`, `auth.openai.com`,
+`ab.chatgpt.com`, `sdmntprcentralus.oaiusercontent.com`,
+`developers.openai.com` and `learn.chatgpt.com`.
+Other destinations, localhost and private-network access remain blocked. Temporary
+artifacts and isolated review clones belong under `TMPDIR`. Skill data indexes for
+repository rules and PR decisions are bounded per-run copies under `XDG_DATA_HOME`;
+refreshing them cannot modify the owner's original settings. Resume preserves the
+run cache and reselects the same process-local policy. Explicit clean cleanup
+removes scratch. No global Codex config, authentication or Tailscale change is
+required, and initialization failure never falls back to full access.
+
+The policy governs sandboxed commands. Codex service/control traffic, MCP servers,
+apps and browser tools retain their separate controls. A destination allowlist
+does not filter HTTP methods or grant publishing authority: the profile's approval
+and publishing rules remain applicable. Existing explicitly selected full-access
+profiles remain a separate owner choice. Agent/skill GitHub commands still use
+GitHub independently of the daemon's request budget.
+
+Keep fixture checks, real pinned-provider command-only checks and installation
+observations separate in private operator evidence.
+Native tests verify GitHub TLS without an HTTP API request, denied other/private
+destinations, blocked direct localhost access, read-only review files, protected
+Git metadata, workspace-only implementation edits, inaccessible unrelated files,
+unchanged host files and persistent private scratch. They also verify existing
+GitHub authentication and local reviewer configuration without printing tokens.
+Linux may provide private synthetic parent directories inside the namespace;
+writes there are checked against the unchanged owner host files. These command
+checks do not establish a full model-led third-party review pipeline or close
+callback, soak, login, nested runtime or accessibility acceptance gaps.
+
+Shell temp settings include both `TMPDIR` and zsh `TMPPREFIX`; otherwise heredoc
+creation can fail despite a writable scratch directory. Installed-version checks
+and the initial-candidate failure are retained in the sandbox evidence.
+
+## Dependency updates
+
+Use the [private owner dependency API](dependency-admin.md) to check and update
+Codex, installed plugins and standalone skills with recorded GitHub provenance.
+Operations retain per-dependency outcomes and backups and never replay uncertain
+changes. New runs load updated skill bundles; retained runs keep frozen contents.

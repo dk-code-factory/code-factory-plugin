@@ -19,6 +19,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -30,13 +31,13 @@ func main() {
 	}
 }
 func run() error {
-	port := 4174
-	if value, present := os.LookupEnv("CODE_FACTORY_TEST_HOST_PORT"); present {
-		var err error
-		port, err = strconv.Atoi(value)
-		if err != nil || port < 1 || port > 65535 {
-			return fmt.Errorf("CODE_FACTORY_TEST_HOST_PORT must be an integer port from 1 to 65535")
+	basePort := 4173
+	if value := os.Getenv("CODE_FACTORY_TEST_BASE_PORT"); value != "" {
+		port, err := strconv.Atoi(value)
+		if err != nil || strings.Trim(value, "0123456789") != "" || port < 1 || port > 65534 {
+			return fmt.Errorf("CODE_FACTORY_TEST_BASE_PORT must be a decimal integer from 1 to 65534")
 		}
+		basePort = port
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -54,7 +55,8 @@ func run() error {
 	if e != nil {
 		return e
 	}
-	a := &app.App{Store: s, Vault: v, DataDir: dir, GitHub: providers.NewGitHub()}
+	github := providers.NewGitHub()
+	a := &app.App{Store: s, Vault: v, DataDir: dir, GitHub: providers.NewCachedGitHub(github)}
 	binary, e := filepath.Abs("bin/fake-codex")
 	if e != nil {
 		return e
@@ -86,14 +88,14 @@ func run() error {
 		case "/user":
 			fmt.Fprint(w, `{"login":"pilot"}`)
 		case "/repos/pilot/fixture/issues":
-			fmt.Fprint(w, `[{"number":1,"title":"Assembled daemon fixture","body":"Inspect the fixture","state":"open","html_url":"https://github.com/pilot/fixture/issues/1","updated_at":"2026-10-19T12:00:00Z","user":{"login":"pilot"},"labels":[{"name":"P1"}]}]`)
+			fmt.Fprint(w, `[{"number":1,"title":"Assembled daemon fixture","body":"Inspect the fixture","state":"open","html_url":"https://github.com/pilot/fixture/issues/1","updated_at":"2026-10-19T12:00:00Z","user":{"login":"pilot"},"labels":[{"name":"P1"}]},{"number":2,"title":"Fresh first message fixture","body":"Investigate the first-message workflow","state":"open","html_url":"https://github.com/pilot/fixture/issues/2","updated_at":"2026-10-19T12:00:00Z","user":{"login":"pilot"},"labels":[{"name":"P1"}]}]`)
 		default:
 			fmt.Fprint(w, `[]`)
 		}
 	}))
 	defer provider.Close()
-	a.GitHub.BaseURL = provider.URL
-	a.GitHub.Token = func(context.Context) (string, error) { return "provider-fixture", nil }
+	github.BaseURL = provider.URL
+	github.Token = func(context.Context) (string, error) { return "provider-fixture", nil }
 	if e = a.Sync(ctx); e != nil {
 		return e
 	}
@@ -104,7 +106,7 @@ func run() error {
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]bool{"ready": true})
 	})
-	server := &http.Server{Addr: fmt.Sprintf("127.0.0.1:%d", port), Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: fmt.Sprintf("127.0.0.1:%d", basePort+1), Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shutdown, c := context.WithTimeout(context.Background(), 5*time.Second)

@@ -148,7 +148,7 @@ func TestRestartCheckingAutomaticallyClarifiesRetainedThread(t *testing.T) {
 	run := prepareRun(t, a, ctx)
 	run.Status = "interrupted"
 	run.ThreadID = "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	_ = a.Store.Put(ctx, "run", run.ID, run, "")
@@ -201,27 +201,51 @@ func TestRestartCheckingAutomaticallyClarifiesRetainedThread(t *testing.T) {
 }
 
 func TestRestartClarificationPreservesClaimedAttempt(t *testing.T) {
-	t.Setenv("CF_FAKE_MODE", "complete")
-	t.Setenv("CF_FAKE_HELPER_FAILURE", "invalid")
-	t.Setenv("CF_FAKE_CLARIFICATION", "malformed")
-	a, ctx := fixture(t)
-	run := prepareRun(t, a, ctx)
-	run.Status = "interrupted"
-	run.ThreadID = "thread-1"
-	_ = os.MkdirAll(run.Worktree, 0700)
-	_ = a.Store.Put(ctx, "run", run.ID, run, "")
-	r := domain.QuestionRecovery{ID: "in-flight-clarification", RunID: run.ID, Stage: "clarifying", SourceText: "Task complete", Attempts: 1}
-	_ = a.Store.Put(ctx, "question-recovery", r.ID, r, "")
-	for n := 0; n < 2; n++ {
-		if err := a.Runs.Recover(ctx); err != nil {
-			t.Fatal(err)
-		}
+	for _, phase := range []string{"running", "queued", "starting"} {
+		t.Run(phase, func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", "complete")
+			t.Setenv("CF_FAKE_HELPER_FAILURE", "invalid")
+			t.Setenv("CF_FAKE_CLARIFICATION", "malformed")
+			record := filepath.Join(t.TempDir(), "protocol.jsonl")
+			t.Setenv("CF_FAKE_RECORD", record)
+			a, ctx := fixture(t)
+			run := prepareRun(t, a, ctx)
+			run.Status, run.TurnID = phase, "interrupted-clarification"
+			if phase != "running" {
+				run.TurnID = ""
+			}
+			run.ThreadID = "thread-1"
+			_ = a.Runs.workspace(ctx, run)
+			_ = a.Store.Put(ctx, "run", run.ID, run, "")
+			r := domain.QuestionRecovery{ID: "in-flight-clarification", RunID: run.ID, Stage: "clarifying", SourceText: "Task complete", Attempts: 1, RepairTurnID: "interrupted-clarification"}
+			_ = a.Store.Put(ctx, "question-recovery", r.ID, r, "")
+			for n := 0; n < 2; n++ {
+				if err := a.Runs.Recover(ctx); err != nil {
+					t.Fatal(err)
+				}
+			}
+			r = waitRecovery(t, a, "unresolved")
+			if r.Attempts != 2 || r.Confirmation != "" {
+				t.Fatalf("restart lost budget: %+v", r)
+			}
+			assertNoAttention(t, a)
+			for _, call := range recordedCalls(t, record) {
+				if call.Method != "turn/start" {
+					continue
+				}
+				var input []struct{ Text string }
+				if err := json.Unmarshal(call.Params["input"], &input); err != nil {
+					t.Fatal(err)
+				}
+				for _, part := range input {
+					if strings.HasPrefix(part.Text, "Continue this same session from its last unfinished step") {
+						t.Fatal("question clarification replayed ordinary task continuation")
+					}
+				}
+			}
+
+		})
 	}
-	r = waitRecovery(t, a, "unresolved")
-	if r.Attempts != 2 || r.Confirmation != "" {
-		t.Fatalf("restart lost budget: %+v", r)
-	}
-	assertNoAttention(t, a)
 }
 
 func TestLegacyCompletionRequestReconcilesWithoutDiscardingRealQuestion(t *testing.T) {
@@ -232,7 +256,7 @@ func TestLegacyCompletionRequestReconcilesWithoutDiscardingRealQuestion(t *testi
 			run := prepareRun(t, a, ctx)
 			run.Status = "interrupted"
 			run.ThreadID = "thread-1"
-			_ = os.MkdirAll(run.Worktree, 0700)
+			_ = a.Runs.workspace(ctx, run)
 			_ = a.Store.Put(ctx, "run", run.ID, run, "")
 			source := "Task complete"
 			if later {
@@ -475,7 +499,7 @@ func TestLegacyClarificationSupersedesOnlyMatchingSynthetic(t *testing.T) {
 	run := prepareRun(t, a, ctx)
 	run.Status = "interrupted"
 	run.ThreadID = "thread-1"
-	_ = os.MkdirAll(run.Worktree, 0700)
+	_ = a.Runs.workspace(ctx, run)
 	_ = a.Store.Put(ctx, "run", run.ID, run, "")
 	legacy := domain.QuestionRecovery{ID: "legacy", RunID: run.ID, Stage: "fallback", Question: "Task complete"}
 	_ = a.Store.Put(ctx, "question-recovery", legacy.ID, legacy, "")
@@ -581,10 +605,10 @@ func TestLegacyClarificationSupersedesOnlyMatchingSynthetic(t *testing.T) {
 func TestRestartClaimedRecoveryAnswerDoesNotAskAgain(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
-	run.Status = "interrupted"
+	run.Status, run.TurnID = "running", "claimed-repair-turn"
 	run.ThreadID = "thread-1"
 	_ = a.Store.Put(ctx, "run", run.ID, run, "")
-	r := domain.QuestionRecovery{ID: "answered", RunID: run.ID, Stage: "answered", Question: "Which target?", Confirmation: "native", Attempts: 1}
+	r := domain.QuestionRecovery{ID: "answered", RunID: run.ID, Stage: "answered", Question: "Which target?", Confirmation: "native", Attempts: 1, RepairTurnID: run.TurnID}
 	_ = a.Store.Put(ctx, "question-recovery", r.ID, r, "")
 	if err := a.Runs.Recover(ctx); err != nil {
 		t.Fatal(err)
@@ -697,7 +721,7 @@ func TestStartupTakeoverCancelsRecoveryBeforeSessionAttachment(t *testing.T) {
 			a, ctx := fixture(t)
 			run := prepareRun(t, a, ctx)
 			run.Status, run.ThreadID = "interrupted", "thread-1"
-			if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+			if err := a.Runs.workspace(ctx, run); err != nil {
 				t.Fatal(err)
 			}
 			if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -754,7 +778,7 @@ func TestStartupTakeoverCancelsAfterSessionAttachment(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -876,7 +900,7 @@ func TestRetainedSetupFailureExhaustsSharedBudget(t *testing.T) {
 				run.ThreadID = ""
 			}
 			if method != "missing-worktree" {
-				if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+				if err := a.Runs.workspace(ctx, run); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -939,7 +963,7 @@ func TestStalledRecoveryTakeoverDoesNotBlockAnotherRunsQuestion(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1162,7 +1186,7 @@ func TestAsyncRecoveryRetainsSingleRouteAcrossRestart(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1244,7 +1268,7 @@ func TestAsyncRecoveryRetiresOnlyMatchingDuplicate(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1326,7 +1350,7 @@ func TestOriginatingRecoveryClaimsExcludeSiblingAnswers(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1401,7 +1425,7 @@ func TestRetainedSetupReusesClaimForLastPermittedTurn(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1427,7 +1451,7 @@ func TestRestartUnavailableSetupUsesRemainingBudget(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -1559,7 +1583,7 @@ func TestAsyncRecoveryDisconnectRetainsOnlyAsyncRoute(t *testing.T) {
 	}
 	waitFor(t, func() bool {
 		var current domain.Run
-		return a.Store.Get(ctx, "run", run.ID, &current) == nil && current.Status == "interrupted" && current.TurnID == ""
+		return a.Store.Get(ctx, "run", run.ID, &current) == nil && current.Status == "interrupted" && current.TurnID == r.RepairTurnID
 	})
 	// process/closed persists interrupted state before fallback. Joining its
 	// session lock waits for the complete callback before counting answer routes.
@@ -1838,13 +1862,17 @@ func TestTakeoverAfterClaimPreventsQueuedRepairContinuation(t *testing.T) {
 			case <-takeoverCtx.Done():
 				t.Fatal("queued repair continuation did not finish")
 			}
-			waitRecoveryWork(t, a.Runs)
 			if err := a.Store.Get(ctx, "question-recovery", r.ID, &r); err != nil || r.Stage != "resolved" || r.Attempts != 1 {
 				t.Fatalf("takeover failed to finalise the claim and invalidate continuation: %+v %v", r, err)
 			}
 			if err := a.Store.Get(ctx, "attention", at.ID, &at); err != nil || at.Status != "answered" {
 				t.Fatalf("takeover lost durable answer claim: %+v %v", at, err)
 			}
+			// Claims are checked before teardown. Stop the completed provider before
+			// joining workers: its dispatch loop can otherwise admit new background
+			// attention work concurrently with a zero-count WaitGroup.Wait.
+			a.Runs.Close()
+			waitRecoveryWork(t, a.Runs)
 			data, err := os.ReadFile(record)
 			if err != nil {
 				t.Fatal(err)
@@ -1918,7 +1946,7 @@ func TestRetiredResumeCannotOverwriteOwnerReplacement(t *testing.T) {
 	a, ctx := fixture(t)
 	run := prepareRun(t, a, ctx)
 	run.Status, run.ThreadID = "interrupted", "thread-1"
-	if err := os.MkdirAll(run.Worktree, 0700); err != nil {
+	if err := a.Runs.workspace(ctx, run); err != nil {
 		t.Fatal(err)
 	}
 	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
@@ -2027,5 +2055,121 @@ func TestTakeoverInvalidatesEntireQueuedCompletion(t *testing.T) {
 	data, err := os.ReadFile(record)
 	if err != nil || strings.Count(string(data), "outputSchema") != 1 {
 		t.Fatalf("stale completion launched another automatic classifier: %s %v", data, err)
+	}
+}
+
+func TestStartupStillContinuesNewerOwnerWorkBesideOldRecoveryDiagnostics(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "hold")
+	record := filepath.Join(t.TempDir(), "protocol.jsonl")
+	t.Setenv("CF_FAKE_RECORD", record)
+	a, ctx := fixture(t)
+	run := prepareRun(t, a, ctx)
+	if err := a.Runs.workspace(ctx, run); err != nil {
+		t.Fatal(err)
+	}
+	run.Status, run.ThreadID, run.TurnID, run.ResumePending = "running", "thread-1", "newer-owner-turn", true
+	if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
+		t.Fatal(err)
+	}
+	recovery := domain.QuestionRecovery{ID: "older-unresolved", RunID: run.ID, Stage: "unresolved", SourceTurnID: "older-source", RepairTurnID: "older-repair", SourceText: "Task complete", Attempts: 2, DiagnosticError: clarificationUnavailable}
+	if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Runs.Recover(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		return a.Store.Get(ctx, "run", run.ID, &run) == nil && run.Status == "running" && run.TurnID != ""
+	})
+	calls := recordedCalls(t, record)
+	if len(calls) != 2 || calls[0].Method != "thread/resume" || calls[1].Method != "turn/start" || !strings.Contains(string(calls[1].Params["input"]), "last unfinished step") || strings.Contains(string(calls[1].Params["input"]), "question-only recovery") {
+		t.Fatal("old diagnostics prevented or replaced newer owner work", calls)
+	}
+}
+
+func TestStartupRestoresAcceptedOwnerResumeBesideOldRecoveryDiagnostics(t *testing.T) {
+	for _, pending := range []bool{false, true} {
+		name := "ordinary-accepted-resume"
+		if pending {
+			name = "pending-question-still-blocks"
+		}
+		t.Run(name, func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", "hold")
+			record := filepath.Join(t.TempDir(), "protocol.jsonl")
+			t.Setenv("CF_FAKE_RECORD", record)
+			a, ctx := fixture(t)
+			run := prepareRun(t, a, ctx)
+			if err := a.Runs.workspace(ctx, run); err != nil {
+				t.Fatal(err)
+			}
+			run.Status, run.ThreadID, run.TurnID, run.ResumePending = "interrupted", "thread-1", "older-source", false
+			if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
+				t.Fatal(err)
+			}
+			recovery := domain.QuestionRecovery{ID: "older-unresolved", RunID: run.ID, Stage: "unresolved", SourceTurnID: "older-source", RepairTurnID: "older-repair", SourceText: "Task complete", Attempts: 2, DiagnosticError: clarificationUnavailable}
+			if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
+				t.Fatal(err)
+			}
+			accepted, err := a.Runs.Start(ctx, run.ID, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if accepted.Status != "queued" || !accepted.ResumePending || accepted.TurnID != "" {
+				t.Fatalf("wrong durable accepted checkpoint: %+v", accepted)
+			}
+			a.Runs.Close()
+			if err := os.Remove(record); err != nil && !os.IsNotExist(err) {
+				t.Fatal(err)
+			}
+			// Restore the exact public acceptance checkpoint to model process loss
+			// after commit but before the background launch can submit its turn.
+			if err := a.Store.Put(ctx, "run", run.ID, accepted, ""); err != nil {
+				t.Fatal(err)
+			}
+			question := domain.Attention{ID: "genuine-unanswered", RunID: run.ID, Origin: "async", Method: questionMethod, Blocking: true, Status: "pending", Params: raw(map[string]any{"questions": []question{{ID: "q1", Question: "Which scope?", IsOther: true}}})}
+			if pending {
+				if err := a.Store.Put(ctx, "attention", question.ID, question, ""); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := a.Runs.Recover(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if pending {
+				waitRecoveryWork(t, a.Runs)
+				if err := a.Store.Get(ctx, "run", run.ID, &run); err != nil || run.Status != "interrupted" || !run.ResumePending {
+					t.Fatal("pending question did not hold accepted work", run, err)
+				}
+				if err := a.Store.Get(ctx, "attention", question.ID, &question); err != nil || question.Status != "pending" {
+					t.Fatal("startup claimed or discarded genuine pending question", question, err)
+				}
+				if _, err := os.Stat(record); !os.IsNotExist(err) {
+					t.Fatal("pending question allowed provider work", err)
+				}
+				return
+			}
+			waitFor(t, func() bool {
+				return a.Store.Get(ctx, "run", run.ID, &run) == nil && run.Status == "running" && run.TurnID != ""
+			})
+			if run.ID != accepted.ID || run.ThreadID != accepted.ThreadID || run.Worktree != accepted.Worktree || run.Prompt != accepted.Prompt || string(raw(run.Profile)) != string(raw(accepted.Profile)) {
+				t.Fatal("startup replaced retained work or authority", run)
+			}
+			calls := recordedCalls(t, record)
+			if len(calls) != 2 || calls[0].Method != "thread/resume" || calls[1].Method != "turn/start" || string(calls[0].Params["threadId"]) != string(raw(accepted.ThreadID)) || string(calls[0].Params["cwd"]) != string(raw(accepted.Worktree)) {
+				t.Fatal("accepted owner resume did not restore exactly one retained turn", calls)
+			}
+			var input []struct{ Text string }
+			if err := json.Unmarshal(calls[1].Params["input"], &input); err != nil {
+				t.Fatal(err)
+			}
+			if len(input) != 1 || !strings.HasPrefix(input[0].Text, "Continue this same session from its last unfinished step") || strings.Contains(input[0].Text, accepted.Prompt) || strings.Contains(input[0].Text, "question-only recovery") {
+				t.Fatal("accepted owner resume replayed or substituted work", input)
+			}
+			var saved domain.QuestionRecovery
+			if err := a.Store.Get(ctx, "question-recovery", recovery.ID, &saved); err != nil || string(raw(saved)) != string(raw(recovery)) {
+				t.Fatal("ordinary owner start changed exhausted diagnostics", saved, err)
+			}
+			assertNoAttention(t, a)
+		})
 	}
 }

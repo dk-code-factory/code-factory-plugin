@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -48,15 +49,86 @@ type Client struct {
 }
 
 func Version(ctx context.Context, binary string) (string, error) {
+	v, err := ExecutableVersion(ctx, binary)
+	if err != nil {
+		return "", err
+	}
+	if CompareVersions(strings.TrimPrefix(v, "codex-cli "), "0.161.0") < 0 {
+		return "", fmt.Errorf("Codex requires stable version 0.161.0 or later; managed upgrades also require a protocol probe")
+	}
+	return v, nil
+}
+
+// ExecutableVersion permits inspecting an older CLI so administration can still
+// upgrade it, even though it cannot launch normal work.
+func ExecutableVersion(ctx context.Context, binary string) (string, error) {
 	b, e := exec.CommandContext(ctx, binary, "--version").Output()
 	if e != nil {
 		return "", fmt.Errorf("Codex not installed")
 	}
 	v := strings.TrimSpace(string(b))
-	if v != "codex-cli 0.161.0" {
-		return v, fmt.Errorf("unsupported Codex version %s; tested version is 0.161.0", v)
+	if !regexp.MustCompile(`^codex-cli [0-9]{1,6}\.[0-9]{1,6}\.[0-9]{1,6}$`).MatchString(v) {
+		return "", fmt.Errorf("Codex did not report a stable numeric version")
 	}
 	return v, nil
+}
+
+// CompareVersions accepts already validated stable numeric versions.
+func CompareVersions(a, b string) int {
+	x, y := strings.Split(a, "."), strings.Split(b, ".")
+	for i := 0; i < 3; i++ {
+		var av, bv int
+		if i < len(x) {
+			av, _ = strconv.Atoi(x[i])
+		}
+		if i < len(y) {
+			bv, _ = strconv.Atoi(y[i])
+		}
+		if av < bv {
+			return -1
+		}
+		if av > bv {
+			return 1
+		}
+	}
+	return 0
+}
+
+// Probe makes no model calls and never changes login/configuration. This checks
+// the app-server surfaces and native plugin inventory used by Code Factory.
+func Probe(ctx context.Context, binary, cwd string) error {
+	if _, err := Version(ctx, binary); err != nil {
+		return err
+	}
+	c, err := Start(ctx, binary, nil, nil)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	if err = c.Initialize(ctx); err != nil {
+		return fmt.Errorf("Codex initialize failed")
+	}
+	var account struct {
+		Account  *struct{ Type string }
+		Requires bool `json:"requiresOpenaiAuth"`
+	}
+	if err = c.Call(ctx, "account/read", map[string]any{"refreshToken": false}, &account); err != nil || account.Requires && account.Account == nil {
+		return fmt.Errorf("Codex existing authentication unavailable")
+	}
+	var skills struct{ Data []json.RawMessage }
+	if err = c.Call(ctx, "skills/list", map[string]any{"cwds": []string{cwd}, "forceReload": true}, &skills); err != nil || skills.Data == nil {
+		return fmt.Errorf("Codex skill protocol unavailable")
+	}
+	var config struct{ Config map[string]json.RawMessage }
+	if err = c.Call(ctx, "config/read", map[string]any{"includeLayers": false}, &config); err != nil || config.Config == nil {
+		return fmt.Errorf("Codex configuration protocol unavailable")
+	}
+	output, err := exec.CommandContext(ctx, binary, "plugin", "list", "--json").Output()
+	var plugins struct{ Installed []json.RawMessage }
+	if err != nil || len(output) > 16<<20 || json.Unmarshal(output, &plugins) != nil || plugins.Installed == nil {
+		return fmt.Errorf("Codex plugin management unavailable")
+	}
+	return nil
 }
 func Start(ctx context.Context, binary string, extra []string, onMessage func(Message)) (*Client, error) {
 	cmd := exec.CommandContext(ctx, binary, append([]string{"app-server"}, extra...)...)

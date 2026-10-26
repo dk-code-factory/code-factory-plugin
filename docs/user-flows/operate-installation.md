@@ -14,22 +14,26 @@ The owner has a local installation and, for a release change, a validated packag
 2. Upgrade to a validated release after preserving compatible private state.
 3. If necessary, explicitly roll back using the retained compatible snapshot.
 4. Uninstall application services and launchers while retaining application data and connection mapping.
+5. Use the private owner dependency API to inspect versions, check managed updates and start an identified update operation while agent work is inactive. Inspect each result before starting work with updated dependencies.
 
 ## Alternatives and recovery
 
 Invalid packages or occupied ports fail without replacing a healthy installation. Failed upgrades attempt automatic recovery. If interruption occurs after a release is activated but before the change is finalized, explicit rollback can restore the retained compatible snapshot. Rollback preserves newer state in an archive. Shared network routes and login policy are preserved. Browser inspection uses an explicitly owner-approved attachment mode. A dedicated persistent pilot profile requires its own initial manual sign-in without copying authentication; inspection pauses during that sign-in. Local debugger readiness alone does not establish application or host acceptance. Upgrading changed embedded UI content also changes its advertised resource identity; hosts may still require a metadata refresh or fresh view. Verify the actual rendered revision rather than inferring it from healthy service or local resource reads. Operator evidence is version-bound and never inferred from fixture success.
 
+The owner can inspect private rotating diagnostics for incoming MCP and owner API calls, with UTC start time, API name, bounded safe parameters, transport status and server processing duration. The duration does not measure client latency or background agent completion. Logs survive restart, rotate within fixed bounds and never broaden request authority. Rejected calls are recorded; unsafe paths and write failures produce a generic warning while preserving API behavior. Existing earlier calls are not reconstructed.
+
 ## Scenarios
 
-- **S1** Fresh/rerun installation and failed upgrade preserve private state. Explicit rollback recovers an interruption after release activation but before the change is finalized, restoring the compatible snapshot and archiving newer state.
+- **S1** Fresh/rerun installation and failed upgrade preserve private state. Application and task commands use the recorded provider programs without replacing global programs; prior provider command selections remain available for compatible rollback. Explicit rollback recovers an interruption after release activation but before the change is finalized, restoring the compatible snapshot and archiving newer state.
 - **S2** Rollback restores compatible state and transport profile while archiving newer state.
 - **S3** Uninstall/reinstall retain data and mapping; shared routes and unrelated services are preserved.
 - **S4** Diagnostics expose version-bound verified/failed/unverified evidence, including outstanding host acceptance.
+- **S5** Owner-authenticated dependency maintenance checks and updates Codex, installed native plugins and standalone skills with known GitHub provenance. Active work prevents acceptance; repeated operation IDs return the same result. Codex candidates pass compatibility checks before recorded-provider activation; failures preserve the working provider. Skill updates retain backups and reject edits made after the recorded baseline. Automatic lock import may treat earlier local edits as that baseline and replace them. The ambiguous-baseline adoption repair is excluded throughout this PR, including later review cycles and resumed work; no follow-up fix or issue is scheduled. Explicit legacy DK migration selects current native skills while retaining old files and frozen run snapshots. Interrupted or unconfirmed changes remain uncertain and are not replayed. Externally managed host dependencies remain explicit.
 
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [owner](../glossary/README.md#owner), [verification](../glossary/README.md#verification), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior).
+Glossary: [owner](../glossary/README.md#owner), [verification](../glossary/README.md#verification), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [dependency-operation](../glossary/README.md#dependency-operation), [github-skill-source](../glossary/README.md#github-skill-source).
 UI entities: [P-DIAGNOSTICS](../ui/README.md#P-DIAGNOSTICS), [W-DIAGNOSTICS](../ui/README.md#W-DIAGNOSTICS), [C-DIAGNOSE](../ui/README.md#C-DIAGNOSE), [PAGE-BROWSER-LAB](../ui/README.md#PAGE-BROWSER-LAB), [P-BROWSER-LAB](../ui/README.md#P-BROWSER-LAB), [W-BROWSER-LAB](../ui/README.md#W-BROWSER-LAB), [C-BROWSER-LAB](../ui/README.md#C-BROWSER-LAB).
 
 ## Flow diagram
@@ -44,6 +48,12 @@ flowchart TD
     N5(["Preserve unrelated services and shared routes"])
     N6["Reject invalid package or occupied port"]
     N7["Release activated but interrupted before change is finalized"]
+    N8["Authenticate owner and inspect or update identified managed dependencies #40;S5#41;"]
+    N9(["Observe verified per-dependency outcomes#59; retain backups and existing authentication"])
+    N10(["Reject busy, invalid or incompatible changes#59; retain state and inspect uncertain outcomes"])
+    N11["Record API name, safe parameters, transport status and server processing time #40;S4#41;"]
+    N12(["Retain private bounded logs with secret values redacted"])
+    N13(["Warn once if logging is unavailable#59; preserve the API result without replay"])
     N0 -->|"upgrade"| N1
     N1 -->|"upgrade returns failure"| N2
     N2 -->|"recovered"| N0
@@ -57,6 +67,12 @@ flowchart TD
     N1 -->|"interrupted after activation before finalization"| N7
     N7 -->|"explicit rollback"| N3
     N2 -->|"automatic recovery fails#59; explicit rollback"| N3
+    N0 -->|"explicit owner dependency maintenance"| N8
+    N8 -->|"authorized idle operation and verified changes"| N9
+    N8 -->|"unauthorized, active work, edits after baseline, failed probe or interruption"| N10
+    N0 -->|"incoming MCP or private owner API call"| N11
+    N11 -->|"safe bounded record appended#59; rotate older entries"| N12
+    N11 -->|"unsafe path or log write failure"| N13
 ```
 
 ## Implementation references
@@ -83,6 +99,18 @@ flowchart TD
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [scripts/browser_options.mjs](../../scripts/browser_options.mjs) — Pure explicit attachment options retain privacy flags, reject unsafe/ambiguous endpoints and never echo rejected credential-bearing URL values. (`export function parseBrowserOptions(`)
 - [internal/transport/mcp.go](../../internal/transport/mcp.go) — Advertises the embedded UI under a full-content SHA256 URI and binds all tool/output-template references to it, retaining only an unadvertised exact legacy-read alias. (`func registerUIResource(`)
+- [internal/gateway/proxy_diagnostics.go](../../internal/gateway/proxy_diagnostics.go) — Fixed safe upstream failure classes, preserving request secrecy and HTTP behavior. (`func proxyError(`)
+- [internal/commandenv/providers.go](../../internal/commandenv/providers.go) — Generate private versioned command launchers for exactly the recorded provider executables, quote paths literally and preserve prior launcher sets for rollback. (`func Prepare(`)
+- [internal/app/dependencies.go](../../internal/app/dependencies.go) — Serialize identified dependency jobs; stage and probe Codex before activation, update registered plugins and retain uncertain outcomes. (`func (m *Manager) UpdateDependencies(`)
+- [internal/app/dependency_skills.go](../../internal/app/dependency_skills.go) — Register GitHub origins, detect edits after the recorded baseline, retain backups and atomically exchange pinned skill directories. Automatic lock import can adopt earlier edits; the ambiguous-baseline repair is excluded throughout this PR. (`func (m *Manager) RegisterGitHubSkill(`)
+- [internal/app/dependency_migration.go](../../internal/app/dependency_migration.go) — Explicitly migrate canonical legacy DK skill duplicates, rebind profiles and recover archived referenced paths after interruption. (`func (m *Manager) migrateLegacyDKSkills(`)
+- [internal/dependencies/codex.go](../../internal/dependencies/codex.go) — Verify stable dkropachev/codex fork release asset SHA256 and retain full CLI/companion package layout before probing. (`func StageCodex(`)
+- [internal/dependencies/files.go](../../internal/dependencies/files.go) — Bound archives and reject traversal, links, duplicate files and special entries; fingerprint installed content. (`func Extract(`)
+- [internal/transport/dependencies.go](../../internal/transport/dependencies.go) — Private bearer-authenticated owner REST API outside MCP/public/browser routing, with strict JSON input and durable status. (`func (s *Server) DependencyHandler(`)
+- [internal/codex/client.go](../../internal/codex/client.go) — No-model compatibility probe covering initialize, current account, skills, config and native plugin inventory. (`func Probe(`)
+- [docs/dependency-admin.md](../../docs/dependency-admin.md) — Owner dependency API request, recovery, provenance and supported dependency boundaries.
+- [internal/transport/api_log.go](../../internal/transport/api_log.go) — Record incoming MCP/owner API call names, safe parameters, UTC start time, HTTP status and handler duration in a private bounded rotating JSONL log without changing request processing. (`func (s *Server) LogAPI(`)
+- [internal/transport/api_log_parameters.go](../../internal/transport/api_log_parameters.go) — Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence. (`func privateAPIParameter(`)
 
 ## Test references
 
@@ -106,13 +134,41 @@ flowchart TD
 - [scripts/test_browser_control.mjs](../../scripts/test_browser_control.mjs) — `test('endpoint validation rejects remote hosts, normalized aliases and URL metadata'`; S4. Remote/alias/credential/path/query/fragment/invalid-port endpoint spellings reject without echoing the supplied secret value. Pure argument fixtures do not attach Chrome, read profiles or establish host acceptance.
 - [scripts/test_browser_control.mjs](../../scripts/test_browser_control.mjs) — `test('argument parsing is deterministic and cannot mutate inputs or later calls'`; S4. Option parsing is deterministic, read-only and isolated from prior result mutation. Pure argument fixtures do not attach Chrome, read profiles or establish host acceptance.
 - [internal/transport/ui_resource_test.go](../../internal/transport/ui_resource_test.go) — `func TestUIResourceContentIdentityAndCompatibility(`; S1. Actual SDK fixture asserts stable same-content and changed-content UI identity, matching current tool/resource metadata and exact HTML; only the original exact URI reads current content unadvertised, while unknown/previous hashes and query variants reject. CSP domains stay empty. This does not prove host refresh or installed UI acceptance.
+- [internal/gateway/proxy_diagnostics_test.go](../../internal/gateway/proxy_diagnostics_test.go) — `func TestProxyDiagnosticsClassifyWithoutLeakingRequestOrError(`; S1. Failure categories contain no raw request/error details and preserve 502 behavior.
+- [internal/setup/github_diagnostics_test.go](../../internal/setup/github_diagnostics_test.go) — `func TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence(`; S1. Diagnostics use local credentials without a GitHub API probe and align freshness/paused/deferred status with periodic reconciliation.
+- [internal/commandenv/providers_test.go](../../internal/commandenv/providers_test.go) — `func TestSelectedProvidersWinWithoutGlobalReplacement(`; S1. Selected executables win over conflicting fallback commands, unusual paths and literal arguments are preserved, and previous launcher versions remain unchanged.
+- [internal/commandenv/providers_test.go](../../internal/commandenv/providers_test.go) — `func TestUnavailableProvidersNeverFallBack(`; S1. Missing or relative selected providers fail instead of invoking an older system fallback.
+- [internal/commandenv/providers_test.go](../../internal/commandenv/providers_test.go) — `func TestProviderDirectoryRejectsEscapingSymlinks(`; S1. A replaced launcher symlink cannot overwrite an outside owner file.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyUpdateIsIdempotentAndKeepsUncertainOutcomes(`; S5. Duplicate deliveries do not repeat native changes; partial mutations and restart recovery retain uncertain observations without secret stderr.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyMaintenanceRejectsActiveWorkAndBlocksNewLaunches(`; S5. Active work prevents acceptance; maintenance blocks task Start and competing plugin changes.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestGitHubSkillUpgradePreservesBackupRejectsEditsAndUnsafeSource(`; S5. Pinned GitHub replacement retains original files and provenance; later local edits and unsafe source paths are rejected.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestCodexActivationUpdatesRecordedProviderAndKeepsPriorRuntime(`; S5. Provider switching retains prior runtime and executable while updating recorded and current provider selections.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestCodexUpdateProbesBeforeSwitchAndRetainsProviderOnFailure(`; S5. Verified staged candidate must pass protocol/auth/skills/plugins; an incompatible later candidate cannot replace the working provider.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestLegacyDKSkillMigrationRebindsProfilesAndRecoversMissingReferences(`; S5. Opt-in legacy migration retains backups, selects current native skills and restores old paths after a crash before profile migration.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestUpdatedPluginProfilesDeduplicateDiscoveryAndKeepPreparedSnapshots(`; S5. Repeated discovery roots do not create false ambiguity; new skill IDs update profiles while prepared snapshots remain unchanged.
+- [internal/dependencies/files_test.go](../../internal/dependencies/files_test.go) — `func TestDependencyArchivesRejectTraversalLinksDuplicatesAndBudget(`; S5. Invalid archive paths, links, duplicates and per-entry or cumulative over-budget content are rejected; exact-limit content survives extraction.
+- [internal/dependencies/files_test.go](../../internal/dependencies/files_test.go) — `func TestDependencyArchiveRejectsCumulativeSizeOverflowBeforeWriting(`; S5. After accepting one byte, a MaxInt64 declared entry is rejected before its path is created; the prior accepted file remains intact.
+- [internal/dependencies/files_test.go](../../internal/dependencies/files_test.go) — `func TestSkillFingerprintSurvivesPrivateCopyAndDetectsEdits(`; S5. Owner-private copy permissions keep fingerprints stable; modified content and links invalidate update eligibility.
+- [internal/dependencies/files_test.go](../../internal/dependencies/files_test.go) — `func TestCodexDownloadVerifiesDigestAndRetainsCompanions(`; S5. The selected fork package digest and origin are required; companion binaries retain their distribution layout.
+- [internal/transport/dependencies_test.go](../../internal/transport/dependencies_test.go) — `func TestDependencyAdminRequiresOwnerAndRejectsAmbiguousRequests(`; S5. Owner bearer/origin checks and strict JSON protect the API; identified updates are pollable and deduplicated.
+- [internal/gateway/dependencies_test.go](../../internal/gateway/dependencies_test.go) — `func TestDependencyAdminIsAbsentFromPublicGateway(`; S5. Plain and prefixed dependency routes remain unavailable through the public OAuth gateway.
+- [internal/codex/compatibility_test.go](../../internal/codex/compatibility_test.go) — `func TestStableCodexVersionBoundary(`; S5. Stable minimum and numeric ordering accept upgrade candidates while rejecting older/prerelease CLI versions.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyMarketplaceFailureDoesNotBlockIndependentPlugins(`; S5. A failed renamed/unavailable Git marketplace remains an isolated result while independent plugins still update; failure output stays private.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestDependencyInventoryExcludesSkillContents(`; S5. Cached owner inventory exposes installed plugin/skill metadata while excluding skill contents and uninstalled catalog entries.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(`; S4. Actual MCP tool/resource and rejected requests retain call names, safe parameters and durations while omitting owner credentials, stored secrets, answers, message text and URL secrets; files and directory are private.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(`; S4. Owner request parameters and processing duration are recorded while the downstream handler sees unchanged request bytes and status.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogActualOwnerHandlerRecordsRejectedInput(`; S4. The actual private owner handler logs rejected dependency parameters and HTTP status without executing maintenance.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRotationConcurrencyAndFailurePreserveAPI(`; S4. Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogBoundsMalformedBodiesAndPreservesPanic(`; S4. Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records.
+- [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestGitHubSkillUpgradeRejectsNestedNativePackages(`; S5. Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup.
 
 ## Verification and gaps
 
 Local suites: `go`, `release`.
 Fixture success does not establish real-host acceptance.
 - **S3** — `gap-flow-operate-installation-s3-01` · Unverified behavior · P1 · owner: specification-coordinator. A coordinated real desktop logout/login is still open. Isolated systemd tests and process fixtures cannot prove the current user login cycle. Next verification: Coordinate a real desktop logout/login for the installed version and record service, browser-session and connection continuity observations; isolated process/systemd fixtures cannot close that check.
-- **S4** — `gap-flow-operate-installation-s4-01` · Unverified behavior · P1 · owner: specification-coordinator. Controller option fixtures establish only configured local attachment arguments, not sign-in or actual browser/app acceptance. Diagnostics cannot establish host receipt, soak or CSP enforcement; outstanding checks stay unverified in ../acceptance.md. Next verification: Inspect actual-host callback receipt and CSP behavior and complete the recorded soak for the installed version; update dated acceptance evidence while retaining unobserved checks as unverified.
+- **S4** — `gap-flow-operate-installation-s4-01` · Unverified behavior · P1 · owner: specification-coordinator. Controller option fixtures establish only configured local attachment arguments, not sign-in or actual browser/app acceptance. This development port establishes no installed-host callback, soak, login or CSP acceptance; outstanding checks remain unverified in ../acceptance.md. Next verification: Inspect actual-host callback receipt and CSP behavior and complete a connected one-hour soak for the installed port version; update dated acceptance evidence while retaining unobserved checks as unverified.
 - **S1** — `gap-flow-operate-installation-s1-01` · Unverified behavior · P2 · owner: user-flow-maintainer. The hard-kill fixture covers only the boundary after release activation and before installation commit at the process-backed service-restart gate. Other interruption stages, power-loss or storage-durability failures and recovery through real user systemd remain unverified. The separate returned-failure fixture completes deferred automatic recovery before rollback and does not establish interruption coverage at additional stages. Next verification: Extend interruption tests to additional durable-operation boundaries and storage/power-loss failure models; separately verify recovery through real user systemd without broadening the existing single-boundary fixture claim.
+- **S5** — `gap-flow-operate-installation-s5-skill-baseline-01` · Known limitation · P2 · owner: user-flow-maintainer. Automatic standalone-skill lock import records the current local tree as its baseline. First-time or previously imported skills may have earlier local edits replaced. The user explicitly excluded the ambiguous-baseline adoption repair throughout PR3, including later cycles/resumes, preserving registration compatibility. Next verification: No follow-up fix or issue is scheduled. Reconsider this limitation only under separately authorized scope; do not claim existing post-registration edit assertions prove pre-import edit protection.
 
 <!-- /flow-references -->

@@ -90,3 +90,73 @@ func TestUIResourceContentIdentityAndCompatibility(t *testing.T) {
 		previousURI = uri
 	}
 }
+
+func TestSettingsResourceIsIndependentFromInboxAndLegacyAlias(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	previousSettings := ""
+	for _, main := range []string{`<!doctype html><html><body>revision one</body></html>`, `<!doctype html><html><body>revision two</body></html>`} {
+		settings := strings.Replace(main, "<html", `<html data-code-factory-view="settings"`, 1)
+		server := mcp.NewServer(&mcp.Implementation{Name: "independent-settings-test", Version: "1"}, nil)
+		inboxURI := registerUIResource(server, main)
+		settingsURI := registerSettingsUIResource(server, settings)
+		repeated := registerSettingsUIResource(mcp.NewServer(&mcp.Implementation{Name: "repeated-settings-test", Version: "1"}, nil), settings)
+		if inboxURI == settingsURI || settingsURI == previousSettings || settingsURI != repeated || settingsURI != fmt.Sprintf("ui://code-factory/settings-%x.html", sha256.Sum256([]byte(settings))) {
+			t.Fatal("settings identity is not independent and content-specific")
+		}
+		bind(server, inboxURI, "open_factory", "Inbox", false, true, func(context.Context, Empty) (any, error) { return "inbox", nil })
+		bind(server, settingsURI, "open_settings", "Settings", false, true, func(context.Context, Empty) (any, error) { return "settings", nil })
+		st, ct := mcp.NewInMemoryTransports()
+		ss, err := server.Connect(ctx, st, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		client := mcp.NewClient(&mcp.Implementation{Name: "separate-settings-client", Version: "1"}, nil)
+		session, err := client.Connect(ctx, ct, nil)
+		if err != nil {
+			ss.Close()
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { session.Close(); ss.Close() })
+		listed, err := session.ListResources(ctx, nil)
+		if err != nil || len(listed.Resources) != 2 {
+			t.Fatal("both surfaces must be advertised", err)
+		}
+		tools, err := session.ListTools(ctx, nil)
+		if err != nil || len(tools.Tools) != 2 {
+			t.Fatal("both UI entry tools must be advertised", err)
+		}
+		expected := map[string]string{"open_factory": inboxURI, "open_settings": settingsURI}
+		for _, tool := range tools.Tools {
+			uri := expected[tool.Name]
+			if tool.Meta["ui"].(map[string]any)["resourceUri"] != uri || tool.Meta["openai/outputTemplate"] != uri {
+				t.Fatal("entry tool points at the wrong surface", tool.Name)
+			}
+		}
+		for uri, body := range map[string]string{inboxURI: main, settingsURI: settings, legacyResourceURI: main} {
+			result, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: uri})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(result.Contents) != 1 || result.Contents[0].URI != uri || result.Contents[0].Text != body {
+				t.Fatal("surface content crossed identities", uri)
+			}
+			csp := result.Contents[0].Meta["ui"].(map[string]any)["csp"].(map[string]any)
+			if len(csp["connectDomains"].([]any)) != 0 || len(csp["resourceDomains"].([]any)) != 0 {
+				t.Fatal("settings gained direct iframe network access")
+			}
+		}
+		invalid := []string{"ui://code-factory/settings.html", settingsURI + "?view=inbox", resourceURI(settings), settingsResourceURI(main)}
+		if previousSettings != "" {
+			invalid = append(invalid, previousSettings)
+		}
+		for _, uri := range invalid {
+			_, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: uri})
+			var protocolError *jsonrpc.Error
+			if !errors.As(err, &protocolError) || protocolError.Code != mcp.CodeResourceNotFound {
+				t.Fatal("unregistered cross-surface URI accepted", uri, err)
+			}
+		}
+		previousSettings = settingsURI
+	}
+}

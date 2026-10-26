@@ -1,5 +1,17 @@
 # Browser and installed-host testing
 
+## Development port · 2026-10-25
+
+The development UI has Working, Issues, My PRs, Review PRs and Messages queues.
+Opening an item shows its conversation; opening an item never starts an agent.
+Review the selected pipeline and authority before explicit Start. Pending answers
+belong to their owning run; uncertain delivery must not replay automatically.
+Settings opens separately and includes dependency and plugin administration.
+
+These are source contracts awaiting fresh verification against the published
+base. Follow [acceptance](acceptance.md) for the draft port's current blockers;
+private pilot observations do not establish acceptance for this branch.
+
 This is a generic operator guide. Supply your own approved private pilot repository,
 Tailscale hostname, registered app ID and installed plugin ID; none are bundled.
 Read [operations](operations.md) and [acceptance](acceptance.md) first.

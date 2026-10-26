@@ -75,12 +75,6 @@ func (g *GitHub) Operation(ctx context.Context, ledger *store.Store, memoize boo
 func (g *GitHub) StartOperation(ctx context.Context, ledger *store.Store, memoize bool) context.Context {
 	return context.WithValue(ctx, operationKey{}, &operation{client: g, ledger: ledger, requireLedger: memoize, memoize: memoize, memo: map[string]bool{}})
 }
-func (g *GitHub) now() time.Time {
-	if g.Now != nil {
-		return g.Now().UTC()
-	}
-	return time.Now().UTC()
-}
 func (g *GitHub) resolve(ctx context.Context, op *operation) error {
 	if !op.resolved {
 		op.resolved = true
@@ -296,14 +290,30 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	if g.Client == nil {
 		return fail(BeforeDispatch, 0, errors.New("GitHub HTTP client unavailable; restore settings and resume"))
 	}
+	if g.Managed() {
+		unlock, err := g.lockUsage(ctx)
+		if err != nil {
+			return fail(BeforeDispatch, 0, err)
+		}
+		defer unlock()
+	}
 	safe := *g.Client
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	if err = g.beginRequest(ctx, op.token, "core", req.URL.Path); err != nil {
+		return fail(BeforeDispatch, 0, err)
+	}
 	res, err := safe.Do(req)
 	if err != nil {
 		return fail(Uncertain, 0, errors.New("GitHub connection failed"))
 	}
 	defer res.Body.Close()
+	if err = g.observe(ctx, op.token, "core", req.URL.Path, res.Header); err != nil {
+		return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
+	}
 	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "") {
+		if g.Managed() {
+			return fail(HTTPRejected, res.StatusCode, g.rateLimited(ctx, op.token, "core", res.Header))
+		}
 		deadline := retryDeadline(res.Header, g.now())
 		if until.After(deadline) {
 			deadline = until
@@ -397,4 +407,59 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 		}
 	}
 	return b, res.Header.Clone(), nil
+}
+
+// Index hydration may overlap independent repositories, while retaining the
+// same authentication and cooldown boundary as publication requests.
+func (g *GitHub) indexCooldown(ctx context.Context, token string) error {
+	g.dispatch.Lock()
+	defer g.dispatch.Unlock()
+	until := g.cooldowns[CooldownKey(g.BaseURL, token)]
+	if op, _ := ctx.Value(operationKey{}).(*operation); op != nil && op.ledger != nil {
+		var saved time.Time
+		if err := op.ledger.Get(ctx, CooldownKind, CooldownKey(g.BaseURL, token), &saved); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return errors.New("GitHub cooldown state unavailable")
+		}
+		if saved.After(until) {
+			until = saved
+		}
+	}
+	if g.now().Before(until) {
+		return &RateLimitError{Until: until}
+	}
+	return nil
+}
+func (g *GitHub) indexRateLimited(ctx context.Context, token string, h http.Header) error {
+	err := g.rateLimited(ctx, token, "core", h)
+	if g.Managed() {
+		return err
+	}
+	var rate *RateLimitError
+	if !errors.As(err, &rate) {
+		return err
+	}
+	g.dispatch.Lock()
+	defer g.dispatch.Unlock()
+	key := CooldownKey(g.BaseURL, token)
+	if g.cooldowns == nil {
+		g.cooldowns = map[string]time.Time{}
+	}
+	if rate.Until.After(g.cooldowns[key]) {
+		g.cooldowns[key] = rate.Until
+	}
+	if op, _ := ctx.Value(operationKey{}).(*operation); op != nil && op.ledger != nil {
+		if saveErr := op.ledger.Write(ctx, func(t *store.Tx) error {
+			var saved time.Time
+			if e := t.Get(CooldownKind, key, &saved); e != nil && !errors.Is(e, store.ErrNotFound) {
+				return e
+			}
+			if saved.After(rate.Until) {
+				rate.Until = saved
+			}
+			return t.Put(CooldownKind, key, rate.Until)
+		}); saveErr != nil {
+			return errors.New("GitHub retry deadline could not be retained")
+		}
+	}
+	return err
 }
