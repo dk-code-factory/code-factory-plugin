@@ -9692,7 +9692,8 @@
         "UI-REPORTS-DETAIL-ORDER",
         "UI-REPORTS-SELECTION-ORDER",
         "UI-REPORTS-DETAIL-PROGRESS",
-        "UI-REPORTS-MUTATION-PROGRESS"
+        "UI-REPORTS-MUTATION-PROGRESS",
+        "UI-REPORTS-EVIDENCE-RETRY"
       ],
       "gaps": [
         {
@@ -9701,7 +9702,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Local browser fixtures assert information requests and evidence payloads, independent closure/prerelease/Unknown displays, recovery gating and ordered detail responses. Evidence disclosure contents, fix/stable-release link variants, rejected mutations, draft retention across failures and report-specific accessibility and installed-host behavior remain unverified.",
+          "reason": "Local browser fixtures assert information requests and evidence payloads, independent closure/prerelease/Unknown displays, recovery gating and ordered detail responses. Evidence disclosure contents, fix/stable-release link variants, rejected recovery requests, draft retention across other failures and report-specific accessibility and installed-host behavior remain unverified.",
           "next_verification": "Exercise disclosure contents, stable/fix link variants and failed evidence/recovery requests with retained drafts; separately check report keyboard/accessibility behavior and the approved installed host."
         }
       ],
@@ -9788,7 +9789,8 @@
       "assertions": [
         "UI-REPORTS-INFO",
         "UI-REPORTS-RECOVERY",
-        "UI-REPORTS-MUTATION-PROGRESS"
+        "UI-REPORTS-MUTATION-PROGRESS",
+        "UI-REPORTS-EVIDENCE-RETRY"
       ],
       "gaps": [],
       "suites": [
@@ -9806,7 +9808,7 @@
       "external_boundary": false,
       "endpoint_description": "`W-REPORT-DETAIL.add-evidence` \u2192 `W-REPORT-DETAIL`, `W-REPORT-LIST`",
       "trigger": "Add evidence; selected report ID, draft text and retained idempotency key.",
-      "interactions": "Append idempotent host observations and queue reports waiting for information."
+      "interactions": "Append idempotent host observations and queue reports waiting for information. After an uncertain response, an unchanged draft can be retried without duplicate additions; editing the retained draft permits another observation."
     },
     {
       "id": "C-REPORT-RECOVER",
@@ -10572,6 +10574,12 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues releases mutation controls during continuing slow journal refreshes\"",
       "assertion": "After a mutation renders its own refreshed list, refresh, evidence and acknowledged recovery controls become usable while queued journal refreshes remain pending; a second evidence submission reaches the selected report."
+    },
+    {
+      "id": "UI-REPORTS-EVIDENCE-RETRY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "\"reported issues retries uncertain evidence without duplicating it and accepts edited evidence\"",
+      "assertion": "After an accepted evidence call loses its acknowledgement, the retained unchanged draft retries with the same key and adds nothing twice; editing the draft submits a distinct key, appends exactly one new observation and clears the successful draft."
     }
   ],
   "source_map": [

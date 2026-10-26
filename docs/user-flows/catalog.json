@@ -7046,7 +7046,7 @@
             "S2",
             "S3"
           ],
-          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain."
+          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7420,6 +7420,15 @@
             "S5"
           ],
           "purpose": "Actual delivery validation from a workflow-depth local clone accepts checked packages containing a historical fix commit, preserving fix ancestry and exact artifact download without publication."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues retries uncertain evidence without duplicating it and accepts edited evidence\"",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "A controlled accepted addition returns two lost acknowledgements; unchanged retries preserve one retained addition and identity, while an edited draft uses a distinct identity and successfully appends another observation."
         }
       ],
       "suites": [

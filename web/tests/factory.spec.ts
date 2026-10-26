@@ -85,6 +85,10 @@ async function host(
     ) => Promise<ReportPage>;
     readItem?: (detail: Detail) => Promise<Detail>;
     readReport?: (report: IssueReport) => Promise<IssueReport>;
+    addEvidence?: (
+      report: IssueReport,
+      args: Record<string, unknown>,
+    ) => Promise<ToolResult>;
     resumeReport?: (report: IssueReport) => Promise<IssueReport>;
     failPreparation?: boolean;
     theme?: "light" | "dark";
@@ -169,6 +173,7 @@ async function host(
         }
         case "add_issue_evidence": {
           const report = reports.find((r) => r.id === a.id)!;
+          if (options.addEvidence) return options.addEvidence(report, a);
           report.additions.push(String(a.text));
           report.processing = "queued";
           state.cursor++;
@@ -1715,6 +1720,78 @@ test("reported issues shares ledger search, information requests and evidence re
     .toBeTruthy();
   expect(calls.some((c) => c.name === "start_run")).toBeFalsy();
 });
+test("reported issues retries uncertain evidence without duplicating it and accepts edited evidence", async ({
+  page,
+}) => {
+  const report = reportFixture();
+  const accepted = new Map<string, string>();
+  let attempts = 0;
+  const { ui, state, calls } = await host(page, {
+    reports: [report],
+    addEvidence: async (result, args) => {
+      attempts++;
+      const key = String(args.idempotencyKey);
+      const text = String(args.text);
+      if (accepted.has(key) && accepted.get(key) !== text)
+        return {
+          isError: true,
+          content: [
+            { type: "text", text: "Evidence key conflicts with accepted text" },
+          ],
+        };
+      if (!accepted.has(key)) {
+        accepted.set(key, text);
+        result.additions.push(text);
+        result.processing = "queued";
+        state.cursor++;
+      }
+      // The daemon accepted the first payload, but both acknowledgements are lost.
+      if (attempts <= 2)
+        return {
+          isError: true,
+          content: [{ type: "text", text: "Evidence acknowledgement lost" }],
+        };
+      return {
+        content: [],
+        structuredContent: { data: structuredClone(result) },
+      };
+    },
+  });
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  const evidence = detail.getByLabel("What did the host display?");
+  const add = detail.getByRole("button", { name: "Add evidence", exact: true });
+  const original = "Work displayed an expired request error";
+  await evidence.fill(original);
+  await add.click();
+  await expect(ui.getByRole("alert")).toContainText(
+    "Evidence acknowledgement lost",
+  );
+  await expect(evidence).toHaveValue(original);
+  await expect(detail.getByText(original, { exact: true })).toHaveCount(1);
+  await add.click();
+  await expect.poll(() => attempts).toBe(2);
+  await expect(add).toBeEnabled();
+  await expect(evidence).toHaveValue(original);
+  expect(report.additions).toEqual([original]);
+  const additions = () => calls.filter((c) => c.name === "add_issue_evidence");
+  expect(additions()[1].arguments.idempotencyKey).toBe(
+    additions()[0].arguments.idempotencyKey,
+  );
+  const edited = "Work displayed a newer permission error";
+  await evidence.fill(edited);
+  await add.click();
+  await expect(evidence).toHaveValue("");
+  await expect(detail.getByText(edited, { exact: true })).toBeVisible();
+  expect(report.additions).toEqual([original, edited]);
+  expect(additions()[2].arguments.idempotencyKey).not.toBe(
+    additions()[0].arguments.idempotencyKey,
+  );
+});
+
 test("reported issues displays independent closure, prerelease delivery and explicit workflow recovery", async ({
   page,
 }) => {

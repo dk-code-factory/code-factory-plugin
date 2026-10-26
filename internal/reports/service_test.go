@@ -298,6 +298,10 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	o.Errors += "\nAuthorization: Negotiate unknown-observation-proof\nProxy-Authorization: Digest username=unknown-proxy-user, response=unknown-proxy-proof\nretained-authorization-line"
 	o.ToolEvidence += `
 {"Proxy-Authorization": "Negotiate unknown-tool-proxy-proof"}`
+	o.ToolEvidence += `
+{"Authorization": ["Negotiate unknown-text-array-proof",
+"Custom unknown-text-array-second"], "adjacent": "retained-auth-array-neighbor"}
+{'Proxy-Authorization': ['Custom unknown-text-proxy-array-proof', 'Negotiate unknown-text-proxy-array-second'], 'adjacent': 'retained-proxy-array-neighbor'}`
 	o.RunIDs = []string{"run-1", "missing-run"}
 	if err := s.Store.Put(ctx, "item", "repo#1", domain.Item{ID: "repo#1", Revision: "captured-associated-item-revision"}, ""); err != nil {
 		t.Fatal(err)
@@ -334,10 +338,11 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	secrets = append(secrets, "unknown-single-id", "unknown-single-cookie", "unknown-single-response", "unknown-single-array")
 	secrets = append(secrets, "unknown-single-password", "secret-single-suffix", "unknown-double-password", "secret-double-suffix")
 	secrets = append(secrets, "unknown-observation-proof", "unknown-proxy-user", "unknown-proxy-proof", "unknown-tool-proxy-proof", "unknown-event-proof", "unknown-map-proxy-proof", "unknown-map-proxy-second", "unknown-structured-proxy-proof")
+	secrets = append(secrets, "unknown-text-array-proof", "unknown-text-array-second", "unknown-text-proxy-array-proof", "unknown-text-proxy-array-second")
 	stored, _ := json.Marshal(get(t, s, ctx, r.ID))
 	for _, secret := range secrets {
 		if strings.Contains(string(b), secret) || strings.Contains(string(stored), secret) {
-			t.Fatal("private evidence leaked", secret)
+			t.Error("private evidence or stored report leaked", secret)
 		}
 	}
 	if !strings.Contains(string(b), "retained-line-evidence") || !strings.Contains(string(b), "retained-event-line") || !strings.Contains(string(b), "retained-prefixed-line") || !strings.Contains(string(b), "retained-single-quote-line") || !strings.Contains(string(b), "retained-quoted-value-line") || !strings.Contains(string(b), "retained-authorization-line") {
@@ -345,6 +350,9 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	}
 	if !strings.Contains(string(b), "immutable-base") || !strings.Contains(string(b), "Referenced run unavailable") || !strings.Contains(string(b), "captured-associated-item-revision") {
 		t.Fatal("missing scoped evidence or omissions", string(b))
+	}
+	if !strings.Contains(string(b), "retained-auth-array-neighbor") || !strings.Contains(string(b), "retained-proxy-array-neighbor") {
+		t.Error("authorization array redaction swallowed adjacent evidence", string(b))
 	}
 	info, _ := os.Stat(filepath.Join(s.Dir, "issue-reports", r.ID, "evidence.json"))
 	if info.Mode().Perm() != 0600 {
@@ -365,13 +373,16 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	engine.findings.Body += "\n{'id_token': 'unknown-single-draft-id', 'Cookie': 'session=unknown-single-draft-cookie', 'Set-Cookie': ['unknown-single-draft-response']}"
 	engine.findings.Body += "\n{'password': 'unknown-draft-password secret-draft-suffix'}"
 	engine.findings.Body += "\nAuthorization: Negotiate unknown-draft-proof\nProxy-Authorization: Custom unknown-draft-proxy-proof\nretained-draft-authorization-line"
-	if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "redacted-addition", Text: "Cookie: session=unknown-added-cookie\nAuthorization: Custom unknown-added-proof\nretained-addition-line"}); err != nil {
+	engine.findings.Body += `
+{"Authorization": ["Custom unknown-draft-array-proof"], "adjacent": "retained-draft-array-neighbor"}
+{'Proxy-Authorization': ['Negotiate unknown-draft-proxy-array-proof'], 'adjacent': 'retained-draft-proxy-array-neighbor'}`
+	if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "redacted-addition", Text: "Cookie: session=unknown-added-cookie\nAuthorization: Custom unknown-added-proof\nretained-addition-line\n" + `{"Proxy-Authorization": ["Custom unknown-added-array-proof"], "adjacent": "retained-added-array-neighbor"}`}); err != nil {
 		t.Fatal(err)
 	}
 	step(t, s, ctx)
 	stored, _ = json.Marshal(get(t, s, ctx, r.ID))
 	if strings.Contains(string(stored), "unknown-") || !strings.Contains(string(stored), "retained-addition-line") || !strings.Contains(string(stored), "retained-draft-authorization-line") {
-		t.Fatal("unknown credentials persisted after investigation", string(stored))
+		t.Error("unknown credentials persisted after investigation", string(stored))
 	}
 	// Re-sanitize a retained draft at publication as well as fresh worker output.
 	if _, err := s.update(ctx, r.ID, func(r *Report) error { r.Findings.Body = engine.findings.Body; return nil }); err != nil {
@@ -379,13 +390,19 @@ func TestEvidenceIsPrivateScopedHashedAndRedacted(t *testing.T) {
 	}
 	step(t, s, ctx)
 	if len(github.created) != 1 || strings.Contains(github.created[0].Body, "unknown-") || strings.Contains(github.created[0].Body, "secret-draft-suffix") || !strings.Contains(github.created[0].Body, "retained-draft-line") {
-		t.Fatal("unknown draft credentials reached publication", github.created)
+		t.Error("unknown draft credentials reached publication", github.created)
+	}
+	if len(github.created) == 1 && (!strings.Contains(github.created[0].Body, "retained-draft-array-neighbor") || !strings.Contains(github.created[0].Body, "retained-draft-proxy-array-neighbor")) {
+		t.Error("authorization array redaction swallowed adjacent publication evidence", github.created)
 	}
 	prepared, _ := json.Marshal(engine.preparedReports[0])
-	for _, secret := range append(secrets, "unknown-added-cookie", "unknown-added-proof") {
+	for _, secret := range append(secrets, "unknown-added-cookie", "unknown-added-proof", "unknown-added-array-proof") {
 		if strings.Contains(string(prepared), secret) {
-			t.Fatal("unknown credentials reached investigator input", secret)
+			t.Error("unknown credentials reached investigator input", secret)
 		}
+	}
+	if !strings.Contains(string(prepared), "retained-added-array-neighbor") {
+		t.Error("authorization array redaction swallowed adjacent investigator evidence", string(prepared))
 	}
 }
 

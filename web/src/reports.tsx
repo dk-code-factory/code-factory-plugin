@@ -48,7 +48,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
   const [evidence, setEvidence] = useState("");
   const [note, setNote] = useState("");
   const [reconciled, setReconciled] = useState(false);
-  const evidenceKey = useRef(crypto.randomUUID());
+  const evidenceAttempt = useRef({ text: "", key: crypto.randomUUID() });
   const [loadingMore, setLoadingMore] = useState(false);
   const detailRequest = useRef(0);
   const selectedRef = useRef(selected);
@@ -121,7 +121,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
     setEvidence("");
     setNote("");
     setReconciled(false);
-    evidenceKey.current = crypto.randomUUID();
+    evidenceAttempt.current = { text: "", key: crypto.randomUUID() };
     setDetail(undefined);
   }, [selected]);
   const read = useCallback(async () => {
@@ -169,7 +169,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
       await call(name, args);
       if (name === "add_issue_evidence" && selectedRef.current === target) {
         setEvidence("");
-        evidenceKey.current = crypto.randomUUID();
+        evidenceAttempt.current = { text: "", key: crypto.randomUUID() };
       }
       await read();
       await latestLoad.current();
@@ -392,13 +392,18 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
             </label>
             <button
               disabled={busy || !evidence.trim()}
-              onClick={() =>
+              onClick={() => {
+                if (evidenceAttempt.current.text !== evidence)
+                  evidenceAttempt.current = {
+                    text: evidence,
+                    key: crypto.randomUUID(),
+                  };
                 void mutate("add_issue_evidence", {
                   id: detail.id,
-                  idempotencyKey: evidenceKey.current,
+                  idempotencyKey: evidenceAttempt.current.key,
                   text: evidence,
-                })
-              }
+                });
+              }}
             >
               Add evidence
             </button>
