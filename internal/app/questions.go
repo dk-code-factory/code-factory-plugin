@@ -369,6 +369,28 @@ func (m *Manager) structuredQuestionCheck(ctx context.Context, model, prompt str
 	}
 }
 
+func (m *Manager) restoreStoppedTurn(s *session, runID, turnID string, ownerRevision uint64) {
+	text, err := m.app.Store.TurnFinalText(m.sessionContext(s), runID, turnID)
+	s.mu.Lock()
+	if s.stopped() || s.ownerRevision != ownerRevision || s.lastCompletedTurn != turnID || s.run.Status != "idle" || s.run.TurnID != "" {
+		s.mu.Unlock()
+		return
+	}
+	if err != nil {
+		s.run.Error = "Saved final response could not be inspected; check the retained transcript."
+		_ = m.persist(s, "run.state")
+		s.mu.Unlock()
+		return
+	}
+	s.finalText = text
+	s.mu.Unlock()
+	if strings.TrimSpace(text) == "" {
+		return
+	}
+	m.recheckAmbiguousForOwner(runID, text, false, s, ownerRevision)
+	m.checkStoppedTurn(s, turnID, text, ownerRevision)
+}
+
 func (m *Manager) checkStoppedTurn(s *session, turnID, text string, ownerRevision uint64) {
 	m.adminGate.RLock()
 	defer m.adminGate.RUnlock()

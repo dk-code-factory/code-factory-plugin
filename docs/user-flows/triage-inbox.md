@@ -134,6 +134,7 @@ flowchart TD
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(`; S6. Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `saved unread details remain unread when refresh is`; S5, S6. Paused/cooldown/unavailable observations with no error retain visible saved details and unread state; draft editing does not mark read or launch.
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingContinuationUsesOnlyActiveTurnTokens(`; S6. Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `cooldown without an error keeps a retry action and saved details unread until fresh`; S5, S6. Error-free cooldown displays saved detail, retry time and explicit Retry; retry while still deferred preserves unread and draft with zero read markers, then a permitted fresh response marks exactly once and preserves draft without launching work.
 
 ## Verification and gaps
 

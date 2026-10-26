@@ -216,6 +216,7 @@ flowchart TD
 - [internal/app/review_eligibility_test.go](../../internal/app/review_eligibility_test.go) — `func TestNonReviewPreparationAndStartDoNotReadPrincipal(`; S6. Preparation remains saved-state only and explicit nonreview Start makes no User call while retaining its existing source check.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(`; S3. Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a late first-message Start cannot replace another item's draft`; S1, S2. With a delayed immutable accepted Start response and lagging saved reads, the Messages badge proves React processed the response before asserting another item and exact draft remain selected; private guard removal fails after this barrier.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestAutomaticReviewBusyGuardReadsOnlyOwningRunMetadata(`; S5. Repeated automatic eligibility reads only owning-run metadata: all four persisted busy states prevent claims and pipeline validation despite unrelated/private frozen payloads; idle ownership reaches normal pipeline validation without provider work.
 
 ## Verification and gaps
 

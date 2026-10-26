@@ -147,7 +147,7 @@ func (a *App) ProcessReviewRequests(ctx context.Context) error {
 		} else if !errors.Is(err, store.ErrNotFound) {
 			return err
 		}
-		runs, err := store.List[domain.Run](ctx, a.Store, "run")
+		runs, err := store.Select[struct{ ItemID, Status string }](ctx, a.Store, "run", "itemId", item.ID, "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
 		if err != nil {
 			return err
 		}

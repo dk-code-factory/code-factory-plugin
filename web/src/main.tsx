@@ -1357,7 +1357,14 @@ function ItemDetail({
   return (
     <>
       {detail.observation?.refresh === "pending" && <p role="status">Refreshing saved details…</p>}
-      {detail.refreshError && <p role="alert">{detail.refreshError} <button onClick={()=>setDetailVersion(v=>v+1)}>Retry detail refresh</button></p>}
+      {(detail.refreshError || detail.observation?.refresh === "cooldown") && (
+        <p role={detail.refreshError ? "alert" : "status"}>
+          {detail.refreshError || "Refresh deferred; showing saved information."}{" "}
+          {detail.observation?.refresh === "cooldown" && detail.observation.retryAt &&
+            <>Retry after {new Date(detail.observation.retryAt).toLocaleString()}. </>}
+          <button onClick={() => setDetailVersion(v => v + 1)}>Retry detail refresh</button>
+        </p>
+      )}
       {loadError && (
         <p role={loadError.retrying ? "status" : "alert"}>
           {loadError.message}

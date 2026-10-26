@@ -206,3 +206,92 @@ func TestProgressBackfillDiscardsPartialAndMalformedChunksAtMethodBoundary(t *te
 		t.Fatal("stale backfill overwrote newer live cursor", progress, err)
 	}
 }
+
+func TestTurnFinalTextRestoresFullOwningResponseAcrossPages(t *testing.T) {
+	for _, explicit := range []bool{false, true} {
+		t.Run(map[bool]string{false: "started-boundary", true: "explicit-turn"}[explicit], func(t *testing.T) {
+			ctx := context.Background()
+			s, err := Open(filepath.Join(t.TempDir(), "state.db"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer s.Close()
+			emit := func(run, method string, params any) {
+				t.Helper()
+				if err := s.Write(ctx, func(tx *Tx) error {
+					return tx.Event("run.output", run, map[string]any{"method": method, "params": params})
+				}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			emit("other", "item/completed", map[string]any{"turnId": "target", "item": map[string]string{"type": "agentMessage", "text": "Other run question?"}})
+			emit("run", "turn/started", map[string]any{"turn": map[string]string{"id": "older"}})
+			emit("run", "item/completed", map[string]any{"item": map[string]string{"type": "agentMessage", "text": "Older question?"}})
+			emit("run", "turn/started", map[string]any{"turn": map[string]string{"id": "target"}})
+			text := strings.Repeat("Saved \"quoted\" facts ✓ ", 700) + "Which target?"
+			params := map[string]any{"item": map[string]string{"type": "agentMessage", "text": text}}
+			if explicit {
+				params["turnId"] = "target"
+			}
+			payload, err := json.Marshal(params)
+			if err != nil {
+				t.Fatal(err)
+			}
+			chunks := 0
+			for len(payload) > 0 {
+				n := min(31, len(payload))
+				for n < len(payload) && !utf8.RuneStart(payload[n]) {
+					n--
+				}
+				emit("run", "item/completed/chunk", map[string]string{"delta": string(payload[:n])})
+				payload = payload[n:]
+				chunks++
+			}
+			if chunks <= 200 {
+				t.Fatal("fixture did not cross an event page")
+			}
+			for _, kind := range []string{"userMessage", "commandExecution"} {
+				emit("run", "item/completed", map[string]any{"turnId": "target", "item": map[string]string{"type": kind, "text": "Unrelated question?"}})
+			}
+			emit("run", "turn/started", map[string]any{"turn": map[string]string{"id": "newer"}})
+			emit("run", "item/completed", map[string]any{"item": map[string]string{"type": "agentMessage", "text": "Newer response"}})
+			got, err := s.TurnFinalText(ctx, "run", "target")
+			if err != nil || got != text {
+				t.Fatal("full owning response lost, truncated or replaced", len(got), len(text), err)
+			}
+			got, err = s.TurnFinalText(ctx, "run", "missing")
+			if err != nil || got != "" {
+				t.Fatal("unrelated turn supplied text", got, err)
+			}
+			got, err = s.TurnFinalText(ctx, "run", "")
+			if err != nil || got != "" {
+				t.Fatal("missing turn identity supplied text", got, err)
+			}
+		})
+	}
+}
+
+func TestTurnFinalTextRejectsIncompleteAndNonAgentSources(t *testing.T) {
+	for _, payload := range []string{`{"item":{"type":"agentMessage","text":"partial`, `{"item":]}`, `{"item":{"type":"userMessage","text":"User question?"}}`, `{"item":{"type":"commandExecution","text":"Tool question?"}}`} {
+		t.Run(payload, func(t *testing.T) {
+			ctx := context.Background()
+			s, err := Open(filepath.Join(t.TempDir(), "state.db"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer s.Close()
+			if err := s.Write(ctx, func(tx *Tx) error {
+				if err := tx.Event("run.output", "run", map[string]any{"method": "turn/started", "params": map[string]any{"turn": map[string]string{"id": "target"}}}); err != nil {
+					return err
+				}
+				return tx.Event("run.output", "run", map[string]any{"method": "item/completed/chunk", "params": map[string]string{"delta": payload}})
+			}); err != nil {
+				t.Fatal(err)
+			}
+			got, err := s.TurnFinalText(ctx, "run", "target")
+			if err != nil || got != "" {
+				t.Fatal("partial, malformed or non-agent payload became a question source", got, err)
+			}
+		})
+	}
+}

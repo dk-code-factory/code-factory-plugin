@@ -1766,6 +1766,14 @@
             "S10"
           ],
           "purpose": "Failure retiring one source run still permits another retirement; the returned error remains truthful and a later pass completes remaining source work."
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestAutomaticReviewBusyGuardReadsOnlyOwningRunMetadata(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Repeated automatic eligibility reads only owning-run metadata: all four persisted busy states prevent claims and pipeline validation despite unrelated/private frozen payloads; idle ownership reaches normal pipeline validation without provider work."
         }
       ],
       "suites": [
@@ -2494,6 +2502,15 @@
           "scenarios": [
             "S6"
           ]
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "cooldown without an error keeps a retry action and saved details unread until fresh",
+          "scenarios": [
+            "S5",
+            "S6"
+          ],
+          "purpose": "Error-free cooldown displays saved detail, retry time and explicit Retry; retry while still deferred preserves unread and draft with zero read markers, then a permitted fresh response marks exactly once and preserves draft without launching work."
         }
       ],
       "suites": [
@@ -4001,6 +4018,14 @@
             "S1",
             "S2"
           ]
+        },
+        {
+          "path": "internal/app/review_requests_test.go",
+          "anchor": "func TestAutomaticReviewBusyGuardReadsOnlyOwningRunMetadata(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Repeated automatic eligibility reads only owning-run metadata: all four persisted busy states prevent claims and pipeline validation despite unrelated/private frozen payloads; idle ownership reaches normal pipeline validation without provider work."
         }
       ],
       "suites": [
@@ -5982,6 +6007,22 @@
             "S4"
           ],
           "purpose": "A real fixture process holds historical clarification after a failed helper check; its injected negative clarification result and completion resolve the historical recovery at one attempt before the latest genuine question becomes its own answerable fallback with the original turn identity."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupClassifiesJournaledFinalOfRestoredCompletedTurn(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Actual final-message journal production before lost turn/completed restores a large owning textual question into one confirmed Messages route; ordinary completed text actually resolves with no attention or repair, same retained authority and no ordinary task replay across repeated recovery."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestTakeoverCancelsRestoredCompletedTurnClassification(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Interrupt completes while restored completion classification is gated; releasing and joining that callback before daemon shutdown preserves cancelled recovery with no attention or question-only repair."
         }
       ],
       "suites": [
@@ -6477,6 +6518,16 @@
           "path": "internal/app/tracking.go",
           "anchor": "func (a *App) TrackWork(",
           "purpose": "Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required."
+        },
+        {
+          "path": "internal/store/progress.go",
+          "anchor": "func (s *Store) TurnFinalText(",
+          "purpose": "Read the complete same-turn redacted final agent response from paged retained journal, reusing legacy chunk framing and excluding excerpts or unrelated sources."
+        },
+        {
+          "path": "internal/app/questions.go",
+          "anchor": "func (m *Manager) restoreStoppedTurn(",
+          "purpose": "Restore successful provider-completed turn source outside lifecycle locks, revalidate current owner revision and run the existing guarded stopped-question policy without ordinary task replay."
         }
       ],
       "tests": [
@@ -6892,7 +6943,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Restart from an actually running clarification preserves the durable shared attempt count and submits only question-only turns; actual turn/start inputs cannot contain ordinary unfinished-task continuation."
+          "purpose": "Restart from running clarification or its queued/starting pre-turn setup preserves the durable shared attempt count and submits only question-only turns; original recovery-owned acceptance cannot become ordinary unfinished-task continuation after state normalization."
         },
         {
           "path": "internal/app/question_classification_test.go",
@@ -7037,6 +7088,46 @@
             "S1"
           ],
           "purpose": "Old exhausted diagnostics with different source/repair turns cannot block newer unfinished owner work: startup resumes the retained thread and submits exactly one ordinary continuation, with no question-only replacement."
+        },
+        {
+          "path": "internal/app/question_classification_test.go",
+          "anchor": "func TestStartupRestoresAcceptedOwnerResumeBesideOldRecoveryDiagnostics(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Restore the exact public accepted queued Resume checkpoint beside older exhausted diagnostics into one same-thread/workspace ordinary continuation with retained authority, no task or answer replay and unchanged diagnostics; a genuine pending question still blocks provider work."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestStartupClassifiesJournaledFinalOfRestoredCompletedTurn(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Actual final-message journal production before lost turn/completed restores a large owning textual question into one confirmed Messages route; ordinary completed text actually resolves with no attention or repair, same retained authority and no ordinary task replay across repeated recovery."
+        },
+        {
+          "path": "internal/app/recovery_test.go",
+          "anchor": "func TestTakeoverCancelsRestoredCompletedTurnClassification(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Interrupt completes while restored completion classification is gated; releasing and joining that callback before daemon shutdown preserves cancelled recovery with no attention or question-only repair."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestTurnFinalTextRestoresFullOwningResponseAcrossPages(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "The full redacted owning agent response survives Unicode/escaped chunk framing across journal pages with explicit or started-boundary turn identity; other runs, older/newer turns, user/tool output and missing turn identity cannot replace it."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestTurnFinalTextRejectsIncompleteAndNonAgentSources(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Incomplete or malformed completion chunks and complete user/tool payloads supply no stopped-question source; partial text cannot establish a question."
         }
       ],
       "suites": [

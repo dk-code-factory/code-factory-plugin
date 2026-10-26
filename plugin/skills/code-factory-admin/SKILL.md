@@ -29,7 +29,7 @@ enable implementation, and selecting a profile does not enable automatic review.
 claims prevent duplicate launches across polls and restarts.
 
 For an explicitly requested manual PR review, use the daily Code Factory skill's
-`list_inbox` → `prepare_pr_review` → `start_run` sequence. The preparation tool
+`prepare_pr_review` → `start_run` sequence. The preparation tool
 resolves these configured review defaults automatically and returns a durable
 snapshot with the PR head, selected skills and repository prompt. Queue-only
 monitoring does not prevent an authorized manual review. Do not enable automatic

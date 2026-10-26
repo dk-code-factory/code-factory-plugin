@@ -311,6 +311,59 @@ func TestRepositoryQueueOverridePauseDraftAndStaleRequestsDoNotStart(t *testing.
 		})
 	}
 }
+
+func TestAutomaticReviewBusyGuardReadsOnlyOwningRunMetadata(t *testing.T) {
+	for _, status := range []string{"queued", "starting", "running", "waiting", "idle"} {
+		t.Run(status, func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			ctx := a.Runs.ctx
+			config, err := a.Config(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			config.AutoReview = true
+			if err := a.SaveConfig(ctx, config); err != nil {
+				t.Fatal(err)
+			}
+			var repo domain.Repository
+			if err := a.Store.Get(ctx, "repository", pr.Repository, &repo); err != nil {
+				t.Fatal(err)
+			}
+			// Reaching pipeline validation proves the idle control passes the
+			// busy guard without starting a provider or creating another run.
+			repo.ReviewProfileID = "missing-review-pipeline"
+			if err := a.Store.Put(ctx, "repository", repo.ID, repo, ""); err != nil {
+				t.Fatal(err)
+			}
+			unrelated := map[string]any{"id": "unrelated-history", "itemId": "other/repo#9", "status": map[string]string{"legacy": "unreadable"}}
+			owning := map[string]any{"id": "owning-history", "itemId": pr.ID, "status": status, "skills": "unrelated frozen bytes", "profile": "private profile", "prompt": strings.Repeat("retained prompt ", 4000), "reviewPromptSnapshot": "private review instructions", "sourceSnapshot": "private source"}
+			for id, record := range map[string]any{"unrelated-history": unrelated, "owning-history": owning} {
+				if err := a.Store.Put(ctx, "run", id, record, ""); err != nil {
+					t.Fatal(err)
+				}
+			}
+			for range 2 {
+				if err := a.ProcessReviewRequests(ctx); err != nil {
+					t.Fatal("automatic eligibility decoded retained snapshots", err)
+				}
+				if claimCount(t, a) != 0 {
+					t.Fatal("metadata inspection claimed or started work")
+				}
+			}
+			if err := a.Store.Get(ctx, "repository", repo.ID, &repo); err != nil {
+				t.Fatal(err)
+			}
+			if status == "idle" {
+				if !strings.Contains(repo.ReviewError, "Automatic review needs") {
+					t.Fatal("idle metadata did not reach pipeline validation", repo.ReviewError)
+				}
+			} else if repo.ReviewError != "" {
+				t.Fatal("persisted busy owner did not stop automatic eligibility", status, repo.ReviewError)
+			}
+		})
+	}
+}
+
 func TestRepositoryAutoOverrideAndSystemPipelineDefaults(t *testing.T) {
 	a, pr := reviewFixture(t)
 	ctx := a.Runs.ctx

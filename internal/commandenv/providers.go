@@ -54,7 +54,7 @@ func Prepare(directory string, providers map[string]string) (string, error) {
 		return "", err
 	}
 	defer bin.Close()
-	for _, tool := range []string{"git", "gh", "codex", "systemctl"} {
+	for _, tool := range tools {
 		target := providers[tool]
 		if !filepath.IsAbs(target) {
 			return "", fmt.Errorf("selected %s executable must be absolute", tool)

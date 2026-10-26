@@ -4943,6 +4943,43 @@ test("a deferred detail refresh retains saved information and unread state until
   expect(calls.some(c=>["prepare_launch","start_run"].includes(c.name))).toBe(false);
 });
 
+test("cooldown without an error keeps a retry action and saved details unread until fresh", async ({ page }) => {
+  let coolingDown = true;
+  const retryAt = "2100-06-01T12:00:00Z";
+  const { ui, calls, state } = await host(page, {
+    readItem: async detail => ({
+      ...detail,
+      observation: {
+        observedAt: "2026-10-24T01:00:00Z",
+        refresh: coolingDown ? "cooldown" : "fresh",
+        ...(coolingDown ? { retryAt } : {}),
+      },
+    }),
+  });
+  await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
+  await expect(ui.getByRole("heading", { name: "Fix reconnect regression", exact: true })).toBeVisible();
+  const deferred = ui.getByRole("status").filter({ hasText: "Refresh deferred; showing saved information." });
+  await expect(deferred).toContainText("Retry after");
+  await expect(deferred).toContainText("2100");
+  const draft = ui.getByRole("textbox", { name: "Message agent", exact: true });
+  await draft.fill("Keep my retry draft.");
+  const retry = ui.getByRole("button", { name: "Retry detail refresh", exact: true });
+  await retry.click();
+  await expect.poll(() => calls.filter(c => c.name === "read_item").length).toBe(2);
+  await expect(deferred).toBeVisible();
+  expect(state.inbox[0].unread).toBe(true);
+  expect(calls.filter(c => c.name === "item_action" && c.arguments.action === "read")).toHaveLength(0);
+  await expect(draft).toHaveValue("Keep my retry draft.");
+  coolingDown = false;
+  await retry.click();
+  await expect(deferred).toHaveCount(0);
+  await expect(retry).toHaveCount(0);
+  await expect.poll(() => calls.filter(c => c.name === "item_action" && c.arguments.action === "read").length).toBe(1);
+  expect(state.inbox[0].unread).toBe(false);
+  await expect(draft).toHaveValue("Keep my retry draft.");
+  expect(calls.filter(c => ["prepare_launch", "prepare_pr_review", "start_run"].includes(c.name))).toHaveLength(0);
+});
+
 test("linked PR changes refresh full selected details without consuming another read or launch",async({page})=>{
  const snapshot=initial();
  snapshot.inbox[0].linkedPullRequests=[{id:"owner/repo#2",title:"Linked implementation",url:"https://github.com/owner/repo/pull/2",state:"open",draft:false,head:"abc",reviewDecision:"approved",ci:"success",syncedAt:new Date().toISOString(),checks:[{name:"Initial CI",status:"completed",conclusion:"success",url:""}]}];

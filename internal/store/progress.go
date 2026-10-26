@@ -171,6 +171,69 @@ func (c *completionChunks) append(delta string) json.RawMessage {
 	return params
 }
 
+// TurnFinalText reads the last complete agent response belonging to one turn.
+// It uses full redacted journal payloads, including legacy completion chunks;
+// progress excerpts and user/tool output cannot substitute for that response.
+func (s *Store) TurnFinalText(ctx context.Context, runID, turnID string) (string, error) {
+	if runID == "" || turnID == "" {
+		return "", nil
+	}
+	after, currentTurn, text := int64(0), "", ""
+	var chunks completionChunks
+	for {
+		page, err := s.RunEvents(ctx, runID, after, 200)
+		if err != nil {
+			return "", err
+		}
+		for _, event := range page["events"].([]domain.Event) {
+			var body struct {
+				Method string
+				Params json.RawMessage
+			}
+			if json.Unmarshal(event.Data, &body) != nil {
+				chunks = completionChunks{}
+				continue
+			}
+			if body.Method == "item/completed/chunk" {
+				var chunk struct{ Delta string }
+				if json.Unmarshal(body.Params, &chunk) != nil {
+					chunks = completionChunks{}
+					continue
+				}
+				body.Params = chunks.append(chunk.Delta)
+				if body.Params == nil {
+					continue
+				}
+				body.Method = "item/completed"
+			} else {
+				chunks = completionChunks{}
+			}
+			var p struct {
+				TurnID string
+				Turn   struct{ ID string }
+				Item   struct{ Type, Text string }
+			}
+			if json.Unmarshal(body.Params, &p) != nil {
+				continue
+			}
+			if body.Method == "turn/started" {
+				currentTurn = p.Turn.ID
+			}
+			owner := p.TurnID
+			if owner == "" {
+				owner = currentTurn
+			}
+			if body.Method == "item/completed" && p.Item.Type == "agentMessage" && owner == turnID {
+				text = p.Item.Text
+			}
+		}
+		if !page["hasMore"].(bool) {
+			return text, nil
+		}
+		after = page["cursor"].(int64)
+	}
+}
+
 // Backfill runs once at startup, outside any read request. The cursor guard
 // prevents older history from replacing concurrent live projections.
 func (s *Store) BackfillProgress(ctx context.Context) error {

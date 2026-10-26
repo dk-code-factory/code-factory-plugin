@@ -989,7 +989,8 @@
         "UI-CONNECT-HOST-MUTATION",
         "UI-DETAIL-DEFERRED",
         "UI-ITEM-SUMMARY-MARKDOWN",
-        "UI-DETAIL-OBSERVATION-READ"
+        "UI-DETAIL-OBSERVATION-READ",
+        "UI-DETAIL-COOLDOWN-RETRY"
       ],
       "gaps": [
         {
@@ -4545,7 +4546,8 @@
         "UI-CONNECT-ITEM",
         "UI-CONNECT-TOOL-ERROR",
         "UI-DETAIL-DEFERRED",
-        "UI-DETAIL-OBSERVATION-READ"
+        "UI-DETAIL-OBSERVATION-READ",
+        "UI-DETAIL-COOLDOWN-RETRY"
       ],
       "gaps": [
         {
@@ -6792,7 +6794,8 @@
         "UI-SINGLE-PAGE",
         "UI-DIRECT-CHAT",
         "UI-DETAIL-DEFERRED",
-        "UI-DETAIL-OBSERVATION-READ"
+        "UI-DETAIL-OBSERVATION-READ",
+        "UI-DETAIL-COOLDOWN-RETRY"
       ],
       "gaps": [
         {
@@ -6879,7 +6882,8 @@
         "UI-ITEM-ACTIONS",
         "API-UI-CONTENT",
         "UI-DETAIL-DEFERRED",
-        "UI-DETAIL-OBSERVATION-READ"
+        "UI-DETAIL-OBSERVATION-READ",
+        "UI-DETAIL-COOLDOWN-RETRY"
       ],
       "gaps": [
         {
@@ -12014,6 +12018,12 @@
       "path": "internal/app/plugins_test.go",
       "anchor": "func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(",
       "assertion": "Successful native removal/discovery omission disables cached unmanaged skill and blocks new Prepare while entrypoint files and prior prepared snapshots remain. Cancelled discovery preserves known availability; managed skill remains selectable and rediscovery re-enables."
+    },
+    {
+      "id": "UI-DETAIL-COOLDOWN-RETRY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "cooldown without an error keeps a retry action and saved details unread until fresh",
+      "assertion": "Error-free cooldown renders saved details, deferred status, optional retry time and the existing Retry control. Retrying while deferred keeps unread and the message draft; retrying after fresh data is allowed marks the displayed revision once, clears deferred feedback and retains the draft without launching work."
     }
   ],
   "source_map": [

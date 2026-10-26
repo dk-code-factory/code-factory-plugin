@@ -92,8 +92,14 @@ func (m *Manager) Recover(ctx context.Context) error {
 	if e != nil {
 		return e
 	}
+	// Preserve accepted ordinary starts before recovery normalizes their state.
+	acceptedTaskStarts := map[string]bool{}
 	attached := map[string]bool{}
 	for _, r := range runs {
+		if r.ResumePending && !r.InterruptRequested && r.TurnID == "" &&
+			(r.Status == "queued" || r.Status == "starting" || r.Status == "running") {
+			acceptedTaskStarts[r.ID] = true
+		}
 		if s, err := m.get(r.ID); err == nil {
 			s.mu.Lock()
 			attached[r.ID] = !s.disconnected && !s.retired
@@ -148,7 +154,7 @@ func (m *Manager) Recover(ctx context.Context) error {
 		if err := m.app.Store.Get(ctx, "run", r.RunID, &recoveryRun); err != nil {
 			return err
 		}
-		ownsTurn := recoveryRun.TurnID == "" || recoveryRun.TurnID == r.SourceTurnID || recoveryRun.TurnID == r.RepairTurnID
+		ownsTurn := !acceptedTaskStarts[r.RunID] && (recoveryRun.TurnID == "" || recoveryRun.TurnID == r.SourceTurnID || recoveryRun.TurnID == r.RepairTurnID)
 		if ownsTurn && (r.Stage == "checking" || automaticRecovery(&r) || r.Stage == "unresolved" || r.Stage == "awaiting-answer" || r.Stage == "answered") {
 			// Recovery has its own constrained continuation. A crash cannot turn
 			// that dialogue into an ordinary task replay, nor block newer owner work.
@@ -950,6 +956,9 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	if s.recovering && resume && s.resumeTurnID != "" {
 		for _, turn := range result.Thread.Turns {
 			if turn.ID == s.resumeTurnID && (turn.Status == "completed" || turn.Status == "failed") {
+				s.lastCompletedTurn, s.lastCompletedStatus = turn.ID, turn.Status
+				s.completed[turn.ID] = true
+				ownerRevision := s.ownerRevision
 				s.run.Status = "idle"
 				if turn.Status == "failed" {
 					s.run.Status = "failed"
@@ -959,6 +968,8 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 				s.mu.Unlock()
 				if e != nil {
 					m.fail(s, e)
+				} else if turn.Status == "completed" {
+					m.background(func() { m.restoreStoppedTurn(s, r.ID, turn.ID, ownerRevision) })
 				}
 				return
 			}

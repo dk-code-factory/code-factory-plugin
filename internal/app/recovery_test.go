@@ -1,8 +1,11 @@
 package app
 
 import (
+	"codefactory/internal/codex"
 	"codefactory/internal/domain"
+	"codefactory/internal/store"
 	"codefactory/internal/testutil"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -347,5 +350,161 @@ func TestStartupHonorsCleanupEvenWhenDirtyRemovalFails(t *testing.T) {
 	}
 	if b, err := os.ReadFile(filepath.Join(r.Worktree, "unsaved.txt")); err != nil || string(b) != "retained work" {
 		t.Fatal("dirty work was lost", err)
+	}
+}
+
+// Persist the real final-message producer while deliberately withholding only
+// turn/completed, then join the process to model that exact daemon crash window.
+func journalFinalBeforeCompletion(t *testing.T, text, record string) (*App, context.Context, domain.Run) {
+	t.Helper()
+	t.Setenv("CF_FAKE_MODE", "hold")
+	t.Setenv("CF_FAKE_RECORD", record)
+	a, ctx := fixture(t)
+	run := prepareRun(t, a, ctx)
+	if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool {
+		return a.Store.Get(ctx, "run", run.ID, &run) == nil && run.Status == "running" && run.TurnID != ""
+	})
+	live, err := a.Runs.get(run.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a.Runs.onMessage(live, codex.Message{Method: "item/completed", Params: raw(map[string]any{"turnId": run.TurnID, "item": map[string]string{"id": "stopped-final", "type": "agentMessage", "phase": "final_answer", "text": text}})})
+	page, err := a.Store.RunEvents(ctx, run.ID, 0, 200)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, event := range page["events"].([]domain.Event) {
+		var body struct{ Method string }
+		_ = json.Unmarshal(event.Data, &body)
+		found = found || body.Method == "item/completed" || body.Method == "item/completed/chunk"
+		if body.Method == "turn/completed" {
+			t.Fatal("fixture completed turn before crash window")
+		}
+	}
+	if !found {
+		t.Fatal("final response was not journaled")
+	}
+	var recovery domain.QuestionRecovery
+	if err := a.Store.Get(ctx, "question-recovery", run.ID+":"+run.TurnID, &recovery); err != store.ErrNotFound {
+		t.Fatal("question was classified before its completion", recovery, err)
+	}
+	assertNoAttention(t, a)
+	a.Runs.Close()
+	return a, ctx, run
+}
+
+func TestStartupClassifiesJournaledFinalOfRestoredCompletedTurn(t *testing.T) {
+	for _, question := range []bool{true, false} {
+		name, text := "ordinary-completion", "Task complete"
+		if question {
+			name, text = "chunked-question", strings.Repeat("Retained facts ✓ ", 3000)+"Which target should I use?"
+		}
+		t.Run(name, func(t *testing.T) {
+			record := filepath.Join(t.TempDir(), "calls.jsonl")
+			a, ctx, before := journalFinalBeforeCompletion(t, text, record)
+			t.Setenv("CF_FAKE_RESUME_STATUS", "completed")
+			t.Setenv("CF_FAKE_MODE", "recover-first")
+			if err := a.Runs.Recover(ctx); err != nil {
+				t.Fatal(err)
+			}
+			var recovery domain.QuestionRecovery
+			waitFor(t, func() bool {
+				if a.Store.Get(ctx, "question-recovery", before.ID+":"+before.TurnID, &recovery) != nil {
+					return false
+				}
+				if !question {
+					return recovery.Stage == "resolved"
+				}
+				page, err := a.ListAttention(ctx, AttentionInput{RunID: before.ID})
+				return recovery.Stage == "awaiting-answer" && err == nil && len(page.Requests) == 1 && page.Requests[0].Request.RecoveryID == recovery.ID
+			})
+			if recovery.SourceTurnID != before.TurnID || recovery.SourceText != questionContext(text) {
+				t.Fatal("restored classification lost exact owning final response", recovery)
+			}
+			var after domain.Run
+			if err := a.Store.Get(ctx, "run", before.ID, &after); err != nil {
+				t.Fatal(err)
+			}
+			if after.ThreadID != before.ThreadID || after.Worktree != before.Worktree || after.Prompt != before.Prompt || string(raw(after.Profile)) != string(raw(before.Profile)) {
+				t.Fatal("restored completion replaced retained work or authority")
+			}
+			if question {
+				page, err := a.ListAttention(ctx, AttentionInput{RunID: before.ID})
+				if err != nil || len(page.Requests) != 1 || !confirmedQuestion(recovery) || page.Requests[0].Request.RecoveryID != recovery.ID {
+					t.Fatal("restored question missing from Messages", page, err)
+				}
+			} else {
+				assertNoAttention(t, a)
+				if recovery.Attempts != 0 {
+					t.Fatal("ordinary completion requested repair")
+				}
+			}
+			for n := 0; n < 2; n++ {
+				if err := a.Runs.Recover(ctx); err != nil {
+					t.Fatal(err)
+				}
+			}
+			episodes, err := store.List[domain.QuestionRecovery](ctx, a.Store, "question-recovery")
+			if err != nil || len(episodes) != 1 {
+				t.Fatal("restored completion duplicated recovery", episodes, err)
+			}
+			ordinary, resumes := 0, 0
+			for _, call := range recordedCalls(t, record) {
+				if call.Method == "thread/resume" {
+					resumes++
+				}
+				if call.Method != "turn/start" || len(call.Params["outputSchema"]) != 0 {
+					continue
+				}
+				var input []struct{ Text string }
+				_ = json.Unmarshal(call.Params["input"], &input)
+				if len(input) > 0 && !strings.HasPrefix(input[0].Text, "Code Factory question-only recovery") {
+					ordinary++
+				}
+			}
+			if ordinary != 1 || resumes != 1 {
+				t.Fatal("restored completion replayed ordinary task", ordinary, resumes)
+			}
+		})
+	}
+}
+
+func TestTakeoverCancelsRestoredCompletedTurnClassification(t *testing.T) {
+	record := filepath.Join(t.TempDir(), "calls.jsonl")
+	a, ctx, run := journalFinalBeforeCompletion(t, "Which target should I use?", record)
+	gate := filepath.Join(t.TempDir(), "release")
+	t.Setenv("CF_FAKE_RESUME_STATUS", "completed")
+	t.Setenv("CF_FAKE_GATE_METHOD", "turn/start")
+	t.Setenv("CF_FAKE_GATE_FILE", gate)
+	defer func() { _ = os.WriteFile(gate, nil, 0600) }()
+	if err := a.Runs.Recover(ctx); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { _, err := os.Stat(gate + ".waiting"); return err == nil })
+	if err := a.Runs.Interrupt(ctx, run.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(gate, nil, 0600); err != nil {
+		t.Fatal(err)
+	}
+	// Join the released callback while the daemon is still live. Fixture shutdown
+	// cannot supply the suppression that this takeover must establish itself.
+	waitRecoveryWork(t, a.Runs)
+	if a.Runs.ctx.Err() != nil {
+		t.Fatal("daemon shutdown supplied cancellation")
+	}
+	var recovery domain.QuestionRecovery
+	if err := a.Store.Get(ctx, "question-recovery", run.ID+":"+run.TurnID, &recovery); err != nil || recovery.Stage != "cancelled" {
+		t.Fatal("takeover failed to cancel restored check", recovery, err)
+	}
+	assertNoAttention(t, a)
+	for _, call := range recordedCalls(t, record) {
+		if call.Method == "turn/start" && strings.Contains(string(call.Params["input"]), "Code Factory question-only recovery") {
+			t.Fatal("late check started repair after takeover")
+		}
 	}
 }

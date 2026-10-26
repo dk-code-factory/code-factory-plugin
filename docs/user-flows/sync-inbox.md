@@ -176,6 +176,7 @@ flowchart TD
 - [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestSavedClosureRetriesBeforeFreshnessCooldownAndPause(`; S10. Cancelled retirement after accepted closure retries from saved source state despite fresh metadata, cooldown or pause, without another provider read.
 - [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestReferenceRefreshDoesNotDecodeRetainedSnapshots(`; S6. Reference candidates project only run identity/status, excluding incompatible immutable skill/profile/prompt/source snapshot fields before decoding.
 - [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestSavedClosureContinuesAfterPartialRetirementFailure(`; S10. Failure retiring one source run still permits another retirement; the returned error remains truthful and a later pass completes remaining source work.
+- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestAutomaticReviewBusyGuardReadsOnlyOwningRunMetadata(`; S5. Repeated automatic eligibility reads only owning-run metadata: all four persisted busy states prevent claims and pipeline validation despite unrelated/private frozen payloads; idle ownership reaches normal pipeline validation without provider work.
 
 ## Verification and gaps
 
