@@ -15,6 +15,7 @@ import type {
   Snapshot,
 } from "./types";
 import "./style.css";
+import { ReportedIssues } from "./reports";
 
 function StatusIcon({ recovery = false }: { recovery?: boolean }) {
   return (
@@ -190,7 +191,7 @@ function Factory() {
         </span>
       </header>
       <nav>
-        {["Inbox", "Agents", "Settings"].map((t) => (
+        {["Inbox", "Agents", "Reported issues", "Settings"].map((t) => (
           <button
             key={t}
             aria-current={tab === t ? "page" : undefined}
@@ -230,6 +231,7 @@ function Factory() {
         </section>
       ) : (
         <>
+          {tab === "Reported issues" && <ReportedIssues cursor={snap.cursor} />}
           {tab === "Inbox" && (
             <>
               <div className="toolbar">

@@ -102,3 +102,8 @@ State lives under `$XDG_DATA_HOME/code-factory` or `~/.local/share/code-factory`
 The Go SDK handles MCP `2026-07-28` and legacy `2025-11-25`/`2025-06-18` tools/resources. Events extends discovery and adds custom methods without coupling the domain to Work. Legacy compatibility does not constitute a delivered Claude plugin. Claude Channels and desktop packaging are later adapters.
 
 See [operations.md](docs/operations.md) for setup, daily use, diagnostics, upgrade, recovery and uninstall. See [acceptance.md](docs/acceptance.md) for the real-host release gate and [DESIGN.md](DESIGN.md) for invariants and recovery behavior.
+
+Suspected Code Factory defects can be submitted through the bundled
+`code-factory-report-issue` skill and followed in **Reported issues**. The private
+ledger, automatic investigation/filing prerequisites, recovery and verified
+release tracking are described in [issue reporting](docs/reporting.md).

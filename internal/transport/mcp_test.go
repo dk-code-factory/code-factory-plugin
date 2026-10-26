@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
@@ -124,6 +125,42 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("missing credential tool")
+	}
+	reportTools := map[string]bool{"report_issue": false, "add_issue_evidence": false, "get_issue_report": false, "list_issue_reports": false, "refresh_issue_reports": false, "resume_issue_report": false}
+	for _, value := range tools {
+		tool := value.(map[string]any)
+		name := tool["name"].(string)
+		if _, ok := reportTools[name]; ok {
+			reportTools[name] = true
+			visibility := tool["_meta"].(map[string]any)["ui"].(map[string]any)["visibility"].([]any)
+			if len(visibility) != 2 {
+				t.Fatal("report tool unavailable to chat and UI", name)
+			}
+		}
+	}
+	for name, present := range reportTools {
+		if !present {
+			t.Fatal("missing reporting tool", name)
+		}
+	}
+	observation := map[string]any{"idempotencyKey": "mcp-observation", "observedAt": time.Now().UTC().Format(time.RFC3339), "surface": "Work", "expected": "Display response", "actual": "No response", "reproductionUnknown": "Observed once"}
+	result := request("tools/call", map[string]any{"name": "report_issue", "arguments": observation}, true, "2026-07-28")
+	report := result["structuredContent"].(map[string]any)["data"].(map[string]any)
+	if report["processing"] != "queued" {
+		t.Fatal("MCP submission did not persist queue", result)
+	}
+	id := report["id"].(string)
+	result = request("tools/call", map[string]any{"name": "get_issue_report", "arguments": map[string]any{"id": id}}, true, "2026-07-28")
+	if result["structuredContent"].(map[string]any)["data"].(map[string]any)["id"] != id {
+		t.Fatal("MCP report read uses another ledger")
+	}
+	result = request("tools/call", map[string]any{"name": "add_issue_evidence", "arguments": map[string]any{"id": id, "idempotencyKey": "mcp-evidence", "text": "Work displayed an empty pane"}}, true, "2026-07-28")
+	if result["isError"] == true {
+		t.Fatal(result)
+	}
+	result = request("tools/call", map[string]any{"name": "list_issue_reports", "arguments": map[string]any{"status": "queued"}}, true, "2026-07-28")
+	if len(result["structuredContent"].(map[string]any)["data"].(map[string]any)["items"].([]any)) != 1 {
+		t.Fatal("MCP list lost retained observation")
 	}
 
 	for _, id := range []string{"r1", "r2"} {

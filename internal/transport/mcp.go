@@ -4,6 +4,7 @@ import (
 	"codefactory/internal/app"
 	"codefactory/internal/domain"
 	"codefactory/internal/events"
+	"codefactory/internal/reports"
 	"codefactory/internal/setup"
 	"codefactory/internal/store"
 	"codefactory/internal/web"
@@ -120,7 +121,7 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 	if name == "open_factory" {
 		meta["openai/outputTemplate"] = resourceURI
 	}
-	openWorld := name == "start_run" || name == "send_message" || name == "answer_request"
+	openWorld := name == "start_run" || name == "send_message" || name == "answer_request" || name == "report_issue" || name == "add_issue_evidence" || name == "resume_issue_report" || name == "refresh_issue_reports"
 	destructive := name == "cleanup_run"
 	mcp.AddTool(s, &mcp.Tool{Name: name, Description: desc, Meta: meta, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, OpenWorldHint: ptr(openWorld), DestructiveHint: ptr(destructive)}}, func(ctx context.Context, _ *mcp.CallToolRequest, in I) (*mcp.CallToolResult, map[string]any, error) {
 		v, e := f(ctx, in)
@@ -136,6 +137,14 @@ func New(a *app.App, ev *events.Service) *Server {
 	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. Use prepare_launch, review the snapshot, then start_run only when requested. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
 	s.MCP = m
 	uri := registerUIResource(m, web.HTML)
+	bind(m, uri, "report_issue", "Report suspected Code Factory defective behavior. Persists an idempotent observation immediately, captures private local evidence, and queues automatic investigation and issue filing. Does not authorize fixing code.", false, false, func(ctx context.Context, in reports.Submission) (any, error) { return a.Reports.Submit(ctx, in) })
+	bind(m, uri, "add_issue_evidence", "Append missing host observations to a report; local runtime evidence is collected server-side. Resumes investigations waiting for information.", false, false, func(ctx context.Context, in reports.EvidenceInput) (any, error) {
+		return a.Reports.AddEvidence(ctx, in)
+	})
+	bind(m, uri, "get_issue_report", "Read report investigation, evidence manifest, GitHub identity, independent fix/release versions and synchronization freshness.", false, true, func(ctx context.Context, in IDInput) (any, error) { return a.Reports.Get(ctx, in.ID) })
+	bind(m, uri, "list_issue_reports", "Search the shared report ledger with cursor pagination and processing, component and version filters.", false, true, func(ctx context.Context, in reports.ListInput) (any, error) { return a.Reports.List(ctx, in) })
+	bind(m, uri, "refresh_issue_reports", "Refresh GitHub and verified package release evidence without starting an agent. Retains last successful results and retry times on errors.", false, false, func(ctx context.Context, _ Empty) (any, error) { return nil, a.Reports.Refresh(ctx, true) })
+	bind(m, uri, "resume_issue_report", "Resume blocked work or explicitly reconciled interrupted workflow effects. Uncertain issue creation is reconciled without repeating creation.", false, false, func(ctx context.Context, in reports.ResumeInput) (any, error) { return a.Reports.ResumeReport(ctx, in) })
 	bind(m, uri, "open_factory", "Open Code Factory’s GitHub issue and pull-request dashboard, repository settings, and local Codex agents. No email account is needed.", false, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
 	bind(m, uri, "list_inbox", "List synchronized issues and PRs without marking anything read.", false, true, func(ctx context.Context, in InboxInput) (any, error) { return a.Inbox(ctx, in.State) })
 	bind(m, uri, "read_item", "Read item detail. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })

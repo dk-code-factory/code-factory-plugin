@@ -3,6 +3,7 @@ package app
 import (
 	"codefactory/internal/domain"
 	"codefactory/internal/providers"
+	"codefactory/internal/reports"
 	"codefactory/internal/store"
 	"context"
 	"crypto/rand"
@@ -23,6 +24,7 @@ type App struct {
 	GitHub  *providers.GitHub
 	Runs    *Manager
 	DataDir string
+	Reports *reports.Service
 }
 
 func ID() string {
@@ -34,6 +36,12 @@ func ID() string {
 	return hex.EncodeToString(b[:])
 }
 func (a *App) Init(ctx context.Context) error {
+	if a.Reports == nil {
+		a.Reports = &reports.Service{Store: a.Store, Vault: a.Vault, Dir: a.DataDir, Engine: &reports.NativeEngine{Dir: a.DataDir}, GitHub: &reports.GitHubAdapter{Client: a.GitHub, Store: a.Store}}
+		if a.Runs != nil {
+			a.Reports.Engine = &reports.NativeEngine{Dir: a.DataDir, Codex: a.Runs.Binary}
+		}
+	}
 	var c domain.Config
 	if e := a.Store.Get(ctx, "config", "settings", &c); errors.Is(e, store.ErrNotFound) {
 		if e = a.Store.Put(ctx, "config", "settings", domain.Defaults(), ""); e != nil {
@@ -282,10 +290,15 @@ func (a *App) Sync(ctx context.Context) error {
 	if len(repos) == 0 {
 		return nil
 	}
+	ctx = a.GitHub.StartOperation(ctx, a.Store, false)
 	user, e := a.GitHub.User(ctx)
 	if e != nil {
 		for _, r := range repos {
 			r.Error = e.Error()
+			var rate *providers.RateLimitError
+			if errors.As(e, &rate) {
+				r.RetryAt = rate.Until
+			}
 			_ = a.Store.Put(ctx, "repository", r.ID, r, "sync.error")
 		}
 		return e
@@ -305,6 +318,9 @@ func (a *App) Sync(ctx context.Context) error {
 			}
 			if e = a.Store.Put(ctx, "repository", r.ID, r, "sync.error"); e != nil {
 				return e
+			}
+			if rate != nil {
+				return nil
 			}
 			continue
 		}

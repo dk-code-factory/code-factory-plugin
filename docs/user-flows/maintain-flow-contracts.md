@@ -16,7 +16,7 @@ The contributor has the source checkout, an available comparison base and the lo
 4. Keep open gaps typed with stable identity, ownership, severity and the next verification; run required suites and record subject-specific decisions.
 5. Run the local gate against the intended working tree, index or committed branch comparison.
 6. Remote checks select exact event commits, install locked prerequisites and run the same fixture suites without model credentials. A narrowly pinned, reviewed first public root has no predecessor; it receives full source checks without a fabricated Git comparison.
-7. Package delivery promotes unchanged checksummed artifacts only from successful main-branch push verification for the exact tagged source; dry-run delivery verifies without publishing or installing.
+7. Package delivery promotes unchanged checksummed artifacts only from successful main-branch push verification for the exact tagged source; dry-run delivery verifies without publishing or installing. Component versions come from those exact package bytes; explicit fixed-issue references require ancestor fix commits with matching fixing or closing references.
 
 ## Alternatives and recovery
 
@@ -33,7 +33,7 @@ may receive separate explicit contract decisions without waiving behavior tests.
 - **S2** Behavior changes, including flow addition/removal, require changed implementation and tests; reviewed corrections preserve accurate outcomes.
 - **S3** Broken references, unmapped files, unknown comparisons and stale or failed verification fail closed.
 - **S4** The same checker evaluates working changes, the staged index, and explicit committed branch/PR comparisons. Default verification uses fixtures; provider execution requires a separate explicit opt-in.
-- **S5** Remote verification uses exact event comparisons and a single reviewed public-root bootstrap; release delivery requires successful main push verification, exact artifact provenance and checksums. Unknown comparisons, failed checks, changed artifacts or existing releases stop delivery.
+- **S5** Remote verification uses exact event comparisons and a single reviewed public-root bootstrap; release delivery requires successful main push verification, exact artifact provenance, packaged component versions, commit-backed fixed-issue references and checksums. Unknown comparisons, failed checks, changed artifacts or existing releases stop delivery.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -118,6 +118,7 @@ flowchart TD
 - [scripts/release.py](../../scripts/release.py) — Require successful push CI for exact main-history source, and deliver the same checked artifacts or perform a nonpublishing dry run. (`def resolve(`)
 - [.github/workflows/ci.yml](../../.github/workflows/ci.yml) — Hosted full verification on pushes and PRs with read-only permissions and pinned prerequisites/actions. (`name: CI`)
 - [.github/workflows/release.yml](../../.github/workflows/release.yml) — Version-tag and manual dry-run package promotion; scoped publisher permission, no live-machine deployment. (`name: Release`)
+- [release/fixed-issues.json](../../release/fixed-issues.json) — Explicit fixed issues backed by ancestor source commits and exact promoted package versions.
 
 ## Test references
 

@@ -3047,6 +3047,515 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The local dismissal connection for a textual question."
+    },
+    {
+      "id": "issue-report",
+      "name": "Issue report",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A retained observation of suspected defective behavior with its investigation and delivery evidence."
+    },
+    {
+      "id": "report-ledger",
+      "name": "Report ledger",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The persistent collection of issue reports and their independent histories."
+    },
+    {
+      "id": "report-processing",
+      "name": "Report processing state",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The progress of an observation through investigation, information requests, publication and recovery."
+    },
+    {
+      "id": "report-outcome",
+      "name": "Report outcome",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The investigation disposition identifying a filed issue, a duplicate or explained behavior."
+    },
+    {
+      "id": "evidence-manifest",
+      "name": "Evidence manifest",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An inventory of evidence origins, capture times, content identities, omissions and truncation."
+    },
+    {
+      "id": "delivery-evidence",
+      "name": "Delivery evidence",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Verified relationships among a fix, its component version and a published package."
+    },
+    {
+      "id": "fixed-issue",
+      "name": "Fixed-issue reference",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An explicit association of an issue with the source commit that corrects it."
+    },
+    {
+      "id": "element-w-navigation-reports",
+      "name": "reported issues",
+      "aliases": [],
+      "category": "element",
+      "definition": "The reported issues destination control in the navigation widget.",
+      "scope": "ui-w-navigation"
+    },
+    {
+      "id": "ui-page-reports",
+      "name": "Reported issues page",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "The page presenting retained issue reports."
+    },
+    {
+      "id": "ui-p-report-list",
+      "name": "Report list pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The pane containing report discovery and filtering controls."
+    },
+    {
+      "id": "ui-p-report-detail",
+      "name": "Report detail pane",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "The pane presenting the selected report and its recovery controls."
+    },
+    {
+      "id": "ui-w-report-list",
+      "name": "Report list widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The searchable and paginated presentation of retained reports."
+    },
+    {
+      "id": "ui-w-report-detail",
+      "name": "Report detail widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The presentation of one report, its investigation, evidence and delivery state."
+    },
+    {
+      "id": "ui-c-report-select",
+      "name": "Report selection connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The transition from a report row to its details."
+    },
+    {
+      "id": "ui-c-report-evidence",
+      "name": "Report evidence connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The addition of an observation to a retained report."
+    },
+    {
+      "id": "ui-c-report-recover",
+      "name": "Report recovery connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The explicit recovery of retained report work."
+    },
+    {
+      "id": "ui-c-report-refresh",
+      "name": "Report refresh connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The refresh of issue and delivery evidence."
+    },
+    {
+      "id": "element-w-report-list-heading",
+      "name": "heading",
+      "aliases": [],
+      "category": "element",
+      "definition": "The heading naming the retained report collection in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-subtitle",
+      "name": "subtitle",
+      "aliases": [],
+      "category": "element",
+      "definition": "The description of investigation, issue state and verified delivery in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-refresh",
+      "name": "refresh",
+      "aliases": [],
+      "category": "element",
+      "definition": "The action requesting refreshed issue and release evidence in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-error",
+      "name": "error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The alert displaying a report read, mutation or external-link failure in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-search",
+      "name": "search",
+      "aliases": [],
+      "category": "element",
+      "definition": "The text input matching a report identifier, observation surface or actual behavior, processing explanation or investigation summary in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-processing-filter",
+      "name": "processing-filter",
+      "aliases": [],
+      "category": "element",
+      "definition": "The selector narrowing reports by their processing state in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-component-filter",
+      "name": "component-filter",
+      "aliases": [],
+      "category": "element",
+      "definition": "The input narrowing reports by component in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-version-filter",
+      "name": "version-filter",
+      "aliases": [],
+      "category": "element",
+      "definition": "The input narrowing reports by an observed plugin, installed or component version, or a retained release package or component version, in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-empty",
+      "name": "empty",
+      "aliases": [],
+      "category": "element",
+      "definition": "The message displayed when the report list widget has no matching records.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-select",
+      "name": "select",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repeated action selecting a retained report by its observation surface and actual behavior in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-row-processing",
+      "name": "row-processing",
+      "aliases": [],
+      "category": "element",
+      "definition": "The processing state displayed for each retained report in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-row-component",
+      "name": "row-component",
+      "aliases": [],
+      "category": "element",
+      "definition": "The component identity or unknown-component fallback displayed for each retained report in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-row-id",
+      "name": "row-id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The durable identifier displayed for each retained report in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-list-load-more",
+      "name": "load-more",
+      "aliases": [],
+      "category": "element",
+      "definition": "The action requesting the next page of retained reports in the report list widget.",
+      "scope": "ui-w-report-list"
+    },
+    {
+      "id": "element-w-report-detail-surface",
+      "name": "surface",
+      "aliases": [],
+      "category": "element",
+      "definition": "The heading identifying the selected observation's surface in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-id",
+      "name": "id",
+      "aliases": [],
+      "category": "element",
+      "definition": "The durable identifier of the selected report in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-processing",
+      "name": "processing",
+      "aliases": [],
+      "category": "element",
+      "definition": "The selected report's investigation and publication progress displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-outcome",
+      "name": "outcome",
+      "aliases": [],
+      "category": "element",
+      "definition": "The selected report's investigation disposition or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-observed",
+      "name": "observed",
+      "aliases": [],
+      "category": "element",
+      "definition": "The observation time or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-expected",
+      "name": "expected",
+      "aliases": [],
+      "category": "element",
+      "definition": "The expected behavior of the selected observation displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-actual",
+      "name": "actual",
+      "aliases": [],
+      "category": "element",
+      "definition": "The actual behavior of the selected observation displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-reproduction",
+      "name": "reproduction",
+      "aliases": [],
+      "category": "element",
+      "definition": "The reproduction steps, explanation of unknown reproduction or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-message",
+      "name": "message",
+      "aliases": [],
+      "category": "element",
+      "definition": "The current processing explanation displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-findings",
+      "name": "findings",
+      "aliases": [],
+      "category": "element",
+      "definition": "The retained investigation summary displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-missing-information",
+      "name": "missing-information",
+      "aliases": [],
+      "category": "element",
+      "definition": "The request for additional information displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-open-issue",
+      "name": "open-issue",
+      "aliases": [],
+      "category": "element",
+      "definition": "The action opening the selected report's retained GitHub issue through the host from the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-issue-state",
+      "name": "issue-state",
+      "aliases": [],
+      "category": "element",
+      "definition": "The retained GitHub issue's open or closed state displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-closure-reason",
+      "name": "closure-reason",
+      "aliases": [],
+      "category": "element",
+      "definition": "The retained GitHub issue's closure reason or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-open-fix",
+      "name": "open-fix",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repeated action opening a retained fix pull request or commit through the host from the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-open-release",
+      "name": "open-release",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repeated action opening a retained stable or prerelease URL through the host from the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-linked-fix",
+      "name": "linked-fix",
+      "aliases": [],
+      "category": "element",
+      "definition": "The retained fix repository, commit and component version or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-stable-availability",
+      "name": "stable-availability",
+      "aliases": [],
+      "category": "element",
+      "definition": "The stable release repository, package version, component version and publication time or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-prerelease-availability",
+      "name": "prerelease-availability",
+      "aliases": [],
+      "category": "element",
+      "definition": "The prerelease repository, package version, component version and publication time or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-installed-version",
+      "name": "installed-version",
+      "aliases": [],
+      "category": "element",
+      "definition": "The observed installed Code Factory version or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-observed-version",
+      "name": "observed-version",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repeated observed component version or Unknown fallback displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-issue-freshness",
+      "name": "issue-freshness",
+      "aliases": [],
+      "category": "element",
+      "definition": "The last successful GitHub verification and any error and retry time displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-release-freshness",
+      "name": "release-freshness",
+      "aliases": [],
+      "category": "element",
+      "definition": "The last successful release verification and any error and retry time displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-additions",
+      "name": "additions",
+      "aliases": [],
+      "category": "element",
+      "definition": "The retained additional host observations displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-evidence",
+      "name": "evidence",
+      "aliases": [],
+      "category": "element",
+      "definition": "The draft input for an additional host observation in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-add-evidence",
+      "name": "add-evidence",
+      "aliases": [],
+      "category": "element",
+      "definition": "The action adding an additional host observation to the selected report in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-recovery-note",
+      "name": "recovery-note",
+      "aliases": [],
+      "category": "element",
+      "definition": "The draft explanation of inspected and reconciled workflow effects in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-effects-acknowledgement",
+      "name": "effects-acknowledgement",
+      "aliases": [],
+      "category": "element",
+      "definition": "The checkbox recording that retained workflow effects were inspected and reconciled in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-resume",
+      "name": "resume",
+      "aliases": [],
+      "category": "element",
+      "definition": "The action requesting explicit recovery of the selected retained report from the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-evidence-history",
+      "name": "evidence-history",
+      "aliases": [],
+      "category": "element",
+      "definition": "The disclosure control revealing the evidence manifest and processing history in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-evidence-manifest",
+      "name": "evidence-manifest",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repeated evidence origin, time, digest or omission and truncation marker displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "element-w-report-detail-history",
+      "name": "history",
+      "aliases": [],
+      "category": "element",
+      "definition": "The repeated processing time, state and explanation displayed in the report detail widget.",
+      "scope": "ui-w-report-detail"
+    },
+    {
+      "id": "ui-c-report-query",
+      "name": "Report query connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The transition selecting the displayed report subset from search and filter values."
+    },
+    {
+      "id": "ui-c-report-more",
+      "name": "Report pagination connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The transition extending the displayed range of retained reports."
+    },
+    {
+      "id": "ui-c-report-open-link",
+      "name": "Report external link connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The transition opening a retained report issue, fix or release through the host."
     }
   ]
 }

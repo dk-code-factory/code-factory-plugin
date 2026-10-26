@@ -178,3 +178,77 @@ export interface Diagnostics {
     at: string;
   }[];
 }
+
+export interface IssueReport {
+  id: string;
+  observation: {
+    surface: string;
+    expected: string;
+    actual: string;
+    steps?: string[];
+    reproductionUnknown?: string;
+    observedAt: string;
+    pluginVersion?: string;
+    impact?: string;
+    frequency?: string;
+    suspectedCause?: string;
+  };
+  processing: string;
+  outcome: string;
+  component: string;
+  message: string;
+  additions: string[];
+  workflowId: string;
+  versions: Record<string, string>;
+  installedVersion: string;
+  findings?: {
+    classification: string;
+    summary: string;
+    missingInformation: string;
+    repository: string;
+  };
+  issue?: {
+    url: string;
+    state: string;
+    closureReason: string;
+    repository: string;
+    number: number;
+  };
+  fixes: {
+    repository: string;
+    pr?: string;
+    commit: string;
+    component: string;
+    version?: string;
+  }[];
+  releases: {
+    repository: string;
+    version: string;
+    componentVersion: string;
+    publishedAt: string;
+    url: string;
+    prerelease: boolean;
+    commit: string;
+  }[];
+  evidence: {
+    origin: string;
+    sha256?: string;
+    omission?: string;
+    truncated: boolean;
+    at: string;
+    bytes: number;
+  }[];
+  history: { status: string; detail: string; at: string }[];
+  issueSync: ReportFreshness;
+  releaseSync: ReportFreshness;
+}
+export interface ReportFreshness {
+  lastSuccess: string;
+  lastAttempt: string;
+  retryAt: string;
+  error: string;
+}
+export interface ReportPage {
+  items: IssueReport[];
+  nextCursor: string;
+}

@@ -841,6 +841,10 @@
         {
           "path": "internal/testutil/fakecodex/main.go",
           "purpose": "Shared fake-provider verification input; changes require assertion reconciliation."
+        },
+        {
+          "path": "internal/providers/github_requests.go",
+          "purpose": "Serialized operation-scoped requests, conditional LRU, shared private cooldowns and same-origin Link parsing."
         }
       ],
       "tests": [
@@ -876,6 +880,57 @@
             "S2"
           ],
           "purpose": "Cache preserves pagination and separates identities."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestInboxRequestBudgetAndIndependentFreshness(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Cold 73 and warm 62 requests including identity; independent reviews/CI, head/base invalidation, hourly commit reconciliation and stable incremental buckets."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestSharedCacheLRUAccountingAndExpiry(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Bounded LRU evicts oldest entries, accounts replacements and expires exact TTL boundaries."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestSharedOperationCacheAuthenticationAndSerialization(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "One token resolution per operation, serialized requests, merged cached headers, media isolation and revocation invalidation."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestSharedPersistedCooldownAndPagination(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "HTTP-date and reset deadlines, restarted cross-consumer cooldowns, credential isolation, unreadable storage and unsafe Link rejection."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestCheckRunLinksCompletenessAndIncrementalExpiry(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Multi-page check-run completeness, cyclic/incomplete Link rejection and ten-minute incremental validator expiry."
+        },
+        {
+          "path": "internal/app/app_test.go",
+          "anchor": "func TestSharedGitHubCooldownPreservesInboxCheckpoints(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Limits from identity or a repository stop the batch, preserve successful/remaining checkpoints, persist diagnostics and suppress the next operation."
         }
       ],
       "suites": [
@@ -5060,6 +5115,10 @@
             "S5"
           ],
           "purpose": "Version-tag and manual dry-run package promotion; scoped publisher permission, no live-machine deployment."
+        },
+        {
+          "path": "release/fixed-issues.json",
+          "purpose": "Explicit fixed issues backed by ancestor source commits and exact promoted package versions."
         }
       ],
       "tests": [
@@ -6935,6 +6994,767 @@
             "from": "CD",
             "to": "CI_FAIL",
             "label": "invalid or expired artifacts, mismatched source, or existing release"
+          }
+        ]
+      }
+    },
+    {
+      "id": "report-code-factory-issue",
+      "title": "Report suspected defects and track verified delivery",
+      "spec": "docs/user-flows/report-code-factory-issue.md",
+      "scenarios": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "implementation": [
+        {
+          "path": "cmd/code-factory/main.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "go.mod",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "go.sum",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/app/app.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/pluginbundle/hosting.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/engine.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/evidence.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/github.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/investigate.yml",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/service.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/types.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "plugin/skills/code-factory-report-issue/SKILL.md",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "plugin/skills/code-factory/SKILL.md",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "release/fixed-issues.json",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "scripts/ci.py",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "web/src/reports.tsx",
+          "purpose": "Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance."
+        },
+        {
+          "path": "internal/reports/provider.py",
+          "purpose": "Restores the full retained dk-workflows receipt and lifecycle environment at the native provider boundary while preserving native Codex authentication."
+        },
+        {
+          "path": "internal/reports/evidence.go",
+          "anchor": "func redactCredentialValue(",
+          "purpose": "Shared traversal redacts structured header pairs and decoded embedded JSON/MCP text, retaining full raw-header association and bounded fail-closed omission guards."
+        },
+        {
+          "path": "internal/providers/github_requests.go",
+          "purpose": "Shared serialized conditional requests, operation authentication and durable cooldowns."
+        },
+        {
+          "path": "internal/providers/github.go",
+          "purpose": "Shared identity-scoped bounded cache and provider client."
+        },
+        {
+          "path": "internal/reports/tracking_batch.go",
+          "purpose": "Verified release proof memoization keyed by release metadata, tag target and credential scope."
+        },
+        {
+          "path": "internal/reports/marker_index.go",
+          "purpose": "Private versioned incremental marker index, complete scans, candidate revalidation and transactional generations."
+        }
+      ],
+      "tests": [
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestSubmissionValidationConcurrentIdempotencyAndConflicts(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Twenty concurrent submissions retain one queued report identity, reject changed-payload conflicts and emit exactly the expected journal events; cancellable workers execute in an owned child with a local kill/reap deadline before fixture cleanup."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestEvidenceIsPrivateScopedHashedAndRedacted(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ],
+          "purpose": "Unknown authorization schemes, OAuth client_secret values and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain. Serialized authorization/proxy arrays inside textual evidence are also redacted across these boundaries while adjacent fields remain. Structured/serialized header pairs, X-Api-Key aliases, named header-value records and escaped nested MCP text are excluded before all retained/external boundaries, while adjacent fields and complete raw header association survive. Captured Event.Data and Attention.Params retain the exact large integer JSON token without rounding or conversion to a string."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestWorkflowLostAdmissionDaemonRestartAndUncertainCreation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestMissingPrerequisitesInformationAndExplicitRecovery(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestDuplicateReuseRoutingBlockAndSingleInvestigation(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRefreshSeparatesIssueFixDeliveryAndPreservesSuccessfulState(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Issue reopen, independent fix identity, partial verified fixes/releases, retained prior availability, error freshness and rate-limit backoff survive failed release reads without starting an agent."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestLedgerPaginationSearchAndVersionFilters(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestRepositoryRoutingLabelsDuplicateAndPublicationBoundary(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestTrackingRequiresPublishedMatchingProvenance(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Verified direct closing commits and merged fixes stay independent of release reads; reject foreign or unverified commits, preserve partial discoveries, and enrich fix versions while retaining PR association only with matching published provenance."
+        },
+        {
+          "path": "internal/reports/engine_test.go",
+          "anchor": "func TestNativeWorkflowEngineWithFakeProviderAndLifecycle(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real controller and fake provider verify large observations and accumulated evidence through a private immutable prompt file, idempotent admission, explicit uncertain lifecycle recovery, controller restart and deadlines. The deadline subtest independently observes its exact fake provider start, requires the retained timeout classification, and verifies provider termination before teardown; launch failure cannot satisfy the oracle."
+        },
+        {
+          "path": "internal/transport/mcp_test.go",
+          "anchor": "func TestAuthenticatedMCPDiscoveryToolsAndUI(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S6"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues shares ledger search, information requests and evidence recovery\"",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues displays independent closure, prerelease delivery and explicit workflow recovery\"",
+          "scenarios": [
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "purpose": "Rendered independent delivery/recovery controls send the selected report exact GitHub URL through the host open-link boundary."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_component_versions_come_from_promoted_packages(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_fixed_issue_requires_ancestor_commit_and_explicit_issue_reference(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "scripts/test_packaging.py",
+          "anchor": "def test_zip_is_self_contained_deterministic_and_contains_no_host_state(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "scripts/test_packaging.py",
+          "anchor": "def test_registered_browser_package_has_no_local_mcp_launcher(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues paginates and filters processing component and version\"",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A pending second page and loaded 32 unique rows survive journal updates, later-row content refreshes, and query changes reset the loaded range while retaining server filters."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestConcurrentPublicationCommandsClaimOneExternalEffect(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Two service instances concurrently publish the same retained report, claim exactly one external creation and retain its completed issue identity; the owned child bounds and reaps stalled workers before private fixture cleanup."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestInterruptedPreparationNeedsLifecycleReconciliation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Retained Preparing state becomes needs attention without starting an engine; unacknowledged resume fails, and explicit lifecycle reconciliation with a recovery note permits one fresh engine start."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestSimilarTitlesDoNotSilentlyMergeDistinctObservations(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Similar titles alone cannot merge distinct observations; duplicate reuse requires an explicit investigated issue identity."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRejectedCreationCanResumeWithoutTreatingItAsAnUnknownEffect(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A definite rejected creation leaves the report blocked with no uncertain creation claim; after correcting the rejection, explicit resume permits a second creation attempt and completes the report."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestHTTPPublicationRejectsKnownFailuresAndRetainsServerUncertainty(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Single HTTP 400/403/422/429 responses classify as definite rejections, HTTP 500 remains uncertain, and HTTP 429 retains a future retry deadline. This fixture does not exercise recovery or repeated creation attempts."
+        },
+        {
+          "path": "internal/reports/engine_test.go",
+          "anchor": "func TestNativeAuthenticationPrerequisitesUseOnlyFakeBoundaries(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "Fake native login-status boundaries distinguish authentication prerequisites and verify unknown prefixed cookies/id_token are excluded from private failed-command diagnostics while adjacent evidence is retained."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestUncertainResumeLifecycleNeedsAcknowledgedRecovery(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Retained uncertain resume entry cannot replay or release the sole slot without acknowledged reconciliation; recovery preserves admission identity, rotates only its lifecycle attempt and lets queued work progress."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestFinalizedUnusableFindingsReleaseSlotAndAllowFreshInvestigation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Empty summaries and invalid classifications hold the slot until lifecycle completion, then allow other reports to progress and explicit recovery to start a fresh investigation generation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPriorGenerationFindingsDoNotReleaseUncertainPreparation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Prior-generation findings cannot release the sole slot while a newly admitted generation retains uncertain lifecycle preparation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRefreshRateLimitStopsOtherOperationsAndReports(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Issue/release rate-limit deadlines stop other operations and reports, retain previous delivery evidence and leave skipped operation/row freshness untouched."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues keeps newer journal details after a delayed mutation read\"",
+          "scenarios": [
+            "S4",
+            "S6"
+          ],
+          "purpose": "An older mutation read cannot overwrite newer journal processing, findings or recovery controls for the selected report."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues keeps a pending selection read when an older selection mutation finishes\"",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A completed old-selection mutation cannot suppress the pending current-selection detail read."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestTrackingNativeWorkflowRelease(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Actual native manifest, dependency/conformance metadata and package/checksum inventory establish dependency stable/prerelease delivery only with an independent closing fix and ancestry; malformed, missing or source-only proof stays Unknown."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestGitHubReportingCooldownSurvivesRestartAndSeparatesCredentials(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Store-backed credential/endpoint deadlines suppress reporting HTTP across operations, adapters and reopened state; expiry and credential changes are independent, storage failures stop before HTTP and rejected POST retains retry provenance."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestEvidenceAfterWorkerCompletionRequiresFreshGeneration(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Evidence accepted after worker completion is captured exactly once by a fresh generation after lifecycle finalization, before stale suspected/information/explained findings settle."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestEvidencePublicationClaimBoundary(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Atomic evidence/admission checks reject stale unclaimed drafts during validation/marker races and preserve known issue identity; durable or uncertain create claims settle once without replay."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues makes detail progress while journal updates continue\"",
+          "scenarios": [
+            "S4",
+            "S6"
+          ],
+          "purpose": "Per-read delays span ongoing confirmed journal updates while selected findings and recovery controls become visible and remain current before the queued refresh."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues allows pagination during continuing slow journal refreshes\"",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Slow list reads span confirmed continuing journal polls while Load more remains usable; duplicate clicks admit one additional page and exactly the expected 60 unique rows appear before another background refresh."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPrivateInputsAreRejectedBeforeCheckoutPersistence(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S4"
+          ],
+          "purpose": "Private observations, idempotency keys and events are absent after unsafe-location rejection; additions and recovery notes cannot modify a retained ledger after its directory becomes a checkout."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPublicationCommandInterruptionRecovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real child-process interruption before and after durable creation claims persists actionable recovery despite cancellation, lets queued investigation proceed and reconciles a claimed effect once without replay. Owned child execution has its own bounded context/test timeout and termination/reaping proof; parent cancellation remains an independent recovery stimulus."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestObsoletePublicationFailuresPreserveActiveGeneration(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Delayed validation, duplicate, marker and subprocess failures preserve the exact newer report/runtime or fresh-evidence queue and keep the active investigator capacity."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestPublicationFailuresPreserveRecoveredIssueAndClaim(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Recovered issue identities and claim state survive late rejection, uncertain creation and reconciliation failure/empty-result paths."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestHTTPPublicationFailuresBeforeDispatchAreDefinite(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Known encoding, request-configuration, token and cooldown-storage failures before HTTP dispatch retain a sanitized actionable definite-rejection outcome and send zero POSTs."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "One token resolution per publication: operation-start token failure dispatches no requests, restored authentication files once, while a lost POST response retains its durable claim and reconciliation never repeats creation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestDelayedPublicationSuccessPreservesEstablishedIssue(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Delayed duplicate successes preserve newer/same-generation established identities, outcomes, timestamps and Runtime; a newer claimed creation retains ownership while safe missing-identity recovery preserves newer processing/outcome."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues releases mutation controls during continuing slow journal refreshes\"",
+          "scenarios": [
+            "S4",
+            "S6"
+          ],
+          "purpose": "Mutation refresh completion re-enables refresh, evidence and acknowledged recovery controls while subsequent journal list reads remain pending; a second evidence submission reaches the selected report."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_delivery_checkout_verifies_historical_fixes_without_publishing(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Actual delivery validation from a workflow-depth local clone accepts checked packages containing a historical fix commit, preserving fix ancestry and exact artifact download without publication."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues retries uncertain evidence without duplicating it and accepts edited evidence\"",
+          "scenarios": [
+            "S2",
+            "S6"
+          ],
+          "purpose": "A controlled accepted addition returns two lost acknowledgements; unchanged retries preserve one retained addition and identity, while an edited draft uses a distinct identity and successfully appends another observation."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRedactCredentialCandidateStormOmitsPrivateTail(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Malformed serialized candidate storms preserve inspected diagnostic text and omit unresolved private tails instead of returning uninspected material."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRedactCredentialExhaustedDepthOmitsPrivateText(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "An exhausted serialized-decoding state omits unresolved private text without allocating exponentially escaped input."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestRedactCredentialPreservesLargeDiagnosticInteger(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Decoded serialized evidence removes an unknown credential while preserving adjacent fields, surrounding prose and the exact diagnostic integer above2^53."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestTrackingBatchSharesAndRevalidatesEvidence(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Three reports deduplicate issue/timeline/closing-commit/list/tag/assets/ancestry requests; a new refresh revalidates mutable evidence and tag changes invalidate proof."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestReportingLinkTraversalAndCachedPagination(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Exactly 100/200 results terminate through Link without empty-page probes; cached links survive 304 while cycles and foreign origins fail."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestMarkerIndexIncrementalSafetyAndRecovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Complete cold scan, restart and overlap updates, marker edits/removal, duplicates, deleted candidate rebuild, failed-pagination watermark preservation and hourly/version rebuild."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestMarkerIndexGenerationConflictsAndCreationCheckpoint(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Three conflicting generations fail recoverably without overwrite; creation associations preserve synchronization watermark."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestMarkerIndexConcurrentWriters(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Independent clients and database connections retry concurrent full scans and preserve both committed generations."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestCrossConsumerCooldownStopsInboxAndPublication(",
+          "scenarios": [
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "purpose": "Rate limits from inbox or reports suppress both consumers and prevent publication dispatch."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestLostCreationResponseRecoversThroughMarkerIndexWithoutReplay(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual HTTP accepts a POST then loses its response; incremental marker recovery revalidates the new issue and completes without a duplicate POST."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestAssetCacheRequiresDigestAcrossOperations(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Digestless bytes are operation-only; validated digests permit cross-operation reuse while changed asset sizes invalidate it."
+        },
+        {
+          "path": "internal/store/store_test.go",
+          "anchor": "func TestCompareAndSwapPreservesConcurrentEntities(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Atomic entity comparison across independent SQLite connections accepts current bytes, rejects stale/absence overwrites and retains the newer generation."
+        }
+      ],
+      "suites": [
+        "go",
+        "browser",
+        "packaging",
+        "tooling"
+      ],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-flow-report-issue-host",
+          "scenario": "S6",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "user-flow-maintainer",
+          "reason": "Installed-host reporting and authenticated live filing acceptance have not been observed; ordinary CI uses fake provider, lifecycle and GitHub boundaries.",
+          "next_verification": "Run separately authorized acceptance against the approved private test repository and browser session; retain private version-bound evidence outside Git."
+        }
+      ],
+      "ui": [
+        "PAGE-REPORTS",
+        "P-REPORT-LIST",
+        "P-REPORT-DETAIL",
+        "W-REPORT-LIST",
+        "W-REPORT-DETAIL",
+        "C-REPORT-SELECT",
+        "C-REPORT-EVIDENCE",
+        "C-REPORT-RECOVER",
+        "C-REPORT-REFRESH",
+        "W-NAVIGATION",
+        "C-NAVIGATE",
+        "C-REPORT-QUERY",
+        "C-REPORT-MORE",
+        "C-REPORT-OPEN-LINK"
+      ],
+      "terms": [
+        "issue-report",
+        "report-ledger",
+        "report-processing",
+        "report-outcome",
+        "evidence-manifest",
+        "delivery-evidence",
+        "fixed-issue",
+        "credential"
+      ],
+      "graph": {
+        "start": "submit",
+        "nodes": [
+          {
+            "id": "submit",
+            "label": "Validate private location and retain idempotent observation",
+            "scenario": "S1"
+          },
+          {
+            "id": "capture",
+            "label": "Capture private scoped evidence and explicit omissions",
+            "scenario": "S2"
+          },
+          {
+            "id": "investigate",
+            "label": "Investigate and verify ownership or duplicate",
+            "scenario": "S3"
+          },
+          {
+            "id": "recover",
+            "label": "Retain missing prerequisites or interrupted effects for recovery",
+            "scenario": "S4"
+          },
+          {
+            "id": "track",
+            "label": "Track issue, fix and verified release independently",
+            "scenario": "S5"
+          },
+          {
+            "id": "view",
+            "label": "Search reports and inspect details",
+            "scenario": "S6"
+          },
+          {
+            "id": "done",
+            "label": "Retained report remains available",
+            "terminal": true
+          },
+          {
+            "id": "reject",
+            "label": "Reject unsafe private evidence location before retention",
+            "scenario": "S1",
+            "terminal": true
+          }
+        ],
+        "edges": [
+          {
+            "from": "submit",
+            "to": "capture"
+          },
+          {
+            "from": "capture",
+            "to": "investigate"
+          },
+          {
+            "from": "capture",
+            "to": "recover",
+            "label": "prerequisite unavailable"
+          },
+          {
+            "from": "investigate",
+            "to": "recover",
+            "label": "missing information or interrupted effects"
+          },
+          {
+            "from": "recover",
+            "to": "investigate",
+            "label": "evidence supplied or effects reconciled"
+          },
+          {
+            "from": "investigate",
+            "to": "track",
+            "label": "filed or duplicate"
+          },
+          {
+            "from": "investigate",
+            "to": "view",
+            "label": "explained behavior"
+          },
+          {
+            "from": "track",
+            "to": "view"
+          },
+          {
+            "from": "view",
+            "to": "done"
+          },
+          {
+            "from": "recover",
+            "to": "done",
+            "label": "retain blocked report"
+          },
+          {
+            "from": "investigate",
+            "to": "investigate",
+            "label": "Additional evidence needs investigation before settlement"
+          },
+          {
+            "from": "submit",
+            "to": "reject",
+            "label": "Unsafe private data location"
           }
         ]
       }

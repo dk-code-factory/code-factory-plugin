@@ -26,6 +26,8 @@ The list expresses logical composition, not required component boundaries.
 | `P-INBOX-QUERY` | `W-INBOX-QUERY`, `W-SYNC-HEALTH` | Inbox search/filter and configured repositories; above the list/detail split. |
 | `P-INBOX-LIST` | `W-ITEM-ROW` repeated by item ID, or `W-INBOX-EMPTY` | Filtered synchronized inbox. Selection identifies one detail context; filtering need not clear selection. |
 | `P-ITEM-DETAIL` | `W-ITEM-OVERVIEW`, `W-ITEM-ACTIONS`, `W-PRIORITY`, `W-RELATIONSHIPS`, `W-TICKET-CONTEXT`, `W-PR-EVIDENCE`, `W-ITEM-HISTORY` | One selected item ID and its displayed revision. Prompt/loading replaces the other widgets until matching detail is available. Detail loads on item-ID or revision changes and remount; refreshing the shared snapshot alone does not reload it. |
+| `P-REPORT-LIST` | Search, processing/component/version filters, report rows, pagination and manual refresh. | The shared persistent report ledger. |
+| `P-REPORT-DETAIL` | Observation, findings, missing information, evidence, GitHub and delivery, freshness and recovery. | The selected durable report ID. |
 <!-- /specs:panes-1 -->
 
 ## Agent panes

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-relate-items",
-  "base": "cdf6df8f81b499f0b59a2b9e4e4ea2b48cfeeee2",
-  "fingerprint": "c12e07bc69bb44b1f893bb198ec78cf4eb8b28855665571bf9b88b660650e64a",
+  "base": "fc80b2e2cb61568835c66fdaefc770df0e19c3b1",
+  "fingerprint": "73ffd6aed98c7b9832cf877370afde1d34fe0e1a7ff820f73be9966c509da420",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S3 retain reference evidence, local-link removal and read-only ticket context. Shared UI and domain inputs select review without any relationship behavior change.",
-    "implementation": "Relationship discovery, Link and item-detail refresh handlers remain unchanged. Recovery UI changes are limited to Agent controls/notices and do not alter relationship drafts or provider writes. Approved CI trigger selection now runs pushes only on main and retains PR-to-main/manual events. Exact comparison, fixture, bootstrap and main-push release implementations are unchanged; feature branches without PRs and manual parent-base limitations are documented. Current cycle changes only failed synthetic delivery cancellation and disconnected awaiting-answer takeover in questions.go. Reviewed this consumer against those narrow changes; its authored behavior and implementation remain consistent, with existing gaps retained.",
-    "tests": "Read TestInboxRevisionStatesPriorityAndLinks local unlink assertion preserving independently discovered APP-42 evidence and initial reference count. Existing browser late-selection/draft assertions remain mapped and unchanged."
+    "description": "Manual and discovered item relationships retain their independent local behavior; report duplicate relationships associate observations with an existing issue.",
+    "implementation": "Relationship discovery/link handlers are unchanged. Report publication validates a duplicate issue identity without creating or commenting on that issue. Reviewed the shared GitHub transport and private marker CAS addition: only inbox synchronization/report operations use these paths; this contract retains its existing API, transitions and assertion ownership.",
+    "tests": "Existing relationship fixtures remain responsible for local links; new duplicate assertions require zero issue creations when an existing duplicate is reused."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 8.788
+      "seconds": 22.205
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.715
+      "seconds": 25.239
     },
     {
       "command": [
@@ -52,36 +52,36 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.462
+      "seconds": 0.582
     }
   ],
   "dependencies": {
-    "flow:relate-items": "9093f6d8fc3d1bbf6828d2ed6a8c024bd4e4dc73df343aba0511af95746498c5",
-    "term:connection-submits": "936fe3512ff42748c5952360cd6be85044cf8d1b396f623fcfe43494d5cb16b8",
-    "term:coverage-gap": "4a7577550d83ddf6e0f8de27dffbd5b26a23ef973d93e9d58685eee6b2a66de6",
-    "term:element-w-pr-evidence-branch": "f7033b0163008ac2d14fe62ed9d92fd3823086a0d16492b042b794e8944c4e70",
-    "term:element-w-pr-evidence-checks-content": "091cf261a0594d5d177daec04081b9cf98016676e3ba7a7132044e4bfb1db291",
-    "term:element-w-pr-evidence-checks-disclosure": "2e4a3065628a76d2fa9e625c139ff03cd336aa995f5b447808f6bbc94558d253",
-    "term:element-w-pr-evidence-head": "70f25f2393fb4d92be2a7d88da38497370a8189dcddb59b3b30144c3b8040002",
-    "term:element-w-relationships-add": "dd57384cd6c5499d67e09a2c8ebd4febc6bce90c3c6a2293951ebaf1766decdd",
-    "term:element-w-relationships-evidence-or-local": "3b641e6249991a5d50822f23a65f7d6266a106045956b9c70fe4fde2358b83c6",
-    "term:element-w-relationships-remove": "a224fd35c156d89ce5c487772ea06f09c09a2e3157796aa6ed362c5ebeb2c926",
-    "term:element-w-relationships-target": "c15b2e1676029ca842da3bcaae5bc9bf1b8c398a7737e837cc179b3666c8fd40",
-    "term:element-w-relationships-target-input": "a9a64885f8d38aba0be0036bf6bc011e6477c5bc7bc04bab952e476479d89dd4",
-    "term:element-w-ticket-context-status": "8ff05d1208e6059440ac412e228311c8f79aa957490211fc1e0d9e8e4e04c844",
-    "term:element-w-ticket-context-summary-or-error": "83b3052f5f67b4e83cde703083a2fc3f1622b83443b746834535b72922360431",
-    "term:element-w-ticket-context-ticket-id": "2f724faef5503ab2bf3944454374a54b1b1810fd11e3a24de4ac401af8355c8b",
-    "term:relationship": "831298d903aac600c7d77551ba2ff35b79dfcc3fcfed745623a512d3ffaffb2a",
-    "term:state-error": "050fb7c9021011b86697999403a700459d85bd38b383dc85027f0d2296999b02",
-    "term:ui-c-link": "c424949f8b327b0d712694eda69ca0d0d1c2f9e2ce058f6bfc96dd49375b1d5b",
-    "term:ui-w-pr-evidence": "27a24fa106c206f970fe924650a4622427e0ffefe2fea9fee22d571224c17cb3",
-    "term:ui-w-relationships": "01cc7f9057eae92a1d111caf75a941674a33ae50a7299f85fc5799faf7b9e315",
-    "term:ui-w-ticket-context": "98cc0837576ceaf8db5e568ca74a0a11870c3d2fea75b9e4dab343653a7caa33",
-    "term:unverified-behavior": "36e7e9a3831e32de218b4cbee09bcd7b7d52b78070781da4a96ffa2f7046a25e",
-    "term:work-item": "8dd81f01639d1457547737621920727a8aa4c0af84d6526f28e18569f95d230b",
-    "ui:C-LINK": "0f53a86e14514ab19a543aa8faecfb01e6e12e69e606c26e9e886112851d6345",
-    "ui:W-PR-EVIDENCE": "deffa95ebb02a8bbb6df0298955b8f97d62480d8e1f301236d872a2888688e76",
-    "ui:W-RELATIONSHIPS": "ebfc051478223988e6d0fc2427cc3de6234e41ee35ad7c257b7dfc779511b9ad",
-    "ui:W-TICKET-CONTEXT": "9967f2e7eb081e090a4cd67981ae3d4fb1d4bdd0cfd4548b6f74e5f65ccc55f8"
+    "flow:relate-items": "4a54028d8782bca3806050709b2b21c39936ecc9d8ea5a853dc390c99379d0ea",
+    "term:connection-submits": "c5563dca115c4fe3069ea4752c06c610fef371d7ad9e021f4d4f0dd58aae6449",
+    "term:coverage-gap": "a38740977513a9d32ee20fd7453728cf839647d0acc6e576b4b9b74901cfd27d",
+    "term:element-w-pr-evidence-branch": "a1a1a2813555ebf3f2da1b9001edb56727fe85086405fe661f9ad6b1a0648b43",
+    "term:element-w-pr-evidence-checks-content": "b1513ed95549e9f0d9046676796b0ef862d855ed4d54009a7097247d9fb0933c",
+    "term:element-w-pr-evidence-checks-disclosure": "dd6d65dd767fa9f1e5ec3dc6a7ab08b4a7f5ac985d56ea7e4dd7767ca790de04",
+    "term:element-w-pr-evidence-head": "0157ef6cd97dd59868f686ba52ffb27b564d0baff98229ba24c343cf978237fa",
+    "term:element-w-relationships-add": "ce1d3d75f18cb38014a087887dd1dcf075ec9c6197dd05b228fc692686c2e912",
+    "term:element-w-relationships-evidence-or-local": "93bb11a8989c051e2929796009d5ca5df9d76b282204f9806e585d73f05679cc",
+    "term:element-w-relationships-remove": "459414b26285ac67aceb5ccf28635bc9b1a4c1ca3ccfb9725a9993b106acb407",
+    "term:element-w-relationships-target": "589a931772dd2926a5f8affa31d76100cb16ade4af665efc11204e3e0642bde2",
+    "term:element-w-relationships-target-input": "3acec3d09c02e42d7c7ff96f29dd9565289b4dcf4d9bed30665114699e827949",
+    "term:element-w-ticket-context-status": "bad1ecb9f6c9d36df63523a118058df23cb299ac74d21d3be03cb33a2fa8a2f4",
+    "term:element-w-ticket-context-summary-or-error": "c1a759b2ba58ec700bb97c921efb228e7aa16f2cadbcf70720f0db6268836caa",
+    "term:element-w-ticket-context-ticket-id": "f3434c11017f6a8e0c1e888ebb4b4c39657c2fbae1d00d34249ad866e9f4f1d5",
+    "term:relationship": "a72913708fc583b2cf32dc157d5cdd12e9c59962c0e9afd54343421590aa4e85",
+    "term:state-error": "93136fd9615f71e01872a33f7a30d7681ec4c5e01c20d741d0a6f177cbd5538c",
+    "term:ui-c-link": "509717c0128a6a7694d20fbddab937585abf4c4c2a136cf3ad1549bd9793429f",
+    "term:ui-w-pr-evidence": "dcb1dbab15d1803cfb86db14c2f622d6732ca43c11905aa0440622406cc0ad37",
+    "term:ui-w-relationships": "bdf5630eccef8324e0fae2047fc37ee7d612d12bf1c3261217fae685a0d867ed",
+    "term:ui-w-ticket-context": "25a8d6e977b99e5bb8ffaa0c422b3187070273ddc37921d6a3ccb783d991a524",
+    "term:unverified-behavior": "3b5c3eed81f4988dfbce60a9fe4d485212fc539b326e1d4808b989f12fd199cb",
+    "term:work-item": "5bf5c93d7445f9f69fed9d7a38e6c06c41f157a209a761eb8d5cea60364fe716",
+    "ui:C-LINK": "1f76875666e7c155af9aaa68f682ae9dd3fe1c530de51a43577adbc03f8ab03e",
+    "ui:W-PR-EVIDENCE": "6254aeab6fcd092045ac2532938d128d6ec4472d6b215a3689803d5634e3f92d",
+    "ui:W-RELATIONSHIPS": "e33bf0f58cc00d20596adbbf863704191cd3719a2b8598736d56bb6cdd168075",
+    "ui:W-TICKET-CONTEXT": "f03ebdb0cab9d1f45fa95ddd8c321887010e27f52796ae8f0b2cb5114b49d08d"
   }
 }

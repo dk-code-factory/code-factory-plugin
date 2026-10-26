@@ -31,6 +31,13 @@ decisions. Every later revision uses the ordinary fail-closed specification gate
 The original fourteen-flow historical adoption pin remains unchanged and is not a
 public CI bypass; its private historical commit is not published.
 
+Concurrent local checkouts can set `CODE_FACTORY_TEST_UI_PORT` and
+`CODE_FACTORY_TEST_HOST_PORT` for fixture listeners, for example
+`CODE_FACTORY_TEST_UI_PORT=43173 CODE_FACTORY_TEST_HOST_PORT=43174 make ci FLOW_BASE=main`.
+Defaults remain 4173 and 4174. Both listeners stay on loopback; strict port
+ownership, fresh servers, health checks and direct-connection assertions use the
+selected ports. Installed service routes are unchanged.
+
 ## Delivery
 
 [Release](https://github.com/dk-code-factory/code-factory-plugin/actions/workflows/release.yml)
@@ -50,3 +57,10 @@ needed. CI artifacts expire after30days; rerun their original CI run if necessar
 Deployment to an operator's Linux machine remains manual. No workflow installs
 services, changes Tailscale, signs into providers, starts agents or runs live-host
 acceptance. A green build does not establish that an installation is ready.
+
+The checked CI manifest also identifies daemon and plugin component versions
+from the promoted package bytes. Explicit fixed issues in
+`release/fixed-issues.json` must name full ancestor fix commits with matching
+fixing/closing issue references. Report delivery tracking verifies the published
+release, uploaded asset digests, tag commit, checksum list and component ancestry;
+a tag, closed issue or merged PR alone does not establish release availability.
