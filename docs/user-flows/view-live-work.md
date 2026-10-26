@@ -102,7 +102,7 @@ flowchart TD
 - [web/src/reviews.tsx](../../web/src/reviews.tsx) — Visible submitted review receipts, verdict/head, inline findings, cached freshness and host links. (`export function PostedReviews(`)
 - [internal/app/review_publication.go](../../internal/app/review_publication.go) — Durable budgeted review observations, failure retention and post-turn refresh. (`func (a *App) ReadPRReviews(`)
 - [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Read submitted review and inline-comment pages; omit pending drafts. (`func (g *GitHub) PublishedReviews(`)
-- [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
+- [internal/app/tracking.go](../../internal/app/tracking.go) — Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required. (`func (a *App) TrackWork(`)
 - [internal/app/observations.go](../../internal/app/observations.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) observation(`)
 - [internal/store/reads.go](../../internal/store/reads.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func Select[T any](`)
 - [internal/store/progress.go](../../internal/store/progress.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (t *Tx) ProjectProgress(`)
@@ -145,6 +145,7 @@ flowchart TD
 - [internal/store/progress_test.go](../../internal/store/progress_test.go) — `func TestCompletionChunksPreserveEscapesAndWaitForValidWholeObjects(`; S6. Legacy completion framing preserves escaped quotes/braces/backslashes and Unicode at valid split positions, waits for valid whole objects and isolates adjacent objects without repeated prefix validation.
 - [internal/store/progress_test.go](../../internal/store/progress_test.go) — `func TestProgressBackfillDiscardsPartialAndMalformedChunksAtMethodBoundary(`; S6. Partial/malformed completion history stays unavailable until method reset; newer actual journal projection wins against stale reconstructed progress through its cursor guard.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `chunked owner and agent completions remain normal conversation across journal pages`; S2. Long owner/unstreamed agent Unicode and escaped completions across a journal page retain You/Agent roles and ID coalescing in the normal conversation; raw partial/malformed and command output stay under initially collapsed Details.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingContinuationUsesOnlyActiveTurnTokens(`; S6. Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.
 
 ## Verification and gaps
 

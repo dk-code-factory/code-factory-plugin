@@ -195,7 +195,11 @@ func (a *App) TrackWork(ctx context.Context, in TrackInput) (map[string]any, err
 			return nil, err
 		}
 		out["latestOutput"] = progress
-		out["continuation"] = map[string]any{"runId": current.ID, "expectedTurn": current.TurnID, "transcriptTool": "read_transcript", "after": 0, "projectionCursor": progress.Cursor}
+		expectedTurn := ""
+		if current.Status == "running" || current.Status == "waiting" {
+			expectedTurn = current.TurnID
+		}
+		out["continuation"] = map[string]any{"runId": current.ID, "expectedTurn": expectedTurn, "transcriptTool": "read_transcript", "after": 0, "projectionCursor": progress.Cursor}
 	}
 	ids := []string{}
 	for _, r := range runs {

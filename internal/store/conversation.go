@@ -8,10 +8,13 @@ import (
 
 func (t *Tx) ConversationVersion(runID string) (int64, error) {
 	var seq int64
+	// Legacy completion chunks hide their item type. Count every same-run chunk
+	// as a possible conversation change, without importing it as reply evidence.
 	err := t.tx.QueryRowContext(t.ctx, `SELECT coalesce(max(seq),0) FROM events
 		WHERE entity=? AND kind='run.output'
-		AND json_extract(data,'$.method')='item/completed'
-		AND json_extract(data,'$.params.item.type') IN ('userMessage','agentMessage')`, runID).Scan(&seq)
+		AND (json_extract(data,'$.method')='item/completed/chunk'
+		OR (json_extract(data,'$.method')='item/completed'
+		AND json_extract(data,'$.params.item.type') IN ('userMessage','agentMessage')))`, runID).Scan(&seq)
 	return seq, err
 }
 

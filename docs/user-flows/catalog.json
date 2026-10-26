@@ -2190,7 +2190,7 @@
         {
           "path": "internal/app/tracking.go",
           "anchor": "func (a *App) TrackWork(",
-          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+          "purpose": "Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required."
         },
         {
           "path": "internal/store/reads.go",
@@ -2486,6 +2486,14 @@
             "S6"
           ],
           "purpose": "Paused/cooldown/unavailable observations with no error retain visible saved details and unread state; draft editing does not mark read or launch."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingContinuationUsesOnlyActiveTurnTokens(",
+          "purpose": "Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.",
+          "scenarios": [
+            "S6"
+          ]
         }
       ],
       "suites": [
@@ -3984,6 +3992,15 @@
             "S3"
           ],
           "purpose": "Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a late first-message Start cannot replace another item's draft",
+          "purpose": "With a delayed immutable accepted Start response and lagging saved reads, the Messages badge proves React processed the response before asserting another item and exact draft remain selected; private guard removal fails after this barrier.",
+          "scenarios": [
+            "S1",
+            "S2"
+          ]
         }
       ],
       "suites": [
@@ -4456,7 +4473,7 @@
         {
           "path": "internal/app/tracking.go",
           "anchor": "func (a *App) TrackWork(",
-          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+          "purpose": "Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required."
         },
         {
           "path": "internal/transport/tracking.go",
@@ -4477,6 +4494,11 @@
           "path": "internal/store/conversation.go",
           "anchor": "func (s *Store) ConversationEvidence(",
           "purpose": "Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs."
+        },
+        {
+          "path": "internal/store/conversation.go",
+          "anchor": "func (t *Tx) ConversationVersion(",
+          "purpose": "Transaction guard counts ordinary owner/agent completions and opaque same-run completion chunks as possible conversation changes without importing omitted content as evidence."
         }
       ],
       "tests": [
@@ -4793,7 +4815,7 @@
             "S1",
             "S6"
           ],
-          "purpose": "Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects."
+          "purpose": "Actual provider-loss follow-up uses the returned TrackWork continuation fields, preserves historical turn/thread/workspace/authority and encrypted claim, and resumes exactly the submitted response without original-task or generic replay."
         },
         {
           "path": "web/tests/factory.spec.ts",
@@ -4802,6 +4824,31 @@
             "S1"
           ],
           "purpose": "Long owner/unstreamed agent Unicode and escaped completions across a journal page retain You/Agent roles and ID coalescing in the normal conversation; raw partial/malformed and command output stay under initially collapsed Details."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationRejectsChunkedConversationChanges(",
+          "purpose": "Actual oversized completion producer changes journal version while run status/turn stay fixed; stale inference preserves the exact pending request. Unchanged/other-run/ordinary-tool controls still settle; opaque tool chunks conservatively preserve uncertainty.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingContinuationUsesOnlyActiveTurnTokens(",
+          "purpose": "Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.",
+          "scenarios": [
+            "S1",
+            "S6"
+          ]
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a late first-message Start cannot replace another item's draft",
+          "purpose": "With a delayed immutable accepted Start response and lagging saved reads, the Messages badge proves React processed the response before asserting another item and exact draft remain selected; private guard removal fails after this barrier.",
+          "scenarios": [
+            "S1"
+          ]
         },
         {
           "path": "internal/app/questions_test.go",
@@ -5306,6 +5353,11 @@
           "path": "internal/store/vault.go",
           "anchor": "func (v *Vault) SetTx(",
           "purpose": "Encrypt exact attention replies in the same transaction as answer and recovery claims; no plaintext answer payload in public state."
+        },
+        {
+          "path": "internal/store/conversation.go",
+          "anchor": "func (t *Tx) ConversationVersion(",
+          "purpose": "Transaction guard counts ordinary owner/agent completions and opaque same-run completion chunks as possible conversation changes without importing omitted content as evidence."
         }
       ],
       "tests": [
@@ -5625,15 +5677,15 @@
             "S3",
             "S4"
           ],
-          "purpose": "Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects."
+          "purpose": "Actual provider-loss follow-up uses the returned TrackWork continuation fields, preserves historical turn/thread/workspace/authority and encrypted claim, and resumes exactly the submitted response without original-task or generic replay."
         },
         {
-          "path": "internal/app/attention_test.go",
-          "anchor": "func TestAttentionQueueFiltersAndPaginatesWithoutSkippingResolvedRequests(",
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationRejectsChunkedConversationChanges(",
+          "purpose": "Actual oversized completion producer changes journal version while run status/turn stay fixed; stale inference preserves the exact pending request. Unchanged/other-run/ordinary-tool controls still settle; opaque tool chunks conservatively preserve uncertainty.",
           "scenarios": [
-            "S5"
-          ],
-          "purpose": "Queue includes live RPC and retained text/message asks; excludes answered/stale/orphaned/prepared/cleaned requests, preserves options and blocking status, strips unrelated run content, validates cursors/limits and never skips asks when a preceding page is resolved."
+            "S4"
+          ]
         },
         {
           "path": "internal/app/app_test.go",
@@ -5642,14 +5694,6 @@
             "S3"
           ],
           "purpose": "Recovery invalidates pending request identity."
-        },
-        {
-          "path": "internal/app/questions_test.go",
-          "anchor": "func TestStoppedQuestionRecoveryNativeAndFallback(",
-          "scenarios": [
-            "S4"
-          ],
-          "purpose": "First/second native repair, two-attempt fallback, original mode restoration and duplicate rejection."
         },
         {
           "path": "internal/app/questions_test.go",
@@ -5674,14 +5718,6 @@
             "S4"
           ],
           "purpose": "Owner takeover cancels further attempts and rejects the old form."
-        },
-        {
-          "path": "internal/app/questions_test.go",
-          "anchor": "func TestTextQuestionDismissalCannotAnswerOrApproveNativeRequests(",
-          "scenarios": [
-            "S4"
-          ],
-          "purpose": "Dismissal cannot answer an approval or start work."
         },
         {
           "path": "web/tests/factory.spec.ts",
@@ -6600,6 +6636,16 @@
           "path": "internal/store/conversation.go",
           "anchor": "func (s *Store) ConversationEvidence(",
           "purpose": "Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs."
+        },
+        {
+          "path": "internal/store/conversation.go",
+          "anchor": "func (t *Tx) ConversationVersion(",
+          "purpose": "Transaction guard counts ordinary owner/agent completions and opaque same-run completion chunks as possible conversation changes without importing omitted content as evidence."
+        },
+        {
+          "path": "internal/app/tracking.go",
+          "anchor": "func (a *App) TrackWork(",
+          "purpose": "Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required."
         }
       ],
       "tests": [
@@ -6983,7 +7029,23 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "Actual provider loss retains an inactive old turn and text ask; empty-token follow-up delivers exactly one thread resume and owner-reply turn with retained workspace/profile and private answer, while historical-token submission rejects."
+          "purpose": "Actual provider-loss follow-up uses the returned TrackWork continuation fields, preserves historical turn/thread/workspace/authority and encrypted claim, and resumes exactly the submitted response without original-task or generic replay."
+        },
+        {
+          "path": "internal/app/attention_reconciliation_test.go",
+          "anchor": "func TestAttentionReconciliationRejectsChunkedConversationChanges(",
+          "purpose": "Actual oversized completion producer changes journal version while run status/turn stay fixed; stale inference preserves the exact pending request. Unchanged/other-run/ordinary-tool controls still settle; opaque tool chunks conservatively preserve uncertainty.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingContinuationUsesOnlyActiveTurnTokens(",
+          "purpose": "Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.",
+          "scenarios": [
+            "S2"
+          ]
         },
         {
           "path": "internal/app/app_test.go",
@@ -7004,36 +7066,11 @@
         },
         {
           "path": "internal/app/questions_test.go",
-          "anchor": "func TestStructuredMessageQuestionSurvivesRestartAndClaimsAnswerOnce(",
-          "scenarios": [
-            "S1",
-            "S2"
-          ],
-          "purpose": "Structured question retains identity across restart; concurrent responses accept only once."
-        },
-        {
-          "path": "internal/app/questions_test.go",
-          "anchor": "func TestLostNativeQuestionsRemainAnswerableWithoutConvertingApprovals(",
-          "scenarios": [
-            "S1"
-          ],
-          "purpose": "Lost native question becomes text; approvals remain stale."
-        },
-        {
-          "path": "internal/app/questions_test.go",
           "anchor": "func TestRestartDuringRepairRetainsOneFallbackWithoutReplayingAttempts(",
           "scenarios": [
             "S1"
           ],
           "purpose": "In-flight repair restart produces one durable fallback without replaying attempts."
-        },
-        {
-          "path": "internal/app/questions_test.go",
-          "anchor": "func TestRestartMaterializesAlreadyPersistedFallback(",
-          "scenarios": [
-            "S1"
-          ],
-          "purpose": "Crash between persisted fallback stage and attention creation is repaired idempotently."
         },
         {
           "path": "internal/app/question_classification_test.go",
@@ -7582,7 +7619,7 @@
         {
           "path": "internal/app/tracking.go",
           "anchor": "func (a *App) TrackWork(",
-          "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+          "purpose": "Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required."
         },
         {
           "path": "internal/app/observations.go",
@@ -7890,6 +7927,14 @@
             "S2"
           ],
           "purpose": "Long owner/unstreamed agent Unicode and escaped completions across a journal page retain You/Agent roles and ID coalescing in the normal conversation; raw partial/malformed and command output stay under initially collapsed Details."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingContinuationUsesOnlyActiveTurnTokens(",
+          "purpose": "Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.",
+          "scenarios": [
+            "S6"
+          ]
         }
       ],
       "suites": [

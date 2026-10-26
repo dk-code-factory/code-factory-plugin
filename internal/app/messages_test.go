@@ -52,7 +52,15 @@ func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(t *testing.T) {
 		t.Fatal("inactive historical turn was accepted as active authority")
 	}
 	const reply = "Use the focused retained scope"
-	accepted, err := a.Runs.QueueMessage(ctx, run.ID, reply, "")
+	tracked, err := a.TrackWork(ctx, TrackInput{Target: run.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tracked["currentRun"].(map[string]any)["turnId"] != original.TurnID {
+		t.Fatal("tracking discarded the historical turn")
+	}
+	continuation := tracked["continuation"].(map[string]any)
+	accepted, err := a.Runs.QueueMessage(ctx, continuation["runId"].(string), reply, continuation["expectedTurn"].(string))
 	if err != nil {
 		t.Fatal(err)
 	}

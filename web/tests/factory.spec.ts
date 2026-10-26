@@ -464,7 +464,7 @@ async function host(
               },
             },
           ];
-          data = state.runs[0];
+          data = structuredClone(state.runs[0]);
           state.cursor++;
           await options.beforeStartResponse?.();
           if (options.loseStartResponse)
@@ -3097,7 +3097,12 @@ test("a late first-message Start cannot replace another item's draft", async ({
   snapshot.inbox.push(second);
   const { ui, calls } = await host(page, {
     snapshot,
-    beforeStartResponse: () => gate,
+    beforeStartResponse: () => {
+      // Keep snapshot reads behind the accepted Start response. Only accepting
+      // its waiting run can make the pending question count as a message.
+      snapshot.runs[0].status = "prepared";
+      return gate;
+    },
   });
   try {
     await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
@@ -3113,7 +3118,11 @@ test("a late first-message Start cannot replace another item's draft", async ({
     await ui
       .getByLabel("Message agent")
       .fill("Keep the second task's unsubmitted message.");
+    await expect(ui.getByRole("button", { name: "Messages", exact: true })).toBeVisible();
     release();
+    // This badge is derived from acceptRun's returned run, not a host-call or
+    // response-sent signal. Wait for that React update before checking selection.
+    await expect(ui.getByRole("button", { name: "Messages 1", exact: true })).toBeVisible();
     await expect(
       ui.getByRole("heading", { name: "Second task", exact: true }),
     ).toBeVisible();

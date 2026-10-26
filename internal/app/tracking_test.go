@@ -17,6 +17,42 @@ import (
 	"codefactory/internal/store"
 )
 
+func TestTrackingContinuationUsesOnlyActiveTurnTokens(t *testing.T) {
+	for _, status := range []string{"idle", "interrupted", "failed", "running", "waiting"} {
+		t.Run(status, func(t *testing.T) {
+			a, ctx := fixture(t)
+			i := item()
+			i.Body = ""
+			importOne(t, a, ctx, i)
+			run := domain.Run{ID: "retained", ItemID: i.ID, Status: status, ThreadID: "retained-thread", TurnID: "historical-turn", Created: time.Now().UTC()}
+			if err := a.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
+				t.Fatal(err)
+			}
+			tracked, err := a.TrackWork(ctx, TrackInput{Target: run.ID})
+			if err != nil {
+				t.Fatal(err)
+			}
+			continuation := tracked["continuation"].(map[string]any)
+			expected := ""
+			active := status == "running" || status == "waiting"
+			if active {
+				expected = run.TurnID
+			}
+			if continuation["runId"] != run.ID || continuation["expectedTurn"] != expected {
+				t.Fatal("continuation does not match message concurrency authority", continuation)
+			}
+			if tracked["currentRun"].(map[string]any)["turnId"] != run.TurnID {
+				t.Fatal("tracking discarded historical turn identity")
+			}
+			if active {
+				if _, err := a.Runs.QueueMessage(ctx, run.ID, "stale active reply", "stale-turn"); err == nil || !strings.Contains(err.Error(), "active turn changed") {
+					t.Fatal("stale active turn was not rejected", err)
+				}
+			}
+		})
+	}
+}
+
 func TestTrackingResolvesTargetsPaginatesHistoryAndSeparatesReceiptHeads(t *testing.T) {
 	a, ctx := fixture(t)
 	i := item()

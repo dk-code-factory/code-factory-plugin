@@ -93,7 +93,7 @@ flowchart TD
 - [internal/app/app.go](../../internal/app/app.go) — Bulk-load keyed user/assessment/ticket state and project list history fields before Go decoding; retain canonical linked-context hashing and full source/detail records. (`func (a *App) InboxSummaries(`)
 - [internal/app/detail.go](../../internal/app/detail.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) ItemDetail(`)
 - [internal/app/observations.go](../../internal/app/observations.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) observation(`)
-- [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
+- [internal/app/tracking.go](../../internal/app/tracking.go) — Saved bounded tracking returns only active running/waiting concurrency tokens for follow-up; inactive retained turns remain historical identity in currentRun, with no remote read required. (`func (a *App) TrackWork(`)
 - [internal/store/reads.go](../../internal/store/reads.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func Select[T any](`)
 - [internal/transport/tracking.go](../../internal/transport/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (s *Server) dashboard(`)
 
@@ -133,6 +133,7 @@ flowchart TD
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestFreshDetailKeepsMonitoringFocusWithoutProviderRefresh(`; S6. A fresh local detail read retains the original selected-item monitoring focus without scheduling provider work.
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestSavedTrackingReadsDuringUncommittedSynchronizationWrite(`; S6. Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `saved unread details remain unread when refresh is`; S5, S6. Paused/cooldown/unavailable observations with no error retain visible saved details and unread state; draft editing does not mark read or launch.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingContinuationUsesOnlyActiveTurnTokens(`; S6. Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.
 
 ## Verification and gaps
 

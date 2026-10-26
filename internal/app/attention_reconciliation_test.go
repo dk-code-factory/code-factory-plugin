@@ -1,13 +1,128 @@
 package app
 
 import (
+	"codefactory/internal/codex"
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
+
+func TestAttentionReconciliationRejectsChunkedConversationChanges(t *testing.T) {
+	for _, tc := range []struct {
+		name, changeType string
+		long, otherRun   bool
+		stale            bool
+	}{
+		{name: "unchanged"},
+		{name: "other-run-long-owner", changeType: "userMessage", long: true, otherRun: true},
+		{name: "ordinary-tool", changeType: "commandExecution"},
+		{name: "ordinary-owner-correction", changeType: "userMessage", stale: true},
+		{name: "long-owner-correction", changeType: "userMessage", long: true, stale: true},
+		{name: "long-agent-correction", changeType: "agentMessage", long: true, stale: true},
+		// Opaque legacy chunks cannot establish their item type without importing
+		// omitted content. A long tool completion conservatively preserves the ask.
+		{name: "opaque-long-tool", changeType: "commandExecution", long: true, stale: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a, ctx := fixture(t)
+			r := prepareRun(t, a, ctx)
+			r.Status, r.TurnID = "idle", "unchanged-turn"
+			if err := a.Store.Put(ctx, "run", r.ID, r, ""); err != nil {
+				t.Fatal(err)
+			}
+			request := domain.Attention{ID: "question", RunID: r.ID, Origin: "async", Method: questionMethod, Status: "pending", Created: time.Now().UTC(), Params: raw(map[string]any{"questions": []question{{ID: "q1", Question: "Which contract?", IsOther: true}}})}
+			if err := a.Store.Put(ctx, "attention", request.ID, request, ""); err != nil {
+				t.Fatal(err)
+			}
+			live := &session{run: r, pending: map[string]domain.Attention{}, completed: map[string]bool{}}
+			evidence := []attentionEvidence{{Role: "user", Text: "Use stable IDs"}, {Role: "agent", Text: "Stable IDs accepted"}}
+			complete := func(s *session, kind, text string) {
+				t.Helper()
+				item := map[string]any{"id": ID(), "type": kind, "text": text}
+				if kind == "userMessage" {
+					delete(item, "text")
+					item["content"] = []map[string]string{{"type": "text", "text": text}}
+				}
+				a.Runs.onMessage(s, codex.Message{Method: "item/completed", Params: raw(map[string]any{"turnId": r.TurnID, "item": item})})
+			}
+			for n := range evidence {
+				kind := "agentMessage"
+				if evidence[n].Role == "user" {
+					kind = "userMessage"
+				}
+				complete(live, kind, evidence[n].Text)
+				evidence[n].Seq = a.Store.Latest(ctx)
+			}
+			decision := attentionDecision{QuestionID: "q1", Status: "resolved", UserEvent: evidence[0].Seq, AgentEvent: evidence[1].Seq, UserQuote: evidence[0].Text, AgentQuote: evidence[1].Text}
+			if tc.changeType != "" {
+				target := live
+				if tc.otherRun {
+					other := r
+					other.ID = "other-run"
+					target = &session{run: other, pending: map[string]domain.Attention{}, completed: map[string]bool{}}
+				}
+				text := "Do not settle q1; the earlier decision is withdrawn."
+				if tc.long {
+					text = strings.Repeat(text, 1000)
+				}
+				before := a.Store.Latest(ctx)
+				complete(target, tc.changeType, text)
+				page, err := a.Store.RunEvents(ctx, target.run.ID, before, 200)
+				if err != nil {
+					t.Fatal(err)
+				}
+				events := page["events"].([]domain.Event)
+				if len(events) == 0 || tc.long && len(events) < 2 {
+					t.Fatal("actual completion producer did not journal expected chunks", len(events))
+				}
+				if tc.long {
+					for _, event := range events {
+						var body struct{ Method string }
+						if err := json.Unmarshal(event.Data, &body); err != nil || body.Method != "item/completed/chunk" {
+							t.Fatal("oversized completion bypassed chunk producer", body, err)
+						}
+					}
+				}
+			}
+			// The bounded helper input still contains exactly the earlier explicit
+			// owning exchange. Omitted content may invalidate it, never prove a reply.
+			saved, err := a.Store.ConversationEvidence(ctx, r.ID, request.Created)
+			want := 2
+			if tc.changeType == "userMessage" && !tc.long && !tc.otherRun {
+				want++
+			}
+			if err != nil || len(saved) != want {
+				t.Fatal("bounded same-run evidence changed unexpectedly", len(saved), err)
+			}
+			if tc.long && len(saved) == 2 && (saved[0].Seq != evidence[1].Seq || saved[1].Seq != evidence[0].Seq) {
+				t.Fatal("chunked content replaced explicit bounded evidence", saved)
+			}
+			var unchanged domain.Run
+			if err := a.Store.Get(ctx, "run", r.ID, &unchanged); err != nil || unchanged.Status != r.Status || unchanged.TurnID != r.TurnID {
+				t.Fatal("fixture changed run guards instead of conversation", unchanged, err)
+			}
+			err = a.Runs.applyAttentionDecisions(ctx, r, request, evidence, []attentionDecision{decision})
+			var current domain.Attention
+			if loadErr := a.Store.Get(ctx, "attention", request.ID, &current); loadErr != nil {
+				t.Fatal(loadErr)
+			}
+			if tc.stale {
+				if err == nil || !strings.Contains(err.Error(), "conversation changed") {
+					t.Fatal("stale owning conversation was accepted", err)
+				}
+				if current.Status != "pending" || len(current.Resolutions) != 0 || string(current.Params) != string(request.Params) {
+					t.Fatal("stale inference changed unanswered questions", current)
+				}
+			} else if err != nil || current.Status != "resolved" || len(current.Resolutions) != 1 {
+				t.Fatal("unchanged owning evidence no longer settles", current, err)
+			}
+		})
+	}
+}
 
 func TestDeliveredMessageReconcilesOnlyAcknowledgedQuestions(t *testing.T) {
 	for _, tc := range []struct {

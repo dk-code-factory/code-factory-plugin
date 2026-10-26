@@ -12148,7 +12148,7 @@
       "id": "UI-CHAT-LATE",
       "path": "web/tests/factory.spec.ts",
       "anchor": "a late first-message Start cannot replace another item",
-      "assertion": "A first-message launch completing after another item is opened cannot replace its page or unsubmitted draft; exactly one prepare/Start is sent."
+      "assertion": "A withheld first-message Start response is processed while saved reads remain prepared: Messages changes to Messages 1 only after the returned waiting run reaches React. After that barrier, the later selected item and exact unsubmitted draft remain; exactly one prepare/Start is sent."
     },
     {
       "id": "UI-CHAT-PREPARE-ERROR",
@@ -12538,7 +12538,7 @@
       "id": "API-INACTIVE-QUESTION-FOLLOWUP",
       "path": "internal/app/messages_test.go",
       "anchor": "func TestDisconnectedQuestionFollowupRestoresOneSubmittedTurn(",
-      "assertion": "After actual provider loss, inactive nonempty token rejects while empty-token followup resumes the same thread/workspace/profile/prompt with exactly one submitted question-reply turn; question becomes answered and encrypted reply remains in Vault without original-task replay."
+      "assertion": "After actual provider loss, TrackWork preserves historical currentRun.turnId but advertises an empty inactive continuation token. Passing its returned runId/expectedTurn to QueueMessage restores the same thread/workspace/profile/prompt with exactly one submitted question reply; stale active tokens reject, the question is answered and Vault retains the reply without original-task replay."
     },
     {
       "id": "ADMIN-REMOVED-SKILL",
