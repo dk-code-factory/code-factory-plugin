@@ -2,14 +2,14 @@
   "version": 1,
   "flow": "flow-receive-notifications",
   "base": "fc80b2e2cb61568835c66fdaefc770df0e19c3b1",
-  "fingerprint": "21d356c14f67e6c76ba6ffe74525cc56eb1d7517cb85c6f43322087b10f73696",
+  "fingerprint": "2e9ac9c5ebd9787d216d1a881d74d21123466aad9db35f3e13ddd90afa13702e",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Durable callback and attention notification behavior remains accurate; report changes add journal notifications containing report identity and processing state only.",
-    "implementation": "Existing Events transport/delivery code is unchanged. Report persistence uses the existing transactional journal rather than introducing output-token callbacks.",
+    "implementation": "Existing Events transport/delivery code is unchanged. Report persistence uses the existing transactional journal rather than introducing output-token callbacks. Reviewed the shared GitHub transport and private marker CAS addition: only inbox synchronization/report operations use these paths; this contract retains its existing API, transitions and assertion ownership.",
     "tests": "Existing event delivery fixtures retain their scope; new report journal assertions reject full evidence content. No fixture result closes real callback or host acceptance."
   },
   "verification": [
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 21.448
+      "seconds": 22.205
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.815
+      "seconds": 25.239
     },
     {
       "command": [
@@ -52,11 +52,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.642
+      "seconds": 0.582
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "7a9c57c6acaeb0f108bd1091240ffd12f5e76edaeb1bc225e0168b03d05b13cb",
+    "flow:receive-notifications": "31a199edc3e5181d37693044e9437e12851639fc0b357a5483556aca48e8ea7c",
     "term:attention-request": "66ec3c547e81044a57e6a72cc5435a692c46ae6bc335e84620105bdbac78eea2",
     "term:coverage-gap": "a38740977513a9d32ee20fd7453728cf839647d0acc6e576b4b9b74901cfd27d",
     "term:host": "32089dbcb76600b2357814ddf0acd761f611d35e4f85ed8eb6bf237c89a2692b",

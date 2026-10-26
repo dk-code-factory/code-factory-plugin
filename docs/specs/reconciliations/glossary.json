@@ -9,7 +9,7 @@
   "review": {
     "kind": "terminology",
     "description": "Added report ledger, processing/outcome, evidence manifest, fixed-issue and delivery meanings plus canonical report UI names. Existing term IDs and the navigation naming scope are preserved. Added 46 scoped report element meanings and three report connection meanings; all 420 previously established terms remain unchanged. This repair cycle introduces no new canonical meanings; the established scoped reporting vocabulary remains unchanged.",
-    "implementation": "Definitions contain meanings without consumer links; UI entities consume the new terms and the new navigation element is scoped to the existing navigation widget. Reviewed exact widget controls and element IDs against the registry-owner handoff. Existing ui-w-report-list/ui-w-report-detail scope terms distinguish repeated names without consumer backlinks; definitions contain declarative meanings, no paths/procedures, and no idempotency implementation detail.",
+    "implementation": "Definitions contain meanings without consumer links; UI entities consume the new terms and the new navigation element is scoped to the existing navigation widget. Reviewed exact widget controls and element IDs against the registry-owner handoff. Existing ui-w-report-list/ui-w-report-detail scope terms distinguish repeated names without consumer backlinks; definitions contain declarative meanings, no paths/procedures, and no idempotency implementation detail. For this transport optimization, rechecked that existing 469 scoped meanings and glossary-to-consumer ownership remain intact. Cache/session/index implementation details are kept in behavior metadata rather than adding foundation backlinks.",
     "tests": "Registry validation checks uniqueness, naming scopes and dependency direction. Existing foundational tests remain required; no generated table alone claims behavior coverage. Both maintainers ran all 201 specification tests. Actual report fixtures exercise the named query, pagination, evidence, recovery, issue-link and ordered/progress detail controls; unproved disclosure, other link variants, failures, accessibility and installed-host behavior remain explicit typed gaps."
   },
   "verification": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.815
+      "seconds": 25.239
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.642
+      "seconds": 0.582
     }
   ],
   "dependencies": {

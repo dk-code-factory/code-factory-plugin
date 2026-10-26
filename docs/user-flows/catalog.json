@@ -841,6 +841,10 @@
         {
           "path": "internal/testutil/fakecodex/main.go",
           "purpose": "Shared fake-provider verification input; changes require assertion reconciliation."
+        },
+        {
+          "path": "internal/providers/github_requests.go",
+          "purpose": "Serialized operation-scoped requests, conditional LRU, shared private cooldowns and same-origin Link parsing."
         }
       ],
       "tests": [
@@ -876,6 +880,57 @@
             "S2"
           ],
           "purpose": "Cache preserves pagination and separates identities."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestInboxRequestBudgetAndIndependentFreshness(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Cold 73 and warm 62 requests including identity; independent reviews/CI, head/base invalidation, hourly commit reconciliation and stable incremental buckets."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestSharedCacheLRUAccountingAndExpiry(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Bounded LRU evicts oldest entries, accounts replacements and expires exact TTL boundaries."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestSharedOperationCacheAuthenticationAndSerialization(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "One token resolution per operation, serialized requests, merged cached headers, media isolation and revocation invalidation."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestSharedPersistedCooldownAndPagination(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "HTTP-date and reset deadlines, restarted cross-consumer cooldowns, credential isolation, unreadable storage and unsafe Link rejection."
+        },
+        {
+          "path": "internal/providers/github_requests_test.go",
+          "anchor": "func TestCheckRunLinksCompletenessAndIncrementalExpiry(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Multi-page check-run completeness, cyclic/incomplete Link rejection and ten-minute incremental validator expiry."
+        },
+        {
+          "path": "internal/app/app_test.go",
+          "anchor": "func TestSharedGitHubCooldownPreservesInboxCheckpoints(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Limits from identity or a repository stop the batch, preserve successful/remaining checkpoints, persist diagnostics and suppress the next operation."
         }
       ],
       "suites": [
@@ -7032,6 +7087,22 @@
           "path": "internal/reports/evidence.go",
           "anchor": "func redactCredentialValue(",
           "purpose": "Shared traversal redacts structured header pairs and decoded embedded JSON/MCP text, retaining full raw-header association and bounded fail-closed omission guards."
+        },
+        {
+          "path": "internal/providers/github_requests.go",
+          "purpose": "Shared serialized conditional requests, operation authentication and durable cooldowns."
+        },
+        {
+          "path": "internal/providers/github.go",
+          "purpose": "Shared identity-scoped bounded cache and provider client."
+        },
+        {
+          "path": "internal/reports/tracking_batch.go",
+          "purpose": "Verified release proof memoization keyed by release metadata, tag target and credential scope."
+        },
+        {
+          "path": "internal/reports/marker_index.go",
+          "purpose": "Private versioned incremental marker index, complete scans, candidate revalidation and transactional generations."
         }
       ],
       "tests": [
@@ -7398,7 +7469,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Actual HTTP and SQLite preserve a durable claim before token failure, clear it with zero dispatched POSTs, then recover to exactly one POST after authentication returns; a dispatched lost response retains uncertainty and cannot repeat creation."
+          "purpose": "One token resolution per publication: operation-start token failure dispatches no requests, restored authentication files once, while a lost POST response retains its durable claim and reconciliation never repeats creation."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7458,6 +7529,85 @@
             "S2"
           ],
           "purpose": "Decoded serialized evidence removes an unknown credential while preserving adjacent fields, surrounding prose and the exact diagnostic integer above2^53."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestTrackingBatchSharesAndRevalidatesEvidence(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Three reports deduplicate issue/timeline/closing-commit/list/tag/assets/ancestry requests; a new refresh revalidates mutable evidence and tag changes invalidate proof."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestReportingLinkTraversalAndCachedPagination(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Exactly 100/200 results terminate through Link without empty-page probes; cached links survive 304 while cycles and foreign origins fail."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestMarkerIndexIncrementalSafetyAndRecovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Complete cold scan, restart and overlap updates, marker edits/removal, duplicates, deleted candidate rebuild, failed-pagination watermark preservation and hourly/version rebuild."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestMarkerIndexGenerationConflictsAndCreationCheckpoint(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Three conflicting generations fail recoverably without overwrite; creation associations preserve synchronization watermark."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestMarkerIndexConcurrentWriters(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Independent clients and database connections retry concurrent full scans and preserve both committed generations."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestCrossConsumerCooldownStopsInboxAndPublication(",
+          "scenarios": [
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "purpose": "Rate limits from inbox or reports suppress both consumers and prevent publication dispatch."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestLostCreationResponseRecoversThroughMarkerIndexWithoutReplay(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual HTTP accepts a POST then loses its response; incremental marker recovery revalidates the new issue and completes without a duplicate POST."
+        },
+        {
+          "path": "internal/reports/github_optimization_test.go",
+          "anchor": "func TestAssetCacheRequiresDigestAcrossOperations(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Digestless bytes are operation-only; validated digests permit cross-operation reuse while changed asset sizes invalidate it."
+        },
+        {
+          "path": "internal/store/store_test.go",
+          "anchor": "func TestCompareAndSwapPreservesConcurrentEntities(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Atomic entity comparison across independent SQLite connections accepts current bytes, rejects stale/absence overwrites and retains the newer generation."
         }
       ],
       "suites": [

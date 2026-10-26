@@ -2,14 +2,14 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "fc80b2e2cb61568835c66fdaefc770df0e19c3b1",
-  "fingerprint": "61218c3217cffef2abc9011c27287c564e1fcacb10b39da69848eae2f523669d",
+  "fingerprint": "8f2ecc55c3c5789b4ede6fd779467c858d7f275ded7df3f4e3f30b97b737f4d5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Health, upgrade, rollback and uninstall remain accurate. Reporting documents prerequisite recovery without installing dependencies or changing services.",
-    "implementation": "CLI adds report-publish; existing installer, diagnostics and rollback paths are unchanged. Report evidence uses the bundled plugin version independently of observed host version.",
+    "implementation": "CLI adds report-publish; existing installer, diagnostics and rollback paths are unchanged. Report evidence uses the bundled plugin version independently of observed host version. Reviewed the shared GitHub transport and private marker CAS addition: only inbox synchronization/report operations use these paths; this contract retains its existing API, transitions and assertion ownership.",
     "tests": "Installer/smoke suites remain required. Reporting fixtures do not establish installed-host, login-cycle or real-service acceptance; those gaps remain open."
   },
   "verification": [
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 21.448
+      "seconds": 22.205
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.051
+      "seconds": 6.464
     },
     {
       "command": [
@@ -38,7 +38,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.669
+      "seconds": 7.685
     },
     {
       "command": [
@@ -46,7 +46,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.346
+      "seconds": 22.184
     },
     {
       "command": [
@@ -54,7 +54,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.181
     },
     {
       "command": [
@@ -79,7 +79,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.301
     },
     {
       "command": [
@@ -110,7 +110,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.815
+      "seconds": 25.239
     },
     {
       "command": [
@@ -118,11 +118,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.642
+      "seconds": 0.582
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "3778e82edcb8c07868eb15bb80ed3a21a432ee170de2ee8ee8bc104d375b6ec4",
+    "flow:operate-installation": "8376faae595f071142c38f8b6b162367ce29ffcdb4f8d424417b122de17a777c",
     "term:connection-refreshes": "463a321db10c8ae3a000ed4562054274280ad8a33231274b4240a7a6b7092080",
     "term:connection-submits": "c5563dca115c4fe3069ea4752c06c610fef371d7ad9e021f4d4f0dd58aae6449",
     "term:coverage-gap": "a38740977513a9d32ee20fd7453728cf839647d0acc6e576b4b9b74901cfd27d",
@@ -157,12 +157,12 @@
     "term:ui-w-diagnostics": "05931a7e96e141440bee3221fc7e859837429d668638325abee763f360b14fc0",
     "term:unverified-behavior": "3b5c3eed81f4988dfbce60a9fe4d485212fc539b326e1d4808b989f12fd199cb",
     "term:verification": "94feb98971e86a201694e9a12931cde0d1d5c332af57bb095da2c6e8c08473d5",
-    "ui:C-BROWSER-LAB": "7d45791bdcaeab81030431d5dfa412a474e41b5e6c77cd838c1822599ac7f043",
-    "ui:C-DIAGNOSE": "390aaf9564b972adb9d17301e805a8330a38813f96f1e55452f99d5498807221",
-    "ui:P-BROWSER-LAB": "82eb8d5124af603c7f57ede982e1722a4011dfbc2680dd30921b9ca5cd2a855a",
-    "ui:P-DIAGNOSTICS": "484b8fe3f371f17fdf0d501efcbd681d321c8ac63736dd731ce087b7eab548e8",
-    "ui:PAGE-BROWSER-LAB": "9a2103a71c97ccf53f7f11f640739d4760d7a3f422ed47a49155bc2d8a305195",
-    "ui:W-BROWSER-LAB": "48f51c48f06081c250496607b825ff8250a8c67b8812eb870683977af7396ec4",
-    "ui:W-DIAGNOSTICS": "619afc3d34b4c275c77fc6141e010044cf54139baeaa5e0cc929a62b3f4f7f1b"
+    "ui:C-BROWSER-LAB": "b5ce04cc273d51c16971c4bfbc526b7036f9b798c40bb45c29958a0b52093155",
+    "ui:C-DIAGNOSE": "7e58a20eb6430587d92e3b072d7189aad20257a08df1bfbcd4115a2dfaa84a5c",
+    "ui:P-BROWSER-LAB": "f7fd601e6733f86798fd09c9747d8081c19c25ed297215f019d961227f3daacc",
+    "ui:P-DIAGNOSTICS": "fff049d838026a14d1d317b35eab9979cd62c6af141442bcb750e3379fb893bb",
+    "ui:PAGE-BROWSER-LAB": "3a95243eb9cdc102d07e064f757fe4921fa34a38424d774a598d22406e8aaddd",
+    "ui:W-BROWSER-LAB": "66de6603755b0196b72a11693ce44e983aed5b293d95876912d84ea48d26f8a2",
+    "ui:W-DIAGNOSTICS": "5891094860e0d789da5c2689830cd63d00457ed6f1635872f3df51bdae470ee7"
   }
 }

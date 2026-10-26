@@ -597,3 +597,58 @@ func TestSecretAnswerRedactionSurvivesExplicitResume(t *testing.T) {
 		t.Fatal("secret answer was journaled")
 	}
 }
+
+func TestSharedGitHubCooldownPreservesInboxCheckpoints(t *testing.T) {
+	for _, limitedPath := range []string{"/user", "/repos/owner/a/issues"} {
+		t.Run(limitedPath, func(t *testing.T) {
+			a, ctx := fixture(t)
+			prior := time.Now().Add(-time.Minute).UTC().Truncate(time.Second)
+			for _, id := range []string{"owner/a", "owner/b"} {
+				if e := a.Store.Put(ctx, "repository", id, domain.Repository{ID: id, Imported: true, LastSync: prior, LastFull: prior}, ""); e != nil {
+					t.Fatal(e)
+				}
+			}
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				if r.URL.Path == limitedPath {
+					w.Header().Set("Retry-After", "120")
+					w.WriteHeader(429)
+					return
+				}
+				if r.URL.Path == "/user" {
+					fmt.Fprint(w, `{"login":"owner"}`)
+					return
+				}
+				fmt.Fprint(w, `[]`)
+			}))
+			defer server.Close()
+			tokens := 0
+			a.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { tokens++; return "token", nil }}
+			_ = a.Sync(ctx)
+			for _, id := range []string{"owner/a", "owner/b"} {
+				var r domain.Repository
+				if e := a.Store.Get(ctx, "repository", id, &r); e != nil {
+					t.Fatal(e)
+				}
+				if !r.Imported || !r.LastSync.Equal(prior) || !r.LastFull.Equal(prior) {
+					t.Fatal("limited/skipped sync advanced checkpoint", r)
+				}
+				if id == "owner/a" && (r.Error == "" || r.RetryAt.IsZero()) {
+					t.Fatal("rate limit lost repository diagnostics", r)
+				}
+			}
+			want := 1
+			if limitedPath != "/user" {
+				want = 2
+			}
+			if calls != want || tokens != 1 {
+				t.Fatal("rate limit did not stop batch", calls, tokens)
+			}
+			_ = a.Sync(ctx)
+			if calls != want || tokens != 2 {
+				t.Fatal("shared cooldown allowed another dispatch", calls, tokens)
+			}
+		})
+	}
+}

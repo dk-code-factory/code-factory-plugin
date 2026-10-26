@@ -3,23 +3,23 @@ package providers
 import (
 	"codefactory/internal/domain"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os/exec"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
 type cacheEntry struct {
-	ETag   string
-	Body   []byte
-	Header http.Header
+	ETag    string
+	Body    []byte
+	Header  http.Header
+	Expires time.Time
+	Used    uint64
+	Size    int
 }
 
 type RateLimitError struct{ Until time.Time }
@@ -27,6 +27,10 @@ type RateLimitError struct{ Until time.Time }
 func (e *RateLimitError) Error() string { return "GitHub rate limit; synchronization will retry" }
 
 type GitHub struct {
+	dispatch   sync.Mutex
+	tick       uint64
+	cooldowns  map[string]time.Time
+	Now        func() time.Time
 	cacheBytes int
 	mu         sync.Mutex
 	cache      map[string]cacheEntry
@@ -45,118 +49,72 @@ func NewGitHub() *GitHub {
 	}}
 }
 func (g *GitHub) get(ctx context.Context, path string, out any) (http.Header, error) {
-	u := g.BaseURL + path
-	if strings.HasPrefix(path, "http") {
-		u = path
-	}
-	parsed, e := url.Parse(u)
+	b, h, e := g.Request(ctx, http.MethodGet, path, nil, "")
 	if e != nil {
 		return nil, e
 	}
-	base, _ := url.Parse(g.BaseURL)
-	if parsed.Host != base.Host || parsed.Scheme != base.Scheme {
-		return nil, fmt.Errorf("invalid GitHub pagination URL")
-	}
-	token, e := g.Token(ctx)
-	if e != nil {
-		return nil, e
-	}
-	req, e := http.NewRequestWithContext(ctx, "GET", u, nil)
-	if e != nil {
-		return nil, e
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-	tokenHash := sha256.Sum256([]byte(token))
-	cacheKey := fmt.Sprintf("%s#%x", u, tokenHash)
-	g.mu.Lock()
-	cached, hasCache := g.cache[cacheKey]
-	g.mu.Unlock()
-	if hasCache {
-		req.Header.Set("If-None-Match", cached.ETag)
-	}
-	res, e := g.Client.Do(req)
-	if e != nil {
-		return nil, fmt.Errorf("GitHub connection failed")
-	}
-	defer res.Body.Close()
-	if res.StatusCode == 304 && hasCache {
-		return cached.Header.Clone(), json.Unmarshal(cached.Body, out)
-	}
-	if res.StatusCode == 429 || (res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "")) {
-		until := time.Now().Add(time.Minute)
-		if n, e := strconv.ParseInt(res.Header.Get("X-RateLimit-Reset"), 10, 64); e == nil {
-			until = time.Unix(n, 0)
-		}
-		if n, e := strconv.Atoi(res.Header.Get("Retry-After")); e == nil {
-			until = time.Now().Add(time.Duration(n) * time.Second)
-		}
-		return nil, &RateLimitError{Until: until}
-	}
-	if res.StatusCode == 401 || res.StatusCode == 403 {
-		return nil, fmt.Errorf("GitHub access revoked or insufficient repository permissions")
-	}
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("GitHub request failed (HTTP %d)", res.StatusCode)
-	}
-	body, e := io.ReadAll(io.LimitReader(res.Body, (16<<20)+1))
-	if e != nil {
-		return nil, e
-	}
-	if len(body) > 16<<20 {
-		return nil, fmt.Errorf("GitHub response too large")
-	}
-	if e = json.Unmarshal(body, out); e != nil {
-		return nil, e
-	}
-	if etag := res.Header.Get("ETag"); etag != "" {
-		g.mu.Lock()
-		if g.cache == nil {
-			g.cache = map[string]cacheEntry{}
-		}
-		if g.cacheBytes+len(body) > 64<<20 {
-			g.cache = map[string]cacheEntry{}
-			g.cacheBytes = 0
-		}
-		if old, ok := g.cache[cacheKey]; ok {
-			g.cacheBytes -= len(old.Body)
-		}
-		g.cacheBytes += len(body)
-		g.cache[cacheKey] = cacheEntry{ETag: etag, Body: body, Header: res.Header.Clone()}
-		g.mu.Unlock()
-	}
-	return res.Header, nil
+	return h, json.Unmarshal(b, out)
 }
 func (g *GitHub) pages(ctx context.Context, path string) ([]json.RawMessage, error) {
+	ctx = g.Operation(ctx, nil, false)
 	out := []json.RawMessage{}
+	seen := map[string]bool{}
 	for page := 0; path != ""; page++ {
-		if page > 10000 {
-			return nil, fmt.Errorf("GitHub pagination exceeded limit")
+		canonical, e := g.endpoint(path)
+		if e != nil {
+			return nil, e
 		}
+		if page >= 10000 || seen[canonical] {
+			return nil, fmt.Errorf("GitHub pagination exceeded limit or cycle")
+		}
+		seen[canonical] = true
 		var data []json.RawMessage
 		h, e := g.get(ctx, path, &data)
 		if e != nil {
 			return nil, e
 		}
 		out = append(out, data...)
-		path = ""
-		for _, link := range strings.Split(h.Get("Link"), ",") {
-			parts := strings.Split(strings.TrimSpace(link), ";")
-			if len(parts) > 1 && strings.Contains(parts[1], `rel="next"`) {
-				path = strings.Trim(parts[0], "<>")
-			}
+		path, e = g.NextPage(h)
+		if e != nil {
+			return nil, e
 		}
 	}
 	return out, nil
 }
 func (g *GitHub) User(ctx context.Context) (string, error) {
+	ctx = g.Operation(ctx, nil, false)
+	scope, e := g.Scope(ctx)
+	if e != nil {
+		return "", e
+	}
+	if b, ok := g.CachedBlob("identity:" + scope); ok {
+		return string(b), nil
+	}
 	var u struct{ Login string }
-	_, e := g.get(ctx, "/user", &u)
+	_, e = g.get(ctx, "/user", &u)
+	if e == nil && u.Login != "" {
+		g.CacheBlob("identity:"+scope, []byte(u.Login), 5*time.Minute)
+	}
 	return u.Login, e
 }
 
+type ghBranch struct {
+	SHA, Ref string
+	Repo     struct {
+		FullName string `json:"full_name"`
+	}
+}
+type ghPR struct {
+	Draft, Merged bool
+	Head, Base    ghBranch
+}
+
+func (p ghPR) complete() bool {
+	return p.Head.SHA != "" && p.Head.Ref != "" && p.Head.Repo.FullName != "" && p.Base.SHA != "" && p.Base.Ref != "" && p.Base.Repo.FullName != ""
+}
+
 type ghIssue struct {
+	ghPR
 	Number             int
 	Title, Body, State string
 	HTMLURL            string `json:"html_url"`
@@ -168,11 +126,16 @@ type ghIssue struct {
 }
 
 func (g *GitHub) Sync(ctx context.Context, repo domain.Repository, full bool) ([]domain.Item, error) {
+	ctx = g.Operation(ctx, nil, false)
+	scope, e := g.Scope(ctx)
+	if e != nil {
+		return nil, e
+	}
 	path := "/repos/" + repo.ID
 	query := "?state=all&sort=updated&direction=asc&per_page=100"
 	since := ""
 	if repo.Imported && !repo.LastSync.IsZero() {
-		since = "&since=" + url.QueryEscape(repo.LastSync.Add(-2*time.Minute).Format(time.RFC3339))
+		since = "&since=" + url.QueryEscape(repo.LastSync.Add(-2*time.Minute).Truncate(2*time.Minute).Format(time.RFC3339))
 	}
 	if full {
 		query = "?state=open&sort=updated&direction=asc&per_page=100"
@@ -203,11 +166,13 @@ func (g *GitHub) Sync(ctx context.Context, repo domain.Repository, full bool) ([
 	if e != nil {
 		return nil, e
 	}
+	openPRs := map[int]ghPR{}
 	for _, b := range prs {
 		var i ghIssue
 		if e = json.Unmarshal(b, &i); e != nil {
 			return nil, e
 		}
+		openPRs[i.Number] = i.ghPR
 		i.Pull = json.RawMessage(`{}`)
 		byID[i.Number] = i
 	}
@@ -222,13 +187,11 @@ func (g *GitHub) Sync(ctx context.Context, repo domain.Repository, full bool) ([
 		}
 		if len(i.Pull) > 0 && string(i.Pull) != "null" {
 			v.Kind = "pr"
-			var pr struct {
-				Draft  bool
-				Merged bool
-				Head   struct{ SHA, Ref string }
-			}
-			if _, e = g.get(ctx, fmt.Sprintf("%s/pulls/%d", path, i.Number), &pr); e != nil {
-				return nil, e
+			pr, listed := openPRs[i.Number]
+			if !listed || !pr.complete() {
+				if _, e = g.get(ctx, fmt.Sprintf("%s/pulls/%d", path, i.Number), &pr); e != nil {
+					return nil, e
+				}
 			}
 			v.Draft = pr.Draft
 			v.Head = pr.Head.SHA
@@ -236,36 +199,66 @@ func (g *GitHub) Sync(ctx context.Context, repo domain.Repository, full bool) ([
 			if pr.Merged {
 				v.State = "merged"
 			}
-			for _, part := range []struct{ path, kind string }{{fmt.Sprintf("/pulls/%d/reviews", i.Number), "review"}, {fmt.Sprintf("/pulls/%d/comments", i.Number), "review-comment"}, {fmt.Sprintf("/pulls/%d/commits", i.Number), "commit"}} {
+			for _, part := range []struct{ path, kind string }{{fmt.Sprintf("/pulls/%d/reviews", i.Number), "review"}, {fmt.Sprintf("/pulls/%d/comments", i.Number), "review-comment"}} {
 				a, e := g.activities(ctx, path+part.path+"?per_page=100", part.kind)
 				if e != nil {
 					return nil, e
 				}
 				v.Activity = append(v.Activity, a...)
 			}
-			var checks json.RawMessage
-			if _, e = g.get(ctx, path+"/commits/"+v.Head+"/check-runs?per_page=100", &checks); e != nil {
-				return nil, e
-			}
-			var checksObj struct {
-				Total int               `json:"total_count"`
-				Runs  []json.RawMessage `json:"check_runs"`
-			}
-			if e = json.Unmarshal(checks, &checksObj); e != nil {
-				return nil, e
-			}
-			for page := 2; len(checksObj.Runs) < checksObj.Total; page++ {
-				var more struct {
-					Runs []json.RawMessage `json:"check_runs"`
-				}
-				if _, e = g.get(ctx, fmt.Sprintf("%s/commits/%s/check-runs?per_page=100&page=%d", path, v.Head, page), &more); e != nil {
+			signature, _ := json.Marshal(struct{ Head, Base ghBranch }{pr.Head, pr.Base})
+			commitKey := fmt.Sprintf("commits:%s:%s:%d:%s", scope, repo.ID, i.Number, signature)
+			var commits []domain.Activity
+			cached, ok := g.CachedBlob(commitKey)
+			if full || !pr.complete() || !ok || json.Unmarshal(cached, &commits) != nil {
+				commits, e = g.activities(ctx, fmt.Sprintf("%s/pulls/%d/commits?per_page=100", path, i.Number), "commit")
+				if e != nil {
 					return nil, e
 				}
-				if len(more.Runs) == 0 {
+				if pr.complete() {
+					b, _ := json.Marshal(commits)
+					g.CacheBlob(commitKey, b, 0)
+				}
+			}
+			v.Activity = append(v.Activity, commits...)
+			checksObj := struct {
+				Total int               `json:"total_count"`
+				Runs  []json.RawMessage `json:"check_runs"`
+			}{}
+			next := path + "/commits/" + v.Head + "/check-runs?per_page=100"
+			seen := map[string]bool{}
+			for page := 0; next != ""; page++ {
+				canonical, err := g.endpoint(next)
+				if err != nil {
+					return nil, err
+				}
+				if page >= 10000 || seen[canonical] {
+					return nil, fmt.Errorf("GitHub checks pagination limit or cycle")
+				}
+				seen[canonical] = true
+				var more struct {
+					Total int               `json:"total_count"`
+					Runs  []json.RawMessage `json:"check_runs"`
+				}
+				h, err := g.get(ctx, next, &more)
+				if err != nil {
+					return nil, err
+				}
+				if page == 0 {
+					checksObj.Total = more.Total
+				} else if more.Total != checksObj.Total || len(more.Runs) == 0 {
 					return nil, fmt.Errorf("incomplete GitHub checks pagination")
 				}
 				checksObj.Runs = append(checksObj.Runs, more.Runs...)
+				next, err = g.NextPage(h)
+				if err != nil {
+					return nil, err
+				}
 			}
+			if len(checksObj.Runs) != checksObj.Total {
+				return nil, fmt.Errorf("incomplete GitHub checks pagination")
+			}
+
 			statuses, e := g.pages(ctx, path+"/commits/"+v.Head+"/statuses?per_page=100")
 			if e != nil {
 				return nil, e

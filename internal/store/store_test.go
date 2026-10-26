@@ -108,3 +108,39 @@ func TestCredentialsAreRedactedBeforeJournaling(t *testing.T) {
 		t.Fatal("missing redaction")
 	}
 }
+
+func TestCompareAndSwapPreservesConcurrentEntities(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "cas.db")
+	s, e := Open(path)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer s.Close()
+	other, e := Open(path)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer other.Close()
+	first := map[string]int{"generation": 1}
+	if ok, e := s.CompareAndSwap(ctx, "index", "repo", nil, first); e != nil || !ok {
+		t.Fatal("initial insert failed", ok, e)
+	}
+	var prior json.RawMessage
+	if e = s.Get(ctx, "index", "repo", &prior); e != nil {
+		t.Fatal(e)
+	}
+	if ok, e := other.CompareAndSwap(ctx, "index", "repo", nil, first); e != nil || ok {
+		t.Fatal("absence check overwrote entity", ok, e)
+	}
+	if ok, e := other.CompareAndSwap(ctx, "index", "repo", prior, map[string]int{"generation": 2}); e != nil || !ok {
+		t.Fatal("current update failed", ok, e)
+	}
+	if ok, e := s.CompareAndSwap(ctx, "index", "repo", prior, map[string]int{"generation": 3}); e != nil || ok {
+		t.Fatal("stale generation overwrote current entity", ok, e)
+	}
+	var current map[string]int
+	if e = s.Get(ctx, "index", "repo", &current); e != nil || current["generation"] != 2 {
+		t.Fatal("concurrent value lost", current, e)
+	}
+}

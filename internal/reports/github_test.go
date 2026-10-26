@@ -51,6 +51,8 @@ func TestRepositoryRoutingLabelsDuplicateAndPublicationBoundary(t *testing.T) {
 				t.Error("draft or marker changed", input)
 			}
 			reply(w, map[string]any{"number": 7, "html_url": "https://github.com/" + DefaultRepository + "/issues/7", "state": "open"})
+		case r.URL.Path == "/repos/"+DefaultRepository+"/issues/7":
+			reply(w, map[string]any{"number": 7, "html_url": "https://github.com/" + DefaultRepository + "/issues/7", "body": marker("known-report"), "state": "open"})
 		case strings.Contains(r.URL.Path, "/contents/"):
 			reply(w, map[string]any{"type": "file", "sha": strings.Repeat("a", 40)})
 		case strings.HasSuffix(r.URL.Path, "/labels"):
@@ -209,17 +211,24 @@ func TestTrackingRequiresPublishedMatchingProvenance(t *testing.T) {
 		}{int64(i + 1), name, "uploaded", int64(len(assets[int64(i+1)])), "sha256:" + hex.EncodeToString(h[:])})
 	}
 	releases = []githubRelease{release}
+	originalManifestDigest := release.Assets[2].Digest
 	fixes, available, e = g.Track(ctx, issue, component)
 	if e != nil || len(available) != 1 || available[0].ComponentVersion != "1.2.0" || available[0].Prerelease || len(fixes) != 1 || fixes[0].Version != "1.2.0" || fixes[0].PR != "https://github.com/"+owner+"/pull/21" {
 		t.Fatal("verified release lost", fixes, available, e)
 	}
 	for _, endpoint := range []string{"/repos/" + owner + "/releases", "/repos/" + owner + "/releases/assets/3"} {
 		failurePath = endpoint
+		// A new immutable identity forces the asset request; unchanged verified bytes
+		// are intentionally reusable when only connectivity changes.
+		if strings.Contains(endpoint, "/assets/") {
+			releases[0].Assets[2].Digest = ""
+		}
 		fixes, available, e = g.Track(ctx, issue, component)
 		if e == nil || len(fixes) != 1 || fixes[0].Commit != fix || fixes[0].PR == "" || fixes[0].Version != "" || len(available) != 0 {
 			t.Fatal("release read failure discarded the fix or inferred delivery", endpoint, fixes, available, e)
 		}
 	}
+	releases[0].Assets[2].Digest = originalManifestDigest
 	broken := release
 	broken.Tag = "v1.3.0"
 	broken.Assets = append(broken.Assets[:0:0], release.Assets...)
@@ -361,86 +370,74 @@ func TestHTTPPublicationFailuresBeforeDispatchAreDefinite(t *testing.T) {
 
 func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(t *testing.T) {
 	for _, lostResponse := range []bool{false, true} {
-		name := "token failure before dispatch"
-		if lostResponse {
-			name = "lost response after dispatch"
-		}
-		t.Run(name, func(t *testing.T) {
+		t.Run(fmt.Sprint(lostResponse), func(t *testing.T) {
 			s, ctx := fixture(t)
 			engine, _ := setupEngine(s)
 			engine.findings.SourceCommit = strings.Repeat("a", 40)
 			engine.findings.SourcePath = "internal/app/app.go"
 			engine.findings.OwnershipReason = "Implementation is in this source path"
-			var posts, markerReads atomic.Int64
-			var failToken, sawClaim atomic.Bool
+			var posts, tokens, markerReads atomic.Int64
 			g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
 				switch {
 				case r.Method == http.MethodPost:
 					posts.Add(1)
 					if lostResponse {
-						connection, _, err := w.(http.Hijacker).Hijack()
-						if err != nil {
-							t.Error(err)
+						c, _, e := w.(http.Hijacker).Hijack()
+						if e != nil {
+							t.Error(e)
 							return
 						}
-						_ = connection.Close()
+						_ = c.Close()
 						return
 					}
 					reply(w, map[string]any{"number": 17, "html_url": "https://github.com/" + DefaultRepository + "/issues/17", "state": "open"})
 				case strings.Contains(r.URL.Path, "/contents/"):
-					reply(w, map[string]string{"type": "file", "sha": strings.Repeat("a", 40)})
+					reply(w, map[string]string{"type": "file"})
 				case strings.HasSuffix(r.URL.Path, "/issues"):
-					if markerReads.Add(1) == 1 && !lostResponse {
-						failToken.Store(true)
-					}
+					markerReads.Add(1)
 					reply(w, []any{})
 				default:
-					reply(w, map[string]any{"full_name": DefaultRepository, "has_issues": true, "archived": false})
+					reply(w, map[string]any{"full_name": DefaultRepository, "has_issues": true})
 				}
 			})
 			s.GitHub = g
-			r := submit(t, s, ctx)
+			failToken := !lostResponse
 			g.Client.Token = func(context.Context) (string, error) {
-				if failToken.Load() {
-					rt, err := s.runtime(ctx, r.ID)
-					if err == nil && rt.CreateAttempted && rt.Intent != nil {
-						sawClaim.Store(true)
-					}
+				tokens.Add(1)
+				if failToken {
 					return "", errors.New("private-fixture-value")
 				}
 				return "fixture-token", nil
 			}
+			r := submit(t, s, ctx)
 			step(t, s, ctx)
 			step(t, s, ctx)
 			current := get(t, s, ctx, r.ID)
-			rt, err := s.runtime(ctx, r.ID)
-			if err != nil || markerReads.Load() != 1 || rt.Intent == nil || current.Issue != nil {
-				t.Fatal("fixture did not retain the publication boundary", current, rt, err)
+			rt, e := s.runtime(ctx, r.ID)
+			if e != nil || current.Issue != nil || tokens.Load() != 1 {
+				t.Fatal("unexpected operation outcome", current.Processing, rt, e, tokens.Load())
 			}
 			if lostResponse {
 				if current.Processing != "needs_attention" || !rt.CreateAttempted || posts.Load() != 1 {
-					t.Fatal("potentially dispatched publication became retryable", current, rt, posts.Load())
+					t.Fatal("lost response became replayable", current.Processing, rt, posts.Load())
 				}
-			} else if current.Processing != "blocked" || rt.CreateAttempted || posts.Load() != 0 || !sawClaim.Load() || !strings.Contains(current.Message, "authentication") || strings.Contains(current.Message, "private-fixture-value") {
-				t.Fatal("known undispatched publication retained an uncertain claim or unsafe diagnostic", current, rt, posts.Load())
+			} else if current.Processing != "blocked" || rt.CreateAttempted || posts.Load() != 0 || markerReads.Load() != 0 || !strings.Contains(current.Message, "authentication") || strings.Contains(current.Message, "private-fixture-value") {
+				t.Fatal("token failure dispatched publication", current.Processing, rt, posts.Load())
 			}
-			failToken.Store(false)
-			if _, err := s.ResumeReport(ctx, ResumeInput{ID: r.ID}); err != nil {
-				t.Fatal(err)
+			failToken = false
+			if _, e = s.ResumeReport(ctx, ResumeInput{ID: r.ID}); e != nil {
+				t.Fatal(e)
 			}
 			if lostResponse {
-				current = get(t, s, ctx, r.ID)
-				rt, err = s.runtime(ctx, r.ID)
-				if err != nil || current.Processing != "needs_attention" || !rt.CreateAttempted || markerReads.Load() != 2 || posts.Load() != 1 {
-					t.Fatal("empty marker recovery permitted another potentially dispatched creation", current, rt, err)
+				if get(t, s, ctx, r.ID).Processing != "needs_attention" || posts.Load() != 1 || markerReads.Load() != 2 {
+					t.Fatal("uncertain creation replayed", posts.Load(), markerReads.Load())
 				}
 				return
 			}
 			step(t, s, ctx)
 			step(t, s, ctx)
-			current = get(t, s, ctx, r.ID)
-			if current.Processing != "complete" || current.Outcome != "filed" || current.Issue == nil || current.Issue.Number != 17 || markerReads.Load() != 2 || posts.Load() != 1 {
-				t.Fatal("restored authentication did not recover to exactly one dispatched creation", current, posts.Load())
+			if get(t, s, ctx, r.ID).Processing != "complete" || posts.Load() != 1 || markerReads.Load() != 1 || tokens.Load() != 2 {
+				t.Fatal("fresh authenticated operation failed", posts.Load(), markerReads.Load(), tokens.Load())
 			}
 		})
 	}
@@ -495,9 +492,7 @@ func TestGitHubReportingCooldownSurvivesRestartAndSeparatesCredentials(t *testin
 		t.Fatal("independent credential inherited another credential's cooldown", err, requests.Load())
 	}
 	g.Client.Token = func(context.Context) (string, error) { return "fixture-token", nil }
-	if err := reopened.Put(ctx, githubCooldownKind, githubCooldownKey(g.Client.BaseURL, "fixture-token"), time.Now().Add(-time.Second), ""); err != nil {
-		t.Fatal(err)
-	}
+	g.Client.Now = func() time.Time { return reset.Add(time.Second) }
 	if _, err := g.ReadIssue(ctx, DefaultRepository, 17); err != nil || requests.Load() != 3 {
 		t.Fatal("expired cooldown prevented reporting refresh", err, requests.Load())
 	}

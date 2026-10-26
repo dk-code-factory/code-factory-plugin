@@ -2,14 +2,14 @@
   "version": 1,
   "flow": "flow-relate-items",
   "base": "fc80b2e2cb61568835c66fdaefc770df0e19c3b1",
-  "fingerprint": "96e3bf2f2e46187ffd31b02400266697f37a2c778c913210162404ee9affc438",
+  "fingerprint": "73ffd6aed98c7b9832cf877370afde1d34fe0e1a7ff820f73be9966c509da420",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Manual and discovered item relationships retain their independent local behavior; report duplicate relationships associate observations with an existing issue.",
-    "implementation": "Relationship discovery/link handlers are unchanged. Report publication validates a duplicate issue identity without creating or commenting on that issue.",
+    "implementation": "Relationship discovery/link handlers are unchanged. Report publication validates a duplicate issue identity without creating or commenting on that issue. Reviewed the shared GitHub transport and private marker CAS addition: only inbox synchronization/report operations use these paths; this contract retains its existing API, transitions and assertion ownership.",
     "tests": "Existing relationship fixtures remain responsible for local links; new duplicate assertions require zero issue creations when an existing duplicate is reused."
   },
   "verification": [
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 21.448
+      "seconds": 22.205
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.815
+      "seconds": 25.239
     },
     {
       "command": [
@@ -52,11 +52,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.642
+      "seconds": 0.582
     }
   ],
   "dependencies": {
-    "flow:relate-items": "4d95735089fafe229dce9f3b472cd41ed84737fcdd41d20f8163c12ad998910a",
+    "flow:relate-items": "4a54028d8782bca3806050709b2b21c39936ecc9d8ea5a853dc390c99379d0ea",
     "term:connection-submits": "c5563dca115c4fe3069ea4752c06c610fef371d7ad9e021f4d4f0dd58aae6449",
     "term:coverage-gap": "a38740977513a9d32ee20fd7453728cf839647d0acc6e576b4b9b74901cfd27d",
     "term:element-w-pr-evidence-branch": "a1a1a2813555ebf3f2da1b9001edb56727fe85086405fe661f9ad6b1a0648b43",
@@ -79,9 +79,9 @@
     "term:ui-w-ticket-context": "25a8d6e977b99e5bb8ffaa0c422b3187070273ddc37921d6a3ccb783d991a524",
     "term:unverified-behavior": "3b5c3eed81f4988dfbce60a9fe4d485212fc539b326e1d4808b989f12fd199cb",
     "term:work-item": "5bf5c93d7445f9f69fed9d7a38e6c06c41f157a209a761eb8d5cea60364fe716",
-    "ui:C-LINK": "76f8fa409b8c483eef7e8c943be1d3d73c60909eff8e4979409a918c9ec94ad3",
-    "ui:W-PR-EVIDENCE": "7469f5818256ec2ca16f26f51cabd4c4e211b50dfb8cd333cf334bd2b67f336d",
-    "ui:W-RELATIONSHIPS": "75f0b334e2fd1e00eba788a514c78d98836d3134456a130cc0e166d1cb79fa20",
-    "ui:W-TICKET-CONTEXT": "8d4794743749b4c7d9bf68be927b6bb8bca20009bc7e85fc3eae2e4a486ee124"
+    "ui:C-LINK": "1f76875666e7c155af9aaa68f682ae9dd3fe1c530de51a43577adbc03f8ab03e",
+    "ui:W-PR-EVIDENCE": "6254aeab6fcd092045ac2532938d128d6ec4472d6b215a3689803d5634e3f92d",
+    "ui:W-RELATIONSHIPS": "e33bf0f58cc00d20596adbbf863704191cd3719a2b8598736d56bb6cdd168075",
+    "ui:W-TICKET-CONTEXT": "f03ebdb0cab9d1f45fa95ddd8c321887010e27f52796ae8f0b2cb5114b49d08d"
   }
 }

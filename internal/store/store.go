@@ -209,3 +209,27 @@ func (s *Store) RunEvents(ctx context.Context, id string, after int64, limit int
 	}
 	return map[string]any{"events": out, "cursor": next, "hasMore": more}, rows.Err()
 }
+
+// CompareAndSwap replaces exactly the entity bytes previously read by the caller.
+// A nil previous value requires absence. One SQLite statement both acquires the
+// writer lock and checks the value, avoiding deferred read-transaction upgrades
+// when separate processes reconcile the same private entity.
+func (s *Store) CompareAndSwap(ctx context.Context, kind, id string, previous json.RawMessage, value any) (bool, error) {
+	b, err := json.Marshal(value)
+	if err != nil {
+		return false, err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var result sql.Result
+	if previous == nil {
+		result, err = s.db.ExecContext(ctx, "INSERT OR IGNORE INTO entities(kind,id,data) VALUES(?,?,?)", kind, id, b)
+	} else {
+		result, err = s.db.ExecContext(ctx, "UPDATE entities SET data=? WHERE kind=? AND id=? AND data=?", b, kind, id, []byte(previous))
+	}
+	if err != nil {
+		return false, err
+	}
+	n, err := result.RowsAffected()
+	return n == 1, err
+}

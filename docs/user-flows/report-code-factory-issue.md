@@ -42,6 +42,10 @@ Journal updates refresh the loaded report range, including a pending request for
 - **S5** Closure, merged fixes, stable/prerelease delivery, dependency releases, mismatched assets and unknown installed versions remain independent; failed/rate-limited refresh preserves successful evidence.
 - **S6** The shared view supports search, details, information requests, recovery controls, exact GitHub destinations and explicit unknown/version displays. Journal refreshes preserve the loaded report range; query changes reset pagination.
 
+Report refreshes share matching issue and delivery evidence within each refresh. Issue state remains on a five-minute schedule and release evidence on a 15-minute schedule. A manual refresh revalidates mutable evidence. Changed tag or asset identities require current verification; partial failure retains independently verified fixes and releases without marking skipped work fresh.
+
+Before creating or recovering an issue, synchronize private marker history and verify each matching issue's current identity and body. Incomplete history, unreadable private state or conflicting concurrent updates cannot establish absence. Rebuild complete history at least hourly and after inconsistent candidates; duplicate current markers require manual reconciliation. An uncertain creation remains reconciliation-only.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -95,6 +99,10 @@ flowchart TD
 - [web/src/reports.tsx](../../web/src/reports.tsx) — Report ledger, private evidence, durable investigation, deterministic publication or verified release provenance.
 - [internal/reports/provider.py](../../internal/reports/provider.py) — Restores the full retained dk-workflows receipt and lifecycle environment at the native provider boundary while preserving native Codex authentication.
 - [internal/reports/evidence.go](../../internal/reports/evidence.go) — Shared traversal redacts structured header pairs and decoded embedded JSON/MCP text, retaining full raw-header association and bounded fail-closed omission guards. (`func redactCredentialValue(`)
+- [internal/providers/github_requests.go](../../internal/providers/github_requests.go) — Shared serialized conditional requests, operation authentication and durable cooldowns.
+- [internal/providers/github.go](../../internal/providers/github.go) — Shared identity-scoped bounded cache and provider client.
+- [internal/reports/tracking_batch.go](../../internal/reports/tracking_batch.go) — Verified release proof memoization keyed by release metadata, tag target and credential scope.
+- [internal/reports/marker_index.go](../../internal/reports/marker_index.go) — Private versioned incremental marker index, complete scans, candidate revalidation and transactional generations.
 
 ## Test references
 
@@ -139,7 +147,7 @@ flowchart TD
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestObsoletePublicationFailuresPreserveActiveGeneration(`; S2, S3, S4. Delayed validation, duplicate, marker and subprocess failures preserve the exact newer report/runtime or fresh-evidence queue and keep the active investigator capacity.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestPublicationFailuresPreserveRecoveredIssueAndClaim(`; S3, S4. Recovered issue identities and claim state survive late rejection, uncertain creation and reconciliation failure/empty-result paths.
 - [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestHTTPPublicationFailuresBeforeDispatchAreDefinite(`; S3, S4. Known encoding, request-configuration, token and cooldown-storage failures before HTTP dispatch retain a sanitized actionable definite-rejection outcome and send zero POSTs.
-- [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(`; S3, S4. Actual HTTP and SQLite preserve a durable claim before token failure, clear it with zero dispatched POSTs, then recover to exactly one POST after authentication returns; a dispatched lost response retains uncertainty and cannot repeat creation.
+- [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(`; S3, S4. One token resolution per publication: operation-start token failure dispatches no requests, restored authentication files once, while a lost POST response retains its durable claim and reconciliation never repeats creation.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestDelayedPublicationSuccessPreservesEstablishedIssue(`; S3, S4. Delayed duplicate successes preserve newer/same-generation established identities, outcomes, timestamps and Runtime; a newer claimed creation retains ownership while safe missing-identity recovery preserves newer processing/outcome.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues releases mutation controls during continuing slow journal refreshes"`; S4, S6. Mutation refresh completion re-enables refresh, evidence and acknowledged recovery controls while subsequent journal list reads remain pending; a second evidence submission reaches the selected report.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_delivery_checkout_verifies_historical_fixes_without_publishing(`; S5. Actual delivery validation from a workflow-depth local clone accepts checked packages containing a historical fix commit, preserving fix ancestry and exact artifact download without publication.
@@ -147,6 +155,15 @@ flowchart TD
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestRedactCredentialCandidateStormOmitsPrivateTail(`; S2. Malformed serialized candidate storms preserve inspected diagnostic text and omit unresolved private tails instead of returning uninspected material.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestRedactCredentialExhaustedDepthOmitsPrivateText(`; S2. An exhausted serialized-decoding state omits unresolved private text without allocating exponentially escaped input.
 - [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestRedactCredentialPreservesLargeDiagnosticInteger(`; S2. Decoded serialized evidence removes an unknown credential while preserving adjacent fields, surrounding prose and the exact diagnostic integer above2^53.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestTrackingBatchSharesAndRevalidatesEvidence(`; S5. Three reports deduplicate issue/timeline/closing-commit/list/tag/assets/ancestry requests; a new refresh revalidates mutable evidence and tag changes invalidate proof.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestReportingLinkTraversalAndCachedPagination(`; S4, S5. Exactly 100/200 results terminate through Link without empty-page probes; cached links survive 304 while cycles and foreign origins fail.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestMarkerIndexIncrementalSafetyAndRecovery(`; S3, S4. Complete cold scan, restart and overlap updates, marker edits/removal, duplicates, deleted candidate rebuild, failed-pagination watermark preservation and hourly/version rebuild.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestMarkerIndexGenerationConflictsAndCreationCheckpoint(`; S3, S4. Three conflicting generations fail recoverably without overwrite; creation associations preserve synchronization watermark.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestMarkerIndexConcurrentWriters(`; S3, S4. Independent clients and database connections retry concurrent full scans and preserve both committed generations.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestCrossConsumerCooldownStopsInboxAndPublication(`; S3, S4, S5. Rate limits from inbox or reports suppress both consumers and prevent publication dispatch.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestLostCreationResponseRecoversThroughMarkerIndexWithoutReplay(`; S3, S4. Actual HTTP accepts a POST then loses its response; incremental marker recovery revalidates the new issue and completes without a duplicate POST.
+- [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestAssetCacheRequiresDigestAcrossOperations(`; S5. Digestless bytes are operation-only; validated digests permit cross-operation reuse while changed asset sizes invalidate it.
+- [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestCompareAndSwapPreservesConcurrentEntities(`; S4. Atomic entity comparison across independent SQLite connections accepts current bytes, rejects stale/absence overwrites and retains the newer generation.
 
 ## Verification and gaps
 

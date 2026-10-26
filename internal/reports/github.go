@@ -1,20 +1,17 @@
 package reports
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -40,12 +37,9 @@ func (e *rateLimit) Error() string {
 }
 func (e *rateLimit) RetryTime() time.Time { return e.until }
 
-const githubCooldownKind = "report-github-rate-limit"
+const githubCooldownKind = providers.CooldownKind
 
-func githubCooldownKey(baseURL, token string) string {
-	h := sha256.Sum256([]byte(baseURL + "\x00" + token))
-	return hex.EncodeToString(h[:])
-}
+func githubCooldownKey(baseURL, token string) string { return providers.CooldownKey(baseURL, token) }
 
 func reportingRateLimit(method string, until time.Time) error {
 	retry := &rateLimit{until}
@@ -55,115 +49,36 @@ func reportingRateLimit(method string, until time.Time) error {
 	return retry
 }
 
+// BeginOperation is also used by Service to share reads across a refresh or publication.
+func (g *GitHubAdapter) BeginOperation(ctx context.Context) context.Context {
+	ctx = g.Client.StartOperation(ctx, g.Store, true)
+	return context.WithValue(ctx, trackingKey{}, &trackingBatch{client: g.Client, id: batchSequence.Add(1)})
+}
+func (g *GitHubAdapter) operation(ctx context.Context) context.Context {
+	if batch, _ := ctx.Value(trackingKey{}).(*trackingBatch); batch != nil && batch.client == g.Client {
+		return ctx
+	}
+	return g.BeginOperation(ctx)
+}
+
 func (g *GitHubAdapter) request(ctx context.Context, method, endpoint string, input any, accept string) ([]byte, error) {
-	// Only failures returned before Client.Do prove that creation was not sent.
-	beforeDispatch := func(reason string) error {
-		if method == http.MethodPost {
-			return &publicationRejected{Reason: reason}
+	b, _, e := g.requestHeaders(ctx, method, endpoint, input, accept)
+	return b, e
+}
+func (g *GitHubAdapter) requestHeaders(ctx context.Context, method, endpoint string, input any, accept string) ([]byte, http.Header, error) {
+	ctx = g.operation(ctx)
+	b, h, e := g.Client.Request(ctx, method, endpoint, input, accept)
+	if e != nil && method == http.MethodPost {
+		var rate *providers.RateLimitError
+		if errors.As(e, &rate) {
+			return nil, nil, reportingRateLimit(method, rate.Until)
 		}
-		return errors.New(reason)
-	}
-	var body io.Reader
-	if input != nil {
-		b, e := json.Marshal(input)
-		if e != nil {
-			return nil, beforeDispatch("GitHub request could not be encoded; correct the draft and resume")
+		var outcome *providers.RequestError
+		if errors.As(e, &outcome) && (outcome.Phase == providers.BeforeDispatch || outcome.Phase == providers.HTTPRejected && outcome.Status >= 400 && outcome.Status < 500 && outcome.Status != 408) {
+			return nil, nil, &publicationRejected{Reason: e.Error(), cause: e}
 		}
-		body = bytes.NewReader(b)
 	}
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	req, e := http.NewRequestWithContext(ctx, method, g.Client.BaseURL+endpoint, body)
-	if e != nil {
-		return nil, beforeDispatch("GitHub request configuration is invalid; restore the adapter settings and resume")
-	}
-	token, e := g.Client.Token(ctx)
-	if e != nil {
-		return nil, beforeDispatch("GitHub authentication unavailable; restore GitHub CLI authentication and resume")
-	}
-	if g.Store == nil {
-		return nil, beforeDispatch("Reporting GitHub cooldown storage unavailable; restore the private ledger and resume")
-	}
-	cooldownID := githubCooldownKey(g.Client.BaseURL, token)
-	var retryAt time.Time
-	if e = g.Store.Get(ctx, githubCooldownKind, cooldownID, &retryAt); e != nil && !errors.Is(e, store.ErrNotFound) {
-		return nil, beforeDispatch("Reporting GitHub cooldown state unavailable; restore readable private ledger storage and resume")
-	}
-	if time.Now().Before(retryAt) {
-		return nil, reportingRateLimit(method, retryAt)
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Accept", "application/vnd.github+json")
-	if accept != "" {
-		req.Header.Set("Accept", accept)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	res, e := g.Client.Client.Do(req)
-	if e != nil {
-		return nil, fmt.Errorf("GitHub connection failed")
-	}
-	defer res.Body.Close()
-	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "") {
-		now := time.Now().UTC()
-		until := now
-		if sec, e := strconv.ParseInt(res.Header.Get("X-RateLimit-Reset"), 10, 64); e == nil {
-			if reset := time.Unix(sec, 0); reset.After(until) {
-				until = reset
-			}
-		}
-		if sec, e := strconv.Atoi(res.Header.Get("Retry-After")); e == nil {
-			if after := now.Add(time.Duration(sec) * time.Second); after.After(until) {
-				until = after
-			}
-		}
-		if !until.After(now) {
-			until = now.Add(time.Minute)
-		}
-		if e = g.Store.Write(ctx, func(t *store.Tx) error {
-			var retained time.Time
-			if e := t.Get(githubCooldownKind, cooldownID, &retained); e != nil && !errors.Is(e, store.ErrNotFound) {
-				return e
-			}
-			if retained.After(until) {
-				until = retained
-			}
-			return t.Put(githubCooldownKind, cooldownID, until)
-		}); e != nil {
-			return nil, fmt.Errorf("GitHub retry deadline could not be retained: %w", reportingRateLimit(method, until))
-		}
-		return nil, reportingRateLimit(method, until)
-	}
-	if method == http.MethodGet && accept == "application/octet-stream" && res.StatusCode == 302 {
-		target, e := url.Parse(res.Header.Get("Location"))
-		if e != nil || target.Scheme != "https" || (target.Hostname() != "release-assets.githubusercontent.com" && target.Hostname() != "objects.githubusercontent.com") {
-			return nil, fmt.Errorf("Untrusted release asset redirect")
-		}
-		// Signed CDN URLs receive no owner/GitHub authorization headers.
-		req, e = http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
-		if e != nil {
-			return nil, e
-		}
-		download := &http.Client{Timeout: 30 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-		res, e = download.Do(req)
-		if e != nil {
-			return nil, fmt.Errorf("Release asset unavailable")
-		}
-		defer res.Body.Close()
-	}
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		if method == http.MethodPost && res.StatusCode >= 400 && res.StatusCode < 500 && res.StatusCode != 408 {
-			return nil, &publicationRejected{Reason: fmt.Sprintf("GitHub rejected issue creation (HTTP %d); restore permissions or correct the draft and resume", res.StatusCode)}
-		}
-		return nil, fmt.Errorf("GitHub operation failed (HTTP %d)", res.StatusCode)
-	}
-	b, e := io.ReadAll(io.LimitReader(res.Body, (16<<20)+1))
-	if e != nil {
-		return nil, e
-	}
-	if len(b) > 16<<20 {
-		return nil, fmt.Errorf("GitHub response exceeds limit")
-	}
-	return b, nil
+	return b, h, e
 }
 func (g *GitHubAdapter) get(ctx context.Context, endpoint string, out any) error {
 	b, e := g.request(ctx, "GET", endpoint, nil, "")
@@ -173,22 +88,41 @@ func (g *GitHubAdapter) get(ctx context.Context, endpoint string, out any) error
 	return json.Unmarshal(b, out)
 }
 func listPages[T any](ctx context.Context, g *GitHubAdapter, endpoint string) ([]T, error) {
-	out := []T{}
-	sep := "?"
-	if strings.Contains(endpoint, "?") {
-		sep = "&"
+	ctx = g.operation(ctx)
+	u, e := url.Parse(endpoint)
+	if e != nil {
+		return nil, e
 	}
-	for page := 1; page <= 100; page++ {
+	q := u.Query()
+	q.Set("per_page", "100")
+	q.Set("page", "1")
+	u.RawQuery = q.Encode()
+	next, e := g.Client.RequestURL(u.String())
+	if e != nil {
+		return nil, e
+	}
+	seen := map[string]bool{}
+	out := []T{}
+	for page := 0; next != ""; page++ {
+		if page >= 100 || seen[next] {
+			return nil, fmt.Errorf("GitHub pagination limit or cycle; results are incomplete")
+		}
+		seen[next] = true
+		b, h, e := g.requestHeaders(ctx, http.MethodGet, next, nil, "")
+		if e != nil {
+			return nil, e
+		}
 		var rows []T
-		if e := g.get(ctx, endpoint+sep+"per_page=100&page="+strconv.Itoa(page), &rows); e != nil {
+		if e = json.Unmarshal(b, &rows); e != nil {
 			return nil, e
 		}
 		out = append(out, rows...)
-		if len(rows) < 100 {
-			return out, nil
+		next, e = g.Client.NextPage(h)
+		if e != nil {
+			return nil, e
 		}
 	}
-	return nil, fmt.Errorf("GitHub pagination limit reached; results are incomplete")
+	return out, nil
 }
 
 var commitPattern = regexp.MustCompile(`^[0-9a-f]{40}$`)
@@ -199,6 +133,7 @@ func allowedRepo(repo string) bool {
 	return len(parts) == 2 && parts[0] == "dk-code-factory" && regexp.MustCompile(`^[A-Za-z0-9_-][A-Za-z0-9_.-]*$`).MatchString(parts[1]) && !strings.Contains(parts[1], "..")
 }
 func (g *GitHubAdapter) Validate(ctx context.Context, f Findings) error {
+	ctx = g.operation(ctx)
 	if !allowedRepo(f.Repository) || routes[f.Component] != f.Repository {
 		return fmt.Errorf("Ownership routing is uncertain or outside dk-code-factory; supply supported dependency provenance")
 	}
@@ -264,6 +199,7 @@ func (i githubIssue) issue(repo string) (Issue, error) {
 	return Issue{Repository: repo, Number: i.Number, URL: i.URL, State: i.State, ClosureReason: i.Reason}, nil
 }
 func (g *GitHubAdapter) ReadIssue(ctx context.Context, repo string, number int) (Issue, error) {
+	ctx = g.operation(ctx)
 	if !allowedRepo(repo) || number < 1 {
 		return Issue{}, fmt.Errorf("Invalid issue target")
 	}
@@ -276,30 +212,8 @@ func (g *GitHubAdapter) ReadIssue(ctx context.Context, repo string, number int) 
 	}
 	return i.issue(repo)
 }
-func (g *GitHubAdapter) FindMarker(ctx context.Context, repo, marker string) (*Issue, error) {
-	if !allowedRepo(repo) {
-		return nil, fmt.Errorf("Invalid marker repository")
-	}
-	rows, e := listPages[githubIssue](ctx, g, "/repos/"+repo+"/issues?state=all&sort=created&direction=desc")
-	if e != nil {
-		return nil, e
-	}
-	var found *Issue
-	for _, row := range rows {
-		if strings.Contains(row.Body, marker) {
-			i, e := row.issue(repo)
-			if e != nil {
-				return nil, e
-			}
-			if found != nil {
-				return nil, fmt.Errorf("Multiple issues contain the report marker; reconcile manually")
-			}
-			found = &i
-		}
-	}
-	return found, nil
-}
 func (g *GitHubAdapter) Create(ctx context.Context, f Findings, marker string) (Issue, error) {
+	ctx = g.operation(ctx)
 	if !allowedRepo(f.Repository) {
 		return Issue{}, fmt.Errorf("Invalid publication repository")
 	}
@@ -311,7 +225,14 @@ func (g *GitHubAdapter) Create(ctx context.Context, f Findings, marker string) (
 	if e = json.Unmarshal(b, &i); e != nil {
 		return Issue{}, e
 	}
-	return i.issue(f.Repository)
+	issue, e := i.issue(f.Repository)
+	if e != nil {
+		return Issue{}, e
+	}
+	// Failure to update this optimization cannot erase a successful issue identity.
+	// The durable publication claim still prevents replay; future lookups refresh history.
+	_ = g.recordCreation(ctx, f.Repository, marker, i)
+	return issue, nil
 }
 
 type ComponentProvenance struct {
@@ -337,6 +258,9 @@ type Provenance struct {
 	Files      []Artifact                     `json:"files"`
 }
 type githubRelease struct {
+	ID          int64         `json:"id"`
+	UpdatedAt   time.Time     `json:"updated_at"`
+	Target      string        `json:"target_commitish"`
 	Tag         string        `json:"tag_name"`
 	URL         string        `json:"html_url"`
 	Draft       bool          `json:"draft"`
@@ -355,6 +279,7 @@ type githubAsset struct {
 // Track returns verified observations alongside later request errors. Callers
 // must merge those observations with retained evidence when the refresh fails.
 func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string) ([]Fix, []Release, error) {
+	ctx = g.operation(ctx)
 	if !allowedRepo(issue.Repository) {
 		return nil, nil, fmt.Errorf("Invalid tracking repository")
 	}
@@ -502,6 +427,17 @@ func (g *GitHubAdapter) Track(ctx context.Context, issue Issue, component string
 }
 
 func (g *GitHubAdapter) releaseAsset(ctx context.Context, repo string, a githubAsset) ([]byte, error) {
+	ctx = g.operation(ctx)
+	scope, e := g.Client.Scope(ctx)
+	if e != nil {
+		return nil, e
+	}
+	key := fmt.Sprintf("asset:%s:%s:%d:%d:%s", scope, repo, a.ID, a.Size, a.Digest)
+	if a.Digest != "" && a.State == "uploaded" {
+		if b, ok := g.Client.CachedBlob(key); ok {
+			return b, nil
+		}
+	}
 	if a.State != "uploaded" || a.ID < 1 || a.Size > 16<<20 {
 		return nil, fmt.Errorf("Release evidence asset is unavailable")
 	}
@@ -516,13 +452,16 @@ func (g *GitHubAdapter) releaseAsset(ctx context.Context, repo string, a githubA
 	if a.Digest != "" && a.Digest != "sha256:"+hex.EncodeToString(h[:]) {
 		return nil, fmt.Errorf("Release asset digest mismatch")
 	}
+	if a.Digest != "" {
+		g.Client.CacheBlob(key, b, 0)
+	}
 	return b, nil
 }
 
 // Native workflow releases declare their package inventory and build identity in
 // small metadata files. Their fix association comes from independent closing
 // evidence in Track, not Code Factory's fixed-issue manifest fields.
-func (g *GitHubAdapter) workflowReleaseProvenance(ctx context.Context, repo string, r githubRelease) (ComponentProvenance, bool, error) {
+func (g *GitHubAdapter) verifyWorkflowReleaseProvenance(ctx context.Context, repo string, r githubRelease) (ComponentProvenance, bool, error) {
 	c := ComponentProvenance{Repository: repo}
 	if r.Tag == "" || r.URL != "https://github.com/"+repo+"/releases/tag/"+r.Tag {
 		return c, false, nil
@@ -643,7 +582,7 @@ func (g *GitHubAdapter) workflowReleaseProvenance(ctx context.Context, repo stri
 
 // Published metadata and uploaded assets are separate GitHub states. The tag,
 // complete package set, checksums and component commits must all agree.
-func (g *GitHubAdapter) releaseProvenance(ctx context.Context, repo string, r githubRelease) (Provenance, bool, error) {
+func (g *GitHubAdapter) verifyReleaseProvenance(ctx context.Context, repo string, r githubRelease) (Provenance, bool, error) {
 	var p Provenance
 	assets := map[string]int{}
 	for i, a := range r.Assets {

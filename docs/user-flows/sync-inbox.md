@@ -11,13 +11,13 @@ At least one accessible repository is configured.
 ## Main flow
 
 1. Import open issues and pull requests as the initial baseline.
-2. Refresh automatically and include subsequent discoveries and item changes.
-3. Include pull-request reviews, checks, commits and references in item detail.
+2. Refresh every 30 seconds and include subsequent discoveries and item changes; reconcile all open items hourly.
+3. Include pull-request reviews, checks, commits and references in item detail. Refresh mutable activity independently of issue timestamps and retain matching commit evidence until the head or base changes or hourly reconciliation runs.
 4. Keep previously synchronized closed or merged history available when viewing all items.
 
 ## Alternatives and recovery
 
-Authentication and provider errors remain visible. Failed refreshes retain their last successful progress. Rate limits delay retries, and access recovery permits later refreshes.
+Authentication and provider errors remain visible. Failed refreshes retain their last successful progress. Rate limits delay inbox and report requests sharing the same connection, and access recovery permits later refreshes. Cached identity and response evidence stay scoped to the current connection; incomplete pagination cannot advance progress.
 
 ## Scenarios
 
@@ -62,6 +62,7 @@ flowchart TD
 - [go.sum](../../go.sum) — Shared domain, persistence, transport or dependency contract
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
+- [internal/providers/github_requests.go](../../internal/providers/github_requests.go) — Serialized operation-scoped requests, conditional LRU, shared private cooldowns and same-origin Link parsing.
 
 ## Test references
 
@@ -69,6 +70,12 @@ flowchart TD
 - [internal/providers/github_test.go](../../internal/providers/github_test.go) — `func TestGitHubPaginationPREnrichmentAndRecovery(`; S2. Pagination, enrichment and activity revisions.
 - [internal/providers/github_test.go](../../internal/providers/github_test.go) — `func TestGitHubRateLimitsRevocationAndPaginationOrigin(`; S3. Rate limits and credential revocation.
 - [internal/providers/github_test.go](../../internal/providers/github_test.go) — `func TestConditionalCacheKeepsPaginationAndScopesAuthentication(`; S2. Cache preserves pagination and separates identities.
+- [internal/providers/github_requests_test.go](../../internal/providers/github_requests_test.go) — `func TestInboxRequestBudgetAndIndependentFreshness(`; S2. Cold 73 and warm 62 requests including identity; independent reviews/CI, head/base invalidation, hourly commit reconciliation and stable incremental buckets.
+- [internal/providers/github_requests_test.go](../../internal/providers/github_requests_test.go) — `func TestSharedCacheLRUAccountingAndExpiry(`; S2. Bounded LRU evicts oldest entries, accounts replacements and expires exact TTL boundaries.
+- [internal/providers/github_requests_test.go](../../internal/providers/github_requests_test.go) — `func TestSharedOperationCacheAuthenticationAndSerialization(`; S2, S3. One token resolution per operation, serialized requests, merged cached headers, media isolation and revocation invalidation.
+- [internal/providers/github_requests_test.go](../../internal/providers/github_requests_test.go) — `func TestSharedPersistedCooldownAndPagination(`; S2, S3. HTTP-date and reset deadlines, restarted cross-consumer cooldowns, credential isolation, unreadable storage and unsafe Link rejection.
+- [internal/providers/github_requests_test.go](../../internal/providers/github_requests_test.go) — `func TestCheckRunLinksCompletenessAndIncrementalExpiry(`; S2, S3. Multi-page check-run completeness, cyclic/incomplete Link rejection and ten-minute incremental validator expiry.
+- [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestSharedGitHubCooldownPreservesInboxCheckpoints(`; S3. Limits from identity or a repository stop the batch, preserve successful/remaining checkpoints, persist diagnostics and suppress the next operation.
 
 ## Verification and gaps
 

@@ -705,6 +705,11 @@ func (s *Service) finishIssue(ctx context.Context, id string, issue Issue, outco
 	})
 }
 func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
+	if batch, ok := s.GitHub.(interface {
+		BeginOperation(context.Context) context.Context
+	}); ok {
+		ctx = batch.BeginOperation(ctx)
+	}
 	if rt.CreateAttempted {
 		return s.reconcilePublication(ctx, &r, rt)
 	}
@@ -824,6 +829,11 @@ func (s *Service) PublishReport(ctx context.Context, id string) error {
 	return s.publish(ctx, r, rt)
 }
 func (s *Service) Refresh(ctx context.Context, force bool) error {
+	if batch, ok := s.GitHub.(interface {
+		BeginOperation(context.Context) context.Context
+	}); ok {
+		ctx = batch.BeginOperation(ctx)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	rows, e := store.List[Report](ctx, s.Store, "issue-report")

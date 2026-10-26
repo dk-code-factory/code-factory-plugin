@@ -290,10 +290,15 @@ func (a *App) Sync(ctx context.Context) error {
 	if len(repos) == 0 {
 		return nil
 	}
+	ctx = a.GitHub.StartOperation(ctx, a.Store, false)
 	user, e := a.GitHub.User(ctx)
 	if e != nil {
 		for _, r := range repos {
 			r.Error = e.Error()
+			var rate *providers.RateLimitError
+			if errors.As(e, &rate) {
+				r.RetryAt = rate.Until
+			}
 			_ = a.Store.Put(ctx, "repository", r.ID, r, "sync.error")
 		}
 		return e
@@ -313,6 +318,9 @@ func (a *App) Sync(ctx context.Context) error {
 			}
 			if e = a.Store.Put(ctx, "repository", r.ID, r, "sync.error"); e != nil {
 				return e
+			}
+			if rate != nil {
+				return nil
 			}
 			continue
 		}
