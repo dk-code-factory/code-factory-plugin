@@ -7042,9 +7042,11 @@
           "path": "internal/reports/service_test.go",
           "anchor": "func TestEvidenceIsPrivateScopedHashedAndRedacted(",
           "scenarios": [
-            "S2"
+            "S1",
+            "S2",
+            "S3"
           ],
-          "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
+          "purpose": "Unknown authorization schemes and structured proxy authorization proofs are absent from persisted observations, private evidence, additions, investigator input and publication while unrelated evidence lines remain."
         },
         {
           "path": "internal/reports/service_test.go",
@@ -7401,6 +7403,23 @@
             "S4"
           ],
           "purpose": "Delayed duplicate successes preserve newer/same-generation established identities, outcomes, timestamps and Runtime; a newer claimed creation retains ownership while safe missing-identity recovery preserves newer processing/outcome."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues releases mutation controls during continuing slow journal refreshes\"",
+          "scenarios": [
+            "S4",
+            "S6"
+          ],
+          "purpose": "Mutation refresh completion re-enables refresh, evidence and acknowledged recovery controls while subsequent journal list reads remain pending; a second evidence submission reaches the selected report."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_delivery_checkout_verifies_historical_fixes_without_publishing(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Actual delivery validation from a workflow-depth local clone accepts checked packages containing a historical fix commit, preserving fix ancestry and exact artifact download without publication."
         }
       ],
       "suites": [

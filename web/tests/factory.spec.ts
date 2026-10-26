@@ -1947,6 +1947,67 @@ test("reported issues keeps a pending selection read when an older selection mut
   ).toBeEnabled();
 });
 
+test("reported issues releases mutation controls during continuing slow journal refreshes", async ({
+  page,
+}) => {
+  const report = reportFixture();
+  let slow = false;
+  const pending: (() => void)[] = [];
+  const { ui, state, calls } = await host(page, {
+    reports: [report],
+    listReports: async (result) => {
+      if (slow)
+        await new Promise<void>((resolve) => {
+          pending.push(resolve);
+        });
+      return result;
+    },
+  });
+  async function journalUpdate() {
+    const reads = calls.filter((c) => c.name === "get_issue_report").length;
+    state.cursor++;
+    await expect
+      .poll(() => calls.filter((c) => c.name === "get_issue_report").length)
+      .toBeGreaterThan(reads);
+  }
+  await ui
+    .getByRole("button", { name: "Reported issues", exact: true })
+    .click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  const evidence = detail.getByLabel("What did the host display?");
+  const refresh = ui.getByRole("button", {
+    name: "Refresh issues and releases",
+  });
+  await expect(evidence).toBeEnabled();
+  slow = true;
+  await refresh.click();
+  await expect.poll(() => pending.length).toBe(1);
+  await expect(refresh).toBeDisabled();
+  await expect(evidence).toBeDisabled();
+  await journalUpdate();
+  await journalUpdate();
+  pending[0]();
+  await expect.poll(() => pending.length).toBe(2);
+  // The mutation refresh rendered; a queued journal refresh is still pending.
+  await journalUpdate();
+  await journalUpdate();
+  await expect(refresh).toBeEnabled();
+  await expect(evidence).toBeEnabled();
+  await expect(
+    detail.getByRole("button", { name: "Resume or reconcile report" }),
+  ).toBeEnabled();
+  await evidence.fill("Evidence supplied while journal refresh is pending");
+  await detail.getByRole("button", { name: "Add evidence" }).click();
+  await expect(detail).toContainText(
+    "Evidence supplied while journal refresh is pending",
+  );
+  await expect(evidence).toBeEnabled();
+  expect(pending).toHaveLength(2);
+  slow = false;
+  pending[1]();
+});
+
 test("reported issues allows pagination during continuing slow journal refreshes", async ({
   page,
 }) => {

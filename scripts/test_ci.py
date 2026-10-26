@@ -5,6 +5,7 @@ import io
 import tarfile
 import zipfile
 import os
+import re
 from pathlib import Path
 import subprocess
 import shutil
@@ -83,7 +84,7 @@ class HostedCITests(unittest.TestCase):
         self.assertIn(["python3", "scripts/test_installer.py"], calls)
         self.assertIn(["python3", "scripts/smoke.py"], calls)
 
-    def assets(self):
+    def assets(self, head=None):
         directory = self.root / "dist"
         directory.mkdir()
         with tarfile.open(directory / "code-factory-test-linux-amd64.tar.gz", "w:gz") as archive:
@@ -94,7 +95,7 @@ class HostedCITests(unittest.TestCase):
         with zipfile.ZipFile(directory / "code-factory-plugin-test.zip", "w") as archive:
             for name in ("plugin.json", ".codex-plugin/plugin.json"):
                 archive.writestr(name, json.dumps({"version": "test-plugin"}))
-        ci.artifact_manifest(directory, self.first)
+        ci.artifact_manifest(directory, head or self.first)
         return directory
 
     def test_component_versions_come_from_promoted_packages(self):
@@ -157,8 +158,25 @@ class HostedCITests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ci.verify_artifacts(directory, self.first)
 
-    def test_delivery_dry_run_checks_downloads_without_publishing(self):
-        directory = self.assets()
+    def test_delivery_checkout_verifies_historical_fixes_without_publishing(self):
+        self.git("commit", "--allow-empty", "-m", "Fixes dk-code-factory/code-factory-plugin#17")
+        fix = self.git("rev-parse", "HEAD")
+        registry = self.root / "release/fixed-issues.json"
+        registry.parent.mkdir()
+        registry.write_text(json.dumps({"version": 1, "fixes": [{
+            "issue": "dk-code-factory/code-factory-plugin#17", "component": "code-factory", "commit": fix,
+        }]}))
+        head = self.change("release")
+        directory = self.assets(head)
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/release.yml").read_text()
+        checkout = workflow.split("\n  deliver:\n", 1)[1].split("\n      - name:", 1)[0]
+        depth = re.search(r"^\s+fetch-depth: (\d+)\s*$", checkout, re.MULTILINE)
+        depth = int(depth.group(1)) if depth else 1
+        publisher = self.root / "publisher"
+        # file:// makes Git honor the workflow's depth for this local fixture.
+        subprocess.run(["git", "clone", *(["--depth", str(depth)] if depth else []),
+                        self.root.as_uri(), str(publisher)], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         calls = []
         summary = self.root / "summary.md"
 
@@ -170,8 +188,8 @@ class HostedCITests(unittest.TestCase):
                 shutil.copyfile(path, target / path.name)
             return ""
 
-        with patch.object(release, "gh", side_effect=download), patch.dict(os.environ, {
-            "VERIFIED_COMMIT": self.first, "VERIFIED_RUN_ID": "42",
+        with patch.object(ci, "ROOT", publisher), patch.object(release, "gh", side_effect=download), patch.dict(os.environ, {
+            "VERIFIED_COMMIT": head, "VERIFIED_RUN_ID": "42",
             "RELEASE_TAG": "", "DRY_RUN": "true", "GITHUB_REPOSITORY": "fixture/repo",
             "GITHUB_STEP_SUMMARY": str(summary),
         }):

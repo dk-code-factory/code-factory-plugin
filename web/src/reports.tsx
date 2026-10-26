@@ -72,36 +72,34 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
       if (inFlight) return;
       inFlight = true;
       try {
-        // Journal changes queue a refresh rather than cancelling a pending page.
-        while (active && refreshPending) {
-          refreshPending = false;
-          const items = new Map<string, IssueReport>();
-          let nextCursor = "";
-          for (let i = 0; i < pages; i++) {
-            const data = await call<ReportPage>("list_issue_reports", {
-              search,
-              status,
-              component,
-              version,
-              cursor: nextCursor,
-              limit: 30,
-            });
-            if (!active) return;
-            for (const item of data.items) items.set(item.id, item);
-            nextCursor = data.nextCursor;
-            if (!nextCursor) break;
-          }
-          setPage({ items: [...items.values()], nextCursor });
-          setError("");
-          paginationPending = false;
-          setLoadingMore(false);
+        refreshPending = false;
+        const items = new Map<string, IssueReport>();
+        let nextCursor = "";
+        for (let i = 0; i < pages; i++) {
+          const data = await call<ReportPage>("list_issue_reports", {
+            search,
+            status,
+            component,
+            version,
+            cursor: nextCursor,
+            limit: 30,
+          });
+          if (!active) return;
+          for (const item of data.items) items.set(item.id, item);
+          nextCursor = data.nextCursor;
+          if (!nextCursor) break;
         }
+        setPage({ items: [...items.values()], nextCursor });
+        setError("");
       } catch (e) {
         if (active) setError(String(e));
       } finally {
         inFlight = false;
         paginationPending = false;
         if (active) setLoadingMore(false);
+        // Continue queued journal work independently so mutation controls become
+        // usable after their own refreshed page has rendered.
+        if (active && refreshPending) void load();
       }
     }
     latestLoad.current = load;
