@@ -1,0 +1,12 @@
+name: Execute a retained Code Factory review turn
+on:
+  workflow_call:
+    inputs:
+      prompt: {type: string, required: true}
+jobs:
+  review:
+    steps:
+      - id: review
+        uses: agent/reviewer
+        with:
+          prompt: ${{ inputs.prompt }}

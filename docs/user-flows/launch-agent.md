@@ -147,6 +147,9 @@ flowchart TD
 - [internal/app/tracking.go](../../internal/app/tracking.go) — Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status. (`func (a *App) TrackWork(`)
 - [internal/app/review_eligibility.go](../../internal/app/review_eligibility.go) — Reject own-author PR reviews and unknown author/identity before preparation, atomic Start and fresh source execution; retain review intent across profile-default changes. (`func validatePRReviewAuthor(`)
 - [internal/app/launch_retry.go](../../internal/app/launch_retry.go) — Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims. (`func (m *Manager) RetryDeferredLaunches(`)
+- [internal/aiworkflows/client.go](../../internal/aiworkflows/client.go) — YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery. (`func (c *Client) CallWorkflow(`)
+- [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 
 ## Test references
 
@@ -246,6 +249,9 @@ flowchart TD
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestSlowInterruptCannotChangeReplacementOrCleanedSession(`; S5, S8. A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewRevalidatesActivePrincipal(`; S5, S6. Due accepted manual retry reads the actual active principal under current credentials, permits eligible execution without synchronized identity and rejects self-review before workspace/provider creation without restoring saved identity.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(`; S5, S6. Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInvalidWorkflowFailsBeforeProviderEffects(`; S4. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(`; S2. Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent.
 
 ## Verification and gaps
 

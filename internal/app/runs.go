@@ -1,6 +1,7 @@
 package app
 
 import (
+	"codefactory/internal/aiworkflows"
 	"codefactory/internal/codex"
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
@@ -47,7 +48,7 @@ type session struct {
 	cancel              context.CancelFunc
 	clientless          bool // Immutable lock owner, not an attached provider session.
 	run                 domain.Run
-	client              *codex.Client
+	client              *aiworkflows.Client
 	pending             map[string]domain.Attention
 	retired             bool
 	secrets             []string
@@ -949,7 +950,17 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 			return
 		}
 	}
-	c, e := codex.Start(s.ctx, m.CodexBinary(), sandboxArgs, func(msg codex.Message) { m.onMessage(s, msg) })
+	review, e := isPRReview(func(kind, id string, out any) error { return m.app.Store.Get(ctx, kind, id, out) }, r, *source)
+	if e != nil {
+		s.mu.Unlock()
+		m.fail(s, e)
+		return
+	}
+	kind := aiworkflows.Task
+	if review {
+		kind = aiworkflows.Review
+	}
+	c, e := aiworkflows.Start(s.ctx, m.CodexBinary(), sandboxArgs, m.app.DataDir, kind, func(msg codex.Message) { m.onMessage(s, msg) })
 	if e != nil {
 		s.mu.Unlock()
 		m.fail(s, e)
@@ -1011,7 +1022,7 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	if s.run.Profile.Model == "" {
 		s.run.Profile.Model = result.Model
 	}
-	s.run.Status = "running"
+	s.run.Status = "starting"
 	s.run.TurnID = ""
 	// A provider can durably finish just before the daemon loses its completion
 	// notification. Recognize that result rather than running the task again.
@@ -1095,6 +1106,9 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	}
 	if !s.completed[response.Turn.ID] {
 		s.run.TurnID = response.Turn.ID
+		if s.run.Status == "starting" {
+			s.run.Status = "running"
+		}
 	}
 	e = m.persist(s, "run.state")
 	s.mu.Unlock()
@@ -1524,7 +1538,7 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 	return m.persist(s, "run.state")
 }
 func (m *Manager) Interrupt(ctx context.Context, id string) error {
-	var interruptClient, closeClient *codex.Client
+	var interruptClient, closeClient *aiworkflows.Client
 	var target map[string]string
 	// Persist cancellation under the current run owner, then release its lock
 	// before provider I/O. Manager membership remains a brief lockRun check.

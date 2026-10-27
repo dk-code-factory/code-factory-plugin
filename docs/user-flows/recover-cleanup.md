@@ -132,6 +132,10 @@ flowchart TD
 - [internal/store/progress.go](../../internal/store/progress.go) — Read the complete same-turn redacted final agent response from paged retained journal, reusing legacy chunk framing and excluding excerpts or unrelated sources. (`func (s *Store) TurnFinalText(`)
 - [internal/app/questions.go](../../internal/app/questions.go) — Restore successful provider-completed turn source outside lifecycle locks, revalidate current owner revision and run the existing guarded stopped-question policy without ordinary task replay. (`func (m *Manager) restoreStoppedTurn(`)
 - [internal/app/launch_retry.go](../../internal/app/launch_retry.go) — Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims. (`func (m *Manager) RetryDeferredLaunches(`)
+- [internal/aiworkflows/client.go](../../internal/aiworkflows/client.go) — YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery. (`func (c *Client) CallWorkflow(`)
+- [internal/aiworkflows/workflows/question-repair.yml](../../internal/aiworkflows/workflows/question-repair.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 
 ## Test references
 
@@ -228,6 +232,10 @@ flowchart TD
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestSlowInterruptCannotChangeReplacementOrCleanedSession(`; S3. A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewRevalidatesActivePrincipal(`; S1. Due accepted manual retry reads the actual active principal under current credentials, permits eligible execution without synchronized identity and rejects self-review before workspace/provider creation without restoring saved identity.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(`; S1. Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInterruptAndFollowUpUseRetainedSessionWithoutReplay(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestWorkflowCheckpointsOmitPrivateContentAndCloseJoinsExecution(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(`; S1. Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(`; S1. Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint.
 
 ## Verification and gaps
 

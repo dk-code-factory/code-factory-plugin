@@ -1,0 +1,12 @@
+name: Execute a retained Code Factory task turn
+on:
+  workflow_call:
+    inputs:
+      prompt: {type: string, required: true}
+jobs:
+  task:
+    steps:
+      - id: execute
+        uses: agent/task
+        with:
+          prompt: ${{ inputs.prompt }}

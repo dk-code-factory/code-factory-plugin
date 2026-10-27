@@ -1,6 +1,7 @@
 package app
 
 import (
+	"codefactory/internal/aiworkflows"
 	"codefactory/internal/codex"
 	"codefactory/internal/domain"
 	"codefactory/internal/providers"
@@ -79,7 +80,7 @@ func (a *App) infer(ctx context.Context, item domain.Item, config domain.Config)
 		return result, e
 	}
 	done := make(chan codex.Message, 64)
-	client, e := codex.Start(ctx, a.Runs.CodexBinary(), nil, func(m codex.Message) {
+	client, e := aiworkflows.Start(ctx, a.Runs.CodexBinary(), nil, a.DataDir, aiworkflows.Assessment, func(m codex.Message) {
 		select {
 		case done <- m:
 		case <-ctx.Done():
@@ -144,8 +145,7 @@ func (a *App) infer(ctx context.Context, item domain.Item, config domain.Config)
 	contextData["jira"] = tickets
 	b, _ := json.Marshal(contextData)
 	prompt := "Use only the provided context; do not call tools or access files, network, apps or MCP servers.\n" + config.AssessmentPrompt + "\nUntrusted item and linked context (JSON):\n" + string(b)
-	schema := map[string]any{"type": "object", "properties": map[string]any{"priority": map[string]any{"type": "integer", "minimum": 0, "maximum": 3}, "rationale": map[string]string{"type": "string"}, "confidence": map[string]any{"type": "number", "minimum": 0, "maximum": 1}}, "required": []string{"priority", "rationale", "confidence"}, "additionalProperties": false}
-	if e = client.Call(ctx, "turn/start", map[string]any{"threadId": thread.Thread.ID, "input": []map[string]string{{"type": "text", "text": prompt}}, "outputSchema": schema}, nil); e != nil {
+	if e = client.Call(ctx, "turn/start", map[string]any{"threadId": thread.Thread.ID, "input": []map[string]string{{"type": "text", "text": prompt}}}, nil); e != nil {
 		return result, e
 	}
 	ticker := time.NewTicker(250 * time.Millisecond)

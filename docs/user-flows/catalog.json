@@ -2951,6 +2951,16 @@
           "path": "internal/domain/admin.go",
           "anchor": "type PluginOperation struct",
           "purpose": "Typed plugin operation and inventory persistence."
+        },
+        {
+          "path": "internal/aiworkflows/client.go",
+          "anchor": "func (c *Client) CallWorkflow(",
+          "purpose": "YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/assessment.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
         }
       ],
       "tests": [
@@ -2993,6 +3003,22 @@
             "S2"
           ],
           "purpose": "Background inference defers while plugin state is changing; unavailable selected skills cannot be prepared."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestStructuredWorkflowRejectsInvalidOutputWithoutRepair(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
         }
       ],
       "suites": [
@@ -3643,6 +3669,21 @@
           "path": "internal/app/launch_retry.go",
           "anchor": "func (m *Manager) RetryDeferredLaunches(",
           "purpose": "Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims."
+        },
+        {
+          "path": "internal/aiworkflows/client.go",
+          "anchor": "func (c *Client) CallWorkflow(",
+          "purpose": "YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/review.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/task.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
         }
       ],
       "tests": [
@@ -4447,6 +4488,30 @@
             "S6"
           ],
           "purpose": "Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInvalidWorkflowFailsBeforeProviderEffects(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/app/workflows_test.go",
+          "anchor": "func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent."
         }
       ],
       "suites": [
@@ -4973,6 +5038,36 @@
           "path": "internal/app/launch_retry.go",
           "anchor": "func (m *Manager) RetryDeferredLaunches(",
           "purpose": "Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims."
+        },
+        {
+          "path": "internal/aiworkflows/client.go",
+          "anchor": "func (c *Client) CallWorkflow(",
+          "purpose": "YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/attention-check.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/question-check.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/question-repair.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/review.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/task.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
         }
       ],
       "tests": [
@@ -5443,6 +5538,38 @@
             "S3"
           ],
           "purpose": "A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestWorkflowPreservesPolicySkillsAndInteractiveReplies(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInterruptAndFollowUpUseRetainedSessionWithoutReplay(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/app/workflows_test.go",
+          "anchor": "func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
         }
       ],
       "suites": [
@@ -5857,6 +5984,26 @@
           "path": "internal/store/conversation.go",
           "anchor": "func (t *Tx) ConversationVersion(",
           "purpose": "Transaction guard counts ordinary owner/agent completions and opaque same-run completion chunks as possible conversation changes without importing omitted content as evidence."
+        },
+        {
+          "path": "internal/aiworkflows/client.go",
+          "anchor": "func (c *Client) CallWorkflow(",
+          "purpose": "YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/attention-check.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/question-check.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/question-repair.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
         }
       ],
       "tests": [
@@ -6537,6 +6684,38 @@
             "S1"
           ],
           "purpose": "A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestWorkflowPreservesPolicySkillsAndInteractiveReplies(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/app/workflows_test.go",
+          "anchor": "func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
         }
       ],
       "suites": [
@@ -7047,6 +7226,26 @@
           "path": "internal/app/launch_retry.go",
           "anchor": "func (m *Manager) RetryDeferredLaunches(",
           "purpose": "Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims."
+        },
+        {
+          "path": "internal/aiworkflows/client.go",
+          "anchor": "func (c *Client) CallWorkflow(",
+          "purpose": "YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/question-repair.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/review.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/task.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
         }
       ],
       "tests": [
@@ -7819,6 +8018,38 @@
             "S1"
           ],
           "purpose": "Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInterruptAndFollowUpUseRetainedSessionWithoutReplay(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestWorkflowCheckpointsOmitPrivateContentAndCloseJoinsExecution(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/app/workflows_test.go",
+          "anchor": "func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
         }
       ],
       "suites": [
@@ -8262,6 +8493,21 @@
           "path": "internal/transport/tracking.go",
           "anchor": "func (s *Server) dashboard(",
           "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/aiworkflows/client.go",
+          "anchor": "func (c *Client) CallWorkflow(",
+          "purpose": "YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/review.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/task.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
         }
       ],
       "tests": [
@@ -8557,6 +8803,22 @@
           "scenarios": [
             "S6"
           ]
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
         }
       ],
       "suites": [
@@ -9212,6 +9474,41 @@
           "path": "internal/transport/api_log_parameters.go",
           "anchor": "func privateAPIParameter(",
           "purpose": "Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence."
+        },
+        {
+          "path": "internal/aiworkflows/client.go",
+          "anchor": "func (c *Client) CallWorkflow(",
+          "purpose": "YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/assessment.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/attention-check.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/question-check.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/question-repair.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/review.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/aiworkflows/workflows/task.yml",
+          "anchor": "name:",
+          "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
         }
       ],
       "tests": [
@@ -9593,6 +9890,22 @@
             "S6"
           ],
           "purpose": "Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestWorkflowCheckpointsOmitPrivateContentAndCloseJoinsExecution(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestWorkflowPreservesPolicySkillsAndInteractiveReplies(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
         }
       ],
       "suites": [

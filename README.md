@@ -116,12 +116,23 @@ available while another query waits on the network.
 
 ## Layout
 
+All model-producing turns run through YAML workflows. Tasks, reviews, priority
+assessments, question classification, attention reconciliation and question repair
+use embedded definitions in `internal/aiworkflows/workflows/` with the pinned
+`agent-workflow` Go executor. Its Codex adapter preserves the retained session,
+native questions and approvals, selected skills and permission profile. Private
+workflow checkpoints record execution status without prompts or responses; the
+application ledger still owns restart recovery and uncertain delivery. Issue
+investigations use their existing detached workflow controller. Discovery and
+authentication checks do not invoke models.
+
 | Directory | Responsibility |
 | --- | --- |
 | `internal/domain` | Transport-neutral item, profile, run, attention and event types |
 | `internal/store` | SQLite migration, atomic state/event transactions and encrypted vault |
 | `internal/providers` | Read-only GitHub/Jira adapters |
 | `internal/codex` | Version-isolated JSON-lines app-server client |
+| `internal/aiworkflows` | Embedded YAML execution and interactive Codex workflow adapter |
 | `internal/app` | Inbox, priorities, links, assessments, worktrees and run lifecycle |
 | `internal/events` | Work callback verification and durable webhook delivery |
 | `internal/transport` | Official Go MCP SDK tools/resources and isolated Events extension |
