@@ -1,0 +1,22 @@
+name: Classify a stopped task's question
+on:
+  workflow_call:
+    inputs:
+      prompt: {type: string, required: true}
+jobs:
+  question:
+    steps:
+      - id: classify
+        uses: agent/question-checker
+        with:
+          prompt: ${{ inputs.prompt }}
+          output:
+            format: json
+            repair-attempts: 0
+            schema:
+              type: object
+              additionalProperties: false
+              required: [needsInput, question]
+              properties:
+                needsInput: {type: boolean}
+                question: {type: string}

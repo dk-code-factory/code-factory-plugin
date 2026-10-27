@@ -302,7 +302,10 @@ func main() {
 					}
 				}
 				if mode == "inference" {
-					text = `{"priority":1,"rationale":"Critical regression","confidence":0.9}`
+					text = os.Getenv("CF_FAKE_INFERENCE")
+					if text == "" {
+						text = `{"priority":1,"rationale":"Critical regression","confidence":0.9}`
+					}
 				}
 				notify("item/completed", map[string]any{"item": map[string]string{"type": "agentMessage", "text": text}})
 				complete("completed")

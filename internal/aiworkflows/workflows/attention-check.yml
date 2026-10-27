@@ -1,0 +1,33 @@
+name: Reconcile pending questions against conversation evidence
+on:
+  workflow_call:
+    inputs:
+      prompt: {type: string, required: true}
+jobs:
+  attention:
+    steps:
+      - id: reconcile
+        uses: agent/attention-checker
+        with:
+          prompt: ${{ inputs.prompt }}
+          output:
+            format: json
+            repair-attempts: 0
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decisions]
+              properties:
+                decisions:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [questionId, status, userEvent, agentEvent, userQuote, agentQuote]
+                    properties:
+                      questionId: {type: string}
+                      status: {type: string}
+                      userEvent: {type: integer}
+                      agentEvent: {type: integer}
+                      userQuote: {type: string}
+                      agentQuote: {type: string}

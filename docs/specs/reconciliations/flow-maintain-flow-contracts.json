@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "9a2ae20ad6035e92b607e01329d9b3437d5ab3da",
-  "fingerprint": "89825ae0a4f3f56d25881e72db3c51bed915c7c6132bd2b02472ce0ff365012b",
+  "base": "53c80d8da0b498fa5d5897b657c4f5886331859d",
+  "fingerprint": "09debeb852460aae2efd4600adcf47a6c758477122d4eef6e7ee65e0321aa839",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "Retained prior reviewed evidence for unchanged branch inputs: Exact full comparison remains fc80b2e2cb61568835c66fdaefc770df0e19c3b1 to current candidate after published71c; six Decisions and answers1/2 retain main-only manual CI and the narrowly excluded baseline adoption remedy. Cycle5 completed on71c and its five findings plus one coordinator startup defect are being corrected; no sixth cycle or counter reset is selected. PR checks additionally cover sync/local-development, while push/manual checks and release provenance remain restricted to main.",
-    "implementation": "Retained prior reviewed evidence for unchanged branch inputs: Full impact still covers15flows plus glossary/UI, with actual source/test differences against main supporting behavior classifications and pinned product adoption untouched. Existing owners implement original accepted resume distinction, full same-turn stopped-text restoration, indexed automatic metadata reads and saved-detail cooldown Retry; provider inventory/admin prose corrections add no protocol or authority. New actual assertions map to RecoverS1/AnswerS4/SyncS5/LaunchS5/TriageS5-S6; one new UI assertion stays under existing owners. CLI alone writes fingerprints after fixture verification. Rebase comparison against9c549ce retains these owning source paths; conflict changes concern the shared transport, reporting shell and reconciliation context rather than changing this contract. Inspected ci.yml pull_request branch selection and scripts/ci.py comparison_commit fetch of the exact missing event commits; no guessed comparison fallback was added.",
-    "tests": "Retained prior reviewed evidence for unchanged branch inputs: Parent inspected actual new source/assertions and38 unchanged classification function sections plus the changed clarification/new accepted checkpoint bodies. Causal onMessage crash and takeover, full journal paging/framing, persisted review busy states, rendered cooldown and four selected launchers use existing fixtures rather than a new framework. Preserved all132entity IDs/150UI/27flowgap metadata and adoption pins. Current full exact-base reconcile/make ci and committed checks must be recorded after this review. Fifth configured review cannot cover final changed tree; no cleanup/completion readiness is implied. scripts/test_ci.py covers development-target PR acceptance, main push/manual restrictions and missing exact comparison-commit fetch behavior; package provenance remains bound to the selected source."
+    "kind": "refactor",
+    "description": "Specification maintenance keeps the original adoption baseline and layer ownership. New workflow files and regression assertions are mapped explicitly.",
+    "implementation": "catalog.json adds adapter/YAML implementation references and exact regression anchors without changing glossary meanings, UI identities or dependency direction.",
+    "tests": "Reviewed validation/report failures for initially unmapped files and stale generated sections; render/validate and mandatory tooling suites now verify complete mapped inputs and generated blocks."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.164
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.263
+      "seconds": 24.755
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.743
+      "seconds": 0.742
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "b6e22dfe7020f6ec4fd886486bdb5afeee7be344123516daa1b8da4dbfc29cc7",
-    "term:coverage-gap": "539b3f5217591788d75f90eb2a363f25fbdeb63d2af6e5b4553dcac2323201f5",
-    "term:entity": "f1cfe5fdd756b40793611a6ad54c6487075b4281edbfb2c404857191392bd39a",
-    "term:glossary": "dc7a7ca1ec32b010aacd898ce53b1a3588ff32a3af291ab3e401c262d3b1ef76",
-    "term:known-limitation": "d383ca4653ef0751f1822998082124b2716123cf017e7dcc5e3fdbeeabe6bea1",
-    "term:reconciliation": "8f2cfae94e1c37f81a62fefe600da616dd87337cccd032aed9ba3f77f3e67250",
-    "term:unverified-behavior": "7068b2e866cb247f69bffae08ddc0cd7cce6e28705e53e017625c3823f805160",
-    "term:verification": "75e2fc0e769148a1d2c3a3a7cdf3a79711da0b1aea5798c87914b00d9abfc6ab"
+    "flow:maintain-flow-contracts": "2da2ef095e4a058f85d54cd507fb142f57a45cd7c24ef3391ad93d01f2ff5c1f",
+    "term:coverage-gap": "f881787e5a8ed32ce7b1d00893fefbcdd16913b81501a0bce605f2e7983dd5aa",
+    "term:entity": "a5f3c518ab20baef6f467b75d37bbff40de25542dbc1887f4cca54874f718100",
+    "term:glossary": "860e940905bd6f021d55b03fa8a2eb012895b7453fbe076982a86e3dcec76fd8",
+    "term:known-limitation": "ee07f82e34fb29f43807c1906c8d763b97fed0830f8b2f33f9f391028b4fa273",
+    "term:reconciliation": "24de7a25c4d356fbece4d127b706bec930099a89efffdc5367d1306b1b7a9091",
+    "term:unverified-behavior": "fee1885fba8d5646733595cb3d47e962e746279451c1247919e51bc7c45a9972",
+    "term:verification": "d14bcaeadef0be4e18041e5305e7ee16b56428bdf475008890c7db65200437fa"
   }
 }

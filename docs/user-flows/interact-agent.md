@@ -37,6 +37,9 @@ Conversation rendering keeps human-facing agent messages and your replies visibl
 
 Automatic recovery exchanges appear as technical activity under Details or in the session console. Your responses keep their ordinary conversation role.
 
+An execution diagnostic received after completion preserves the completed turn
+and does not repeat its work or change a later follow-up.
+
 During explicit plugin maintenance, a new Start, message or answer is temporarily refused rather than delivered against changing plugin state. The caller retains its draft and receives the maintenance error. Maintenance is itself refused while agent work is active; question repair and continuation share the same boundary.
 
 - **S5** Restoring an inactive bounded task reapplies its invocation-local filesystem and network profile before the submitted turn. It preserves the same workspace, scratch, private indexes and original approval/publishing authority. A legacy sandbox override cannot discard the scoped policy; invalid initialization fails without starting an unrestricted replacement.
@@ -145,6 +148,12 @@ flowchart TD
 - [internal/store/conversation.go](../../internal/store/conversation.go) — Bounded same-run redacted conversation evidence excludes tools, internal recovery input, old source messages and other runs. (`func (s *Store) ConversationEvidence(`)
 - [internal/store/conversation.go](../../internal/store/conversation.go) — Transaction guard counts ordinary owner/agent completions and opaque same-run completion chunks as possible conversation changes without importing omitted content as evidence. (`func (t *Tx) ConversationVersion(`)
 - [internal/app/launch_retry.go](../../internal/app/launch_retry.go) — Persist deadline-based pre-agent launch deferral, conservative legacy PR-review recovery and automatic-policy revalidation without duplicate claims. (`func (m *Manager) RetryDeferredLaunches(`)
+- [internal/aiworkflows/client.go](../../internal/aiworkflows/client.go) — YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery. (`func (c *Client) CallWorkflow(`)
+- [internal/aiworkflows/workflows/attention-check.yml](../../internal/aiworkflows/workflows/attention-check.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/aiworkflows/workflows/question-check.yml](../../internal/aiworkflows/workflows/question-check.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/aiworkflows/workflows/question-repair.yml](../../internal/aiworkflows/workflows/question-repair.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 
 ## Test references
 
@@ -206,6 +215,17 @@ flowchart TD
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredLaunchCancelAndCloseDuringSourceVerification(`; S3. Interrupt, manager close, policy disable and repository pause during blocked live verification prevent provider start; interrupt/close create no workspace.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(`; S3. A real fake-provider interrupt stays blocked behind a controlled process barrier while deferred polling, unrelated Start, Answer and Interrupt complete; cancellation intent and exact original RPC IDs persist, then the same accepted deferred claim starts after capacity clears.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestSlowInterruptCannotChangeReplacementOrCleanedSession(`; S3. A completed old turn can be replaced or deliberately cleaned while its interrupt response is blocked; the old RPC reports disconnect and stale old-session events cannot overwrite replacement authority or resurrect cleaned work.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestWorkflowPreservesPolicySkillsAndInteractiveReplies(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInterruptAndFollowUpUseRetainedSessionWithoutReplay(`; S3. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(`; S4. Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(`; S1. Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S1. Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointDiagnosticDoesNotDeadlockClose(`; S1. Shutdown releases execution ownership before a diagnostic callback waits on the application session lock; the callback exits after that lock is released.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveSuccessAndNativeFailuresDoNotReportWorkflowError(`; S1, S3. Ordinary completed, interrupted and failed native turns retain one unchanged terminal notification without an extra workflow diagnostic.
+- [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestAnsweredContinuationPreservesStateOnStorageFailure(`; S4. Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(`; S1. A queued acknowledgement cannot report successful admission after cancellation takes ownership; output remains undecoded and workflow cancellation is synchronous.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(`; S1. After successful admission, caller cancellation preserves observation until native interruption, client cancellation or Close; provider work starts only once.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAcknowledgementTransferRejectsCanceledClient(`; S1. A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission.
 
 ## Verification and gaps
 

@@ -77,6 +77,7 @@ func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(t *testing.T) {
 					t.Fatal(err)
 				}
 				waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", run.ID, &run); return run.Status == "idle" })
+				waitForResolvedCompletion(t, a, ctx, run.ID)
 				if _, err := a.Runs.Start(ctx, run.ID, false); err == nil {
 					t.Fatal("repeated Start was accepted")
 				}

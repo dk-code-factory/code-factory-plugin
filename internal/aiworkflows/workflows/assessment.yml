@@ -1,0 +1,23 @@
+name: Assess item priority
+on:
+  workflow_call:
+    inputs:
+      prompt: {type: string, required: true}
+jobs:
+  assessment:
+    steps:
+      - id: assess
+        uses: agent/assessor
+        with:
+          prompt: ${{ inputs.prompt }}
+          output:
+            format: json
+            repair-attempts: 0
+            schema:
+              type: object
+              additionalProperties: false
+              required: [priority, rationale, confidence]
+              properties:
+                priority: {type: integer, minimum: 0, maximum: 3}
+                rationale: {type: string}
+                confidence: {type: number, minimum: 0, maximum: 1}

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "9a2ae20ad6035e92b607e01329d9b3437d5ab3da",
-  "fingerprint": "3934386488a364618bc662685ff49f97188629dda138a8f672c2e01b5eeb95f5",
+  "base": "53c80d8da0b498fa5d5897b657c4f5886331859d",
+  "fingerprint": "ac8617a84c0b0e7009477f3fe85ca22067d58dbb8abde936501bfe793e0edd4d",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Against current main 9a2ae20 this flow retains its existing behavior; retry integration and changed operational CI inputs require renewed review of its consuming source/assertions. Retained prior reviewed evidence for unchanged branch inputs: Against advanced main, PR3 S4 metadata-only PR/recovered-question event mapping remains changed behavior; stable delivery IDs, callback validation, retries and unavailable real-host subscription stay. Target confirmation prevents false local asks without adding host capability.",
-    "implementation": "Retained prior reviewed evidence for unchanged branch inputs: Current events code still constructs metadata instead of copying private event body. Integrated atomic attention resolution/replacement preserves history and request identity; recovery completion/uncertainty never answers or authorizes notifications. No callback/auth/signing or host subscription behavior is broadened. Rebase comparison against9c549ce retains these owning source paths; conflict changes concern the shared transport, reporting shell and reconciliation context rather than changing this contract.",
-    "tests": "Retained prior reviewed evidence for unchanged branch inputs: Changed event fixture injects private question context, checks absent body and exactly one inbox+attention notification over repeated ticks. Existing challenge/signature/entity/503-ID/expiry assertions retain limits. All inherited confirmed/unconfirmed request tests are local agent fixtures and do not supply callback receipt or renewal/host proof. Existing host and delivery-variant gaps remain unchanged; combined full-base verification is recorded separately; restored question detection reuses existing metadata-only attention events and grants no host notification acceptance."
+    "kind": "refactor",
+    "description": "Subscription discovery, callback verification, durable delivery and retries remain independent of model execution.",
+    "implementation": "The YAML adapter forwards existing Codex notifications to the same application handler, preserving event ownership and notification publication paths.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry assertions for signed callbacks, stable retry event IDs, acknowledged deduplication and expiry; no notification source or callback code changed."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 44.03
+      "seconds": 46.362
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.164
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.263
+      "seconds": 24.755
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.743
+      "seconds": 0.742
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "637d13673d77a0d16314b65587ee82a888f905fc51b5bc6b8524d73f112a70ac",
-    "term:attention-request": "aa1c821729383b02478b660152477660fb77adfd40033168d166d232ca14da8c",
-    "term:coverage-gap": "539b3f5217591788d75f90eb2a363f25fbdeb63d2af6e5b4553dcac2323201f5",
-    "term:host": "8f00be050e658a31857e8eec198e774daebdd84026d4a99f8fa7bac2297ed27d",
-    "term:known-limitation": "d383ca4653ef0751f1822998082124b2716123cf017e7dcc5e3fdbeeabe6bea1",
-    "term:subscription": "4af8efb93b5d85e4eef3e3cf32db1183d6b1062645c1a3b7f921e353604ed1e0",
-    "term:unverified-behavior": "7068b2e866cb247f69bffae08ddc0cd7cce6e28705e53e017625c3823f805160"
+    "flow:receive-notifications": "2c2c528d97892de8070874d79473321fe409c88555709ba5b9382f6a65985c31",
+    "term:attention-request": "e9bfae35c52126e629dcd3acf1362a9c9a792d3ec7ee59fd566c170c030e70c9",
+    "term:coverage-gap": "f881787e5a8ed32ce7b1d00893fefbcdd16913b81501a0bce605f2e7983dd5aa",
+    "term:host": "b9ea95ed3585f0b5df2fbaadc94ccb1a26a55324db5b306621983648f273e739",
+    "term:known-limitation": "ee07f82e34fb29f43807c1906c8d763b97fed0830f8b2f33f9f391028b4fa273",
+    "term:subscription": "5a332454c2da154a9c01986ea77580aba2e18232d232df4d9f1b1ff31a56677f",
+    "term:unverified-behavior": "fee1885fba8d5646733595cb3d47e962e746279451c1247919e51bc7c45a9972"
   }
 }

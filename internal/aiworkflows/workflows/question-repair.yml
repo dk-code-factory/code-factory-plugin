@@ -1,0 +1,12 @@
+name: Recover a question in the retained task session
+on:
+  workflow_call:
+    inputs:
+      prompt: {type: string, required: true}
+jobs:
+  recovery:
+    steps:
+      - id: clarify
+        uses: agent/question-repairer
+        with:
+          prompt: ${{ inputs.prompt }}

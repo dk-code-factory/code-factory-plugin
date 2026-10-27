@@ -76,6 +76,8 @@ flowchart TD
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/app/plugins.go](../../internal/app/plugins.go) — Durable pinned-CLI plugin lifecycle and exclusive runtime/maintenance boundary. (`func (m *Manager) PluginAction(`)
 - [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
+- [internal/aiworkflows/client.go](../../internal/aiworkflows/client.go) — YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery. (`func (c *Client) CallWorkflow(`)
+- [internal/aiworkflows/workflows/assessment.yml](../../internal/aiworkflows/workflows/assessment.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 
 ## Test references
 
@@ -84,6 +86,9 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S1. Stored overrides initialize including P0; all priorities and automatic submit immediately for the selected item.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("failed immediate priority saves restore the saved value with an inline error"`; S1. Rejected saves restore the previous picker and show exact local feedback.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginMaintenanceDefersInferenceAndRejectsUnavailableSkills(`; S2. Background inference defers while plugin state is changing; unavailable selected skills cannot be prepared.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestStructuredWorkflowRejectsInvalidOutputWithoutRepair(`; S3. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(`; S1. Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics.
 
 ## Verification and gaps
 

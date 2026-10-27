@@ -6,10 +6,79 @@ import (
 	"codefactory/internal/store"
 	"encoding/json"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
+
+func TestNativeAnswerRejectsDurableInterruptBeforeProviderCompletion(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "question")
+	root := t.TempDir()
+	entered, releasePath := filepath.Join(root, "interrupt-entered"), filepath.Join(root, "interrupt-release")
+	t.Setenv("CF_FAKE_INTERRUPT_ENTERED", entered)
+	t.Setenv("CF_FAKE_INTERRUPT_RELEASE", releasePath)
+	a, ctx := fixture(t)
+	run := prepareRun(t, a, ctx)
+	if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	at := pendingQuestion(t, a, "rpc")
+	release := sync.OnceFunc(func() {
+		if err := os.WriteFile(releasePath, []byte("release"), 0600); err != nil {
+			t.Error(err)
+		}
+	})
+	interruptDone := make(chan error, 1)
+	join := sync.OnceFunc(func() {
+		release()
+		waitLaunchRetry(t, func() {
+			if err := <-interruptDone; err != nil {
+				t.Error(err)
+			}
+		})
+	})
+	// Always release the provider and join interruption before fixture shutdown,
+	// including when an assertion fails while the provider is blocked.
+	t.Cleanup(join)
+	go func() { interruptDone <- a.Runs.Interrupt(ctx, run.ID) }()
+	waitFor(t, func() bool { _, err := os.Stat(entered); return err == nil })
+	if err := a.Store.Get(ctx, "run", run.ID, &run); err != nil || !run.InterruptRequested || run.Status != "waiting" || run.TurnID == "" {
+		t.Fatal("interrupt intent was not durable before provider completion", run, err)
+	}
+	answer := json.RawMessage(`{"answers":{"scope":{"answers":["Focused"]}}}`)
+	if err := a.Runs.Answer(ctx, at.ID, answer); err == nil {
+		t.Fatal("native answer accepted after durable interruption intent")
+	}
+	if err := a.Store.Get(ctx, "attention", at.ID, &at); err != nil || at.Status != "pending" {
+		t.Fatal("rejected answer claimed the pending request", at, err)
+	}
+	s, err := a.Runs.get(run.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.mu.Lock()
+	pending, ok := s.pending[at.ID]
+	s.mu.Unlock()
+	if !ok || pending.Status != "pending" {
+		t.Fatal("rejected answer consumed the native request", pending)
+	}
+	if _, err := a.Vault.Get(ctx, "attention-answer:"+at.ID); !errors.Is(err, store.ErrNotFound) {
+		t.Fatal("rejected answer left a saved answer", err)
+	}
+	join()
+	waitFor(t, func() bool {
+		_ = a.Store.Get(ctx, "run", run.ID, &run)
+		return run.Status == "interrupted" && run.TurnID == ""
+	})
+	if err := a.Store.Get(ctx, "attention", at.ID, &at); err != nil || at.Status != "stale" {
+		t.Fatal("completed interruption did not stale the native request", at, err)
+	}
+	if err := a.Runs.Answer(ctx, at.ID, answer); err == nil {
+		t.Fatal("stale interrupted request accepted an answer")
+	}
+}
 
 func TestAnsweredRepairNeverReappearsAfterRecovery(t *testing.T) {
 	for _, stage := range []string{"answered", "awaiting-answer", "fallback"} {
