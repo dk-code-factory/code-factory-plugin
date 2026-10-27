@@ -399,6 +399,35 @@ func TestUITranscriptPublicationLeavesSummariesCurrentAndNotifiesOnlyHistory(t *
 	}
 }
 
+func TestUIOpeningSummaryUsesEligibleSavedAttention(t *testing.T) {
+	s, ctx := uiFixture(t)
+	for _, run := range []domain.Run{{ID: "idle", Status: "idle"}, {ID: "interrupted", Status: "interrupted"}, {ID: "prepared", Status: "prepared"}, {ID: "terminated", Status: "terminated"}} {
+		if err := s.App.Store.Put(ctx, "run", run.ID, run, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, at := range []domain.Attention{{ID: "orphan", RunID: "missing", Status: "pending"}, {ID: "old-rpc", RunID: "idle", Status: "pending"}, {ID: "interrupted-rpc", RunID: "interrupted", Status: "pending"}, {ID: "prepared-text", RunID: "prepared", Status: "pending", Origin: "text"}, {ID: "terminated-text", RunID: "terminated", Status: "pending", Origin: "text"}} {
+		if err := s.App.Store.Put(ctx, "attention", at.ID, at, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cursor, _ := s.App.Store.UILatest(ctx)
+	waitProjection(t, s, ctx, cursor)
+	summary, err := s.dashboard(ctx)
+	if err != nil || summary["hasAttention"] != false {
+		t.Fatal("stale/orphaned attention appeared in opening summary", summary, err)
+	}
+	if err := s.App.Store.Put(ctx, "attention", "retained-text", domain.Attention{ID: "retained-text", RunID: "idle", Origin: "text", Status: "pending"}, ""); err != nil {
+		t.Fatal(err)
+	}
+	cursor, _ = s.App.Store.UILatest(ctx)
+	waitProjection(t, s, ctx, cursor)
+	summary, err = s.dashboard(ctx)
+	if err != nil || summary["hasAttention"] != true {
+		t.Fatal("eligible saved textual ask missing from summary", summary, err)
+	}
+}
+
 func BenchmarkUIOutputPublication(b *testing.B) {
 	ctx := context.Background()
 	db, err := store.Open(filepath.Join(b.TempDir(), "state.db"))

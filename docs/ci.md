@@ -15,7 +15,7 @@ Empty, cold-server and synthetic retained-state cases use provider operations
 delayed by at least 100 ms, with measured delays, request counts, payload sizes,
 render timings and long tasks stored in `web/performance-results/timing.json`.
 CI uploads that JSON, environment details and failure traces on every run.
-These measurements do not establish real ChatGPT sidebar latency. It forces fixture mode and needs no model credentials or installed service.
+These measurements do not establish real ChatGPT sidebar latency. The launch endpoint is timestamped in the child at the same second animation-frame callback, using browser [shared monotonic timestamps](https://www.w3.org/TR/hr-time-3/#examples). Parent notification elapsed time and message-delivery lag are retained separately, so host queueing after paint is auditable without entering the click-to-paint bound. It forces fixture mode and needs no model credentials or installed service.
 Successful builds upload Linux x86-64 and portable plugin packages, SHA256SUMS and
 a CI manifest bound to the exact source commit. Failed browser evidence is kept
 separately. Verification has read-only repository permissions.

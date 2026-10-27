@@ -397,7 +397,9 @@
         "UI-HIDDEN-SUBSCRIPTION",
         "UI-INBOX-PAGES",
         "UI-NAV-MESSAGES",
-        "UI-SHELL-ORDER"
+        "UI-SHELL-ORDER",
+        "API-OVERVIEW-ATTENTION",
+        "UI-HIDDEN-DIRTY"
       ],
       "gaps": [
         {
@@ -487,7 +489,8 @@
         "UI-CONNECT-POLL",
         "UI-CONNECT-MUTATION",
         "UI-CONNECT-HOST-WRAP",
-        "UI-CONNECT-HOST-MUTATION"
+        "UI-CONNECT-HOST-MUTATION",
+        "UI-VIEW-RETRY"
       ],
       "gaps": [
         {
@@ -718,7 +721,8 @@
         "STORE-UI-SNAPSHOT",
         "UI-QUERY-ORDER",
         "UI-HIDDEN-SUBSCRIPTION",
-        "UI-INBOX-PAGES"
+        "UI-INBOX-PAGES",
+        "UI-QUERY-IDENTITY"
       ],
       "gaps": [
         {
@@ -935,7 +939,8 @@
         "UI-WAKE-MESSAGE",
         "UI-OPEN-AGENT",
         "API-COMPACT-INBOX",
-        "UI-COMPACT-REVIEW"
+        "UI-COMPACT-REVIEW",
+        "UI-QUERY-IDENTITY"
       ],
       "gaps": [
         {
@@ -1724,7 +1729,8 @@
         "API-UI",
         "UI-SAVED-OBSERVATIONS",
         "API-GITHUB-QUERY-CACHE",
-        "UI-REPOSITORY-FRESHNESS"
+        "UI-REPOSITORY-FRESHNESS",
+        "UI-REVIEW-OBSERVATION"
       ],
       "gaps": [
         {
@@ -2404,7 +2410,9 @@
         "UI-RESYNC-HISTORY",
         "UI-HISTORY-WINDOW",
         "API-UI-OUTPUT-DOMAIN",
-        "UI-OUTPUT-SUBSCRIPTION"
+        "UI-OUTPUT-SUBSCRIPTION",
+        "UI-STREAM-PROGRESS",
+        "UI-HIDDEN-HISTORY"
       ],
       "gaps": [
         {
@@ -2423,7 +2431,7 @@
       ],
       "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too. Older-history browsing exposes next-history and follow-latest controls.",
       "state_description": "The normal conversation contains agent progress/final messages, user replies, saved-message delivery status and readable errors. Saved messages show queued, delivering, delivered or uncertain feedback; changes replace the same message status block. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role. Completed owner and agent messages remain normal Conversation content across fetched journal pages; incomplete or malformed raw fragments remain technical activity under Details.",
-      "interactions": "Details reveals retained technical activity without starting or changing agent work. Opening the beginning enters a bounded history window that remains inspectable across background updates. Next history page advances on request; Follow latest history resumes automatic updates. The retained display remains limited to 1,000 events. A full state resync reloads history from its beginning without clearing the reply draft. Session console uses the same retained session and draft."
+      "interactions": "Details reveals retained technical activity without starting or changing agent work. Opening the beginning enters a bounded history window that remains inspectable across background updates. Next history page advances on request; Follow latest history resumes automatic updates. The retained display remains limited to 1,000 events. A full state resync reloads history from its beginning without clearing the reply draft. Session console uses the same retained session and draft. Continuing publications coalesce behind one in-flight saved read while valid prefixes remain visible. Hidden views pause new history reads and resume on visibility even without another publication."
     },
     {
       "id": "W-MESSAGE",
@@ -3827,7 +3835,7 @@
         "go"
       ],
       "element_description": "**managed-skill** select with Create a skill option; **name** required input; **instructions** text area; **save**. **save-result** beside each form. Selected content has load-status/load-error feedback and an explicit reload control.",
-      "state_description": "Existing choices include managed skills only. Selecting an existing skill loads name/content. Selecting Create a skill currently does not reset populated fields. Saving disables the form; success or an exact error appears beside it; failed inputs remain.",
+      "state_description": "Create a skill selects a fresh authoring template and clears the previous name/instructions. Selecting an existing managed skill loads its saved instructions. Failed reads retain the prior draft but gate Save until a successful selected read or explicit new selection.",
       "interactions": "Selecting a managed skill loads only its saved authoring content. Broad metadata and launch lists omit content/files. Loading/error states disable Save; explicit reload retries the read, and late prior selections cannot replace the current editor or draft. Save creates/replaces managed skill content. No delete, rename migration or file-tree editor is present."
     },
     {
@@ -6954,7 +6962,8 @@
         "STORE-UI-SNAPSHOT",
         "UI-QUERY-ORDER",
         "UI-HIDDEN-SUBSCRIPTION",
-        "UI-INBOX-PAGES"
+        "UI-INBOX-PAGES",
+        "UI-QUERY-IDENTITY"
       ],
       "gaps": [
         {
@@ -9205,7 +9214,14 @@
         "API-UI-OUTPUT-DOMAIN",
         "UI-OUTPUT-SUBSCRIPTION",
         "UI-REPOSITORY-FRESHNESS",
-        "UI-ACCEPTANCE-RESYNC"
+        "UI-ACCEPTANCE-RESYNC",
+        "UI-STREAM-PROGRESS",
+        "UI-HIDDEN-HISTORY",
+        "UI-HIDDEN-RESYNC",
+        "API-OVERVIEW-ATTENTION",
+        "UI-HIDDEN-DIRTY",
+        "UI-VIEW-RETRY",
+        "UI-REVIEW-OBSERVATION"
       ],
       "gaps": [
         {
@@ -9234,7 +9250,7 @@
       ],
       "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
       "trigger": "A committed saved-state publication advances the shared UI change cursor.",
-      "interactions": "One authenticated host subscription waits up to 25 seconds for metadata-only invalidations. A background worker publishes immutable saved projections and their cursor atomically. Reads perform no provider requests, dependency probes or external refreshes. Affected views reread saved state; hidden views catch up on visibility, bursts coalesce and older responses cannot replace newer queries or selections. Rollbacks emit no invalidation; commits from other processes are reconciled. Missing cursors require full resync. Known reads retry bounded transport failures. Mutations never replay automatically, and acceptance is separate from later completion. Drafts, focus, selection and uncertain-action errors survive updates. Older snapshot/change contracts remain available. Full resync advances local subscription identity even when the server cursor decreases; incremental transcript state is then reloaded from its beginning. Local successful Start acknowledgement remains visible while a published run is missing or still prepared. A published non-prepared run replaces that overlay; full resync clears it.",
+      "interactions": "One authenticated host subscription waits up to 25 seconds for metadata-only invalidations. A background worker publishes immutable saved projections and their cursor atomically. Reads perform no provider requests, dependency probes or external refreshes. Affected views reread saved state; hidden views catch up on visibility, bursts coalesce and older responses cannot replace newer queries or selections. Rollbacks emit no invalidation; commits from other processes are reconciled. Missing cursors require full resync. Known reads retry bounded transport failures. Mutations never replay automatically, and acceptance is separate from later completion. Drafts, focus, selection and uncertain-action errors survive updates. Older snapshot/change contracts remain available. Full resync advances local subscription identity even when the server cursor decreases; incremental transcript state is then reloaded from its beginning. Local successful Start acknowledgement remains visible while a published run is missing or still prepared. A published non-prepared run replaces that overlay; full resync clears it. Saved reads clear only invalidations whose captured cursor and requested views they cover. A failed current-view read retains separate feedback and retries transient transport failure without requiring another publication. Queue rows remain bound to the applied queue/query/page identity.",
       "from": [
         "S-FACTORY"
       ],
@@ -13216,7 +13232,7 @@
       "id": "UI-LAUNCH-50MS",
       "path": "web/performance/tests/launch.spec.ts",
       "anchor": "production embedded direct launch: every fresh and warm sample is at most 50 ms",
-      "assertion": "Every one of 20 fresh and 10 warm built-resource direct launches has actionable painted navigation within 50 ms; empty/cold/retained states use delayed provider fixtures and retain timing evidence."
+      "assertion": "Every one of 20 fresh and 10 warm built-resource direct launches has actionable painted navigation within 50 ms; empty/cold/retained states use delayed provider fixtures and retain timing evidence. The same painted callback records its shared monotonic timestamp; host notification elapsed and delivery lag are retained separately and do not enter the click-to-paint endpoint."
     },
     {
       "id": "API-UI-PAGES",
@@ -13379,6 +13395,54 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
       "assertion": "Full resync removes local acknowledgement overlays and returns the selected run to restored authoritative state without another Start."
+    },
+    {
+      "id": "UI-STREAM-PROGRESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "continuing transcript publications coalesce while delayed reads still render valid prefixes",
+      "assertion": "With publications every 35 ms and reads delayed 180 ms, the conversation renders live prefixes before streaming stops and has at most one transcript read in flight."
+    },
+    {
+      "id": "UI-HIDDEN-HISTORY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "hidden retained history pauses pagination and resumes on visibility without a new publication",
+      "assertion": "A read already sent before hide may finish; no further history page starts while hidden, and show resumes static pagination without needing a new publication."
+    },
+    {
+      "id": "UI-HIDDEN-RESYNC",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a hidden full resync rejects a delayed reply from the previous state epoch",
+      "assertion": "An outstanding old-cursor read returning while hidden cannot restore the previous state epoch or block the lower-cursor restored data after visibility resumes."
+    },
+    {
+      "id": "API-OVERVIEW-ATTENTION",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIOpeningSummaryUsesEligibleSavedAttention",
+      "assertion": "Opening hasAttention excludes orphaned and stale pending records using the saved attention queue eligibility; a retained eligible textual ask remains visible."
+    },
+    {
+      "id": "UI-HIDDEN-DIRTY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a hidden older read cannot consume newer run and attention invalidations",
+      "assertion": "A delayed older response while hidden cannot clear later run/attention work; show refreshes both current items and Messages."
+    },
+    {
+      "id": "UI-VIEW-RETRY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "failed requested view reads recover without a new journal publication",
+      "assertion": "Exhausted transport retries for a requested view retain local error feedback despite healthy idle watches, then recover automatically without a new commit."
+    },
+    {
+      "id": "UI-QUERY-IDENTITY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "queue navigation cannot activate rows belonging to the previous query",
+      "assertion": "A delayed new queue renders loading without previous-query rows or launch actions, then shows only the new result set."
+    },
+    {
+      "id": "UI-REVIEW-OBSERVATION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "observation-only completion refreshes posted review monitoring state",
+      "assertion": "A saved review observation completion clears pending status on observation-only invalidation even when the review record version is unchanged."
     }
   ],
   "source_map": [

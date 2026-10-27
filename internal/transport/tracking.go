@@ -24,15 +24,9 @@ func (s *Server) dashboard(ctx context.Context) (map[string]any, error) {
 	for _, r := range runs {
 		states[r.Status]++
 	}
-	var attention []domain.Attention
-	if err := json.Unmarshal(p.data["attention"], &attention); err != nil {
+	var hasAttention bool
+	if err := json.Unmarshal(p.data["hasAttention"], &hasAttention); err != nil {
 		return nil, err
-	}
-	hasAttention := false
-	for _, at := range attention {
-		if at.Status == "pending" {
-			hasAttention = true
-		}
 	}
 
 	return map[string]any{"itemCount": len(entries), "queues": counts, "runCount": len(runs), "runStates": states, "hasAttention": hasAttention, "readAt": time.Now().UTC(), "cursor": p.cursor, "publishedAt": p.published, "detailTool": "track_work", "appSnapshotTool": "read_ui_state"}, nil

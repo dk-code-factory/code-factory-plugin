@@ -14,7 +14,7 @@ export function PostedReviews({
   version: string;
   repository: string;
 }) {
-  const uiVersion = useUIVersion(["pr-reviews"], itemId);
+  const uiVersion = useUIVersion(["pr-reviews", "observation"], itemId);
   const repositoryVersion = useUIVersion(["repository"], repository);
   const [data, setData] = useState<PRReviews>();
   const [error, setError] = useState("");

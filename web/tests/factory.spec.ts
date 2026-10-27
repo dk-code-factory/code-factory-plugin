@@ -110,6 +110,7 @@ async function host(
     beforeStartResponse?: () => Promise<void>;
     rejectStart?: boolean;
     transcript?: JournalEvent[];
+    readTranscript?: (page:EventPage)=>Promise<EventPage>;
     theme?: "light" | "dark";
     denyOpenLink?: boolean;
     failOpenLink?: boolean;
@@ -535,6 +536,7 @@ async function host(
               cursor: state.cursor,
               hasMore: false,
             };
+          if(options.readTranscript) data=await options.readTranscript(data as EventPage);
           break;
         }
         case "answer_request": {
@@ -5671,4 +5673,163 @@ test("full resync clears a local Start acceptance overlay without replaying the 
   await expect(ui.getByLabel("Session status")).toContainText("prepared");
   await expect(ui.getByRole("button",{name:"Messages",exact:true})).toBeVisible();
   expect(calls.filter(c=>c.name==="start_run")).toHaveLength(1);
+});
+
+test("continuing transcript publications coalesce while delayed reads still render valid prefixes",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  snapshot.runs=[retained(snapshot,"continuous-output")];
+  const transcript:JournalEvent[]=[{seq:1,kind:"run.output",entity:"continuous-output",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Seed transcript "}}}];
+  let active=0,maximum=0;
+  const {ui,state}=await host(page,{snapshot,transcript,watchDomains:["transcript"],readTranscript:async result=>{
+    active++;maximum=Math.max(maximum,active);
+    try{await new Promise(resolve=>setTimeout(resolve,180));return result}finally{active--}
+  }});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.locator(".transcript")).toContainText("Seed transcript");
+  let emitted=0;
+  const stream=setInterval(()=>{
+    emitted++;
+    transcript.push({seq:transcript.length+1,kind:"run.output",entity:"continuous-output",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Live prefix "+emitted+" "}}});
+    state.cursor++;
+  },35);
+  try{
+    await expect(ui.locator(".transcript")).toContainText("Live prefix",{timeout:4000});
+    // The interval remains live at this assertion; valid output cannot wait for EOF.
+    expect(emitted).toBeGreaterThan(0);
+    expect(maximum).toBe(1);
+  }finally{clearInterval(stream)}
+});
+
+test("hidden retained history pauses pagination and resumes on visibility without a new publication",async({page})=>{
+  const snapshot=initial();snapshot.cursor=2000;snapshot.runs=[retained(snapshot,"hidden-history")];
+  const transcript:JournalEvent[]=Array.from({length:400},(_,n)=>({seq:n+1,kind:"run.output",entity:"hidden-history",at:new Date().toISOString(),data:{method:"item/completed",params:{item:{id:"hidden-"+(n+1),type:"agentMessage",text:"Retained hidden event "+(n+1)}}}}));
+  const {ui,calls}=await host(page,{snapshot,transcript,watchDomains:["transcript"],readTranscript:async result=>{await new Promise(resolve=>setTimeout(resolve,180));return result}});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="read_transcript").length).toBeGreaterThan(0);
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  const reads=calls.filter(c=>c.name==="read_transcript").length;
+  // A read already sent at hide may finish, but must not start its next page.
+  await expect(ui.locator(".transcript")).toContainText("Retained hidden event");
+  await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect(calls.filter(c=>c.name==="read_transcript")).toHaveLength(reads);
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(ui.locator(".transcript")).toContainText("Retained hidden event 400");
+});
+
+test("a hidden full resync rejects a delayed reply from the previous state epoch",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});
+  let captured=false,returned=false;
+  const {ui,state,calls}=await host(page,{snapshot,readUIState:async(data,args)=>{
+    if(args.search==="delayed"&&!captured){captured=true;await gate;returned=true}
+    return data;
+  }});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).waitFor();
+    await ui.getByLabel("Search inbox").fill("delayed");
+    await expect.poll(()=>captured).toBe(true);
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    state.inbox[0].item.title="Restored after hidden resync";state.cursor=3;
+    await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===3)).toBe(true);
+    release();
+    await expect.poll(()=>returned).toBe(true);
+    await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    await ui.getByLabel("Search inbox").fill("");
+    await expect(ui.getByRole("button",{name:/Restored after hidden resync/})).toBeVisible();
+  }finally{release()}
+});
+
+test("a hidden older read cannot consume newer run and attention invalidations",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});
+  let captured=false,returned=false;
+  const {ui,state,calls}=await host(page,{snapshot,readUIState:async(data,args)=>{
+    if(args.search==="delayed"&&!captured){captured=true;await gate;returned=true}
+    return data;
+  }});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).waitFor();
+    await ui.getByLabel("Search inbox").fill("delayed");
+    await expect.poll(()=>captured).toBe(true);
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    state.runs=[retained(state,"new-hidden-question","waiting")];
+    state.attention=[{id:"hidden-question",runId:"new-hidden-question",status:"pending",method:"item/tool/requestUserInput",blocking:true,params:{questions:[{id:"scope",question:"Which scope?",options:[{label:"Focused"},{label:"Broad"}]}]}} as Snapshot["attention"][number]];
+    state.inbox[0].item.title="Fresh hidden state";state.cursor=101;
+    await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===101)).toBe(true);
+    release();await expect.poll(()=>returned).toBe(true);
+    await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    await ui.getByLabel("Search inbox").fill("");
+    await expect(ui.getByRole("button",{name:/Fresh hidden state/})).toBeVisible();
+    await expect(ui.getByRole("button",{name:"Messages 1",exact:true})).toBeVisible();
+  }finally{release()}
+});
+
+test("failed requested view reads recover without a new journal publication",async({page})=>{
+  let unavailable=false;
+  const snapshot=initial();snapshot.inbox[0].item.title="Retry target";
+  const {ui,calls}=await host(page,{snapshot,transportFault:(name,args)=>name==="read_ui_state"&&args.search==="Retry target"&&unavailable});
+  await ui.getByRole("button",{name:/Retry target/}).waitFor();
+  unavailable=true;
+  await ui.getByLabel("Search inbox").fill("Retry target");
+  await expect(ui.getByRole("alert").filter({hasText:"Retrying saved view"})).toBeVisible();
+  const watches=calls.filter(c=>c.name==="watch_ui_changes").length;
+  await expect.poll(()=>calls.filter(c=>c.name==="watch_ui_changes").length).toBeGreaterThan(watches);
+  await expect(ui.getByRole("alert").filter({hasText:"Retrying saved view"})).toBeVisible();
+  unavailable=false;
+  await expect(ui.getByRole("button",{name:/Retry target/})).toBeVisible();
+  await expect(ui.getByRole("alert")).toHaveCount(0);
+  expect(snapshot.cursor).toBe(1);
+});
+
+test("queue navigation cannot activate rows belonging to the previous query",async({page})=>{
+  const snapshot=initial();
+  const pr=structuredClone(snapshot.inbox[0]);Object.assign(pr.item,{id:"owner/repo#2",kind:"pr",title:"Reviewable pull request",author:"someone",reviewRequests:["alex"]});pr.queues=["review"];
+  snapshot.inbox.push(pr);
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});let pending=false;
+  const {ui,calls}=await host(page,{snapshot,readUIState:async(data,args)=>{if(args.queue==="review"){pending=true;await gate}return data}});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).waitFor();
+    await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+    await expect.poll(()=>pending).toBe(true);
+    await expect(ui.getByRole("button",{name:/Fix reconnect regression/})).toHaveCount(0);
+    await expect(ui.getByText("Loading saved items…",{exact:true})).toBeVisible();
+    release();
+    await expect(ui.getByRole("button",{name:/Reviewable pull request/})).toBeVisible();
+    expect(calls.filter(c=>["prepare_launch","start_run"].includes(c.name))).toHaveLength(0);
+  }finally{release()}
+});
+
+test("observation-only completion refreshes posted review monitoring state",async({page})=>{
+  const snapshot=initial();snapshot.profiles[0].id="review";
+  const entry=snapshot.inbox[0];Object.assign(entry.item,{kind:"pr",author:"someone",reviewRequests:["alex"]});entry.queues=["review"];
+  let pending=true;
+  const {ui,state}=await host(page,{snapshot,watchDomains:["observation"],readReviews:async()=>({itemId:entry.item.id,refresh:pending?"pending":"fresh",syncedAt:"2026-10-27T12:00:00Z",lastAttempt:"2026-10-27T12:00:00Z",reviews:[]})});
+  await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toBeVisible();
+  pending=false;state.cursor++;
+  await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toHaveCount(0);
 });

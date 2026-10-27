@@ -112,6 +112,11 @@ func (s *Server) rebuildUIState(ctx context.Context) {
 		if err != nil {
 			return err
 		}
+		attention, err := reader.App.ListAttention(ctx, app.AttentionInput{Limit: 1})
+		if err != nil {
+			return err
+		}
+		data["hasAttention"] = len(attention.Requests) > 0
 		config, err := reader.App.Config(ctx)
 		if err != nil {
 			return err

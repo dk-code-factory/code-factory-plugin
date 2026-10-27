@@ -9,6 +9,10 @@ type Sample = {
   ms: number;
   usable: boolean;
   pending: number;
+  readyMs: number;
+  firstFrameMs: number;
+  notificationMs: number;
+  messageLagMs: number;
 };
 type RequestSample = {
   name: string;
@@ -45,12 +49,24 @@ async function prepare(context: BrowserContext, scenario: string) {
       observer.disconnect();
       button.click();
       const usable = button.getAttribute("aria-current") === "page";
-      // Two frame callbacks ensure the actionable navigation has been painted.
-      requestAnimationFrame(() =>
+      const readyAt = performance.timeOrigin + performance.now();
+      // Keep the same conservative two-frame paint condition, but timestamp
+      // it here so the host's message delivery queue is not part of UI paint.
+      requestAnimationFrame(() => {
+        const firstFrameAt = performance.timeOrigin + performance.now();
         requestAnimationFrame(() =>
-          window.parent.postMessage({ shellPainted: true, usable }, "*"),
-        ),
-      );
+          window.parent.postMessage(
+            {
+              shellPainted: true,
+              usable,
+              readyAt,
+              firstFrameAt,
+              paintedAt: performance.timeOrigin + performance.now(),
+            },
+            "*",
+          ),
+        );
+      });
     });
     observer.observe(document, {
       childList: true,
@@ -110,7 +126,10 @@ async function prepare(context: BrowserContext, scenario: string) {
       body: `<!doctype html><button id="launch">Open Code Factory</button><script>
 window.addEventListener("message",async e=>{
  const m=e.data;
- if(m.shellPainted){window.launchResult={ms:performance.now()-window.started,usable:m.usable,pending:window.pending};return}
+ if(m.shellPainted){
+ const notificationAt=performance.timeOrigin+performance.now();
+ window.launchResult={ms:m.paintedAt-window.startedEpoch,readyMs:m.readyAt-window.startedEpoch,firstFrameMs:m.firstFrameAt-window.startedEpoch,notificationMs:notificationAt-window.startedEpoch,messageLagMs:notificationAt-m.paintedAt,usable:m.usable,pending:window.pending};return
+ }
  if(m.longTasks){window.tasks=(window.tasks||[]).concat(m.longTasks);return}
  if(!m||m.id===undefined)return;
  try{
@@ -121,7 +140,7 @@ window.addEventListener("message",async e=>{
  }catch(error){e.source.postMessage({jsonrpc:"2.0",id:m.id,error:{code:-32000,message:String(error)}},"*")}
 });
 document.getElementById("launch").onclick=()=>{
- window.started=performance.now();window.launchResult=undefined;
+ window.started=performance.now();window.startedEpoch=performance.timeOrigin+window.started;window.launchResult=undefined;
  document.querySelector("iframe")?.remove();
  const frame=document.createElement("iframe");frame.title="Code Factory";frame.style="width:100%;height:90vh;border:0";frame.src=${JSON.stringify(origin + "/fixture-ui")};document.body.appendChild(frame);
 };
@@ -145,7 +164,7 @@ async function launch(page: Page, scenario: string, mode: string) {
     () =>
       (
         window as unknown as {
-          launchResult: { ms: number; usable: boolean; pending: number };
+          launchResult: Omit<Sample, "scenario" | "mode">;
         }
       ).launchResult,
   );
@@ -294,6 +313,27 @@ test("production embedded direct launch: every fresh and warm sample is at most 
     );
     expect(samples).toHaveLength(30);
     expect(samples.every((s) => s.usable)).toBe(true);
+    expect(
+      samples.every(
+        (s) =>
+          Number.isFinite(s.ms) &&
+          s.ms >= 0 &&
+          Number.isFinite(s.notificationMs) &&
+          s.notificationMs >= 0 &&
+          // Different contexts may coarsen timeOrigin independently, so this
+          // diagnostic difference can be slightly negative. Keep its raw value;
+          // the actual click-to-paint duration above remains nonnegative.
+          Number.isFinite(s.messageLagMs),
+      ),
+    ).toBe(true);
+    expect(
+      samples.every(
+        (s) =>
+          s.readyMs >= 0 &&
+          s.firstFrameMs >= s.readyMs &&
+          s.ms >= s.firstFrameMs,
+      ),
+    ).toBe(true);
     expect(
       samples.filter((s) => s.ms > 50),
       JSON.stringify(samples),

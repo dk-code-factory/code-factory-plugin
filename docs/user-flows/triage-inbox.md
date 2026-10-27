@@ -155,6 +155,7 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `inbox pagination and complete-dataset search keep later saved items reachable`; S3. Three pages expose all 125 fixture items; searching on the last page resets pagination and opens item 125.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `the shared subscription updates Messages while Reported issues is open`; S3. A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a selected item outside the current page never renders an earlier selected entry`; S3. A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `queue navigation cannot activate rows belonging to the previous query`; S3. Previous-query rows cannot be activated under a newly selected queue while its saved read is pending.
 
 ## Verification and gaps
 

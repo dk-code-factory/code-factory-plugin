@@ -105,6 +105,14 @@ function Factory() {
   );
   const [error, setError] = useState("");
   const [pollError, setPollError] = useState("");
+  const [viewError, setViewError] = useState("");
+  const viewRetry = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const viewBackoff = useRef(1000);
+  const viewNeedsRetry = useRef(false);
+  const latestRefresh = useRef<() => Promise<number>>(async () => 0);
+  const [appliedQuery, setAppliedQuery] = useState("");
   const [connection, setConnection] = useState("Connecting to Work…");
   const [selected, setSelected] = useState("");
   const [runId, setRunId] = useState("");
@@ -150,7 +158,7 @@ function Factory() {
   const request = useRef(0);
   const appliedCursor = useRef(0);
   const hasData = useRef(false);
-  const dirtyDomains = useRef(new Set<string>());
+  const dirtyDomains = useRef(new Map<string, number>());
   const acceptedRuns = useRef(new Map<string, Run>());
   const launchOpen = Boolean(launch || draftRun);
   const queryRef = useRef({
@@ -173,7 +181,7 @@ function Factory() {
         Review: "review",
       } as Record<string, string>
     )[q.tab];
-    const dirty = dirtyDomains.current;
+    const dirty = new Map(dirtyDomains.current);
     const views = settingsView
       ? ["settings"]
       : [
@@ -193,23 +201,87 @@ function Factory() {
           ...(q.launchOpen ? ["launch"] : []),
         ];
     if (!views.length) views.push("selection");
-    const s = await call<Partial<Snapshot>>("read_ui_state", {
-      views,
-      queue,
-      filter: q.filter,
-      search: q.search,
-      offset: q.offset,
-      limit: 50,
-      id: q.selected,
-    });
+    let s: Partial<Snapshot>;
+    try {
+      s = await call<Partial<Snapshot>>("read_ui_state", {
+        views,
+        queue,
+        filter: q.filter,
+        search: q.search,
+        offset: q.offset,
+        limit: 50,
+        id: q.selected,
+      });
+    } catch (error) {
+      if (mounted.current && generation === request.current) {
+        viewNeedsRetry.current = true;
+        setViewError(
+          isConnectionFailure(error)
+            ? "Connection interrupted. Retrying saved view…"
+            : String(error),
+        );
+        setConnection(
+          isConnectionFailure(error)
+            ? "Retrying saved view…"
+            : "Saved view unavailable",
+        );
+        clearTimeout(viewRetry.current);
+        if (isConnectionFailure(error)) {
+          viewRetry.current = setTimeout(() => {
+            if (mounted.current && !document.hidden)
+              void latestRefresh.current().catch(() => {});
+          }, viewBackoff.current);
+          viewBackoff.current = Math.min(viewBackoff.current * 2, 30000);
+        }
+      }
+      throw error;
+    }
     if (
       mounted.current &&
       generation === request.current &&
       (s.cursor ?? 0) >= appliedCursor.current
     ) {
       appliedCursor.current = s.cursor ?? 0;
+      if (queue && s.inbox)
+        setAppliedQuery(JSON.stringify([q.tab, q.filter, q.search, q.offset]));
+      clearTimeout(viewRetry.current);
+      viewNeedsRetry.current = false;
+      viewBackoff.current = 1000;
+      setViewError("");
       hasData.current = true;
-      dirtyDomains.current.clear();
+      const covered = new Set<string>();
+      if (views.includes("shell"))
+        for (const d of ["identity", "repository", "profile", "config"])
+          covered.add(d);
+      if (views.includes("messages"))
+        for (const d of ["run", "attention", "question-recovery"])
+          covered.add(d);
+      if (views.includes("inbox"))
+        for (const d of [
+          "item",
+          "user",
+          "assessment",
+          "relationship",
+          "ticket",
+          "linked-pr",
+        ])
+          covered.add(d);
+      if (views.includes("reviews")) covered.add("pr-reviews");
+      if (views.includes("launch") || views.includes("settings"))
+        for (const d of ["repository", "profile", "config", "skill"])
+          covered.add(d);
+      if (views.includes("settings"))
+        for (const d of ["github-usage", "github-notifications"])
+          covered.add(d);
+      for (const [domain, invalidatedAt] of dirty) {
+        if (
+          covered.has(domain) &&
+          (s.cursor ?? 0) >= invalidatedAt &&
+          dirtyDomains.current.get(domain) === invalidatedAt
+        ) {
+          dirtyDomains.current.delete(domain);
+        }
+      }
       let saved = s;
       if (s.runs) {
         const runs = new Map(s.runs.map((run) => [run.id, run]));
@@ -241,13 +313,14 @@ function Factory() {
     }
     return s.cursor ?? 0;
   }, [settingsView]);
+  latestRefresh.current = refresh;
   const firstQuery = useRef(true);
   useEffect(() => {
     if (firstQuery.current) {
       firstQuery.current = false;
       return;
     }
-    void refresh().catch((e) => setPollError(String(e)));
+    void refresh().catch(() => {});
   }, [tab, filter, search, offset, selected, launchOpen, refresh]);
   const action = useCallback(
     async (
@@ -292,13 +365,19 @@ function Factory() {
           if (stopped) return;
           if (change.resync || Object.keys(change.changes).length) {
             if (change.resync) {
+              // A hidden view does not refresh immediately, but any reply from
+              // the previous state epoch must already be obsolete.
+              request.current++;
+              setAppliedQuery("");
               appliedCursor.current = 0;
               acceptedRuns.current.clear();
+              dirtyDomains.current.clear();
             }
             // One publication updates panel subscribers and the affected active view.
             publishUIChange(change);
             const domains = Object.keys(change.changes);
-            for (const domain of domains) dirtyDomains.current.add(domain);
+            for (const domain of domains)
+              dirtyDomains.current.set(domain, change.cursor);
             if (change.resync)
               for (const domain of [
                 "identity",
@@ -309,7 +388,7 @@ function Factory() {
                 "attention",
                 "question-recovery",
               ])
-                dirtyDomains.current.add(domain);
+                dirtyDomains.current.set(domain, change.cursor);
             const q = queryRef.current;
             const inboxDomains = [
               "item",
@@ -356,7 +435,7 @@ function Factory() {
           cursor.current = change.cursor;
         }
         if (!stopped) {
-          setConnection("Connected");
+          if (!viewNeedsRetry.current) setConnection("Connected");
           setPollError("");
         }
         backoff = 1000;
@@ -384,6 +463,7 @@ function Factory() {
       stopped = true;
       mounted.current = false;
       clearTimeout(timer);
+      clearTimeout(viewRetry.current);
       document.removeEventListener("visibilitychange", visible);
     };
   }, [refresh]);
@@ -402,7 +482,9 @@ function Factory() {
   const currentAttention = pending.find((a) => a.id === attentionId);
   const queue = ["Working", "Inbox", "Mine", "Review"].includes(tab);
   const viewer = snap?.viewer;
-  const visibleItems = snap?.inbox ?? [];
+  const currentQuery = JSON.stringify([tab, filter, search, offset]);
+  const queryReady = appliedQuery === currentQuery;
+  const visibleItems = queryReady ? (snap?.inbox ?? []) : [];
 
   const pageKey = tab === "Agent" ? `Agent:${runId || selected}` : tab;
   function navigate(next: string) {
@@ -416,6 +498,7 @@ function Factory() {
     setTab(next);
   }
   useLayoutEffect(() => {
+    if (queue && !queryReady) return;
     const saved = positions.current.get(pageKey);
     const target = saved?.focus
       ? [...document.querySelectorAll<HTMLElement>("[data-focus-key]")].find(
@@ -425,7 +508,6 @@ function Factory() {
     const heading = pageRef.current?.querySelector<HTMLElement>("h1, h2");
     if (!target && heading) heading.tabIndex = -1;
     const formFocused =
-      tab === "Settings" &&
       pageRef.current?.contains(document.activeElement) &&
       document.activeElement?.matches("input, select, textarea");
     const fallback = queue
@@ -437,9 +519,11 @@ function Factory() {
         : tab === "Settings"
           ? pageRef.current?.querySelector<HTMLElement>("summary")
           : (heading ?? pageRef.current);
-    if (!formFocused) (target ?? fallback)?.focus({ preventScroll: true });
-    window.scrollTo(0, saved?.scroll ?? 0);
-  }, [pageKey, Boolean(snap)]);
+    if (!formFocused) {
+      (target ?? fallback)?.focus({ preventScroll: true });
+      window.scrollTo(0, saved?.scroll ?? 0);
+    }
+  }, [pageKey, Boolean(snap), queryReady]);
   const openRun = (id: string) => {
     const run = snap?.runs.find((r) => r.id === id);
     if (tab !== "Agent") setRunBack("Messages");
@@ -565,6 +649,11 @@ function Factory() {
           {pollError}
         </div>
       )}
+      {viewError && (
+        <div role="alert" className="error">
+          {viewError}
+        </div>
+      )}
       {error && (
         <div role="alert" className="error">
           {error}
@@ -682,6 +771,7 @@ function Factory() {
                   </button>
                 </div>
                 <section className="item-list" aria-label="Items">
+                  {!queryReady && <p role="status">Loading saved items…</p>}
                   {visibleItems.map((v) => (
                     <div className="inbox-row" key={v.item.id}>
                       <button
@@ -755,7 +845,8 @@ function Factory() {
                       </div>
                     </div>
                   ))}
-                  {(search !== "" || filter !== "open") &&
+                  {queryReady &&
+                    (search !== "" || filter !== "open") &&
                     visibleItems.length === 0 && (
                       <div className="empty">
                         <p>No matching items</p>
@@ -769,15 +860,18 @@ function Factory() {
                         </button>
                       </div>
                     )}
-                  {!snap.inbox.length && search === "" && filter === "open" && (
-                    <div className="empty">
-                      {snap.repositories.length > 0 ? (
-                        <p>No items yet.</p>
-                      ) : (
-                        <p>No repositories configured.</p>
-                      )}
-                    </div>
-                  )}
+                  {queryReady &&
+                    !snap.inbox.length &&
+                    search === "" &&
+                    filter === "open" && (
+                      <div className="empty">
+                        {snap.repositories.length > 0 ? (
+                          <p>No items yet.</p>
+                        ) : (
+                          <p>No repositories configured.</p>
+                        )}
+                      </div>
+                    )}
                 </section>
               </section>
             )}
@@ -2357,6 +2451,8 @@ function Agent({
     ["idle", "running", "waiting", "interrupted", "failed"].includes(
       run.status,
     );
+  const requestHistory = useRef<() => void>(() => {});
+  const outputSeen = useRef(transcriptVersion);
   useEffect(() => {
     if (previousResync.current !== resyncVersion) {
       previousResync.current = resyncVersion;
@@ -2365,49 +2461,72 @@ function Agent({
       setCursor(0);
       setMore(false);
     }
-    let stop = false;
+    let stopped = false;
+    let inFlight = false;
+    let pending = false;
+    let retrying = false;
     let timer: ReturnType<typeof setTimeout>;
     let delay = 1000;
     async function load() {
+      pending = true;
+      if (stopped || document.hidden || inFlight || retrying) return;
+      inFlight = true;
       try {
-        const p = await call<EventPage>("read_transcript", {
-          id: run.id,
-          after: pageCursor.current,
-          limit: 100,
-        });
-        if (!stop) {
+        while (!stopped && pending && !document.hidden) {
+          pending = false;
+          const p = await call<EventPage>("read_transcript", {
+            id: run.id,
+            after: pageCursor.current,
+            limit: 100,
+          });
+          if (stopped) return;
           setEvents((old) => [...old, ...p.events].slice(-1000));
           pageCursor.current = p.cursor;
           setCursor(p.cursor);
           setMore(p.hasMore);
-          if (p.hasMore && !browsingHistory) timer = setTimeout(load, 0);
           setHistoryError(undefined);
           delay = 1000;
+          if (p.hasMore && !browsingHistory) pending = true;
         }
-      } catch (e) {
-        if (!stop)
+      } catch (error) {
+        if (!stopped) {
           setHistoryError({
-            message: isConnectionFailure(e)
+            message: isConnectionFailure(error)
               ? "Connection interrupted. Retrying conversation…"
-              : String(e),
-            retrying: isConnectionFailure(e),
+              : String(error),
+            retrying: isConnectionFailure(error),
           });
-        delay = Math.min(delay * 2, 30000);
-        if (!stop) timer = setTimeout(load, delay);
+          retrying = true;
+          timer = setTimeout(() => {
+            retrying = false;
+            void load();
+          }, delay);
+          delay = Math.min(delay * 2, 30000);
+        }
+      } finally {
+        inFlight = false;
       }
     }
+    const visible = () => {
+      if (!document.hidden) void load();
+    };
+    requestHistory.current = () => void load();
+    outputSeen.current = transcriptVersion;
+    document.addEventListener("visibilitychange", visible);
     void load();
     return () => {
-      stop = true;
+      stopped = true;
       clearTimeout(timer);
+      document.removeEventListener("visibilitychange", visible);
+      requestHistory.current = () => {};
     };
-  }, [
-    run.id,
-    historyVersion,
-    transcriptVersion,
-    resyncVersion,
-    browsingHistory,
-  ]);
+  }, [run.id, historyVersion, resyncVersion, browsingHistory]);
+  useEffect(() => {
+    if (outputSeen.current !== transcriptVersion) {
+      outputSeen.current = transcriptVersion;
+      requestHistory.current();
+    }
+  }, [transcriptVersion]);
   const blocks = transcriptBlocks(events);
   const conversation = blocks.filter((b) =>
     ["Agent", "You", "Run error", "Message delivery"].includes(b.label),

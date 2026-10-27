@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "9135daf735e0679080343dc12a52b0bb23f83098",
-  "fingerprint": "0af6e6374ca6339bb33dc53e3212fd51a43a8be91c2a6c3bc1139678266f5cbd",
+  "fingerprint": "bd9cb1d2b19f1b138a80dd3f57ca3677f7c3c7f26fd9df4bb6a221e0c464d71a",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 135.547
+      "seconds": 135.3
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 64.337
+      "seconds": 62.366
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.413
+      "seconds": 3.33
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 3.456
+      "seconds": 3.571
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 23.396
+      "seconds": 22.648
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.241
+      "seconds": 0.181
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.683
+      "seconds": 0.682
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.221
+      "seconds": 0.201
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.285
+      "seconds": 1.264
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 29.556
+      "seconds": 29.617
     },
     {
       "command": [
@@ -143,7 +143,7 @@
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "d6d4e175b873b8c4022aabff4b06226f34f9f1b8a5c0d526d38c4bd667d00c0d",
+    "flow:operate-installation": "49d9f593dc54fa98de3755128279d24224186bab2494c4e6ef3f2920c79bb88f",
     "term:connection-refreshes": "d787db30d657a7e890b6c72866dabb219a98933d97c110211e440f8e7b3a523f",
     "term:connection-submits": "3a00c99a96b41a48cd8aa11463802c1f1fcd2e5fd2b0d06b4248425f78345952",
     "term:coverage-gap": "805f6284d0fead9eee5889000225bba4bdcd5e6c8f226a1f067319dd7de0f921",
@@ -180,12 +180,12 @@
     "term:ui-w-diagnostics": "9767a9b9712d032dd7695f9496d508b218fc194f699052f6240e543be2980abf",
     "term:unverified-behavior": "433756cb9068d05bbaac06b016e9cbddfb200012bda4c0f5b3b6643e85997b76",
     "term:verification": "3b749c272e9bd9eb4393bd79bea89871fd2ee0fc3eb60e571f4c810f02b28e84",
-    "ui:C-BROWSER-LAB": "01358d249dc72062cbbcb4820398e690eeefe36141e79ea9217aa4cecb8f0570",
-    "ui:C-DIAGNOSE": "7170b14e536004184fb1c7efbfe2f16d05c4b14d97a35094db44d7cc0c8b64a5",
-    "ui:P-BROWSER-LAB": "fb399cf86da27adcebf3ce1d219dab19536119a6a78d4fcd3be11ac202bf4fcf",
-    "ui:P-DIAGNOSTICS": "42fad1b269210a5f914a698d11e844364ed386b1c0ca538cf2685dbb82e49381",
-    "ui:PAGE-BROWSER-LAB": "00eeaa55587d4b02637519d337a5dca2a7e016f58e994125f10ecefdbe08e1e9",
-    "ui:W-BROWSER-LAB": "adbe0ee5e7284f5688a2612557db85024c06e16381164aa7dc3fb5eed8dd7d4f",
-    "ui:W-DIAGNOSTICS": "5e11a55b5e3f4ae7731c56a3888e2f224b871e7a6e4d022b817ff9f0ba59a6da"
+    "ui:C-BROWSER-LAB": "1a6d7d21cd876d831eb154e66154357a1a2c69769041974352494576574d6cc5",
+    "ui:C-DIAGNOSE": "9a3d8f07862d86e19346decbc31f8a397e4f76ece819708b09b0e04601033358",
+    "ui:P-BROWSER-LAB": "2965ce3231b226d6ea15dd909dec26e641aace61c0cccb778e1bd4bf7a11aaf5",
+    "ui:P-DIAGNOSTICS": "5fec176d9e584ed12f7d072e79ffcfb86683bd46932fe7fda14a89d349908c90",
+    "ui:PAGE-BROWSER-LAB": "3103ffd2014ec983a30b275ea73be5ad301c88aeaa75ada25ad364a52221086c",
+    "ui:W-BROWSER-LAB": "d2de5670149aa166121b20bcaf7d237af24a6ba388a54e88dbcf0698a8011b15",
+    "ui:W-DIAGNOSTICS": "13db908e5ac9aa7a26616e6aa556d2ab32a6de9b92986ffdcda1b035588ddaf9"
   }
 }
