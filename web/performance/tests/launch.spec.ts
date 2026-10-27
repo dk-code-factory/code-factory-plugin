@@ -120,33 +120,6 @@ async function prepare(context: BrowserContext, scenario: string) {
       return result.result;
     },
   );
-  await page.route(origin + "/fixture-host", (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: `<!doctype html><button id="launch">Open Code Factory</button><script>
-window.addEventListener("message",async e=>{
- const m=e.data;
- if(m.shellPainted){
- const notificationAt=performance.timeOrigin+performance.now();
- window.launchResult={ms:m.paintedAt-window.startedEpoch,readyMs:m.readyAt-window.startedEpoch,firstFrameMs:m.firstFrameAt-window.startedEpoch,notificationMs:notificationAt-window.startedEpoch,messageLagMs:notificationAt-m.paintedAt,usable:m.usable,pending:window.pending};return
- }
- if(m.longTasks){window.tasks=(window.tasks||[]).concat(m.longTasks);return}
- if(!m||m.id===undefined)return;
- try{
- let result={};
- if(m.method==="ui/initialize")result={protocolVersion:m.params.protocolVersion,hostInfo:{name:"Fixture MCP host",version:"1"},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:"light",displayMode:"fullscreen"}};
- else if(m.method==="tools/call")result=await window.fixtureCall(m.params);
- e.source.postMessage({jsonrpc:"2.0",id:m.id,result},"*");
- }catch(error){e.source.postMessage({jsonrpc:"2.0",id:m.id,error:{code:-32000,message:String(error)}},"*")}
-});
-document.getElementById("launch").onclick=()=>{
- window.started=performance.now();window.startedEpoch=performance.timeOrigin+window.started;window.launchResult=undefined;
- document.querySelector("iframe")?.remove();
- const frame=document.createElement("iframe");frame.title="Code Factory";frame.style="width:100%;height:90vh;border:0";frame.src=${JSON.stringify(origin + "/fixture-ui")};document.body.appendChild(frame);
-};
-</script>`,
-    }),
-  );
   await page.goto(origin + "/fixture-host");
   return page;
 }

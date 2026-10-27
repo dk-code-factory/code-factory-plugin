@@ -139,6 +139,10 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "ready") })
+	mux.HandleFunc("/fixture-host", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprint(w, performanceHostHTML)
+	})
 	mux.HandleFunc("/fixture-ui", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		html := web.HTML
@@ -200,3 +204,28 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 	}
 	return err
 }
+
+// performanceHostHTML is served by the fixture itself so timed resource
+// requests do not pass through Playwright routing or its cache override.
+const performanceHostHTML = `<!doctype html><button id="launch">Open Code Factory</button><script>
+window.addEventListener("message",async e=>{
+ const m=e.data;
+ if(m.shellPainted){
+ const notificationAt=performance.timeOrigin+performance.now();
+ window.launchResult={ms:m.paintedAt-window.startedEpoch,readyMs:m.readyAt-window.startedEpoch,firstFrameMs:m.firstFrameAt-window.startedEpoch,notificationMs:notificationAt-window.startedEpoch,messageLagMs:notificationAt-m.paintedAt,usable:m.usable,pending:window.pending};return
+ }
+ if(m.longTasks){window.tasks=(window.tasks||[]).concat(m.longTasks);return}
+ if(!m||m.id===undefined)return;
+ try{
+ let result={};
+ if(m.method==="ui/initialize")result={protocolVersion:m.params.protocolVersion,hostInfo:{name:"Fixture MCP host",version:"1"},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:"light",displayMode:"fullscreen"}};
+ else if(m.method==="tools/call")result=await window.fixtureCall(m.params);
+ e.source.postMessage({jsonrpc:"2.0",id:m.id,result},"*");
+ }catch(error){e.source.postMessage({jsonrpc:"2.0",id:m.id,error:{code:-32000,message:String(error)}},"*")}
+});
+document.getElementById("launch").onclick=()=>{
+ window.started=performance.now();window.startedEpoch=performance.timeOrigin+window.started;window.launchResult=undefined;
+ document.querySelector("iframe")?.remove();
+ const frame=document.createElement("iframe");frame.title="Code Factory";frame.style="width:100%;height:90vh;border:0";frame.src="/fixture-ui";document.body.appendChild(frame);
+};
+</script>`
