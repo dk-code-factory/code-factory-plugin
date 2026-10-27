@@ -222,6 +222,7 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S1. Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointDiagnosticDoesNotDeadlockClose(`; S1. Shutdown releases execution ownership before a diagnostic callback waits on the application session lock; the callback exits after that lock is released.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveSuccessAndNativeFailuresDoNotReportWorkflowError(`; S1, S3. Ordinary completed, interrupted and failed native turns retain one unchanged terminal notification without an extra workflow diagnostic.
+- [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestAnsweredContinuationPreservesStateOnStorageFailure(`; S4. Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers.
 
 ## Verification and gaps
 

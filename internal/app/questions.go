@@ -1008,6 +1008,9 @@ func (m *Manager) continueAfterRepair(s *session, r *domain.QuestionRecovery) {
 	// cannot mistake admission for an already completed continuation.
 	s.run.Status = "starting"
 	if m.persist(s, "run.state") != nil {
+		if s.run.Status == "starting" {
+			s.run.Status = "idle"
+		}
 		return
 	}
 	r.Stage = "resolved"
@@ -1020,7 +1023,9 @@ func (m *Manager) continueAfterRepair(s *session, r *domain.QuestionRecovery) {
 	defer cancel()
 	text := "Continue the original task using the user's answer from the preceding question-only turn. Inspect current state and do not replay completed actions."
 	if err := m.sendLocked(ctx, s, text, ""); err != nil {
-		s.run.Status = "idle"
+		if s.run.Status == "starting" {
+			s.run.Status = "idle"
+		}
 		s.run.Error = "Question answered; continuation could not be confirmed. Check the console before sending again."
 		_ = m.persist(s, "run.state")
 	} else {

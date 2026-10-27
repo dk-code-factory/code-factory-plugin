@@ -5595,6 +5595,14 @@
             "S3"
           ],
           "purpose": "Ordinary completed, interrupted and failed native turns retain one unchanged terminal notification without an extra workflow diagnostic."
+        },
+        {
+          "path": "internal/app/workflows_test.go",
+          "anchor": "func TestAnsweredContinuationPreservesStateOnStorageFailure(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers."
         }
       ],
       "suites": [
@@ -6749,6 +6757,14 @@
             "S3"
           ],
           "purpose": "Durable interruption rejects a native answer before provider completion without claiming attention or saving its reply; completion stales the original request."
+        },
+        {
+          "path": "internal/app/workflows_test.go",
+          "anchor": "func TestAnsweredContinuationPreservesStateOnStorageFailure(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers."
         }
       ],
       "suites": [
@@ -8083,6 +8099,14 @@
             "S1"
           ],
           "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
+        },
+        {
+          "path": "internal/app/workflows_test.go",
+          "anchor": "func TestAnsweredContinuationPreservesStateOnStorageFailure(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers."
         }
       ],
       "suites": [
