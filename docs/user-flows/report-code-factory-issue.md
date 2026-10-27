@@ -183,6 +183,7 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues exposes rendered draft limitations and required repository fields"`; S2, S3, S4, S6. Rendered repository-required information requests accept host evidence, fallback limitation stays visible, the issue draft opens with full content and finalized unusable work uses existing acknowledged recovery.
 - [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestControllerRejectedContractFinalizesBeforeFreshRecovery(`; S3, S4. Controller schema rejection holds capacity until lifecycle completion succeeds, then explicit recovery prepares fresh context and a new admission without publishing malformed output.
 - [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestFormFieldsWithoutIDsGetStableOrderedIdentities(`; S3. Optional GitHub field IDs normalize to stable ordered identities; an available layout cannot be bypassed by omitting template selection.
+- [internal/reports/context_test.go](../../internal/reports/context_test.go) — `func TestPrivateContextSanitizesSecretsBeforeBodyLimits(`; S2, S3. A known 64-character owner secret crossing the candidate-body byte limit is fully redacted before truncation; retained snapshots exclude its prefix, stay bounded and record omissions.
 
 ## Verification and gaps
 

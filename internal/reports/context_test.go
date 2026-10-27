@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -185,5 +188,42 @@ func TestInvestigationSnapshotPrivateImmutableAndFreshOnRecovery(t *testing.T) {
 	fresh, _ := s.runtime(ctx, r.ID)
 	if g.preparations != 2 || fresh.Generation != 2 || fresh.Context.Repositories[0].Documents[0].Content != "new upstream guidance" {
 		t.Fatal("recovery did not prepare fresh context", fresh, g.preparations)
+	}
+}
+
+func TestPrivateContextSanitizesSecretsBeforeBodyLimits(t *testing.T) {
+	s, ctx := fixture(t)
+	engine, _ := setupEngine(s)
+	engine.status = "running"
+	secret := strings.Repeat("0123456789abcdef", 4)
+	if err := os.WriteFile(filepath.Join(s.Dir, "owner.token"), []byte(secret), 0600); err != nil {
+		t.Fatal(err)
+	}
+	body := strings.Repeat("x", 7937) + secret + strings.Repeat("y", 100)
+	s.GitHub = adapter(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/search/issues" {
+			http.NotFound(w, r)
+			return
+		}
+		repo := strings.TrimPrefix(strings.Fields(r.URL.Query().Get("q"))[0], "repo:")
+		reply(w, map[string]any{"items": []any{map[string]any{"number": 17, "html_url": "https://github.com/" + repo + "/issues/17", "body": body, "title": "Related observation"}}})
+	})
+	report := submit(t, s, ctx)
+	step(t, s, ctx)
+	rt, err := s.runtime(ctx, report.ID)
+	if err != nil || rt.Context == nil {
+		t.Fatal(rt, err)
+	}
+	for _, repo := range rt.Context.Repositories {
+		if len(repo.Candidates) != 1 {
+			t.Fatal("candidate not retained", repo)
+		}
+		retained := repo.Candidates[0].Body
+		if strings.Contains(retained, secret[:32]) || !strings.Contains(retained, "[redacted]") || len(retained) > 8000 {
+			t.Fatal("body limit bypassed known-secret sanitization", len(retained))
+		}
+		if !slices.Contains(repo.Omissions, "duplicate body unavailable or incomplete") {
+			t.Fatal("body truncation omission missing", repo.Omissions)
+		}
 	}
 }

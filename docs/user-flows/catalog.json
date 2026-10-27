@@ -13930,6 +13930,15 @@
             "S3"
           ],
           "purpose": "Optional GitHub field IDs normalize to stable ordered identities; an available layout cannot be bypassed by omitting template selection."
+        },
+        {
+          "path": "internal/reports/context_test.go",
+          "anchor": "func TestPrivateContextSanitizesSecretsBeforeBodyLimits(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "A known 64-character owner secret crossing the candidate-body byte limit is fully redacted before truncation; retained snapshots exclude its prefix, stay bounded and record omissions."
         }
       ],
       "suites": [

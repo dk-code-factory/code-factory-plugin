@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "f184049d9ed471b64a63652fc0534cf79b86599c",
-  "fingerprint": "7c61665d37ca530114d215cddebdaeaeb898e6660dd5551f0c7902733232324f",
+  "fingerprint": "77fcfd4f7adca4372e44b649f26488bca6a9044c45eb21eb9615494385e6c1b6",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.301
+      "seconds": 0.241
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 148.8
+      "seconds": 149.442
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 49.095
+      "seconds": 49.276
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.69
+      "seconds": 3.675
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 3.351
+      "seconds": 3.311
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.763
+      "seconds": 21.749
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.181
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.14
+      "seconds": 0.161
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.976
+      "seconds": 24.931
     },
     {
       "command": [
@@ -139,11 +139,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.782
+      "seconds": 0.763
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "6703f87ad7db34d241f6003de1c299e8b0e01185da3ebf16b53069d1c7440528",
+    "flow:operate-installation": "af82e5c84b9e28f1fdb0a3b2514f87083a770829e1c82e1c0d9ff7514832f404",
     "term:connection-refreshes": "264e49c0e3c3f14ef90b2cb600efe84abda733e3b326208a18b4c52b1fe7cc1b",
     "term:connection-submits": "ab556493fc17981b9cba0ae57cd888acb047f81fefb75b1b9148840dcdad7ae9",
     "term:coverage-gap": "1d347ba7589e9c052f0bac793e1765be9aba86e88f18fd049cb758e132e24a3b",
@@ -180,12 +180,12 @@
     "term:ui-w-diagnostics": "39885fe46078755143872804bb7ee91726b8ffd99e57968fa66cea069ab53c46",
     "term:unverified-behavior": "702c6ec67471b05c8eceb8d624aa3326c111680fd87d97a71611789008ab072e",
     "term:verification": "b949deafc9512b604250894d4bb1c44949328377556c96bb8a5c4b35d6f1d594",
-    "ui:C-BROWSER-LAB": "07704c4a3b07d0db0942ef7bda41fb5d1d2cb76d134b71d91b4aaf11a8b5d965",
-    "ui:C-DIAGNOSE": "c39c28909bbb7199b3904ec87e6a4cf994a98346ea61eefceb1f18b971845440",
-    "ui:P-BROWSER-LAB": "b380da835ddc734ebeaa66c400dca13433a296d47bfa9e8aa7f02163d1d51371",
-    "ui:P-DIAGNOSTICS": "ee00b0fb5a6261f3790e3a105214a87e53c4d32fc0a6ac49dd316dbe101e2536",
-    "ui:PAGE-BROWSER-LAB": "caec4a001c8e409440159ae0185d26b0a1d61a1b8983f120444eda403df7eecb",
-    "ui:W-BROWSER-LAB": "c5848684f84a75c68b10187d2617048d82c72449904d1680a4d114904c782718",
-    "ui:W-DIAGNOSTICS": "3a738a30f3aadcaeb574694a74df30b48ac4f9e189cd41763c0786c730cc39c0"
+    "ui:C-BROWSER-LAB": "13321a80b213ca952f8a44347c53865dc5545d5c0f7f135aacf2144c2ce43b8d",
+    "ui:C-DIAGNOSE": "d8374dfe4442b29746e0db47e6e5e2d623226cc4796c289e1247fe62be74191e",
+    "ui:P-BROWSER-LAB": "afcc3edd3522dc88125fa4619542f041d44ef709dfb589983187bd34dd62c45c",
+    "ui:P-DIAGNOSTICS": "be391e5c9b2d001da638a8f8704d6a16d4155bb6835850703a228ee2466e1030",
+    "ui:PAGE-BROWSER-LAB": "7f7ec2a2c6812adea76788a938e0c92f809238a285ca153d63e72cceb61bf641",
+    "ui:W-BROWSER-LAB": "03ad6953a4c38127bb1cad33b7d75985229419c7633f9e689fdb9553d10800f6",
+    "ui:W-DIAGNOSTICS": "8ca038527fb3053961b36d85b45df3c6cd043c6999c793663fce888ba2a6742f"
   }
 }

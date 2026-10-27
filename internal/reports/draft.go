@@ -377,16 +377,18 @@ func renderDraft(d structuredDraft, c *investigationContext, observation Submiss
 			return f, nil
 		}
 		f.Body = body
-		for _, label := range selected.Labels {
-			if slices.Contains(r.Labels, label) && !slices.Contains(f.Labels, label) {
-				f.Labels = append(f.Labels, label)
-			}
-		}
 	} else {
 		if len(d.Answers) > 0 {
 			return f, fmt.Errorf("answers supplied without a supported template")
 		}
 		f.Body = "Layout limitation: " + reason + "\n"
+	}
+	if selected != nil {
+		for _, label := range selected.Labels {
+			if slices.Contains(r.Labels, label) && !slices.Contains(f.Labels, label) {
+				f.Labels = append(f.Labels, label)
+			}
+		}
 	}
 	missingContent := []string{}
 	for _, part := range content {

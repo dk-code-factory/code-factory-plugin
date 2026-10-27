@@ -476,6 +476,7 @@ func (s *Service) Step(ctx context.Context) error {
 		if err := s.sanitize(ctx, rt.Context); err != nil {
 			return err
 		}
+		limitContextBodies(rt.Context)
 		refreshContextHashes(rt.Context)
 		rt.AdmissionID = r.ID
 		if rt.Generation > 1 {

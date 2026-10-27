@@ -107,12 +107,8 @@ func (g *GitHubAdapter) PrepareContext(ctx context.Context, observation Submissi
 					break
 				}
 				if _, err := item.issue(repo); err == nil {
-					body := item.Body
-					if len(body) > 8000 {
-						body = body[:8000]
-						omit("duplicate body")
-					}
-					r.Candidates = append(r.Candidates, duplicateCandidate{item.Number, item.URL, item.Title, redactCredentialText(body)})
+					// Keep complete values until the service can redact known secrets.
+					r.Candidates = append(r.Candidates, duplicateCandidate{item.Number, item.URL, item.Title, redactCredentialText(item.Body)})
 				}
 			}
 		}
@@ -222,6 +218,21 @@ func refreshContextHashes(c *investigationContext) {
 					*t = normalizeTemplate(d.Path, d.Content)
 					break
 				}
+			}
+		}
+	}
+}
+
+// limitContextBodies runs only after secret-aware sanitization. Truncating first
+// can turn a known secret into an unrecognized prefix.
+func limitContextBodies(c *investigationContext) {
+	for i := range c.Repositories {
+		repo := &c.Repositories[i]
+		for j := range repo.Candidates {
+			body := &repo.Candidates[j].Body
+			if len(*body) > 8000 {
+				*body = (*body)[:8000]
+				repo.Omissions = append(repo.Omissions, "duplicate body unavailable or incomplete")
 			}
 		}
 	}

@@ -47,6 +47,7 @@ body:
 	if markdown.Unsupported != "" || form.Unsupported != "" {
 		t.Fatal(markdown, form)
 	}
+	upload := normalizeTemplate("upload.yml", "name: Bug\nlabels: [bug, absent]\nbody:\n- type: upload\n  id: attachment\n  attributes: {label: File}\n")
 	for _, test := range []struct {
 		name     string
 		template *issueTemplate
@@ -54,6 +55,7 @@ body:
 		want     string
 	}{
 		{"generic", nil, nil, "Layout limitation:"},
+		{"unsupported form preserves labels", &upload, nil, "Layout limitation: Repository issue layout is unsupported:"},
 		{"markdown", &markdown, []fieldAnswer{{ID: "section-1", Text: "Observed delivery failure"}, {ID: "section-2", Text: "Unknown timing"}}, "## What happened\n\nObserved delivery failure"},
 		{"form", &form, []fieldAnswer{{ID: "version", Text: "1.2.3"}, {ID: "logs", Text: "delivery failed"}, {ID: "os", Choices: []string{"Linux"}}, {ID: "checked", Choices: []string{"I reproduced this on a clean install"}}}, "- [x] I reproduced this on a clean install"},
 	} {
