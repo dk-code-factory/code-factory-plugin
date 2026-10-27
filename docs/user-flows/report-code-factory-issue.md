@@ -12,16 +12,18 @@ The owner has an authenticated private connection. Automatic investigation requi
 
 1. Submit an observation time, affected surface, expected/actual results and reproduction steps or an explicit unknown-reproduction explanation, with a stable idempotency key. Include host-only errors and responses and available relevant IDs. Separate suspected causes from facts.
 2. Require a private data location outside source checkouts before retaining observations or additional evidence. Retain an accepted report immediately and collect relevant local evidence privately, with origins, capture times, hashes, explicit omissions and truncation. Credentials, authentication and unrelated work are excluded.
-3. Investigate the captured evidence and relevant source through durable local work. Classify confirmed or suspected bugs, duplicates, insufficient information or behavior explained by the contract. Verify component ownership and destination within the organization before drafting repository-native issue text.
+3. Retain a private snapshot of destination status, labels, templates, contribution/security/support guidance and at most ten duplicate candidates per destination before investigation. Reuse that snapshot through polling and recovery of the same investigation; a fresh investigation captures fresh context. Investigate the captured evidence and relevant source through durable local work. Classify confirmed or suspected bugs, duplicates, insufficient information or behavior explained by the contract. Verify component ownership within the organization. The component determines the destination; the investigator supplies narrative facts, template selection and typed answers. Render repository headings and field order, supported labels and form answers consistently.
 4. Publish the verified draft automatically, recording intent before the external effect and retaining the issue identity afterward. Reuse clear duplicates. Reporting authority does not authorize fixing code.
 5. Keep the shared ledger current with independent processing, outcome, GitHub state, fix references, component versions, published stable/prerelease versions and observed installed versions. Unknown evidence stays Unknown.
-6. Search and filter Reported issues, inspect details and missing-information requests, append host evidence, refresh delivery evidence and explicitly recover blocked or interrupted work.
+6. Search and filter Reported issues, inspect details, the collapsible issue draft, visible layout limitation and missing-information requests, append host evidence, refresh delivery evidence and explicitly recover blocked or interrupted work.
 
 ## Alternatives and recovery
 
 Repeated submissions with the same key and payload return the same durable report; conflicting keys fail. Lost workflow acknowledgements retry retained admission inputs. One investigation executes at a time with a thirty-minute deadline. Missing information resumes when supplied. Interrupted effects require inspection and explicit reconciliation before resume. Uncertain GitHub creation is searched by its opaque report marker and never blindly repeated. Uncertain routing blocks publication. Evidence unavailable locally can be requested from the host; locally available records are collected by the service.
 
-An investigation that finishes with unusable findings retains an actionable report. It releases investigation capacity only after finalization succeeds; an explicit retry starts a fresh investigation rather than repeating the unusable result.
+Missing, unavailable or unsupported issue layouts use a standard report with environment, reproduction or an explicit unknown-reproduction explanation, expected/actual behavior, relevant evidence, findings and uncertainty, plus a brief layout limitation. Complex Markdown, upload fields and unknown form constructs use this fallback. Missing required facts request actionable information; unsupported choices and checkbox attestations without explicit host evidence are rejected. An observed security/support routing restriction prevents public issue publication even when generic formatting is used. Metadata omissions alone permit generic formatting, while authentication, destination availability and source ownership remain publication requirements.
+
+An investigation that finishes with unusable findings retains an actionable report. Empty information requests, contradictory classifications, invalid duplicate identities and incomplete or oversized drafts are unusable. Retained older investigations and drafts preserve their original output contract and publication identity. It releases investigation capacity only after finalization succeeds; an explicit retry starts a fresh investigation rather than repeating the unusable result.
 
 An uncertain issue publication retains its reconciliation requirements without holding investigation capacity after its investigation has finalized. Other reports can investigate while that issue identity is recovered; the uncertain creation is never repeated.
 
@@ -37,10 +39,10 @@ Journal updates refresh the loaded report range, including a pending request for
 
 - **S1** Complete submissions in a private location outside source checkouts persist; incomplete/conflicting requests and unsafe evidence locations fail before private input is retained, and concurrent retries return one report. Reporting ships in portable, Codex and browser packages.
 - **S2** Relevant local context is captured with redaction and a private manifest; additional host observations are idempotent and resume requests for information.
-- **S3** Durable investigation verifies ownership, reuses duplicates and files only a verified repository-native draft within the organization.
+- **S3** Durable investigation verifies ownership and supplied duplicate candidates; deterministic routing and template rendering file only a complete verified draft within the organization, or request required facts and respect reporting restrictions.
 - **S4** Missing prerequisites, interrupted controllers, deadlines and uncertain effects remain recoverable without replaying issue creation.
 - **S5** Closure, merged fixes, stable/prerelease delivery, dependency releases, mismatched assets and unknown installed versions remain independent; failed/rate-limited refresh preserves successful evidence.
-- **S6** The shared view supports search, details, information requests, recovery controls, exact GitHub destinations and explicit unknown/version displays. Journal refreshes preserve the loaded report range; query changes reset pagination.
+- **S6** The shared view supports search, details, a collapsible rendered draft and visible layout limitation, information requests, recovery controls, exact GitHub destinations and explicit unknown/version displays. Journal refreshes preserve the loaded report range; query changes reset pagination.
 
 Report refreshes share matching issue and delivery evidence within each refresh. Issue state remains on a five-minute schedule and release evidence on a 15-minute schedule. A manual refresh revalidates mutable evidence. Changed tag or asset identities require current verification; partial failure retains independently verified fixes and releases without marking skipped work fresh.
 
@@ -57,8 +59,8 @@ UI entities: [PAGE-REPORTS](../ui/README.md#PAGE-REPORTS), [P-REPORT-LIST](../ui
 ```mermaid
 flowchart TD
     N0["Validate private location and retain idempotent observation #40;S1#41;"]
-    N1["Capture private scoped evidence and explicit omissions #40;S2#41;"]
-    N2["Investigate and verify ownership or duplicate #40;S3#41;"]
+    N1["Capture private evidence and retain repository context with omissions #40;S2#41;"]
+    N2["Investigate ownership and duplicates, then render and validate a draft #40;S3#41;"]
     N3["Retain missing prerequisites or interrupted effects for recovery #40;S4#41;"]
     N4["Track issue, fix and verified release independently #40;S5#41;"]
     N5["Search reports and inspect details #40;S6#41;"]
@@ -67,7 +69,7 @@ flowchart TD
     N0 --> N1
     N1 --> N2
     N1 -->|"prerequisite unavailable"| N3
-    N2 -->|"missing information or interrupted effects"| N3
+    N2 -->|"required facts, reporting restriction, unusable findings or interrupted effects"| N3
     N3 -->|"evidence supplied or effects reconciled"| N2
     N2 -->|"filed or duplicate"| N4
     N2 -->|"explained behavior"| N5
@@ -103,6 +105,9 @@ flowchart TD
 - [internal/providers/github.go](../../internal/providers/github.go) — Shared identity-scoped bounded cache and provider client.
 - [internal/reports/tracking_batch.go](../../internal/reports/tracking_batch.go) — Verified release proof memoization keyed by release metadata, tag target and credential scope.
 - [internal/reports/marker_index.go](../../internal/reports/marker_index.go) — Private versioned incremental marker index, complete scans, candidate revalidation and transactional generations.
+- [internal/reports/context.go](../../internal/reports/context.go) — Read-only bounded metadata and duplicate collection pins default-branch documents and sanitizes a private generation snapshot. (`func (g *GitHubAdapter) PrepareContext(`)
+- [internal/reports/draft.go](../../internal/reports/draft.go) — Deterministic component routing, classification validation, repository template rendering and actionable required-field/restriction requests. (`func renderDraft(`)
+- [internal/reports/investigate-legacy.yml](../../internal/reports/investigate-legacy.yml) — Retained unversioned generations preserve their original repository/body output schema.
 
 ## Test references
 
@@ -166,6 +171,19 @@ flowchart TD
 - [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestCompareAndSwapPreservesConcurrentEntities(`; S4. Atomic entity comparison across independent SQLite connections accepts current bytes, rejects stale/absence overwrites and retains the newer generation.
 - [internal/reports/github_optimization_test.go](../../internal/reports/github_optimization_test.go) — `func TestManagedInboxAndReportingSharePersistentRequestBudget(`; S4, S5. A managed inbox read exhausts the shared persisted request budget; report reads and a separate publication transport fail before dispatch, retain the one consumed request and never create an issue.
 - [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestManagedTransportsShareProcessGateAndPreserveCooldown(`; S4, S5. Separate database connections and transports cannot overlap managed HTTP; a cancelled waiting publication remains BeforeDispatch, exactly two attempts survive, and a later rate-limit deadline is preserved.
+- [internal/reports/context_test.go](../../internal/reports/context_test.go) — `func TestRepositoryContextPinsDocumentsBoundsSearchAndUsesConditionalCache(`; S2, S3. Authenticated GETs pin document revisions and hashes, follow label pagination, bound each search to ten candidates, redact credentials and conditionally reuse immutable content.
+- [internal/reports/context_test.go](../../internal/reports/context_test.go) — `func TestRepositoryContextMetadataOmissionsAndSharedCooldown(`; S2, S4. Unavailable metadata retains explicit omissions; persisted rate-limit cooldown suppresses subsequent preparation and publication reads.
+- [internal/reports/context_test.go](../../internal/reports/context_test.go) — `func TestInvestigationSnapshotPrivateImmutableAndFreshOnRecovery(`; S2, S3, S4. Restarted polling reuses the private snapshot; malformed output finalizes before explicit recovery prepares fresh context and a new generation.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestDeterministicReportTemplatesAndFallback(`; S3. Markdown frontmatter/headings and ordered form text/dropdown/checkbox answers render with supported labels, code hints and complete standard facts; missing layout has a limitation notice.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestUnsupportedTemplatesFailToGenericLayout(`; S3. Malformed YAML, complex Markdown, upload fields and unknown attributes use the generic layout with an unsupported-layout reason.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestStructuredDraftRejectsContradictionsAndInventedAnswers(`; S3, S4. Empty information requests, invalid duplicates, contradictory findings, unsupported labels, invented templates, uncertain ownership and oversized drafts fail; every supported component routes deterministically.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestRequiredFactsChoicesAttestationsAndRestrictions(`; S2, S3. Required facts and template fields request information; unsupported choices and invented checkbox attestations fail; generic fallback cannot bypass interpreted security routing or unreviewed guidance.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestStructuredDraftSanitizedBeforeRetentionAndPublication(`; S2, S3. Completed deterministic bodies are sanitized before ledger retention and publication while adjacent diagnostic evidence survives.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestLegacyDraftRemainsOnPublicationPath(`; S3, S4. Unversioned retained drafts keep their destination/body through publication without structured re-rendering.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `"reported issues exposes rendered draft limitations and required repository fields"`; S2, S3, S4, S6. Rendered repository-required information requests accept host evidence, fallback limitation stays visible, the issue draft opens with full content and finalized unusable work uses existing acknowledged recovery.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestControllerRejectedContractFinalizesBeforeFreshRecovery(`; S3, S4. Controller schema rejection holds capacity until lifecycle completion succeeds, then explicit recovery prepares fresh context and a new admission without publishing malformed output.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestFormFieldsWithoutIDsGetStableOrderedIdentities(`; S3. Optional GitHub field IDs normalize to stable ordered identities; an available layout cannot be bypassed by omitting template selection.
+- [internal/reports/context_test.go](../../internal/reports/context_test.go) — `func TestPrivateContextSanitizesSecretsBeforeBodyLimits(`; S2, S3. A known 64-character owner secret crossing the candidate-body byte limit is fully redacted before truncation; retained snapshots exclude its prefix, stay bounded and record omissions.
 
 ## Verification and gaps
 

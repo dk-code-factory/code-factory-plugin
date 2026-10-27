@@ -13285,6 +13285,20 @@
         {
           "path": "internal/reports/marker_index.go",
           "purpose": "Private versioned incremental marker index, complete scans, candidate revalidation and transactional generations."
+        },
+        {
+          "path": "internal/reports/context.go",
+          "purpose": "Read-only bounded metadata and duplicate collection pins default-branch documents and sanitizes a private generation snapshot.",
+          "anchor": "func (g *GitHubAdapter) PrepareContext("
+        },
+        {
+          "path": "internal/reports/draft.go",
+          "purpose": "Deterministic component routing, classification validation, repository template rendering and actionable required-field/restriction requests.",
+          "anchor": "func renderDraft("
+        },
+        {
+          "path": "internal/reports/investigate-legacy.yml",
+          "purpose": "Retained unversioned generations preserve their original repository/body output schema."
         }
       ],
       "tests": [
@@ -13808,6 +13822,123 @@
             "S5"
           ],
           "purpose": "Separate database connections and transports cannot overlap managed HTTP; a cancelled waiting publication remains BeforeDispatch, exactly two attempts survive, and a later rate-limit deadline is preserved."
+        },
+        {
+          "path": "internal/reports/context_test.go",
+          "anchor": "func TestRepositoryContextPinsDocumentsBoundsSearchAndUsesConditionalCache(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Authenticated GETs pin document revisions and hashes, follow label pagination, bound each search to ten candidates, redact credentials and conditionally reuse immutable content."
+        },
+        {
+          "path": "internal/reports/context_test.go",
+          "anchor": "func TestRepositoryContextMetadataOmissionsAndSharedCooldown(",
+          "scenarios": [
+            "S2",
+            "S4"
+          ],
+          "purpose": "Unavailable metadata retains explicit omissions; persisted rate-limit cooldown suppresses subsequent preparation and publication reads."
+        },
+        {
+          "path": "internal/reports/context_test.go",
+          "anchor": "func TestInvestigationSnapshotPrivateImmutableAndFreshOnRecovery(",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Restarted polling reuses the private snapshot; malformed output finalizes before explicit recovery prepares fresh context and a new generation."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestDeterministicReportTemplatesAndFallback(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Markdown frontmatter/headings and ordered form text/dropdown/checkbox answers render with supported labels, code hints and complete standard facts; missing layout has a limitation notice."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestUnsupportedTemplatesFailToGenericLayout(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Malformed YAML, complex Markdown, upload fields and unknown attributes use the generic layout with an unsupported-layout reason."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestStructuredDraftRejectsContradictionsAndInventedAnswers(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Empty information requests, invalid duplicates, contradictory findings, unsupported labels, invented templates, uncertain ownership and oversized drafts fail; every supported component routes deterministically."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestRequiredFactsChoicesAttestationsAndRestrictions(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Required facts and template fields request information; unsupported choices and invented checkbox attestations fail; generic fallback cannot bypass interpreted security routing or unreviewed guidance."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestStructuredDraftSanitizedBeforeRetentionAndPublication(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Completed deterministic bodies are sanitized before ledger retention and publication while adjacent diagnostic evidence survives."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestLegacyDraftRemainsOnPublicationPath(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Unversioned retained drafts keep their destination/body through publication without structured re-rendering."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "\"reported issues exposes rendered draft limitations and required repository fields\"",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4",
+            "S6"
+          ],
+          "purpose": "Rendered repository-required information requests accept host evidence, fallback limitation stays visible, the issue draft opens with full content and finalized unusable work uses existing acknowledged recovery."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestControllerRejectedContractFinalizesBeforeFreshRecovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Controller schema rejection holds capacity until lifecycle completion succeeds, then explicit recovery prepares fresh context and a new admission without publishing malformed output."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestFormFieldsWithoutIDsGetStableOrderedIdentities(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Optional GitHub field IDs normalize to stable ordered identities; an available layout cannot be bypassed by omitting template selection."
+        },
+        {
+          "path": "internal/reports/context_test.go",
+          "anchor": "func TestPrivateContextSanitizesSecretsBeforeBodyLimits(",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "A known 64-character owner secret crossing the candidate-body byte limit is fully redacted before truncation; retained snapshots exclude its prefix, stay bounded and record omissions."
         }
       ],
       "suites": [
@@ -13864,12 +13995,12 @@
           },
           {
             "id": "capture",
-            "label": "Capture private scoped evidence and explicit omissions",
+            "label": "Capture private evidence and retain repository context with omissions",
             "scenario": "S2"
           },
           {
             "id": "investigate",
-            "label": "Investigate and verify ownership or duplicate",
+            "label": "Investigate ownership and duplicates, then render and validate a draft",
             "scenario": "S3"
           },
           {
@@ -13916,7 +14047,7 @@
           {
             "from": "investigate",
             "to": "recover",
-            "label": "missing information or interrupted effects"
+            "label": "required facts, reporting restriction, unusable findings or interrupted effects"
           },
           {
             "from": "recover",

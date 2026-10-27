@@ -1,7 +1,10 @@
 // Package reports owns the private issue ledger and its deterministic boundaries.
 package reports
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 const DefaultRepository = "dk-code-factory/code-factory-plugin"
 
@@ -127,31 +130,34 @@ type ResumeInput struct {
 
 // Runtime is stored separately so lifecycle tokens and private inputs never reach MCP.
 type Runtime struct {
-	Generation       int       `json:"generation"`
-	Workspace        string    `json:"workspace"`
-	Prompt           string    `json:"prompt"`
-	Token            string    `json:"token"`
-	Root             string    `json:"root"`
-	Completion       string    `json:"completion"`
-	SkillVersion     string    `json:"skillVersion"`
-	Notice           string    `json:"notice"`
-	AdmissionID      string    `json:"admissionId"`
-	AdditionCount    int       `json:"additionCount"` // append-only evidence included in this generation's immutable prompt
-	Admitting        bool      `json:"admitting"`
-	Preparing        bool      `json:"preparing"`
-	ControllerErrors int       `json:"controllerErrors"`
-	ResumePending    bool      `json:"resumePending"`
-	ResumeID         string    `json:"resumeId"`
-	ResumeUncertain  bool      `json:"resumeUncertain"`
-	UnusableResult   bool      `json:"unusableResult"`
-	Intent           *Findings `json:"intent,omitempty"`
-	CreateAttempted  bool      `json:"createAttempted"`
+	OutputContract   int                   `json:"outputContract,omitempty"`
+	Context          *investigationContext `json:"context,omitempty"`
+	Generation       int                   `json:"generation"`
+	Workspace        string                `json:"workspace"`
+	Prompt           string                `json:"prompt"`
+	Token            string                `json:"token"`
+	Root             string                `json:"root"`
+	Completion       string                `json:"completion"`
+	SkillVersion     string                `json:"skillVersion"`
+	Notice           string                `json:"notice"`
+	AdmissionID      string                `json:"admissionId"`
+	AdditionCount    int                   `json:"additionCount"` // append-only evidence included in this generation's immutable prompt
+	Admitting        bool                  `json:"admitting"`
+	Preparing        bool                  `json:"preparing"`
+	ControllerErrors int                   `json:"controllerErrors"`
+	ResumePending    bool                  `json:"resumePending"`
+	ResumeID         string                `json:"resumeId"`
+	ResumeUncertain  bool                  `json:"resumeUncertain"`
+	UnusableResult   bool                  `json:"unusableResult"`
+	Intent           *Findings             `json:"intent,omitempty"`
+	CreateAttempted  bool                  `json:"createAttempted"`
 }
 type WorkflowState struct {
 	ID      string `json:"id"`
 	Status  string `json:"status"`
 	Outputs struct {
-		Findings Findings `json:"findings"`
+		Findings   Findings        `json:"findings"`
+		Structured json.RawMessage `json:"structured,omitempty"`
 	} `json:"outputs"`
 	Error string `json:"error"`
 }

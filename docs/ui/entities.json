@@ -9487,14 +9487,15 @@
         "UI-REPORTS-RECOVERY",
         "UI-REPORTS-DETAIL-ORDER",
         "UI-REPORTS-SELECTION-ORDER",
-        "UI-REPORTS-DETAIL-PROGRESS"
+        "UI-REPORTS-DETAIL-PROGRESS",
+        "UI-REPORTS-DRAFT"
       ],
       "gaps": [],
       "suites": [
         "browser",
         "go"
       ],
-      "composition": "Observation, findings, missing information, evidence, GitHub and delivery, freshness and recovery.",
+      "composition": "Observation, findings with collapsible issue draft and visible layout limitation, required information, evidence, GitHub and delivery, freshness and recovery.",
       "context": "The selected durable report ID."
     },
     {
@@ -9781,7 +9782,8 @@
         "UI-REPORTS-SELECTION-ORDER",
         "UI-REPORTS-DETAIL-PROGRESS",
         "UI-REPORTS-MUTATION-PROGRESS",
-        "UI-REPORTS-EVIDENCE-RETRY"
+        "UI-REPORTS-EVIDENCE-RETRY",
+        "UI-REPORTS-DRAFT"
       ],
       "gaps": [
         {
@@ -9798,8 +9800,8 @@
         "browser",
         "go"
       ],
-      "element_description": "**surface** heading, **id**, **processing**, **outcome**, **observed**, **expected**, **actual**, **reproduction**, **message**, conditional **findings** and **missing-information**; **open-issue**, **issue-state**, **closure-reason**; repeated **open-fix**, **open-release**, **linked-fix**, **stable-availability**, **prerelease-availability**, **installed-version**, repeated **observed-version**; **issue-freshness**, **release-freshness**; repeated **additions**, **evidence** input and **add-evidence**; conditional **recovery-note**, **effects-acknowledgement**, **resume**; **evidence-history** disclosure with repeated **evidence-manifest** and **history**.",
-      "state_description": "No detail article is displayed until the selected report is read. Unknown evidence remains Unknown; processing and outcome stay independent of issue closure, fix, stable, prerelease and installed versions. Freshness shows last successful verification and, on error, its retry time. Add evidence requires a nonblank draft and is disabled during a mutation. Resume is shown for blocked, needs attention or needs information; needs attention shows the note and acknowledgement, both required when a workflow ID exists. Evidence/history starts collapsed. Only current selected-report detail reads can update findings, processing and recovery controls; superseded reads are discarded. Journal detail refreshes coalesce while a read is pending, allowing a slow response to display before the queued refresh.",
+      "element_description": "**surface** heading, **id**, **processing**, **outcome**, **observed**, **expected**, **actual**, **reproduction**, **message**, conditional **findings** with the Issue draft disclosure and visible layout limitation, and **missing-information** including repository-required facts; **open-issue**, **issue-state**, **closure-reason**; repeated **open-fix**, **open-release**, **linked-fix**, **stable-availability**, **prerelease-availability**, **installed-version**, repeated **observed-version**; **issue-freshness**, **release-freshness**; repeated **additions**, **evidence** input and **add-evidence**; conditional **recovery-note**, **effects-acknowledgement**, **resume**; **evidence-history** disclosure with repeated **evidence-manifest** and **history**.",
+      "state_description": "No detail article is displayed until the selected report is read. Unknown evidence remains Unknown; processing and outcome stay independent of issue closure, fix, stable, prerelease and installed versions. Freshness shows last successful verification and, on error, its retry time. Add evidence requires a nonblank draft and is disabled during a mutation. Resume is shown for blocked, needs attention or needs information; needs attention shows the note and acknowledgement, both required when a workflow ID exists. Evidence/history starts collapsed. Only current selected-report detail reads can update findings, processing and recovery controls; superseded reads are discarded. Journal detail refreshes coalesce while a read is pending, allowing a slow response to display before the queued refresh. When a rendered issue body exists, Issue draft starts collapsed and reveals its title and complete text on demand. A generic layout limitation remains visible outside that disclosure. Required repository fields use the existing information request and host-evidence controls.",
       "interactions": "C-REPORT-EVIDENCE appends host observations and can queue information requests. C-REPORT-RECOVER submits the note and acknowledgement for retained work. Successful mutations reread details and the loaded list. Changing selection resets local evidence/recovery drafts. C-REPORT-OPEN-LINK opens retained issue, fix and release URLs through the host; it does not establish external delivery. Mutation controls become usable after their own detail/list refresh, independently of continuing queued journal refreshes."
     },
     {
@@ -12865,6 +12867,12 @@
       "path": "internal/app/attention_answers_test.go",
       "anchor": "func TestNativeAnswerRejectsDurableInterruptBeforeProviderCompletion(",
       "assertion": "A blocked provider interrupt exposes durable cancellation intent; a valid native answer rejects without claiming attention or storing its reply, and interrupted completion stales the request. Fixture backend coverage, not installed-host acceptance."
+    },
+    {
+      "id": "UI-REPORTS-DRAFT",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "\"reported issues exposes rendered draft limitations and required repository fields\"",
+      "assertion": "Required repository fields appear as information requests; appended host evidence queues work, fallback limitations remain visible, opening Issue draft reveals title and complete body, and finalized unusable work recovers through acknowledged controls."
     }
   ],
   "source_map": [

@@ -17,17 +17,42 @@ jobs:
             schema:
               type: object
               additionalProperties: false
-              required: [classification, summary, missingInformation, component, repository, sourcePath, sourceCommit, ownershipReason, duplicateNumber, title, body, labels]
+              required: [classification, summary, missingInformation, component, sourcePath, sourceCommit, ownershipReason, duplicateNumber, title, content, templateId, answers, labels, guidanceReviewed, restriction, restrictionReason, version]
               properties:
                 classification: {type: string, enum: [confirmed, suspected, duplicate, insufficient_information, explained]}
                 summary: {type: string}
                 missingInformation: {type: string}
                 component: {type: string, enum: [code-factory, plugin, agent-workflow, dk-workflows, unknown]}
-                repository: {type: string}
                 sourcePath: {type: string}
                 sourceCommit: {type: string}
                 ownershipReason: {type: string}
                 duplicateNumber: {type: integer}
                 title: {type: string}
-                body: {type: string}
                 labels: {type: array, items: {type: string}}
+                version: {type: integer, enum: [2]}
+                templateId: {type: string}
+                guidanceReviewed: {type: array, items: {type: string}}
+                restriction: {type: string, enum: [none, security, support]}
+                restrictionReason: {type: string}
+                content:
+                  type: object
+                  additionalProperties: false
+                  required: [environment, reproduction, expected, actual, evidence, findings, uncertainty]
+                  properties:
+                    environment: {type: string}
+                    reproduction: {type: string}
+                    expected: {type: string}
+                    actual: {type: string}
+                    evidence: {type: string}
+                    findings: {type: string}
+                    uncertainty: {type: string}
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [id, text, choices]
+                    properties:
+                      id: {type: string}
+                      text: {type: string}
+                      choices: {type: array, items: {type: string}}

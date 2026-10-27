@@ -4326,6 +4326,40 @@ test("reported issues shares ledger search, information requests and evidence re
     .toBeTruthy();
   expect(calls.some((c) => c.name === "start_run")).toBeFalsy();
 });
+test("reported issues exposes rendered draft limitations and required repository fields", async ({ page }) => {
+  const report = reportFixture();
+  report.findings!.missingInformation = "Please provide the required repository fields: Version";
+  const { ui, calls, state } = await host(page, { reports: [report] });
+  await ui.getByRole("button", { name: "Reported issues", exact: true }).click();
+  await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+  const detail = ui.getByRole("article", { name: "Report details" });
+  await expect(detail.getByRole("status")).toContainText("required repository fields: Version");
+  await detail.getByLabel("What did the host display?").fill("Version 1.2.3");
+  await detail.getByRole("button", { name: "Add evidence", exact: true }).click();
+  await expect(detail).toContainText("Version 1.2.3");
+  report.processing = "filing";
+  report.findings = {
+    classification: "suspected", summary: "Delivery regression", missingInformation: "",
+    repository: "dk-code-factory/code-factory-plugin", title: "Answer delivery fails",
+    body: "Layout limitation: Repository issue layout is unsupported: complex Markdown layout.\n\n## Environment\nFixture host\n\n## Reproduction\nUnknown; observed once",
+  };
+  state.cursor++;
+  await expect(detail.getByRole("status")).toContainText("Repository issue layout is unsupported");
+  await detail.getByText("Issue draft", { exact: true }).click();
+  await expect(detail.getByRole("heading", { name: "Answer delivery fails" })).toBeVisible();
+  await expect(detail.locator("pre")).toContainText("## Environment");
+  await expect(detail.locator("pre")).toContainText("Unknown; observed once");
+  report.processing = "needs_attention";
+  report.message = "Investigation finalized with unusable findings; resume to start a fresh investigation";
+  state.cursor++;
+  await expect(detail).toContainText("resume to start a fresh investigation");
+  await detail.getByLabel("Recovery note").fill("Inspected the finalized investigation; no publication was attempted");
+  await detail.getByRole("checkbox", { name: "I inspected the retained workflow" }).check();
+  await detail.getByRole("button", { name: "Resume or reconcile report" }).click();
+  await expect(detail).toContainText("Recovery admitted");
+  expect(calls.find(c => c.name === "resume_issue_report")?.arguments).toMatchObject({ id: report.id, reconciled: true });
+});
+
 test("reported issues retries uncertain evidence without duplicating it and accepts edited evidence", async ({
   page,
 }) => {

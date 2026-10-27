@@ -26,6 +26,7 @@ func TestNativeWorkflowEngineWithFakeProviderAndLifecycle(t *testing.T) {
 	provider := filepath.Join(dir, "codex")
 	f := findings()
 	raw, _ := json.Marshal(f)
+	structuredRaw, _ := json.Marshal(draftFixture(f))
 	script := `#!/usr/bin/env python3
 import json, os, sys, time
 from pathlib import Path
@@ -50,6 +51,8 @@ if Path('deadline-provider').exists():
  time.sleep(20)
 if os.path.exists(os.path.join(os.path.dirname(__file__), 'slow')): time.sleep(20)
 text = ` + string(mustJSON(string(raw))) + `
+if 'Output contract version 2:' in prompt: text = ` + string(mustJSON(string(structuredRaw))) + `
+if Path('structured-response.json').exists(): text = Path('structured-response.json').read_text()
 print(json.dumps({'type':'thread.started','thread_id':'fixture-thread'}))
 print(json.dumps({'type':'item.completed','item':{'type':'agent_message','text':text}}))
 print(json.dumps({'type':'turn.completed','usage':{'input_tokens':1,'output_tokens':1}}))
@@ -85,7 +88,7 @@ else:
 		t.Fatal(e)
 	}
 	n := &NativeEngine{Dir: dir, Binary: binary, Codex: provider, SkillRoot: root, Fixture: true}
-	rt := Runtime{Generation: 1, AdmissionID: strings.Repeat("a", 32)}
+	rt := Runtime{Generation: 1, AdmissionID: strings.Repeat("a", 32), OutputContract: structuredContract, Context: &investigationContext{Version: 1, Repositories: []repositoryContext{{Repository: DefaultRepository}}}}
 	r := Report{ID: rt.AdmissionID, Observation: observation()}
 	r.Observation.ToolEvidence = strings.Repeat("x", 150<<10)
 	r.Additions = []string{strings.Repeat("first-host-evidence-", 5<<10), strings.Repeat("second-host-evidence-", 5<<10)}
@@ -93,6 +96,15 @@ else:
 	defer cancel()
 	if e := n.Prepare(ctx, r, &rt); e != nil {
 		t.Fatal(e)
+	}
+	snapshotPath := filepath.Join(rt.Workspace, "repository-context.json")
+	info, err := os.Stat(snapshotPath)
+	if err != nil || info.Mode().Perm() != 0600 {
+		t.Fatal("repository context is not private", info, err)
+	}
+	snapshot, err := os.ReadFile(snapshotPath)
+	if err != nil || string(snapshot) != string(marshalContext(rt.Context)) {
+		t.Fatal("prepared snapshot changed", err)
 	}
 	defer func() {
 		_, _ = command(context.Background(), rt.Workspace, nil, binary, "stop", "--workspace", rt.Workspace)
@@ -111,6 +123,23 @@ else:
 	if e != nil || string(retained) != rt.Prompt || len(retained) < 256<<10 {
 		t.Fatal("large observation and accumulated evidence were not retained intact", len(retained), e)
 	}
+	if err := privateWrite(snapshotPath, []byte(`{"version":1,"repositories":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := n.Start(ctx, rt); err == nil {
+		t.Fatal("changed repository context reused admission")
+	}
+	beforeResume, _ := os.ReadFile(filepath.Join(root, "calls"))
+	if _, err := n.Resume(ctx, rt, first.ID); err == nil {
+		t.Fatal("changed repository context reached explicit resume")
+	}
+	afterResume, _ := os.ReadFile(filepath.Join(root, "calls"))
+	if string(beforeResume) != string(afterResume) {
+		t.Fatal("changed context triggered lifecycle effects")
+	}
+	if err := privateWrite(snapshotPath, snapshot); err != nil {
+		t.Fatal(err)
+	}
 	changed := rt
 	changed.Prompt += "changed admission content"
 	if _, err := n.Start(ctx, changed); err == nil {
@@ -128,7 +157,8 @@ else:
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	if state.Status != "succeeded" || state.Outputs.Findings.Title != f.Title {
+	decoded, decodeErr := decodeStructured(state.Outputs.Structured)
+	if state.Status != "succeeded" || decodeErr != nil || decoded.Title != f.Title {
 		t.Fatalf("real controller result: %+v error=%v", state, e)
 	}
 	// Inspection survives a stopped controller, and a new client still reads the result.
@@ -371,6 +401,32 @@ else:
 			t.Fatal("deadline left the started fake provider alive", started.PID)
 		}
 		t.Log("fake provider exited before controller and lifecycle teardown")
+	})
+	t.Run("malformed structured result is rejected by the real controller", func(t *testing.T) {
+		next := Runtime{Generation: 20, AdmissionID: r.ID + "-20", OutputContract: structuredContract, Context: rt.Context}
+		if err := n.Prepare(ctx, r, &next); err != nil {
+			t.Fatal(err)
+		}
+		defer n.Complete(context.Background(), next)
+		defer command(context.Background(), next.Workspace, nil, binary, "stop", "--workspace", next.Workspace)
+		if err := privateWrite(filepath.Join(next.Workspace, "structured-response.json"), []byte(`{"classification":"suspected","repository":"invented"}`)); err != nil {
+			t.Fatal(err)
+		}
+		state, err := n.Start(ctx, next)
+		if err != nil {
+			t.Fatal(err)
+		}
+		deadline := time.Now().Add(10 * time.Second)
+		for time.Now().Before(deadline) && (state.Status == "running" || state.Status == "queued") {
+			time.Sleep(30 * time.Millisecond)
+			state, err = n.Status(ctx, next, state.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		if state.Status != "failed" || !strings.Contains(state.Error, "invalid structured output") {
+			t.Fatal("malformed model contract did not fail validation", state)
+		}
 	})
 	t.Run("automatic dependency upgrades block without changing owner settings", func(t *testing.T) {
 		file := filepath.Join(dir, "config/dk-code-factory/updates.json")

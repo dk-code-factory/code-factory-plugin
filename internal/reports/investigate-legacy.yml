@@ -1,0 +1,33 @@
+name: Investigate a Code Factory observation and draft an issue
+on:
+  workflow_call:
+    inputs:
+      report_id: {type: string, required: true}
+      prompt: {type: string, required: true}
+jobs:
+  investigate:
+    steps:
+      - id: inspect
+        uses: agent/investigator
+        with:
+          prompt: ${{ inputs.prompt }}
+          output:
+            format: json
+            repair-attempts: 0
+            schema:
+              type: object
+              additionalProperties: false
+              required: [classification, summary, missingInformation, component, repository, sourcePath, sourceCommit, ownershipReason, duplicateNumber, title, body, labels]
+              properties:
+                classification: {type: string, enum: [confirmed, suspected, duplicate, insufficient_information, explained]}
+                summary: {type: string}
+                missingInformation: {type: string}
+                component: {type: string, enum: [code-factory, plugin, agent-workflow, dk-workflows, unknown]}
+                repository: {type: string}
+                sourcePath: {type: string}
+                sourceCommit: {type: string}
+                ownershipReason: {type: string}
+                duplicateNumber: {type: integer}
+                title: {type: string}
+                body: {type: string}
+                labels: {type: array, items: {type: string}}

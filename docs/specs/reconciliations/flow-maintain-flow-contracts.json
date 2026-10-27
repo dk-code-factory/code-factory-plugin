@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "53c80d8da0b498fa5d5897b657c4f5886331859d",
-  "fingerprint": "09debeb852460aae2efd4600adcf47a6c758477122d4eef6e7ee65e0321aa839",
+  "base": "f184049d9ed471b64a63652fc0534cf79b86599c",
+  "fingerprint": "f4fba0978cb5b16c9437a16f8245f2b212270dcb8be140b3d2cc644171cf20f5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Specification maintenance keeps the original adoption baseline and layer ownership. New workflow files and regression assertions are mapped explicitly.",
-    "implementation": "catalog.json adds adapter/YAML implementation references and exact regression anchors without changing glossary meanings, UI identities or dependency direction.",
-    "tests": "Reviewed validation/report failures for initially unmapped files and stale generated sections; render/validate and mandatory tooling suites now verify complete mapped inputs and generated blocks."
+    "kind": "structure",
+    "description": "Reconcile flow contracts with implementation and tests: authored scenarios S1, S2, S3, S4, S5 and graph transitions are unchanged. Impact comes from shared Go/browser/release suite inputs, module declarations and consumed UI mappings; the only product behavior changes are the reporting draft and investigation boundaries.",
+    "implementation": "Reviewed the maintain-flow-contracts contract and its implementation/reference mappings against the branch changes. Shared IssueReport fields are optional additions and report processing stays within the separate reports service. Existing task, attention, connection, installation and publication controls preserve their prior transitions; no glossary or consumer ownership is reversed.",
+    "tests": "Reviewed the existing mapped assertion purposes, including def test_code_and_test_changes_require_reconciliation(; def test_description_changes_require_both_code_and_tests(. Existing fixture suites remain selected and their assertions are unchanged; new reporting assertions do not claim coverage for this flow or close its outstanding real-host/acceptance gaps."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.755
+      "seconds": 24.931
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.763
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "2da2ef095e4a058f85d54cd507fb142f57a45cd7c24ef3391ad93d01f2ff5c1f",
-    "term:coverage-gap": "f881787e5a8ed32ce7b1d00893fefbcdd16913b81501a0bce605f2e7983dd5aa",
-    "term:entity": "a5f3c518ab20baef6f467b75d37bbff40de25542dbc1887f4cca54874f718100",
-    "term:glossary": "860e940905bd6f021d55b03fa8a2eb012895b7453fbe076982a86e3dcec76fd8",
-    "term:known-limitation": "ee07f82e34fb29f43807c1906c8d763b97fed0830f8b2f33f9f391028b4fa273",
-    "term:reconciliation": "24de7a25c4d356fbece4d127b706bec930099a89efffdc5367d1306b1b7a9091",
-    "term:unverified-behavior": "fee1885fba8d5646733595cb3d47e962e746279451c1247919e51bc7c45a9972",
-    "term:verification": "d14bcaeadef0be4e18041e5305e7ee16b56428bdf475008890c7db65200437fa"
+    "flow:maintain-flow-contracts": "cc3c802a6651f36c7cdbe9a71e51a5d3a03b7d68e1b5445a58c6531c841d6516",
+    "term:coverage-gap": "1d347ba7589e9c052f0bac793e1765be9aba86e88f18fd049cb758e132e24a3b",
+    "term:entity": "e4dbace6b17f9423afb8167d068303ffb3b18acabf4d6965ad7bf512d6baa5ba",
+    "term:glossary": "52284e020e3dfd535a120e5735b8ee615be2f8ad2aeae1cf9d2657cdf8c449cf",
+    "term:known-limitation": "bfb4621eddaf4e3ea1207ef24f3f58a5b92b7eacc14fc2dfb420ea2382d5bb5e",
+    "term:reconciliation": "6bbf74c66f84caa735376d58e08cacfd92e33bfaf9af90379f5cfb6140a487a0",
+    "term:unverified-behavior": "702c6ec67471b05c8eceb8d624aa3326c111680fd87d97a71611789008ab072e",
+    "term:verification": "b949deafc9512b604250894d4bb1c44949328377556c96bb8a5c4b35d6f1d594"
   }
 }
