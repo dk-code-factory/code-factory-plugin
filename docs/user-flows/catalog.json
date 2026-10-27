@@ -4512,6 +4512,30 @@
             "S2"
           ],
           "purpose": "Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "A queued acknowledgement cannot report successful admission after cancellation takes ownership; output remains undecoded and workflow cancellation is synchronous."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "After successful admission, caller cancellation preserves observation until native interruption, client cancellation or Close; provider work starts only once."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAcknowledgementTransferRejectsCanceledClient(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission."
         }
       ],
       "suites": [
@@ -5603,6 +5627,30 @@
             "S4"
           ],
           "purpose": "Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A queued acknowledgement cannot report successful admission after cancellation takes ownership; output remains undecoded and workflow cancellation is synchronous."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "After successful admission, caller cancellation preserves observation until native interruption, client cancellation or Close; provider work starts only once."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAcknowledgementTransferRejectsCanceledClient(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission."
         }
       ],
       "suites": [
@@ -8107,6 +8155,30 @@
             "S4"
           ],
           "purpose": "Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A queued acknowledgement cannot report successful admission after cancellation takes ownership; output remains undecoded and workflow cancellation is synchronous."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "After successful admission, caller cancellation preserves observation until native interruption, client cancellation or Close; provider work starts only once."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAcknowledgementTransferRejectsCanceledClient(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission."
         }
       ],
       "suites": [

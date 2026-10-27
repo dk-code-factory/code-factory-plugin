@@ -553,3 +553,111 @@ func TestStatusStoreSerializationOmitsPrivateOutputsAnswersAndErrors(t *testing.
 		t.Fatal("status persistence mutated private in-memory execution")
 	}
 }
+
+func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(t *testing.T) {
+	admission, cancelAdmission := context.WithCancel(context.Background())
+	defer cancelAdmission()
+	workflow, cancelWorkflow := context.WithCancel(context.Background())
+	defer cancelWorkflow()
+	tn := &turn{ack: make(chan startResult, 1), cancel: cancelWorkflow}
+	callbackStarted, releaseCallback, callbackDone := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	stop := context.AfterFunc(admission, func() {
+		defer close(callbackDone)
+		close(callbackStarted)
+		<-releaseCallback
+		cancelWorkflow()
+	})
+	var once sync.Once
+	release := func() { once.Do(func() { close(releaseCallback) }) }
+	t.Cleanup(func() {
+		release()
+		select {
+		case <-callbackDone:
+		case <-time.After(5 * time.Second):
+			t.Error("admission cancellation callback did not exit")
+		}
+	})
+	// Queue a valid native acknowledgement, then let cancellation start before
+	// the caller takes ownership. stop must reject even an in-progress callback.
+	tn.ack <- startResult{response: json.RawMessage(`{"turn":{"id":"turn-1"}}`)}
+	cancelAdmission()
+	select {
+	case <-callbackStarted:
+	case <-time.After(5 * time.Second):
+		t.Fatal("admission cancellation did not start")
+	}
+	var response struct{ Turn struct{ ID string } }
+	c := &Client{ctx: context.Background()}
+	err := c.acceptStart(admission, tn, stop, <-tn.ack, &response)
+	if !errors.Is(err, context.Canceled) || response.Turn.ID != "" {
+		t.Fatalf("canceled admission accepted buffered acknowledgement: response=%+v err=%v", response, err)
+	}
+	if workflow.Err() == nil {
+		t.Fatal("canceled handoff did not synchronously stop workflow observation")
+	}
+}
+
+func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(t *testing.T) {
+	for _, shutdown := range []string{"interrupt", "client-cancel", "close"} {
+		t.Run(shutdown, func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", "hold")
+			dir := t.TempDir()
+			log := filepath.Join(dir, "rpc.jsonl")
+			t.Setenv("CF_FAKE_RECORD", log)
+			c := startFixture(t, dir, Task, nil)
+			admission, cancelAdmission := context.WithCancel(context.Background())
+			defer cancelAdmission()
+			var response struct{ Turn struct{ ID string } }
+			if err := c.Call(admission, "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Observe retained native turn"}}}, &response); err != nil {
+				t.Fatal(err)
+			}
+			cancelAdmission()
+			c.mu.Lock()
+			tn := c.active
+			c.mu.Unlock()
+			if tn == nil || response.Turn.ID != "turn-1" {
+				t.Fatal("successful admission lost its observed native identity", response)
+			}
+			status := workflows.RunStatusCanceled
+			switch shutdown {
+			case "interrupt":
+				status = workflows.RunStatusFailed
+				if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": response.Turn.ID}, nil); err != nil {
+					t.Fatal(err)
+				}
+			case "client-cancel":
+				c.cancel()
+			case "close":
+				_ = c.Close()
+			}
+			select {
+			case <-tn.finalized:
+			case <-time.After(5 * time.Second):
+				t.Fatal("client shutdown did not finalize workflow")
+			}
+			waitRecord(t, dir, Task, status)
+			data, err := os.ReadFile(log)
+			if err != nil || strings.Count(string(data), `"method":"turn/start"`) != 1 {
+				t.Fatal("native turn was replayed", err, string(data))
+			}
+		})
+	}
+}
+
+func TestAcknowledgementTransferRejectsCanceledClient(t *testing.T) {
+	lifetime, cancelClient := context.WithCancel(context.Background())
+	defer cancelClient()
+	workflow, cancelWorkflow := context.WithCancel(lifetime)
+	defer cancelWorkflow()
+	admission, cancelAdmission := context.WithCancel(context.Background())
+	defer cancelAdmission()
+	stop := context.AfterFunc(admission, cancelWorkflow)
+	defer stop()
+	tn := &turn{cancel: cancelWorkflow}
+	cancelClient()
+	var response struct{ Turn struct{ ID string } }
+	err := (&Client{ctx: lifetime}).acceptStart(admission, tn, stop, startResult{response: json.RawMessage(`{"turn":{"id":"turn-1"}}`)}, &response)
+	if !errors.Is(err, context.Canceled) || response.Turn.ID != "" || workflow.Err() == nil {
+		t.Fatalf("closed client accepted acknowledgement: response=%+v err=%v", response, err)
+	}
+}

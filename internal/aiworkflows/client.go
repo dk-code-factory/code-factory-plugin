@@ -220,25 +220,12 @@ func (c *Client) CallWorkflow(ctx context.Context, kind Kind, params any, out an
 	defer stop()
 	select {
 	case ack := <-t.ack:
-		if ack.err != nil {
-			cancel()
-			return ack.err
-		}
-		if out != nil {
-			return json.Unmarshal(ack.response, out)
-		}
-		return nil
+		return c.acceptStart(ctx, t, stop, ack, out)
 	case err := <-t.finished:
 		// A fast provider may complete before the caller receives its ack.
 		select {
 		case ack := <-t.ack:
-			if ack.err != nil {
-				return ack.err
-			}
-			if out != nil {
-				return json.Unmarshal(ack.response, out)
-			}
-			return nil
+			return c.acceptStart(ctx, t, stop, ack, out)
 		default:
 			if err == nil {
 				err = errors.New("AI workflow ended without starting a turn")
@@ -249,6 +236,27 @@ func (c *Client) CallWorkflow(ctx context.Context, kind Kind, params any, out an
 		cancel()
 		return ctx.Err()
 	}
+}
+
+func (c *Client) acceptStart(ctx context.Context, t *turn, stop func() bool, ack startResult, out any) error {
+	if ack.err != nil {
+		t.cancel()
+		return ack.err
+	}
+	// Stopping admission cancellation transfers observation to the client. A
+	// callback that already started may still cancel even after stop returns.
+	if !stop() || ctx.Err() != nil {
+		t.cancel()
+		return ctx.Err()
+	}
+	if err := c.ctx.Err(); err != nil {
+		t.cancel()
+		return err
+	}
+	if out != nil {
+		return json.Unmarshal(ack.response, out)
+	}
+	return nil
 }
 
 type providerTurn struct {
