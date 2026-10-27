@@ -88,6 +88,7 @@ flowchart TD
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginMaintenanceDefersInferenceAndRejectsUnavailableSkills(`; S2. Background inference defers while plugin state is changing; unavailable selected skills cannot be prepared.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestStructuredWorkflowRejectsInvalidOutputWithoutRepair(`; S3. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(`; S1. Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics.
 
 ## Verification and gaps
 

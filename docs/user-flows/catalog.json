@@ -3019,6 +3019,14 @@
             "S3"
           ],
           "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics."
         }
       ],
       "suites": [
@@ -10059,6 +10067,14 @@
             "S2"
           ],
           "purpose": "Late diagnostic uses a generic message and originating identities without prompt, answer or provider-error content."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics."
         }
       ],
       "suites": [

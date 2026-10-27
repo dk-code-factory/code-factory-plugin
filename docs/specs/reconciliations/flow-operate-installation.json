@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "53c80d8da0b498fa5d5897b657c4f5886331859d",
-  "fingerprint": "cfd2ed0ecf6a8e9e58b618302af64140664c0e2aff43e3846b3067120b8d6081",
+  "fingerprint": "d1d8412ad653a8b55e592891b368b756c5342f3b83a8cf1b9b5a9fc51e9411ad",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -10,7 +10,7 @@
     "kind": "refactor",
     "description": "Operating and upgrading the installation still preserves private application state and native authentication; this change replaces model turn orchestration inside the daemon.",
     "implementation": "Workflow status checkpoints live privately below application data, omit task content and never authorize restart replay. Existing application recovery remains authoritative.",
-    "tests": "New close/checkpoint fixture verifies cancellation joins execution, removes temporary definitions and omits a private prompt canary. Existing installer rollback and interrupted-upgrade assertions remain required."
+    "tests": "New close/checkpoint fixture verifies cancellation joins execution, removes temporary definitions and omits a private prompt canary. Existing installer rollback and interrupted-upgrade assertions remain required. Reinspected delayed-checkpoint Close test: c.closed observed under c.mu proves Close entry before blocked persistence is released; cleanup releases and joins Close. A private no-drain overlay is rejected by the test, establishing sensitivity without production test hooks."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 144.035
+      "seconds": 144.636
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 44.84
+      "seconds": 46.362
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.97
+      "seconds": 3.253
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.568
+      "seconds": 3.01
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.606
+      "seconds": 21.546
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.161
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.164
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.573
+      "seconds": 24.755
     },
     {
       "command": [
@@ -143,49 +143,49 @@
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "0bdf5275b2f3ad28911b1a23af5aa7d1f41087f5ce68d8928b3ec2742959d96c",
-    "term:connection-refreshes": "c1c0b9323a937e9fa10ee70601696a89e5ea480bc1476b14011e60c9f3c3f2e6",
-    "term:connection-submits": "940d230d7a9e4e70aed92dda32b527858cc2fc38becbfba6c7c8fa063b188378",
-    "term:coverage-gap": "ed49e0cf3761a265e0f5b8415ef7e3c9e484d7201b888cee5ca2cf41b2d4b5b2",
-    "term:dependency-operation": "bacb364bc39ab034930feae9cefa99e48a7538543b303dacc7549aa19d33dfa4",
-    "term:element-w-browser-lab-key-controls": "1d3d7824572be0119cc117c4c1ee8fb6bd53396cc26932fb1011c23d4f62ad70",
-    "term:element-w-browser-lab-location": "4a14dabe858eb2633f65100209aefa6c6af4b29f2a62133a145e8b6742beeaaf",
-    "term:element-w-browser-lab-message": "f072ff086391c65410bf23d0582bb0f02363d6106645a9d21de6ec985417bf96",
-    "term:element-w-browser-lab-navigate": "950b3a6a68b70c2e1f7338c4efc0f2549fb9f9b3c4307e69225e2d459125c054",
-    "term:element-w-browser-lab-refresh": "03893305382e079e95d02954b12a273c56519d724f03fa1685448064378a9f4e",
-    "term:element-w-browser-lab-screenshot": "84445c829c905800c587669dac2f99876c83113b736b772c59c428ca82a4848d",
-    "term:element-w-browser-lab-scroll-up-down": "80a3492965a63427d21ba326c09a9d5008966fdff01f20facd3353001c56a6cf",
-    "term:element-w-browser-lab-send-text": "09c752d61dc6bd19b88995901f7aa8807ee7220f1955f1ed0bf121fa519bb76c",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "b0df732a40183a6bb8af7980c9289f37d28df407583805616b7e469874bd1c6a",
-    "term:element-w-browser-lab-text-to-send": "0b9b2e1c3c0a36c3bf0d9220b454152638258299b4a8a2d609ce8ac80fea5c18",
-    "term:element-w-browser-lab-url": "731fa5b3b439465fd787c56a149ce6db7eb9b82fa74076e66aa44935ec9ab39e",
-    "term:element-w-diagnostics-check-connection": "cd08b2ba8d01169c29bf20b8ddc6c939bb1e5745a76d5fe7cbebeb3ca7956a33",
-    "term:element-w-diagnostics-check-id": "628a7a163c1e035173e4134bb0f2496eb207ae95a18daf3aebb41f8be041a909",
-    "term:element-w-diagnostics-check-state": "75f8da617d7bce7b91d19297f1dbb1a4e56937ca4d41d5e1c6395e9c81aab992",
-    "term:element-w-diagnostics-detail": "00e9a54dca16b281361aa97a4dcc9a74e1300d247edcadd63bbb66be4f880907",
-    "term:element-w-diagnostics-provider-sign-in-help": "b5f30f9012b5b1528ee766f287195e25b976613b7393fb12f874b8fcbec99170",
-    "term:element-w-diagnostics-timestamp": "30cb8931f026be80ec824fa0e1683cfea2b17664c3a6c11b811e1d5759273e8b",
-    "term:element-w-diagnostics-version": "38f90efce8a7307c25f2d0f42e175aea4923e922ed21f1f673f95fc49335fdbe",
-    "term:github-skill-source": "a0bdc2c9f3b3ea01e0860503e49d1ea60f724c31c9ebe0b459467a21cbfc9c3c",
-    "term:owner": "4a35d935be30ce85a1d7ecd2fac6b53ac326188ed3fd19852c39c5df5bdd5331",
-    "term:state-failed": "ea6440ff274a43a037c5724af342c07629d6d2b5f58e62f713b37bfb8c292ff6",
-    "term:state-unverified": "f738a25c723dd058fc5cb967e9744d40c9f21e5eeb439f4fb9e46ffb7a4f25d7",
-    "term:state-verified": "0e26ae8bdc47d2b3ffcc5ce8ca5162bbed8d16fd4e718aa6aa85aaa40f763f54",
-    "term:ui-c-browser-lab": "e6e1bec526eed3c625e1674255264e9934e579277ffa5e1dc57f710fd2a6fb14",
-    "term:ui-c-diagnose": "4883b4b37a8881cfcd9e04e207dbbe16b11854875c4e40b4d3c36e92f5c5068a",
-    "term:ui-p-browser-lab": "fdd2e243196e59d134894cb3f1528189335173a61e48541d6df20f6d29969efa",
-    "term:ui-p-diagnostics": "ef014b2720457923179fd8d265e653e4341069e367df80e71ef977d63e0aa0e4",
-    "term:ui-page-browser-lab": "5ff54c60da88fe132e4b9b20806f5e326ee2a8c4a1e6abc576601123037b62a0",
-    "term:ui-w-browser-lab": "0df72e4ede38bf7e2080a7439f10d4dd6ca7007a68ef9268ce4ab6ed308b6d63",
-    "term:ui-w-diagnostics": "8cae957db5323fc2aa95e848d29e15efb8fa5c65c7d8dddedb6867c00bc73128",
-    "term:unverified-behavior": "93026eb34758d65eec762e9eee351784153064bef4c9c7553f1f6602e30ac4c2",
-    "term:verification": "7b3ba71ea3186821553af93419afb053db29475705ecb674f5b6840e270e9805",
-    "ui:C-BROWSER-LAB": "84a6bd2e8552782aad061e33e87e141f2788ec7edf787d274750ac8865b46154",
-    "ui:C-DIAGNOSE": "b66bec34d562457dd926ca2f0c40a640b8846d825b44eb16621e2976e7297b0e",
-    "ui:P-BROWSER-LAB": "87a8d41188f3eca1ea9fc081fdf551bc9ca4e275b5fa7fcc7ec08bdbd81eda30",
-    "ui:P-DIAGNOSTICS": "f2baf32238ac5b7c6cb46eb4821bc83707d6968ec5b05019c6f1f3f5a5cbd58b",
-    "ui:PAGE-BROWSER-LAB": "7e96f1f1e217a1b791c191d2c4d4f6ad8a3d1e31dd544d2156905f63059e6998",
-    "ui:W-BROWSER-LAB": "c95e422e96be95d8589ac20b1cc510d976a2d3bdf68b9a4f4d75c3dfee22f087",
-    "ui:W-DIAGNOSTICS": "2b79f92a069f669ff784137f5a797711020ffc00a2f8d25a04ae34524a9ccd0f"
+    "flow:operate-installation": "917f34be412d61aaa18f4c9a4163d84a5bdc229b30550699d4b9d5e58fee1b34",
+    "term:connection-refreshes": "562d18de00143ed599038546c664b7c7a85871e1f6abe7d3c90d0c753d1873bc",
+    "term:connection-submits": "9ceca7ded464e0fa9cfb02bf8aaf94df6fd6a8803abdde237e597f90e1984b82",
+    "term:coverage-gap": "f881787e5a8ed32ce7b1d00893fefbcdd16913b81501a0bce605f2e7983dd5aa",
+    "term:dependency-operation": "3b17e8d623d453591507baf8b6d6aa3a77e5a85d8df485b05cd6968a840a967e",
+    "term:element-w-browser-lab-key-controls": "6cb3fe2321ac8bd817816d981607e55f6474fbec47b652ec370fa0770e3fe0eb",
+    "term:element-w-browser-lab-location": "ed6009dd1d673de292fd133d0de1a220208a93db5a76cf4d8b656a3d9231d7f5",
+    "term:element-w-browser-lab-message": "84576fe15da19ba6f173567cbd24b063b81757afc271dc523a96efe7b2007f4c",
+    "term:element-w-browser-lab-navigate": "070f052b255c99a82da27c776ab6b2d32c81dddfe7c7eda2caa66e33e13af6f6",
+    "term:element-w-browser-lab-refresh": "edbcd075847124ef1b595e6020b4cab1b9220528fbab921ace6a99acb6194efe",
+    "term:element-w-browser-lab-screenshot": "293b8083e89ba697ad608f98629f1bc7cc20d7bf8d117b16ba7dc67b08026299",
+    "term:element-w-browser-lab-scroll-up-down": "7ee519c1f28d656d7315032d0f470487708229531a1c5ed6a156d46e32f9f697",
+    "term:element-w-browser-lab-send-text": "a9810dcfbfbc6e8a5700c7b4680f22ed25b738035ffd942d8284c7271686c680",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "b6b6fafc8d6a67fe35158d6d0c2e4fed49bb0f5e0e39b193a6fbed625654b093",
+    "term:element-w-browser-lab-text-to-send": "ddf79f49777ec8c2110b7ff1137e1e07f005062206b04e46e259b378ea91e828",
+    "term:element-w-browser-lab-url": "eef1fe26919acc9b6241c465a3e5461d7db5cc9091b02b698f4111a69481ea7e",
+    "term:element-w-diagnostics-check-connection": "22be3c32ce692627ecbd4f0243cf0def9adf45f68e7c78d2ae39a39c6fb955e3",
+    "term:element-w-diagnostics-check-id": "8e7c114b54940cdc2600978c5b5aefa60503c2c3dceb1f70834fafb191f221f8",
+    "term:element-w-diagnostics-check-state": "9d403a0022f23cdc787f104e2fa5c0de3ad59fc412d46ae0d5bcba72b213d4a5",
+    "term:element-w-diagnostics-detail": "8e860e64710b0205da89537c70e98181d0b748fd0c9fcd9d6bbb5c6a64ecfd23",
+    "term:element-w-diagnostics-provider-sign-in-help": "8d255c8d6ac0fed734135a944da73b17602dffc242dd95d275a1abdf58ed7837",
+    "term:element-w-diagnostics-timestamp": "4b2be275f0b92b680e341d1b32d5f9c278e414741954936099298dd41449d741",
+    "term:element-w-diagnostics-version": "369e246dffd670f793e5029393796964f96de5f05c7f35af68fc43f26ba1fca9",
+    "term:github-skill-source": "6613b7603cbc6f2226559418a46e02e118ad2783289cfa0ce61c82e592607920",
+    "term:owner": "20c0a7bae743a04e05a022217f20efe16011798a346cc159ab8261f81f707f8f",
+    "term:state-failed": "bb4825d7a1489db217493e147d9e4f818d2b5d35b2bd319b12888045c44ae52b",
+    "term:state-unverified": "37e69b4ea32f01f5a1754592f35ca8f70a658d4732c3aeb810c078f3b565d110",
+    "term:state-verified": "c6eb5e5ca1a462d1b81f7d0bb9db6befb5bf0a03316f92716bda1c4b47639f5c",
+    "term:ui-c-browser-lab": "6187cc202b952b4f258abca8e52eaebda64194a718e7948e9bbc62c486e18444",
+    "term:ui-c-diagnose": "48c17a4fa964400a1d908b27c5518a61ed4bd877753d7da937e27054b41057e4",
+    "term:ui-p-browser-lab": "e066e12cbea66f8cba9a0ffa431191d72447472ce4ad38e9abe7a9e5a39540ad",
+    "term:ui-p-diagnostics": "885ca09e0dca74569f09f67c455b1b13a348bdedf7cea7853efb0dd91de7431b",
+    "term:ui-page-browser-lab": "ab0987d6978c7e05f960f3bc99ce2cad1ee5d79e92e4c683d32211ee89d993e4",
+    "term:ui-w-browser-lab": "0921c30ab4bffe54c509e3c6fc43458c9b0e027cf399210bc67029d09fffb4db",
+    "term:ui-w-diagnostics": "66a5f8a1d7f5e26721e70d96bb1bf612e3d9a9d96d7e9dd8a1e5c3b17cf6ff9c",
+    "term:unverified-behavior": "fee1885fba8d5646733595cb3d47e962e746279451c1247919e51bc7c45a9972",
+    "term:verification": "d14bcaeadef0be4e18041e5305e7ee16b56428bdf475008890c7db65200437fa",
+    "ui:C-BROWSER-LAB": "cf405900de8644a426b12c23aba13dd63fa28c8027d4e4e2523f3f83e5286e12",
+    "ui:C-DIAGNOSE": "77a1055ea5781483c521f811dfb3bc213e5c989612a97863525ce045cfb99774",
+    "ui:P-BROWSER-LAB": "938b48ee530a7499a0ac3117c76753d20b857cefd662234aabfcd61b32c27e93",
+    "ui:P-DIAGNOSTICS": "09065b2f88c30fccf2ded974ce5d5ec3b2f90a3ce3531c94085be4eb1f8fb35b",
+    "ui:PAGE-BROWSER-LAB": "4d874464eb0b12ca40239f1f8a174e4ae30ae0ce2c72fa054b386f3ebc5dd745",
+    "ui:W-BROWSER-LAB": "21027a9a38d0fcda443a20f6e5b018b52a1f40bcc367973838de0753ec170c1d",
+    "ui:W-DIAGNOSTICS": "ccae845a313b98ce8ce2f9661b65697fe41ad8412754d135f1a1a4399e01eee4"
   }
 }

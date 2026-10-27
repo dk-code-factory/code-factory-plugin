@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/dk-code-factory/agent-workflow/pkg/workflows"
+	"github.com/google/jsonschema-go/jsonschema"
 )
 
 //go:embed workflows/*.yml
@@ -310,6 +312,23 @@ func (p *providerTurn) RunAgent(ctx context.Context, req workflows.AgentRequest)
 	case result := <-t.end:
 		if result.status != "completed" {
 			return nil, fmt.Errorf("provider turn ended: %s", result.status)
+		}
+		if req.Output != nil && req.Output.Enabled() {
+			// Validate the YAML-owned contract fully before executor success. The
+			// pinned executor's validator omits some numeric constraints.
+			data, err := json.Marshal(req.Output.Schema)
+			var schema jsonschema.Schema
+			if err != nil || json.Unmarshal(data, &schema) != nil {
+				return nil, errors.New("invalid AI workflow output schema")
+			}
+			resolved, err := schema.Resolve(&jsonschema.ResolveOptions{Loader: func(*url.URL) (*jsonschema.Schema, error) {
+				return nil, errors.New("external AI workflow schema references are unsupported")
+			}})
+			raw, _, parseErr := workflows.ExtractJSONValue(result.text)
+			var value any
+			if err != nil || parseErr != nil || json.Unmarshal([]byte(raw), &value) != nil || resolved.Validate(value) != nil {
+				return nil, errors.New("AI workflow response does not match its output schema")
+			}
 		}
 		return map[string]any{"text": result.text}, nil
 	case <-ctx.Done():

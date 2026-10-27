@@ -207,6 +207,70 @@ func TestStructuredWorkflowRejectsInvalidOutputWithoutRepair(t *testing.T) {
 	}
 }
 
+func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		priority   int
+		confidence float64
+		valid      bool
+	}{
+		{"priority-above-maximum", 4, 0.5, false},
+		{"confidence-above-maximum", 2, 2, false},
+		{"priority-below-minimum", -1, 0.5, false},
+		{"confidence-below-minimum", 2, -0.1, false},
+		{"lower-boundaries", 0, 0, true},
+		{"upper-boundaries", 3, 1, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", "inference")
+			output, err := json.Marshal(map[string]any{"priority": tc.priority, "confidence": tc.confidence, "rationale": "private-assessment-output-canary"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Setenv("CF_FAKE_INFERENCE", string(output))
+			dir := t.TempDir()
+			log := filepath.Join(dir, "rpc.jsonl")
+			t.Setenv("CF_FAKE_RECORD", log)
+			terminal := make(chan codex.Message, 1)
+			c := startFixture(t, dir, Assessment, func(msg codex.Message) {
+				if msg.Method == "turn/completed" {
+					terminal <- msg
+				}
+			})
+			if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Assess item"}}}, nil); err != nil {
+				t.Fatal(err)
+			}
+			msg := receiveMessage(t, terminal)
+			var data struct{ Turn struct{ Status string } }
+			wantStatus, wantRunStatus := "failed", workflows.RunStatusFailed
+			if tc.valid {
+				wantStatus, wantRunStatus = "completed", workflows.RunStatusSucceeded
+			}
+			if json.Unmarshal(msg.Params, &data) != nil || data.Turn.Status != wantStatus {
+				t.Fatalf("YAML schema violation reported incorrectly: want %s, got %s", wantStatus, msg.Params)
+			}
+			waitRecord(t, dir, Assessment, wantRunStatus)
+			if strings.Contains(string(msg.Params), "private-assessment-output-canary") {
+				t.Fatal("private response leaked through terminal validation diagnostic")
+			}
+			calls, err := os.ReadFile(log)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Count(string(calls), `"method":"turn/start"`) != 1 || !strings.Contains(string(calls), `"outputSchema"`) || !strings.Contains(string(calls), `"maximum":3`) || !strings.Contains(string(calls), `"maximum":1`) {
+				t.Fatal("YAML schema was lost or response validation replayed a turn", string(calls))
+			}
+			files, _ := filepath.Glob(filepath.Join(dir, "ai-workflows/runs/*.json"))
+			for _, file := range files {
+				checkpoint, err := os.ReadFile(file)
+				if err != nil || strings.Contains(string(checkpoint), "private-assessment-output-canary") {
+					t.Fatal("private response persisted in status checkpoint", err)
+				}
+			}
+		})
+	}
+}
+
 func TestWorkflowCheckpointsOmitPrivateContentAndCloseJoinsExecution(t *testing.T) {
 	t.Setenv("CF_FAKE_MODE", "hold")
 	dir := t.TempDir()
@@ -274,6 +338,27 @@ func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(t *testing.T) {
 	}
 	closed := make(chan struct{})
 	go func() { _ = c.Close(); close(closed) }()
+	t.Cleanup(func() {
+		finish()
+		select {
+		case <-closed:
+		case <-time.After(5 * time.Second):
+			t.Error("close goroutine did not exit after checkpoint release")
+		}
+	})
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		c.mu.Lock()
+		closing := c.closed
+		c.mu.Unlock()
+		if closing {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("close did not enter while checkpoint was blocked")
+		}
+		time.Sleep(time.Millisecond)
+	}
 	select {
 	case <-closed:
 		t.Fatal("close discarded pending successful checkpoint")

@@ -192,6 +192,7 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestWorkflowPreservesPolicySkillsAndInteractiveReplies(`; S2. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestStatusStoreSerializationOmitsPrivateOutputsAnswersAndErrors(`; S2. Distinct run/job/step/iteration output, answer and provider-error canaries are absent from private status records; useful status identity and original in-memory execution remain intact.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S2. Late diagnostic uses a generic message and originating identities without prompt, answer or provider-error content.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(`; S2. Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics.
 
 ## Verification and gaps
 
