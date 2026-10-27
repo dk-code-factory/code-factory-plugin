@@ -159,17 +159,19 @@ func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.mu.Lock()
 	recovery := &domain.QuestionRecovery{ID: "workflow-answer", RunID: run.ID, Stage: "answered", Confirmation: "native"}
-	s.recovery = recovery
-	s.run.Status = "idle"
-	if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
+	if err := func() error {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		s.recovery = recovery
+		s.run.Status = "idle"
+		if err := a.Store.Put(ctx, "question-recovery", recovery.ID, recovery, ""); err != nil {
+			return err
+		}
+		return a.Runs.persist(s, "run.state")
+	}(); err != nil {
 		t.Fatal(err)
 	}
-	if err := a.Runs.persist(s, "run.state"); err != nil {
-		t.Fatal(err)
-	}
-	s.mu.Unlock()
 	done := make(chan struct{})
 	go func() { defer close(done); a.Runs.continueAfterRepair(s, recovery) }()
 	t.Cleanup(func() { _ = os.WriteFile(gate, nil, 0600); waitLaunchRetry(t, func() { <-done }) })
