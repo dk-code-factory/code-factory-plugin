@@ -33,7 +33,9 @@ func (a *App) AssessNext(ctx context.Context) error {
 	if a.Runs.busy() {
 		return nil
 	}
-	entries, e := a.Inbox(ctx, "open")
+	// Select from compact saved entries; decode retained history only for the
+	// item being assessed, keeping background selection off the launch path.
+	entries, e := a.InboxSummaries(ctx, "open")
 	if e != nil {
 		return e
 	}
@@ -49,11 +51,15 @@ func (a *App) AssessNext(ctx context.Context) error {
 		if as.Revision == entry.Item.Revision && as.Policy == c.PolicyVersion && as.Context == a.AssessmentContext(ctx, entry.Item) && (as.Status == "complete" || time.Now().Before(as.RetryAt)) {
 			continue
 		}
-		as = domain.Assessment{ID: entry.Item.ID, Revision: entry.Item.Revision, Policy: c.PolicyVersion, Context: a.AssessmentContext(ctx, entry.Item), Status: "running"}
+		var source domain.Item
+		if e = a.Store.Get(ctx, "item", entry.Item.ID, &source); e != nil {
+			return e
+		}
+		as = domain.Assessment{ID: source.ID, Revision: source.Revision, Policy: c.PolicyVersion, Context: a.AssessmentContext(ctx, source), Status: "running"}
 		if e = a.Store.Put(ctx, "assessment", as.ID, as, "assessment.changed"); e != nil {
 			return e
 		}
-		res, err := a.infer(ctx, entry.Item, c)
+		res, err := a.infer(ctx, source, c)
 		if err != nil {
 			as.Status = "error"
 			as.Error = err.Error()
