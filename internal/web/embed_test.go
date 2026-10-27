@@ -1,6 +1,10 @@
 package web
 
 import (
+	"compress/gzip"
+	"encoding/base64"
+	"io"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -26,5 +30,22 @@ func TestProductionShellPrecedesDeferredRuntime(t *testing.T) {
 	}
 	if strings.Contains(HTML, `<script type="module"`) {
 		t.Fatal("a production module must not parse before shell paint")
+	}
+	payload := regexp.MustCompile(`<script type="application/x-code-factory" id="factory-runtime" data-encoding="gzip-base64">([^<]+)</script>`).FindStringSubmatch(HTML)
+	if len(payload) != 2 {
+		t.Fatal("production runtime must be compressed after the shell")
+	}
+	packed, err := base64.StdEncoding.DecodeString(payload[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader, err := gzip.NewReader(strings.NewReader(string(packed)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reader.Close()
+	module, err := io.ReadAll(reader)
+	if err != nil || !strings.Contains(string(module), "react.transitional.element") || len(payload[1])*2 >= len(module) {
+		t.Fatal("runtime must round-trip to the application and halve parser input", len(payload[1]), len(module), err)
 	}
 }
