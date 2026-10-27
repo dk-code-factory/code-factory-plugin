@@ -8170,6 +8170,11 @@
           "path": "internal/app/attention_reconciliation.go",
           "anchor": "func (m *Manager) reconcileAttention(",
           "purpose": "Per-question reconciliation changes saved actionable attention only after same-run owner/agent evidence; it never sends an answer."
+        },
+        {
+          "path": "internal/app/runs.go",
+          "anchor": "func (m *Manager) Answer(",
+          "purpose": "Reject native answers after durable interruption intent before answer validation, private reply persistence or provider delivery."
         }
       ],
       "assertions": [
@@ -8183,7 +8188,8 @@
         "UI-ATTENTION-CONTEXT",
         "UI-READABLE-APPROVALS",
         "API-ATTENTION-RECONCILIATION",
-        "API-INACTIVE-QUESTION-FOLLOWUP"
+        "API-INACTIVE-QUESTION-FOLLOWUP",
+        "API-NATIVE-ANSWER-INTERRUPT"
       ],
       "gaps": [
         {
@@ -8203,7 +8209,7 @@
       ],
       "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state",
       "trigger": "Response matched to current request ID.",
-      "interactions": "Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
+      "interactions": "Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them. Once interruption is requested, native questions reject new responses while the agent is stopping.",
       "from": [
         "W-QUESTIONS",
         "W-APPROVAL",
@@ -12853,6 +12859,12 @@
       "path": "internal/app/launch_retry_test.go",
       "anchor": "func TestDeferredLaunchProjectionRetainsWorkingQueueAndRetryDeadline(",
       "assertion": "Deferred work stays in Working with Waiting for GitHub; tracking retains launchRetryAt and cancellation clears the waiting projection."
+    },
+    {
+      "id": "API-NATIVE-ANSWER-INTERRUPT",
+      "path": "internal/app/attention_answers_test.go",
+      "anchor": "func TestNativeAnswerRejectsDurableInterruptBeforeProviderCompletion(",
+      "assertion": "A blocked provider interrupt exposes durable cancellation intent; a valid native answer rejects without claiming attention or storing its reply, and interrupted completion stales the request. Fixture backend coverage, not installed-host acceptance."
     }
   ],
   "source_map": [

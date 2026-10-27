@@ -1611,7 +1611,7 @@ func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	a, ok := s.pending[id]
-	if !ok || a.Status != "pending" {
+	if !ok || a.Status != "pending" || s.run.InterruptRequested {
 		return fmt.Errorf("attention request is stale or already answered")
 	}
 	if e = validateAnswer(a, result); e != nil {

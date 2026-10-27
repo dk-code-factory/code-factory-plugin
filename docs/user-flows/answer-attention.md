@@ -36,7 +36,7 @@ Keyboard focus stays within the dialog through updates. Escape defers the answer
 
 Messages counts valid unanswered questions and approvals, including nonblocking questions and retained message/text questions; an empty queue remains available with a concise status. Answering one request removes only that request from the waiting list. Retained conversations and prepared launches are available only in their owning item’s Work history. Answered, stale and orphaned requests are excluded. Live RPC requests require their original connected process; retained message/text questions can restore their session. Approval command, reason and requested access are readable fields; original data is available under Technical details. Allow once, Allow for this session, Deny and Cancel preserve the exact original response values. Answers are local to each request; secret answers never enter ordinary item/run draft storage.
 
-Nonblocking requests leave work active and remain visible in both Messages and the owning conversation. Invalid answers and grants beyond requested permissions are rejected. Duplicate, resolved or stale requests cannot be answered again. Delivery failure after a response is claimed is not automatically replayed. Unsupported host verification stays explicit.
+Nonblocking requests leave work active and remain visible in both Messages and the owning conversation. Invalid answers and grants beyond requested permissions are rejected. Duplicate, resolved or stale requests cannot be answered again. Requesting interruption immediately prevents answering the agent's native questions, including while the agent is still stopping. Delivery failure after a response is claimed is not automatically replayed. Unsupported host verification stays explicit.
 
 A delivered conversational message, completed turn or startup schedules background reconciliation of retained message/text questions. Only a specific owner decision followed by an explicit agent acknowledgement in the same run can retire that question. Partial decisions preserve the other original question IDs and options; resolved, cancelled or superseded questions leave actionable attention with evidence references retained. A read-only helper checks bounded redacted conversation evidence and cannot answer questions or grant permissions. Missing or ambiguous evidence, helper failure, a changed conversation or another run’s completed review preserves the outstanding asks. Saved-state reads remain immediate and never invoke this helper. Native requests and approvals still require their original protocol response.
 
@@ -50,7 +50,7 @@ When an agent stops with text, the application classifies whether input is actua
 
 - **S1** A blocking question is visible and answered exactly once, including concurrent submissions.
 - **S2** Approval choices and form content are validated without broadening permissions.
-- **S3** Nonblocking requests leave the run active; stale requests reject responses after recovery.
+- **S3** Nonblocking requests leave the run active; native requests reject responses once interruption is requested, and stale requests reject responses after recovery.
 
 - **S5** The chat queue is discoverable, read only, oldest first and paginated without skipping requests when earlier asks resolve. It preserves owning context and exact options, excludes stale/answered/orphaned requests, and verifies that an accepted answer resumes the same agent without removing another agent’s ask.
 
@@ -293,6 +293,7 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S2. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(`; S4. Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(`; S1. Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint.
+- [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestNativeAnswerRejectsDurableInterruptBeforeProviderCompletion(`; S3. Durable interruption rejects a native answer before provider completion without claiming attention or saving its reply; completion stales the original request.
 
 ## Verification and gaps
 

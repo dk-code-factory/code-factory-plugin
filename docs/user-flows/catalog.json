@@ -6716,6 +6716,14 @@
             "S1"
           ],
           "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
+        },
+        {
+          "path": "internal/app/attention_answers_test.go",
+          "anchor": "func TestNativeAnswerRejectsDurableInterruptBeforeProviderCompletion(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Durable interruption rejects a native answer before provider completion without claiming attention or saving its reply; completion stales the original request."
         }
       ],
       "suites": [
