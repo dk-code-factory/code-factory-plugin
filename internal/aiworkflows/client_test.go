@@ -16,17 +16,25 @@ import (
 	"github.com/dk-code-factory/agent-workflow/pkg/workflows"
 )
 
+func fixtureRPCContext(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func startFixture(t *testing.T, dir string, kind Kind, callback func(codex.Message)) *Client {
 	t.Helper()
+	// Client lifetime outlives each RPC's admission deadline.
 	c, err := Start(context.Background(), testutil.FakeCodex(t), nil, dir, kind, callback)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = c.Close() })
-	if err = c.Initialize(context.Background()); err != nil {
+	if err = c.Initialize(fixtureRPCContext(t)); err != nil {
 		t.Fatal(err)
 	}
-	if err = c.Call(context.Background(), "thread/start", map[string]any{"cwd": dir, "sandbox": "read-only", "approvalPolicy": "never"}, nil); err != nil {
+	if err = c.Call(fixtureRPCContext(t), "thread/start", map[string]any{"cwd": dir, "sandbox": "read-only", "approvalPolicy": "never"}, nil); err != nil {
 		t.Fatal(err)
 	}
 	return c
@@ -61,7 +69,7 @@ func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(t *testing.T) {
 			dir := t.TempDir()
 			c := startFixture(t, dir, kind, nil)
 			var response struct{ Turn struct{ ID string } }
-			if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Inspect this task"}}}, &response); err != nil {
+			if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Inspect this task"}}}, &response); err != nil {
 				t.Fatal(err)
 			}
 			if response.Turn.ID == "" {
@@ -87,7 +95,7 @@ func TestWorkflowPreservesPolicySkillsAndInteractiveReplies(t *testing.T) {
 		}
 	})
 	params := map[string]any{"threadId": "thread-1", "startIfIdle": true, "effort": "high", "approvalPolicy": "on-request", "sandboxPolicy": map[string]any{"type": "readOnly"}, "collaborationMode": map[string]any{"mode": "plan"}, "input": []map[string]string{{"type": "text", "text": "Review retained session"}, {"type": "skill", "name": "review-skill", "path": "/private/snapshot/SKILL.md"}}}
-	if err := c.Call(context.Background(), "turn/start", params, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", params, nil); err != nil {
 		t.Fatal(err)
 	}
 	waitRecord(t, dir, Review, workflows.RunStatusRunning)
@@ -132,7 +140,7 @@ func TestInvalidWorkflowFailsBeforeProviderEffects(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(c.dir, "workflows/task.yml"), []byte("jobs: [invalid]"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Must not execute"}}}, nil); err == nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Must not execute"}}}, nil); err == nil {
 		t.Fatal("invalid YAML accepted")
 	}
 	data, _ := os.ReadFile(log)
@@ -146,21 +154,21 @@ func TestInterruptAndFollowUpUseRetainedSessionWithoutReplay(t *testing.T) {
 	dir := t.TempDir()
 	c := startFixture(t, dir, Task, nil)
 	params := map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "First task"}}}
-	if err := c.Call(context.Background(), "turn/start", params, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", params, nil); err != nil {
 		t.Fatal(err)
 	}
-	if err := c.Call(context.Background(), "turn/start", params, nil); err == nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", params, nil); err == nil {
 		t.Fatal("concurrent turn accepted")
 	}
-	if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-1"}, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-1"}, nil); err != nil {
 		t.Fatal(err)
 	}
 	waitRecord(t, dir, Task, workflows.RunStatusFailed)
 	params["input"] = []map[string]string{{"type": "text", "text": "Follow-up"}}
-	if err := c.CallWorkflow(context.Background(), QuestionRepair, params, nil); err != nil {
+	if err := c.CallWorkflow(fixtureRPCContext(t), QuestionRepair, params, nil); err != nil {
 		t.Fatal(err)
 	}
-	if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-1"}, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-1"}, nil); err != nil {
 		t.Fatal(err)
 	}
 	waitRecord(t, dir, QuestionRepair, workflows.RunStatusFailed)
@@ -177,7 +185,7 @@ func TestStructuredWorkflowRejectsInvalidOutputWithoutRepair(t *testing.T) {
 			terminal <- msg
 		}
 	})
-	if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Assess item"}}}, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Assess item"}}}, nil); err != nil {
 		t.Fatal(err)
 	}
 	waitRecord(t, dir, Assessment, workflows.RunStatusFailed)
@@ -203,7 +211,7 @@ func TestWorkflowCheckpointsOmitPrivateContentAndCloseJoinsExecution(t *testing.
 	t.Setenv("CF_FAKE_MODE", "hold")
 	dir := t.TempDir()
 	c := startFixture(t, dir, Task, nil)
-	if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "private-secret-canary"}}}, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "private-secret-canary"}}}, nil); err != nil {
 		t.Fatal(err)
 	}
 	if err := c.Close(); err != nil { /* A completed process may already have exited. */
@@ -219,7 +227,7 @@ func TestWorkflowCheckpointsOmitPrivateContentAndCloseJoinsExecution(t *testing.
 	if _, err := os.Stat(c.dir); !os.IsNotExist(err) {
 		t.Fatal("closed client retained temporary definitions")
 	}
-	if err := c.Call(context.Background(), "turn/start", map[string]any{"input": []map[string]string{{"type": "text", "text": "Must not restart"}}}, nil); err == nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"input": []map[string]string{{"type": "text", "text": "Must not restart"}}}, nil); err == nil {
 		t.Fatal("closed client started work")
 	}
 }
@@ -251,7 +259,7 @@ func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(t *testing.T) {
 	var once sync.Once
 	finish := func() { once.Do(func() { close(release) }) }
 	t.Cleanup(finish)
-	if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Complete retained task"}}}, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Complete retained task"}}}, nil); err != nil {
 		t.Fatal(err)
 	}
 	select {
@@ -333,7 +341,7 @@ func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(
 			release := func() { once.Do(func() { close(store.release) }) }
 			t.Cleanup(release)
 			params := map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "private-prompt-and-answer-canary"}}}
-			if err := c.Call(context.Background(), "turn/start", params, nil); err != nil {
+			if err := c.Call(fixtureRPCContext(t), "turn/start", params, nil); err != nil {
 				t.Fatal(err)
 			}
 			select {
@@ -351,7 +359,7 @@ func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(
 			}
 			assertCompletion("turn-1", "completed") // Must arrive before checkpoint release.
 			params["input"] = []map[string]string{{"type": "text", "text": "question-only recovery follow-up"}}
-			if err := c.CallWorkflow(context.Background(), QuestionRepair, params, nil); err != nil {
+			if err := c.CallWorkflow(fixtureRPCContext(t), QuestionRepair, params, nil); err != nil {
 				t.Fatal(err)
 			}
 			release()
@@ -369,7 +377,7 @@ func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(
 			if !followUpActive {
 				t.Fatal("old checkpoint changed follow-up admission or terminal status")
 			}
-			if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-2"}, nil); err != nil {
+			if err := c.Call(fixtureRPCContext(t), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-2"}, nil); err != nil {
 				t.Fatal(err)
 			}
 			assertCompletion("turn-2", "interrupted")
@@ -408,7 +416,7 @@ func TestInteractiveCheckpointDiagnosticDoesNotDeadlockClose(t *testing.T) {
 	var once sync.Once
 	release := func() { once.Do(func() { close(store.release) }) }
 	t.Cleanup(release)
-	if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Complete task"}}}, nil); err != nil {
+	if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Complete task"}}}, nil); err != nil {
 		t.Fatal(err)
 	}
 	select {
@@ -474,11 +482,11 @@ func TestInteractiveSuccessAndNativeFailuresDoNotReportWorkflowError(t *testing.
 					messages <- msg
 				}
 			})
-			if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": tc.prompt}}}, nil); err != nil {
+			if err := c.Call(fixtureRPCContext(t), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": tc.prompt}}}, nil); err != nil {
 				t.Fatal(err)
 			}
 			if tc.status == "interrupted" {
-				if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-1"}, nil); err != nil {
+				if err := c.Call(fixtureRPCContext(t), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-1"}, nil); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -605,7 +613,7 @@ func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(t *testing.T) {
 			log := filepath.Join(dir, "rpc.jsonl")
 			t.Setenv("CF_FAKE_RECORD", log)
 			c := startFixture(t, dir, Task, nil)
-			admission, cancelAdmission := context.WithCancel(context.Background())
+			admission, cancelAdmission := context.WithCancel(fixtureRPCContext(t))
 			defer cancelAdmission()
 			var response struct{ Turn struct{ ID string } }
 			if err := c.Call(admission, "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Observe retained native turn"}}}, &response); err != nil {
@@ -622,7 +630,7 @@ func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(t *testing.T) {
 			switch shutdown {
 			case "interrupt":
 				status = workflows.RunStatusFailed
-				if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": response.Turn.ID}, nil); err != nil {
+				if err := c.Call(fixtureRPCContext(t), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": response.Turn.ID}, nil); err != nil {
 					t.Fatal(err)
 				}
 			case "client-cancel":
