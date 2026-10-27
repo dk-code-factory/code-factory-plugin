@@ -34,6 +34,9 @@ Conversation rendering keeps human-facing agent messages, your replies and saved
 
 Automatic recovery exchanges appear as technical activity under Details or in the session console. Your responses keep their ordinary conversation role.
 
+An execution diagnostic received after completion preserves the completed turn
+and does not repeat its work or change a later follow-up.
+
 - **S5** Submitted reviews refresh after a PR turn and remain available to plugin skills with provider receipt URLs and explicit freshness. A failed refresh retains saved reviews and the last successful observation; an unverified result is not an empty or successful publication result. Reading, refreshing and opening review links never starts work or repeats publication. Saved details and receipts render while a background refresh is pending; errors retain the previous successful observation. Fresh host reads do not force provider requests or bypass pause, budgets and cooldowns.
 
 - **S6** A conversational status read includes the selected item and current/retained run summaries, exact pending questions, a bounded agent progress or final-response excerpt with its timestamp and continuation reference, and saved current-head versus earlier-head publication receipts. The current run uses the same retained-session preference as the embedded view; a run identifier selects that exact run. Missing progress projections and missing external observations remain explicitly unavailable. Longer history, questions and receipts use independent pagination. Dashboard opening is explicit and returns a compact overview; the embedded app obtains its own state through the host connection.
@@ -151,6 +154,7 @@ flowchart TD
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `func TestTrackingContinuationUsesOnlyActiveTurnTokens(`; S6. Idle/interrupted/failed continuations return empty expectedTurn while preserving historical turnId; running/waiting retain the real token and reject stale active submissions.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(`; S1. Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S2. Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed.
 
 ## Verification and gaps
 

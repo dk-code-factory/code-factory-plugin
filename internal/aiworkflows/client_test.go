@@ -5,6 +5,7 @@ import (
 	"codefactory/internal/testutil"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -277,4 +278,278 @@ func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(t *testing.T) {
 		t.Fatal("close did not drain workflow")
 	}
 	waitRecord(t, dir, Task, workflows.RunStatusSucceeded)
+}
+
+// Fail only the first run, after its native completion. Other turns must keep
+// using the same session while this observational checkpoint is blocked.
+type failingTerminalStore struct {
+	store            workflows.RunStore
+	entered, release chan struct{}
+	once             sync.Once
+	failedID         string
+}
+
+func (s *failingTerminalStore) Save(ctx context.Context, run *workflows.Run) error {
+	if run.Status != workflows.RunStatusRunning {
+		s.once.Do(func() {
+			s.failedID = run.ID
+			close(s.entered)
+			<-s.release
+		})
+		if run.ID == s.failedID {
+			return errors.New("private-provider-error-canary")
+		}
+	}
+	return s.store.Save(ctx, run)
+}
+
+func receiveMessage(t *testing.T, messages <-chan codex.Message) codex.Message {
+	t.Helper()
+	select {
+	case msg := <-messages:
+		return msg
+	case <-time.After(5 * time.Second):
+		t.Fatal("missing workflow notification")
+		return codex.Message{}
+	}
+}
+
+func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(t *testing.T) {
+	for _, kind := range []Kind{Task, Review, QuestionRepair} {
+		t.Run(string(kind), func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", "recover-first") // Distinct turn IDs on the same thread.
+			dir := t.TempDir()
+			log := filepath.Join(dir, "rpc.jsonl")
+			t.Setenv("CF_FAKE_RECORD", log)
+			messages := make(chan codex.Message, 16)
+			c := startFixture(t, dir, kind, func(msg codex.Message) {
+				if msg.Method == "turn/completed" || msg.Method == "workflow/error" {
+					messages <- msg
+				}
+			})
+			store := &failingTerminalStore{store: c.store, entered: make(chan struct{}), release: make(chan struct{})}
+			c.store = store
+			var once sync.Once
+			release := func() { once.Do(func() { close(store.release) }) }
+			t.Cleanup(release)
+			params := map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "private-prompt-and-answer-canary"}}}
+			if err := c.Call(context.Background(), "turn/start", params, nil); err != nil {
+				t.Fatal(err)
+			}
+			select {
+			case <-store.entered:
+			case <-time.After(5 * time.Second):
+				t.Fatal("terminal checkpoint not reached")
+			}
+			assertCompletion := func(wantID, wantStatus string) {
+				t.Helper()
+				msg := receiveMessage(t, messages)
+				var data struct{ Turn struct{ ID, Status string } }
+				if msg.Method != "turn/completed" || json.Unmarshal(msg.Params, &data) != nil || data.Turn.ID != wantID || data.Turn.Status != wantStatus {
+					t.Fatalf("native completion changed: %s %s", msg.Method, msg.Params)
+				}
+			}
+			assertCompletion("turn-1", "completed") // Must arrive before checkpoint release.
+			params["input"] = []map[string]string{{"type": "text", "text": "question-only recovery follow-up"}}
+			if err := c.CallWorkflow(context.Background(), QuestionRepair, params, nil); err != nil {
+				t.Fatal(err)
+			}
+			release()
+			msg := receiveMessage(t, messages)
+			var diagnostic struct{ ThreadID, TurnID, Message string }
+			if msg.Method != "workflow/error" || json.Unmarshal(msg.Params, &diagnostic) != nil || diagnostic.ThreadID != "thread-1" || diagnostic.TurnID != "turn-1" || diagnostic.Message != "AI workflow failed; inspect its private execution status." {
+				t.Fatalf("missing sanitized diagnostic for originating turn: %s %s", msg.Method, msg.Params)
+			}
+			if strings.Contains(string(msg.Params), "canary") || strings.Contains(string(msg.Params), "Which target") {
+				t.Fatal("private workflow content escaped in diagnostic")
+			}
+			c.mu.Lock()
+			followUpActive := c.active != nil && c.active.id == "turn-2" && !c.active.ended
+			c.mu.Unlock()
+			if !followUpActive {
+				t.Fatal("old checkpoint changed follow-up admission or terminal status")
+			}
+			if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-2"}, nil); err != nil {
+				t.Fatal(err)
+			}
+			assertCompletion("turn-2", "interrupted")
+			_ = c.Close()
+			select {
+			case extra := <-messages:
+				t.Fatalf("duplicate terminal or diagnostic: %s %s", extra.Method, extra.Params)
+			default:
+			}
+			data, err := os.ReadFile(log)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Count(string(data), `"method":"turn/start"`) != 2 || strings.Count(string(data), `"threadId":"thread-1"`) != 2 {
+				t.Fatal("workflow failure replayed or moved a native turn", string(data))
+			}
+		})
+	}
+}
+
+func TestInteractiveCheckpointDiagnosticDoesNotDeadlockClose(t *testing.T) {
+	t.Setenv("CF_FAKE_MODE", "complete")
+	dir := t.TempDir()
+	var owner sync.Mutex
+	attempted, delivered := make(chan struct{}), make(chan struct{})
+	c := startFixture(t, dir, Task, func(msg codex.Message) {
+		if msg.Method == "workflow/error" {
+			close(attempted)
+			owner.Lock()
+			defer owner.Unlock()
+			close(delivered)
+		}
+	})
+	store := &failingTerminalStore{store: c.store, entered: make(chan struct{}), release: make(chan struct{})}
+	c.store = store
+	var once sync.Once
+	release := func() { once.Do(func() { close(store.release) }) }
+	t.Cleanup(release)
+	if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": "Complete task"}}}, nil); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-store.entered:
+	case <-time.After(5 * time.Second):
+		t.Fatal("terminal checkpoint not reached")
+	}
+	owner.Lock() // Manager.Close holds the session lock while joining execution.
+	locked := true
+	unlock := func() {
+		if locked {
+			locked = false
+			owner.Unlock()
+		}
+	}
+	t.Cleanup(unlock)
+	release()
+	select {
+	case <-attempted:
+	case <-time.After(5 * time.Second):
+		t.Fatal("diagnostic callback not reached")
+	}
+	closed := make(chan struct{})
+	go func() { _ = c.Close(); close(closed) }()
+	t.Cleanup(func() {
+		unlock()
+		select {
+		case <-closed:
+		case <-time.After(5 * time.Second):
+			t.Error("close goroutine did not exit")
+		}
+		select {
+		case <-delivered:
+		case <-time.After(5 * time.Second):
+			t.Error("diagnostic callback did not exit")
+		}
+	})
+	select {
+	case <-closed:
+	case <-time.After(5 * time.Second):
+		t.Fatal("shutdown joined a callback waiting for the owner's session lock")
+	}
+	unlock()
+	select {
+	case <-delivered:
+	case <-time.After(5 * time.Second):
+		t.Fatal("diagnostic callback remained blocked after shutdown")
+	}
+}
+
+func TestInteractiveSuccessAndNativeFailuresDoNotReportWorkflowError(t *testing.T) {
+	for _, tc := range []struct{ status, mode, prompt string }{
+		{"completed", "complete", "Task"},
+		{"interrupted", "hold", "Task"},
+		{"failed", "complete", "question-only recovery clarification"},
+	} {
+		t.Run(tc.status, func(t *testing.T) {
+			t.Setenv("CF_FAKE_MODE", tc.mode)
+			t.Setenv("CF_FAKE_CLARIFICATION", "failed")
+			messages := make(chan codex.Message, 16)
+			c := startFixture(t, t.TempDir(), Task, func(msg codex.Message) {
+				if msg.Method == "turn/completed" || msg.Method == "workflow/error" {
+					messages <- msg
+				}
+			})
+			if err := c.Call(context.Background(), "turn/start", map[string]any{"threadId": "thread-1", "input": []map[string]string{{"type": "text", "text": tc.prompt}}}, nil); err != nil {
+				t.Fatal(err)
+			}
+			if tc.status == "interrupted" {
+				if err := c.Call(context.Background(), "turn/interrupt", map[string]string{"threadId": "thread-1", "turnId": "turn-1"}, nil); err != nil {
+					t.Fatal(err)
+				}
+			}
+			msg := receiveMessage(t, messages)
+			var terminal struct{ Turn struct{ Status string } }
+			if msg.Method != "turn/completed" || json.Unmarshal(msg.Params, &terminal) != nil || terminal.Turn.Status != tc.status {
+				t.Fatal("native terminal status changed", msg.Method, string(msg.Params))
+			}
+			_ = c.Close()
+			select {
+			case extra := <-messages:
+				t.Fatalf("unexpected workflow diagnostic or duplicate completion: %s %s", extra.Method, extra.Params)
+			case <-time.After(25 * time.Millisecond):
+			}
+		})
+	}
+}
+
+func TestStatusStoreSerializationOmitsPrivateOutputsAnswersAndErrors(t *testing.T) {
+	dir := t.TempDir()
+	var canaries []string
+	outputs := func(location string) map[string]any {
+		output, answer := location+"-output-canary", location+"-answer-canary"
+		canaries = append(canaries, output, answer)
+		return map[string]any{"text": output, "answers": map[string]any{"scope": answer}}
+	}
+	privateError := func(location string) string {
+		value := location + "-provider-error-canary"
+		canaries = append(canaries, value)
+		return value
+	}
+	run := workflows.Run{
+		ID: "0123456789abcdef0123456789abcdef", WorkflowRef: "workflows/task.yml", Status: workflows.RunStatusFailed,
+		Outputs: outputs("run"), Error: privateError("run"),
+		Jobs: map[string]workflows.JobExecution{"task": {
+			ID: "task", Status: "failed", Outputs: outputs("job"), Error: privateError("job"),
+			Steps: map[string]workflows.StepExecution{"model": {ID: "model", Status: "failed", Outputs: outputs("step"), Error: privateError("step")}},
+			Iterations: []workflows.JobIteration{{Number: 1, Status: "failed", Outputs: outputs("iteration"), Error: privateError("iteration"),
+				Steps: map[string]workflows.StepExecution{"nested": {ID: "nested", Status: "failed", Outputs: outputs("iteration-step"), Error: privateError("iteration-step")}},
+			}},
+		}},
+	}
+	if err := (statusStore{dir: dir}).Save(context.Background(), &run); err != nil {
+		t.Fatal(err)
+	}
+	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
+	if err != nil || len(files) != 1 {
+		t.Fatal("missing persisted status", files, err)
+	}
+	data, err := os.ReadFile(files[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, canary := range canaries {
+		if strings.Contains(string(data), canary) {
+			t.Fatalf("private content persisted: %s", canary)
+		}
+	}
+	var saved workflows.Run
+	if err := json.Unmarshal(data, &saved); err != nil {
+		t.Fatal(err)
+	}
+	job := saved.Jobs["task"]
+	step := job.Steps["model"]
+	if saved.ID != run.ID || saved.WorkflowRef != run.WorkflowRef || saved.Status != run.Status || job.ID != "task" || job.Status != "failed" || step.ID != "model" || step.Status != "failed" {
+		t.Fatal("status identity was lost", saved)
+	}
+	if saved.Error != "AI workflow did not complete" || job.Error != "AI workflow job did not complete" || step.Error != "AI workflow step did not complete" {
+		t.Fatal("missing sanitized status errors", saved)
+	}
+	if len(run.Outputs) == 0 || len(run.Jobs["task"].Iterations) != 1 || run.Jobs["task"].Steps["model"].Error != "step-provider-error-canary" {
+		t.Fatal("status persistence mutated private in-memory execution")
+	}
 }

@@ -37,6 +37,9 @@ Conversation rendering keeps human-facing agent messages and your replies visibl
 
 Automatic recovery exchanges appear as technical activity under Details or in the session console. Your responses keep their ordinary conversation role.
 
+An execution diagnostic received after completion preserves the completed turn
+and does not repeat its work or change a later follow-up.
+
 During explicit plugin maintenance, a new Start, message or answer is temporarily refused rather than delivered against changing plugin state. The caller retains its draft and receives the maintenance error. Maintenance is itself refused while agent work is active; question repair and continuation share the same boundary.
 
 - **S5** Restoring an inactive bounded task reapplies its invocation-local filesystem and network profile before the submitted turn. It preserves the same workspace, scratch, private indexes and original approval/publishing authority. A legacy sandbox override cannot discard the scoped policy; invalid initialization fails without starting an unrestricted replacement.
@@ -216,6 +219,9 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInterruptAndFollowUpUseRetainedSessionWithoutReplay(`; S3. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestWorkflowAdmissionPreservesStartingStateAndRecoveryClaim(`; S4. Blocked native admission stays starting; answered recovery is claimed before its sole continuation is sent.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(`; S1. Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S1. Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointDiagnosticDoesNotDeadlockClose(`; S1. Shutdown releases execution ownership before a diagnostic callback waits on the application session lock; the callback exits after that lock is released.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveSuccessAndNativeFailuresDoNotReportWorkflowError(`; S1, S3. Ordinary completed, interrupted and failed native turns retain one unchanged terminal notification without an extra workflow diagnostic.
 
 ## Verification and gaps
 

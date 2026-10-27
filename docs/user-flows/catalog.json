@@ -5570,6 +5570,31 @@
             "S1"
           ],
           "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCheckpointDiagnosticDoesNotDeadlockClose(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Shutdown releases execution ownership before a diagnostic callback waits on the application session lock; the callback exits after that lock is released."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveSuccessAndNativeFailuresDoNotReportWorkflowError(",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Ordinary completed, interrupted and failed native turns retain one unchanged terminal notification without an extra workflow diagnostic."
         }
       ],
       "suites": [
@@ -8827,6 +8852,14 @@
             "S1"
           ],
           "purpose": "Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed."
         }
       ],
       "suites": [
@@ -9914,6 +9947,22 @@
             "S2"
           ],
           "purpose": "YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestStatusStoreSerializationOmitsPrivateOutputsAnswersAndErrors(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Distinct run/job/step/iteration output, answer and provider-error canaries are absent from private status records; useful status identity and original in-memory execution remain intact."
+        },
+        {
+          "path": "internal/aiworkflows/client_test.go",
+          "anchor": "func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Late diagnostic uses a generic message and originating identities without prompt, answer or provider-error content."
         }
       ],
       "suites": [

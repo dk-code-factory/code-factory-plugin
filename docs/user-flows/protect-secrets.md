@@ -190,6 +190,8 @@ flowchart TD
 - [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestGitHubSkillUpgradeRejectsNestedNativePackages(`; S6. Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestWorkflowCheckpointsOmitPrivateContentAndCloseJoinsExecution(`; S2. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestWorkflowPreservesPolicySkillsAndInteractiveReplies(`; S2. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestStatusStoreSerializationOmitsPrivateOutputsAnswersAndErrors(`; S2. Distinct run/job/step/iteration output, answer and provider-error canaries are absent from private status records; useful status identity and original in-memory execution remain intact.
+- [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S2. Late diagnostic uses a generic message and originating identities without prompt, answer or provider-error content.
 
 ## Verification and gaps
 

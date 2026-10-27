@@ -46,6 +46,8 @@ type Client struct {
 	active *turn
 	wg     sync.WaitGroup
 	closed bool
+
+	onMessage func(codex.Message)
 }
 
 type turn struct {
@@ -55,11 +57,13 @@ type turn struct {
 	end       chan turnResult
 	finished  chan error
 	finalized chan struct{}
+	delivered chan struct{}
 	text      string
 	id        string
 	ended     bool
+	status    string
 	cancel    context.CancelFunc
-	err       error // Published by closing finalized before terminal delivery.
+	err       error // Published by closing finalized before structured terminal delivery.
 }
 
 type startResult struct {
@@ -100,9 +104,10 @@ func Start(ctx context.Context, binary string, extra []string, dataDir string, k
 		}
 	}
 	ctx, cancel := context.WithCancel(ctx)
-	c := &Client{ctx: ctx, cancel: cancel, dir: dir, kind: kind, store: statusStore{dir: filepath.Join(root, "runs")}}
+	c := &Client{ctx: ctx, cancel: cancel, dir: dir, kind: kind, store: statusStore{dir: filepath.Join(root, "runs")}, onMessage: onMessage}
 	native, err := codex.Start(ctx, binary, extra, func(msg codex.Message) {
 		if completed := c.observe(msg); completed != nil {
+			defer close(completed.delivered)
 			// Structured helpers must validate before their caller consumes a
 			// successful result. Interactive tasks deliver completion immediately
 			// so an answer cannot steer an already ended native turn while an
@@ -174,7 +179,7 @@ func (c *Client) CallWorkflow(ctx context.Context, kind Kind, params any, out an
 		return fmt.Errorf("AI workflow requires a text prompt")
 	}
 	workflowCtx, cancel := context.WithCancel(c.ctx)
-	t := &turn{kind: kind, params: native, ack: make(chan startResult, 1), end: make(chan turnResult, 1), finished: make(chan error, 1), finalized: make(chan struct{}), cancel: cancel}
+	t := &turn{kind: kind, params: native, ack: make(chan startResult, 1), end: make(chan turnResult, 1), finished: make(chan error, 1), finalized: make(chan struct{}), delivered: make(chan struct{}), cancel: cancel}
 	c.mu.Lock()
 	if c.closed {
 		c.mu.Unlock()
@@ -191,7 +196,6 @@ func (c *Client) CallWorkflow(ctx context.Context, kind Kind, params any, out an
 	c.mu.Unlock()
 	stop := context.AfterFunc(ctx, cancel)
 	go func() {
-		defer c.wg.Done()
 		defer cancel()
 		e := workflows.Executor{WorkspaceDir: c.dir, Agents: &providerTurn{client: c, turn: t}, Store: c.store, MaxParallel: 1}
 		_, runErr := e.Run(workflowCtx, workflows.RunRequest{Ref: "workflows/" + string(kind) + ".yml", Inputs: map[string]any{"prompt": prompt}})
@@ -199,10 +203,19 @@ func (c *Client) CallWorkflow(ctx context.Context, kind Kind, params any, out an
 		if c.active == t {
 			c.active = nil
 		}
+		status, id := t.status, t.id
 		c.mu.Unlock()
 		t.finished <- runErr
 		t.err = runErr
 		close(t.finalized)
+		// Application shutdown joins execution while holding its session lock.
+		// Like native notifications, diagnostics must not be part of that join.
+		c.wg.Done()
+		if runErr != nil && status == "completed" && (kind == Task || kind == Review || kind == QuestionRepair) && c.onMessage != nil {
+			<-t.delivered
+			params, _ := json.Marshal(map[string]any{"threadId": t.params["threadId"], "turnId": id, "message": "AI workflow failed; inspect its private execution status."})
+			c.onMessage(codex.Message{Method: "workflow/error", Params: params})
+		}
 	}()
 	defer stop()
 	select {
@@ -321,6 +334,7 @@ func (c *Client) observe(msg codex.Message) *turn {
 	}
 	if msg.Method == "turn/completed" {
 		t.ended = true
+		t.status = data.Turn.Status
 		t.end <- turnResult{text: t.text, status: data.Turn.Status}
 		// Release the transport for a follow-up, even if saving the workflow's
 		// terminal checkpoint is still pending. Old execution owns only t.
