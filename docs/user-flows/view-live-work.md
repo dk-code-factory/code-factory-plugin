@@ -10,8 +10,8 @@ A supported host has opened the connected application. Updated embedded applicat
 
 ## Main flow
 
-1. Load the inbox as a full-width list beneath compact navigation. Opening an item or agent replaces the list with one focused page; owned surfaces preserve the active host theme even when the surrounding document is transparent.
-2. Refresh visible state as work changes and display connection errors when refresh fails.
+1. Open directly from the host sidebar, bypassing a conversational model turn. Navigation and loading controls become usable before saved data or background work finishes. The controlled fixture launch boundary is 50 ms for every fresh launch and warm reopening; actual host latency is recorded separately. Load the inbox as a full-width list beneath compact navigation. Opening an item or agent replaces the list with one focused page; owned surfaces preserve the active host theme even when the surrounding document is transparent.
+2. Populate the requested view from saved state, then receive shared change notifications after committed background results are published. Refresh affected views, preserving drafts, focus and selection. Reads do not request external refreshes. Display connection errors when saved-state delivery fails.
 3. Read output and file changes incrementally, with progress/status messages, final replies, user messages and readable errors visible; plans, diffs, command output and internal summaries remain under collapsed Details or the optional same-session console; load older history on request.
 4. Close or reconnect the view and reload retained state.
 5. For a pull request, read posted reviews above the conversation: open the GitHub receipt, inspect the author, verdict, reviewed commit, body and inline findings, and distinguish current-head from earlier-head reviews. Review observations include all authors and do not imply that a particular run published them.
@@ -20,7 +20,7 @@ A supported host has opened the connected application. Updated embedded applicat
 
 Source-terminated sessions display Stopped with their reason and retained history. They cannot accept follow-up or resume; cleanup remains available without discarding modified files.
 
-Hidden or disconnected views back off refreshes. Failed initialization does not poison the open view: later attempts use a fresh connection. Only known reads retry bounded transient transport failures; business/tool errors remain distinct. Recovered polling clears its own connection feedback, while transcript reads clear only their local read failures. Existing output and drafts remain visible. A healthy background read never dismisses an uncertain action response, and Start, Send, answers and saves are not automatically replayed. The view uses the host connection and receives no local credentials. Closing the view leaves agents running. Transcript output and diffs are paged rather than loaded without bounds. Ordinary relationship and message drafts survive tab/record changes within the open app; closing/reloading ends that draft lifetime. Branding, permanent footer and successful sync timestamps are omitted. Connected status is available to assistive technology; connecting/disconnected feedback and failures remain visible. Back restores list context and nonempty history remains disclosed. Settings opens in an independent view using the same authenticated connection; saving configuration leaves an already-open task view and its drafts intact.
+Hidden views defer panel reads and catch up when visible. Disconnected views resume from their last change cursor; a missing cursor requires a full saved-state resync. Rolled-back changes notify no view. Concurrent writers and bursts retain all affected identifiers. Failed initialization does not poison the open view: later attempts use a fresh connection. Only known reads retry bounded transient transport failures; business/tool errors remain distinct. Recovered subscriptions clear their own connection feedback, while transcript reads clear only their local read failures. Existing output and drafts remain visible. A healthy background read never dismisses an uncertain action response, and Start, Send, answers and saves are not automatically replayed. The view uses the host connection and receives no local credentials. Closing the view leaves agents running. Transcript output and diffs are paged rather than loaded without bounds. Ordinary relationship and message drafts survive tab/record changes within the open app; closing/reloading ends that draft lifetime. Branding, permanent footer and successful sync timestamps are omitted. Connected status is available to assistive technology; connecting/disconnected feedback and failures remain visible. Back restores list context and nonempty history remains disclosed. Settings opens in an independent view using the same authenticated connection; saving configuration leaves an already-open task view and its drafts intact.
 
 ## Scenarios
 
@@ -41,10 +41,12 @@ and does not repeat its work or change a later follow-up.
 
 - **S6** A conversational status read includes the selected item and current/retained run summaries, exact pending questions, a bounded agent progress or final-response excerpt with its timestamp and continuation reference, and saved current-head versus earlier-head publication receipts. The current run uses the same retained-session preference as the embedded view; a run identifier selects that exact run. Missing progress projections and missing external observations remain explicitly unavailable. Longer history, questions and receipts use independent pagination. Dashboard opening is explicit and returns a compact overview; the embedded app obtains its own state through the host connection.
 
+- **S7** Direct launch paints actionable navigation within 50 ms in every controlled fresh/warm fixture sample, while delayed providers remain pending. Saved-state counts, filters and pages load independently; actual ChatGPT and typed-chat latency require separate evidence.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [host](../glossary/README.md#host), [inbox](../glossary/README.md#inbox), [agent-run](../glossary/README.md#agent-run), [transcript](../glossary/README.md#transcript), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [session-console](../glossary/README.md#session-console), [published-review](../glossary/README.md#published-review).
+Glossary: [host](../glossary/README.md#host), [inbox](../glossary/README.md#inbox), [agent-run](../glossary/README.md#agent-run), [transcript](../glossary/README.md#transcript), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [session-console](../glossary/README.md#session-console), [published-review](../glossary/README.md#published-review), [direct-launch](../glossary/README.md#direct-launch), [ui-projection](../glossary/README.md#ui-projection), [ui-change-cursor](../glossary/README.md#ui-change-cursor).
 UI entities: [S-FACTORY](../ui/README.md#S-FACTORY), [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-IDENTITY](../ui/README.md#P-IDENTITY), [P-NAVIGATION](../ui/README.md#P-NAVIGATION), [P-FEEDBACK](../ui/README.md#P-FEEDBACK), [W-IDENTITY](../ui/README.md#W-IDENTITY), [W-NAVIGATION](../ui/README.md#W-NAVIGATION), [W-GLOBAL-ERROR](../ui/README.md#W-GLOBAL-ERROR), [W-CONNECTION-BLOCKER](../ui/README.md#W-CONNECTION-BLOCKER), [C-NAVIGATE](../ui/README.md#C-NAVIGATE), [C-STATE-REFRESH](../ui/README.md#C-STATE-REFRESH), [C-GLOBAL-ATTENTION](../ui/README.md#C-GLOBAL-ATTENTION), [W-TRANSCRIPT](../ui/README.md#W-TRANSCRIPT), [W-MESSAGE](../ui/README.md#W-MESSAGE), [C-TRANSCRIPT](../ui/README.md#C-TRANSCRIPT), [C-FOLLOW-UP](../ui/README.md#C-FOLLOW-UP), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [C-BACK](../ui/README.md#C-BACK), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE), [C-SESSION-CONSOLE](../ui/README.md#C-SESSION-CONSOLE), [W-PR-EVIDENCE](../ui/README.md#W-PR-EVIDENCE).
 
 ## Flow diagram
@@ -61,6 +63,7 @@ flowchart TD
     N7["Switch between concise conversation and full session console without changing the retained session or reply draft. #40;S4#41;"]
     N8["Observe submitted reviews with receipts, findings and explicit freshness #40;S5#41;"]
     N9["Read saved work, questions and publication with explicit freshness and bounded history #40;S6#41;"]
+    N10["Open directly with actionable navigation before saved data and background work finish #40;S7#41;"]
     N0 -->|"connected"| N1
     N0 -->|"connection unavailable"| N4
     N1 -->|"success"| N2
@@ -76,6 +79,8 @@ flowchart TD
     N8 -->|"Show provider receipts or retained stale result"| N6
     N0 -->|"conversational status request"| N9
     N9 -->|"saved result or explicit unknown/ambiguity"| N6
+    N0 -->|"Direct sidebar entrypoint"| N10
+    N10 --> N6
 ```
 
 ## Implementation references
@@ -113,6 +118,15 @@ flowchart TD
 - [internal/aiworkflows/client.go](../../internal/aiworkflows/client.go) — YAML workflow execution retains native session policy, questions, interrupts and application-owned recovery. (`func (c *Client) CallWorkflow(`)
 - [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/transport/ui_state.go](../../internal/transport/ui_state.go) — Asynchronous coherent publication, metadata-only watches and independent process reconciliation. (`func (s *Server) startUIState()`)
+- [internal/transport/ui_state.go](../../internal/transport/ui_state.go) — Requested saved views, complete-dataset filters and 50-row default pagination. (`func (s *Server) readUIState(`)
+- [internal/store/snapshot.go](../../internal/store/snapshot.go) — Atomic saved state/cursor WAL snapshot and durable metadata-only journal. (`func (s *Store) ReadView(`)
+- [web/src/ui-changes.ts](../../web/src/ui-changes.ts) — One subscription dispatches affected domain/ID versions and defers hidden panel reads. (`export function publishUIChange(`)
+- [web/defer-ui.mjs](../../web/defer-ui.mjs) — Production resource postpones bundled runtime parsing until after actionable shell paint. (`const scripts =`)
+- [web/index.html](../../web/index.html) — Actionable navigation and query controls precede runtime/SDK initialization. (`id="boot-nav"`)
+- [internal/store/store.go](../../internal/store/store.go) — Post-commit durable invalidations preserve legacy event contracts. (`func (s *Store) Write(`)
+- [internal/testhost/performance.go](../../internal/testhost/performance.go) — Production embedded resource with retained-state, provider-latency and cold-server fixtures. (`func servePerformance(`)
+- [web/playwright.performance.config.ts](../../web/playwright.performance.config.ts) — Isolated one-worker, zero-retry production performance verification. (`workers: 1`)
 
 ## Test references
 
@@ -155,13 +169,28 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(`; S1. Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S2. Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed.
+- [web/performance/tests/launch.spec.ts](../../web/performance/tests/launch.spec.ts) — `production embedded direct launch: every fresh and warm sample is at most 50 ms`; S1, S3. Every one of 20 fresh and 10 warm built-resource direct launches has actionable painted navigation within 50 ms; empty/cold/retained states use delayed provider fixtures and retain timing evidence.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIProjectionPaginatesAndSearchesCompleteRetainedStateWithoutProviders`; S1, S3. All 1,000 saved items are reachable through 50-row pages; body search finds a later item, selection remains reachable and no provider endpoint is called.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIWatchPublishesCommittedStateAndReconcilesOtherConnections`; S1, S3. Rollback produces no invalidation; an independent connection commit wakes the watch only after matching saved state and its cursor are published.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIWatchCoalescesBurstsConcurrentWritersReconnectAndResync`; S1, S3. Two writers retain all affected IDs through a reconnect; invalidations contain metadata only and unavailable/future cursors require resync.
+- [internal/store/ui_journal_test.go](../../internal/store/ui_journal_test.go) — `TestUIJournalCommitsRollbackCASAndLegacyCursor`; S1, S3. Rollbacks and failed CAS produce no UI journal entry; successful CAS does, private buckets are excluded and legacy event cursors remain unchanged.
+- [internal/store/ui_journal_test.go](../../internal/store/ui_journal_test.go) — `TestReadViewPinsDataAndCursorAcrossConcurrentConnection`; S1, S3. A concurrent connection commit cannot mix a newer entity with an older cursor inside a WAL read view.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `published inbox responses preserve the newer query when older reads finish later`; S1, S3. A delayed earlier query cannot replace a later selection/result, and legacy broad-read polling is absent.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `hidden views catch up through the shared subscription without rereading panels while hidden`; S1, S3. A durable update is observed by the single watch while a hidden view performs no panel reads; visibility restores the latest saved item.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `inbox pagination and complete-dataset search keep later saved items reachable`; S1, S3. Three pages expose all 125 fixture items; searching on the last page resets pagination and opens item 125.
+- [web/performance/tests/launch.spec.ts](../../web/performance/tests/launch.spec.ts) — `production embedded direct launch: every fresh and warm sample is at most 50 ms`; S7. All fresh and warm samples meet the 50 ms controlled fixture launch boundary; actual host latency remains unverified.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `TestBackgroundObservationsAdvanceWithoutOpeningAView`; S1. Saved reads trigger no provider work; independent background monitoring starts without a view and persists failed observations while retaining saved item detail.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `the shared subscription updates Messages while Reported issues is open`; S1. A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a selected item outside the current page never renders an earlier selected entry`; S1. A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `observation-only publications refresh the selected saved error without a broad read`; S1, S3. Saved provider errors refresh the selected item on an owner-ID invalidation, without loading broad shared state.
 
 ## Verification and gaps
 
-Local suites: `go`, `browser`.
+Local suites: `go`, `browser`, `ui-performance`.
 Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-view-live-work-s2-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Concurrent snapshot/cursor ordering and large diff pagination need focused tests. Next verification: Add concurrent snapshot/cursor ordering and multi-page large-diff fixture cases that assert no missed, repeated or reordered retained events.
 - **S3** — `gap-flow-view-live-work-s3-01` · Unverified behavior · P1 · owner: specification-coordinator. No installed-host connected one-hour soak is established by this development port. Hidden/disconnected visibility timing and backoff transitions also lack focused assertions; reconnect/iframe fixtures do not prove those variants. Next verification: Exercise hidden/disconnected visibility and retry-backoff transitions with focused fixture assertions, then record a connected one-hour soak for the actual installed port version as bounded dated evidence.
 - **S6** — `gap-flow-view-live-work-s6-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Synthetic fixture measurements cover saved lookup/publication, queue pages, configured launch, nonsecret answer/local delivery, retained-thread follow-up and explicit dashboard paths. No installed-version or real Work acceptance is established by this development port. Actual-host normal, ambiguous-target, retained-history/large-page, changed-head receipt, cooldown/error and uncertain-delivery variants remain unverified. Next verification: Observe normal conversational paths and the ambiguity, history/large-page, changed-head, cooldown/error and uncertain-delivery variants through an explicitly scoped private-pilot campaign for the installed port version; keep fixture and host evidence separate.
+- **S7** — `gap-flow-direct-launch-host` · Unverified behavior · P2 · owner: user-flow-maintainer. The 50 ms bound covers the production embedded UI in a controlled fixture host. Actual ChatGPT sidebar latency and typed-chat model processing have not been measured on this build. Next verification: Measure actual direct sidebar launches in the approved host/session and record their latency separately; preserve the fixture boundary.
 
 <!-- /flow-references -->

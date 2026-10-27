@@ -4315,4 +4315,46 @@ The control requesting an observation of submitted reviews.
 `state-terminated` · state
 
 Work has ended because its source item closed or merged; the retained session cannot continue.
+
+<a id="direct-launch"></a>
+## Direct launch
+
+`direct-launch` · domain
+
+Opening an application surface through a dedicated host control without a conversational model turn.
+
+<a id="ui-projection"></a>
+## UI projection
+
+`ui-projection` · domain
+
+An immutable public view of saved application state associated with one change cursor.
+
+<a id="ui-change-cursor"></a>
+## UI change cursor
+
+`ui-change-cursor` · domain
+
+A position identifying the saved changes included in a published UI projection.
+
+<a id="element-w-inbox-query-previous"></a>
+## previous
+
+`element-w-inbox-query-previous` · element · scope: ui-w-inbox-query
+
+The control selecting the preceding saved result page.
+
+<a id="element-w-inbox-query-next"></a>
+## next
+
+`element-w-inbox-query-next` · element · scope: ui-w-inbox-query
+
+The control selecting the following saved result page.
+
+<a id="element-w-inbox-query-total"></a>
+## total
+
+`element-w-inbox-query-total` · element · scope: ui-w-inbox-query
+
+The count of saved items matching a query before pagination.
 <!-- /specs:terms -->

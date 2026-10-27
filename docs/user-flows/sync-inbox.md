@@ -15,6 +15,8 @@ At least one accessible repository is configured.
 3. Refresh full reviews, checks, commits and references for selected or tracked work within the request budget; keep saved information available when refresh is deferred.
 4. Keep previously synchronized closed or merged history available when viewing all items.
 
+Background monitoring and work completion retain their results before notifying open views. Saved UI reads do not initiate external requests; changes from concurrent processes become visible through the same published state. Failed refreshes retain prior saved evidence and explicit errors.
+
 ## Alternatives and recovery
 
 Authentication and provider errors remain visible. Failed refreshes retain their last successful progress. Reference backfill yields to repository polling and resumes with other references on its next pass. Rate limits delay retries, and access recovery permits later refreshes. Inbox and report operations, including report publication in a separate process, share the persisted request budget and cooldowns. Managed synchronization processes repositories in order through the serialized request gate; a limited repository cannot advance a later repository checkpoint.
@@ -209,6 +211,7 @@ flowchart TD
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestRecoveredLegacyCustomReviewStillChecksLiveEligibility(`; S5, S8. Persisted historical custom-review intent keeps live head and own/unknown author checks after defaults change; mismatched cached source identity remains stopped without promotion or a new claim.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewRevalidatesActivePrincipal(`; S5, S8. Due accepted manual retry reads the actual active principal under current credentials, permits eligible execution without synchronized identity and rejects self-review before workspace/provider creation without restoring saved identity.
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(`; S5, S8. Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch.
+- [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `TestBackgroundObservationsAdvanceWithoutOpeningAView`; S1. Saved reads trigger no provider work; independent background monitoring starts without a view and persists failed observations while retaining saved item detail.
 
 ## Verification and gaps
 

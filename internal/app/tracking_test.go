@@ -216,6 +216,63 @@ func TestSavedReadsDoNotWaitForSynchronizationOrBlockedGitHubAndDeduplicate(t *t
 	}
 }
 
+func TestBackgroundObservationsAdvanceWithoutOpeningAView(t *testing.T) {
+	a, ctx := fixture(t)
+	i := item()
+	i.Kind = "pr"
+	i.Head = "saved-head"
+	i.Body = ""
+	importOne(t, a, ctx, i)
+	entered := make(chan struct{}, 10)
+	release := make(chan struct{})
+	var once sync.Once
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		entered <- struct{}{}
+		<-release
+		http.Error(w, "fixture provider unavailable", 503)
+	}))
+	defer server.Close()
+	defer once.Do(func() { close(release) })
+	gh := &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	gh.ConfigureUsage(a.Store, func(context.Context) (providers.GitHubPolicy, error) {
+		return providers.GitHubPolicy{RequestsPerHour: 600}, nil
+	})
+	a.GitHub = gh
+	reader := &App{Store: a.Store, SavedOnly: true}
+	before := a.Store.Latest(ctx)
+	if _, err := reader.ItemDetail(ctx, i.ID); err != nil {
+		t.Fatal(err)
+	}
+	if calls.Load() != 0 || a.Store.Latest(ctx) != before {
+		t.Fatal("saved UI read initiated external work")
+	}
+	a.RefreshSavedObservations(ctx)
+	select {
+	case <-entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("background monitoring required an open view")
+	}
+	detail, err := reader.ItemDetail(ctx, i.ID)
+	if err != nil || detail["item"].(domain.Item).Head != "saved-head" || detail["observation"].(Observation).Refresh != "pending" {
+		t.Fatal("pending provider blocked saved detail", detail, err)
+	}
+	once.Do(func() { close(release) })
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		var status Observation
+		_ = a.Store.Get(ctx, "observation", "detail:"+i.ID, &status)
+		if status.Error != "" {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("provider failure not saved")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 func TestObservationPauseCooldownAndFailureRetainSavedState(t *testing.T) {
 	a, ctx := fixture(t)
 	i := item()

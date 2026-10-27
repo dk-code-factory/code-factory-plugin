@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useUIVersion } from "./ui-changes";
 import { call } from "./bridge";
 import type { Config, Profile, Repository, Snapshot } from "./types";
 
@@ -34,6 +35,7 @@ interface AdminState {
   offset: number;
 }
 export function PluginAdmin({ skills }: { skills: Snapshot["skills"] }) {
+  const uiVersion = useUIVersion(["plugin-inventory", "plugin-operation"]);
   const [state, setState] = useState<AdminState>();
   const [query, setQuery] = useState("");
   const [available, setAvailable] = useState(false);
@@ -57,31 +59,30 @@ export function PluginAdmin({ skills }: { skills: Snapshot["skills"] }) {
   );
   useEffect(() => {
     let stop = false;
-    let timer: ReturnType<typeof setTimeout>;
+    let retry: ReturnType<typeof setTimeout>;
+
     async function refresh() {
-      let busy = false;
       try {
         const next = await load();
         if (!stop) {
           setState(next);
           setReadError("");
-          busy = next.operations.some((op) =>
-            ["queued", "running"].includes(op.status),
-          );
           if (request && next.operations.some((op) => op.id === request.id))
             setRequest(undefined);
         }
       } catch (e) {
-        if (!stop) setReadError(`Could not read plugin status: ${String(e)}`);
+        if (!stop) {
+          setReadError(`Could not read plugin status: ${String(e)}`);
+          retry = setTimeout(refresh, 2000);
+        }
       }
-      if (!stop) timer = setTimeout(refresh, busy ? 1000 : 10000);
     }
     void refresh();
     return () => {
       stop = true;
-      clearTimeout(timer);
+      clearTimeout(retry);
     };
-  }, [load, request]);
+  }, [load, request, uiVersion]);
   const busy =
     submitting ||
     !!request ||
@@ -391,9 +392,10 @@ export function RepositoryAdmin({
   return (
     <section aria-label="Repository monitoring">
       <p>
-        Review notifications are checked on the system interval and repositories reconcile every 15 minutes using your GitHub
-        sign-in. Review PRs includes requests for your user or teams. Adding a
-        repository requires that account to have access.
+        Review notifications are checked on the system interval and repositories
+        reconcile every 15 minutes using your GitHub sign-in. Review PRs
+        includes requests for your user or teams. Adding a repository requires
+        that account to have access.
       </p>
       {snap.viewer?.teamError && <p role="alert">{snap.viewer.teamError}</p>}
       {snap.repositories.map((r) => (
@@ -526,9 +528,9 @@ export function RepositoryAdmin({
           </label>
           <p>
             Automatic reviews use the selected pipeline's sandbox and publishing
-            authority. Repository polling launches work only when automatic review
-            is enabled. A request is claimed once per PR head and
-            request episode.
+            authority. Repository polling launches work only when automatic
+            review is enabled. A request is claimed once per PR head and request
+            episode.
           </p>
           <button>Save repository</button>
         </fieldset>
@@ -558,7 +560,7 @@ export function SystemReviewSettings({
   change,
   usage,
 }: {
-  usage?:import("./types").GitHubUsage;
+  usage?: import("./types").GitHubUsage;
   config: Config;
   profiles: Profile[];
   change: (c: Config) => void;
@@ -566,13 +568,83 @@ export function SystemReviewSettings({
   return (
     <>
       <fieldset aria-label="GitHub API usage">
-       <legend>GitHub API usage</legend>
-       <label>Request budget per hour<input type="number" min={60} max={5000} value={config.githubRequestsPerHour??600} onChange={e=>change({...config,githubRequestsPerHour:Number(e.target.value)})}/></label>
-       <label>Keep GitHub requests in reserve<input type="number" min={0} max={5000} value={config.githubReserve??100} onChange={e=>change({...config,githubReserve:Number(e.target.value)})}/></label>
-       <label>Review notification poll interval<select aria-label="Review notification poll interval" value={config.githubPollSeconds??120} onChange={e=>change({...config,githubPollSeconds:Number(e.target.value)})}>{![60,120,300,900,3600].includes(config.githubPollSeconds??120)&&<option value={config.githubPollSeconds}>{config.githubPollSeconds} seconds</option>}<option value={60}>Every minute</option><option value={120}>Every 2 minutes</option><option value={300}>Every 5 minutes</option><option value={900}>Every 15 minutes</option><option value={3600}>Every hour</option></select></label>
-       <p>Notifications are read without marking them read. Repositories reconcile every 15 minutes; full histories and checks refresh for selected or tracked work. Manual polls share the same budget. This budget covers Code Factory reads; plugins, skills and agent commands use GitHub independently.</p>
-       {usage&&<p role="status">{usage.requestsLastHour} / {usage.budget} requests in the last hour. Reserve: {usage.reserve}. REST remaining: {usage.restRemaining??"Unknown"}; GraphQL remaining: {usage.graphqlRemaining??"Unknown"}.{usage.nextRequest&&!usage.nextRequest.startsWith("0001")&&new Date(usage.nextRequest).getTime()>Date.now()?` Deferred requests retry after ${new Date(usage.nextRequest).toLocaleString()}.`:""}</p>}
-       {usage?.notificationError&&<p role="alert">Review notifications: {usage.notificationError}. Repository reconciliation remains available.</p>}
+        <legend>GitHub API usage</legend>
+        <label>
+          Request budget per hour
+          <input
+            type="number"
+            min={60}
+            max={5000}
+            value={config.githubRequestsPerHour ?? 600}
+            onChange={(e) =>
+              change({
+                ...config,
+                githubRequestsPerHour: Number(e.target.value),
+              })
+            }
+          />
+        </label>
+        <label>
+          Keep GitHub requests in reserve
+          <input
+            type="number"
+            min={0}
+            max={5000}
+            value={config.githubReserve ?? 100}
+            onChange={(e) =>
+              change({ ...config, githubReserve: Number(e.target.value) })
+            }
+          />
+        </label>
+        <label>
+          Review notification poll interval
+          <select
+            aria-label="Review notification poll interval"
+            value={config.githubPollSeconds ?? 120}
+            onChange={(e) =>
+              change({ ...config, githubPollSeconds: Number(e.target.value) })
+            }
+          >
+            {![60, 120, 300, 900, 3600].includes(
+              config.githubPollSeconds ?? 120,
+            ) && (
+              <option value={config.githubPollSeconds}>
+                {config.githubPollSeconds} seconds
+              </option>
+            )}
+            <option value={60}>Every minute</option>
+            <option value={120}>Every 2 minutes</option>
+            <option value={300}>Every 5 minutes</option>
+            <option value={900}>Every 15 minutes</option>
+            <option value={3600}>Every hour</option>
+          </select>
+        </label>
+        <p>
+          Notifications are read without marking them read. Repositories
+          reconcile every 15 minutes; full histories and checks refresh for
+          selected or tracked work. Manual polls share the same budget. This
+          budget covers Code Factory reads; plugins, skills and agent commands
+          use GitHub independently.
+        </p>
+        {usage && (
+          <p role="status">
+            {usage.requestsLastHour} / {usage.budget} requests in the last hour.
+            Reserve: {usage.reserve}. REST remaining:{" "}
+            {usage.restRemaining ?? "Unknown"}; GraphQL remaining:{" "}
+            {usage.graphqlRemaining ?? "Unknown"}.
+            {usage.nextRequest &&
+            !usage.nextRequest.startsWith("0001") &&
+            new Date(usage.nextRequest).getTime() > Date.now()
+              ? ` Deferred requests retry after ${new Date(usage.nextRequest).toLocaleString()}.`
+              : ""}
+          </p>
+        )}
+        {usage?.notificationError && (
+          <p role="alert">
+            Review notifications: {usage.notificationError}. Repository
+            reconciliation remains available.
+          </p>
+        )}
       </fieldset>
       <label>
         System default for review requests

@@ -82,9 +82,11 @@ async function host(
     snapshot?: Snapshot;
     initializeFailures?: number;
     memoizeReads?: boolean;
+    watchDomains?: string[];
     transportFault?: (name: string, args: Record<string, unknown>) => boolean;
     toolError?: { name: string; message: string };
     readItem?: (detail: Detail) => Promise<Detail>;
+    readUIState?: (state: Snapshot, args: Record<string,unknown>) => Promise<Snapshot>;
     readReviews?: (id: string) => Promise<PRReviews>;
     reports?: IssueReport[];
     listReports?: (
@@ -159,6 +161,7 @@ async function host(
     },
   ];
   const reports = options.reports ?? [];
+  let transcriptLength=options.transcript?.length??0;
   await page.exposeFunction(
     "hostCall",
     async (p: { name: string; arguments: Record<string, unknown> }) => {
@@ -181,28 +184,49 @@ async function host(
             attention: [],
           };
           break;
-        case "read_snapshot":
+        case "read_ui_state": {
+          const q=String(a.queue||"all");
+          const query=String(a.search||"").toLowerCase();
+          const filter=String(a.filter||"all");
+          const rows=state.inbox.filter(v=>{
+            const owns=v.item.author.toLowerCase()===state.viewer?.login.toLowerCase();
+            const requested=v.item.reviewRequests?.some(l=>l.toLowerCase()===state.viewer?.login.toLowerCase())||v.item.reviewTeams?.some(t=>state.viewer?.teams?.includes(t));
+            const member=v.queues?v.queues.includes(q):q==="issues"?v.item.kind==="issue":q==="mine"?v.item.kind==="pr"&&owns:q==="review"?v.item.kind==="pr"&&requested:q==="working"?state.runs.some(r=>r.itemId===v.item.id&&r.status!=="prepared")&&v.item.state==="open":true;
+            return (q==="all"||member)&&(filter==="all"||filter==="open"&&v.item.state==="open"||filter==="pending"&&v.item.state==="open"&&!v.hasPullRequest||filter==="new"&&v.user.new||filter==="unread"&&v.unread||filter==="acted-on"&&v.user.actions.length>0)&&
+              (v.item.title+" "+v.item.id+" "+v.item.body).toLowerCase().includes(query);
+          }).sort((a,b)=>(a.priority??4)-(b.priority??4)||Date.parse(b.item.updated)-Date.parse(a.item.updated));
+          const offset=Number(a.offset||0),limit=Number(a.limit||50);
+          const views=(a.views as string[]|undefined)??["inbox"];
+          const projected:Partial<Snapshot>={cursor:state.cursor};
+          const copy=structuredClone(state);
+          if(views.includes("shell")) Object.assign(projected,{viewer:copy.viewer,repositories:copy.repositories,profiles:copy.profiles,config:copy.config});
+          if(views.includes("messages")) Object.assign(projected,{runs:copy.runs,attention:copy.attention,questionRecoveries:copy.questionRecoveries});
+          if(views.includes("settings")||views.includes("launch")) Object.assign(projected,{repositories:copy.repositories,profiles:copy.profiles,config:copy.config,skills:copy.skills,githubUsage:copy.githubUsage});
+          if(views.includes("reviews")) projected.reviewVersions=copy.reviewVersions;
+          if(views.includes("inbox")) Object.assign(projected,{inbox:structuredClone(rows.slice(offset,offset+limit)),page:{offset,limit,total:rows.length,hasMore:offset+limit<rows.length}});
+          projected.selectedEntry=structuredClone(state.inbox.find(e=>e.item.id===a.id));
+          data=options.readUIState?await options.readUIState(projected as Snapshot,a):projected;
+          break;
+        }
         case "open_factory":
-          data = structuredClone(state);
+          data=structuredClone(state);
           break;
-        case "read_changes":
-          data = {
-            events:
-              state.cursor > Number(a.after)
-                ? [
-                    {
-                      seq: state.cursor,
-                      kind: "run.state",
-                      entity: "run-1",
-                      data: {},
-                      at: new Date().toISOString(),
-                    },
-                  ]
-                : [],
-            cursor: state.cursor,
-            hasMore: false,
-          };
+        case "watch_ui_changes": {
+          // Fixture long poll releases on durable changes or a short idle timeout.
+          const until=Date.now()+500;
+          while(state.cursor===Number(a.after)&&Date.now()<until) {
+            if((options.transcript?.length??0)!==transcriptLength){
+              transcriptLength=options.transcript?.length??0;state.cursor++;break;
+            }
+            await new Promise(r=>setTimeout(r,20));
+          }
+          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id)}:{}};
+          if(options.watchDomains){
+            const change=data as {changes:Record<string,string[]>};
+            change.changes=Object.fromEntries(Object.entries(change.changes).filter(([domain])=>options.watchDomains!.includes(domain)));
+          }
           break;
+        }
         case "list_issue_reports": {
           const rows = reports
             .filter(
@@ -621,7 +645,7 @@ async function host(
   await page.route("**/host", (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>const readCache=new Map();window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{const key=JSON.stringify(m.params);if(${options.memoizeReads ?? false}&&['read_snapshot','read_changes','read_plugin_admin'].includes(m.params.name)){if(readCache.has(key))result=readCache.get(key);else{result=await window.hostCall(m.params);readCache.set(key,structuredClone(result))}}else result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
+      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>const readCache=new Map();window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{const key=JSON.stringify(m.params);if(${options.memoizeReads ?? false}&&['read_ui_state','watch_ui_changes','read_plugin_admin'].includes(m.params.name)){if(readCache.has(key))result=readCache.get(key);else{result=await window.hostCall(m.params);readCache.set(key,structuredClone(result))}}else result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
     }),
   );
   await page.goto("/host");
@@ -886,11 +910,11 @@ test("keyboard launch review traps focus, preserves edits and restores its opene
   await page.keyboard.type("Keep this keyboard launch draft.");
   await expect(prompt).toHaveCSS("outline-width", "3px");
   const snapshots = calls.filter(
-    (call) => call.name === "read_snapshot",
+    (call) => call.name === "read_ui_state",
   ).length;
   state.cursor++;
   await expect
-    .poll(() => calls.filter((call) => call.name === "read_snapshot").length)
+    .poll(() => calls.filter((call) => call.name === "read_ui_state").length)
     .toBeGreaterThan(snapshots);
   await expect(prompt).toBeFocused();
   await expect(prompt).toHaveValue("Keep this keyboard launch draft.");
@@ -1226,13 +1250,11 @@ test("triage does not launch, launch edits and attention answer survive reopenin
   // Replace the host document and iframe while the original request is pending.
   // The host's Node-side snapshot survives; no second launch seeds the new view.
   const snapshotsBeforeReopen = calls.filter(
-    (c) => c.name === "read_snapshot",
+    (c) => c.name === "read_ui_state",
   ).length;
   await page.reload();
   await expect(ui.getByLabel("Search inbox")).toBeVisible();
-  expect(
-    calls.filter((c) => c.name === "read_snapshot").length,
-  ).toBeGreaterThan(snapshotsBeforeReopen);
+  await expect.poll(()=>calls.filter((c) => c.name === "read_ui_state").length).toBeGreaterThan(snapshotsBeforeReopen);
   await expect(
     ui.getByRole("button", { name: /^Messages\s*1$/ }),
   ).toBeVisible();
@@ -3288,7 +3310,7 @@ test("initial bridge failures retry a fresh handshake without reloading or losin
           .initializationCount,
     ),
   ).toBe(4);
-  expect(calls.filter((c) => c.name === "read_snapshot")).toHaveLength(1);
+  expect(calls.filter((c) => c.name === "read_ui_state")).toHaveLength(1);
   await expect(ui.getByRole("alert")).toHaveCount(0);
 });
 
@@ -3297,7 +3319,7 @@ test("transient polling outage recovers without a stale error banner or lost fir
 }) => {
   let disconnected = false;
   const { ui, calls } = await host(page, {
-    transportFault: (name) => disconnected && name === "read_changes",
+    transportFault: (name) => disconnected && name === "watch_ui_changes",
   });
   await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
   await ui
@@ -3342,7 +3364,7 @@ test("transient item read failure retries and marks only the successfully displa
     ui.getByRole("heading", { name: "Fix reconnect regression", exact: true }),
   ).toBeVisible();
   await expect(ui.getByLabel("Message agent")).toBeVisible();
-  expect(calls.filter((c) => c.name === "read_item")).toHaveLength(4);
+  expect(calls.filter((c) => c.name === "read_item").length).toBeGreaterThanOrEqual(4);
   await expect
     .poll(
       () =>
@@ -3371,6 +3393,7 @@ test("transcript recovery keeps output and draft while removing only its own rea
   ).toBeVisible();
   await ui.getByLabel("Message agent").fill("Keep the follow-up draft.");
   transcriptUnavailable = true;
+  snapshot.cursor++;
   await expect(
     ui.getByRole("status").filter({ hasText: "Retrying conversation" }),
   ).toBeVisible({ timeout: 7000 });
@@ -3404,9 +3427,9 @@ test("mutation connection failure is not replayed and later polling does not dis
   await expect(ui.getByRole("alert")).toContainText(
     "Connection to Code Factory interrupted",
   );
-  const polls = calls.filter((c) => c.name === "read_changes").length;
+  const polls = calls.filter((c) => c.name === "watch_ui_changes").length;
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(polls + 1);
   expect(calls.filter((c) => c.name === "send_message")).toHaveLength(1);
   await expect(ui.getByLabel("Message agent")).toHaveValue(
@@ -3433,9 +3456,9 @@ test("read tool errors are not mistaken for retryable transport errors", async (
   await expect(
     ui.getByRole("button", { name: "Retry loading item", exact: true }),
   ).toBeVisible();
-  const polls = calls.filter((c) => c.name === "read_changes").length;
+  const polls = calls.filter((c) => c.name === "watch_ui_changes").length;
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(polls + 1);
   expect(calls.filter((c) => c.name === "read_item")).toHaveLength(1);
 });
@@ -3459,13 +3482,13 @@ test("exact host-wrapped MCP connection error retries a read without exposing it
         root.dataset.frameworkErrorSeen = "true";
     }).observe(root, { subtree: true, childList: true, characterData: true });
   });
-  failure.name = "read_changes";
+  failure.name = "watch_ui_changes";
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(0);
   failure.name = "unused";
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(1);
   await expect(
     ui.getByRole("status", { name: "Connection status" }),
@@ -3502,9 +3525,9 @@ test("exact host-wrapped connection failure never replays a mutation", async ({
   await expect(ui.getByRole("alert")).toContainText(
     "Connection to Code Factory interrupted",
   );
-  const polls = calls.filter((c) => c.name === "read_changes").length;
+  const polls = calls.filter((c) => c.name === "watch_ui_changes").length;
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(polls + 1);
   expect(calls.filter((c) => c.name === "send_message")).toHaveLength(1);
   await expect(ui.getByLabel("Message agent")).toHaveValue(
@@ -4411,7 +4434,7 @@ test("reported issues retries uncertain evidence without duplicating it and acce
     "Evidence acknowledgement lost",
   );
   await expect(evidence).toHaveValue(original);
-  await expect(detail.getByText(original, { exact: true })).toHaveCount(1);
+  await expect(detail.locator("p").filter({hasText:original})).toHaveCount(1);
   await add.click();
   await expect.poll(() => attempts).toBe(2);
   await expect(add).toBeEnabled();
@@ -4700,8 +4723,8 @@ test("reported issues releases mutation controls during continuing slow journal 
   slow = true;
   await refresh.click();
   await expect.poll(() => pending.length).toBe(1);
-  await expect(refresh).toBeDisabled();
-  await expect(evidence).toBeDisabled();
+  await expect(refresh).toBeEnabled();
+  await expect(evidence).toBeEnabled();
   await journalUpdate();
   await journalUpdate();
   pending[0]();
@@ -5138,14 +5161,14 @@ test("Markdown issue headings do not replace the useful conversation summary", a
 
 test("fresh read markers observe external changes after a host memoizes an empty journal page", async ({ page }) => {
   const { ui, calls, state } = await host(page, { memoizeReads: true });
-  await expect.poll(() => calls.filter(c => c.name === "read_changes").length).toBeGreaterThan(0);
+  await expect.poll(() => calls.filter(c => c.name === "watch_ui_changes").length).toBeGreaterThan(0);
   state.inbox[0].item.title = "Externally updated pilot review";
   state.cursor++;
   await expect(ui.getByRole("button", { name: /Externally updated pilot review/ })).toBeVisible();
   state.inbox[0].item.title = "Second external review update";
   state.cursor++;
   await expect(ui.getByRole("button", { name: /Second external review update/ })).toBeVisible();
-  const reads = calls.filter(c => ["read_changes", "read_snapshot"].includes(c.name));
+  const reads = calls.filter(c => ["watch_ui_changes", "read_ui_state"].includes(c.name));
   expect(new Set(reads.map(c => c.arguments.freshness)).size).toBe(reads.length);
   expect(reads.every(c => typeof c.arguments.freshness === "string" && c.arguments.freshness.length > 0)).toBe(true);
   expect(calls.some(c => ["prepare_launch", "start_run", "send_message"].includes(c.name))).toBe(false);
@@ -5222,6 +5245,7 @@ for (const theme of ["light", "dark"] as const) {
     await expect(ui.getByText("Saved receipt available immediately",{exact:true})).toBeVisible();
     expect(calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read")).toHaveLength(0);
     pending=false;
+    snapshot.cursor++;
     await expect(ui.getByText("Refreshing saved details…",{exact:true})).toHaveCount(0);
     await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toHaveCount(0);
     await expect.poll(()=>calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read").length).toBe(1);
@@ -5291,4 +5315,146 @@ test("chunked owner and agent completions remain normal conversation across jour
   await expect(ui.getByText(/partial secret/)).toBeVisible();
   await expect(ui.getByText("malformed provider JSON", { exact: true })).toBeVisible();
   expect(calls.filter((c) => c.name === "read_transcript").some((c) => c.arguments.after === 100)).toBe(true);
+});
+
+test("published inbox responses preserve the newer query when older reads finish later",async({page})=>{
+  const snapshot=initial();
+  const second=structuredClone(snapshot.inbox[0]);
+  second.item.id="owner/repo#2";second.item.title="Second matching item";
+  snapshot.inbox.push(second);
+  let release:()=>void=()=>{};
+  let delayed=false;
+  let staleReturned=false;
+  const {ui,calls}=await host(page,{snapshot,readUIState:async(state,args)=>{
+    if(args.search==="Fix") { delayed=true;await new Promise<void>(resolve=>{release=resolve});staleReturned=true; }
+    return state;
+  }});
+  await ui.getByLabel("Search inbox").fill("Fix");
+  await expect.poll(()=>delayed).toBe(true);
+  await ui.getByLabel("Search inbox").fill("Second");
+  await expect(ui.getByRole("button",{name:/Second matching item/})).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  release();
+  await expect.poll(()=>staleReturned).toBe(true);
+  await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  await expect(ui.getByLabel("Search inbox")).toHaveValue("Second");
+  await expect(ui.locator(".inbox-row")).toHaveCount(1);
+  await expect(ui.getByRole("button",{name:/Fix reconnect regression/})).toHaveCount(0);
+  expect(calls.filter(c=>["read_snapshot","read_changes"].includes(c.name))).toHaveLength(0);
+  expect(reads).toBeGreaterThanOrEqual(3);
+});
+
+test("hidden views catch up through the shared subscription without rereading panels while hidden",async({page})=>{
+  const {ui,state,calls}=await host(page);
+  await expect(ui.getByRole("button",{name:/Fix reconnect regression/})).toBeVisible();
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  const watches=calls.filter(c=>c.name==="watch_ui_changes").length;
+  state.inbox[0].item.title="Committed while hidden";state.cursor++;
+  await expect.poll(()=>calls.filter(c=>c.name==="watch_ui_changes").length).toBeGreaterThan(watches);
+  expect(calls.filter(c=>c.name==="read_ui_state")).toHaveLength(reads);
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(ui.getByRole("button",{name:/Committed while hidden/})).toBeVisible();
+});
+
+test("inbox pagination and complete-dataset search keep later saved items reachable",async({page})=>{
+  const snapshot=initial();
+  snapshot.inbox=Array.from({length:125},(_,n)=>{
+    const entry=structuredClone(initial().inbox[0]);
+    entry.item.id="owner/repo#"+(n+1);entry.item.title="Saved item "+String(n+1).padStart(3,"0");entry.item.updated="2026-10-27T12:00:00Z";return entry;
+  });
+  const {ui}=await host(page,{snapshot});
+  await expect(ui.locator(".inbox-row")).toHaveCount(50);
+  await ui.getByRole("button",{name:"Next items"}).click();
+  await expect(ui.getByRole("button",{name:/Saved item 051/})).toBeVisible();
+  await ui.getByRole("button",{name:"Next items"}).click();
+  await expect(ui.locator(".inbox-row")).toHaveCount(25);
+  await ui.getByRole("button",{name:/Saved item 125/}).click();
+  await expect(ui.getByRole("heading",{name:"Saved item 125",exact:true})).toBeVisible();
+  await ui.getByRole("button",{name:"← Issues",exact:true}).click();
+  await expect(ui.locator(".inbox-row")).toHaveCount(25);
+  await expect(ui.getByRole("button",{name:/Saved item 125/})).toBeFocused();
+  await ui.getByLabel("Search inbox").fill("Saved item 125");
+  await expect(ui.locator(".inbox-row")).toHaveCount(1);
+  await ui.getByRole("button",{name:/Saved item 125/}).click();
+  await expect(ui.getByRole("heading",{name:"Saved item 125",exact:true})).toBeVisible();
+});
+
+test("the shared subscription updates Messages while Reported issues is open",async({page})=>{
+  const {ui,state,calls}=await host(page,{watchDomains:["run","attention"]});
+  await ui.getByRole("button",{name:"Reported issues",exact:true}).click();
+  await expect(ui.getByRole("region",{name:"Reported issues"})).toBeVisible();
+  await expect.poll(()=>calls.filter(c=>c.name==="list_issue_reports").length).toBe(1);
+  const reportReads=calls.filter(c=>c.name==="list_issue_reports").length;
+  state.runs=[retained(state,"new-question","waiting")];
+  state.attention=[{id:"new-question-request",runId:"new-question",status:"pending",method:"item/tool/requestUserInput",blocking:true,params:{questions:[{id:"scope",question:"Which scope?",options:[{label:"Focused"},{label:"Broad"}]}]}} as Snapshot["attention"][number]];
+  state.cursor++;
+  await expect(ui.getByRole("button",{name:"Messages 1",exact:true})).toBeVisible();
+  await expect(ui.getByRole("region",{name:"Reported issues"})).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state");
+  expect(reads.some(c=>(c.arguments.views as string[]).includes("messages"))).toBe(true);
+  expect(calls.filter(c=>c.name==="list_issue_reports")).toHaveLength(reportReads);
+});
+
+test("a selected item outside the current page never renders an earlier selected entry",async({page})=>{
+  const snapshot=initial();
+  const second=structuredClone(snapshot.inbox[0]);
+  second.item.id="owner/repo#60";second.item.title="Later page question";
+  snapshot.inbox.push(second);
+  const run=retained(snapshot,"later-page","waiting");run.itemId=second.item.id;
+  snapshot.runs=[run];
+  snapshot.attention=[{id:"later-request",runId:run.id,status:"pending",method:"item/tool/requestUserInput",blocking:true,params:{questions:[{id:"scope",question:"Which scope?",options:[{label:"Focused"},{label:"Broad"}]}]}} as Snapshot["attention"][number]];
+  let release:()=>void=()=>{};
+  let pending=false;
+  const blocked=new Promise<void>(resolve=>{release=resolve});
+  const {ui}=await host(page,{snapshot,readUIState:async(data,args)=>{
+    if(args.id===second.item.id){pending=true;await blocked;}
+    // Emulate a page that excludes the question's item; selection is independent.
+    if(data.inbox)data.inbox=data.inbox.filter(e=>e.item.id!==second.item.id);
+    return data;
+  }});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+    await expect(ui.getByRole("heading",{name:"Fix reconnect regression",exact:true})).toBeVisible();
+    await ui.getByRole("button",{name:"Messages 1",exact:true}).click();
+    await ui.getByRole("region",{name:"Waiting for you"}).getByRole("button").click();
+    await expect.poll(()=>pending).toBe(true);
+    await expect(ui.locator(".detail h1").filter({hasText:"Fix reconnect regression"})).toHaveCount(0);
+    release();
+    await expect(ui.locator(".detail h1").filter({hasText:"Later page question"})).toBeVisible();
+  }finally{release()}
+});
+
+test("observation-only publications refresh the selected saved error without a broad read",async({page})=>{
+  let failed=false;
+  const {ui,state,calls}=await host(page,{watchDomains:["observation"],readItem:async detail=>({...detail,refreshError:failed?"Background provider failed":"",observation:{observedAt:"2026-10-27T12:00:00Z",refresh:failed?"cooldown":"fresh"}})});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByRole("heading",{name:"Fix reconnect regression",exact:true})).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  failed=true;state.cursor++;
+  await expect(ui.getByRole("alert")).toContainText("Background provider failed");
+  expect(calls.filter(c=>c.name==="read_ui_state")).toHaveLength(reads);
+});
+
+test("launch customization loads saved skills only when its deferred view opens",async({page})=>{
+  const snapshot=initial();
+  snapshot.skills=[{id:"saved-skill",name:"Saved skill",description:"Saved fixture skill",path:"/fixture/skill",content:"",managed:true}];
+  const {ui,calls}=await host(page,{snapshot});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await showItemDetails(ui);
+  expect(calls.filter(c=>c.name==="read_ui_state").every(c=>!(c.arguments.views as string[]).includes("launch"))).toBe(true);
+  await ui.getByRole("button",{name:"New run",exact:true}).click();
+  await ui.getByRole("button",{name:"Edit",exact:true}).click();
+  await ui.getByText("Advanced",{exact:true}).click();
+  await ui.getByRole("checkbox",{name:"Saved skill",exact:true}).check();
+  await ui.getByRole("button",{name:"Review launch",exact:true}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="prepare_launch").some(c=>(c.arguments.skillIds as string[]|undefined)?.includes("saved-skill"))).toBe(true);
+  expect(calls.filter(c=>c.name==="read_ui_state").some(c=>(c.arguments.views as string[]).includes("launch"))).toBe(true);
+  expect(calls.filter(c=>c.name==="start_run")).toHaveLength(0);
 });

@@ -20,13 +20,18 @@ import (
 var ErrNotFound = errors.New("record not found")
 
 type Store struct {
-	db   *sql.DB
-	mu   sync.Mutex
-	path string
+	db      *sql.DB
+	view    *sql.Tx
+	ctx     context.Context
+	cancel  context.CancelFunc
+	changed chan struct{}
+	mu      sync.Mutex
+	path    string
 }
 type Tx struct {
-	tx  *sql.Tx
-	ctx context.Context
+	tx      *sql.Tx
+	ctx     context.Context
+	changes map[string]map[string]bool
 }
 
 func Open(path string) (*Store, error) {
@@ -63,15 +68,17 @@ func Open(path string) (*Store, error) {
 		`CREATE INDEX IF NOT EXISTS entities_run ON entities(kind,json_extract(data,'$.runId'))`,
 		`CREATE INDEX IF NOT EXISTS entities_source ON entities(kind,json_extract(data,'$.source'))`,
 		`CREATE INDEX IF NOT EXISTS entities_target ON entities(kind,json_extract(data,'$.target'))`,
-		`CREATE INDEX IF NOT EXISTS events_run_output ON events(entity,kind,seq)`} {
+		`CREATE INDEX IF NOT EXISTS events_run_output ON events(entity,kind,seq)`,
+		`CREATE TABLE IF NOT EXISTS ui_changes(seq INTEGER PRIMARY KEY AUTOINCREMENT,data BLOB NOT NULL)`} {
 		if _, err = db.Exec(q); err != nil {
 			db.Close()
 			return nil, err
 		}
 	}
-	return &Store{db: db, path: absolute}, nil
+	ctx, cancel := context.WithCancel(context.Background())
+	return &Store{db: db, path: absolute, ctx: ctx, cancel: cancel, changed: make(chan struct{}, 1)}, nil
 }
-func (s *Store) Close() error { return s.db.Close() }
+func (s *Store) Close() error { s.cancel(); return s.db.Close() }
 
 // ProcessLock coordinates external effects across connections and processes.
 // No database transaction remains open while the caller holds the lock. Closing
@@ -118,7 +125,7 @@ func decode(row *sql.Row, out any) error {
 	return json.Unmarshal(b, out)
 }
 func (s *Store) Get(ctx context.Context, kind, id string, out any) error {
-	return decode(s.db.QueryRowContext(ctx, "SELECT data FROM entities WHERE kind=? AND id=?", kind, id), out)
+	return decode(s.reader().QueryRowContext(ctx, "SELECT data FROM entities WHERE kind=? AND id=?", kind, id), out)
 }
 func (t *Tx) Get(kind, id string, out any) error {
 	return decode(t.tx.QueryRowContext(t.ctx, "SELECT data FROM entities WHERE kind=? AND id=?", kind, id), out)
@@ -145,7 +152,7 @@ func ListWithout[T any](ctx context.Context, s *Store, kind string, paths ...str
 }
 
 func (s *Store) list(ctx context.Context, kind, expression string, args []any) ([]json.RawMessage, error) {
-	rows, e := s.db.QueryContext(ctx, "SELECT "+expression+" FROM entities WHERE kind=? ORDER BY id", append(args, kind)...)
+	rows, e := s.reader().QueryContext(ctx, "SELECT "+expression+" FROM entities WHERE kind=? ORDER BY id", append(args, kind)...)
 	if e != nil {
 		return nil, e
 	}
@@ -183,7 +190,7 @@ func decodeList[T any](rows []json.RawMessage) ([]T, error) {
 // Records reads a bucket once and keeps the database key authoritative, even for
 // older records whose embedded ID is missing. Decode only the records needed.
 func (s *Store) Records(ctx context.Context, kind string) (map[string]json.RawMessage, error) {
-	rows, err := s.db.QueryContext(ctx, "SELECT id,data FROM entities WHERE kind=?", kind)
+	rows, err := s.reader().QueryContext(ctx, "SELECT id,data FROM entities WHERE kind=?", kind)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +210,7 @@ func (s *Store) Records(ctx context.Context, kind string) (map[string]json.RawMe
 // JSONByteSizes counts JSON-encoded byte slices without transferring or decoding
 // their base64 values. Missing/null fields count as zero; storage keys own identity.
 func (s *Store) JSONByteSizes(ctx context.Context, kind, path string) (map[string]int64, error) {
-	rows, err := s.db.QueryContext(ctx, "SELECT id,coalesce(length(rtrim(json_extract(data, ?), '='))*3/4,0) FROM entities WHERE kind=?", path, kind)
+	rows, err := s.reader().QueryContext(ctx, "SELECT id,coalesce(length(rtrim(json_extract(data, ?), '='))*3/4,0) FROM entities WHERE kind=?", path, kind)
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +228,7 @@ func (s *Store) JSONByteSizes(ctx context.Context, kind, path string) (map[strin
 }
 
 func (t *Tx) Put(kind, id string, v any) error {
+	t.invalidate(kind, id)
 	b, e := json.Marshal(v)
 	if e != nil {
 		return e
@@ -229,10 +237,14 @@ func (t *Tx) Put(kind, id string, v any) error {
 	return e
 }
 func (t *Tx) Delete(kind, id string) error {
+	t.invalidate(kind, id)
 	_, e := t.tx.ExecContext(t.ctx, "DELETE FROM entities WHERE kind=? AND id=?", kind, id)
 	return e
 }
 func (t *Tx) Event(kind, id string, v any) error {
+	if strings.HasPrefix(kind, "run.") {
+		t.invalidate("run", id)
+	}
 	b, e := json.Marshal(v)
 	if e != nil {
 		return e
@@ -258,6 +270,9 @@ func (t *Tx) Event(kind, id string, v any) error {
 	return nil
 }
 func (s *Store) Write(ctx context.Context, f func(*Tx) error) error {
+	if s.view != nil {
+		return fmt.Errorf("cannot write through a read view")
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	tx, e := s.db.BeginTx(ctx, nil)
@@ -265,10 +280,24 @@ func (s *Store) Write(ctx context.Context, f func(*Tx) error) error {
 		return e
 	}
 	defer tx.Rollback()
-	if e = f(&Tx{tx: tx, ctx: ctx}); e != nil {
+	t := &Tx{tx: tx, ctx: ctx}
+	if e = f(t); e != nil {
 		return e
 	}
-	return tx.Commit()
+	if len(t.changes) > 0 {
+		b, err := json.Marshal(t.changes)
+		if err != nil {
+			return err
+		}
+		if _, e = tx.ExecContext(ctx, "INSERT INTO ui_changes(data) VALUES(?)", b); e != nil {
+			return e
+		}
+	}
+	if e = tx.Commit(); e != nil {
+		return e
+	}
+	s.signal()
+	return nil
 }
 func (s *Store) Put(ctx context.Context, kind, id string, v any, event string) error {
 	return s.Write(ctx, func(t *Tx) error {
@@ -288,7 +317,7 @@ func (s *Store) Events(ctx context.Context, after int64, limit int) ([]domain.Ev
 	if limit < 1 || limit > 200 {
 		limit = 100
 	}
-	rows, e := s.db.QueryContext(ctx, "SELECT seq,kind,entity,data,at FROM events WHERE seq>? ORDER BY seq LIMIT ?", after, limit)
+	rows, e := s.reader().QueryContext(ctx, "SELECT seq,kind,entity,data,at FROM events WHERE seq>? ORDER BY seq LIMIT ?", after, limit)
 	if e != nil {
 		return nil, e
 	}
@@ -310,7 +339,7 @@ func (s *Store) Events(ctx context.Context, after int64, limit int) ([]domain.Ev
 }
 func (s *Store) Latest(ctx context.Context) int64 {
 	var n int64
-	_ = s.db.QueryRowContext(ctx, "SELECT COALESCE(MAX(seq),0) FROM events").Scan(&n)
+	_ = s.reader().QueryRowContext(ctx, "SELECT COALESCE(MAX(seq),0) FROM events").Scan(&n)
 	return n
 }
 
@@ -321,7 +350,7 @@ func (s *Store) RunEvents(ctx context.Context, id string, after int64, limit int
 	if limit < 1 || limit > 200 {
 		limit = 100
 	}
-	rows, e := s.db.QueryContext(ctx, "SELECT seq,kind,entity,data,at FROM events WHERE entity=? AND kind='run.output' AND seq>? ORDER BY seq LIMIT ?", id, after, limit+1)
+	rows, e := s.reader().QueryContext(ctx, "SELECT seq,kind,entity,data,at FROM events WHERE entity=? AND kind='run.output' AND seq>? ORDER BY seq LIMIT ?", id, after, limit+1)
 	if e != nil {
 		return nil, e
 	}
@@ -358,17 +387,24 @@ func (s *Store) CompareAndSwap(ctx context.Context, kind, id string, previous js
 	if err != nil {
 		return false, err
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	var result sql.Result
-	if previous == nil {
-		result, err = s.db.ExecContext(ctx, "INSERT OR IGNORE INTO entities(kind,id,data) VALUES(?,?,?)", kind, id, b)
-	} else {
-		result, err = s.db.ExecContext(ctx, "UPDATE entities SET data=? WHERE kind=? AND id=? AND data=?", b, kind, id, []byte(previous))
-	}
-	if err != nil {
-		return false, err
-	}
-	n, err := result.RowsAffected()
-	return n == 1, err
+	var changed bool
+	err = s.Write(ctx, func(t *Tx) error {
+		var result sql.Result
+		var err error
+		if previous == nil {
+			result, err = t.tx.ExecContext(ctx, "INSERT OR IGNORE INTO entities(kind,id,data) VALUES(?,?,?)", kind, id, b)
+		} else {
+			result, err = t.tx.ExecContext(ctx, "UPDATE entities SET data=? WHERE kind=? AND id=? AND data=?", b, kind, id, []byte(previous))
+		}
+		if err != nil {
+			return err
+		}
+		n, err := result.RowsAffected()
+		changed = n == 1
+		if changed {
+			t.invalidate(kind, id)
+		}
+		return err
+	})
+	return changed, err
 }

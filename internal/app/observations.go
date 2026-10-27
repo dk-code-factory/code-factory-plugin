@@ -24,6 +24,7 @@ func (a *App) observation(ctx context.Context, item domain.Item, kind string, ob
 	if err := a.Store.Get(ctx, "observation", kind+":"+item.ID, &out); err != nil && !errors.Is(err, store.ErrNotFound) {
 		return out, err
 	}
+	pending := out.Refresh == "pending" && time.Since(out.LastAttempt) < 90*time.Second
 	out.ObservedAt = observed
 	if kind == "reviews" {
 		rows, err := store.Select[domain.PRReviews](ctx, a.Store, "pr-reviews", "id", item.ID, "$.reviews")
@@ -34,7 +35,9 @@ func (a *App) observation(ctx context.Context, item domain.Item, kind string, ob
 		if err != nil {
 			return out, err
 		}
-		out.LastAttempt = r.LastAttempt
+		if r.LastAttempt.After(out.LastAttempt) {
+			out.LastAttempt = r.LastAttempt
+		}
 		out.Error = r.Error
 		out.RetryAt = r.RetryAt
 	}
@@ -58,6 +61,14 @@ func (a *App) observation(ctx context.Context, item domain.Item, kind string, ob
 	}
 	if repo.RetryAt.After(out.RetryAt) {
 		out.RetryAt = repo.RetryAt
+	}
+	if a.SavedOnly {
+		if pending {
+			out.Refresh = "pending"
+		} else if out.Refresh != "fresh" && out.RetryAt.After(time.Now()) {
+			out.Refresh = "cooldown"
+		}
+		return out, nil
 	}
 	if a.GitHub == nil || !a.GitHub.Managed() || a.Runs == nil {
 		out.Refresh = "unavailable"
@@ -117,13 +128,28 @@ func (a *App) scheduleObservationLocked(item domain.Item, kind string, afterTurn
 		force := afterTurn
 		for {
 			ctx, cancel := context.WithTimeout(a.Runs.ctx, 90*time.Second)
+			var attempt Observation
+			_ = a.Store.Get(ctx, "observation", key, &attempt)
+			attempt.LastAttempt = time.Now().UTC()
+			attempt.Refresh = "pending"
+			if err := a.Store.Put(ctx, "observation", key, attempt, ""); err != nil {
+				cancel()
+				a.refreshMu.Lock()
+				delete(a.refreshing, key)
+				delete(a.refreshAgain, key)
+				a.refreshMu.Unlock()
+				return
+			}
 			if kind == "reviews" {
-				_, _ = a.refreshPRReviews(ctx, item.ID, force)
-			} else {
-				var attempt Observation
-				_ = a.Store.Get(ctx, "observation", key, &attempt)
-				attempt.LastAttempt = time.Now().UTC()
+				result, err := a.refreshPRReviews(ctx, item.ID, force)
+				attempt.Error = result.Error
+				attempt.RetryAt = result.RetryAt
+				if err != nil {
+					attempt.Error = err.Error()
+				}
+				attempt.Refresh = "complete"
 				_ = a.Store.Put(ctx, "observation", key, attempt, "")
+			} else {
 				err := a.RefreshItemDetail(ctx, item.ID)
 				if err != nil {
 					attempt.Error = err.Error()
@@ -136,6 +162,7 @@ func (a *App) scheduleObservationLocked(item domain.Item, kind string, afterTurn
 					attempt.Error = ""
 					attempt.RetryAt = time.Time{}
 				}
+				attempt.Refresh = "complete"
 				_ = a.Store.Put(ctx, "observation", key, attempt, "item.observation")
 			}
 			cancel()
@@ -192,6 +219,43 @@ func (a *App) queueItemFocus(item domain.Item) {
 	}
 }
 func (a *App) ItemObservation(ctx context.Context, item domain.Item) (Observation, error) {
-	a.queueItemFocus(item)
+	if !a.SavedOnly {
+		a.queueItemFocus(item)
+	}
 	return a.observation(ctx, item, "detail", item.DetailSyncedAt, providers.GitHubDetailTTL)
+}
+
+// External observations advance independently of which views happen to be open.
+func (a *App) RefreshSavedObservations(ctx context.Context) {
+	if a.Runs == nil {
+		return
+	}
+	items, err := store.ListWithout[domain.Item](ctx, a.Store, "item", "$.body", "$.activity", "$.checks", "$.pr.checks")
+	if err != nil {
+		return
+	}
+	if len(items) == 0 {
+		return
+	}
+	a.refreshMu.Lock()
+	start := 0
+	for index, item := range items {
+		if item.ID > a.observationAfter {
+			start = index
+			break
+		}
+	}
+	count := min(16, len(items))
+	a.observationAfter = items[(start+count-1)%len(items)].ID
+	a.refreshMu.Unlock()
+	for n := 0; n < count; n++ {
+		item := items[(start+n)%len(items)]
+		if ctx.Err() != nil {
+			return
+		}
+		_, _ = a.observation(ctx, item, "detail", item.DetailSyncedAt, providers.GitHubDetailTTL)
+		if item.Kind == "pr" {
+			_, _ = a.readPRReviews(ctx, item.ID, true)
+		}
+	}
 }

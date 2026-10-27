@@ -255,6 +255,7 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(`; S2. A queued acknowledgement cannot report successful admission after cancellation takes ownership; output remains undecoded and workflow cancellation is synchronous.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(`; S2. After successful admission, caller cancellation preserves observation until native interruption, client cancellation or Close; provider work starts only once.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAcknowledgementTransferRejectsCanceledClient(`; S2. A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `launch customization loads saved skills only when its deferred view opens`; S1. Deferred saved launch data supplies selectable skills to preparation while explicit Start remains separate.
 
 ## Verification and gaps
 

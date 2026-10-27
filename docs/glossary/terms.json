@@ -4686,6 +4686,51 @@
       "aliases": [],
       "category": "state",
       "definition": "Work has ended because its source item closed or merged; the retained session cannot continue."
+    },
+    {
+      "id": "direct-launch",
+      "name": "Direct launch",
+      "aliases": [],
+      "category": "domain",
+      "definition": "Opening an application surface through a dedicated host control without a conversational model turn."
+    },
+    {
+      "id": "ui-projection",
+      "name": "UI projection",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An immutable public view of saved application state associated with one change cursor."
+    },
+    {
+      "id": "ui-change-cursor",
+      "name": "UI change cursor",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A position identifying the saved changes included in a published UI projection."
+    },
+    {
+      "id": "element-w-inbox-query-previous",
+      "name": "previous",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control selecting the preceding saved result page.",
+      "scope": "ui-w-inbox-query"
+    },
+    {
+      "id": "element-w-inbox-query-next",
+      "name": "next",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control selecting the following saved result page.",
+      "scope": "ui-w-inbox-query"
+    },
+    {
+      "id": "element-w-inbox-query-total",
+      "name": "total",
+      "aliases": [],
+      "category": "element",
+      "definition": "The count of saved items matching a query before pagination.",
+      "scope": "ui-w-inbox-query"
     }
   ]
 }

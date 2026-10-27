@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useUIVersion } from "./ui-changes";
 import { call, openLink } from "./bridge";
 import type { IssueReport, ReportPage, ReportFreshness } from "./types";
 
@@ -35,7 +36,8 @@ function Freshness({
     </p>
   );
 }
-export function ReportedIssues({ cursor }: { cursor: number }) {
+export function ReportedIssues() {
+  const cursor = useUIVersion(["issue-report"]);
   const [page, setPage] = useState<ReportPage>({ items: [], nextCursor: "" });
   const [selected, setSelected] = useState("");
   const [detail, setDetail] = useState<IssueReport>();
@@ -44,6 +46,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
   const [component, setComponent] = useState("");
   const [version, setVersion] = useState("");
   const [error, setError] = useState("");
+  const [readError, setReadError] = useState("");
   const [busy, setBusy] = useState(false);
   const [evidence, setEvidence] = useState("");
   const [note, setNote] = useState("");
@@ -90,9 +93,9 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
           if (!nextCursor) break;
         }
         setPage({ items: [...items.values()], nextCursor });
-        setError("");
+        setReadError("");
       } catch (e) {
-        if (active) setError(String(e));
+        if (active) setReadError(String(e));
       } finally {
         inFlight = false;
         paginationPending = false;
@@ -150,7 +153,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
           await read();
         }
       } catch (e) {
-        if (active) setError(String(e));
+        if (active) setReadError(String(e));
       } finally {
         inFlight = false;
       }
@@ -171,8 +174,8 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
         setEvidence("");
         evidenceAttempt.current = { text: "", key: crypto.randomUUID() };
       }
-      await read();
-      await latestLoad.current();
+      void read().catch((e) => setReadError(String(e)));
+      void latestLoad.current();
       setError("");
     } catch (e) {
       setError(String(e));
@@ -194,6 +197,7 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
           Refresh issues and releases
         </button>
       </div>
+      {readError && <p role="alert">{readError}</p>}
       {error && (
         <p role="alert" className="error">
           {error}
@@ -298,7 +302,9 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
               <details>
                 <summary>Issue draft</summary>
                 <h4>{detail.findings.title}</h4>
-                <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                <pre
+                  style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+                >
                   {detail.findings.body}
                 </pre>
               </details>

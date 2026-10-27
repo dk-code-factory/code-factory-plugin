@@ -2,6 +2,7 @@
 /web/node_modules/
 /web/test-results/
 /web/playwright-report/
+/web/performance-results/
 *.db*
 .env
 /plugin/.app.json

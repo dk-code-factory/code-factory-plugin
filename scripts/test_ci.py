@@ -146,6 +146,8 @@ class HostedCITests(unittest.TestCase):
         calls.clear()
         ci.run_verification({"bootstrap": True}, lambda argv, **kwargs: calls.append(argv))
         self.assertIn(["make", "build", "check", "test"], calls)
+        self.assertGreater(calls.index(["make", "test-performance"]),
+                           calls.index(["make", "build", "check", "test"]))
         self.assertIn(["python3", "scripts/test_installer.py"], calls)
         self.assertIn(["python3", "scripts/smoke.py"], calls)
 

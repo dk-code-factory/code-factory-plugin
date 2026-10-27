@@ -33,7 +33,7 @@ func Select[T any](ctx context.Context, s *Store, kind, field, value string, pat
 	if field == "related" {
 		args = append(args, value)
 	}
-	rows, err := s.db.QueryContext(ctx, "SELECT "+expression+" FROM entities WHERE kind=? AND "+predicate+" ORDER BY id", args...)
+	rows, err := s.reader().QueryContext(ctx, "SELECT "+expression+" FROM entities WHERE kind=? AND "+predicate+" ORDER BY id", args...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func Runs(ctx context.Context, s *Store, itemID, id string) ([]domain.Run, error
 		args = append(args, id)
 	}
 	query += " ORDER BY id"
-	rows, err := s.db.QueryContext(ctx, query, args...)
+	rows, err := s.reader().QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +93,6 @@ func Runs(ctx context.Context, s *Store, itemID, id string) ([]domain.Run, error
 // bodies/comments from routine tracking before Go decoding.
 func (s *Store) ReviewSummaries(ctx context.Context, id string) (domain.PRReviews, error) {
 	var out domain.PRReviews
-	err := decode(s.db.QueryRowContext(ctx, `SELECT json_set(data,'$.reviews',json(COALESCE((SELECT json_group_array(json_set(json_remove(value,'$.body','$.comments'),'$.commentCount',COALESCE(json_array_length(value,'$.comments'),0))) FROM json_each(data,'$.reviews')),'[]'))) FROM entities WHERE kind='pr-reviews' AND id=?`, id), &out)
+	err := decode(s.reader().QueryRowContext(ctx, `SELECT json_set(data,'$.reviews',json(COALESCE((SELECT json_group_array(json_set(json_remove(value,'$.body','$.comments'),'$.commentCount',COALESCE(json_array_length(value,'$.comments'),0))) FROM json_each(data,'$.reviews')),'[]'))) FROM entities WHERE kind='pr-reviews' AND id=?`, id), &out)
 	return out, err
 }

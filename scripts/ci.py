@@ -73,6 +73,7 @@ def run_verification(plan, runner=subprocess.run):
         # public root has no publishable predecessor. Every source check runs.
         print("Reviewed public root import: full validation/tests; no Git diff exists.", flush=True)
         commands = [["make", "build", "check", "test"],
+                    ["make", "test-performance"],
                     ["python3", "scripts/package.py"],
                     ["python3", "scripts/test_installer.py"],
                     ["python3", "scripts/smoke.py"]]

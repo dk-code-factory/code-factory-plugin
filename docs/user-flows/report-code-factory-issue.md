@@ -17,6 +17,8 @@ The owner has an authenticated private connection. Automatic investigation requi
 5. Keep the shared ledger current with independent processing, outcome, GitHub state, fix references, component versions, published stable/prerelease versions and observed installed versions. Unknown evidence stays Unknown.
 6. Search and filter Reported issues, inspect details, the collapsible issue draft, visible layout limitation and missing-information requests, append host evidence, refresh delivery evidence and explicitly recover blocked or interrupted work.
 
+A mutation acknowledgement releases its controls independently of later background completion. Shared updates refresh saved lists/details without dismissing uncertain mutation errors or replacing newer selections and evidence drafts.
+
 ## Alternatives and recovery
 
 Repeated submissions with the same key and payload return the same durable report; conflicting keys fail. Lost workflow acknowledgements retry retained admission inputs. One investigation executes at a time with a thirty-minute deadline. Missing information resumes when supplied. Interrupted effects require inspection and explicit reconciliation before resume. Uncertain GitHub creation is searched by its opaque report marker and never blindly repeated. Uncertain routing blocks publication. Evidence unavailable locally can be requested from the host; locally available records are collected by the service.

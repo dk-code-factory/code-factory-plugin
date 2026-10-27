@@ -1,4 +1,4 @@
-.PHONY: build test test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci
+.PHONY: build test test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci
 # Ordinary verification is deterministic even with inherited or command-line opt-ins.
 override export CODE_FACTORY_REAL_CODEX := 0
 FLOW_BASE ?=
@@ -25,6 +25,9 @@ test:
 	python3 scripts/test_ci.py
 	python3 scripts/test_user_flows.py
 	python3 -m unittest discover -s scripts -p 'test_specs*.py'
+test-performance: ui
+	go build -o bin/fake-codex ./internal/testutil/fakecodex
+	cd web && npm run test:performance
 package: build
 	python3 scripts/package.py
 verify:

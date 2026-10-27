@@ -20,18 +20,22 @@ import (
 )
 
 type App struct {
-	refreshMu      sync.Mutex
-	refreshing     map[string]bool
-	refreshAgain   map[string]bool
-	autoReviewMu   sync.Mutex
-	providerMu     sync.Mutex
-	prRefreshAfter string
-	Store          *store.Store
-	Vault          *store.Vault
-	GitHub         providers.GitHubSource
-	Runs           *Manager
-	DataDir        string
-	Reports        *reports.Service
+	// SavedOnly disables observation scheduling and provider status probes for
+	// projection builders and UI reads. Background workers use the live App.
+	SavedOnly        bool
+	refreshMu        sync.Mutex
+	refreshing       map[string]bool
+	refreshAgain     map[string]bool
+	autoReviewMu     sync.Mutex
+	providerMu       sync.Mutex
+	prRefreshAfter   string
+	observationAfter string
+	Store            *store.Store
+	Vault            *store.Vault
+	GitHub           providers.GitHubSource
+	Runs             *Manager
+	DataDir          string
+	Reports          *reports.Service
 }
 
 func ID() string {
@@ -646,6 +650,7 @@ func (a *App) syncLoop(ctx context.Context, ticks <-chan time.Time) {
 		_ = a.RefreshPullRequests(references)
 		cancel()
 		_ = a.RefreshJira(ctx)
+		a.RefreshSavedObservations(ctx)
 		if a.Runs != nil {
 			a.Runs.maybeCheckPlugins(ctx)
 		}

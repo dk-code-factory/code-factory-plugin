@@ -10,7 +10,7 @@ The owner has opened the separate connected Settings view. Repository access is 
 
 ## Main flow
 
-1. Open the independent Settings view and its initially expanded Repositories form, focused on the first repository when none is configured. Save its identifier and optional checkout/base; show feedback while remaining in Settings.
+1. Load the independent Settings view only when opened; its cached administration data follows the shared saved-state subscription. Open the independent Settings view and its initially expanded Repositories form, focused on the first repository when none is configured. Save its identifier and optional checkout/base; show feedback while remaining in Settings.
 2. Expand Priorities & notifications to edit label/priority rows, the assessment policy and the optional question helper model.
 3. Create or edit work profiles, including prompts, model settings, permissions and publishing authority.
 4. Discover local skills or save managed skill content, then select skills for future launches.
@@ -75,7 +75,7 @@ flowchart TD
 
 - [internal/app/app.go](../../internal/app/app.go) — Settings and repository/profile validation (`func (a *App) SaveConfig(`)
 - [internal/app/runs.go](../../internal/app/runs.go) — Skill discovery, snapshots and managed persistence; SaveSkill accepts nonempty names of at most 63 lowercase ASCII letters, digits or hyphens and content beginning with `---\n`, without parsing frontmatter or validating the remaining content. (`func (m *Manager) SaveSkill(`)
-- [web/src/main.tsx](../../web/src/main.tsx) — Settings editor (`function Settings(`)
+- [web/src/settings.tsx](../../web/src/settings.tsx) — Settings editor (`function Settings(`)
 - [internal/domain/types.go](../../internal/domain/types.go) — Defaults and profile choices
 - [internal/store/store.go](../../internal/store/store.go) — Shared domain, persistence, transport or dependency contract
 - [internal/transport/mcp.go](../../internal/transport/mcp.go) — Shared domain, persistence, transport or dependency contract
@@ -103,6 +103,8 @@ flowchart TD
 - [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Bundled administration skill exposes the same owner tool controls. (`name: code-factory-admin`)
 - [internal/app/github_usage.go](../../internal/app/github_usage.go) — Bind system budget settings to private durable accounting and carry over existing cooldowns. (`func (a *App) EnableGitHubUsage(`)
 - [internal/app/skill_snapshots.go](../../internal/app/skill_snapshots.go) — Freeze a selected plugin package and its relative skill entrypoint; materialize bounded retained files with traversal confinement and standalone compatibility. (`func snapshotSkill(`)
+- [web/src/ui-changes.ts](../../web/src/ui-changes.ts) — Plugin administration rereads saved state on shared invalidations; failed reads retry without replaying mutations. (`export function useUIVersion(`)
+- [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — Projection builds quota information from SQLite without provider effects. (`func SavedGitHubUsage(`)
 
 ## Test references
 

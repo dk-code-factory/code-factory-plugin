@@ -156,6 +156,8 @@ export interface GitHubUsage {
  restRemaining?:number;restReset:string;graphqlRemaining?:number;graphqlReset:string;
 }
 export interface Snapshot {
+  selectedEntry?: Entry;
+  page?: {offset:number;limit:number;total:number;hasMore:boolean};
   reviewVersions?: Record<string, string>;
  githubUsage?:GitHubUsage;
   viewer?: { login: string; teams: string[] | null; teamError?: string };

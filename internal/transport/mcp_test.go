@@ -141,6 +141,19 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 			expectedURI = SettingsResourceURI
 		}
 		opens := tool["name"] == "open_factory" || tool["name"] == "open_settings"
+		if tool["name"] == "open_factory" {
+			ui := metadata["openai/ui"].(map[string]any)
+			entries := ui["entrypoints"].([]any)
+			if len(entries) != 1 || entries[0].(map[string]any)["type"] != "global" {
+				t.Fatal("missing direct sidebar entrypoint", metadata)
+			}
+		}
+		if tool["name"] == "read_ui_state" || tool["name"] == "watch_ui_changes" {
+			visibility := metadata["ui"].(map[string]any)["visibility"].([]any)
+			if len(visibility) != 1 || visibility[0] != "app" {
+				t.Fatal("UI projection tools exposed to model", tool)
+			}
+		}
 		if opens && metadata["ui"].(map[string]any)["resourceUri"] != expectedURI {
 			t.Fatalf("opener %s does not reference current UI: %v", tool["name"], metadata)
 		}
