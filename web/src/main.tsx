@@ -156,6 +156,8 @@ function Factory() {
   const cursor = useRef(0);
   const mounted = useRef(true);
   const request = useRef(0);
+  const stateEpoch = useRef(0);
+  const getStateEpoch = useCallback(() => stateEpoch.current, []);
   const appliedCursor = useRef(0);
   const hasData = useRef(false);
   const dirtyDomains = useRef(new Map<string, number>());
@@ -368,6 +370,7 @@ function Factory() {
               // A hidden view does not refresh immediately, but any reply from
               // the previous state epoch must already be obsolete.
               request.current++;
+              stateEpoch.current++;
               setAppliedQuery("");
               appliedCursor.current = 0;
               acceptedRuns.current.clear();
@@ -412,6 +415,7 @@ function Factory() {
                     "profile",
                     "skill",
                     "github-usage",
+                    "github-notifications",
                   ].includes(d),
                 )
               : q.tab === "Reported issues"
@@ -1079,6 +1083,7 @@ function Factory() {
                         />
                       ) : (
                         <NewChat
+                          getStateEpoch={getStateEpoch}
                           profiles={snap.profiles}
                           entry={agentEntry}
                           draft={
@@ -1159,6 +1164,7 @@ function Factory() {
             )}
             {(launch || draftRun) && (
               <Launch
+                getStateEpoch={getStateEpoch}
                 entry={
                   launch ??
                   snap.inbox.find((e) => e.item.id === draftRun?.itemId)
@@ -1342,19 +1348,33 @@ function NewChat({
   setDraft,
   started,
   profiles,
+  getStateEpoch,
 }: {
   entry: Entry;
   draft: ChatDraft;
   setDraft: (update: (old: ChatDraft) => ChatDraft) => void;
   started: (run: Run) => void;
   profiles: Profile[];
+  getStateEpoch: () => number;
 }) {
   const update = (patch: Partial<ChatDraft>) =>
     setDraft((old) => ({ ...old, ...patch }));
   const profile = draft.profile;
+  const stale = (epoch: number) => {
+    if (epoch === getStateEpoch()) return false;
+    update({
+      busy: false,
+      uncertain: true,
+      error:
+        "Saved state changed during the request. Check this run before retrying.",
+    });
+    return true;
+  };
   async function check(run: Run, failure: string) {
+    const epoch = getStateEpoch();
     try {
       const data = await call<{ run: Run }>("read_run", { id: run.id });
+      if (stale(epoch)) return;
       if (!data.run || data.run.id !== run.id)
         throw new Error("Run status could not be verified.");
       if (data.run.status !== "prepared") {
@@ -1368,6 +1388,7 @@ function NewChat({
             `${failure} The run is still prepared. You can Start again.`.trim(),
         });
     } catch (e) {
+      if (stale(epoch)) return;
       update({
         busy: false,
         uncertain: true,
@@ -1379,6 +1400,7 @@ function NewChat({
   async function start() {
     if (draft.busy || draft.uncertain || !profile || !draft.message.trim())
       return;
+    const epoch = getStateEpoch();
     const message = draft.message;
     update({ busy: true, error: "" });
     let prepared =
@@ -1395,6 +1417,7 @@ function NewChat({
           base: "",
         });
         update({ prepared, preparedMessage: message });
+        if (stale(epoch)) return;
         const authority = (p: Profile) =>
           JSON.stringify([
             p.id,
@@ -1414,15 +1437,18 @@ function NewChat({
           return;
         }
       } catch (e) {
+        if (stale(epoch)) return;
         update({ busy: false, error: String(e) });
         return;
       }
     }
     try {
       const run = await call<Run>("start_run", { id: prepared.id });
+      if (stale(epoch)) return;
       update({ busy: false, uncertain: false, error: "" });
       started(run);
     } catch (e) {
+      if (stale(epoch)) return;
       update({ uncertain: true });
       await check(prepared, String(e));
     }
@@ -1925,6 +1951,7 @@ function Launch({
   started,
   initialRun,
   changed,
+  getStateEpoch,
 }: {
   entry?: Entry;
   initialRun?: Run;
@@ -1932,6 +1959,7 @@ function Launch({
   snap: Snapshot;
   close: () => void;
   started: (run: Run) => void;
+  getStateEpoch: () => number;
 }) {
   const [profileId, setProfileId] = useState(
     initialRun?.profile.id ??
@@ -1968,7 +1996,17 @@ function Launch({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const dialogRef = useModalFocus(close);
+  const stale = (epoch: number) => {
+    if (epoch === getStateEpoch()) return false;
+    setUncertain(true);
+    setBusy(false);
+    setError(
+      "Saved state changed during the request. Check this run before retrying.",
+    );
+    return true;
+  };
   async function prepare() {
+    const epoch = getStateEpoch();
     setBusy(true);
     setError("");
     try {
@@ -1982,9 +2020,11 @@ function Launch({
         base,
       });
       setPrepared(run);
+      if (stale(epoch)) return;
       setEditing(false);
       void changed().catch(() => {});
     } catch (e) {
+      if (stale(epoch)) return;
       setError(String(e));
     } finally {
       setBusy(false);
@@ -1997,12 +2037,14 @@ function Launch({
     }
   }, []);
   async function checkStart(id: string, failure = "") {
+    const epoch = getStateEpoch();
     setBusy(true);
     try {
       const { run } = await call<{ run: Run; attention: Attention[] }>(
         "read_run",
         { id },
       );
+      if (stale(epoch)) return;
       if (!run || run.id !== id)
         throw new Error("Run status could not be verified.");
       if (run.status !== "prepared") {
@@ -2014,6 +2056,7 @@ function Launch({
         `${failure} The run is still prepared. You can Start again.`.trim(),
       );
     } catch (e) {
+      if (stale(epoch)) return;
       setUncertain(true);
       setError(
         `${failure} Start status is uncertain. Check status before trying again. ${String(e)}`.trim(),
@@ -2210,14 +2253,17 @@ function Launch({
                   className="primary"
                   disabled={busy || uncertain}
                   onClick={async () => {
+                    const epoch = getStateEpoch();
                     setBusy(true);
                     setError("");
                     try {
                       const r = await call<Run>("start_run", {
                         id: prepared.id,
                       });
+                      if (stale(epoch)) return;
                       started(r);
                     } catch (e) {
+                      if (stale(epoch)) return;
                       setUncertain(true);
                       await checkStart(prepared.id, String(e));
                     }
@@ -2508,7 +2554,7 @@ function Agent({
       }
     }
     const visible = () => {
-      if (!document.hidden) void load();
+      if (!document.hidden && (!browsingHistory || pending)) void load();
     };
     requestHistory.current = () => void load();
     outputSeen.current = transcriptVersion;

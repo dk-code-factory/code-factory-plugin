@@ -142,6 +142,7 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `the managed skill editor loads selected saved instructions and saves an existing skill`; S2. Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a late managed skill read cannot overwrite a later selection or its editor draft`; S2. Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `managed skill read failure blocks saving until an explicit read retry succeeds`; S2. Read failures gate the selected editor save until explicit reload succeeds; no save operation is submitted or replayed.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `notification-only failures refresh saved Settings feedback`; S1. Saved credential-resolution notification feedback updates from its own invalidation bucket.
 
 ## Verification and gaps
 

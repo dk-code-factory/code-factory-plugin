@@ -212,7 +212,7 @@ window.addEventListener("message",async e=>{
  const m=e.data;
  if(m.shellPainted){
  const notificationAt=performance.timeOrigin+performance.now();
- window.launchResult={ms:m.paintedAt-window.startedEpoch,readyMs:m.readyAt-window.startedEpoch,firstFrameMs:m.firstFrameAt-window.startedEpoch,notificationMs:notificationAt-window.startedEpoch,messageLagMs:notificationAt-m.paintedAt,usable:m.usable,pending:window.pending};return
+ window.launchResult={ms:m.paintedAt-window.startedEpoch,readyMs:m.readyAt-window.startedEpoch,firstFrameMs:m.firstFrameAt-window.startedEpoch,notificationMs:notificationAt-window.startedEpoch,messageLagMs:notificationAt-m.paintedAt,fcpMs:m.fcpAt-window.startedEpoch,doubleFrameMs:m.doubleFrameAt-window.startedEpoch,navigationPaints:m.navigationPaints.map(p=>({id:p.id,label:p.label,atMs:p.at-window.startedEpoch,area:p.area})),usable:m.usable,pending:window.pending};return
  }
  if(m.longTasks){window.tasks=(window.tasks||[]).concat(m.longTasks);return}
  if(!m||m.id===undefined)return;

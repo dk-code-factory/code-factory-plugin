@@ -7758,7 +7758,8 @@
         "UI-START-UNKNOWN",
         "UI-START-CONFIRMED",
         "ADMIN-PLUGIN-GATE",
-        "API-REVIEW-AUTHOR-START"
+        "API-REVIEW-AUTHOR-START",
+        "UI-START-CHECK-EPOCH"
       ],
       "gaps": [
         {
@@ -9221,7 +9222,10 @@
         "API-OVERVIEW-ATTENTION",
         "UI-HIDDEN-DIRTY",
         "UI-VIEW-RETRY",
-        "UI-REVIEW-OBSERVATION"
+        "UI-REVIEW-OBSERVATION",
+        "UI-START-EPOCH",
+        "UI-START-CHECK-EPOCH",
+        "UI-NOTIFICATION-FRESHNESS"
       ],
       "gaps": [
         {
@@ -10106,7 +10110,7 @@
       ],
       "element_description": "**surface** heading, **id**, **processing**, **outcome**, **observed**, **expected**, **actual**, **reproduction**, **message**, conditional **findings** with the Issue draft disclosure and visible layout limitation, and **missing-information** including repository-required facts; **open-issue**, **issue-state**, **closure-reason**; repeated **open-fix**, **open-release**, **linked-fix**, **stable-availability**, **prerelease-availability**, **installed-version**, repeated **observed-version**; **issue-freshness**, **release-freshness**; repeated **additions**, **evidence** input and **add-evidence**; conditional **recovery-note**, **effects-acknowledgement**, **resume**; **evidence-history** disclosure with repeated **evidence-manifest** and **history**.",
       "state_description": "No detail article is displayed until the selected report is read. Unknown evidence remains Unknown; processing and outcome stay independent of issue closure, fix, stable, prerelease and installed versions. Freshness shows last successful verification and, on error, its retry time. Add evidence requires a nonblank draft and is disabled during a mutation. Resume is shown for blocked, needs attention or needs information; needs attention shows the note and acknowledgement, both required when a workflow ID exists. Evidence/history starts collapsed. Only current selected-report detail reads can update findings, processing and recovery controls; superseded reads are discarded. Journal detail refreshes coalesce while a read is pending, allowing a slow response to display before the queued refresh. When a rendered issue body exists, Issue draft starts collapsed and reveals its title and complete text on demand. A generic layout limitation remains visible outside that disclosure. Required repository fields use the existing information request and host-evidence controls.",
-      "interactions": "C-REPORT-EVIDENCE appends host observations and can queue information requests. C-REPORT-RECOVER submits the note and acknowledgement for retained work. Successful mutations reread details and the loaded list. Changing selection resets local evidence/recovery drafts. C-REPORT-OPEN-LINK opens retained issue, fix and release URLs through the host; it does not establish external delivery. Mutation controls become usable after their own detail/list refresh, independently of continuing queued journal refreshes."
+      "interactions": "C-REPORT-EVIDENCE appends host observations and can queue information requests. C-REPORT-RECOVER submits the note and acknowledgement for retained work. Successful mutations reread details and the loaded list. Changing selection resets local evidence/recovery drafts. C-REPORT-OPEN-LINK opens retained issue, fix and release URLs through the host; it does not establish external delivery. Mutation controls become usable on acknowledgement; guarded detail/list rereads continue independently without clearing uncertain-action errors or drafts."
     },
     {
       "id": "C-REPORT-SELECT",
@@ -11083,7 +11087,8 @@
         "UI-CHAT-LATE",
         "UI-CHAT-PREPARE-ERROR",
         "ADMIN-PLUGIN-GATE",
-        "UI-ACCEPTANCE-RESYNC"
+        "UI-ACCEPTANCE-RESYNC",
+        "UI-START-EPOCH"
       ],
       "gaps": [],
       "suites": [
@@ -11903,7 +11908,8 @@
         "API-GITHUB-CACHE",
         "API-GITHUB-NOTIFICATIONS",
         "API-GITHUB-INDEX",
-        "UI-GITHUB-USAGE"
+        "UI-GITHUB-USAGE",
+        "UI-NOTIFICATION-FRESHNESS"
       ],
       "gaps": [
         {
@@ -12584,7 +12590,7 @@
       "id": "UI-REPORTS-MUTATION-PROGRESS",
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues releases mutation controls during continuing slow journal refreshes\"",
-      "assertion": "After a mutation renders its own refreshed list, refresh, evidence and acknowledged recovery controls become usable while queued journal refreshes remain pending; a second evidence submission reaches the selected report."
+      "assertion": "After mutation acknowledgement, refresh, evidence and acknowledged recovery controls become usable while saved detail/list and queued journal refreshes remain pending; another evidence submission still reaches the selected report."
     },
     {
       "id": "UI-REPORTS-EVIDENCE-RETRY",
@@ -13232,7 +13238,7 @@
       "id": "UI-LAUNCH-50MS",
       "path": "web/performance/tests/launch.spec.ts",
       "anchor": "production embedded direct launch: every fresh and warm sample is at most 50 ms",
-      "assertion": "Every one of 20 fresh and 10 warm built-resource direct launches has actionable painted navigation within 50 ms; empty/cold/retained states use delayed provider fixtures and retain timing evidence. The same painted callback records its shared monotonic timestamp; host notification elapsed and delivery lag are retained separately and do not enter the click-to-paint endpoint."
+      "assertion": "Every one of 20 fresh and 10 warm launches of the production embedded resource has actionable navigation whose six text ElementTiming entries are visible and follow readiness, corroborated by FCP and all bounded by 50 ms. All raw paint, callback and notification diagnostics are retained; delayed providers and cold/empty/retained fixtures remain."
     },
     {
       "id": "API-UI-PAGES",
@@ -13340,7 +13346,7 @@
       "id": "UI-HISTORY-WINDOW",
       "path": "web/tests/factory.spec.ts",
       "anchor": "older retained history stays inspectable across updates and advances only on request",
-      "assertion": "A 1,300-event run exposes its beginning in an inspectable bounded window; background updates do not move that window, explicit next advances it and follow latest resumes updates without clearing the draft."
+      "assertion": "A 1,300-event run exposes its beginning in an inspectable bounded window; background updates do not move that window, explicit next advances it and follow latest resumes updates without clearing the draft. Hiding/showing a completed browsing page does not create an unsolicited Next request."
     },
     {
       "id": "API-UI-SKILL-EDITOR",
@@ -13443,6 +13449,24 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "observation-only completion refreshes posted review monitoring state",
       "assertion": "A saved review observation completion clears pending status on observation-only invalidation even when the review record version is unchanged."
+    },
+    {
+      "id": "UI-START-EPOCH",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "Start response cannot cross a full resync epoch",
+      "assertion": "A delayed Start result cannot reinstall acceptance after full resync or replay launch."
+    },
+    {
+      "id": "UI-START-CHECK-EPOCH",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a delayed Start status check cannot install acceptance after full resync",
+      "assertion": "An old-epoch status-check result remains uncertain rather than installing a stale accepted run."
+    },
+    {
+      "id": "UI-NOTIFICATION-FRESHNESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "notification-only failures refresh saved Settings feedback",
+      "assertion": "Settings reloads saved notification error feedback on a notification-bucket invalidation without an explicit sync or diagnostics call."
     }
   ],
   "source_map": [

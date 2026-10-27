@@ -106,6 +106,7 @@ async function host(
     beforeMessage?: () => Promise<void>;
     queueMessages?: boolean;
     failReadRun?: boolean;
+    readRun?: (data:{run?:Run;attention:Attention[]})=>Promise<{run?:Run;attention:Attention[]}>;
     loseStartResponse?: boolean;
     beforeStartResponse?: () => Promise<void>;
     rejectStart?: boolean;
@@ -226,7 +227,7 @@ async function host(
             }
             await new Promise(r=>setTimeout(r,20));
           }
-          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"transcript":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id)}:{}};
+          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"transcript":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id),"github-notifications":["cursor"]}:{}};
           if(state.cursor<Number(a.after)) (data as {changes:Record<string,string[]>}).changes={};
           if(options.watchDomains){
             const change=data as {changes:Record<string,string[]>};
@@ -458,6 +459,7 @@ async function host(
             run: state.runs.find((r) => r.id === a.id),
             attention: state.attention.filter((r) => r.runId === a.id),
           };
+          if(options.readRun)data=await options.readRun(structuredClone(data as {run?:Run;attention:Attention[]}));
           break;
         case "save_settings":
           state.config = a as unknown as Snapshot["config"];
@@ -5541,6 +5543,15 @@ test("older retained history stays inspectable across updates and advances only 
   await expect(ui.getByRole("button",{name:"Load next history page"})).toBeVisible();
   await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
   const transcriptReads=calls.filter(c=>c.name==="read_transcript").length;
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  await history.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect(calls.filter(c=>c.name==="read_transcript")).toHaveLength(transcriptReads);
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
   const stateReads=calls.filter(c=>c.name==="read_ui_state").length;
   state.cursor++;
   await expect.poll(()=>calls.filter(c=>c.name==="read_ui_state").length).toBeGreaterThan(stateReads);
@@ -5832,4 +5843,51 @@ test("observation-only completion refreshes posted review monitoring state",asyn
   await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toBeVisible();
   pending=false;state.cursor++;
   await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toHaveCount(0);
+});
+
+for(const modal of [false,true]){
+  test("a delayed "+(modal?"modal":"first-message")+" Start response cannot cross a full resync epoch",async({page})=>{
+    const snapshot=initial();snapshot.cursor=100;
+    let release:()=>void=()=>{};
+    const gate=new Promise<void>(resolve=>{release=resolve});
+    const {ui,state,calls}=await host(page,{snapshot,beforeStartResponse:()=>{snapshot.runs[0].status="prepared";return gate}});
+    try{
+      await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+      if(modal){await showItemDetails(ui);await ui.getByRole("button",{name:"New run",exact:true}).click()}
+      await ui.getByRole(modal?"dialog":"region",{name:modal?"Launch agent":"New agent conversation"}).getByRole("button",{name:"Start agent",exact:true}).click();
+      await expect.poll(()=>calls.filter(c=>c.name==="start_run").length).toBe(1);
+      state.cursor=3;
+      await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===3)).toBe(true);
+      release();
+      await expect(ui.getByRole("alert").filter({hasText:"Saved state changed during the request"})).toBeVisible();
+      await expect(ui.getByRole("button",{name:"Messages",exact:true})).toBeVisible();
+      expect(calls.filter(c=>c.name==="start_run")).toHaveLength(1);
+    }finally{release()}
+  });
+}
+
+test("a delayed Start status check cannot install acceptance after full resync",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  let release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve});let checking=false;
+  const {ui,state,calls}=await host(page,{snapshot,loseStartResponse:true,readRun:async data=>{checking=true;await gate;return data}});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+    await ui.getByRole("region",{name:"New agent conversation"}).getByRole("button",{name:"Start agent",exact:true}).click();
+    await expect.poll(()=>checking).toBe(true);
+    state.runs[0].status="prepared";state.cursor=3;
+    await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===3)).toBe(true);
+    release();
+    await expect(ui.getByRole("alert").filter({hasText:"Saved state changed during the request"})).toBeVisible();
+    await expect(ui.getByRole("button",{name:"Messages",exact:true})).toBeVisible();
+    expect(calls.filter(c=>c.name==="start_run")).toHaveLength(1);
+  }finally{release()}
+});
+
+test("notification-only failures refresh saved Settings feedback",async({page})=>{
+  const snapshot=initial();snapshot.githubUsage={requestsLastHour:0,budget:600,reserve:100,nextRequest:"",restReset:"",graphqlReset:""};
+  const {ui,state,calls}=await host(page,{snapshot,surface:"settings",watchDomains:["github-notifications"]});
+  await ui.getByText("System defaults",{exact:true}).click();
+  state.githubUsage!.notificationError="Saved credential resolution failed";state.cursor++;
+  await expect(ui.getByRole("alert")).toContainText("Saved credential resolution failed");
+  expect(calls.filter(c=>["sync_repositories","diagnostics"].includes(c.name))).toHaveLength(0);
 });

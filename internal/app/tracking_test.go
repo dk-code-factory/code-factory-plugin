@@ -309,6 +309,51 @@ func TestObservationPauseCooldownAndFailureRetainSavedState(t *testing.T) {
 	if err != nil || out.Refresh != "cooldown" || calls.Load() != before {
 		t.Fatal(out, err)
 	}
+	// Keep the worker's pending marker and in-memory ownership alive after
+	// its result has committed, making the cleanup window deterministic.
+	key := "reviews:" + i.ID
+	waitFor(t, func() bool {
+		a.refreshMu.Lock()
+		defer a.refreshMu.Unlock()
+		return !a.refreshing[key]
+	})
+	if err := a.Store.Put(ctx, "observation", key, Observation{
+		Refresh: "pending", LastAttempt: failed.LastAttempt.Add(-time.Millisecond),
+	}, ""); err != nil {
+		t.Fatal(err)
+	}
+	a.refreshMu.Lock()
+	a.refreshing[key] = true
+	a.refreshMu.Unlock()
+	for _, reader := range []*App{a, {Store: a.Store, SavedOnly: true}} {
+		out, err := reader.ReadPRReviews(ctx, i.ID)
+		if err != nil || out.Refresh != "cooldown" || out.Error == "" || len(out.Reviews) != 1 || calls.Load() != before {
+			t.Fatal("completed saved result hidden during worker cleanup", out, err)
+		}
+	}
+	if err := a.Store.Put(ctx, "observation", key, Observation{
+		Refresh: "complete", LastAttempt: failed.LastAttempt,
+	}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := a.ReadPRReviews(ctx, i.ID); err != nil || out.Refresh != "cooldown" {
+		t.Fatal("completed marker hidden before worker ownership cleanup", out, err)
+	}
+	// A genuinely newer attempt still takes precedence over the older result.
+	if err := a.Store.Put(ctx, "observation", key, Observation{
+		Refresh: "pending", LastAttempt: failed.LastAttempt.Add(time.Millisecond),
+	}, ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, reader := range []*App{a, {Store: a.Store, SavedOnly: true}} {
+		out, err := reader.ReadPRReviews(ctx, i.ID)
+		if err != nil || out.Refresh != "pending" || calls.Load() != before {
+			t.Fatal("newer pending attempt lost", out, err)
+		}
+	}
+	a.refreshMu.Lock()
+	delete(a.refreshing, key)
+	a.refreshMu.Unlock()
 	var repo domain.Repository
 	_ = a.Store.Get(ctx, "repository", i.Repository, &repo)
 	repo.Paused = true

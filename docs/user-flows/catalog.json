@@ -1032,6 +1032,14 @@
             "S2"
           ],
           "purpose": "Read failures gate the selected editor save until explicit reload succeeds; no save operation is submitted or replayed."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "notification-only failures refresh saved Settings feedback",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Saved credential-resolution notification feedback updates from its own invalidation bucket."
         }
       ],
       "suites": [
@@ -4781,6 +4789,22 @@
             "S1"
           ],
           "purpose": "A restored authoritative prepared state clears the local accepted-run overlay without replaying Start."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "Start response cannot cross a full resync epoch",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Parameterized first-message and modal starts reject old-epoch success while keeping the request uncertain without replay."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a delayed Start status check cannot install acceptance after full resync",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Status checks cannot apply acceptance from a pre-resync request to restored state."
         }
       ],
       "suites": [

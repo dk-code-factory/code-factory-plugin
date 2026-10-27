@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "9135daf735e0679080343dc12a52b0bb23f83098",
-  "fingerprint": "99d22655a688ac2cd9bb0e7a437c2c868c78c475f0d4b3d4ddc029830cb37d14",
+  "fingerprint": "008360992041cfb4c6963b21f547ec6d2de2734609a878c7a2ec755a9f728d5a",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.261
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 125.317
+      "seconds": 127.335
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 49.543
+      "seconds": 136.668
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.15
+      "seconds": 12.832
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.668
+      "seconds": 8.816
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.786
+      "seconds": 59.543
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 1.486
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.16
+      "seconds": 0.402
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.682
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.221
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.16
+      "seconds": 0.181
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.225
+      "seconds": 1.184
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 26.13
+      "seconds": 25.118
     },
     {
       "command": [
@@ -139,11 +139,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.823
+      "seconds": 0.762
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "ea78811bd7a22bcc47f8567dd4e4a7405488d69a1042bddd30c0b3268922f97c",
+    "flow:operate-installation": "66f820954cbb039de5349f45669b82852f270d4a1fc6d0e282fec477c20c6fb3",
     "term:connection-refreshes": "d787db30d657a7e890b6c72866dabb219a98933d97c110211e440f8e7b3a523f",
     "term:connection-submits": "3a00c99a96b41a48cd8aa11463802c1f1fcd2e5fd2b0d06b4248425f78345952",
     "term:coverage-gap": "805f6284d0fead9eee5889000225bba4bdcd5e6c8f226a1f067319dd7de0f921",
@@ -180,12 +180,12 @@
     "term:ui-w-diagnostics": "9767a9b9712d032dd7695f9496d508b218fc194f699052f6240e543be2980abf",
     "term:unverified-behavior": "433756cb9068d05bbaac06b016e9cbddfb200012bda4c0f5b3b6643e85997b76",
     "term:verification": "3b749c272e9bd9eb4393bd79bea89871fd2ee0fc3eb60e571f4c810f02b28e84",
-    "ui:C-BROWSER-LAB": "23d2bf78f2ddb6fed076bb1a6e1861d35a61f922d690bb4dc580f58120ad703d",
-    "ui:C-DIAGNOSE": "377954c19d0f9910013817d9066743022c4335a3541a2b0ea2999601c225caaa",
-    "ui:P-BROWSER-LAB": "3cca71f70c7f1413ee5b8e6b992402f5f5b8d0208265030c13279dd5ae3a4b21",
-    "ui:P-DIAGNOSTICS": "381147a4e0a595e0fa8a74e8ba0c99a815cf65d1a87cb1e218b6a49313f85d91",
-    "ui:PAGE-BROWSER-LAB": "73f7b822cdbde97d690daae752ef976ea2bfee03b0bb288c58371aece2431901",
-    "ui:W-BROWSER-LAB": "55ef20c2c49d88b3d7f2439b9f2c76fedef76f352e88ca87fb164d7ccb916b9e",
-    "ui:W-DIAGNOSTICS": "b323a0d4fe22df8d980ff0efa9f561a67929200d906a74259c097e76e6712503"
+    "ui:C-BROWSER-LAB": "44671086df92b0850f438b5c5f82543d116dc2bd47cda135ba066bfae0b2b66a",
+    "ui:C-DIAGNOSE": "d208de3ad5a3192f381aecd9ee37fddfd30f2f601b4475c4970ceae5dc40e2fb",
+    "ui:P-BROWSER-LAB": "eea602665d806284aba3cab13836b077a70af3a8645503896747ac4532988e5f",
+    "ui:P-DIAGNOSTICS": "727f3028df95c2cbe48d338683b5265288831853b594dfc94299b2b6f4d3d179",
+    "ui:PAGE-BROWSER-LAB": "479dc27746cb20524e149d0ff2737871c63fa27b5269bc5828c08462dbefd5cd",
+    "ui:W-BROWSER-LAB": "7e6e1defdf00e6b1201234e50ef7dd0b11c22600e37755012bfa2de8f61ff210",
+    "ui:W-DIAGNOSTICS": "44d70ba695a46abe6264e945a89728b78a9b28f20cc1cf88badf971a2105fa2e"
   }
 }

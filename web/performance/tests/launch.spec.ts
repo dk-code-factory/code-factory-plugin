@@ -13,6 +13,9 @@ type Sample = {
   firstFrameMs: number;
   notificationMs: number;
   messageLagMs: number;
+  fcpMs: number;
+  doubleFrameMs: number;
+  navigationPaints: { id: string; label: string; atMs: number; area: number }[];
 };
 type RequestSample = {
   name: string;
@@ -39,33 +42,104 @@ async function prepare(context: BrowserContext, scenario: string) {
         );
       }).observe({ type: "longtask", buffered: true });
     } catch {}
+    const labels = [
+      "Working",
+      "Issues",
+      "My PRs",
+      "Review PRs",
+      "Messages",
+      "Reported issues",
+    ];
+    const paints = new Map<
+      string,
+      { id: string; label: string; at: number; area: number }
+    >();
+    let readyAt = 0,
+      firstFrameAt = 0,
+      doubleFrameAt = 0,
+      fcpAt = 0,
+      usable = false,
+      reported = false;
+    const report = () => {
+      if (
+        reported ||
+        !readyAt ||
+        !doubleFrameAt ||
+        !fcpAt ||
+        paints.size !== labels.length
+      )
+        return;
+      const navigationPaints = [...paints.values()];
+
+      reported = true;
+      // Use direct paint evidence for every navigation label, corroborated by
+      // FCP. Animation frames remain diagnostics, not presentation guarantees.
+      window.parent.postMessage(
+        {
+          shellPainted: true,
+          usable,
+          readyAt,
+          firstFrameAt,
+          doubleFrameAt,
+          fcpAt,
+          navigationPaints,
+          paintedAt: Math.max(fcpAt, ...navigationPaints.map((p) => p.at)),
+        },
+        "*",
+      );
+    };
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.name === "first-contentful-paint")
+          fcpAt = performance.timeOrigin + entry.startTime;
+      }
+      report();
+    }).observe({ type: "paint", buffered: true });
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const e = entry as PerformanceEntry & {
+          identifier: string;
+          renderTime: number;
+          intersectionRect: DOMRectReadOnly;
+        };
+        if (!e.identifier.startsWith("factory-nav-")) continue;
+        const index = Number(e.identifier.slice("factory-nav-".length));
+        if (!labels[index] || e.renderTime <= 0) continue;
+        paints.set(e.identifier, {
+          id: e.identifier,
+          label: labels[index],
+          at: performance.timeOrigin + e.renderTime,
+          area: e.intersectionRect.width * e.intersectionRect.height,
+        });
+      }
+      report();
+    }).observe({ type: "element", buffered: true });
     const observer = new MutationObserver(() => {
       const nav = document.querySelector('nav[aria-label="Main navigation"]');
       if (!(nav instanceof HTMLElement) || nav.dataset.ready !== "true") return;
-      const button = [...nav.querySelectorAll("button")].find(
-        (b) => b.textContent?.trim() === "Messages",
+      const buttons = [...nav.querySelectorAll("button")];
+      if (
+        buttons.length !== labels.length ||
+        buttons.some(
+          (b, i) =>
+            b.textContent?.trim() !== labels[i] ||
+            b.getBoundingClientRect().height < 1,
+        )
+      )
+        return;
+      buttons.forEach((b, i) =>
+        b.setAttribute("elementtiming", "factory-nav-" + i),
       );
-      if (!button || button.getBoundingClientRect().height < 1) return;
       observer.disconnect();
-      button.click();
-      const usable = button.getAttribute("aria-current") === "page";
-      const readyAt = performance.timeOrigin + performance.now();
-      // Keep the same conservative two-frame paint condition, but timestamp
-      // it here so the host's message delivery queue is not part of UI paint.
+      buttons[4].click();
+      usable = buttons[4].getAttribute("aria-current") === "page";
+      readyAt = performance.timeOrigin + performance.now();
       requestAnimationFrame(() => {
-        const firstFrameAt = performance.timeOrigin + performance.now();
-        requestAnimationFrame(() =>
-          window.parent.postMessage(
-            {
-              shellPainted: true,
-              usable,
-              readyAt,
-              firstFrameAt,
-              paintedAt: performance.timeOrigin + performance.now(),
-            },
-            "*",
-          ),
-        );
+        firstFrameAt = performance.timeOrigin + performance.now();
+        requestAnimationFrame(() => {
+          doubleFrameAt = performance.timeOrigin + performance.now();
+          report();
+        });
       });
     });
     observer.observe(document, {
@@ -304,7 +378,18 @@ test("production embedded direct launch: every fresh and warm sample is at most 
         (s) =>
           s.readyMs >= 0 &&
           s.firstFrameMs >= s.readyMs &&
-          s.ms >= s.firstFrameMs,
+          s.doubleFrameMs >= s.firstFrameMs &&
+          s.ms >= s.readyMs &&
+          Number.isFinite(s.fcpMs) &&
+          s.ms >= s.fcpMs &&
+          s.navigationPaints.length === 6 &&
+          s.navigationPaints.every(
+            (p) =>
+              Number.isFinite(p.atMs) &&
+              p.atMs >= s.readyMs &&
+              p.atMs <= s.ms &&
+              p.area > 0,
+          ),
       ),
     ).toBe(true);
     expect(

@@ -25,6 +25,7 @@ func (a *App) observation(ctx context.Context, item domain.Item, kind string, ob
 		return out, err
 	}
 	pending := out.Refresh == "pending" && time.Since(out.LastAttempt) < 90*time.Second
+	completedAttempt := out.Refresh == "complete"
 	out.ObservedAt = observed
 	if kind == "reviews" {
 		rows, err := store.Select[domain.PRReviews](ctx, a.Store, "pr-reviews", "id", item.ID, "$.reviews")
@@ -34,6 +35,12 @@ func (a *App) observation(ctx context.Context, item domain.Item, kind string, ob
 		}
 		if err != nil {
 			return out, err
+		}
+		// A completed review row is saved before worker cleanup clears its
+		// pending marker. Do not let that cleanup window hide the saved result.
+		if pending && !r.LastAttempt.Before(out.LastAttempt) {
+			pending = false
+			completedAttempt = true
 		}
 		if r.LastAttempt.After(out.LastAttempt) {
 			out.LastAttempt = r.LastAttempt
@@ -84,7 +91,7 @@ func (a *App) observation(ctx context.Context, item domain.Item, kind string, ob
 	key := kind + ":" + item.ID
 	a.refreshMu.Lock()
 	defer a.refreshMu.Unlock()
-	if a.refreshing[key] {
+	if a.refreshing[key] && !completedAttempt {
 		out.Refresh = "pending"
 		return out, nil
 	}
