@@ -90,11 +90,13 @@ A retained async question keeps its owning answer route across process loss and 
 
 Cancelling automatic recovery does not establish that a genuine pending async question was answered or became obsolete. After restart, Take over can still clear its recovery progress while that question remains available for an explicit answer.
 
+- **S6** Material review questions suspend their retained workflow. The pending gate survives restart, accepts its correlated answer once and rejects stale or duplicate answers before dependent review resumes.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [attention-request](../glossary/README.md#attention-request), [agent-run](../glossary/README.md#agent-run), [state-blocking](../glossary/README.md#state-blocking), [state-continuing](../glossary/README.md#state-continuing), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [keyboard-focus](../glossary/README.md#keyboard-focus), [modal-dialog](../glossary/README.md#modal-dialog), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated).
-UI entities: [D-ATTENTION](../ui/README.md#D-ATTENTION), [P-ATTENTION-FRAME](../ui/README.md#P-ATTENTION-FRAME), [P-QUESTIONS](../ui/README.md#P-QUESTIONS), [P-APPROVAL](../ui/README.md#P-APPROVAL), [P-ELICITATION](../ui/README.md#P-ELICITATION), [W-DIALOG-FRAME](../ui/README.md#W-DIALOG-FRAME), [W-ATTENTION-NOTICE](../ui/README.md#W-ATTENTION-NOTICE), [W-QUESTIONS](../ui/README.md#W-QUESTIONS), [W-APPROVAL](../ui/README.md#W-APPROVAL), [W-ELICITATION](../ui/README.md#W-ELICITATION), [C-RUN-ATTENTION](../ui/README.md#C-RUN-ATTENTION), [C-ATTENTION-CHAT](../ui/README.md#C-ATTENTION-CHAT), [C-ANSWER](../ui/README.md#C-ANSWER), [C-EXTERNAL-AUTH](../ui/README.md#C-EXTERNAL-AUTH), [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-WAITING-QUEUE](../ui/README.md#P-WAITING-QUEUE), [W-WAITING-ROW](../ui/README.md#W-WAITING-ROW), [C-GLOBAL-ATTENTION](../ui/README.md#C-GLOBAL-ATTENTION), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE), [C-DISMISS-QUESTION](../ui/README.md#C-DISMISS-QUESTION).
+Glossary: [attention-request](../glossary/README.md#attention-request), [agent-run](../glossary/README.md#agent-run), [state-blocking](../glossary/README.md#state-blocking), [state-continuing](../glossary/README.md#state-continuing), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [keyboard-focus](../glossary/README.md#keyboard-focus), [modal-dialog](../glossary/README.md#modal-dialog), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated), [review-workflow](../glossary/README.md#review-workflow), [review-artifact](../glossary/README.md#review-artifact), [review-posting-policy](../glossary/README.md#review-posting-policy), [review-publication-operation](../glossary/README.md#review-publication-operation).
+UI entities: [D-ATTENTION](../ui/README.md#D-ATTENTION), [P-ATTENTION-FRAME](../ui/README.md#P-ATTENTION-FRAME), [P-QUESTIONS](../ui/README.md#P-QUESTIONS), [P-APPROVAL](../ui/README.md#P-APPROVAL), [P-ELICITATION](../ui/README.md#P-ELICITATION), [W-DIALOG-FRAME](../ui/README.md#W-DIALOG-FRAME), [W-ATTENTION-NOTICE](../ui/README.md#W-ATTENTION-NOTICE), [W-QUESTIONS](../ui/README.md#W-QUESTIONS), [W-APPROVAL](../ui/README.md#W-APPROVAL), [W-ELICITATION](../ui/README.md#W-ELICITATION), [C-RUN-ATTENTION](../ui/README.md#C-RUN-ATTENTION), [C-ATTENTION-CHAT](../ui/README.md#C-ATTENTION-CHAT), [C-ANSWER](../ui/README.md#C-ANSWER), [C-EXTERNAL-AUTH](../ui/README.md#C-EXTERNAL-AUTH), [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-WAITING-QUEUE](../ui/README.md#P-WAITING-QUEUE), [W-WAITING-ROW](../ui/README.md#W-WAITING-ROW), [C-GLOBAL-ATTENTION](../ui/README.md#C-GLOBAL-ATTENTION), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE), [C-DISMISS-QUESTION](../ui/README.md#C-DISMISS-QUESTION), [W-PR-REVIEW-POLICY](../ui/README.md#W-PR-REVIEW-POLICY), [W-RETAINED-REVIEW](../ui/README.md#W-RETAINED-REVIEW), [C-PR-POSTING-POLICY](../ui/README.md#C-PR-POSTING-POLICY), [C-REVIEW-PUBLISH](../ui/README.md#C-REVIEW-PUBLISH), [C-REVIEW-RECONCILE](../ui/README.md#C-REVIEW-RECONCILE).
 
 ## Flow diagram
 
@@ -122,6 +124,8 @@ flowchart TD
     N19["Ask original agent for question-only clarification within the shared two-turn budget #40;S4#41;"]
     N20(["Unresolved classification retains diagnostics without new attention or progress"])
     N21["Recheck ambiguous legacy text at startup and after later successful turns"]
+    N22["Wait for a correlated material review decision #40;S6#41;"]
+    N23(["Answer claimed once and dependent review resumed"])
     N0 -->|"answer"| N1
     N0 -->|"nonblocking"| N7
     N7 -->|"respond"| N1
@@ -162,6 +166,8 @@ flowchart TD
     N21 -->|"positive obsolete classification#59; retire only matching request"| N3
     N21 -->|"question remains confirmed and unanswered"| N10
     N21 -->|"classification failure"| N19
+    N0 -->|"retained review workflow"| N22
+    N22 -->|"validate evidence and authority"| N23
 ```
 
 ## Implementation references
@@ -298,6 +304,10 @@ flowchart TD
 - [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestNativeAnswerRejectsDurableInterruptBeforeProviderCompletion(`; S3. Durable interruption rejects a native answer before provider completion without claiming attention or saving its reply; completion stales the original request.
 - [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestAnsweredContinuationPreservesStateOnStorageFailure(`; S4. Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers.
 - [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIOpeningSummaryUsesEligibleSavedAttention`; S1. The cached opening indication follows saved queue ownership/status eligibility instead of counting all raw pending records.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestRetainedReviewQuestionsSurviveRestartAndAnswerOnce(`; S6. Durable attention and duplicate rejection.
+- [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestDurableMaterialWaitAnswersAndRestart(`; S6. Stale/duplicate answers and suspended execution.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewAnswerRejectsChangedRemoteEvidenceBeforeClaim(`; S6. Changed remote evidence rejects a material answer as stale while leaving its retained attention pending and unclaimed.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewAnswerDoesNotClaimAcrossConcurrentRuleChange(`; S6. A governing rule change during remote answer validation rejects the answer before claiming its pending attention.
 
 ## Verification and gaps
 

@@ -59,11 +59,13 @@ Take over after a repair answer preserves the claimed answer while cancelling it
 Takeover waiting for a busy recovery turn leaves other runs available to start and present their questions.
 Take over also cancels recovery before its first question-only turn. Late questions from that cancelled recovery do not return; a later explicit continuation can ask new genuine questions.
 
+- **S8** Retained PR review continuation accepts an explicit Resume or operational continue message after the previous execution stops. Material questions use their owning answer control; new engineering instructions require fresh preparation. Plugin maintenance refuses continuation until it finishes; rejection accepts no message or new review work.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [agent-run](../glossary/README.md#agent-run), [transcript](../glossary/README.md#transcript), [state-idle](../glossary/README.md#state-idle), [state-running](../glossary/README.md#state-running), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated), [state-deferred](../glossary/README.md#state-deferred).
-UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/README.md#P-RUN-LIST), [P-RUN-DETAIL](../ui/README.md#P-RUN-DETAIL), [W-RUN-ROW](../ui/README.md#W-RUN-ROW), [W-RUN-EMPTY](../ui/README.md#W-RUN-EMPTY), [W-RUN-CONTROLS](../ui/README.md#W-RUN-CONTROLS), [C-SELECT-RUN](../ui/README.md#C-SELECT-RUN), [C-RUN-ACTION](../ui/README.md#C-RUN-ACTION), [W-TRANSCRIPT](../ui/README.md#W-TRANSCRIPT), [W-MESSAGE](../ui/README.md#W-MESSAGE), [C-TRANSCRIPT](../ui/README.md#C-TRANSCRIPT), [C-FOLLOW-UP](../ui/README.md#C-FOLLOW-UP), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [C-BACK](../ui/README.md#C-BACK), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE).
+Glossary: [agent-run](../glossary/README.md#agent-run), [transcript](../glossary/README.md#transcript), [state-idle](../glossary/README.md#state-idle), [state-running](../glossary/README.md#state-running), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated), [state-deferred](../glossary/README.md#state-deferred), [review-workflow](../glossary/README.md#review-workflow).
+UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/README.md#P-RUN-LIST), [P-RUN-DETAIL](../ui/README.md#P-RUN-DETAIL), [W-RUN-ROW](../ui/README.md#W-RUN-ROW), [W-RUN-EMPTY](../ui/README.md#W-RUN-EMPTY), [W-RUN-CONTROLS](../ui/README.md#W-RUN-CONTROLS), [C-SELECT-RUN](../ui/README.md#C-SELECT-RUN), [C-RUN-ACTION](../ui/README.md#C-RUN-ACTION), [W-TRANSCRIPT](../ui/README.md#W-TRANSCRIPT), [W-MESSAGE](../ui/README.md#W-MESSAGE), [C-TRANSCRIPT](../ui/README.md#C-TRANSCRIPT), [C-FOLLOW-UP](../ui/README.md#C-FOLLOW-UP), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [C-BACK](../ui/README.md#C-BACK), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE), [W-RETAINED-REVIEW](../ui/README.md#W-RETAINED-REVIEW).
 
 ## Flow diagram
 
@@ -85,6 +87,9 @@ flowchart TD
     N13["Deliver saved message to the same agent using retained context"]
     N14(["Keep uncertain delivery visible without automatic replay"])
     N15["Reconcile acknowledged same-run decisions#59; preserve partial, uncertain and other-run asks #40;S6#41;"]
+    N16["Continue an interrupted retained review through its existing control #40;S8#41;"]
+    N17(["Changed engineering instructions require a fresh prepared review"])
+    N18(["Previous execution stopped#59; valid completed work reused"])
     N0 -->|"idle"| N1
     N0 -->|"active"| N2
     N0 -->|"interrupt"| N3
@@ -108,6 +113,9 @@ flowchart TD
     N13 -->|"delivery acknowledgement unavailable"| N14
     N13 -->|"message delivered and agent acknowledges decisions"| N15
     N15 -->|"only settled questions leave actionable attention"| N6
+    N0 -->|"retained review workflow"| N16
+    N16 -->|"continue or resume after execution stops"| N18
+    N16 -->|"new engineering instruction"| N17
 ```
 
 ## Implementation references
@@ -154,6 +162,7 @@ flowchart TD
 - [internal/aiworkflows/workflows/question-repair.yml](../../internal/aiworkflows/workflows/question-repair.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/app/review_workflows.go](../../internal/app/review_workflows.go) — Retained review continuation uses existing message controls without altering governing scope or overlapping an old worker. (`func (m *Manager) queueReviewContinuation(`)
 
 ## Test references
 
@@ -226,6 +235,9 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(`; S1. A queued acknowledgement cannot report successful admission after cancellation takes ownership; output remains undecoded and workflow cancellation is synchronous.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(`; S1. After successful admission, caller cancellation preserves observation until native interruption, client cancellation or Close; provider work starts only once.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAcknowledgementTransferRejectsCanceledClient(`; S1. A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewInterruptResumeJoinsOldExecution(`; S8. Immediate Resume rejects until the old worker stops; new scope cannot reuse prior review, while a continue message resumes completed checkpoints.
+- [internal/app/review_workflow_guards_test.go](../../internal/app/review_workflow_guards_test.go) — `func TestReviewTerminationCancelsConcurrentStartAndResume(`; S8. Concurrent retained Start/Resume and termination cancels the replacement execution while preserving pre-lock cancellation of old work.
+- [internal/app/review_maintenance_test.go](../../internal/app/review_maintenance_test.go) — `func TestRetainedReviewContinuationHonorsPluginMaintenance(`; S8. Continue/resume with fixture and production adapters refuses the held exclusive maintenance gate without changing runs, sessions, messages or work counters; after release capability and stale-turn checks remain and valid continuation reuses its completed checkpoint.
 
 ## Verification and gaps
 

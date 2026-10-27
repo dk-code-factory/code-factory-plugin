@@ -26,13 +26,20 @@ type MessageDelivery struct {
 // QueueMessage acknowledges a local commit, never a provider or GitHub call.
 // Only the worker touches a session, so a blocked provider cannot delay receipt.
 func (m *Manager) QueueMessage(ctx context.Context, id, text, expected string) (MessageDelivery, error) {
-	if strings.TrimSpace(text) == "" {
+	var retained domain.Run
+	if err := m.app.Store.Get(ctx, "run", id, &retained); err != nil {
+		return MessageDelivery{}, err
+	}
+	if retained.ReviewWorkflow == "" && strings.TrimSpace(text) == "" {
 		return MessageDelivery{}, fmt.Errorf("message is empty")
 	}
 	if !m.adminGate.TryRLock() {
 		return MessageDelivery{}, fmt.Errorf("plugin maintenance in progress; try again when it finishes")
 	}
 	defer m.adminGate.RUnlock()
+	if retained.ReviewWorkflow != "" {
+		return m.queueReviewContinuation(ctx, retained, text, expected)
+	}
 	d := MessageDelivery{ID: ID(), RunID: id, State: "queued", ExpectedTurn: expected, Created: time.Now().UTC()}
 	d.Updated = d.Created
 	// Persist the payload first: no committed queue record can lack its text.

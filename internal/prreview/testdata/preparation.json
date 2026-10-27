@@ -1,0 +1,1022 @@
+{
+  "upstream": "1b0019767a29142bbb4b3855c2fc9f1e4af75b71",
+  "preparation": {
+    "preparation_version": 3,
+    "mode": "standalone",
+    "identity": {
+      "pr_url": "https://github.com/o/r/pull/2",
+      "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "body_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "decisions_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    "workflow_dir": "/fixture",
+    "workspace": "/fixture/checkout",
+    "recovery_manifest": {
+      "path": "/fixture/manifest.json",
+      "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "recovery_context": {
+      "path": "/fixture/context.json",
+      "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "sources": {
+      "manifest": {
+        "path": "/fixture/manifest.json",
+        "snapshot": "/fixture/manifest.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "manifest"
+      },
+      "context": {
+        "path": "/fixture/context.json",
+        "snapshot": "/fixture/context.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "context"
+      },
+      "decisions": {
+        "path": "/fixture/decisions.json",
+        "snapshot": "/fixture/decisions.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "decisions"
+      },
+      "metadata": {
+        "path": "/fixture/metadata.json",
+        "snapshot": "/fixture/metadata.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "metadata"
+      },
+      "patch": {
+        "path": "/fixture/patch.json",
+        "snapshot": "/fixture/patch.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "patch"
+      },
+      "issues/0": {
+        "path": "/fixture/issues/0.json",
+        "snapshot": "/fixture/issues/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "issues/0"
+      },
+      "feedback/0": {
+        "path": "/fixture/feedback/0.json",
+        "snapshot": "/fixture/feedback/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "feedback/0"
+      },
+      "choices/0": {
+        "path": "/fixture/choices/0.json",
+        "snapshot": "/fixture/choices/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "choices/0"
+      },
+      "user_instructions/0": {
+        "path": "/fixture/user_instructions/0.json",
+        "snapshot": "/fixture/user_instructions/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "user_instructions/0"
+      },
+      "run_history/0": {
+        "path": "/fixture/run_history/0.json",
+        "snapshot": "/fixture/run_history/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "run_history/0"
+      },
+      "questions/0": {
+        "path": "/fixture/questions/0.json",
+        "snapshot": "/fixture/questions/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "questions/0"
+      },
+      "prior_preparation/0": {
+        "path": "/fixture/prior.json",
+        "snapshot": "/fixture/prior.json",
+        "sha256": "2fc02cb70cb47f335b8b0728f661c71d31ef808abb56df08ce27f37b37cf4380",
+        "mode": "capture",
+        "origin_identity": "prior_preparation/0"
+      },
+      "rules/0": {
+        "path": "/fixture/rules/0.json",
+        "snapshot": "/fixture/rules/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "rules/0"
+      },
+      "production/0": {
+        "path": "/fixture/production/0.json",
+        "snapshot": "/fixture/production/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "production/0"
+      },
+      "tests/0": {
+        "path": "/fixture/tests/0.json",
+        "snapshot": "/fixture/tests/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "tests/0"
+      },
+      "ci/0": {
+        "path": "/fixture/ci/0.json",
+        "snapshot": "/fixture/ci/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "ci/0"
+      },
+      "reviewers/0": {
+        "path": "/fixture/reviewers/0.json",
+        "snapshot": "/fixture/reviewers/0.json",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "mode": "capture",
+        "origin_identity": "reviewers/0"
+      }
+    },
+    "inputs": {
+      "policy": "3db03f690c6db2af361b32ab02eff42b19bcc7a9a467be62313192dd2ce37a88",
+      "tree": {
+        "a.go": [
+          "100644",
+          "blob",
+          "cccccccccccccccccccccccccccccccccccccccc"
+        ]
+      },
+      "sources": {
+        "manifest": {
+          "identity": "manifest",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "context": {
+          "identity": "context",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "decisions": {
+          "identity": "decisions",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "metadata": {
+          "identity": "metadata",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "patch": {
+          "identity": "patch",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "issues/0": {
+          "identity": "issues/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "feedback/0": {
+          "identity": "feedback/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "choices/0": {
+          "identity": "choices/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "user_instructions/0": {
+          "identity": "user_instructions/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "run_history/0": {
+          "identity": "run_history/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "questions/0": {
+          "identity": "questions/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "prior_preparation/0": {
+          "identity": "prior_preparation/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "rules/0": {
+          "identity": "rules/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "production/0": {
+          "identity": "production/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "tests/0": {
+          "identity": "tests/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "ci/0": {
+          "identity": "ci/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "reviewers/0": {
+          "identity": "reviewers/0",
+          "governing": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      }
+    },
+    "graph": {
+      "c-0": {
+        "location": "/boundaries/correctness/0",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-1": {
+        "location": "/boundaries/remediation_depth/0",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-2": {
+        "location": "/boundaries/performance/0",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-3": {
+        "location": "/boundaries/compatibility/0",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-4": {
+        "location": "/boundaries/complexity/0",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-5": {
+        "location": "/placement/production",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-6": {
+        "location": "/placement/tests",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-7": {
+        "location": "/placement/reuse",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-8": {
+        "location": "/placement/entrypoints",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-9": {
+        "location": "/placement/dependencies",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-10": {
+        "location": "/test_strategy/0",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-11": {
+        "location": "/reviewer_addenda/one",
+        "depends_on": [
+          "c-0",
+          "c-1",
+          "c-10",
+          "c-15",
+          "c-2",
+          "c-3",
+          "c-4",
+          "c-5",
+          "c-6",
+          "c-7",
+          "c-8",
+          "c-9"
+        ],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-12": {
+        "location": "/reviewer_addenda/two",
+        "depends_on": [
+          "c-0",
+          "c-1",
+          "c-10",
+          "c-15",
+          "c-2",
+          "c-3",
+          "c-4",
+          "c-5",
+          "c-6",
+          "c-7",
+          "c-8",
+          "c-9"
+        ],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-13": {
+        "location": "/worker_instructions",
+        "depends_on": [
+          "c-0",
+          "c-1",
+          "c-10",
+          "c-15",
+          "c-2",
+          "c-3",
+          "c-4",
+          "c-5",
+          "c-6",
+          "c-7",
+          "c-8",
+          "c-9"
+        ],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-14": {
+        "location": "/completion_criteria",
+        "depends_on": [
+          "c-0",
+          "c-1",
+          "c-10",
+          "c-15",
+          "c-2",
+          "c-3",
+          "c-4",
+          "c-5",
+          "c-6",
+          "c-7",
+          "c-8",
+          "c-9"
+        ],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      },
+      "c-15": {
+        "location": "/sync_required",
+        "depends_on": [],
+        "paths": [
+          {
+            "path": ".",
+            "kind": "subtree"
+          }
+        ],
+        "sources": [
+          "choices/0",
+          "ci/0",
+          "context",
+          "decisions",
+          "feedback/0",
+          "issues/0",
+          "manifest",
+          "metadata",
+          "patch",
+          "prior_preparation/0",
+          "production/0",
+          "questions/0",
+          "reviewers/0",
+          "rules/0",
+          "run_history/0",
+          "tests/0",
+          "user_instructions/0"
+        ],
+        "decisions": []
+      }
+    },
+    "retired_ids": [],
+    "reviewer_order": [
+      "one",
+      "two"
+    ],
+    "reviewers": {
+      "one": {
+        "descriptor_version": 1,
+        "reviewer": "one",
+        "complete": true,
+        "missing": [],
+        "effective_prompt": "Inspect all governing evidence",
+        "aspects": [
+          "correctness"
+        ],
+        "sources": [
+          {
+            "path": "/fixture/SKILL.md",
+            "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "code_factory_binding": {
+          "reviewer": {
+            "id": "one",
+            "kind": "skill",
+            "skillId": "one"
+          },
+          "resources": {
+            "SKILL.md": "UmV2aWV3IHBpbm5lZCBldmlkZW5jZQ=="
+          },
+          "modes": {
+            "SKILL.md": 384
+          },
+          "entrypoint": "SKILL.md",
+          "identity": "78ee4e0f5a27d9bf5f63c6894e42113f27598658b338c602f3982cc0ba7801cb"
+        }
+      },
+      "two": {
+        "descriptor_version": 1,
+        "reviewer": "two",
+        "complete": true,
+        "missing": [],
+        "effective_prompt": "Inspect all governing evidence",
+        "aspects": [
+          "correctness"
+        ],
+        "sources": [
+          {
+            "path": "/fixture/SKILL.md",
+            "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "code_factory_binding": {
+          "reviewer": {
+            "id": "two",
+            "kind": "skill",
+            "skillId": "two"
+          },
+          "resources": {
+            "SKILL.md": "UmV2aWV3IHBpbm5lZCBldmlkZW5jZQ=="
+          },
+          "modes": {
+            "SKILL.md": 384
+          },
+          "entrypoint": "SKILL.md",
+          "identity": "b2cd8c7be1c42ac2ebc12e1e76fd81bf81d915e7e3378eb160f0f0a0a6fda5fa"
+        }
+      }
+    },
+    "reviewer_paths": [
+      "/fixture/reviewer-one.json",
+      "/fixture/reviewer-two.json"
+    ],
+    "code_factory_bindings": [
+      {
+        "reviewer": {
+          "id": "one",
+          "kind": "skill",
+          "skillId": "one"
+        },
+        "resources": {
+          "SKILL.md": "UmV2aWV3IHBpbm5lZCBldmlkZW5jZQ=="
+        },
+        "modes": {
+          "SKILL.md": 384
+        },
+        "entrypoint": "SKILL.md",
+        "identity": "78ee4e0f5a27d9bf5f63c6894e42113f27598658b338c602f3982cc0ba7801cb"
+      },
+      {
+        "reviewer": {
+          "id": "two",
+          "kind": "skill",
+          "skillId": "two"
+        },
+        "resources": {
+          "SKILL.md": "UmV2aWV3IHBpbm5lZCBldmlkZW5jZQ=="
+        },
+        "modes": {
+          "SKILL.md": 384
+        },
+        "entrypoint": "SKILL.md",
+        "identity": "b2cd8c7be1c42ac2ebc12e1e76fd81bf81d915e7e3378eb160f0f0a0a6fda5fa"
+      }
+    ],
+    "local_answers": [],
+    "analysis": {
+      "boundaries": {
+        "correctness": [
+          {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "remediation_depth": [
+          {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "performance": [
+          {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "compatibility": [
+          {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "complexity": [
+          {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ]
+      },
+      "placement": {
+        "production": {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ],
+          "locations": [
+            "a.go"
+          ]
+        },
+        "tests": {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ],
+          "locations": [
+            "a.go"
+          ]
+        },
+        "reuse": {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ],
+          "locations": [
+            "a.go"
+          ]
+        },
+        "entrypoints": {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ],
+          "locations": [
+            "a.go"
+          ]
+        },
+        "dependencies": {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ],
+          "locations": [
+            "a.go"
+          ]
+        }
+      },
+      "test_strategy": [
+        {
+          "behavior": "Changed behavior",
+          "existing": "Current assertions",
+          "missing": "Boundary regression",
+          "level": "unit",
+          "location": "a_test.go",
+          "command": "go test ./...",
+          "rationale": "Direct state assertions",
+          "limitation": "Fixture only",
+          "evidence": [
+            "pr/body"
+          ]
+        }
+      ],
+      "questions": [],
+      "reviewer_addenda": {
+        "one": "Inspect correctness",
+        "two": "Inspect scope"
+      },
+      "worker_instructions": "Inspect pinned scope, rules, code and tests",
+      "completion_criteria": "Check every engineering dimension",
+      "sync_required": false,
+      "sync_reason": ""
+    },
+    "readiness": "ready",
+    "parent": null,
+    "refresh": {
+      "mode": "initial"
+    },
+    "engineering_id": "a1325f54c50d98c38021bcd21b58606e55abf26df8b232baafe7c50e60c7e334",
+    "preparation_id": "bef3357345c0c46fcef276037629377e4f727c2969f53ef32f73bac22a4562ab"
+  },
+  "prior": {
+    "verified_absence": true,
+    "reason": "No selected prior preparation"
+  },
+  "engineering_id": "a1325f54c50d98c38021bcd21b58606e55abf26df8b232baafe7c50e60c7e334"
+}

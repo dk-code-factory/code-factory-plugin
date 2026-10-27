@@ -144,7 +144,7 @@ func TestAttentionRepliesPersistEncryptedAndStayOutOfQueue(t *testing.T) {
 				// wait for that boundary before sending the continuation.
 				waitFor(t, func() bool {
 					var saved domain.Run
-					return a.Store.Get(ctx, "run", run.ID, &saved) == nil && saved.Status == "idle"
+					return a.Store.Get(ctx, "run", run.ID, &saved) == nil && saved.Status == "idle" && saved.TurnID == ""
 				})
 			}
 			answer := raw(map[string]any{"answers": map[string]any{tc.questionID: map[string]any{"answers": []string{tc.value}}}})

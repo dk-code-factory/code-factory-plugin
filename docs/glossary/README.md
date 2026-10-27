@@ -4399,4 +4399,88 @@ The indicator describing a pending selected-skill read.
 `element-w-skill-settings-load-error` · element · scope: ui-w-skill-settings
 
 The error from loading the selected skill's saved instructions.
+
+<a id="review-workflow"></a>
+## Review workflow
+
+`review-workflow` · domain
+
+A retained sequence of preparation, reviewer assessment, validation and publication decisions for a pull request.
+
+<a id="ordered-reviewer"></a>
+## Ordered reviewer
+
+`ordered-reviewer` · domain
+
+A selected review binding with a stable identity and a position in an ordered assessment list.
+
+<a id="review-artifact"></a>
+## Review artifact
+
+`review-artifact` · domain
+
+An immutable assessment result bound to its target, reviewed source and governing evidence.
+
+<a id="review-preparation"></a>
+## Review preparation
+
+`review-preparation` · domain
+
+The reconciled engineering boundaries, evidence, reviewer instructions and unresolved material questions governing an assessment.
+
+<a id="reviewer-checkpoint"></a>
+## Reviewer checkpoint
+
+`reviewer-checkpoint` · domain
+
+An immutable recorded reviewer outcome bound to the evidence and execution identity that produced it.
+
+<a id="review-posting-policy"></a>
+## Review posting policy
+
+`review-posting-policy` · domain
+
+The effective automatic publication choice resolved from launch, pull-request, repository and global settings in precedence order.
+
+<a id="review-publication-operation"></a>
+## Review publication operation
+
+`review-publication-operation` · domain
+
+A retained publication intent binding an approved assessment payload, target, prior state and observed outcome.
+
+<a id="ui-w-pr-review-policy"></a>
+## PR review posting policy widget
+
+`ui-w-pr-review-policy` · ui-widget
+
+The pull-request publication override and its effective inherited choice.
+
+<a id="ui-w-retained-review"></a>
+## Retained review workflow widget
+
+`ui-w-retained-review` · ui-widget
+
+The visible progress, completeness, omissions and publication receipt of a retained assessment.
+
+<a id="ui-c-review-publish"></a>
+## Retained review publication connection
+
+`ui-c-review-publish` · ui-connection
+
+The explicit publication action for a retained assessment.
+
+<a id="ui-c-review-reconcile"></a>
+## Review publication reconciliation connection
+
+`ui-c-review-reconcile` · ui-connection
+
+The observation action for an uncertain publication outcome.
+
+<a id="ui-c-pr-posting-policy"></a>
+## PR posting policy connection
+
+`ui-c-pr-posting-policy` · ui-connection
+
+The persistent publication override update for a pull request.
 <!-- /specs:terms -->

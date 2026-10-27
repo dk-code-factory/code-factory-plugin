@@ -2133,6 +2133,21 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (m *Manager) answerReviewWorkflow(",
+          "purpose": "Claim correlated review decision answers once and resume the parent workflow."
+        },
+        {
+          "path": "internal/prreview/workflow.go",
+          "anchor": "func (w *Workflow) resumePublication(",
+          "purpose": "Recover a validated finished review result after lost parent finalization without reopening automatic publication or losing its complete artifact."
+        },
+        {
+          "path": "internal/prreview/git.go",
+          "anchor": "func (g GitCollector) ValidateCurrentAfterPublication(",
+          "purpose": "Allow only the exact own publication proven by the retained approved intent during completed/uncertain review recovery, without accepting unrelated scope changes."
         }
       ],
       "assertions": [
@@ -2150,7 +2165,13 @@
         "UI-TERMINATED-WORK",
         "UI-GITHUB-DEFERRED",
         "UI-FAILED-REVIEW",
-        "RUN-LAUNCH-DEFERRED-CANCEL"
+        "RUN-LAUNCH-DEFERRED-CANCEL",
+        "API-REVIEW-GATE",
+        "API-REVIEW-WORKFLOW",
+        "UI-REVIEW-WORKFLOW",
+        "API-REVIEW-FINISHED-RECOVERY",
+        "API-REVIEW-OWN-PUBLICATION-RECOVERY",
+        "API-REVIEW-COMPLETION-BOUNDARY"
       ],
       "gaps": [
         {
@@ -2178,8 +2199,8 @@
         "go"
       ],
       "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
-      "state_description": "No Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable. Deferred pre-agent launches expose Cancel retry; interruption or cleanup cancels their retained retry even when no agent session is attached.",
-      "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible."
+      "state_description": "Interrupted or failed retained review workflows expose Resume review workflow in Details. Other sessions resume through messages and have no Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable. Deferred pre-agent launches expose Cancel retry; interruption or cleanup cancels their retained retry even when no agent session is attached.",
+      "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible. Retained review gates survive restart and accept only the correlated pending answer; explicit interruption/resume preserves completed checkpoints."
     },
     {
       "id": "W-ATTENTION-NOTICE",
@@ -2678,7 +2699,9 @@
       "terms": [
         "ui-w-launch-editor",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "review-posting-policy",
+        "review-workflow"
       ],
       "contains": [],
       "elements": [
@@ -2775,7 +2798,10 @@
         "UI-DRAFT-LAUNCHES",
         "UI-READABLE-APPROVALS",
         "ADMIN-REMOVED-SKILL",
-        "UI-DEFERRED-SKILLS"
+        "UI-DEFERRED-SKILLS",
+        "UI-PR-POSTING",
+        "API-REVIEW-POLICY",
+        "UI-REVIEW-POLICY-UNRESOLVED"
       ],
       "gaps": [
         {
@@ -2792,9 +2818,9 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**profile** select, **task-prompt** textarea, **model** input, **effort** select, **base** input, repeated **skills** checkboxes; **workspace-policy**, **approval-policy**, **publishing-authority** descriptions; **review** button.",
-      "state_description": "Shown only after Edit. Profile and task remain visible; model/effort/base/skills are under Advanced. Profile selection updates prompt/model/effort/skills. Mode/permissions/publishing remain profile settings.",
-      "interactions": "Review prepares a new snapshot from edited values. Field changes alone do not start work; default launch bypasses the editor."
+      "element_description": "**profile** select, **task-prompt** textarea, **model** input, **effort** select, **base** input, repeated **skills** checkboxes; **workspace-policy**, **approval-policy**, **publishing-authority** descriptions; **review** button. Optional automatic posting override and effective source.",
+      "state_description": "Shown only after Edit. Profile and task remain visible; model/effort/base/skills are under Advanced. Profile selection updates prompt/model/effort/skills. Mode/permissions/publishing remain profile settings. Prepared posting choice reports its precedence source; current policy is checked again before submission. Inherited posting is unresolved while policy loads or fails. A visible error offers Retry posting policy; explicit overrides remain selected and server-prepared policy stays authoritative.",
+      "interactions": "Review prepares a new snapshot from edited values. Field changes alone do not start work; default launch bypasses the editor. Launch false is retained separately from inherited posting policy."
     },
     {
       "id": "W-LAUNCH-REVIEW",
@@ -2802,7 +2828,9 @@
       "terms": [
         "ui-w-launch-review",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "review-posting-policy",
+        "review-workflow"
       ],
       "contains": [],
       "elements": [
@@ -2904,7 +2932,9 @@
         "UI-READABLE-APPROVALS",
         "ADMIN-PLUGIN-GATE",
         "UI-FULL-ACCESS",
-        "ADMIN-REMOVED-SKILL"
+        "ADMIN-REMOVED-SKILL",
+        "UI-PR-POSTING",
+        "API-REVIEW-POLICY"
       ],
       "gaps": [
         {
@@ -2930,9 +2960,9 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**profile**, **mode**, **workspace**, **branch-and-base**, **permissions**, **publishing**, **skills**, **prepared-prompt**; **edit**, **start**, conditional **check-status**.",
-      "state_description": "Default launch opens this prepared review directly. Profile/task/mode/permissions/publishing come from the prepared snapshot. Start and Edit disable while submitting or while acceptance remains unverified. The prepared prompt includes repository review instructions and the pinned PR head. Automatic reviews retain the same snapshot but use an owner-enabled policy instead of per-run Start.",
-      "interactions": "Explicit Start is required. A failed or lost response reads the same run: accepted work opens in Agents, still-prepared work permits another explicit Start, unavailable status leaves Check start status. Draft reopening reuses the same snapshot. Closing retains prepared records."
+      "element_description": "**profile**, **mode**, **workspace**, **branch-and-base**, **permissions**, **publishing**, **skills**, **prepared-prompt**; **edit**, **start**, conditional **check-status**. Optional automatic posting override and effective source.",
+      "state_description": "Default launch opens this prepared review directly. Profile/task/mode/permissions/publishing come from the prepared snapshot. Start and Edit disable while submitting or while acceptance remains unverified. The prepared prompt includes repository review instructions and the pinned PR head. Automatic reviews retain the same snapshot but use an owner-enabled policy instead of per-run Start. Prepared posting choice reports its precedence source; current policy is checked again before submission.",
+      "interactions": "Explicit Start is required. A failed or lost response reads the same run: accepted work opens in Agents, still-prepared work permits another explicit Start, unavailable status leaves Check start status. Draft reopening reuses the same snapshot. Closing retains prepared records. Launch false is retained separately from inherited posting policy."
     },
     {
       "id": "W-QUESTIONS",
@@ -3007,6 +3037,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (m *Manager) answerReviewWorkflow(",
+          "purpose": "Claim correlated review decision answers once and resume the parent workflow."
         }
       ],
       "assertions": [
@@ -3020,7 +3055,10 @@
         "API-UI-CONTENT",
         "UI-TEXT-DISMISS",
         "API-FALLBACK-RESTART",
-        "API-QUESTION-ACTIVE-TURN"
+        "API-QUESTION-ACTIVE-TURN",
+        "API-REVIEW-GATE",
+        "API-REVIEW-WORKFLOW",
+        "API-REVIEW-MATERIAL"
       ],
       "gaps": [
         {
@@ -3040,7 +3078,7 @@
       ],
       "element_description": "Repeated **question** legend; **options** radio labels/descriptions; conditional **answer-text** or **secret-answer** input; **submit-answer**.",
       "state_description": "Text input appears for no options or an Other-enabled question; secret text uses a password field. No radio choice is automatically selected. Submit disabled while busy or any question lacks a value.",
-      "interactions": "Sends one response containing all questions. Success refreshes and closes the dialog; stale/invalid responses remain an inline error. Textual fallback questions offer No reply needed, which clears local attention without advancing the session or answering any native approval."
+      "interactions": "Sends one response containing all questions. Success refreshes and closes the dialog; stale/invalid responses remain an inline error. Textual fallback questions offer No reply needed, which clears local attention without advancing the session or answering any native approval. Retained review gates survive restart and accept only the correlated pending answer; explicit interruption/resume preserves completed checkpoints."
     },
     {
       "id": "W-APPROVAL",
@@ -3306,7 +3344,9 @@
         "coverage-gap",
         "unverified-behavior",
         "review-policy",
-        "repository-review-prompt"
+        "repository-review-prompt",
+        "ordered-reviewer",
+        "review-posting-policy"
       ],
       "contains": [],
       "elements": [
@@ -3433,6 +3473,11 @@
           "path": "internal/app/app.go",
           "anchor": "func (a *App) SaveRepository(",
           "purpose": "Save monitoring settings while retaining provider checkpoints."
+        },
+        {
+          "path": "internal/app/review_import.go",
+          "anchor": "func (a *App) ImportDKReviews(",
+          "purpose": "One-time DK import preserves existing settings and records conflicts."
         }
       ],
       "assertions": [
@@ -3446,7 +3491,11 @@
         "UI-ADMIN-REPO",
         "ADMIN-REVIEW-POLICY",
         "ADMIN-REVIEW-ELIGIBILITY",
-        "UI-FULL-ACCESS"
+        "UI-FULL-ACCESS",
+        "UI-REVIEW-CONFIG",
+        "API-REVIEW-POLICY",
+        "API-REVIEW-IMPORT",
+        "UI-REVIEW-IMPORT-TARGET"
       ],
       "gaps": [
         {
@@ -3464,9 +3513,9 @@
         "browser",
         "go"
       ],
-      "element_description": "Repeated **repository-summary**; **repository** required input, **checkout**, **default-base**, **save**, **discover-skills**. **save-result** beside each form. Edit existing repository, last successful poll, pause monitoring, tri-state review policy, inherited role pipelines, additional review prompt, poll now, review-error and skill-discovery directory.",
-      "state_description": "No repository focuses its identifier input. Existing records show polling status/errors and effective automatic/queue policy. Null review policy inherits the system; false queues and true opts into automatic review. Form feedback remains scoped to retained inputs. Pause prevents new polling and automatic launches.",
-      "interactions": "Save monitoring settings without resetting checkpoints; Poll repositories now performs a provider poll and honors explicitly enabled auto-review policies. Extra owner review text appends to the generic review prompt. Opening/settings saving alone does not start agents; opted-in review requests launch after a successful poll."
+      "element_description": "Repeated **repository-summary**; **repository** required input, **checkout**, **default-base**, **save**, **discover-skills**. **save-result** beside each form. Edit existing repository, last successful poll, pause monitoring, tri-state review policy, inherited role pipelines, additional review prompt, poll now, review-error and skill-discovery directory. Ordered reviewer bindings, private review rules, automatic review posting and one-time DK import with conflict feedback.",
+      "state_description": "No repository focuses its identifier input. Existing records show polling status/errors and effective automatic/queue policy. Null review policy inherits the system; false queues and true opts into automatic review. Form feedback remains scoped to retained inputs. Pause prevents new polling and automatic launches. Posting defaults off globally; repository false is explicit and null inherits. An empty reviewer list blocks before diff capture. Invalid ordered-reviewer JSON blocks Save. Resetting inherited reviewer values restores valid draft and native field state so Save can proceed without another text edit. Import results and status belong to the requested repository editor; switching targets discards stale completion.",
+      "interactions": "Save monitoring settings without resetting checkpoints; Poll repositories now performs a provider poll and honors explicitly enabled auto-review policies. Extra owner review text appends to the generic review prompt. Opening/settings saving alone does not start agents; opted-in review requests launch after a successful poll. Persist ordered bindings and private rules for future workflows; import preserves existing Factory values and reports unresolved DK settings."
     },
     {
       "id": "W-POLICY-SETTINGS",
@@ -11532,7 +11581,9 @@
       "terms": [
         "ui-w-system-defaults",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "ordered-reviewer",
+        "review-posting-policy"
       ],
       "contains": [],
       "elements": [
@@ -11577,6 +11628,11 @@
           "path": "internal/app/review_requests.go",
           "anchor": "func autoReviewEnabled(",
           "purpose": "Repository overrides take precedence over the system default."
+        },
+        {
+          "path": "internal/app/review_import.go",
+          "anchor": "func (a *App) ImportDKReviews(",
+          "purpose": "One-time DK import preserves existing settings and records conflicts."
         }
       ],
       "assertions": [
@@ -11586,7 +11642,13 @@
         "ADMIN-REVIEW-POLICY",
         "ADMIN-REVIEW-ELIGIBILITY",
         "UI-FULL-ACCESS",
-        "UI-PLUGIN-INTERVAL"
+        "UI-PLUGIN-INTERVAL",
+        "UI-REVIEW-CONFIG",
+        "API-REVIEW-POLICY",
+        "API-REVIEW-IMPORT",
+        "API-REVIEW-IMPORT-GLOBAL",
+        "UI-REVIEW-IMPORT-EDITS",
+        "UI-REVIEW-CONFIG-DRAFT"
       ],
       "gaps": [],
       "suites": [
@@ -11594,9 +11656,9 @@
         "browser",
         "go"
       ],
-      "element_description": "System review-request policy, default review and implementation pipelines, plugin-check interval and save feedback.",
-      "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins. A supported saved interval outside the offered presets displays its actual minutes and is preserved by unrelated saves.",
-      "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review honors a configured read-only/ask profile or an explicit full-access/never/authorized profile. Selecting authority does not enable automatic review by itself."
+      "element_description": "System review-request policy, default review and implementation pipelines, plugin-check interval and save feedback. Ordered reviewer bindings, private review rules, automatic review posting and one-time DK import with conflict feedback.",
+      "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins. A supported saved interval outside the offered presets displays its actual minutes and is preserved by unrelated saves. Posting defaults off globally; repository false is explicit and null inherits. An empty reviewer list blocks before diff capture. Global DK import applies only its reported reviewer/rule fields to the current draft; unrelated edits made while settings load remain intact. Unrelated settings edits preserve an invalid ordered-reviewer draft and its validation; only changed reviewer configuration resets the draft.",
+      "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review honors a configured read-only/ask profile or an explicit full-access/never/authorized profile. Selecting authority does not enable automatic review by itself. Persist ordered bindings and private rules for future workflows; import preserves existing Factory values and reports unresolved DK settings."
     },
     {
       "id": "P-PLUGIN-ADMIN",
@@ -12048,6 +12110,376 @@
       ],
       "connection_type": "connection-selects",
       "external_boundary": false
+    },
+    {
+      "id": "W-PR-REVIEW-POLICY",
+      "kind": "widget",
+      "terms": [
+        "ui-w-pr-review-policy",
+        "review-workflow",
+        "review-artifact",
+        "review-posting-policy",
+        "review-publication-operation"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-PR-REVIEW-POLICY.override",
+          "term": "review-posting-policy"
+        },
+        {
+          "id": "W-PR-REVIEW-POLICY.effective",
+          "term": "review-posting-policy"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function PRReviewPolicyControls(",
+          "purpose": "PR automatic posting override, inherited value and effective source; saving false disables, null inherits and no save starts or publishes work."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "bind(m, uri, \"post_retained_review\",",
+          "purpose": "Typed artifact publication and correlated policy operations."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (a *App) ReviewPostingPolicy(",
+          "purpose": "Resolve current launch, PR, repository and global posting settings."
+        },
+        {
+          "path": "internal/app/review_posting.go",
+          "anchor": "func (a *App) postRetainedReview(",
+          "purpose": "Validate retained authority, current policy, target and publication state."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (t *Tx) invalidate(",
+          "purpose": "Publish committed PR posting-policy invalidations by owner ID without exposing stored policy values."
+        }
+      ],
+      "assertions": [
+        "UI-PR-POSTING",
+        "API-REVIEW-POLICY",
+        "UI-PR-POSTING-REFRESH",
+        "STORE-UI-JOURNAL",
+        "UI-PR-POLICY-SAVE-ORDER"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser",
+        "tooling"
+      ],
+      "element_description": "PR automatic posting override, inherited value and effective source; saving false disables, null inherits and no save starts or publishes work.",
+      "state_description": "PR automatic posting override, inherited value and effective source; saving false disables, null inherits and no save starts or publishes work. Saved policy changes refresh an open PR without starting or publishing work. Newer saved policy observations remain authoritative when an earlier save reply arrives late.",
+      "interactions": "PR automatic posting override, inherited value and effective source; saving false disables, null inherits and no save starts or publishes work. Saved PR, repository and global policy changes refresh the open effective choice through shared change notifications. An older save reply cannot replace a newer saved policy observation or restore its obsolete error."
+    },
+    {
+      "id": "W-RETAINED-REVIEW",
+      "kind": "widget",
+      "terms": [
+        "ui-w-retained-review",
+        "review-workflow",
+        "review-artifact",
+        "review-posting-policy",
+        "review-publication-operation"
+      ],
+      "contains": [],
+      "elements": [
+        {
+          "id": "W-RETAINED-REVIEW.stage",
+          "term": "review-workflow"
+        },
+        {
+          "id": "W-RETAINED-REVIEW.completeness",
+          "term": "review-artifact"
+        },
+        {
+          "id": "W-RETAINED-REVIEW.post",
+          "term": "review-publication-operation"
+        },
+        {
+          "id": "W-RETAINED-REVIEW.reconcile",
+          "term": "review-publication-operation"
+        },
+        {
+          "id": "W-RETAINED-REVIEW.receipt",
+          "term": "published-review"
+        },
+        {
+          "id": "W-RETAINED-REVIEW.omissions",
+          "term": "review-artifact"
+        }
+      ],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function RetainedReviewStatus(",
+          "purpose": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "bind(m, uri, \"post_retained_review\",",
+          "purpose": "Typed artifact publication and correlated policy operations."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (a *App) ReviewPostingPolicy(",
+          "purpose": "Resolve current launch, PR, repository and global posting settings."
+        },
+        {
+          "path": "internal/app/review_posting.go",
+          "anchor": "func (a *App) postRetainedReview(",
+          "purpose": "Validate retained authority, current policy, target and publication state."
+        },
+        {
+          "path": "internal/prreview/workflow.go",
+          "anchor": "func (w *Workflow) resumePublication(",
+          "purpose": "Recover a validated finished review result after lost parent finalization without reopening automatic publication or losing its complete artifact."
+        },
+        {
+          "path": "internal/store/reads.go",
+          "anchor": "func Runs(",
+          "purpose": "Project truthful finding counts without transferring or decoding historical finding bodies in broad saved run/status reads."
+        },
+        {
+          "path": "internal/prreview/git.go",
+          "anchor": "func (g GitCollector) ValidateCurrentAfterPublication(",
+          "purpose": "Allow only the exact own publication proven by the retained approved intent during completed/uncertain review recovery, without accepting unrelated scope changes."
+        },
+        {
+          "path": "internal/prreview/workflow.go",
+          "anchor": "func (w *Workflow) execute(",
+          "purpose": "Report completion only after engineering assessment and durable result binding; retain incomplete state on earlier faults and preserve completion on later notification/publication failures."
+        },
+        {
+          "path": "internal/store/store.go",
+          "anchor": "func ListWithout[T any](",
+          "purpose": "Remove legacy finding bodies before SQL-to-Go transfer on the actual initial-inbox and queue-tracking run-summary facade."
+        }
+      ],
+      "assertions": [
+        "UI-REVIEW-WORKFLOW",
+        "API-REVIEW-WORKFLOW",
+        "API-REVIEW-POSTING",
+        "UI-REVIEW-POST",
+        "API-REVIEW-MATERIAL",
+        "API-REVIEW-RECEIPT-PROJECTION",
+        "API-REVIEW-LIFECYCLE-PROJECTION",
+        "API-REVIEW-FINISHED-RECOVERY",
+        "API-REVIEW-COMPACT-SQL",
+        "API-REVIEW-COMPACT-UI",
+        "API-REVIEW-OWN-PUBLICATION-RECOVERY",
+        "API-REVIEW-COMPLETION-BOUNDARY"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser",
+        "tooling"
+      ],
+      "element_description": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting.",
+      "state_description": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting. Broad status uses compact review accounting; a missing finding count stays unknown, and No actionable findings requires an explicitly known zero. Completion requires successful engineering assessment and a durably saved result; an older incomplete artifact cannot be promoted by an earlier failure.",
+      "interactions": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting. Opening broad saved status does not load historical finding bodies; complete publication evidence remains in its retained artifact."
+    },
+    {
+      "id": "C-PR-POSTING-POLICY",
+      "kind": "connection",
+      "terms": [
+        "ui-c-pr-posting-policy",
+        "review-publication-operation"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "bind(m, uri, \"post_retained_review\",",
+          "purpose": "Typed artifact publication and correlated policy operations."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (a *App) ReviewPostingPolicy(",
+          "purpose": "Resolve current launch, PR, repository and global posting settings."
+        },
+        {
+          "path": "internal/app/review_posting.go",
+          "anchor": "func (a *App) postRetainedReview(",
+          "purpose": "Validate retained authority, current policy, target and publication state."
+        },
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function PRReviewPolicyControls(",
+          "purpose": "Save the PR override and display its inherited effective value/source without publication."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (t *Tx) invalidate(",
+          "purpose": "Publish committed PR posting-policy invalidations by owner ID without exposing stored policy values."
+        }
+      ],
+      "assertions": [
+        "UI-PR-POSTING",
+        "API-REVIEW-POLICY",
+        "UI-PR-POSTING-REFRESH",
+        "STORE-UI-JOURNAL",
+        "UI-PR-POLICY-SAVE-ORDER"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser",
+        "tooling"
+      ],
+      "endpoint_description": "Save the PR override and display its inherited effective value/source without publication.",
+      "trigger": "Explicit owner action on the owning retained item or review.",
+      "interactions": "Save the PR override and display its inherited effective value/source without publication. Saved PR, repository and global policy changes refresh the open effective choice through shared change notifications. An older save reply cannot replace a newer saved policy observation or restore its obsolete error.",
+      "from": [
+        "W-PR-REVIEW-POLICY.override"
+      ],
+      "to": [
+        "W-PR-REVIEW-POLICY.effective"
+      ],
+      "connection_type": "connection-submits",
+      "external_boundary": false
+    },
+    {
+      "id": "C-REVIEW-PUBLISH",
+      "kind": "connection",
+      "terms": [
+        "ui-c-review-publish",
+        "review-publication-operation"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "bind(m, uri, \"post_retained_review\",",
+          "purpose": "Typed artifact publication and correlated policy operations."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (a *App) ReviewPostingPolicy(",
+          "purpose": "Resolve current launch, PR, repository and global posting settings."
+        },
+        {
+          "path": "internal/app/review_posting.go",
+          "anchor": "func (a *App) postRetainedReview(",
+          "purpose": "Validate retained authority, current policy, target and publication state."
+        },
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function RetainedReviewStatus(",
+          "purpose": "Submit the server-approved inline review to the bound GitHub PR; keep omissions and the verified provider receipt."
+        },
+        {
+          "path": "internal/prreview/workflow.go",
+          "anchor": "func (w *Workflow) resumePublication(",
+          "purpose": "Recover a validated finished review result after lost parent finalization without reopening automatic publication or losing its complete artifact."
+        },
+        {
+          "path": "internal/prreview/git.go",
+          "anchor": "func (g GitCollector) ValidateCurrentAfterPublication(",
+          "purpose": "Allow only the exact own publication proven by the retained approved intent during completed/uncertain review recovery, without accepting unrelated scope changes."
+        }
+      ],
+      "assertions": [
+        "UI-REVIEW-WORKFLOW",
+        "API-REVIEW-POSTING",
+        "UI-REVIEW-POST",
+        "API-REVIEW-RECEIPT-PROJECTION",
+        "API-REVIEW-LIFECYCLE-PROJECTION",
+        "API-REVIEW-FINISHED-RECOVERY",
+        "API-REVIEW-OWN-PUBLICATION-RECOVERY",
+        "API-REVIEW-COMPLETION-BOUNDARY"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser",
+        "tooling"
+      ],
+      "endpoint_description": "Submit the server-approved inline review to the bound GitHub PR; keep omissions and the verified provider receipt.",
+      "trigger": "Explicit owner action on the owning retained item or review.",
+      "interactions": "Submit the server-approved inline review to the bound GitHub PR; keep omissions and the verified provider receipt.",
+      "from": [
+        "W-RETAINED-REVIEW.post"
+      ],
+      "to": [
+        "W-RETAINED-REVIEW.receipt",
+        "W-RETAINED-REVIEW.omissions"
+      ],
+      "connection_type": "connection-submits",
+      "external_boundary": true
+    },
+    {
+      "id": "C-REVIEW-RECONCILE",
+      "kind": "connection",
+      "terms": [
+        "ui-c-review-reconcile",
+        "review-publication-operation"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "bind(m, uri, \"post_retained_review\",",
+          "purpose": "Typed artifact publication and correlated policy operations."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (a *App) ReviewPostingPolicy(",
+          "purpose": "Resolve current launch, PR, repository and global posting settings."
+        },
+        {
+          "path": "internal/app/review_posting.go",
+          "anchor": "func (a *App) postRetainedReview(",
+          "purpose": "Validate retained authority, current policy, target and publication state."
+        },
+        {
+          "path": "web/src/reviews.tsx",
+          "anchor": "export function RetainedReviewStatus(",
+          "purpose": "Observe the bound GitHub PR for a unique complete submitted review; never submit a second mutation."
+        },
+        {
+          "path": "internal/prreview/git.go",
+          "anchor": "func (g GitCollector) ValidateCurrentAfterPublication(",
+          "purpose": "Allow only the exact own publication proven by the retained approved intent during completed/uncertain review recovery, without accepting unrelated scope changes."
+        }
+      ],
+      "assertions": [
+        "UI-REVIEW-WORKFLOW",
+        "API-REVIEW-POSTING",
+        "API-REVIEW-RECEIPT-PROJECTION",
+        "API-REVIEW-LIFECYCLE-PROJECTION",
+        "API-REVIEW-OWN-PUBLICATION-RECOVERY"
+      ],
+      "gaps": [],
+      "suites": [
+        "go",
+        "browser",
+        "tooling"
+      ],
+      "endpoint_description": "Observe the bound GitHub PR for a unique complete submitted review; never submit a second mutation.",
+      "trigger": "Explicit owner action on the owning retained item or review.",
+      "interactions": "Observe the bound GitHub PR for a unique complete submitted review; never submit a second mutation.",
+      "from": [
+        "W-RETAINED-REVIEW.reconcile"
+      ],
+      "to": [
+        "W-RETAINED-REVIEW.receipt"
+      ],
+      "connection_type": "connection-refreshes",
+      "external_boundary": true
     }
   ],
   "instances": [
@@ -12380,6 +12812,18 @@
       "type": "W-GITHUB-USAGE",
       "pane": "P-SYSTEM-DEFAULTS",
       "repeat": "one per displayed settings view"
+    },
+    {
+      "id": "P-ITEM-DETAIL/W-PR-REVIEW-POLICY",
+      "type": "W-PR-REVIEW-POLICY",
+      "pane": "P-ITEM-DETAIL",
+      "repeat": "one per displayed owning item or retained review"
+    },
+    {
+      "id": "P-RUN-DETAIL/W-RETAINED-REVIEW",
+      "type": "W-RETAINED-REVIEW",
+      "pane": "P-RUN-DETAIL",
+      "repeat": "one per displayed owning item or retained review"
     }
   ],
   "assertions": [
@@ -13263,7 +13707,7 @@
       "id": "STORE-UI-JOURNAL",
       "path": "internal/store/ui_journal_test.go",
       "anchor": "TestUIJournalCommitsRollbackCASAndLegacyCursor",
-      "assertion": "Rollbacks and failed CAS produce no UI journal entry; successful CAS does, private buckets are excluded and legacy event cursors remain unchanged."
+      "assertion": "Rollbacks and failed CAS produce no UI journal entry; successful CAS does, private buckets are excluded and legacy event cursors remain unchanged. PR posting-policy writes invalidate their owning item without including stored policy values."
     },
     {
       "id": "STORE-UI-SNAPSHOT",
@@ -13474,6 +13918,150 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "`reported issues shows auditor ${outcome} outcome without claiming delivery`",
       "assertion": "Invalid and resolved dispositions show their explanation and completed outcome without information/recovery controls; resolved links a known issue/fix while stable and installed availability remain Unknown, and viewing starts no investigation."
+    },
+    {
+      "id": "UI-REVIEW-CONFIG",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "review workflow settings preserve ordered bindings and inherited posting overrides",
+      "assertion": "Ordered skill/command bindings and private rules persist; global posting starts off, repository false and null are distinct, configuration never starts or posts work. At a 320px viewport, strict body-width equality holds before and after configuration edits; the JSON example uses the existing wrapping code presentation. Invalid reviewer JSON blocks repository Save; toggling inheritance on/off restores valid native textarea state and saves [] without another edit."
+    },
+    {
+      "id": "UI-PR-POSTING",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "PR posting policy and launch override show effective source without starting work",
+      "assertion": "PR false/null overrides show effective source; launch false reaches preparation and displays launch authority without starting work."
+    },
+    {
+      "id": "UI-REVIEW-WORKFLOW",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "retained review progress exposes incomplete providers and reconciles a verified receipt without reposting",
+      "assertion": "Incomplete providers/skips are visible; incomplete reviews cannot post; uncertain results reconcile once and show verified count/receipt/omission without a posting mutation. Details exposes Resume review workflow for failed/interrupted retained reviews and removes it when idle. An observed idle/no-Resume baseline precedes interrupted visibility, so the interrupted assertion cannot reuse the preceding failed DOM."
+    },
+    {
+      "id": "API-REVIEW-WORKFLOW",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestRetainedReviewChildCompletionAndRestartReuse(",
+      "assertion": "First reviewer completion leaves parent running; interruption and restart reuse only its completed checkpoint and finish the remaining reviewer."
+    },
+    {
+      "id": "API-REVIEW-POLICY",
+      "path": "internal/transport/review_workflow_test.go",
+      "anchor": "func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(",
+      "assertion": "MCP omissions preserve new settings, null restores inheritance, launch false is retained and missing engine capabilities reject Start before model execution."
+    },
+    {
+      "id": "API-REVIEW-POSTING",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestAutomaticPostingRechecksConcurrentPolicyAndLaunchPrecedence(",
+      "assertion": "Changes during review and immediately before submission suppress automatic posting; launch true/false precedence is respected and target mismatch is rejected."
+    },
+    {
+      "id": "API-REVIEW-GATE",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestRetainedReviewQuestionsSurviveRestartAndAnswerOnce(",
+      "assertion": "A material gate survives manager restart; answer_request resumes its retained review and rejects duplicate answers."
+    },
+    {
+      "id": "API-REVIEW-IMPORT",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestOneTimeDKImportPreservesFactoryValuesAndReportsConflicts(",
+      "assertion": "One-time private DK import preserves existing Factory rules, imports ordered command binding, reports conflict and never repeats after source removal."
+    },
+    {
+      "id": "UI-REVIEW-POST",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "retained review explicit posting sends its artifact and displays the server receipt",
+      "assertion": "Explicit posting submits only the owning run and artifact reference once, then displays the server-verified receipt. Missing and positive finding counts never show No actionable findings; an explicitly known zero does."
+    },
+    {
+      "id": "API-REVIEW-MATERIAL",
+      "path": "internal/prreview/workflow_test.go",
+      "anchor": "func TestIndependentMaterialDecisionGetsBoundedCorrectionAndDurableGate(",
+      "assertion": "An independent material finding produces one bounded preparation correction, a durable answerable gate, no premature reviewer, and successful correlated answer/resume."
+    },
+    {
+      "id": "UI-PR-POSTING-REFRESH",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "saved review policy changes refresh an open PR without polling or starting work",
+      "assertion": "A saved global posting-policy change refreshes the effective choice in an open PR through shared invalidations, without starting a run or posting a review."
+    },
+    {
+      "id": "API-REVIEW-IMPORT-GLOBAL",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestOneTimeGlobalDKImportUsesUserRulesAndPreservesConflicts(",
+      "assertion": "Global import reads user/rules.json while preserving root reviewer defaults, ignores distractor root rules, holds unresolved DK conflicts, preserves configured Factory settings and never repeats after source removal."
+    },
+    {
+      "id": "API-REVIEW-RECEIPT-PROJECTION",
+      "path": "internal/app/review_posting_concurrency_test.go",
+      "anchor": "func TestReviewPublicationProjectionPreservesNewerVerifiedReceipt(",
+      "assertion": "Delayed stale or empty-ID disabled results preserve the current durable verified/submitting/uncertain publication and receipt/omissions. Prepared/skipped and absent-operation policy disables retain their intended disposition without mutating durable intent."
+    },
+    {
+      "id": "API-REVIEW-LIFECYCLE-PROJECTION",
+      "path": "internal/app/review_posting_concurrency_test.go",
+      "anchor": "func TestReviewPublicationProjectionPreservesLatestLifecycle(",
+      "assertion": "Delayed reconciliation preserves concurrent terminated/cleaned lifecycle and cancellation/execution/worktree fields, and leaves a retargeted operation and receipt intact."
+    },
+    {
+      "id": "UI-REVIEW-IMPORT-EDITS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "global DK review import preserves unrelated edits made while settings are loading",
+      "assertion": "A delayed global import applies imported reviewers/rules while preserving intervening request-budget, plugin-interval and automatic-posting draft edits; Save persists all fields without starting or posting work. A real imported reviewer array resets an invalid prior draft and clears native validation."
+    },
+    {
+      "id": "UI-REVIEW-CONFIG-DRAFT",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "absent global reviewers retain invalid draft and validity through unrelated settings edits",
+      "assertion": "Absent global reviewers retain invalid JSON draft, displayed error and native custom validity across unrelated budget/posting edits; invalid Save makes no settings mutation."
+    },
+    {
+      "id": "UI-REVIEW-IMPORT-TARGET",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "repository DK import discards stale results when switching editors during ${delay}",
+      "assertion": "Repository A import/snapshot delays cannot modify subsequently selected B draft or stale import status; Save retains B reviewers/rules/base, including320px layout."
+    },
+    {
+      "id": "UI-REVIEW-POLICY-UNRESOLVED",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "launch posting inheritance stays unresolved on policy failure and retries without losing explicit overrides",
+      "assertion": "GlobalOn/repositoryOff launch inheritance stays unresolved during loading/failure, exposes error/retry, recovers authoritativeOff and preserves explicit override without starting work."
+    },
+    {
+      "id": "API-REVIEW-FINISHED-RECOVERY",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestReviewRestartFinalizesSavedFinishedSessionWithoutReplay(",
+      "assertion": "Lost parent finalization after a saved finished review recovers the same complete artifact through restart/Resume without reviewer or automatic publication replay; explicit posting still accepts that recovered artifact."
+    },
+    {
+      "id": "UI-PR-POLICY-SAVE-ORDER",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a delayed policy save ${response} preserves a newer committed Off observation",
+      "assertion": "An earlier On save response, whether successful or failed, cannot replace a newer committed Off observation or add its obsolete error; the control becomes available after the one save and no start/post occurs."
+    },
+    {
+      "id": "API-REVIEW-COMPACT-SQL",
+      "path": "internal/store/progress_test.go",
+      "anchor": "func TestRunProjectionCountsLegacyFindingsBeforeDecoding(",
+      "assertion": "For 100 legacy runs with 20 large findings each, runProjectionProbe.UnmarshalJSON inspects bytes from actual ListWithout and Select calls before domain conversion, proving no finding bodies cross those SQL facades and total transfer stays within 256 KiB; counts/status/skips and known-zero versus unknown survive, and original rows remain unchanged."
+    },
+    {
+      "id": "API-REVIEW-COMPACT-UI",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "func TestInitialUIProjectionKeepsHistoricalReviewFindingsCompact(",
+      "assertion": "A tracked-item initial inbox build retains all 100 run IDs/statuses, and shell/messages output keeps truthful counts under 256 KiB with no finding arrays/prose. The separate raw ListWithout/Select probe establishes intermediate SQL transfer exclusion."
+    },
+    {
+      "id": "API-REVIEW-OWN-PUBLICATION-RECOVERY",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestReviewRestartAcceptsOwnPublicationInCurrentScope(",
+      "assertion": "Real GitCollector scope validation accepts the workflow own submitted review after finished, uncertain-tail or submitting-tail restart, preserving one artifact and one mutation; the private artifact retains full findings while the saved run carries only its truthful count."
+    },
+    {
+      "id": "API-REVIEW-COMPLETION-BOUNDARY",
+      "path": "internal/app/retained_review_test.go",
+      "anchor": "func TestReviewRestartDoesNotPromoteOlderArtifactBeforeEngineeringCompletion(",
+      "assertion": "A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact."
     }
   ],
   "source_map": [
@@ -13871,8 +14459,8 @@
       "location_labels": [
         "func (s *Store) ReadView("
       ],
-      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
-      "detail": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER, W-PR-REVIEW-POLICY, C-PR-POSTING-POLICY",
+      "detail": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal. Posting-policy writes publish only their owning item ID."
     },
     {
       "path": "web/src/ui-changes.ts",
@@ -13921,6 +14509,30 @@
       ],
       "entities": "W-SKILL-SETTINGS, C-SKILL-LOAD",
       "detail": "Explicit app-only managed content read with load/error feedback, guarded selections and no private file disclosure."
+    },
+    {
+      "path": "web/src/reviews.tsx",
+      "anchor": "export function PRReviewPolicyControls(",
+      "entities": "W-PR-REVIEW-POLICY, C-PR-POSTING-POLICY",
+      "detail": "PR override/effective source and server persistence. PR, repository and global invalidations refresh the open effective choice.",
+      "anchors": [
+        "export function PRReviewPolicyControls("
+      ],
+      "location_labels": [
+        "export function PRReviewPolicyControls("
+      ]
+    },
+    {
+      "path": "web/src/reviews.tsx",
+      "anchor": "export function RetainedReviewStatus(",
+      "entities": "W-RETAINED-REVIEW, C-REVIEW-PUBLISH, C-REVIEW-RECONCILE",
+      "detail": "Completeness, failures, omissions and verified publication receipt.",
+      "anchors": [
+        "export function RetainedReviewStatus("
+      ],
+      "location_labels": [
+        "export function RetainedReviewStatus("
+      ]
     }
   ],
   "coverage_groups": [
@@ -14460,6 +15072,40 @@
         "reason": "Scoped fixture checks do not establish sustained actual-host budget edits, notification delivery or complete manual accessibility.",
         "next_verification": "Observe the installed admin controls and sustained low-call notification intake, then exercise manual accessibility and remaining validation/deferral variants."
       }
+    },
+    {
+      "name": "Retained PR review policy, progress and publication",
+      "entities": [
+        "W-PR-REVIEW-POLICY",
+        "W-RETAINED-REVIEW",
+        "C-PR-POSTING-POLICY",
+        "C-REVIEW-PUBLISH",
+        "C-REVIEW-RECONCILE"
+      ],
+      "assertions": [
+        "UI-PR-POSTING",
+        "UI-REVIEW-WORKFLOW",
+        "API-REVIEW-WORKFLOW",
+        "API-REVIEW-POLICY",
+        "API-REVIEW-POSTING",
+        "UI-PR-POSTING-REFRESH",
+        "STORE-UI-JOURNAL",
+        "API-REVIEW-FINISHED-RECOVERY",
+        "UI-PR-POLICY-SAVE-ORDER",
+        "API-REVIEW-COMPACT-SQL",
+        "API-REVIEW-COMPACT-UI",
+        "API-REVIEW-OWN-PUBLICATION-RECOVERY",
+        "API-REVIEW-COMPLETION-BOUNDARY"
+      ],
+      "gap": {
+        "version": 1,
+        "id": "gap-coverage-review-workflow-01",
+        "kind": "known-limitation",
+        "severity": "P1",
+        "owner": "ui-specification-maintainer",
+        "reason": "The production adapter recognizes available registered Go actions, but the pinned upstream engine still lacks ordered dynamic iteration and durable external waits. Only deterministic fixtures verify the complete review path.",
+        "next_verification": "Integrate remaining upstream engine issues 26 and 27 using the available registered Go action contract, then explicitly validate installed-host progress, material questions and verified receipts."
+      }
     }
   ],
   "documents": [
@@ -14503,7 +15149,8 @@
             "W-PR-EVIDENCE",
             "W-ITEM-HISTORY",
             "W-REPORT-LIST",
-            "W-REPORT-DETAIL"
+            "W-REPORT-DETAIL",
+            "W-PR-REVIEW-POLICY"
           ],
           "fields": [
             "element_description",
@@ -14531,7 +15178,8 @@
             "W-NEW-CHAT",
             "W-WORK-STATUS",
             "W-SESSION-CONSOLE",
-            "W-QUESTION-RECOVERY"
+            "W-QUESTION-RECOVERY",
+            "W-RETAINED-REVIEW"
           ],
           "fields": [
             "element_description",
@@ -14915,7 +15563,10 @@
             "C-PLUGIN-MAINTENANCE",
             "C-REVIEW-POLICY",
             "C-REPOSITORY-REVIEW-PROMPT",
-            "C-GITHUB-USAGE"
+            "C-GITHUB-USAGE",
+            "C-PR-POSTING-POLICY",
+            "C-REVIEW-PUBLISH",
+            "C-REVIEW-RECONCILE"
           ],
           "fields": [
             "endpoint_description",

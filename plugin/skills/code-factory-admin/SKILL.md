@@ -23,10 +23,26 @@ Repository `reviewPrompt` appends trusted owner instructions to the generic revi
 prompt. `paused` stops monitoring. Explain the effective policy before saving an
 automatic-review choice. Automatic reviews support read-only profiles with publishing
 set to `ask`, or explicitly selected `danger-full-access` profiles with approvals
-set to `never` and publishing set to `authorized`. The former requires owner approval
-to publish; the latter permits autonomous publication. Automatic review does not
+set to `never` and publishing set to `authorized`. These profile choices retain
+native task authority. Migrated review publication is owned by the server and
+requires the separate posting policy or an explicit post request. Automatic review does not
 enable implementation, and selecting a profile does not enable automatic review. Request/head
 claims prevent duplicate launches across polls and restarts.
+
+Global `reviewers` is an ordered array of skill bindings (`id`, `kind: skill`,
+`skillId`) or command bindings (`id`, `kind: command`, `argv` including `{handoff}`).
+Repository null inherits; an explicitly empty list blocks before diff capture.
+`reviewRules` stores private review rules with the same repository inheritance.
+Use `import_dk_review_settings` once per global/repository scope when requested;
+Factory values win and unresolved bindings or rule conflicts are reported.
+
+Global `autoPostReview` defaults false. Repository and persistent PR overrides are
+nullable; launch preparation accepts an optional override. Precedence is launch →
+PR → repository → global. `save_review_policy` updates the PR override. Omitted
+fields preserve values; null restores inheritance. Explain effective source before
+saving a posting choice. Automatic posting uses COMMENT, inline findings and an
+empty body, and rechecks policy before submission. Missing engine capabilities
+block fresh reviews explicitly; never switch them to legacy model execution.
 
 For an explicitly requested manual PR review, use the daily Code Factory skill's
 `prepare_pr_review` → `start_run` sequence. The preparation tool

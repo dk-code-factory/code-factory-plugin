@@ -88,6 +88,11 @@ async function host(
     readItem?: (detail: Detail) => Promise<Detail>;
     readUIState?: (state: Snapshot, args: Record<string,unknown>) => Promise<Snapshot>;
     readReviews?: (id: string) => Promise<PRReviews>;
+    readSettings?: (config: Snapshot["config"]) => Promise<Snapshot["config"]>;
+    beforeDKImport?: (repository?: string) => Promise<void>;
+    beforeReadReviewPolicy?: () => Promise<void>;
+    afterSaveReviewPolicy?: () => Promise<void>;
+    dkReviewSettings?: Pick<Snapshot["config"], "reviewers" | "reviewRules">;
     reports?: IssueReport[];
     listReports?: (
       result: ReportPage,
@@ -119,6 +124,29 @@ async function host(
   } = {},
 ) {
   const state = options.snapshot ?? initial();
+  const prPolicies = new Map<string, boolean | null>();
+  function postingPolicy(id: string) {
+    const item = state.inbox.find((e) => e.item.id === id)?.item;
+    const repo = state.repositories.find((r) => r.id === item?.repository);
+    const pr = prPolicies.get(id);
+    const source =
+      pr != null
+        ? "pr"
+        : repo?.autoPostReview != null
+          ? "repository"
+          : "global";
+    return {
+      itemId: id,
+      autoPostReview: pr ?? null,
+      effective: {
+        enabled:
+          pr ?? repo?.autoPostReview ?? state.config.autoPostReview ?? false,
+        source,
+      },
+    };
+  }
+
+
   const openedLinks: string[] = [];
   await page.exposeFunction("hostOpenLink", (params: { url: string }) => {
     openedLinks.push(params.url);
@@ -227,7 +255,7 @@ async function host(
             }
             await new Promise(r=>setTimeout(r,20));
           }
-          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"transcript":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id),"github-notifications":["cursor"]}:{}};
+          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"transcript":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"pr-review-policy":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id),"github-notifications":["cursor"]}:{}};
           if(state.cursor<Number(a.after)) (data as {changes:Record<string,string[]>}).changes={};
           if(options.watchDomains){
             const change=data as {changes:Record<string,string[]>};
@@ -288,6 +316,68 @@ async function host(
           state.cursor++;
           data = null;
           break;
+        case "read_review_policy":
+          await options.beforeReadReviewPolicy?.();
+          data = postingPolicy(String(a.id));
+          break;
+        case "save_review_policy":
+          if ("autoPostReview" in a)
+            prPolicies.set(String(a.id), a.autoPostReview as boolean | null);
+          data = postingPolicy(String(a.id));
+          state.cursor++;
+          await options.afterSaveReviewPolicy?.();
+          break;
+        case "import_dk_review_settings":
+          await options.beforeDKImport?.(a.repository as string | undefined);
+          Object.assign(
+            a.repository
+              ? state.repositories.find((repository) => repository.id === a.repository)!
+              : state.config,
+            options.dkReviewSettings,
+          );
+          data = {
+            scope: a.repository ?? "global",
+            imported: Object.keys(options.dkReviewSettings ?? {}),
+            conflicts: ["Code Factory values preserved"],
+            completed: true,
+          };
+          break;
+        case "get_settings":
+          data = options.readSettings
+            ? await options.readSettings(structuredClone(state.config))
+            : structuredClone(state.config);
+          break;
+        case "post_retained_review": {
+          const run = state.runs.find((r) => r.id === a.runId)!;
+          run.postingState = "verified";
+          run.postingOperation = "op-1";
+          run.postingReceipt = {
+            id: "receipt",
+            url: "https://github.com/owner/repo/pull/1#receipt",
+            head: run.base,
+            comments: 1,
+          };
+          state.cursor++;
+          data = {
+            id: "op-1",
+            status: "verified",
+            receipt: run.postingReceipt,
+          };
+          break;
+        }
+        case "reconcile_review_publication": {
+          const run = state.runs.find((r) => r.postingOperation === a.id)!;
+          run.postingState = "verified";
+          run.postingReceipt = {
+            id: "receipt",
+            url: "https://github.com/owner/repo/pull/1#receipt",
+            head: run.base,
+            comments: 1,
+          };
+          state.cursor++;
+          data = { id: a.id, status: "verified", receipt: run.postingReceipt };
+          break;
+        }
         case "read_pr_reviews":
           data = options.readReviews ? await options.readReviews(String(a.id)) : {itemId:String(a.id),reviews:[],syncedAt:new Date().toISOString(),lastAttempt:new Date().toISOString()};
           break;
@@ -407,6 +497,11 @@ async function host(
             {
               paused: Boolean(a.paused),
               autoReview: a.autoReview as boolean | null,
+              autoPostReview: a.autoPostReview as boolean | null,
+              reviewers:
+                a.reviewers as Snapshot["repositories"][0]["reviewers"],
+              reviewRules: a.reviewRules as string | null,
+
               reviewProfileId: String(a.reviewProfileId ?? ""),
               implementationProfileId: String(a.implementationProfileId ?? ""),
               reviewPrompt: String(a.reviewPrompt ?? ""),
@@ -416,6 +511,7 @@ async function host(
               lastSync: "0001-01-01",
               error: "",
             },
+            ...state.repositories.filter((repository) => repository.id !== a.id),
           ];
           state.cursor++;
           break;
@@ -444,6 +540,15 @@ async function host(
             error: "",
             created: new Date().toISOString(),
           };
+          if (
+            state.inbox.find((e) => e.item.id === a.itemId)?.item.kind === "pr"
+          ) {
+            run.autoPostReview = a.autoPostReview as boolean | null;
+            run.effectiveAutoPostReview =
+              a.autoPostReview != null
+                ? { enabled: Boolean(a.autoPostReview), source: "launch" }
+                : postingPolicy(String(a.itemId)).effective;
+          }
           state.runs.unshift(run);
           data = run;
           state.cursor++;
@@ -665,7 +770,7 @@ async function host(
       options.surface === "settings" ? "GitHub repository" : "Search inbox",
     ),
   ).toBeVisible();
-  return { ui, state, calls, openedLinks, openLinks: openedLinks };
+  return { ui, state, calls, openedLinks, openLinks: openedLinks, prPolicies };
 }
 async function showSettings(page: Page) {
   await page.locator("iframe").evaluate((frame: HTMLIFrameElement) => {
@@ -1772,15 +1877,15 @@ test("repository form shows saving and errors beside retained inputs", async ({
     .getByRole("button", { name: "Save repository", exact: true })
     .locator("xpath=ancestor::form");
   try {
-    await form.getByRole("button").click();
+    await form.getByRole("button",{name:"Save repository",exact:true}).click();
     await expect(form.getByRole("status")).toHaveText("Saving…");
-    await expect(form.getByRole("button")).toBeDisabled();
+    await expect(form.getByRole("button",{name:"Save repository",exact:true})).toBeDisabled();
     release();
     await expect(form.getByRole("alert")).toContainText(
       "Repository unavailable",
     );
     await expect(ui.getByLabel("GitHub repository")).toHaveValue("owner/repo");
-    await expect(form.getByRole("button")).toBeEnabled();
+    await expect(form.getByRole("button",{name:"Save repository",exact:true})).toBeEnabled();
   } finally {
     release();
   }
@@ -5210,7 +5315,7 @@ test("explicit full-access launch shows never approvals and authorized publishin
   await expect.poll(() => calls.filter(c => c.name === "start_run").length).toBe(1);
   expect(state.runs[0].profile).toMatchObject({ sandbox: "danger-full-access", approval: "never", publishing: "authorized" });
   await showSettings(page);
-  await expect(ui.getByText(/Automatic reviews use the selected pipeline.s sandbox and publishing/)).toBeVisible();
+  await expect(ui.getByText(/Retained review publication follows the posting policy/)).toBeVisible();
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -5958,5 +6063,320 @@ for (const outcome of ["invalid", "resolved"]) {
         ),
       ),
     ).toBe(false);
+  });
+}
+
+test("absent global reviewers retain invalid draft and validity through unrelated settings edits", async ({page})=>{
+ const {ui,calls,state}=await host(page,{surface:"settings"});
+ expect(state.config.reviewers).toBeUndefined();
+ await ui.getByText("System defaults",{exact:true}).click();
+ const defaults=ui.locator("details").filter({has:ui.locator("summary").filter({hasText:/^System defaults$/})});
+ const configuration=defaults.getByRole("group",{name:"Review workflow configuration"});
+ const reviewers=configuration.getByLabel("Ordered reviewers");
+ await reviewers.fill("{invalid");
+ const error=await configuration.getByRole("alert").innerText();
+ expect(await reviewers.evaluate(e=>(e as HTMLTextAreaElement).validity.customError)).toBe(true);
+ await defaults.getByLabel("Request budget per hour",{exact:true}).fill("1400");
+ await expect(reviewers).toHaveValue("{invalid");
+ await expect(configuration.getByRole("alert")).toHaveText(error);
+ expect(await reviewers.evaluate(e=>(e as HTMLTextAreaElement).validity.customError)).toBe(true);
+ await defaults.getByLabel("Automatically post completed reviews",{exact:true}).check();
+ await expect(reviewers).toHaveValue("{invalid");
+ await expect(configuration.getByRole("alert")).toHaveText(error);
+ expect(await reviewers.evaluate(e=>(e as HTMLTextAreaElement).validity.customError)).toBe(true);
+ await defaults.getByRole("button",{name:"Save system defaults",exact:true}).click();
+ expect(calls.filter(c=>c.name==="save_settings")).toHaveLength(0);
+ await expect(reviewers).toHaveValue("{invalid");
+ await expect(configuration.getByRole("alert")).toHaveText(error);
+ expect(await reviewers.evaluate(e=>(e as HTMLTextAreaElement).validity.valid)).toBe(false);
+ expect(state.config.reviewers).toBeUndefined();
+ expect(calls.filter(c=>["start_run","post_retained_review"].includes(c.name))).toHaveLength(0);
+});
+
+test("review workflow settings preserve ordered bindings and inherited posting overrides", async ({page})=>{
+ await page.setViewportSize({width:320,height:820});
+ const snapshot=initial();const {ui,calls,state}=await host(page,{snapshot,surface:"settings"});
+ await ui.getByText("System defaults",{exact:true}).click();
+ await expect(ui.locator("body")).toHaveJSProperty("scrollWidth",await ui.locator("body").evaluate(e=>e.clientWidth));
+ await expect(ui.getByLabel("Automatically post completed reviews")).not.toBeChecked();
+ await ui.getByLabel("Automatically post completed reviews").check();
+ const config=ui.getByRole("group",{name:"Review workflow configuration"}).last();
+ const reviewers=[{id:"first",kind:"skill",skillId:"fixture"},{id:"second",kind:"command",argv:["/local/reviewer","{handoff}"]}];
+ await config.getByLabel("Ordered reviewers").fill(JSON.stringify(reviewers));
+ await config.getByLabel("Private review rules").fill("Use inline comment reviews.");
+ await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
+ await expect.poll(()=>state.config.reviewers).toEqual(reviewers);
+ expect(calls.find(c=>c.name==="save_settings")?.arguments.autoPostReview).toBe(true);
+ await ui.getByLabel("GitHub repository",{exact:true}).fill("owner/repo");
+ await ui.getByLabel("Repository automatic review posting").selectOption("false");
+ await ui.getByRole("button",{name:"Save repository",exact:true}).click();
+ await expect.poll(()=>state.repositories[0]?.autoPostReview).toBe(false);
+ await ui.getByRole("button",{name:"Edit repository owner/repo",exact:true}).click();
+ await ui.getByLabel("Repository automatic review posting").selectOption("inherit");
+ const repositoryConfig=ui.getByRole("group",{name:"Review workflow configuration"}).first();
+ await repositoryConfig.getByLabel("Inherit system reviewers",{exact:true}).uncheck();
+ const repositoryReviewers=repositoryConfig.getByLabel("Ordered reviewers");
+ await repositoryReviewers.fill("{invalid");
+ await expect(repositoryConfig.getByRole("alert")).toBeVisible();
+ expect(await repositoryReviewers.evaluate(e=>(e as HTMLTextAreaElement).validity.customError)).toBe(true);
+ const savedRepositories=calls.filter(c=>c.name==="save_repository").length;
+ await ui.getByRole("button",{name:"Save repository",exact:true}).click();
+ expect(calls.filter(c=>c.name==="save_repository")).toHaveLength(savedRepositories);
+ await expect(repositoryReviewers).toHaveValue("{invalid");
+ await repositoryConfig.getByLabel("Inherit system reviewers",{exact:true}).check();
+ await expect(repositoryReviewers).toBeDisabled();
+ await repositoryConfig.getByLabel("Inherit system reviewers",{exact:true}).uncheck();
+ await expect(repositoryReviewers).toBeEnabled();
+ await expect(repositoryReviewers).toHaveValue("[]");
+ await expect(repositoryConfig.getByRole("alert")).toHaveCount(0);
+ expect(await repositoryReviewers.evaluate(e=>(e as HTMLTextAreaElement).validity.valid)).toBe(true);
+ await ui.getByRole("button",{name:"Save repository",exact:true}).click();
+ await expect.poll(()=>calls.filter(c=>c.name==="save_repository").length).toBe(savedRepositories+1);
+ await expect.poll(()=>state.repositories[0]?.autoPostReview).toBeNull();
+ expect(state.repositories[0]?.reviewers).toEqual([]);
+ await expect(ui.locator("body")).toHaveJSProperty("scrollWidth",await ui.locator("body").evaluate(e=>e.clientWidth));
+ expect(calls.filter(c=>["start_run","post_retained_review"].includes(c.name))).toHaveLength(0);
+});
+
+test("global DK review import preserves unrelated edits made while settings are loading", async ({page})=>{
+ const reviewers=[{id:"imported",kind:"skill" as const,skillId:"fixture"}];
+ let release!:()=>void;
+ let loading=false;
+ const gate=new Promise<void>(resolve=>{release=resolve});
+ const {ui,calls,state}=await host(page,{
+  surface:"settings",
+  dkReviewSettings:{reviewers,reviewRules:"Imported private rules."},
+  readSettings:async config=>{loading=true;await gate;return config},
+ });
+ await ui.getByText("System defaults",{exact:true}).click();
+ const defaults=ui.locator("details").filter({has:ui.locator("summary").filter({hasText:/^System defaults$/})});
+ await defaults.getByLabel("Ordered reviewers").fill("{invalid");
+ await expect(defaults.getByRole("alert")).toBeVisible();
+ expect(await defaults.getByLabel("Ordered reviewers").evaluate(e=>(e as HTMLTextAreaElement).validity.customError)).toBe(true);
+ try{
+  await defaults.getByRole("button",{name:"Import DK review settings once",exact:true}).click();
+  await expect.poll(()=>loading).toBe(true);
+  await defaults.getByLabel("Request budget per hour",{exact:true}).fill("1400");
+  await defaults.getByLabel("Plugin update check interval").selectOption("60");
+  await defaults.getByLabel("Automatically post completed reviews",{exact:true}).check();
+  release();
+  await expect(defaults.getByRole("status").filter({hasText:/Imported: reviewers, reviewRules/})).toBeVisible();
+  await expect(defaults.getByLabel("Ordered reviewers")).toHaveValue(JSON.stringify(reviewers,null,2));
+  await expect(defaults.getByRole("alert")).toHaveCount(0);
+  expect(await defaults.getByLabel("Ordered reviewers").evaluate(e=>(e as HTMLTextAreaElement).validity.valid)).toBe(true);
+  await expect(defaults.getByLabel("Private review rules")).toHaveValue("Imported private rules.");
+  await expect(defaults.getByLabel("Request budget per hour",{exact:true})).toHaveValue("1400");
+  await expect(defaults.getByLabel("Plugin update check interval")).toHaveValue("60");
+  await expect(defaults.getByLabel("Automatically post completed reviews",{exact:true})).toBeChecked();
+  await defaults.getByRole("button",{name:"Save system defaults",exact:true}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="save_settings").length).toBe(1);
+  expect(state.config).toMatchObject({reviewers,reviewRules:"Imported private rules.",githubRequestsPerHour:1400,pluginCheckMinutes:60,autoPostReview:true});
+  expect(calls.filter(c=>["start_run","post_retained_review"].includes(c.name))).toHaveLength(0);
+ }finally{release()}
+});
+
+for (const delay of ["import", "snapshot"] as const) {
+  test(`repository DK import discards stale results when switching editors during ${delay}`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 820 });
+    const snapshot = initial();
+    const repo = (id: string) => ({ id, checkout: "", base: "main", lastSync: "", error: "", paused: false,
+      reviewers: [{ id, kind: "skill" as const, skillId: "fixture" }], reviewRules: `${id} saved rules` });
+    snapshot.repositories = [
+      { ...repo("owner/first"), reviewers: undefined, reviewRules: undefined },
+      repo("owner/second"),
+    ];
+    const importedReviewers = [{ id: "imported", kind: "skill" as const, skillId: "fixture" }];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    let loading = false;
+    let completed = false;
+    const pause = async () => { loading = true; await gate; completed = true; };
+    const { ui, calls, state } = await host(page, {
+      snapshot, surface: "settings",
+      dkReviewSettings: { reviewers: importedReviewers, reviewRules: "First repository imported rules" },
+      beforeDKImport: delay === "import" ? pause : undefined,
+      readUIState: delay === "snapshot" ? async (next, args) => {
+        if ((args.views as string[]).includes("settings") && next.repositories?.find(repository => repository.id === "owner/first")?.reviewers?.[0]?.id === "imported") await pause();
+        return next;
+      } : undefined,
+    });
+    await ui.getByRole("button", { name: "Edit repository owner/first", exact: true }).click();
+    const configuration = ui.getByRole("group", { name: "Review workflow configuration" }).first();
+    try {
+      await ui.getByRole("button", { name: "Import DK review settings once", exact: true }).first().click();
+      await expect.poll(() => loading).toBe(true);
+      await ui.getByRole("button", { name: "Edit repository owner/second", exact: true }).click();
+      const secondReviewers = [{ id: "second-draft", kind: "skill", skillId: "fixture" }];
+      await configuration.getByLabel("Ordered reviewers").fill(JSON.stringify(secondReviewers));
+      await configuration.getByLabel("Private review rules", { exact: true }).fill("Second repository unsaved rules");
+      await ui.getByLabel("Default base").fill("second-draft-base");
+      release();
+      await expect.poll(() => completed).toBe(true);
+      await expect(configuration.getByLabel("Ordered reviewers")).toHaveValue(JSON.stringify(secondReviewers, null, 2));
+      await expect(configuration.getByLabel("Private review rules", { exact: true })).toHaveValue("Second repository unsaved rules");
+      await expect(ui.getByLabel("Default base")).toHaveValue("second-draft-base");
+      await expect(ui.getByRole("status").filter({ hasText: /Imported: reviewers, reviewRules/ })).toHaveCount(0);
+      await ui.getByRole("button", { name: "Save repository", exact: true }).click();
+      await expect.poll(() => calls.filter((call) => call.name === "save_repository").length).toBe(1);
+      expect(state.repositories.find((repository) => repository.id === "owner/second")).toMatchObject({
+        reviewers: secondReviewers, reviewRules: "Second repository unsaved rules", base: "second-draft-base",
+      });
+      expect(state.repositories.find((repository) => repository.id === "owner/first")).toMatchObject({
+        reviewers: importedReviewers, reviewRules: "First repository imported rules",
+      });
+      expect(calls.filter((call) => call.name === "import_dk_review_settings").map((call) => call.arguments.repository)).toEqual(["owner/first"]);
+      await expect(ui.locator("body")).toHaveJSProperty("scrollWidth", await ui.locator("body").evaluate((element) => element.clientWidth));
+      expect(calls.filter((call) => ["start_run", "post_retained_review"].includes(call.name))).toHaveLength(0);
+    } finally { release(); }
+  });
+}
+
+test("launch posting inheritance stays unresolved on policy failure and retries without losing explicit overrides", async ({ page }) => {
+  const snapshot = initial();
+  Object.assign(snapshot.inbox[0].item, { kind: "pr", head: "a".repeat(40), author: "other", reviewRequests: ["alex"] });
+  snapshot.config.autoPostReview = true;
+  snapshot.repositories = [{ id: snapshot.inbox[0].item.repository, checkout: "", base: "", lastSync: "", error: "", paused: false, autoPostReview: false }];
+  let failPolicy = false;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const { ui, calls } = await host(page, { snapshot, beforeReadReviewPolicy: async () => {
+    if (failPolicy) { await gate; throw new Error("Policy read unavailable"); }
+  } });
+  await ui.getByRole("button", { name: "Review PRs", exact: true }).click();
+  await openItem(ui, /Fix reconnect regression/);
+  await expect(ui.getByRole("region", { name: "PR review posting policy" })).toContainText("Off · Source: repository");
+  failPolicy = true;
+  try {
+    await ui.getByRole("button", { name: "New run", exact: true }).click();
+    const dialog = ui.getByRole("dialog", { name: "Launch agent" });
+    await expect(dialog).toContainText("Off · Source: repository");
+    await dialog.getByRole("button", { name: "Edit", exact: true }).click();
+    await dialog.getByText("Advanced", { exact: true }).click();
+    const posting = dialog.getByLabel("Launch automatic review posting");
+    await expect(posting.locator("option").first()).toHaveText("Inherit (unresolved)");
+    await expect(dialog.getByRole("status")).toHaveText("Loading inherited posting policy…");
+    release();
+    await expect(dialog.getByRole("alert")).toContainText("Unable to load inherited posting policy");
+    await expect(dialog.getByRole("alert")).toContainText("Policy read unavailable");
+    await expect(posting.locator("option").first()).toHaveText("Inherit (unresolved)");
+    await posting.selectOption("true");
+    await dialog.getByRole("button", { name: "Review launch", exact: true }).click();
+    await expect(dialog).toContainText("On · Source: launch");
+    expect(calls.filter((call) => call.name === "prepare_launch").at(-1)?.arguments.autoPostReview).toBe(true);
+    await dialog.getByRole("button", { name: "Edit", exact: true }).click();
+    await dialog.getByText("Advanced", { exact: true }).click();
+    failPolicy = false;
+    await dialog.getByRole("button", { name: "Retry posting policy", exact: true }).click();
+    await expect(posting.locator("option").first()).toHaveText("Inherit (Off)");
+    await expect(posting).toHaveValue("true");
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await expect(dialog.getByRole("status")).toHaveCount(0);
+    expect(calls.filter((call) => ["start_run", "post_retained_review"].includes(call.name))).toHaveLength(0);
+  } finally { release(); }
+});
+
+test("PR posting policy and launch override show effective source without starting work", async ({page})=>{
+ const snapshot=initial();Object.assign(snapshot.inbox[0].item,{kind:"pr",head:"a".repeat(40),author:"other",reviewRequests:["alex"]});snapshot.config.autoPostReview=true;
+ const {ui,calls}=await host(page,{snapshot});await ui.getByRole("button",{name:"Review PRs",exact:true}).click();await openItem(ui,/Fix reconnect regression/);
+ const policy=ui.getByRole("region",{name:"PR review posting policy"});await expect(policy).toContainText("On · Source: global");
+ await policy.getByLabel("PR automatic review posting").selectOption("false");await expect(policy).toContainText("Off · Source: pr");
+ await policy.getByLabel("PR automatic review posting").selectOption("inherit");await expect(policy).toContainText("On · Source: global");
+ await ui.getByRole("button",{name:"New run",exact:true}).click();const dialog=ui.getByRole("dialog",{name:"Launch agent"});
+ await dialog.getByRole("button",{name:"Edit",exact:true}).click();await dialog.getByText("Advanced",{exact:true}).click();
+ await dialog.getByLabel("Launch automatic review posting").selectOption("false");await expect(dialog.getByLabel("Launch automatic review posting").locator("option").first()).toHaveText("Inherit (On)");await dialog.getByRole("button",{name:"Review launch",exact:true}).click();
+ await expect(dialog).toContainText("Off · Source: launch");expect(calls.filter(c=>c.name==="prepare_launch").at(-1)?.arguments.autoPostReview).toBe(false);
+ expect(calls.filter(c=>["start_run","post_retained_review"].includes(c.name))).toHaveLength(0);
+});
+
+test("retained review progress exposes incomplete providers and reconciles a verified receipt without reposting", async ({page})=>{
+ const snapshot=initial();Object.assign(snapshot.inbox[0].item,{kind:"pr",head:"a".repeat(40),author:"other",reviewRequests:["alex"]});
+ const run=retained(snapshot,"retained-review","failed");run.threadId="";run.reviewWorkflow="code-factory-pr-review-v1";run.reviewStage="ordered-reviewers";run.reviewArtifact={path:"/private/result.json",sha256:"b".repeat(64)};run.reviewComplete=false;
+ run.reviewResult={complete:false,outcome:"provider_failed",executed_reviewers:["one"],reused_reviewers:[],skipped_reviewers:[{reviewer:"limited",reason:"usage limit"}],failed_reviewers:[{reviewer:"two",reason:"provider unavailable"}],finding_count:0};snapshot.runs=[run];
+ const {ui,calls,state,openedLinks}=await host(page,{snapshot,transcript:[]});await ui.getByRole("button",{name:"Review PRs",exact:true}).click();await openItem(ui,/Fix reconnect regression/);
+ const workflow=ui.getByRole("region",{name:"Retained review workflow"});await expect(workflow).toContainText("Incomplete review");await expect(workflow).toContainText("Skipped limited: usage limit");await expect(workflow).toContainText("Incomplete two: provider unavailable");
+ await expect(workflow.getByRole("button",{name:"Post retained review",exact:true})).toHaveCount(0);
+ await ui.getByText("Details",{exact:true}).click();
+ await expect(ui.getByRole("button",{name:"Resume review workflow",exact:true})).toBeVisible();
+ run.status="idle";state.cursor++;
+ await expect(ui.getByRole("button",{name:"Resume review workflow",exact:true})).toHaveCount(0);
+ run.status="interrupted";state.cursor++;
+ await expect(ui.getByRole("button",{name:"Resume review workflow",exact:true})).toBeVisible();
+ run.status="idle";run.reviewComplete=true;run.postingState="uncertain";run.postingOperation="op-1";run.reviewOmissions=[{finding:1,reason:"No diff anchor"}];run.reviewStage="evaluate-posting-policy";state.cursor++;
+ await expect(ui.getByRole("button",{name:"Resume review workflow",exact:true})).toHaveCount(0);
+ await expect(workflow).toContainText("Finding 2 omitted: No diff anchor");await expect(workflow.getByRole("button",{name:"Post retained review",exact:true})).toBeDisabled();
+ await workflow.getByRole("button",{name:"Reconcile review publication",exact:true}).click();
+ await expect(workflow).toContainText("Posting: verified");await expect(workflow).toContainText("1 inline comments");await workflow.getByRole("link",{name:"Verified review receipt"}).click();
+ await expect.poll(()=>openedLinks).toContain("https://github.com/owner/repo/pull/1#receipt");expect(calls.filter(c=>c.name==="reconcile_review_publication")).toHaveLength(1);expect(calls.filter(c=>c.name==="post_retained_review")).toHaveLength(0);
+});
+
+test("retained review explicit posting sends its artifact and displays the server receipt",async({page})=>{
+ const snapshot=initial();Object.assign(snapshot.inbox[0].item,{kind:"pr",head:"a".repeat(40),author:"other",reviewRequests:["alex"]});
+ const run=retained(snapshot,"post-artifact","idle");run.threadId="";run.reviewWorkflow="code-factory-pr-review-v1";run.reviewStage="finished";run.reviewComplete=true;run.reviewArtifact={path:"/private/result.json",sha256:"b".repeat(64)};snapshot.runs=[run];
+ const {ui,calls}=await host(page,{snapshot,transcript:[]});await ui.getByRole("button",{name:"Review PRs",exact:true}).click();await openItem(ui,/Fix reconnect regression/);
+ const workflow=ui.getByRole("region",{name:"Retained review workflow"});
+ await expect(workflow.getByText("No actionable findings.", {exact:true})).toHaveCount(0);
+ run.reviewResult={complete:true,outcome:"completed",executed_reviewers:["one"],reused_reviewers:[],skipped_reviewers:[]};run.reviewStage="evaluate-posting-policy";snapshot.cursor++;
+ await expect(workflow).toContainText("Stage: evaluate-posting-policy");
+ await expect(workflow.getByText("No actionable findings.", {exact:true})).toHaveCount(0);
+ run.reviewResult.finding_count=1;run.reviewStage="finished";snapshot.cursor++;
+ await expect(workflow).toContainText("Stage: finished");
+ await expect(workflow.getByText("No actionable findings.", {exact:true})).toHaveCount(0);
+ run.reviewResult.finding_count=0;snapshot.cursor++;
+ await expect(workflow.getByText("No actionable findings.", {exact:true})).toBeVisible();
+ await workflow.getByRole("button",{name:"Post retained review",exact:true}).click();
+ await expect(workflow.getByRole("link",{name:"Verified review receipt"})).toBeVisible();
+ expect(calls.filter(c=>c.name==="post_retained_review")).toHaveLength(1);expect(calls.find(c=>c.name==="post_retained_review")?.arguments).toEqual({runId:run.id,artifact:run.reviewArtifact});
+});
+
+test("saved review policy changes refresh an open PR without polling or starting work", async ({page}) => {
+ const snapshot=initial();
+ Object.assign(snapshot.inbox[0].item,{kind:"pr",head:"a".repeat(40),author:"other",reviewRequests:["alex"]});
+ const {ui,state,calls}=await host(page,{snapshot,watchDomains:["config","pr-review-policy"]});
+ await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+ await openItem(ui,/Fix reconnect regression/);
+ const policy=ui.getByRole("region",{name:"PR review posting policy"});
+ await expect(policy).toContainText("Off · Source: global");
+ state.config.autoPostReview=true;state.cursor++;
+ await expect(policy).toContainText("On · Source: global");
+ expect(calls.filter(c=>["start_run","post_retained_review"].includes(c.name))).toHaveLength(0);
+});
+
+for (const response of ["success", "failure"] as const) {
+  test(`a delayed policy save ${response} preserves a newer committed Off observation`, async ({ page }) => {
+    const snapshot = initial();
+    Object.assign(snapshot.inbox[0].item, { kind: "pr", head: "a".repeat(40), author: "other", reviewRequests: ["alex"] });
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    let committed = false;
+    const { ui, state, calls, prPolicies } = await host(page, {
+      snapshot,
+      watchDomains: ["pr-review-policy"],
+      afterSaveReviewPolicy: async () => {
+        committed = true;
+        await gate;
+        if (response === "failure") throw new Error("Earlier save reply unavailable");
+      },
+    });
+    try {
+      await ui.getByRole("button", { name: "Review PRs", exact: true }).click();
+      await openItem(ui, /Fix reconnect regression/);
+      const policy = ui.getByRole("region", { name: "PR review posting policy" });
+      const select = policy.getByLabel("PR automatic review posting");
+      await expect(policy).toContainText("Off · Source: global");
+      await select.selectOption("true");
+      await expect.poll(() => committed).toBe(true);
+      prPolicies.set(snapshot.inbox[0].item.id, false);
+      state.cursor++;
+      await expect(policy).toContainText("Off · Source: pr");
+      await expect(select).toHaveValue("false");
+      await expect(select).toBeDisabled();
+      release();
+      await expect(select).toBeEnabled();
+      await expect(select).toHaveValue("false");
+      await expect(policy).toContainText("Off · Source: pr");
+      await expect(policy.getByRole("alert")).toHaveCount(0);
+      expect(calls.filter((call) => call.name === "save_review_policy")).toHaveLength(1);
+      expect(calls.filter((call) => ["start_run", "post_retained_review"].includes(call.name))).toHaveLength(0);
+    } finally { release(); }
   });
 }

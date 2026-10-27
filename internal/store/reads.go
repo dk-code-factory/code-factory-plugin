@@ -9,21 +9,25 @@ import (
 	"codefactory/internal/domain"
 )
 
-func projection(paths []string) (string, []any) {
+func projection(kind string, paths []string) (string, []any) {
+	base := "data"
+	if kind == "run" {
+		base = compactRunSQL
+	}
 	if len(paths) == 0 {
-		return "data", nil
+		return base, nil
 	}
 	args := make([]any, len(paths))
 	for i, p := range paths {
 		args[i] = p
 	}
-	return "json_remove(data," + strings.TrimSuffix(strings.Repeat("?,", len(paths)), ",") + ")", args
+	return "json_remove(" + base + "," + strings.TrimSuffix(strings.Repeat("?,", len(paths)), ",") + ")", args
 }
 
 // Select filters in SQLite before decoding. The small field vocabulary keeps
 // indexed expressions literal while all caller values remain bound parameters.
 func Select[T any](ctx context.Context, s *Store, kind, field, value string, paths ...string) ([]T, error) {
-	expression, args := projection(paths)
+	expression, args := projection(kind, paths)
 	predicates := map[string]string{"id": "id=?", "itemId": "json_extract(data,'$.itemId')=?", "runId": "json_extract(data,'$.runId')=?", "related": "(json_extract(data,'$.source')=? OR json_extract(data,'$.target')=?)"}
 	predicate, ok := predicates[field]
 	if !ok {
@@ -55,7 +59,11 @@ func Select[T any](ctx context.Context, s *Store, kind, field, value string, pat
 
 // Public run records retain the inspectable launch snapshot while excluding
 // private source and skill file contents before any Go decoding or allocation.
-const publicRunSQL = `json_set(json_remove(data,'$.sourceSnapshot'),'$.skills',json(COALESCE((SELECT json_group_array(json_remove(value,'$.files','$.content')) FROM json_each(data,'$.skills')),'[]')))`
+// Legacy run rows can contain complete finding arrays. Count and remove them in
+// SQLite before broad reads transfer or decode those private historical bodies.
+const compactRunSQL = `CASE WHEN json_type(data,'$.reviewResult')='object' THEN json_set(json_remove(data,'$.reviewResult.findings'),'$.reviewResult.finding_count',CASE WHEN json_type(data,'$.reviewResult.finding_count')='integer' THEN json_extract(data,'$.reviewResult.finding_count') WHEN json_type(data,'$.reviewResult.findings')='array' THEN json_array_length(data,'$.reviewResult.findings') ELSE NULL END) ELSE data END`
+
+const publicRunSQL = `json_set(json_remove((` + compactRunSQL + `),'$.sourceSnapshot'),'$.skills',json(COALESCE((SELECT json_group_array(json_remove(value,'$.files','$.content')) FROM json_each(data,'$.skills')),'[]')))`
 
 func Runs(ctx context.Context, s *Store, itemID, id string) ([]domain.Run, error) {
 	query := "SELECT " + publicRunSQL + " FROM entities WHERE kind='run'"

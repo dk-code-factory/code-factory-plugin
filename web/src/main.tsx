@@ -37,6 +37,15 @@ const ReportedIssues = lazy(() =>
 const PostedReviews = lazy(() =>
   import("./reviews").then((m) => ({ default: m.PostedReviews })),
 );
+const PRReviewPolicyControls = lazy(() =>
+  import("./reviews").then((m) => ({ default: m.PRReviewPolicyControls })),
+);
+const RetainedReviewStatus = lazy(() =>
+  import("./reviews").then((m) => ({ default: m.RetainedReviewStatus })),
+);
+const PostingPolicySelect = lazy(() =>
+  import("./admin").then((m) => ({ default: m.PostingPolicySelect })),
+);
 const Settings = lazy(() => import("./settings"));
 
 function latestRun(runs: Run[], itemId: string) {
@@ -1753,12 +1762,15 @@ function ItemDetail({
         </section>
       )}
       {i.kind === "pr" && (
-        <PostedReviews
-          itemId={i.id}
-          head={i.head}
-          version={reviewVersion}
-          repository={i.repository}
-        />
+        <>
+          <PRReviewPolicyControls itemId={i.id} repository={i.repository} />
+          <PostedReviews
+            itemId={i.id}
+            head={i.head}
+            version={reviewVersion}
+            repository={i.repository}
+          />
+        </>
       )}
       {conversation}
       <details className="item-details">
@@ -1989,6 +2001,30 @@ function Launch({
     initialRun?.skills.map((s) => s.id) ?? p?.skills ?? [],
   );
   const [base, setBase] = useState(initialRun?.base ?? "");
+ const [autoPostReview,setAutoPostReview]=useState<boolean|null>(initialRun?.autoPostReview??null);
+  const [inheritedPosting, setInheritedPosting] = useState<{ enabled: boolean; source: string }>();
+  const [postingPolicyError, setPostingPolicyError] = useState("");
+  const [postingPolicyVersion, setPostingPolicyVersion] = useState(0);
+  const postingPolicyUIVersion = useUIVersion(["pr-review-policy"], entry?.item.id ?? initialRun?.itemId);
+  const postingDefaultsVersion = useUIVersion(["config", "repository"]);
+  useEffect(() => {
+    if (entry?.item.kind !== "pr" && !initialRun?.reviewWorkflow) {
+      setInheritedPosting({ enabled: snap.config.autoPostReview ?? false, source: "global" });
+      return;
+    }
+    let alive = true;
+    setInheritedPosting(undefined);
+    setPostingPolicyError("");
+    void call<{ effective: { enabled: boolean; source: string } }>("read_review_policy", {
+      id: entry?.item.id ?? initialRun?.itemId,
+    }).then((policy) => {
+      if (alive) setInheritedPosting(policy.effective);
+    }).catch((error) => {
+      if (alive) setPostingPolicyError(String(error));
+    });
+    return () => { alive = false; };
+  }, [entry?.item.id, entry?.item.kind, initialRun?.itemId, initialRun?.reviewWorkflow, snap.config.autoPostReview, postingPolicyVersion, postingPolicyUIVersion, postingDefaultsVersion]);
+
   const [prepared, setPrepared] = useState<Run | undefined>(initialRun);
   const [editing, setEditing] = useState(false);
   const [uncertain, setUncertain] = useState(false);
@@ -2018,6 +2054,7 @@ function Launch({
         effort,
         skillIds,
         base,
+ autoPostReview,
       });
       setPrepared(run);
       if (stale(epoch)) return;
@@ -2160,6 +2197,17 @@ function Launch({
                   </select>
                 </label>
               </div>
+              <Suspense fallback={<p role="status">Loading posting controls…</p>}>
+                <PostingPolicySelect label="Launch automatic review posting" value={autoPostReview} inherited={inheritedPosting?.enabled} change={setAutoPostReview}/>
+              </Suspense>
+              {postingPolicyError ? (
+                <div>
+                  <p role="alert">Unable to load inherited posting policy: {postingPolicyError}</p>
+                  <button type="button" onClick={() => setPostingPolicyVersion((version) => version + 1)}>
+                    Retry posting policy
+                  </button>
+                </div>
+              ) : !inheritedPosting && <p role="status">Loading inherited posting policy…</p>}
               <label>
                 Base reference
                 <input
@@ -2232,6 +2280,7 @@ function Launch({
                     ? "Ask before publishing"
                     : "Authorized"}
                 </dd>
+{prepared.effectiveAutoPostReview&&<><dt>Automatic review posting</dt><dd>{prepared.effectiveAutoPostReview.enabled?"On":"Off"} · Source: {prepared.effectiveAutoPostReview.source}</dd></>}
                 <dt>Skills</dt>
                 <dd>
                   {prepared.skills.map((s) => s.name).join(", ") ||
@@ -2611,6 +2660,7 @@ function Agent({
       ) : run.error ? (
         <p role="alert">{run.error}</p>
       ) : null}
+<RetainedReviewStatus run={run} changed={()=>action("read_run",{id:run.id})}/>
       {embedded && (
         <p aria-label="Session status">
           {run.profile.name} · {deferred ? "Waiting for GitHub" : run.status}
@@ -2776,11 +2826,12 @@ function Agent({
       <details className="agent-details">
         <summary>Details</summary>
         <p>{run.profile.name}</p>
-        {run.turnId && ["running", "waiting"].includes(run.status) && (
+        {(run.turnId || run.reviewWorkflow) && ["running", "waiting"].includes(run.status) && (
           <button onClick={() => void action("interrupt_run", { id: run.id })}>
             Interrupt
           </button>
         )}
+{run.reviewWorkflow&&["interrupted","failed"].includes(run.status)&&<button onClick={()=>void action("start_run",{id:run.id,resume:true})}>Resume review workflow</button>}
         {!consoleView && activity.length > 0 && (
           <section aria-label="Technical activity">
             {activity.map((b) => (

@@ -55,6 +55,9 @@ export interface Skill {
   managed: boolean;
 }
 export interface Repository {
+  autoPostReview?: boolean | null;
+  reviewers?: Reviewer[] | null;
+  reviewRules?: string | null;
   paused?: boolean;
   autoReview?: boolean | null;
   reviewProfileId?: string;
@@ -68,6 +71,25 @@ export interface Repository {
   error: string;
 }
 export interface Run {
+  reviewWorkflow?: string;
+  reviewStage?: string;
+  reviewArtifact?: { path: string; sha256: string };
+  reviewComplete?: boolean;
+  reviewResult?: {
+    complete: boolean;
+    outcome: string;
+    executed_reviewers: string[];
+    reused_reviewers: string[];
+    skipped_reviewers: { reviewer: string; reason: string }[];
+    failed_reviewers?: { reviewer: string; reason: string }[];
+    finding_count?: number;
+  };
+  postingState?: string;
+  postingOperation?: string;
+  postingReceipt?: ReviewReceipt;
+  reviewOmissions?: { finding: number; reason: string }[];
+  autoPostReview?: boolean | null;
+  effectiveAutoPostReview?: ReviewPolicy;
   id: string;
   itemId: string;
   profile: Profile;
@@ -90,7 +112,7 @@ export interface Attention {
   method: string;
   blocking: boolean;
   status: string;
-  origin?: "rpc" | "async" | "text";
+  origin?: "rpc" | "async" | "text" | "workflow";
   turnId?: string;
   itemId?: string;
   recoveryId?: string;
@@ -134,9 +156,12 @@ export interface Entry {
   };
 }
 export interface Config {
- githubRequestsPerHour?: number;
- githubReserve?: number;
- githubPollSeconds?: number;
+  autoPostReview?: boolean;
+  reviewers?: Reviewer[] | null;
+  reviewRules?: string;
+  githubRequestsPerHour?: number;
+  githubReserve?: number;
+  githubPollSeconds?: number;
   autoReview?: boolean;
   reviewProfileId?: string;
   implementationProfileId?: string;
@@ -151,15 +176,21 @@ export interface Config {
   questionHelperModel?: string;
 }
 export interface GitHubUsage {
- notificationError?:string;
- requestsLastHour:number; budget:number; reserve:number; nextRequest:string;
- restRemaining?:number;restReset:string;graphqlRemaining?:number;graphqlReset:string;
+  notificationError?: string;
+  requestsLastHour: number;
+  budget: number;
+  reserve: number;
+  nextRequest: string;
+  restRemaining?: number;
+  restReset: string;
+  graphqlRemaining?: number;
+  graphqlReset: string;
 }
 export interface Snapshot {
   selectedEntry?: Entry;
   page?: {offset:number;limit:number;total:number;hasMore:boolean};
   reviewVersions?: Record<string, string>;
- githubUsage?:GitHubUsage;
+  githubUsage?: GitHubUsage;
   viewer?: { login: string; teams: string[] | null; teamError?: string };
   cursor: number;
   inbox: Entry[];
@@ -179,11 +210,18 @@ export interface PublishedReview {
   body: string;
   head: string;
   submittedAt: string;
-  comments: {id: string; url: string; author: string; body: string; path: string; line?: number}[];
+  comments: {
+    id: string;
+    url: string;
+    author: string;
+    body: string;
+    path: string;
+    line?: number;
+  }[];
 }
 export interface PRReviews {
- refresh?: string;
- retryAt?: string;
+  refresh?: string;
+  retryAt?: string;
   itemId: string;
   reviews: PublishedReview[];
   syncedAt: string;
@@ -203,8 +241,13 @@ export interface EventPage {
   hasMore: boolean;
 }
 export interface Detail {
- observation?: {observedAt:string;refresh:string;error?:string;retryAt?:string};
- refreshError?: string;
+  observation?: {
+    observedAt: string;
+    refresh: string;
+    error?: string;
+    retryAt?: string;
+  };
+  refreshError?: string;
   item: Item;
   user: UserState;
   linkedPullRequests?: PullRequest[];
@@ -330,4 +373,21 @@ export interface ReportFreshness {
 export interface ReportPage {
   items: IssueReport[];
   nextCursor: string;
+}
+
+export interface ReviewPolicy {
+  enabled: boolean;
+  source: string;
+}
+export interface Reviewer {
+  id: string;
+  kind: "skill" | "command";
+  skillId?: string;
+  argv?: string[];
+}
+export interface ReviewReceipt {
+  id: string;
+  url: string;
+  head: string;
+  comments: number;
 }

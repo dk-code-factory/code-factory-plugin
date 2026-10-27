@@ -609,7 +609,8 @@
         "S3",
         "S4",
         "S5",
-        "S6"
+        "S6",
+        "S7"
       ],
       "implementation": [
         {
@@ -753,6 +754,14 @@
           "path": "internal/providers/github_usage.go",
           "anchor": "func SavedGitHubUsage(",
           "purpose": "Projection builds quota information from SQLite without provider effects."
+        },
+        {
+          "path": "internal/app/review_import.go",
+          "purpose": "Ordered reviewer settings, private rules, posting inheritance and one-time conflict-preserving import."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "purpose": "Ordered reviewer settings, private rules, posting inheritance and one-time conflict-preserving import."
         }
       ],
       "tests": [
@@ -1040,6 +1049,102 @@
             "S1"
           ],
           "purpose": "Saved credential-resolution notification feedback updates from its own invalidation bucket."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "review workflow settings preserve ordered bindings and inherited posting overrides",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Ordered binding persistence and inherited posting controls."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestOneTimeDKImportPreservesFactoryValuesAndReportsConflicts(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Import preservation, conflict feedback and once-only state."
+        },
+        {
+          "path": "internal/transport/review_workflow_test.go",
+          "anchor": "func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Omitted updates preserve values and null restores inheritance."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "saved review policy changes refresh an open PR without polling or starting work",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "A saved global posting-policy change refreshes the effective choice in an open PR through shared invalidations, without starting a run or posting a review."
+        },
+        {
+          "path": "internal/store/ui_journal_test.go",
+          "anchor": "TestUIJournalCommitsRollbackCASAndLegacyCursor",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "A saved PR posting-policy write publishes the owning item ID without stored policy payloads."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestOneTimeGlobalDKImportUsesUserRulesAndPreservesConflicts(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Supported global DK rule location, reviewer defaults, conflict/source preservation, Factory precedence and once-only import after original source removal."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestDirectCommandReviewerRetainsExecutablePackageAfterSourceRemoval(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Selected executable command bindings retain their supported package layout and sibling resources while excluding unrelated untracked owner files. Exact tracked sibling names with leading/trailing space and tab survive raw NUL inventory and are consumed by the retained command after source removal."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "global DK review import preserves unrelated edits made while settings are loading",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Delayed import replaces reported reviewer/rule fields while preserving concurrent unrelated draft edits through Save, with no start/post side effect."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestCommandCaptureRejectsOversizeSelectedExecutableAndPackage(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Oversized standalone/selected untracked executables and selected-plus-tracked package totals fail before unbounded retention."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "absent global reviewers retain invalid draft and validity through unrelated settings edits",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Unrelated renders preserve invalid reviewer draft/error/native validity when global reviewers are absent; invalid Save mutates nothing, while real import/inheritance reset still recovers."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "repository DK import discards stale results when switching editors during ${delay}",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Repository A import/snapshot delays cannot modify subsequently selected B draft or stale import status; Save retains B reviewers/rules/base, including320px layout."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a delayed policy save ${response} preserves a newer committed Off observation",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Delayed success and failure responses from an earlier On save cannot replace a newer committed Off policy observation or restore an obsolete error; exactly one save occurs and no start/post runs."
         }
       ],
       "suites": [
@@ -1084,7 +1189,12 @@
         "C-REPOSITORY-REVIEW-PROMPT",
         "W-GITHUB-USAGE",
         "C-GITHUB-USAGE",
-        "C-SKILL-LOAD"
+        "C-SKILL-LOAD",
+        "W-PR-REVIEW-POLICY",
+        "W-RETAINED-REVIEW",
+        "C-PR-POSTING-POLICY",
+        "C-REVIEW-PUBLISH",
+        "C-REVIEW-RECONCILE"
       ],
       "terms": [
         "repository",
@@ -1101,7 +1211,11 @@
         "repository-review-prompt",
         "github-request-budget",
         "github-request-reserve",
-        "github-review-notification"
+        "github-review-notification",
+        "review-workflow",
+        "review-artifact",
+        "review-posting-policy",
+        "review-publication-operation"
       ],
       "graph": {
         "start": "n0",
@@ -1157,6 +1271,16 @@
             "id": "github_budget",
             "label": "Save API request budget, reserve and review-notification interval; inspect cached usage",
             "scenario": "S6"
+          },
+          {
+            "id": "retained_s7",
+            "label": "Save ordered reviewers, private rules and posting inheritance",
+            "scenario": "S7"
+          },
+          {
+            "id": "retained_s7_outcome",
+            "label": "Settings retained with explicit conflicts and inheritance",
+            "terminal": true
           }
         ],
         "edges": [
@@ -1244,6 +1368,16 @@
             "from": "github_budget",
             "to": "n4",
             "label": "invalid limits"
+          },
+          {
+            "from": "n0",
+            "to": "retained_s7",
+            "label": "retained review workflow"
+          },
+          {
+            "from": "retained_s7",
+            "to": "retained_s7_outcome",
+            "label": "validate evidence and authority"
           }
         ]
       }
@@ -2039,6 +2173,14 @@
             "S1"
           ],
           "purpose": "Saved reads trigger no provider work; independent background monitoring starts without a view and persists failed observations while retaining saved item detail."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestAutomaticReviewUsesNewWorkflowAndNeverNativeFallback(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "An opted-in automatic request creates one retained review claim and records dependency rejection as blocked without evidence capture or a native-turn fallback."
         }
       ],
       "suites": [
@@ -3706,7 +3848,9 @@
         "S5",
         "S6",
         "S7",
-        "S8"
+        "S8",
+        "S9",
+        "S10"
       ],
       "implementation": [
         {
@@ -3921,6 +4065,82 @@
           "path": "internal/aiworkflows/workflows/task.yml",
           "anchor": "name:",
           "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/prreview/patch.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/artifacts.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/contracts.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/decisions.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/publication.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/git.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/workflow.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/preparation.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/evidence.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/engine.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/app/review_posting.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/providers/pr_review.go",
+          "purpose": "Retained review orchestration, pinned evidence, deterministic validation, checkpoints and guarded publication."
+        },
+        {
+          "path": "internal/prreview/testdata/parity.json",
+          "purpose": "Pinned upstream provenance and deterministic parity fixture inputs; no provider or network execution."
+        },
+        {
+          "path": "internal/prreview/testdata/generate.py",
+          "purpose": "Pinned upstream provenance and deterministic parity fixture inputs; no provider or network execution."
+        },
+        {
+          "path": "internal/prreview/testdata/review-result.schema.json",
+          "purpose": "Pinned upstream provenance and deterministic parity fixture inputs; no provider or network execution."
+        },
+        {
+          "path": "internal/prreview/testdata/LICENSE.dk-workflows",
+          "purpose": "Pinned upstream provenance and deterministic parity fixture inputs; no provider or network execution."
+        },
+        {
+          "path": "internal/prreview/dk_preparation.go",
+          "purpose": "Pinned DK v3 preparation envelope, compact engineering identities, exact local answers and portable parity fixture."
+        },
+        {
+          "path": "internal/prreview/testdata/preparation.json",
+          "purpose": "Pinned DK v3 preparation envelope, compact engineering identities, exact local answers and portable parity fixture."
         }
       ],
       "tests": [
@@ -4805,6 +5025,458 @@
             "S1"
           ],
           "purpose": "Status checks cannot apply acceptance from a pre-resync request to restored state."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestReviewerFailureRetentionCorrectionAndExplicitResume(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Failure retention, bounded correction and immutable checkpoint reuse."
+        },
+        {
+          "path": "internal/prreview/publication_test.go",
+          "anchor": "func TestUncertainPublicationOnlyReconciles(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Uncertain submissions reconcile without another mutation."
+        },
+        {
+          "path": "internal/providers/pr_review_test.go",
+          "anchor": "func TestReviewEvidenceCompleteInventoryDecisionsAndPagination(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Complete inventory, Decisions, linked scope and moved-head rejection."
+        },
+        {
+          "path": "internal/app/legacy_review_test.go",
+          "anchor": "func legacyReviewSnapshot(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Pre-migration fixtures preserve the original native-turn lifecycle."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestFreshReviewDependencyDiagnosticAndLaunchPolicySnapshot(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Fresh reviews retain policy and fail closed before execution."
+        },
+        {
+          "path": "internal/transport/review_workflow_test.go",
+          "anchor": "func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Presence-aware API settings, policy and engine diagnostics."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestRetainedReviewChildCompletionAndRestartReuse(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Parent completion and restart checkpoint reuse."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestExhaustionAndMalformedCorrectionsDoNotBecomeClean(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Exhaustion, provider failures and bounded corrections."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestAutomaticPostingRechecksConcurrentPolicyAndLaunchPrecedence(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Concurrent policy changes and launch precedence."
+        },
+        {
+          "path": "internal/prreview/publication_test.go",
+          "anchor": "func TestPublicationVerifiedReceiptAndDuplicatePrevention(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Receipt and duplicate prevention."
+        },
+        {
+          "path": "internal/prreview/publication_test.go",
+          "anchor": "func TestPostingSidesRangesOmissionsAndApprovalGuard(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Inline sides, ranges, omissions and approval guard."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "retained review explicit posting sends its artifact and displays the server receipt",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "User posting supplies artifact identity; server receipt follows a single explicit operation."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestIndependentMaterialDecisionGetsBoundedCorrectionAndDurableGate(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "An independently identified material contradiction receives one retained correction and a correlated durable question gate before reviewer execution."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestCommandReviewerPreservesPinnedHandoffAndStdinCorrection(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "A real retained command reads the exact pinned git-diff-v1 fields and patch, receives output/correction instructions on stdin, and observes bounded native attempt metadata."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestReviewerCannotChangeCapturedPreparationEvidence(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Mutating a captured preparation patch stops subsequent reviewers and retains an incomplete guard failure."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestEngineCapabilitiesRecognizeUpstreamGoActionsAndReportOnlyMissingContracts(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "The pinned SDK advertises registered Go actions; native admission reports only missing ordered iteration/durable waits, honors cancellation and never starts collection or model work."
+        },
+        {
+          "path": "internal/app/review_posting_concurrency_test.go",
+          "anchor": "func TestReviewPublicationProjectionPreservesNewerVerifiedReceipt(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "Delayed stale or empty-ID disabled results retain current verified/submitting/uncertain publication metadata; prepared/skipped and absent-operation disables preserve policy semantics without changing durable intent."
+        },
+        {
+          "path": "internal/app/review_posting_concurrency_test.go",
+          "anchor": "func TestReviewPublicationProjectionPreservesLatestLifecycle(",
+          "scenarios": [
+            "S8",
+            "S10"
+          ],
+          "purpose": "Delayed reconciliation preserves concurrent terminated/cleaned lifecycle and cancellation/execution/worktree fields, and leaves a retargeted operation and receipt intact."
+        },
+        {
+          "path": "internal/prreview/patch_test.go",
+          "anchor": "func TestPatchInventoryAcceptsGitPathsContainingHeaderDelimiter(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Real Git modifications, additions, deletion, mode-only, binary and rename patches preserve exact delimiter-containing inventories and pass evidence validation."
+        },
+        {
+          "path": "internal/prreview/patch_test.go",
+          "anchor": "func TestPatchRejectsUnsafeMalformedAndAmbiguousHeaders(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Unsafe source/destination paths, malformed quotes, ambiguous headers and conflicting marker/rename evidence fail closed."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestReviewCaptureRejectsRemoteHeadDriftWithUnchangedSavedItem(",
+          "scenarios": [
+            "S6",
+            "S8",
+            "S9"
+          ],
+          "purpose": "Remote evidence advances while saved item and accepted head remain unchanged; fresh start and explicit resume reject before preparation/reviewer/native work or a result artifact."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestDirectCommandReviewerRetainsExecutablePackageAfterSourceRemoval(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "A retained nested direct executable imports its sibling after the original package is removed, preserving selected entrypoint bytes and excluding untracked private files. Exact tracked sibling names with leading/trailing space and tab survive raw NUL inventory and are consumed by the retained command after source removal."
+        },
+        {
+          "path": "internal/prreview/patch_test.go",
+          "anchor": "func TestPatchRejectsUnsafeAndConflictingRenameSources(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Unsafe, header/marker-conflicting and repeated inconsistent rename-source metadata reject, while real quoted/binary/mode-changing renames retain complete evidence."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestPinnedParitySourceIdentityGuard(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Offline fixtures accept pristine pinned source identity and reject stale revision, hash mismatch, validator/dependency modifications, untracked modules and ignored bytecode before optional Python execution."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestRetainedReviewRevalidatesSourceLifecycleBeforeWork(",
+          "scenarios": [
+            "S8",
+            "S9"
+          ],
+          "purpose": "Fresh and resumed retained starts freshly verify lifecycle despite warm open cache and unchanged head; closed/merged sources terminate, unavailable/unknown sources fail before capture/preparation/reviewer work while Start remains asynchronous."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestCommandCaptureRejectsOversizeSelectedExecutableAndPackage(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Oversized standalone/selected untracked executables and selected-plus-tracked package totals fail before unbounded retention."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestCommandCaptureHonorsExactPackageBoundaryAndBoundedReads(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Exactly32MiB shared selected/sibling capture succeeds; growth reads stop at remaining budget plus one sentinel and stat rejects oversize before retaining bytes."
+        },
+        {
+          "path": "internal/prreview/contracts_test.go",
+          "anchor": "func TestResponseRequiresExactSchemaMemberNames(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Exact root/status/reason and nested finding member case is required by pinned reviewer schema."
+        },
+        {
+          "path": "internal/prreview/contracts_test.go",
+          "anchor": "func TestResponseStillRejectsAmbiguousAndMalformedSchema(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Duplicate, unknown, null, incomplete and invalid response fields remain rejected without clean completion."
+        },
+        {
+          "path": "internal/prreview/contracts_test.go",
+          "anchor": "func TestMixedCaseReviewerOutputGetsOneCorrection(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Mixed-case reviewer output receives one correction; valid correction completes and repeated malformed output remains incomplete."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestReviewTerminationCancelsConcurrentStartAndResume(",
+          "scenarios": [
+            "S8",
+            "S9"
+          ],
+          "purpose": "Stop cancels both pre-lock lifetime and replacement Start/Resume lifetime without overlap/data race, preserving independent native termination unblocking."
+        },
+        {
+          "path": "internal/prreview/preparation_materiality_test.go",
+          "anchor": "func TestDecodeAnalysisRejectsSchemaMemberAliases(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Exact pinned analysis member names are required across root, dimensions, conclusions, strategy, questions and options."
+        },
+        {
+          "path": "internal/prreview/preparation_materiality_test.go",
+          "anchor": "func TestDecodeAnalysisRequiresExplicitBooleans(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Every boundary, placement and question materiality and synchronization field requires explicit true/false; missing/null values reject."
+        },
+        {
+          "path": "internal/prreview/preparation_materiality_test.go",
+          "anchor": "func TestDecodeAnalysisRejectsAliasedCollectionsWithOmittedMateriality(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Uppercase collection aliases cannot skip required materiality validation."
+        },
+        {
+          "path": "internal/prreview/preparation_materiality_test.go",
+          "anchor": "func TestDecodeAnalysisPreservesStrictJSONAndReadiness(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Duplicate/trailing/unknown/malformed JSON rejection and material proposal/question readiness remain intact."
+        },
+        {
+          "path": "internal/prreview/preparation_materiality_test.go",
+          "anchor": "func TestAnalysisMaterialityCorrectionCannotBypassDecisionGate(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Aliased/missing-materiality preparation receives one correction and cannot become clean without the independent material decision gate."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "launch posting inheritance stays unresolved on policy failure and retries without losing explicit overrides",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "GlobalOn/repositoryOff launch inheritance stays unresolved during loading/failure, exposes error/retry, recovers authoritativeOff and preserves explicit override without starting work."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestAutomaticReviewUsesNewWorkflowAndNeverNativeFallback(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Automatic requests retain the new review contract and a blocked claim when the native adapter lacks required capabilities; no evidence capture, native thread or forged publication is created."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartResumesCompletedPublicationTail(",
+          "scenarios": [
+            "S9",
+            "S10"
+          ],
+          "purpose": "A restart after publication failure resumes the completed review tail, retains one result and preparation, and submits exactly once with its verified receipt."
+        },
+        {
+          "path": "internal/prreview/publication_test.go",
+          "anchor": "func TestPostingEmptyCommentAndExplicitApproval(",
+          "scenarios": [
+            "S10"
+          ],
+          "purpose": "An empty default COMMENT skips all mutation; a subsequent explicitly selected APPROVE can submit once and retain a verified receipt."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestFinishedReviewRecoversValidatedResultWithoutReplay(",
+          "scenarios": [
+            "S9",
+            "S10"
+          ],
+          "purpose": "A finished saved result is returned unchanged without callbacks, session saves or reviewer replay; remote, binding, instructions, artifact, identity and checkout drift reject before reuse."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartFinalizesSavedFinishedSessionWithoutReplay(",
+          "scenarios": [
+            "S9",
+            "S10"
+          ],
+          "purpose": "A lost parent finalization after saved completion survives manager restart and explicit Resume with the same artifact, one preparation/result and no automatic publication despite later enabled policy; the recovered artifact remains explicitly postable."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestCommandCaptureRejectsNonregularPackageResources(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Non-Git package.json/pyproject.toml reviewer packages retain regular bytes, entrypoint and modes; FIFO siblings reject within a bounded subprocess instead of blocking capture."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestCheckoutValidatesTrackedBytesAndModesDespiteIndexFlags(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Committed tracked bytes and owner-execute mode are verified despite assume-unchanged/skip-worktree; unchanged files and other-execute-only changes remain valid while missing, substituted symlink and FIFO files reject without blocking."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestHiddenCheckoutEditsStopReviewersAndCheckpointReuse(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Hidden tracked edits stop a subsequent reviewer and reject completed checkpoint reuse with no additional worker calls."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestCheckoutValidationHonorsCancellation(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "An already cancelled checkout validation returns context.Canceled."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestCheckoutValidatesCommittedSymlinkBytesWithoutFollowing(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Committed symlink target bytes are validated without following a missing target; target substitution or replacement by a regular file rejects."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestCheckoutBlobObjectFormatsAndExecutableFiles(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Unchanged binary executable blobs validate in SHA-1 and SHA-256 repositories, and hidden removal of owner-execute mode rejects."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestCheckoutPreservesGitlinkDirectoryBoundary(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Clean initialized and uninitialized gitlink directories retain the existing nonrecursive validation boundary."
+        },
+        {
+          "path": "internal/prreview/patch_test.go",
+          "anchor": "func TestPatchRejectsConflictingRepeatedRenameDestinations(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Conflicting repeated rename destinations reject even if a later record restores the header name; identical repeated source/destination metadata remains valid."
+        },
+        {
+          "path": "internal/prreview/publication_test.go",
+          "anchor": "func TestCurrentEvidenceAllowsOnlyExactDurablePublicationDelta(",
+          "scenarios": [
+            "S9",
+            "S10"
+          ],
+          "purpose": "Current evidence validation accepts only the exact submitted review matching durable approved payload, identity and receipt; external/ambiguous/edited reviews, changed body/head, altered authority and unsubmitted intents reject."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartAcceptsOwnPublicationInCurrentScope(",
+          "scenarios": [
+            "S9",
+            "S10"
+          ],
+          "purpose": "Real GitCollector scope validation accepts the workflow own submitted review after finished, uncertain-tail or submitting-tail restart, preserving one artifact and one mutation; the private artifact retains full findings while the saved run carries only its truthful count."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestCompletionRequiresAssessmentAndSavedArtifactBinding(",
+          "scenarios": [
+            "S9"
+          ],
+          "purpose": "Aggregate save/cancellation, engineering assessment/retention, result retention corruption and result binding-save faults remain incomplete, cannot promote an older incomplete artifact and allow a later retry to reuse reviewer checkpoints."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestCompletionNotificationFailurePreservesSavedArtifact(",
+          "scenarios": [
+            "S9",
+            "S10"
+          ],
+          "purpose": "A progress failure after durable result binding preserves validated complete state and a valid artifact; retry does not repeat engineering assessment or reviewers."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartDoesNotPromoteOlderArtifactBeforeEngineeringCompletion(",
+          "scenarios": [
+            "S9",
+            "S10"
+          ],
+          "purpose": "A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact."
         }
       ],
       "suites": [
@@ -4876,7 +5548,12 @@
         "C-REVIEW-POLICY",
         "C-REPOSITORY-REVIEW-PROMPT",
         "W-WORK-STATUS",
-        "W-SESSION-CONSOLE"
+        "W-SESSION-CONSOLE",
+        "W-PR-REVIEW-POLICY",
+        "W-RETAINED-REVIEW",
+        "C-PR-POSTING-POLICY",
+        "C-REVIEW-PUBLISH",
+        "C-REVIEW-RECONCILE"
       ],
       "terms": [
         "prepared-launch",
@@ -4893,7 +5570,11 @@
         "review-request-claim",
         "repository-review-prompt",
         "state-terminated",
-        "state-deferred"
+        "state-deferred",
+        "review-workflow",
+        "review-artifact",
+        "review-posting-policy",
+        "review-publication-operation"
       ],
       "graph": {
         "start": "draft",
@@ -4985,6 +5666,49 @@
             "id": "deferred_review_launch",
             "label": "Retain accepted launch, reason and retry deadline; show Waiting for GitHub",
             "scenario": "S8"
+          },
+          {
+            "id": "retained_s9",
+            "label": "Review pinned evidence through ordered reviewers",
+            "scenario": "S9"
+          },
+          {
+            "id": "retained_s9_outcome",
+            "label": "Completed accountable review retained",
+            "terminal": true
+          },
+          {
+            "id": "retained_s10",
+            "label": "Evaluate current posting authority",
+            "scenario": "S10"
+          },
+          {
+            "id": "retained_s10_outcome",
+            "label": "Verified inline review receipt retained",
+            "terminal": true
+          },
+          {
+            "id": "review_material_gate",
+            "label": "Suspend for a material question"
+          },
+          {
+            "id": "review_blocked",
+            "label": "Configuration, engine, evidence guard or provider failure remains explicit",
+            "terminal": true
+          },
+          {
+            "id": "review_post_skipped",
+            "label": "Posting disabled, empty or incomplete; retain the local result",
+            "terminal": true
+          },
+          {
+            "id": "review_post_uncertain",
+            "label": "Retain uncertain submission and reconcile without another mutation"
+          },
+          {
+            "id": "review_post_unresolved",
+            "label": "No unique complete receipt; keep uncertainty visible",
+            "terminal": true
           }
         ],
         "edges": [
@@ -5155,6 +5879,61 @@
             "from": "deferred_review_launch",
             "to": "retained",
             "label": "explicit cancellation; no agent launch"
+          },
+          {
+            "from": "draft",
+            "to": "retained_s9",
+            "label": "retained review workflow"
+          },
+          {
+            "from": "retained_s9",
+            "to": "retained_s9_outcome",
+            "label": "validate evidence and authority"
+          },
+          {
+            "from": "draft",
+            "to": "retained_s10",
+            "label": "retained review workflow"
+          },
+          {
+            "from": "retained_s10",
+            "to": "retained_s10_outcome",
+            "label": "validate evidence and authority"
+          },
+          {
+            "from": "retained_s9",
+            "to": "review_material_gate",
+            "label": "material contradiction"
+          },
+          {
+            "from": "review_material_gate",
+            "to": "retained_s9",
+            "label": "correlated answer and fresh validation"
+          },
+          {
+            "from": "retained_s9",
+            "to": "review_blocked",
+            "label": "missing dependency, changed source or unresolved failure"
+          },
+          {
+            "from": "retained_s10",
+            "to": "review_post_skipped",
+            "label": "policy disabled, empty COMMENT or incomplete review"
+          },
+          {
+            "from": "retained_s10",
+            "to": "review_post_uncertain",
+            "label": "submission not confirmed"
+          },
+          {
+            "from": "review_post_uncertain",
+            "to": "retained_s10_outcome",
+            "label": "unique complete submitted match"
+          },
+          {
+            "from": "review_post_uncertain",
+            "to": "review_post_unresolved",
+            "label": "ambiguous or incomplete observation"
           }
         ]
       }
@@ -5170,7 +5949,8 @@
         "S4",
         "S5",
         "S6",
-        "S7"
+        "S7",
+        "S8"
       ],
       "implementation": [
         {
@@ -5361,6 +6141,11 @@
           "path": "internal/aiworkflows/workflows/task.yml",
           "anchor": "name:",
           "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (m *Manager) queueReviewContinuation(",
+          "purpose": "Retained review continuation uses existing message controls without altering governing scope or overlapping an old worker."
         }
       ],
       "tests": [
@@ -5920,6 +6705,30 @@
             "S1"
           ],
           "purpose": "A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewInterruptResumeJoinsOldExecution(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Immediate Resume rejects until the old worker stops; new scope cannot reuse prior review, while a continue message resumes completed checkpoints."
+        },
+        {
+          "path": "internal/app/review_workflow_guards_test.go",
+          "anchor": "func TestReviewTerminationCancelsConcurrentStartAndResume(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Concurrent retained Start/Resume and termination cancels the replacement execution while preserving pre-lock cancellation of old work."
+        },
+        {
+          "path": "internal/app/review_maintenance_test.go",
+          "anchor": "func TestRetainedReviewContinuationHonorsPluginMaintenance(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Continue/resume with fixture and production adapters refuses the held exclusive maintenance gate without changing runs, sessions, messages or work counters; after release capability and stale-turn checks remain and valid continuation reuses its completed checkpoint."
         }
       ],
       "suites": [
@@ -5955,7 +6764,8 @@
         "C-BACK",
         "W-WORK-STATUS",
         "W-QUESTION-RECOVERY",
-        "W-SESSION-CONSOLE"
+        "W-SESSION-CONSOLE",
+        "W-RETAINED-REVIEW"
       ],
       "terms": [
         "agent-run",
@@ -5967,7 +6777,8 @@
         "question-recovery",
         "session-console",
         "state-terminated",
-        "state-deferred"
+        "state-deferred",
+        "review-workflow"
       ],
       "graph": {
         "start": "n0",
@@ -6047,6 +6858,21 @@
             "id": "reconcile_attention",
             "label": "Reconcile acknowledged same-run decisions; preserve partial, uncertain and other-run asks",
             "scenario": "S6"
+          },
+          {
+            "id": "retained_review_continue",
+            "label": "Continue an interrupted retained review through its existing control",
+            "scenario": "S8"
+          },
+          {
+            "id": "retained_review_scope",
+            "label": "Changed engineering instructions require a fresh prepared review",
+            "terminal": true
+          },
+          {
+            "id": "retained_review_resumed",
+            "label": "Previous execution stopped; valid completed work reused",
+            "terminal": true
           }
         ],
         "edges": [
@@ -6164,6 +6990,21 @@
             "from": "reconcile_attention",
             "to": "n6",
             "label": "only settled questions leave actionable attention"
+          },
+          {
+            "from": "n0",
+            "to": "retained_review_continue",
+            "label": "retained review workflow"
+          },
+          {
+            "from": "retained_review_continue",
+            "to": "retained_review_resumed",
+            "label": "continue or resume after execution stops"
+          },
+          {
+            "from": "retained_review_continue",
+            "to": "retained_review_scope",
+            "label": "new engineering instruction"
           }
         ]
       }
@@ -6177,7 +7018,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -7090,6 +7932,38 @@
             "S1"
           ],
           "purpose": "The cached opening indication follows saved queue ownership/status eligibility instead of counting all raw pending records."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestRetainedReviewQuestionsSurviveRestartAndAnswerOnce(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Durable attention and duplicate rejection."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestDurableMaterialWaitAnswersAndRestart(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Stale/duplicate answers and suspended execution."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewAnswerRejectsChangedRemoteEvidenceBeforeClaim(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Changed remote evidence rejects a material answer as stale while leaving its retained attention pending and unclaimed."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewAnswerDoesNotClaimAcrossConcurrentRuleChange(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A governing rule change during remote answer validation rejects the answer before claiming its pending attention."
         }
       ],
       "suites": [
@@ -7149,7 +8023,12 @@
         "C-GLOBAL-ATTENTION",
         "W-QUESTION-RECOVERY",
         "W-SESSION-CONSOLE",
-        "C-DISMISS-QUESTION"
+        "C-DISMISS-QUESTION",
+        "W-PR-REVIEW-POLICY",
+        "W-RETAINED-REVIEW",
+        "C-PR-POSTING-POLICY",
+        "C-REVIEW-PUBLISH",
+        "C-REVIEW-RECONCILE"
       ],
       "terms": [
         "attention-request",
@@ -7162,7 +8041,11 @@
         "modal-dialog",
         "question-recovery",
         "session-console",
-        "state-terminated"
+        "state-terminated",
+        "review-workflow",
+        "review-artifact",
+        "review-posting-policy",
+        "review-publication-operation"
       ],
       "graph": {
         "start": "n0",
@@ -7267,6 +8150,16 @@
           {
             "id": "recheck",
             "label": "Recheck ambiguous legacy text at startup and after later successful turns"
+          },
+          {
+            "id": "retained_s6",
+            "label": "Wait for a correlated material review decision",
+            "scenario": "S6"
+          },
+          {
+            "id": "retained_s6_outcome",
+            "label": "Answer claimed once and dependent review resumed",
+            "terminal": true
           }
         ],
         "edges": [
@@ -7469,6 +8362,16 @@
             "from": "recheck",
             "to": "clarify",
             "label": "classification failure"
+          },
+          {
+            "from": "n0",
+            "to": "retained_s6",
+            "label": "retained review workflow"
+          },
+          {
+            "from": "retained_s6",
+            "to": "retained_s6_outcome",
+            "label": "validate evidence and authority"
           }
         ]
       }
@@ -7483,7 +8386,8 @@
         "S3",
         "S4",
         "S5",
-        "S6"
+        "S6",
+        "S7"
       ],
       "implementation": [
         {
@@ -7620,6 +8524,21 @@
           "path": "internal/aiworkflows/workflows/task.yml",
           "anchor": "name:",
           "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/prreview/workflow.go",
+          "anchor": "func (w *Workflow) resumePublication(",
+          "purpose": "Validate a completed retained artifact and governing identity, then recover saved finished completion without reopening posting policy or replaying publication."
+        },
+        {
+          "path": "internal/prreview/evidence.go",
+          "anchor": "func (e Evidence) ValidateCheckout(",
+          "purpose": "Validate actual committed tracked bytes/types/owner-execute modes independently of index flags before retained review recovery and checkpoint reuse."
+        },
+        {
+          "path": "internal/prreview/git.go",
+          "anchor": "func (g GitCollector) ValidateCurrentAfterPublication(",
+          "purpose": "Recognize only the exact submitted review proven by its durable approved publication intent while retaining current governing evidence validation during recovery."
         }
       ],
       "tests": [
@@ -8456,6 +9375,110 @@
             "S1"
           ],
           "purpose": "A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestGuardFailuresStopLaterReviewersAndResume(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Checkout, source, package and checkpoint changes block reuse."
+        },
+        {
+          "path": "internal/prreview/publication_test.go",
+          "anchor": "func TestUncertainPublicationOnlyReconciles(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Lost responses and durable-intent recovery never resubmit."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartResumesCompletedPublicationTail(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Explicit restart recovery resumes a completed review publication tail without rerunning preparation or producing duplicate review results or submissions."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestFinishedReviewRecoversValidatedResultWithoutReplay(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "A finished saved result is returned unchanged without callbacks, session saves or reviewer replay; remote, binding, instructions, artifact, identity and checkout drift reject before reuse."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartFinalizesSavedFinishedSessionWithoutReplay(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "A lost parent finalization after saved completion survives manager restart and explicit Resume with the same artifact, one preparation/result and no automatic publication despite later enabled policy; the recovered artifact remains explicitly postable."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestCheckoutValidatesTrackedBytesAndModesDespiteIndexFlags(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Committed tracked bytes and owner-execute mode are verified despite assume-unchanged/skip-worktree; unchanged files and other-execute-only changes remain valid while missing, substituted symlink and FIFO files reject without blocking."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestHiddenCheckoutEditsStopReviewersAndCheckpointReuse(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Hidden tracked edits stop a subsequent reviewer and reject completed checkpoint reuse with no additional worker calls."
+        },
+        {
+          "path": "internal/prreview/evidence_integrity_test.go",
+          "anchor": "func TestCheckoutValidationHonorsCancellation(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "An already cancelled checkout validation returns context.Canceled."
+        },
+        {
+          "path": "internal/prreview/publication_test.go",
+          "anchor": "func TestCurrentEvidenceAllowsOnlyExactDurablePublicationDelta(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Current evidence validation accepts only the exact submitted review matching durable approved payload, identity and receipt; external/ambiguous/edited reviews, changed body/head, altered authority and unsubmitted intents reject."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartAcceptsOwnPublicationInCurrentScope(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Real GitCollector scope validation accepts the workflow own submitted review after finished, uncertain-tail or submitting-tail restart, preserving one artifact and one mutation; the private artifact retains full findings while the saved run carries only its truthful count."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestCompletionRequiresAssessmentAndSavedArtifactBinding(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Aggregate save/cancellation, engineering assessment/retention, result retention corruption and result binding-save faults remain incomplete, cannot promote an older incomplete artifact and allow a later retry to reuse reviewer checkpoints."
+        },
+        {
+          "path": "internal/prreview/workflow_test.go",
+          "anchor": "func TestCompletionNotificationFailurePreservesSavedArtifact(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "A progress failure after durable result binding preserves validated complete state and a valid artifact; retry does not repeat engineering assessment or reviewers."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartDoesNotPromoteOlderArtifactBeforeEngineeringCompletion(",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact."
         }
       ],
       "suites": [
@@ -8505,7 +9528,12 @@
         "PAGE-AGENT",
         "W-WORK-STATUS",
         "W-QUESTION-RECOVERY",
-        "W-SESSION-CONSOLE"
+        "W-SESSION-CONSOLE",
+        "W-PR-REVIEW-POLICY",
+        "W-RETAINED-REVIEW",
+        "C-PR-POSTING-POLICY",
+        "C-REVIEW-PUBLISH",
+        "C-REVIEW-RECONCILE"
       ],
       "terms": [
         "agent-run",
@@ -8517,7 +9545,11 @@
         "question-recovery",
         "session-console",
         "state-terminated",
-        "state-deferred"
+        "state-deferred",
+        "review-workflow",
+        "review-artifact",
+        "review-posting-policy",
+        "review-publication-operation"
       ],
       "graph": {
         "start": "n0",
@@ -8613,6 +9645,16 @@
             "id": "deferred_review_launch",
             "label": "Restore deferred pre-agent launch and honor its retained retry deadline",
             "scenario": "S1"
+          },
+          {
+            "id": "retained_s7",
+            "label": "Validate interrupted review evidence and execution identity",
+            "scenario": "S7"
+          },
+          {
+            "id": "retained_s7_outcome",
+            "label": "Reuse completed checkpoints or retain explicit blocked state",
+            "terminal": true
           }
         ],
         "edges": [
@@ -8750,6 +9792,16 @@
             "from": "deferred_review_launch",
             "to": "startup_unchanged",
             "label": "interrupt cancels retry even without attached session"
+          },
+          {
+            "from": "n0",
+            "to": "retained_s7",
+            "label": "retained review workflow"
+          },
+          {
+            "from": "retained_s7",
+            "to": "retained_s7_outcome",
+            "label": "validate evidence and authority"
           }
         ]
       }
@@ -8765,7 +9817,8 @@
         "S4",
         "S5",
         "S6",
-        "S7"
+        "S7",
+        "S8"
       ],
       "implementation": [
         {
@@ -8960,6 +10013,21 @@
           "path": "web/playwright.performance.config.ts",
           "anchor": "workers: 1",
           "purpose": "Isolated one-worker, zero-retry production performance verification."
+        },
+        {
+          "path": "internal/app/tracking.go",
+          "anchor": "func runSummary(",
+          "purpose": "Saved current and retained run summaries include workflow stage, completeness, prepared posting authority, failures/skips and the owning publication receipt."
+        },
+        {
+          "path": "internal/store/reads.go",
+          "anchor": "func Runs(",
+          "purpose": "Count and remove historical finding bodies in SQLite before broad run/status decoding while preserving truthful review accounting and original rows."
+        },
+        {
+          "path": "internal/store/store.go",
+          "anchor": "func ListWithout[T any](",
+          "purpose": "Apply kind-aware run-result compaction inside SQLite on the actual InboxSummaries/projectWork and queue-tracking facade, including calls without additional omitted fields."
         }
       ],
       "tests": [
@@ -9543,6 +10611,107 @@
             "S3"
           ],
           "purpose": "A saved review observation completion clears pending status on observation-only invalidation even when the review record version is unchanged."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "retained review progress exposes incomplete providers and reconciles a verified receipt without reposting",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Visible failures, omissions and a verified receipt without reposting."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "saved review policy changes refresh an open PR without polling or starting work",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "A saved global posting-policy change refreshes the effective choice in an open PR through shared invalidations, without starting a run or posting a review."
+        },
+        {
+          "path": "internal/store/ui_journal_test.go",
+          "anchor": "TestUIJournalCommitsRollbackCASAndLegacyCursor",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "A saved PR posting-policy write publishes the owning item ID without stored policy payloads."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestTrackingExposesRetainedReviewCompletenessAndOwnReceipt(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Saved conversational tracking exposes the exact retained run review completeness, posting state and its own verified receipt without a live provider."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartFinalizesSavedFinishedSessionWithoutReplay(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "A lost parent finalization after saved completion survives manager restart and explicit Resume with the same artifact, one preparation/result and no automatic publication despite later enabled policy; the recovered artifact remains explicitly postable."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartAcceptsOwnPublicationInCurrentScope(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Real GitCollector scope validation accepts the workflow own submitted review after finished, uncertain-tail or submitting-tail restart, preserving one artifact and one mutation; the private artifact retains full findings while the saved run carries only its truthful count."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestRunProjectionCountsLegacyFindingsBeforeDecoding(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "For 100 legacy runs with 20 large findings each, runProjectionProbe.UnmarshalJSON inspects bytes from actual ListWithout and Select calls before domain conversion, proving no finding bodies cross those SQL facades and total transfer stays within 256 KiB; counts/status/skips and known-zero versus unknown survive, and original rows remain unchanged."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "func TestTrackingKeepsHistoricalReviewFindingsCompact(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Actual InboxSummaries/projectWork and queue TrackWork preserve all 100 run IDs/statuses before item/run tracking checks truthful counts/skips, bounded 32 KiB output and absent historical finding prose."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "func TestInitialUIProjectionKeepsHistoricalReviewFindingsCompact(",
+          "scenarios": [
+            "S1",
+            "S8"
+          ],
+          "purpose": "An actual tracked-item initial inbox build preserves all 100 run IDs/statuses; shell/messages output retains truthful counts under 256 KiB without historical finding arrays or prose. Intermediate transfer exclusion is established separately by the raw ListWithout/Select probe."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a delayed policy save ${response} preserves a newer committed Off observation",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "Delayed success and failure responses from an earlier On save cannot replace a newer committed Off policy observation or restore an obsolete error; exactly one save occurs and no start/post runs."
+        },
+        {
+          "path": "internal/app/retained_review_test.go",
+          "anchor": "func TestReviewRestartDoesNotPromoteOlderArtifactBeforeEngineeringCompletion(",
+          "scenarios": [
+            "S8"
+          ],
+          "purpose": "A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact."
+        },
+        {
+          "path": "internal/store/progress_test.go",
+          "anchor": "func TestListWithoutKeepsOtherKindsAndPrivateReadsUnchanged(",
+          "scenarios": [
+            "S6",
+            "S8"
+          ],
+          "purpose": "Run-only summary compaction leaves item/linked-PR omission behavior and original private run List reads unchanged."
         }
       ],
       "suites": [
@@ -9618,7 +10787,12 @@
         "C-OPEN-SETTINGS",
         "W-SESSION-CONSOLE",
         "C-SESSION-CONSOLE",
-        "W-PR-EVIDENCE"
+        "W-PR-EVIDENCE",
+        "W-PR-REVIEW-POLICY",
+        "W-RETAINED-REVIEW",
+        "C-PR-POSTING-POLICY",
+        "C-REVIEW-PUBLISH",
+        "C-REVIEW-RECONCILE"
       ],
       "terms": [
         "host",
@@ -9631,7 +10805,11 @@
         "published-review",
         "direct-launch",
         "ui-projection",
-        "ui-change-cursor"
+        "ui-change-cursor",
+        "review-workflow",
+        "review-artifact",
+        "review-posting-policy",
+        "review-publication-operation"
       ],
       "graph": {
         "start": "n0",
@@ -9692,6 +10870,16 @@
             "id": "browse_history",
             "label": "Inspect an older retained history window without advancing on background updates",
             "scenario": "S2"
+          },
+          {
+            "id": "retained_s8",
+            "label": "Inspect review completeness, failures, omissions and posting state",
+            "scenario": "S8"
+          },
+          {
+            "id": "retained_s8_outcome",
+            "label": "Observe a verified receipt without reposting",
+            "terminal": true
           }
         ],
         "edges": [
@@ -9793,6 +10981,16 @@
             "from": "browse_history",
             "to": "n2",
             "label": "Follow latest history"
+          },
+          {
+            "from": "n0",
+            "to": "retained_s8",
+            "label": "retained review workflow"
+          },
+          {
+            "from": "retained_s8",
+            "to": "retained_s8_outcome",
+            "label": "validate evidence and authority"
           }
         ]
       }
@@ -11117,6 +12315,11 @@
           "path": "internal/transport/api_log_parameters.go",
           "anchor": "func privateAPIParameter(",
           "purpose": "Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence."
+        },
+        {
+          "path": "internal/app/messages.go",
+          "anchor": "func (m *Manager) QueueMessage(",
+          "purpose": "Retained review continuation honors the existing exclusive plugin/dependency maintenance gate before accepting work."
         }
       ],
       "tests": [
@@ -11497,6 +12700,14 @@
             "S5"
           ],
           "purpose": "Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup."
+        },
+        {
+          "path": "internal/app/review_maintenance_test.go",
+          "anchor": "func TestRetainedReviewContinuationHonorsPluginMaintenance(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Continue/resume with fixture and production adapters refuses the held exclusive maintenance gate without changing runs, sessions, messages or work counters; after release capability and stale-turn checks remain and valid continuation reuses its completed checkpoint."
         }
       ],
       "suites": [
