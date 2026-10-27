@@ -195,6 +195,7 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S2. Late diagnostic uses a generic message and originating identities without prompt, answer or provider-error content.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(`; S2. Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics.
 - [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIProjectionExcludesPrivateSourceSkillFilesAndCredentials`; S1. Messages/settings public projections contain no source snapshot, skill files/content or saved owner credential markers.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIManagedSkillEditorReadsOnlySelectedContent`; S1. Only the selected authorized managed content is returned; broad lists and all editor reads omit private files/unrelated bodies.
 
 ## Verification and gaps
 

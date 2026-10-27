@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { call } from "./bridge";
 import { PluginAdmin, RepositoryAdmin, SystemReviewSettings } from "./admin";
-import type { Config, Profile, Snapshot } from "./types";
+import type { Config, Profile, Snapshot, Skill } from "./types";
 type Action = (
   name: string,
   args?: Record<string, unknown>,
@@ -10,9 +10,11 @@ type Action = (
 function SaveForm({
   save,
   children,
+  disabled = false,
 }: {
   save: () => Promise<void>;
   children: React.ReactNode;
+  disabled?: boolean;
 }) {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -21,7 +23,7 @@ function SaveForm({
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        if (busy) return;
+        if (busy || disabled) return;
         setBusy(true);
         setStatus("Saving…");
         setError("");
@@ -36,7 +38,7 @@ function SaveForm({
         }
       }}
     >
-      <fieldset className="form-fields" disabled={busy}>
+      <fieldset className="form-fields" disabled={busy || disabled}>
         {children}
       </fieldset>
       {status && <p role="status">{status}</p>}
@@ -70,9 +72,41 @@ export default function Settings({
   const [profile, setProfile] = useState<Profile>(snap.profiles[0]);
   const [skillDirectory, setSkillDirectory] = useState("/");
   const [skillName, setSkillName] = useState("");
+  const [selectedSkill, setSelectedSkill] = useState("");
+  const [skillLoading, setSkillLoading] = useState(false);
+  const [skillError, setSkillError] = useState("");
+  const skillRequest = useRef(0);
   const [skillContent, setSkillContent] = useState(
     "---\nname: my-skill\ndescription: Explain when this skill applies.\n---\n\n",
   );
+  async function loadSkill(id: string) {
+    const generation = ++skillRequest.current;
+    setSelectedSkill(id);
+    setSkillError("");
+    if (!id) {
+      setSkillName("");
+      setSkillContent(
+        "---\nname: my-skill\ndescription: Explain when this skill applies.\n---\n\n",
+      );
+      setSkillLoading(false);
+      return;
+    }
+    setSkillLoading(true);
+    try {
+      const { skill } = await call<{ skill: Skill }>("read_ui_state", {
+        views: ["skill"],
+        id,
+      });
+      if (generation !== skillRequest.current) return;
+      setSkillName(skill.name);
+      setSkillContent(skill.content);
+    } catch (error) {
+      if (generation === skillRequest.current)
+        setSkillError("Could not load skill: " + String(error));
+    } finally {
+      if (generation === skillRequest.current) setSkillLoading(false);
+    }
+  }
   const [diagnostics, setDiagnostics] =
     useState<import("./types").Diagnostics>();
   const [diagnosticState, setDiagnosticState] = useState("");
@@ -377,13 +411,8 @@ export default function Settings({
         <summary>Managed skills</summary>
         <select
           aria-label="Edit managed skill"
-          onChange={(e) => {
-            const s = snap.skills.find((s) => s.id === e.target.value);
-            if (s) {
-              setSkillName(s.name);
-              setSkillContent(s.content);
-            }
-          }}
+          value={selectedSkill}
+          onChange={(e) => void loadSkill(e.target.value)}
         >
           <option value="">Create a skill</option>
           {snap.skills
@@ -394,7 +423,18 @@ export default function Settings({
               </option>
             ))}
         </select>
+        {selectedSkill && (
+          <button
+            disabled={skillLoading}
+            onClick={() => void loadSkill(selectedSkill)}
+          >
+            Reload selected skill
+          </button>
+        )}
+        {skillLoading && <p role="status">Loading managed skill…</p>}
+        {skillError && <p role="alert">{skillError}</p>}
         <SaveForm
+          disabled={skillLoading || Boolean(skillError)}
           save={() =>
             save("save_skill", { name: skillName, content: skillContent })
           }
@@ -411,6 +451,7 @@ export default function Settings({
           <label>
             Skill instructions
             <textarea
+              aria-label="Skill instructions"
               value={skillContent}
               onChange={(e) => setSkillContent(e.target.value)}
               rows={10}

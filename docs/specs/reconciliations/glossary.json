@@ -2,13 +2,13 @@
   "version": 1,
   "flow": "glossary",
   "base": "9135daf735e0679080343dc12a52b0bb23f83098",
-  "fingerprint": "8cad5cf649efcb4850845497447e723836f076d5076db052508dc52149e02e0c",
+  "fingerprint": "68c1f3393856fc1701adcd709824cdd5663d7ee1a8c1058fa4c2f7f20dda2b25",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "terminology",
-    "description": "Added direct-launch, ui-projection and ui-change-cursor meanings plus scoped previous/next/total query elements. Existing canonical names, aliases, IDs and dependency direction remain intact.",
+    "description": "Added direct-launch, ui-projection and ui-change-cursor meanings plus scoped previous/next/total query elements. Existing canonical names, aliases, IDs and dependency direction remain intact. Added two scoped history controls without changing existing meanings or cross-layer ownership. Added scoped managed-editor loading/reload terms and the selected-skill load connection without backlinks or consumer behavior in definitions.",
     "implementation": "Inspected new references in shell, query and state-refresh entities. Definitions contain meaning only; registries and implementation retain their own behavior and endpoint ownership.",
     "tests": "Schema/render validation checks unique scoped names and known references; foundation suites remain required and no fixture claim closes installed-host gaps."
   },
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.265
+      "seconds": 1.285
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 29.172
+      "seconds": 29.556
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.923
+      "seconds": 0.943
     }
   ],
   "dependencies": {
@@ -405,8 +405,11 @@
     "term:element-w-run-row-status": "b258b5783e46c2d146271bb05b878857d2d6bb2756967167c4a3c99be4a3d066",
     "term:element-w-session-console-output": "d951a520d88a22afe5b1ae99e9e3ca4051cbd75b934f3dde15241c61c45cd91e",
     "term:element-w-skill-settings-instructions": "02d23367fa6177beb1fc81d99830c40e0bb4be4de817e94fe0702a7d597edaba",
+    "term:element-w-skill-settings-load-error": "e0f9a20157fac7a9b18795427a064bd58510d4bf2e500ebc810a428428fb756b",
+    "term:element-w-skill-settings-load-status": "27dedc555f58351c6d0677a02bdacd264675410f8cae3ede20eee01e0e404f25",
     "term:element-w-skill-settings-managed-skill": "67ae4d75ddfa8e200713f4283430c6e17e703e96f127b5531ad73aeeafec939b",
     "term:element-w-skill-settings-name": "291e6a6fdc76a8e1ea9be5e8b07e4f6be16a90af3c073fca71475d1558b1f1a1",
+    "term:element-w-skill-settings-reload": "20e3493384adeccc8cdb0c6e9e1b5cda874a9bdfa0de2e242e31899cf6a87527",
     "term:element-w-skill-settings-save": "4c8427e0988d939561fec80f5d0fac42d22435c3b73a1ebe6aa042a99c74e55b",
     "term:element-w-skill-settings-save-result": "d746b2b6b5bd21ac1dff0bc581f45135657246994931aa96c76a7e51969515d2",
     "term:element-w-sync-health-details": "9b16ed82b2bd5f7bbcf3a608970691a7a172fd6c55bebf6acd9700c97f22d776",
@@ -428,9 +431,11 @@
     "term:element-w-transcript-command-disclosure": "19fea1d587d916cc923dfeb50b38c012a7e85160481e83facc26f08291d0222b",
     "term:element-w-transcript-console": "e74831878d6f3e10001a7963d9d11cf13ac706f8be8e828d66958e213d4914a8",
     "term:element-w-transcript-error-details": "266edc0c66d0980af1e6a87a297973a143f34b932bfd24e5afe44204632f6eed",
+    "term:element-w-transcript-follow-latest": "3fa4bc39ed86ea4ec9e5f8678c21f2e949f02d4b94a8e34a3fb6ec6640a0916c",
     "term:element-w-transcript-heading": "d3183baef2deca90a4e224eefb2be66295bdb006ba91e8f7e37c0e8b35aa0c37",
     "term:element-w-transcript-live-region": "1ec9223da96033ebb219ca45f9cbe0a816d64d7c472cd939ad4533ba810c8c32",
     "term:element-w-transcript-loading-more": "c242af59a20c40fa937c4a8e481348ea193c81c40979778e951972df8f7afa00",
+    "term:element-w-transcript-next-history": "e9fd6f2f973a9f5cc2d3f1b90d6d90499a1de730594f80e9047050c5671bd29c",
     "term:element-w-transcript-read-error": "60e7961a8d0f05f7e3477c76d3e32ea9e245d19663a0072dd48c4ac969728da4",
     "term:element-w-transcript-restart-history": "b3566ec4a199d5d989421f32df68343b10666c0d9531c64dc739bbfca9bcba47",
     "term:element-w-transcript-technical-activity": "9fb2771f5d23a15389f04231da0f6d4552f6fbb0e51ac7dd72412e80e8575e34",
@@ -552,6 +557,7 @@
     "term:ui-c-select-item": "8880901272302579d14c5d00894e1445371f2cd3131d3c92c7d1a9a8b8b07037",
     "term:ui-c-select-run": "65d5bd5d4ba00d014455abbe3acf05e624c919d34e4eb447dacbac69e889c322",
     "term:ui-c-session-console": "d29d48eb3b1e29362d9525cf5c64e3d9052dfd2e46682d327310d3c65927ab87",
+    "term:ui-c-skill-load": "9bde46e8859c3c48622182258fc8ef904ac44530743a6f627bedab0419e1469f",
     "term:ui-c-skill-save": "137e09810a92ce1b0338370ae9e1430944e31859cfcda38958a5f7122c73f08f",
     "term:ui-c-start": "87762176fb9bd28b873ecad85d7cc7f1d2c28268d994910ce3ad47a0a551069c",
     "term:ui-c-start-chat": "1debb05a0b05819ee0a5fc86a082a82a3758ba6d32db9655052e4dbdcae3ab2f",

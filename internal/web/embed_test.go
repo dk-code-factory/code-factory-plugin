@@ -15,3 +15,16 @@ func TestSettingsDocumentHasIndependentEntry(t *testing.T) {
 		t.Fatal("settings entry changed the shared application bundle")
 	}
 }
+
+func TestProductionShellPrecedesDeferredRuntime(t *testing.T) {
+	navigation := strings.Index(HTML, `id="boot-nav" aria-label="Main navigation"`)
+	controls := strings.Index(HTML, `dataset.ready="true"`)
+	runtime := strings.Index(HTML, `id="factory-runtime"`)
+	body := strings.Index(HTML, "<body>")
+	if body < 0 || navigation < body || controls < navigation || runtime < controls {
+		t.Fatal("the production shell and its handlers must precede the inert runtime payload")
+	}
+	if strings.Contains(HTML, `<script type="module"`) {
+		t.Fatal("a production module must not parse before shell paint")
+	}
+}

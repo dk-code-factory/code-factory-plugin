@@ -7,6 +7,7 @@ import (
 	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -271,6 +272,186 @@ func TestUIProjectionExcludesPrivateSourceSkillFilesAndCredentials(t *testing.T)
 	for _, marker := range []string{"private-source-marker", "private-skill-content", "private-skill-file", "private-owner-credential"} {
 		if strings.Contains(string(data), marker) {
 			t.Fatal("private payload escaped public projection", marker)
+		}
+	}
+}
+
+func TestUIManagedSkillEditorReadsOnlySelectedContent(t *testing.T) {
+	s, ctx := uiFixture(t)
+	selected := domain.Skill{ID: "managed:selected", Name: "selected", Managed: true, Content: "---\nname: selected\n---\nSaved instructions", Files: map[string]string{"private": "private-file-marker"}}
+	other := domain.Skill{ID: "managed:other", Name: "other", Managed: true, Content: "other-content-marker"}
+	external := domain.Skill{ID: "external", Name: "external", Content: "external-content-marker"}
+	for _, skill := range []domain.Skill{selected, other, external} {
+		if err := s.App.Store.Put(ctx, "skill", skill.ID, skill, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cursor, _ := s.App.Store.UILatest(ctx)
+	waitProjection(t, s, ctx, cursor)
+	summary, err := s.readUIState(ctx, UIStateInput{Views: []string{"settings", "launch"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := json.Marshal(summary)
+	for _, marker := range []string{"Saved instructions", "private-file-marker", "other-content-marker", "external-content-marker"} {
+		if strings.Contains(string(data), marker) {
+			t.Fatal("summary disclosed authoring content", marker)
+		}
+	}
+	editor, err := s.readUIState(ctx, UIStateInput{Views: []string{"skill"}, ID: selected.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	skill := editor["skill"].(domain.Skill)
+	if skill.Content != selected.Content || len(skill.Files) != 0 || editor["skillCursor"] != cursor {
+		t.Fatal("selected editor state incomplete or unsafe", editor)
+	}
+	data, _ = json.Marshal(editor)
+	if strings.Contains(string(data), "other-content-marker") || strings.Contains(string(data), "private-file-marker") {
+		t.Fatal("editor read disclosed unrelated content")
+	}
+	if _, err := s.readUIState(ctx, UIStateInput{Views: []string{"skill"}, ID: external.ID}); err == nil {
+		t.Fatal("non-managed skill exposed to managed editor")
+	}
+}
+
+func TestUIInitialPublicationNeedsNoLifetimeInvalidationHistory(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	path := filepath.Join(t.TempDir(), "state.db")
+	db, err := store.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	a := &app.App{Store: db}
+	if err := a.Init(ctx); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer raw.Close()
+	// Old invalidations are not authoritative state and need not be decoded for
+	// a new full snapshot, even if a retired record can no longer be interpreted.
+	if _, err := raw.ExecContext(ctx, "INSERT INTO ui_changes(data) VALUES(?)", []byte("retired invalidation format")); err != nil {
+		t.Fatal(err)
+	}
+	server := New(a, events.New(db, nil))
+	state, err := server.readUIState(ctx, UIStateInput{Views: []string{"settings"}})
+	if err != nil || state["config"] == nil {
+		t.Fatal("old journal prevented current saved state from opening", state, err)
+	}
+	change, err := server.watchUIChanges(ctx, WatchUIInput{After: 0, WaitMs: 1})
+	if err != nil || change["resync"] != true {
+		t.Fatal("old cursor should require full resync", change, err)
+	}
+}
+
+func TestUITranscriptPublicationLeavesSummariesCurrentAndNotifiesOnlyHistory(t *testing.T) {
+	s, ctx := uiFixture(t)
+	run := domain.Run{ID: "retained", ItemID: "owner/repo#1", Status: "idle"}
+	if err := s.App.Store.Write(ctx, func(tx *store.Tx) error {
+		if err := tx.Put("item", run.ItemID, domain.Item{ID: run.ItemID, Repository: "owner/repo", Kind: "issue", State: "open"}); err != nil {
+			return err
+		}
+		if err := tx.Put("user", run.ItemID, domain.UserState{ID: run.ItemID}); err != nil {
+			return err
+		}
+		return tx.Put("run", run.ID, run)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	cursor, _ := s.App.Store.UILatest(ctx)
+	before := waitProjection(t, s, ctx, cursor)
+	if err := s.App.Store.Write(ctx, func(tx *store.Tx) error {
+		return tx.Event("run.output", run.ID, map[string]any{"method": "item/agentMessage/delta", "params": map[string]string{"delta": "saved output"}})
+	}); err != nil {
+		t.Fatal(err)
+	}
+	cursor, _ = s.App.Store.UILatest(ctx)
+	waitProjection(t, s, ctx, cursor)
+	change, err := s.watchUIChanges(ctx, WatchUIInput{After: before.cursor, WaitMs: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	domains := change["changes"].(map[string][]string)
+	if len(domains) != 1 || len(domains["transcript"]) != 1 || domains["transcript"][0] != run.ID {
+		t.Fatal("output invalidated unrelated views", change)
+	}
+	state, err := s.readUIState(ctx, UIStateInput{Views: []string{"inbox", "messages"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state["inbox"].([]domain.InboxEntry)[0].Work.Status != "Inactive" {
+		t.Fatal("history altered work state")
+	}
+	run.Status = "running"
+	if err := s.App.Store.Put(ctx, "run", run.ID, run, "run.state"); err != nil {
+		t.Fatal(err)
+	}
+	cursor, _ = s.App.Store.UILatest(ctx)
+	waitProjection(t, s, ctx, cursor)
+	state, err = s.readUIState(ctx, UIStateInput{Views: []string{"inbox", "messages"}})
+	if err != nil || state["inbox"].([]domain.InboxEntry)[0].Work.Status != "Active" {
+		t.Fatal("real run changes did not refresh summaries", state, err)
+	}
+}
+
+func BenchmarkUIOutputPublication(b *testing.B) {
+	ctx := context.Background()
+	db, err := store.Open(filepath.Join(b.TempDir(), "state.db"))
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer db.Close()
+	a := &app.App{Store: db}
+	if err := a.Init(ctx); err != nil {
+		b.Fatal(err)
+	}
+	if err := db.Write(ctx, func(tx *store.Tx) error {
+		for n := 0; n < 1000; n++ {
+			id := fmt.Sprintf("fixture/repo#%04d", n)
+			if err := tx.Put("item", id, domain.Item{ID: id, Kind: "issue", State: "open"}); err != nil {
+				return err
+			}
+			if err := tx.Put("user", id, domain.UserState{ID: id}); err != nil {
+				return err
+			}
+		}
+		for n := 0; n < 3000; n++ {
+			link := domain.Relationship{ID: fmt.Sprint(n), Source: fmt.Sprintf("fixture/repo#%04d", n%1000), Target: fmt.Sprintf("fixture/repo#%04d", (n+1)%1000)}
+			if err := tx.Put("relationship", link.ID, link); err != nil {
+				return err
+			}
+		}
+		for n := 0; n < 100; n++ {
+			run := domain.Run{ID: fmt.Sprint(n), ItemID: fmt.Sprintf("fixture/repo#%04d", n), Status: "idle"}
+			if err := tx.Put("run", run.ID, run); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		b.Fatal(err)
+	}
+	s := &Server{App: a, ui: &uiState{changed: make(chan struct{})}}
+	s.rebuildUIState(ctx)
+	if s.ui.current == nil {
+		b.Fatal("initial projection unavailable")
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		if err := db.Write(ctx, func(tx *store.Tx) error {
+			return tx.Event("run.output", "0", map[string]any{"method": "item/agentMessage/delta", "params": map[string]string{"delta": "fixture output"}})
+		}); err != nil {
+			b.Fatal(err)
+		}
+		s.rebuildUIState(ctx)
+		if s.ui.err != nil {
+			b.Fatal(s.ui.err)
 		}
 	}
 }

@@ -242,7 +242,9 @@ func (t *Tx) Delete(kind, id string) error {
 	return e
 }
 func (t *Tx) Event(kind, id string, v any) error {
-	if strings.HasPrefix(kind, "run.") {
+	if kind == "run.output" {
+		t.invalidate("transcript", id)
+	} else if strings.HasPrefix(kind, "run.") {
 		t.invalidate("run", id)
 	}
 	b, e := json.Marshal(v)

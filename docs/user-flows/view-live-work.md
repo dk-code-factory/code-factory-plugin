@@ -12,7 +12,7 @@ A supported host has opened the connected application. Updated embedded applicat
 
 1. Open directly from the host sidebar, bypassing a conversational model turn. Navigation and loading controls become usable before saved data or background work finishes. The controlled fixture launch boundary is 50 ms for every fresh launch and warm reopening; actual host latency is recorded separately. Load the inbox as a full-width list beneath compact navigation. Opening an item or agent replaces the list with one focused page; owned surfaces preserve the active host theme even when the surrounding document is transparent.
 2. Populate the requested view from saved state, then receive shared change notifications after committed background results are published. Refresh affected views, preserving drafts, focus and selection. Reads do not request external refreshes. Display connection errors when saved-state delivery fails.
-3. Read output and file changes incrementally, with progress/status messages, final replies, user messages and readable errors visible; plans, diffs, command output and internal summaries remain under collapsed Details or the optional same-session console; load older history on request.
+3. Read output and file changes incrementally, with progress/status messages, final replies, user messages and readable errors visible; plans, diffs, command output and internal summaries remain under collapsed Details or the optional same-session console; load older history on request. An older history window remains inspectable across background updates; advance its pages explicitly or choose to follow the latest output again.
 4. Close or reconnect the view and reload retained state.
 5. For a pull request, read posted reviews above the conversation: open the GitHub receipt, inspect the author, verdict, reviewed commit, body and inline findings, and distinguish current-head from earlier-head reviews. Review observations include all authors and do not imply that a particular run published them.
 
@@ -20,7 +20,7 @@ A supported host has opened the connected application. Updated embedded applicat
 
 Source-terminated sessions display Stopped with their reason and retained history. They cannot accept follow-up or resume; cleanup remains available without discarding modified files.
 
-Hidden views defer panel reads and catch up when visible. Disconnected views resume from their last change cursor; a missing cursor requires a full saved-state resync. Rolled-back changes notify no view. Concurrent writers and bursts retain all affected identifiers. Failed initialization does not poison the open view: later attempts use a fresh connection. Only known reads retry bounded transient transport failures; business/tool errors remain distinct. Recovered subscriptions clear their own connection feedback, while transcript reads clear only their local read failures. Existing output and drafts remain visible. A healthy background read never dismisses an uncertain action response, and Start, Send, answers and saves are not automatically replayed. The view uses the host connection and receives no local credentials. Closing the view leaves agents running. Transcript output and diffs are paged rather than loaded without bounds. Ordinary relationship and message drafts survive tab/record changes within the open app; closing/reloading ends that draft lifetime. Branding, permanent footer and successful sync timestamps are omitted. Connected status is available to assistive technology; connecting/disconnected feedback and failures remain visible. Back restores list context and nonempty history remains disclosed. Settings opens in an independent view using the same authenticated connection; saving configuration leaves an already-open task view and its drafts intact.
+Hidden views defer panel reads and catch up when visible. Disconnected views resume from their last change cursor; a missing cursor requires a full saved-state resync. A restored database may have an earlier cursor: every affected view still reloads, incremental history restarts from its beginning and local reply/evidence drafts remain intact. Rolled-back changes notify no view. Concurrent writers and bursts retain all affected identifiers. Failed initialization does not poison the open view: later attempts use a fresh connection. Only known reads retry bounded transient transport failures; business/tool errors remain distinct. Recovered subscriptions clear their own connection feedback, while transcript reads clear only their local read failures. Existing output and drafts remain visible. A healthy background read never dismisses an uncertain action response, and Start, Send, answers and saves are not automatically replayed. The view uses the host connection and receives no local credentials. Closing the view leaves agents running. Transcript output and diffs are paged rather than loaded without bounds. Ordinary relationship and message drafts survive tab/record changes within the open app; closing/reloading ends that draft lifetime. Branding, permanent footer and successful sync timestamps are omitted. Connected status is available to assistive technology; connecting/disconnected feedback and failures remain visible. Back restores list context and nonempty history remains disclosed. Settings opens in an independent view using the same authenticated connection; saving configuration leaves an already-open task view and its drafts intact.
 
 ## Scenarios
 
@@ -64,6 +64,7 @@ flowchart TD
     N8["Observe submitted reviews with receipts, findings and explicit freshness #40;S5#41;"]
     N9["Read saved work, questions and publication with explicit freshness and bounded history #40;S6#41;"]
     N10["Open directly with actionable navigation before saved data and background work finish #40;S7#41;"]
+    N11["Inspect an older retained history window without advancing on background updates #40;S2#41;"]
     N0 -->|"connected"| N1
     N0 -->|"connection unavailable"| N4
     N1 -->|"success"| N2
@@ -81,6 +82,9 @@ flowchart TD
     N9 -->|"saved result or explicit unknown/ambiguity"| N6
     N0 -->|"Direct sidebar entrypoint"| N10
     N10 --> N6
+    N2 -->|"View history from the beginning"| N11
+    N11 -->|"Load next history page"| N11
+    N11 -->|"Follow latest history"| N2
 ```
 
 ## Implementation references
@@ -183,10 +187,21 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `the shared subscription updates Messages while Reported issues is open`; S1. A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a selected item outside the current page never renders an earlier selected entry`; S1. A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `observation-only publications refresh the selected saved error without a broad read`; S1, S3. Saved provider errors refresh the selected item on an owner-ID invalidation, without loading broad shared state.
+- [internal/web/embed_test.go](../../internal/web/embed_test.go) — `TestProductionShellPrecedesDeferredRuntime`; S7. Critical shell HTML and working event handlers appear before the inert runtime text; executable runtime parsing remains deferred past shell paint.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `full resync to an earlier cursor reloads Reports and preserves its evidence draft`; S3. Restoring an earlier database cursor reloads the selected report after a previous higher publication without clearing its evidence draft.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `full resync reloads plugin administration at an earlier cursor without clearing its draft`; S3. Plugin administration rereads saved inventory after a lower-cursor full resync while preserving the selector draft and performing no management mutation.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft`; S3. Full resync for the same run ID restarts incremental history from zero, removes invalid old output, reloads selected saved observation and keeps the message draft.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `older retained history stays inspectable across updates and advances only on request`; S2. A 1,300-event run exposes its beginning in an inspectable bounded window; background updates do not move that window, explicit next advances it and follow latest resumes updates without clearing the draft.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIInitialPublicationNeedsNoLifetimeInvalidationHistory`; S1, S3. A full current-state publication succeeds without decoding retired lifetime invalidations, and an older cursor requires full resync.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUITranscriptPublicationLeavesSummariesCurrentAndNotifiesOnlyHistory`; S1, S3. Output-only commits publish a transcript-domain invalidation with unchanged summaries, while a real run-state commit still updates visible work state.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `transcript-only publications update output without broad state reads`; S1, S3. A transcript-only publication updates the open conversation without a broad saved-state read.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `repository-only resume refreshes selected detail and posted-review freshness`; S1, S3. Repository-only resume updates posted-review monitoring status and reloads selected saved detail while preserving its draft and making no sync/start call.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `BenchmarkUIOutputPublication`; S1. Record allocation and duration evidence for output publication on 1,000 items, 3,000 relationships and 100 runs; this profile alone makes no latency-gate coverage claim.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `full resync clears a local Start acceptance overlay without replaying the launch`; S3. A restored authoritative prepared state clears the local accepted-run overlay without replaying Start.
 
 ## Verification and gaps
 
-Local suites: `go`, `browser`, `ui-performance`.
+Local suites: `go`, `browser`, `ui-performance`, `inbox-performance`.
 Fixture success does not establish real-host acceptance.
 - **S2** — `gap-flow-view-live-work-s2-01` · Unverified behavior · P2 · owner: user-flow-maintainer. Concurrent snapshot/cursor ordering and large diff pagination need focused tests. Next verification: Add concurrent snapshot/cursor ordering and multi-page large-diff fixture cases that assert no missed, repeated or reordered retained events.
 - **S3** — `gap-flow-view-live-work-s3-01` · Unverified behavior · P1 · owner: specification-coordinator. No installed-host connected one-hour soak is established by this development port. Hidden/disconnected visibility timing and backoff transitions also lack focused assertions; reconnect/iframe fixtures do not prove those variants. Next verification: Exercise hidden/disconnected visibility and retry-backoff transitions with focused fixture assertions, then record a connected one-hour soak for the actual installed port version as bounded dated evidence.

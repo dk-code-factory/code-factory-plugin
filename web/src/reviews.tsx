@@ -7,12 +7,15 @@ export function PostedReviews({
   itemId,
   head,
   version,
+  repository,
 }: {
   itemId: string;
   head: string;
   version: string;
+  repository: string;
 }) {
   const uiVersion = useUIVersion(["pr-reviews"], itemId);
+  const repositoryVersion = useUIVersion(["repository"], repository);
   const [data, setData] = useState<PRReviews>();
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
@@ -38,7 +41,7 @@ export function PostedReviews({
     return () => {
       alive = false;
     };
-  }, [itemId, version, refresh, uiVersion]);
+  }, [itemId, version, refresh, uiVersion, repositoryVersion]);
   function link(url: string, label: string) {
     return (
       <a

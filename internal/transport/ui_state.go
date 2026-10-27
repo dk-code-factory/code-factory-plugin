@@ -93,6 +93,19 @@ func (s *Server) rebuildUIState(ctx context.Context) {
 		if err != nil {
 			return err
 		}
+		changes = map[string]map[string]bool{}
+		if old != nil {
+			changes, err = view.UIChanges(ctx, old.cursor, cursor)
+			if err != nil {
+				return err
+			}
+			if len(changes) == 1 && changes["transcript"] != nil {
+				// Output advances history, but changes no inbox/run/settings
+				// record. Reuse the immutable projection without broad reads.
+				next = &uiProjection{cursor: cursor, published: time.Now().UTC(), data: old.data, inbox: old.inbox, counts: old.counts}
+				return nil
+			}
+		}
 		// A projection has no providers, manager, vault or diagnostics capability.
 		reader := &Server{App: &app.App{Store: view, SavedOnly: true}}
 		data, err := reader.snapshot(ctx)
@@ -130,12 +143,9 @@ func (s *Server) rebuildUIState(ctx context.Context) {
 			}
 			next.data[key] = b
 		}
-		after := int64(0)
-		if old != nil {
-			after = old.cursor
-		}
-		changes, err = view.UIChanges(ctx, after, cursor)
-		return err
+		// Initial publication is a full snapshot. Older cursors resync; no
+		// lifetime invalidation history is needed to publish current state.
+		return nil
 	})
 	if err != nil || ctx.Err() != nil {
 		s.ui.mu.Lock()
@@ -209,6 +219,26 @@ func (s *Server) readUIState(ctx context.Context, in UIStateInput) (map[string]a
 			keys = []string{"repositories", "profiles", "config", "skills"}
 		case "settings":
 			keys = []string{"repositories", "profiles", "config", "skills", "githubUsage"}
+		case "skill":
+			// Authoring is an explicit app-only read of one managed skill.
+			// Broad projections and launch selection keep content/files absent.
+			err := s.App.Store.ReadView(ctx, func(view *store.Store) error {
+				var skill domain.Skill
+				if err := view.Get(ctx, "skill", in.ID, &skill); err != nil {
+					return err
+				}
+				if !skill.Managed {
+					return fmt.Errorf("only managed skills can be edited")
+				}
+				skill.Files = nil
+				out["skill"] = skill
+				var err error
+				out["skillCursor"], err = view.UILatest(ctx)
+				return err
+			})
+			if err != nil {
+				return nil, err
+			}
 		case "inbox":
 			rows := []domain.InboxEntry{}
 			for _, entry := range p.inbox {

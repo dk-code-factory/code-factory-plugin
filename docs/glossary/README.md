@@ -4357,4 +4357,46 @@ The control selecting the following saved result page.
 `element-w-inbox-query-total` · element · scope: ui-w-inbox-query
 
 The count of saved items matching a query before pagination.
+
+<a id="element-w-transcript-next-history"></a>
+## next history page
+
+`element-w-transcript-next-history` · element · scope: ui-w-transcript
+
+The control advancing to the next retained history page.
+
+<a id="element-w-transcript-follow-latest"></a>
+## follow latest history
+
+`element-w-transcript-follow-latest` · element · scope: ui-w-transcript
+
+The control returning a retained history view to its latest updates.
+
+<a id="ui-c-skill-load"></a>
+## Skill load connection
+
+`ui-c-skill-load` · ui-connection
+
+The connection supplying saved managed instructions to the selected editor.
+
+<a id="element-w-skill-settings-reload"></a>
+## reload
+
+`element-w-skill-settings-reload` · element · scope: ui-w-skill-settings
+
+The control loading the selected skill's saved instructions again.
+
+<a id="element-w-skill-settings-load-status"></a>
+## load status
+
+`element-w-skill-settings-load-status` · element · scope: ui-w-skill-settings
+
+The indicator describing a pending selected-skill read.
+
+<a id="element-w-skill-settings-load-error"></a>
+## load error
+
+`element-w-skill-settings-load-error` · element · scope: ui-w-skill-settings
+
+The error from loading the selected skill's saved instructions.
 <!-- /specs:terms -->

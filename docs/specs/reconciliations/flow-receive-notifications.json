@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-receive-notifications",
   "base": "9135daf735e0679080343dc12a52b0bb23f83098",
-  "fingerprint": "b35db9aa6a3f3f5f3f7afe0e7a6baf067538f76c92e1f51147f2e9683f7d7fa6",
+  "fingerprint": "47a7a2092bd1e2d0d74304d2370be3a479ad46338f8d9e85d13e8f06ecc9924b",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 61.94
+      "seconds": 64.337
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.265
+      "seconds": 1.285
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 29.172
+      "seconds": 29.556
     },
     {
       "command": [
@@ -52,11 +52,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.923
+      "seconds": 0.943
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "556098ddb0962756067e109663504e19ebdb22ffe6897912c52df5d3277a228d",
+    "flow:receive-notifications": "653440c0fa5ac2c085c5b5190047adfdf435d737d96c153f9458f85255b9ba7f",
     "term:attention-request": "287bafa8ce8f4b9db38ff592301f032e54e163c181f425cfdb4ba33c695df9a2",
     "term:coverage-gap": "805f6284d0fead9eee5889000225bba4bdcd5e6c8f226a1f067319dd7de0f921",
     "term:host": "68319776b55e968213f2297da0c9df4d5cf77f2b4117a5dbded96e5ce35da32e",

@@ -79,7 +79,7 @@ func (t *Tx) invalidate(kind, id string) {
 	}
 	// Private buckets are never disclosed through the UI invalidation channel.
 	switch kind {
-	case "item", "user", "assessment", "ticket", "relationship", "linked-pr", "identity", "repository", "profile", "config", "run", "attention", "question-recovery", "skill", "pr-reviews", "observation", "issue-report", "plugin-inventory", "plugin-operation", "github-usage", "github-notifications":
+	case "item", "user", "assessment", "ticket", "relationship", "linked-pr", "identity", "repository", "profile", "config", "run", "transcript", "attention", "question-recovery", "skill", "pr-reviews", "observation", "issue-report", "plugin-inventory", "plugin-operation", "github-usage", "github-notifications":
 	default:
 		return
 	}

@@ -4731,6 +4731,53 @@
       "category": "element",
       "definition": "The count of saved items matching a query before pagination.",
       "scope": "ui-w-inbox-query"
+    },
+    {
+      "id": "element-w-transcript-next-history",
+      "name": "next history page",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control advancing to the next retained history page.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "element-w-transcript-follow-latest",
+      "name": "follow latest history",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control returning a retained history view to its latest updates.",
+      "scope": "ui-w-transcript"
+    },
+    {
+      "id": "ui-c-skill-load",
+      "name": "Skill load connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The connection supplying saved managed instructions to the selected editor."
+    },
+    {
+      "id": "element-w-skill-settings-reload",
+      "name": "reload",
+      "aliases": [],
+      "category": "element",
+      "definition": "The control loading the selected skill's saved instructions again.",
+      "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "element-w-skill-settings-load-status",
+      "name": "load status",
+      "aliases": [],
+      "category": "element",
+      "definition": "The indicator describing a pending selected-skill read.",
+      "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "element-w-skill-settings-load-error",
+      "name": "load error",
+      "aliases": [],
+      "category": "element",
+      "definition": "The error from loading the selected skill's saved instructions.",
+      "scope": "ui-w-skill-settings"
     }
   ]
 }

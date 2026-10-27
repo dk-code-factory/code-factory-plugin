@@ -118,7 +118,8 @@
         "STORE-UI-SNAPSHOT",
         "UI-QUERY-ORDER",
         "UI-HIDDEN-SUBSCRIPTION",
-        "UI-INBOX-PAGES"
+        "UI-INBOX-PAGES",
+        "UI-SHELL-ORDER"
       ],
       "gaps": [
         {
@@ -395,7 +396,8 @@
         "UI-QUERY-ORDER",
         "UI-HIDDEN-SUBSCRIPTION",
         "UI-INBOX-PAGES",
-        "UI-NAV-MESSAGES"
+        "UI-NAV-MESSAGES",
+        "UI-SHELL-ORDER"
       ],
       "gaps": [
         {
@@ -1149,7 +1151,9 @@
         "UI-ITEM-SUMMARY-MARKDOWN",
         "UI-DETAIL-OBSERVATION-READ",
         "UI-DETAIL-COOLDOWN-RETRY",
-        "UI-OBSERVATION-ONLY"
+        "UI-OBSERVATION-ONLY",
+        "UI-RESYNC-HISTORY",
+        "UI-REPOSITORY-FRESHNESS"
       ],
       "gaps": [
         {
@@ -1719,7 +1723,8 @@
         "UI-POSTED-REVIEWS",
         "API-UI",
         "UI-SAVED-OBSERVATIONS",
-        "API-GITHUB-QUERY-CACHE"
+        "API-GITHUB-QUERY-CACHE",
+        "UI-REPOSITORY-FRESHNESS"
       ],
       "gaps": [
         {
@@ -2324,6 +2329,14 @@
         {
           "id": "W-TRANSCRIPT.console",
           "term": "element-w-transcript-console"
+        },
+        {
+          "id": "W-TRANSCRIPT.next-history",
+          "term": "element-w-transcript-next-history"
+        },
+        {
+          "id": "W-TRANSCRIPT.follow-latest",
+          "term": "element-w-transcript-follow-latest"
         }
       ],
       "states": [
@@ -2387,7 +2400,11 @@
         "UI-CONVERSATION-EMPTY",
         "UI-SESSION-CONSOLE",
         "UI-QUEUED-MESSAGE",
-        "UI-CONVERSATION-CHUNKS"
+        "UI-CONVERSATION-CHUNKS",
+        "UI-RESYNC-HISTORY",
+        "UI-HISTORY-WINDOW",
+        "API-UI-OUTPUT-DOMAIN",
+        "UI-OUTPUT-SUBSCRIPTION"
       ],
       "gaps": [
         {
@@ -2396,17 +2413,17 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "`UI-TRIAGE`, `UI-ASSEMBLED` assert displayed output and follow-up. Further block variants, retention threshold/history reset, disabled states and rejected-send drafts are not comprehensively asserted.",
-          "next_verification": "For W-TRANSCRIPT: Add browser fixtures for transcript block variants, retention/history reset, message disabled states and rejected sends that preserve the draft."
+          "reason": "Local fixtures cover a 1,300-event bounded history window, explicit continuation, latest-following and lower-cursor full resync with retained drafts. Further block variants, message disabled-state combinations and all rejected-send variants remain incompletely asserted; installed-host acceptance remains unverified.",
+          "next_verification": "Exercise remaining transcript block variants, disabled message states and rejected sends; separately verify history browsing and resync in the approved installed host."
         }
       ],
       "suites": [
         "tooling",
         "browser"
       ],
-      "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too.",
+      "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too. Older-history browsing exposes next-history and follow-latest controls.",
       "state_description": "The normal conversation contains agent progress/final messages, user replies, saved-message delivery status and readable errors. Saved messages show queued, delivering, delivered or uncertain feedback; changes replace the same message status block. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role. Completed owner and agent messages remain normal Conversation content across fetched journal pages; incomplete or malformed raw fragments remain technical activity under Details.",
-      "interactions": "Details reveals retained technical activity without starting or changing agent work. Pending question/approval controls remain outside the collapsed data. History paging/reset and the 1,000-event retained limit remain unchanged. Session console reveals the full event stream using the same session and reply draft."
+      "interactions": "Details reveals retained technical activity without starting or changing agent work. Opening the beginning enters a bounded history window that remains inspectable across background updates. Next history page advances on request; Follow latest history resumes automatic updates. The retained display remains limited to 1,000 events. A full state resync reloads history from its beginning without clearing the reply draft. Session console uses the same retained session and draft."
     },
     {
       "id": "W-MESSAGE",
@@ -3726,6 +3743,18 @@
         {
           "id": "W-SKILL-SETTINGS.save-result",
           "term": "element-w-skill-settings-save-result"
+        },
+        {
+          "id": "W-SKILL-SETTINGS.reload",
+          "term": "element-w-skill-settings-reload"
+        },
+        {
+          "id": "W-SKILL-SETTINGS.load-status",
+          "term": "element-w-skill-settings-load-status"
+        },
+        {
+          "id": "W-SKILL-SETTINGS.load-error",
+          "term": "element-w-skill-settings-load-error"
         }
       ],
       "states": [],
@@ -3775,7 +3804,11 @@
         "UI-SETTINGS",
         "API-UI",
         "API-UI-CONTENT",
-        "UI-SETTINGS-EDITORS"
+        "UI-SETTINGS-EDITORS",
+        "API-UI-SKILL-EDITOR",
+        "UI-SKILL-EDITOR-LOAD",
+        "UI-SKILL-EDITOR-RACE",
+        "UI-SKILL-EDITOR-ERROR"
       ],
       "gaps": [
         {
@@ -3793,9 +3826,9 @@
         "browser",
         "go"
       ],
-      "element_description": "**managed-skill** select with Create a skill option; **name** required input; **instructions** text area; **save**. **save-result** beside each form.",
+      "element_description": "**managed-skill** select with Create a skill option; **name** required input; **instructions** text area; **save**. **save-result** beside each form. Selected content has load-status/load-error feedback and an explicit reload control.",
       "state_description": "Existing choices include managed skills only. Selecting an existing skill loads name/content. Selecting Create a skill currently does not reset populated fields. Saving disables the form; success or an exact error appears beside it; failed inputs remain.",
-      "interactions": "Save creates/replaces managed skill content. No delete, rename migration or file-tree editor is present."
+      "interactions": "Selecting a managed skill loads only its saved authoring content. Broad metadata and launch lists omit content/files. Loading/error states disable Save; explicit reload retries the read, and late prior selections cannot replace the current editor or draft. Save creates/replaces managed skill content. No delete, rename migration or file-tree editor is present."
     },
     {
       "id": "W-DIAGNOSTICS",
@@ -8913,7 +8946,8 @@
         "UI-SETTINGS",
         "API-UI",
         "API-UI-CONTENT",
-        "UI-SETTINGS-EDITORS"
+        "UI-SETTINGS-EDITORS",
+        "UI-SKILL-EDITOR-LOAD"
       ],
       "gaps": [
         {
@@ -9162,7 +9196,16 @@
         "UI-NAV-MESSAGES",
         "UI-PAGED-SELECTION",
         "UI-OBSERVATION-ONLY",
-        "UI-DEFERRED-SKILLS"
+        "UI-DEFERRED-SKILLS",
+        "UI-SHELL-ORDER",
+        "UI-RESYNC-REPORT",
+        "UI-RESYNC-PLUGIN",
+        "UI-RESYNC-HISTORY",
+        "API-UI-INITIAL-PUBLICATION",
+        "API-UI-OUTPUT-DOMAIN",
+        "UI-OUTPUT-SUBSCRIPTION",
+        "UI-REPOSITORY-FRESHNESS",
+        "UI-ACCEPTANCE-RESYNC"
       ],
       "gaps": [
         {
@@ -9191,7 +9234,7 @@
       ],
       "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
       "trigger": "A committed saved-state publication advances the shared UI change cursor.",
-      "interactions": "One authenticated host subscription waits up to 25 seconds for metadata-only invalidations. A background worker publishes immutable saved projections and their cursor atomically. Reads perform no provider requests, dependency probes or external refreshes. Affected views reread saved state; hidden views catch up on visibility, bursts coalesce and older responses cannot replace newer queries or selections. Rollbacks emit no invalidation; commits from other processes are reconciled. Missing cursors require full resync. Known reads retry bounded transport failures. Mutations never replay automatically, and acceptance is separate from later completion. Drafts, focus, selection and uncertain-action errors survive updates. Older snapshot/change contracts remain available.",
+      "interactions": "One authenticated host subscription waits up to 25 seconds for metadata-only invalidations. A background worker publishes immutable saved projections and their cursor atomically. Reads perform no provider requests, dependency probes or external refreshes. Affected views reread saved state; hidden views catch up on visibility, bursts coalesce and older responses cannot replace newer queries or selections. Rollbacks emit no invalidation; commits from other processes are reconciled. Missing cursors require full resync. Known reads retry bounded transport failures. Mutations never replay automatically, and acceptance is separate from later completion. Drafts, focus, selection and uncertain-action errors survive updates. Older snapshot/change contracts remain available. Full resync advances local subscription identity even when the server cursor decreases; incremental transcript state is then reloaded from its beginning. Local successful Start acknowledgement remains visible while a published run is missing or still prepared. A published non-prepared run replaces that overlay; full resync clears it.",
       "from": [
         "S-FACTORY"
       ],
@@ -9265,7 +9308,8 @@
       "assertions": [
         "UI-TRIAGE",
         "UI-ASSEMBLED",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-HISTORY-WINDOW"
       ],
       "gaps": [
         {
@@ -10026,7 +10070,8 @@
         "UI-REPORTS-DETAIL-PROGRESS",
         "UI-REPORTS-MUTATION-PROGRESS",
         "UI-REPORTS-EVIDENCE-RETRY",
-        "UI-REPORTS-DRAFT"
+        "UI-REPORTS-DRAFT",
+        "UI-RESYNC-REPORT"
       ],
       "gaps": [
         {
@@ -10975,7 +11020,8 @@
         "UI-CHAT-LATE",
         "UI-CHAT-PREPARE-ERROR",
         "UI-PIPELINE",
-        "UI-ADMIN-PIPELINE"
+        "UI-ADMIN-PIPELINE",
+        "UI-ACCEPTANCE-RESYNC"
       ],
       "gaps": [
         {
@@ -11020,7 +11066,8 @@
         "UI-CHAT-CONFIRMED",
         "UI-CHAT-LATE",
         "UI-CHAT-PREPARE-ERROR",
-        "ADMIN-PLUGIN-GATE"
+        "ADMIN-PLUGIN-GATE",
+        "UI-ACCEPTANCE-RESYNC"
       ],
       "gaps": [],
       "suites": [
@@ -11425,7 +11472,8 @@
         "ADMIN-PLUGIN-GATE",
         "UI-PLUGIN-READ-RECOVERY",
         "ADMIN-REMOVED-SKILL",
-        "API-UI"
+        "API-UI",
+        "UI-RESYNC-PLUGIN"
       ],
       "gaps": [
         {
@@ -11929,6 +11977,53 @@
         "W-REPOSITORY-SETTINGS"
       ],
       "connection_type": "connection-submits",
+      "external_boundary": false
+    },
+    {
+      "id": "C-SKILL-LOAD",
+      "kind": "connection",
+      "terms": [
+        "ui-c-skill-load"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/settings.tsx",
+          "anchor": "async function loadSkill(",
+          "purpose": "Read selected managed content on demand with a generation guard and explicit read retry."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "case \"skill\":",
+          "purpose": "App-only selected managed content read excludes private files and unrelated skill bodies."
+        }
+      ],
+      "assertions": [
+        "API-UI-SKILL-EDITOR",
+        "UI-SKILL-EDITOR-LOAD",
+        "UI-SKILL-EDITOR-RACE",
+        "UI-SKILL-EDITOR-ERROR"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "endpoint_description": "Saved managed skill selection \u2192 selected authoring fields",
+      "trigger": "Select or reload one managed skill.",
+      "interactions": "Loads saved content for the selected managed editor, retains other drafts on failure and rejects stale selection responses.",
+      "from": [
+        "W-SKILL-SETTINGS.managed-skill",
+        "W-SKILL-SETTINGS.reload"
+      ],
+      "to": [
+        "W-SKILL-SETTINGS.name",
+        "W-SKILL-SETTINGS.instructions"
+      ],
+      "connection_type": "connection-selects",
       "external_boundary": false
     }
   ],
@@ -12671,7 +12766,7 @@
       "id": "UI-CHAT-LATE",
       "path": "web/tests/factory.spec.ts",
       "anchor": "a late first-message Start cannot replace another item",
-      "assertion": "A withheld first-message Start response is processed while saved reads remain prepared: Messages changes to Messages 1 only after the returned waiting run reaches React. After that barrier, the later selected item and exact unsubmitted draft remain; exactly one prepare/Start is sent."
+      "assertion": "A withheld first-message Start response is processed while saved reads remain prepared: Messages changes to Messages 1 only after the returned waiting run reaches React. After that barrier, the later selected item and exact unsubmitted draft remain; exactly one prepare/Start is sent. Reopening the second item forces a saved read after acknowledgement; a still-prepared projection cannot undo accepted Start or replace its draft."
     },
     {
       "id": "UI-CHAT-PREPARE-ERROR",
@@ -13200,6 +13295,90 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "launch customization loads saved skills only when its deferred view opens",
       "assertion": "Saved skills are requested when launch customization opens; selecting one reaches preparation without starting an agent."
+    },
+    {
+      "id": "UI-SHELL-ORDER",
+      "path": "internal/web/embed_test.go",
+      "anchor": "TestProductionShellPrecedesDeferredRuntime",
+      "assertion": "The production navigation and its action handlers precede the large inert runtime payload, with no module parsed before shell paint."
+    },
+    {
+      "id": "UI-RESYNC-REPORT",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync to an earlier cursor reloads Reports and preserves its evidence draft",
+      "assertion": "Restoring an earlier database cursor reloads the selected report after a previous higher publication without clearing its evidence draft."
+    },
+    {
+      "id": "UI-RESYNC-PLUGIN",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync reloads plugin administration at an earlier cursor without clearing its draft",
+      "assertion": "Plugin administration rereads saved inventory after a lower-cursor full resync while preserving the selector draft and performing no management mutation."
+    },
+    {
+      "id": "UI-RESYNC-HISTORY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft",
+      "assertion": "Full resync for the same run ID restarts incremental history from zero, removes invalid old output, reloads selected saved observation and keeps the message draft."
+    },
+    {
+      "id": "UI-HISTORY-WINDOW",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "older retained history stays inspectable across updates and advances only on request",
+      "assertion": "A 1,300-event run exposes its beginning in an inspectable bounded window; background updates do not move that window, explicit next advances it and follow latest resumes updates without clearing the draft."
+    },
+    {
+      "id": "API-UI-SKILL-EDITOR",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIManagedSkillEditorReadsOnlySelectedContent",
+      "assertion": "Broad settings/launch projections omit skill content/files; the app-only managed editor returns only selected content with a read cursor, rejects unmanaged skills and excludes private files."
+    },
+    {
+      "id": "UI-SKILL-EDITOR-LOAD",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "the managed skill editor loads selected saved instructions and saves an existing skill",
+      "assertion": "Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content."
+    },
+    {
+      "id": "UI-SKILL-EDITOR-RACE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a late managed skill read cannot overwrite a later selection or its editor draft",
+      "assertion": "Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions."
+    },
+    {
+      "id": "API-UI-INITIAL-PUBLICATION",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIInitialPublicationNeedsNoLifetimeInvalidationHistory",
+      "assertion": "A full current-state publication succeeds without decoding retired lifetime invalidations, and an older cursor requires full resync."
+    },
+    {
+      "id": "API-UI-OUTPUT-DOMAIN",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUITranscriptPublicationLeavesSummariesCurrentAndNotifiesOnlyHistory",
+      "assertion": "Output-only commits publish a transcript-domain invalidation with unchanged summaries, while a real run-state commit still updates visible work state."
+    },
+    {
+      "id": "UI-OUTPUT-SUBSCRIPTION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "transcript-only publications update output without broad state reads",
+      "assertion": "A transcript-only publication updates the open conversation without a broad saved-state read."
+    },
+    {
+      "id": "UI-REPOSITORY-FRESHNESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "repository-only resume refreshes selected detail and posted-review freshness",
+      "assertion": "Repository-only resume updates posted-review monitoring status and reloads selected saved detail while preserving its draft and making no sync/start call."
+    },
+    {
+      "id": "UI-SKILL-EDITOR-ERROR",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "managed skill read failure blocks saving until an explicit read retry succeeds",
+      "assertion": "A selected read error disables Save, an explicit reload recovers saved instructions, and neither path replays or submits a save mutation."
+    },
+    {
+      "id": "UI-ACCEPTANCE-RESYNC",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
+      "assertion": "Full resync removes local acknowledgement overlays and returns the selected run to restored authoritative state without another Start."
     }
   ],
   "source_map": [
@@ -13635,6 +13814,18 @@
       ],
       "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
       "detail": "Actionable navigation and query controls precede runtime/SDK initialization."
+    },
+    {
+      "path": "web/src/settings.tsx",
+      "anchor": "async function loadSkill(",
+      "anchors": [
+        "async function loadSkill("
+      ],
+      "location_labels": [
+        "async function loadSkill("
+      ],
+      "entities": "W-SKILL-SETTINGS, C-SKILL-LOAD",
+      "detail": "Explicit app-only managed content read with load/error feedback, guarded selections and no private file disclosure."
     }
   ],
   "coverage_groups": [
@@ -14602,6 +14793,7 @@
             "C-DISCOVER-SKILLS",
             "C-POLICY-SAVE",
             "C-PROFILE-SAVE",
+            "C-SKILL-LOAD",
             "C-SKILL-SAVE",
             "C-DIAGNOSE",
             "C-STATE-REFRESH",

@@ -201,7 +201,12 @@ async function host(
           const copy=structuredClone(state);
           if(views.includes("shell")) Object.assign(projected,{viewer:copy.viewer,repositories:copy.repositories,profiles:copy.profiles,config:copy.config});
           if(views.includes("messages")) Object.assign(projected,{runs:copy.runs,attention:copy.attention,questionRecoveries:copy.questionRecoveries});
-          if(views.includes("settings")||views.includes("launch")) Object.assign(projected,{repositories:copy.repositories,profiles:copy.profiles,config:copy.config,skills:copy.skills,githubUsage:copy.githubUsage});
+          if(views.includes("settings")||views.includes("launch")) Object.assign(projected,{repositories:copy.repositories,profiles:copy.profiles,config:copy.config,skills:copy.skills.map(skill=>({...skill,content:""})),githubUsage:copy.githubUsage});
+          if(views.includes("skill")){
+            const skill=copy.skills.find(skill=>skill.id===a.id);
+            if(!skill||!skill.managed) throw new Error("only managed skills can be edited");
+            Object.assign(projected,{skill,skillCursor:state.cursor});
+          }
           if(views.includes("reviews")) projected.reviewVersions=copy.reviewVersions;
           if(views.includes("inbox")) Object.assign(projected,{inbox:structuredClone(rows.slice(offset,offset+limit)),page:{offset,limit,total:rows.length,hasMore:offset+limit<rows.length}});
           projected.selectedEntry=structuredClone(state.inbox.find(e=>e.item.id===a.id));
@@ -220,7 +225,8 @@ async function host(
             }
             await new Promise(r=>setTimeout(r,20));
           }
-          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id)}:{}};
+          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"transcript":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id)}:{}};
+          if(state.cursor<Number(a.after)) (data as {changes:Record<string,string[]>}).changes={};
           if(options.watchDomains){
             const change=data as {changes:Record<string,string[]>};
             change.changes=Object.fromEntries(Object.entries(change.changes).filter(([domain])=>options.watchDomains!.includes(domain)));
@@ -3243,6 +3249,15 @@ test("a late first-message Start cannot replace another item's draft", async ({
     await expect(
       ui.getByRole("region", { name: "New agent conversation" }),
     ).toBeVisible();
+    // A later navigation reads the still-behind prepared projection after the
+    // accepted response has already reached React; it must not undo acceptance.
+    const reads=calls.filter(c=>c.name==="read_ui_state").length;
+    await ui.getByRole("button",{name:"Issues",exact:true}).click();
+    await ui.getByRole("button",{name:/Second task/}).click();
+    await expect.poll(()=>calls.filter(c=>c.name==="read_ui_state").length).toBeGreaterThan(reads);
+    await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await expect(ui.getByRole("button",{name:"Messages 1",exact:true})).toBeVisible();
+    await expect(ui.getByLabel("Message agent")).toHaveValue("Keep the second task's unsubmitted message.");
     expect(calls.filter((c) => c.name === "prepare_launch")).toHaveLength(1);
     expect(calls.filter((c) => c.name === "start_run")).toHaveLength(1);
   } finally {
@@ -5457,4 +5472,203 @@ test("launch customization loads saved skills only when its deferred view opens"
   await expect.poll(()=>calls.filter(c=>c.name==="prepare_launch").some(c=>(c.arguments.skillIds as string[]|undefined)?.includes("saved-skill"))).toBe(true);
   expect(calls.filter(c=>c.name==="read_ui_state").some(c=>(c.arguments.views as string[]).includes("launch"))).toBe(true);
   expect(calls.filter(c=>c.name==="start_run")).toHaveLength(0);
+});
+
+test("full resync to an earlier cursor reloads Reports and preserves its evidence draft",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  const report=reportFixture();
+  const {ui,state}=await host(page,{snapshot,reports:[report],watchDomains:["issue-report"]});
+  await ui.getByRole("button",{name:"Reported issues",exact:true}).click();
+  await ui.getByRole("button",{name:"Agents: Stale response"}).click();
+  const detail=ui.getByRole("article",{name:"Report details"});
+  const evidence=detail.getByLabel("What did the host display?");
+  await evidence.fill("Keep this report draft after database restore.");
+  report.findings!.summary="Latest before restore";state.cursor=101;
+  await expect(detail).toContainText("Latest before restore");
+  report.findings!.summary="Restored report state";state.cursor=3;
+  await expect(detail).toContainText("Restored report state");
+  await expect(detail).not.toContainText("Latest before restore");
+  await expect(evidence).toHaveValue("Keep this report draft after database restore.");
+});
+
+test("full resync reloads plugin administration at an earlier cursor without clearing its draft",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  const {ui,state,calls}=await host(page,{snapshot,surface:"settings",watchDomains:["plugin-inventory"]});
+  await ui.getByText("Plugins & skills",{exact:true}).click();
+  await ui.getByLabel("Plugin selector",{exact:true}).fill("retained@restore");
+  await expect.poll(()=>calls.filter(c=>c.name==="read_plugin_admin").length).toBe(1);
+  state.cursor=101;
+  await expect.poll(()=>calls.filter(c=>c.name==="read_plugin_admin").length).toBe(2);
+  state.cursor=3;
+  await expect.poll(()=>calls.filter(c=>c.name==="read_plugin_admin").length).toBe(3);
+  await expect(ui.getByLabel("Plugin selector",{exact:true})).toHaveValue("retained@restore");
+  expect(calls.filter(c=>c.name==="manage_codex_plugins")).toHaveLength(0);
+});
+
+test("full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  snapshot.runs=[retained(snapshot,"restored-run")];
+  const transcript:JournalEvent[]=[{seq:100,kind:"run.output",entity:"restored-run",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Before restore transcript"}}}];
+  let restored=false;
+  const {ui,state,calls}=await host(page,{snapshot,transcript,readItem:async detail=>({...detail,refreshError:restored?"Restored saved observation":""})});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.locator(".transcript")).toContainText("Before restore transcript");
+  await ui.getByLabel("Message agent").fill("Keep my draft across restored history.");
+  await expect.poll(()=>calls.filter(c=>c.name==="read_transcript").some(c=>c.arguments.after===100)).toBe(true);
+  restored=true;
+  transcript.splice(0,transcript.length,{seq:2,kind:"run.output",entity:"restored-run",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Restored transcript content"}}});
+  state.cursor=3;
+  await expect(ui.locator(".transcript")).toContainText("Restored transcript content");
+  await expect(ui.locator(".transcript")).not.toContainText("Before restore transcript");
+  await expect(ui.getByRole("alert")).toContainText("Restored saved observation");
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Keep my draft across restored history.");
+  expect(calls.filter(c=>c.name==="read_transcript"&&c.arguments.after===0).length).toBeGreaterThanOrEqual(2);
+  expect(calls.filter(c=>["send_message","start_run"].includes(c.name))).toHaveLength(0);
+});
+
+test("older retained history stays inspectable across updates and advances only on request",async({page})=>{
+  const snapshot=initial();snapshot.cursor=2000;
+  snapshot.runs=[retained(snapshot,"large-history")];
+  const transcript:JournalEvent[]=Array.from({length:1300},(_,n)=>({seq:n+1,kind:"run.output",entity:"large-history",at:"2026-10-27T12:00:00Z",data:{method:"item/completed",params:{item:{id:"history-"+(n+1),type:"agentMessage",text:"Historical event "+(n+1)}}}}));
+  const {ui,state,calls}=await host(page,{snapshot,transcript});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  const history=ui.locator(".transcript");
+  await expect(history.getByText("Historical event 1300",{exact:true})).toBeVisible();
+  await ui.getByLabel("Message agent").fill("Keep this draft while inspecting older history.");
+  await ui.getByRole("button",{name:"View history from the beginning"}).click();
+  await expect(ui.getByRole("button",{name:"Load next history page"})).toBeVisible();
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
+  const transcriptReads=calls.filter(c=>c.name==="read_transcript").length;
+  const stateReads=calls.filter(c=>c.name==="read_ui_state").length;
+  state.cursor++;
+  await expect.poll(()=>calls.filter(c=>c.name==="read_ui_state").length).toBeGreaterThan(stateReads);
+  await history.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect(calls.filter(c=>c.name==="read_transcript")).toHaveLength(transcriptReads);
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
+  await ui.getByRole("button",{name:"Load next history page"}).click();
+  await expect(history.getByText("Historical event 200",{exact:true})).toBeVisible();
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
+  await ui.getByRole("button",{name:"Follow latest history"}).click();
+  await expect(history.getByText("Historical event 1300",{exact:true})).toBeVisible();
+  await expect(history.getByText("Historical event 1",{exact:true})).toHaveCount(0);
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Keep this draft while inspecting older history.");
+  expect(calls.filter(c=>["send_message","start_run"].includes(c.name))).toHaveLength(0);
+});
+
+test("the managed skill editor loads selected saved instructions and saves an existing skill",async({page})=>{
+
+  const snapshot=initial();
+  const original="---\nname: saved-skill\ndescription: Saved instructions.\n---\nKeep existing guidance.\n";
+  snapshot.skills=[{id:"managed:saved-skill",name:"saved-skill",path:"/fixture/skill",content:original,managed:true}];
+  const {ui,calls}=await host(page,{snapshot,surface:"settings"});
+  await ui.getByText("Managed skills",{exact:true}).click();
+  expect(calls.filter(c=>c.name==="read_ui_state").every(c=>!(c.arguments.views as string[]).includes("skill"))).toBe(true);
+  await ui.getByLabel("Edit managed skill").selectOption("managed:saved-skill");
+  const content=ui.getByLabel("Skill instructions",{exact:true});
+  await expect(content).toHaveValue(original);
+  const edited=original+"Additional reviewed guidance.\n";
+  await content.fill(edited);
+  await ui.getByRole("button",{name:"Save skill",exact:true}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="save_skill").map(c=>c.arguments.content)).toEqual([edited]);
+  expect(calls.filter(c=>c.name==="read_ui_state").some(c=>(c.arguments.views as string[]).includes("skill")&&c.arguments.id==="managed:saved-skill")).toBe(true);
+});
+
+test("a late managed skill read cannot overwrite a later selection or its editor draft",async({page})=>{
+  const snapshot=initial();
+  const first="---\nname: first\n---\nFirst saved instructions.";
+  const second="---\nname: second\n---\nSecond saved instructions.";
+  snapshot.skills=[{id:"managed:first",name:"first",path:"/fixture/first",content:first,managed:true},{id:"managed:second",name:"second",path:"/fixture/second",content:second,managed:true}];
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});
+  let pending=false,returned=false;
+  const {ui}=await host(page,{snapshot,surface:"settings",readUIState:async(data,args)=>{
+    if((args.views as string[]).includes("skill")&&args.id==="managed:first"){pending=true;await gate;returned=true}
+    return data;
+  }});
+  try{
+    await ui.getByText("Managed skills",{exact:true}).click();
+    await ui.getByLabel("Edit managed skill").selectOption("managed:first");
+    await expect.poll(()=>pending).toBe(true);
+    await expect(ui.getByRole("button",{name:"Save skill",exact:true})).toBeDisabled();
+    await ui.getByLabel("Edit managed skill").selectOption("managed:second");
+    const content=ui.getByLabel("Skill instructions",{exact:true});
+    await expect(content).toHaveValue(second);
+    await content.fill(second+" Keep this local draft.");
+    release();
+    await expect.poll(()=>returned).toBe(true);
+    await content.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await expect(content).toHaveValue(second+" Keep this local draft.");
+    await expect(ui.getByLabel("Skill name",{exact:true})).toHaveValue("second");
+  }finally{release()}
+});
+
+test("transcript-only publications update output without broad state reads",async({page})=>{
+  const snapshot=initial();snapshot.runs=[retained(snapshot,"output-only")];
+  const transcript:JournalEvent[]=[];
+  const {ui,state,calls}=await host(page,{snapshot,transcript,watchDomains:["transcript"]});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByLabel("Message agent")).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  transcript.push({seq:10,kind:"run.output",entity:"output-only",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Transcript-only update"}}});
+  state.cursor++;
+  await expect(ui.locator(".transcript")).toContainText("Transcript-only update");
+  expect(calls.filter(c=>c.name==="read_ui_state")).toHaveLength(reads);
+});
+
+test("repository-only resume refreshes selected detail and posted-review freshness",async({page})=>{
+  const snapshot=initial();snapshot.profiles[0].id="review";
+  const entry=snapshot.inbox[0];
+  Object.assign(entry.item,{kind:"pr",author:"someone",reviewRequests:["alex"]});
+  entry.queues=["review"];
+  snapshot.repositories=[{id:"owner/repo",paused:true,checkout:"",base:""} as Snapshot["repositories"][number]];
+  const {ui,state,calls}=await host(page,{snapshot,watchDomains:["repository"],
+    readItem:async detail=>({...detail,observation:{observedAt:"2026-10-27T12:00:00Z",refresh:snapshot.repositories[0].paused?"paused":"fresh"}}),
+    readReviews:async()=>({itemId:entry.item.id,refresh:snapshot.repositories[0].paused?"paused":"fresh",syncedAt:"2026-10-27T12:00:00Z",lastAttempt:"2026-10-27T12:00:00Z",reviews:[]})});
+  await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByText("Repository monitoring is paused.",{exact:true})).toBeVisible();
+  await ui.getByLabel("Message agent").fill("Keep my draft when monitoring resumes.");
+  const details=calls.filter(c=>c.name==="read_item").length;
+  const reviews=calls.filter(c=>c.name==="read_pr_reviews").length;
+  state.repositories[0].paused=false;state.cursor++;
+  await expect(ui.getByText("Repository monitoring is paused.",{exact:true})).toHaveCount(0);
+  await expect.poll(()=>calls.filter(c=>c.name==="read_item").length).toBeGreaterThan(details);
+  expect(calls.filter(c=>c.name==="read_pr_reviews").length).toBeGreaterThan(reviews);
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Keep my draft when monitoring resumes.");
+  expect(calls.filter(c=>["sync_repositories","start_run"].includes(c.name))).toHaveLength(0);
+});
+
+test("managed skill read failure blocks saving until an explicit read retry succeeds",async({page})=>{
+  const snapshot=initial();
+  const original="---\nname: saved\n---\nKeep saved instructions.";
+  snapshot.skills=[{id:"managed:saved",name:"saved",path:"/fixture/saved",content:original,managed:true}];
+  let unavailable=true;
+  const {ui,calls}=await host(page,{snapshot,surface:"settings",readUIState:async(data,args)=>{
+    if((args.views as string[]).includes("skill")&&unavailable)throw new Error("Saved editor unavailable");
+    return data;
+  }});
+  await ui.getByText("Managed skills",{exact:true}).click();
+  await ui.getByLabel("Edit managed skill").selectOption("managed:saved");
+  await expect(ui.getByRole("alert")).toContainText("Saved editor unavailable");
+  await expect(ui.getByRole("button",{name:"Save skill",exact:true})).toBeDisabled();
+  expect(calls.filter(c=>c.name==="save_skill")).toHaveLength(0);
+  unavailable=false;
+  await ui.getByRole("button",{name:"Reload selected skill",exact:true}).click();
+  await expect(ui.getByLabel("Skill instructions",{exact:true})).toHaveValue(original);
+  await expect(ui.getByRole("button",{name:"Save skill",exact:true})).toBeEnabled();
+  await expect(ui.getByRole("alert")).toHaveCount(0);
+  expect(calls.filter(c=>c.name==="read_ui_state"&&(c.arguments.views as string[]).includes("skill"))).toHaveLength(2);
+  expect(calls.filter(c=>c.name==="save_skill")).toHaveLength(0);
+});
+
+test("full resync clears a local Start acceptance overlay without replaying the launch",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  const {ui,state,calls}=await host(page,{snapshot,beforeStartResponse:()=>{snapshot.runs[0].status="prepared";return Promise.resolve()}});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await ui.getByRole("region",{name:"New agent conversation"}).getByRole("button",{name:"Start agent",exact:true}).click();
+  await expect(ui.getByLabel("Session status")).toContainText("waiting");
+  state.cursor=3;
+  await expect(ui.getByLabel("Session status")).toContainText("prepared");
+  await expect(ui.getByRole("button",{name:"Messages",exact:true})).toBeVisible();
+  expect(calls.filter(c=>c.name==="start_run")).toHaveLength(1);
 });

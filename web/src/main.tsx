@@ -24,7 +24,12 @@ import type {
   QuestionRecovery,
 } from "./types";
 import "./style.css";
-import { publishUIChange, useUIVersion, type UIChange } from "./ui-changes";
+import {
+  publishUIChange,
+  useUIVersion,
+  useUIResyncVersion,
+  type UIChange,
+} from "./ui-changes";
 const ReportedIssues = lazy(() =>
   import("./reports").then((m) => ({ default: m.ReportedIssues })),
 );
@@ -146,6 +151,7 @@ function Factory() {
   const appliedCursor = useRef(0);
   const hasData = useRef(false);
   const dirtyDomains = useRef(new Set<string>());
+  const acceptedRuns = useRef(new Map<string, Run>());
   const launchOpen = Boolean(launch || draftRun);
   const queryRef = useRef({
     tab,
@@ -204,6 +210,19 @@ function Factory() {
       appliedCursor.current = s.cursor ?? 0;
       hasData.current = true;
       dirtyDomains.current.clear();
+      let saved = s;
+      if (s.runs) {
+        const runs = new Map(s.runs.map((run) => [run.id, run]));
+        for (const [id, accepted] of acceptedRuns.current) {
+          const projected = runs.get(id);
+          // Successful Start cannot return to prepared. A projection may still
+          // precede acceptance; retain that local acknowledgement until it catches up.
+          if (!projected || projected.status === "prepared")
+            runs.set(id, accepted);
+          else acceptedRuns.current.delete(id);
+        }
+        saved = { ...s, runs: [...runs.values()] };
+      }
       setSnap(
         (old) =>
           ({
@@ -214,7 +233,7 @@ function Factory() {
             profiles: [],
             skills: [],
             ...old,
-            ...s,
+            ...saved,
           }) as Snapshot,
       );
       setConnection("Connected");
@@ -272,7 +291,10 @@ function Factory() {
           });
           if (stopped) return;
           if (change.resync || Object.keys(change.changes).length) {
-            if (change.resync) appliedCursor.current = 0;
+            if (change.resync) {
+              appliedCursor.current = 0;
+              acceptedRuns.current.clear();
+            }
             // One publication updates panel subscribers and the affected active view.
             publishUIChange(change);
             const domains = Object.keys(change.changes);
@@ -462,6 +484,7 @@ function Factory() {
     navigate("Agent");
   };
   const acceptRun = (run: Run, itemId: string, origin: string) => {
+    acceptedRuns.current.set(run.id, run);
     setSnap((old) =>
       old
         ? { ...old, runs: [...old.runs.filter((r) => r.id !== run.id), run] }
@@ -1056,6 +1079,7 @@ function Factory() {
                   setDraftRun(undefined);
                 }}
                 started={(run) => {
+                  acceptedRuns.current.set(run.id, run);
                   setLaunch(undefined);
                   setDraftRun(undefined);
                   setSnap((old) =>
@@ -1452,6 +1476,10 @@ function ItemDetail({
   }
   const itemVersion = useUIVersion(["item", "user", "observation"], id);
   const linkVersion = useUIVersion(["relationship", "linked-pr", "ticket"]);
+  const repositoryVersion = useUIVersion(
+    ["repository"],
+    entry?.item.repository,
+  );
   const linkedRevision = JSON.stringify(
     entry?.linkedPullRequests?.map((pr) => [
       pr.id,
@@ -1501,6 +1529,7 @@ function ItemDetail({
     detailVersion,
     itemVersion,
     linkVersion,
+    repositoryVersion,
   ]);
   useEffect(() => {
     if (
@@ -1604,7 +1633,12 @@ function ItemDetail({
         </section>
       )}
       {i.kind === "pr" && (
-        <PostedReviews itemId={i.id} head={i.head} version={reviewVersion} />
+        <PostedReviews
+          itemId={i.id}
+          head={i.head}
+          version={reviewVersion}
+          repository={i.repository}
+        />
       )}
       {conversation}
       <details className="item-details">
@@ -2312,7 +2346,11 @@ function Agent({
   const [busy, setBusy] = useState(false);
   const pageCursor = useRef(0);
   const [historyVersion, setHistoryVersion] = useState(0);
-  const runVersion = useUIVersion(["run"], run.id);
+  const runVersion = useUIVersion(["run", "transcript"], run.id);
+  const resyncVersion = useUIResyncVersion();
+  const previousResync = useRef(resyncVersion);
+  const [browsingHistory, setBrowsingHistory] = useState(false);
+  const transcriptVersion = browsingHistory ? 0 : runVersion;
   const deferred = run.status === "deferred";
   const canMessage =
     !!run.threadId &&
@@ -2320,6 +2358,13 @@ function Agent({
       run.status,
     );
   useEffect(() => {
+    if (previousResync.current !== resyncVersion) {
+      previousResync.current = resyncVersion;
+      pageCursor.current = 0;
+      setEvents([]);
+      setCursor(0);
+      setMore(false);
+    }
     let stop = false;
     let timer: ReturnType<typeof setTimeout>;
     let delay = 1000;
@@ -2335,7 +2380,7 @@ function Agent({
           pageCursor.current = p.cursor;
           setCursor(p.cursor);
           setMore(p.hasMore);
-          if (p.hasMore) timer = setTimeout(load, 0);
+          if (p.hasMore && !browsingHistory) timer = setTimeout(load, 0);
           setHistoryError(undefined);
           delay = 1000;
         }
@@ -2356,7 +2401,13 @@ function Agent({
       stop = true;
       clearTimeout(timer);
     };
-  }, [run.id, historyVersion, runVersion]);
+  }, [
+    run.id,
+    historyVersion,
+    transcriptVersion,
+    resyncVersion,
+    browsingHistory,
+  ]);
   const blocks = transcriptBlocks(events);
   const conversation = blocks.filter((b) =>
     ["Agent", "You", "Run error", "Message delivery"].includes(b.label),
@@ -2480,10 +2531,23 @@ function Agent({
           </p>
         )}
       </div>
-      {hasMore && <p>Loading more history after event {cursor}…</p>}
+      {hasMore &&
+        (browsingHistory ? (
+          <button onClick={() => setHistoryVersion((v) => v + 1)}>
+            Load next history page
+          </button>
+        ) : (
+          <p>Loading more history after event {cursor}…</p>
+        ))}
+      {browsingHistory && (
+        <button onClick={() => setBrowsingHistory(false)}>
+          Follow latest history
+        </button>
+      )}
       {events.length >= 1000 && (
         <button
           onClick={() => {
+            setBrowsingHistory(true);
             pageCursor.current = 0;
             setEvents([]);
             setCursor(0);
