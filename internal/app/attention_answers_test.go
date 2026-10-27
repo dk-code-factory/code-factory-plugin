@@ -138,6 +138,15 @@ func TestAttentionRepliesPersistEncryptedAndStayOutOfQueue(t *testing.T) {
 				t.Fatal(err)
 			}
 			at := pendingQuestion(t, a, tc.origin)
+			if tc.origin == "async" {
+				// This case verifies a reply to a completed asynchronous turn.
+				// Its question may be published before completion is processed;
+				// wait for that boundary before sending the continuation.
+				waitFor(t, func() bool {
+					var saved domain.Run
+					return a.Store.Get(ctx, "run", run.ID, &saved) == nil && saved.Status == "idle"
+				})
+			}
 			answer := raw(map[string]any{"answers": map[string]any{tc.questionID: map[string]any{"answers": []string{tc.value}}}})
 			if tc.mode == "approval" {
 				answer = raw(map[string]string{"decision": "decline"})

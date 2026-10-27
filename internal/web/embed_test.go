@@ -3,6 +3,7 @@ package web
 import (
 	"compress/gzip"
 	"encoding/base64"
+	"encoding/json"
 	"io"
 	"regexp"
 	"strings"
@@ -45,7 +46,11 @@ func TestProductionShellPrecedesDeferredRuntime(t *testing.T) {
 	}
 	defer reader.Close()
 	module, err := io.ReadAll(reader)
-	if err != nil || !strings.Contains(string(module), "react.transitional.element") || len(payload[1])*2 >= len(module) {
+	var bundle struct{ JS, CSS string }
+	if err != nil || json.Unmarshal(module, &bundle) != nil || !strings.Contains(bundle.JS, "react.transitional.element") || !strings.Contains(bundle.CSS, "box-sizing:border-box") || len(payload[1])*2 >= len(module) {
 		t.Fatal("runtime must round-trip to the application and halve parser input", len(payload[1]), len(module), err)
+	}
+	if strings.Contains(HTML, `<style rel="stylesheet"`) {
+		t.Fatal("secondary app styles must remain deferred until runtime startup")
 	}
 }
