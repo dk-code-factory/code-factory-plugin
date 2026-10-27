@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -24,6 +25,7 @@ type Engine interface {
 	Complete(context.Context, Runtime) error
 }
 type GitHub interface {
+	PrepareContext(context.Context, Submission) (investigationContext, error)
 	Validate(context.Context, Findings) error
 	FindMarker(context.Context, string, string) (*Issue, error)
 	ReadIssue(context.Context, string, int) (Issue, error)
@@ -461,7 +463,20 @@ func (s *Service) Step(ctx context.Context) error {
 		if s.Engine == nil {
 			return s.state(ctx, r.ID, "blocked", "Install agent-workflow, authenticated Codex and dk-workflows, then resume")
 		}
-		rt = Runtime{Generation: rt.Generation + 1, AdditionCount: len(r.Additions)}
+		rt = Runtime{Generation: rt.Generation + 1, AdditionCount: len(r.Additions), OutputContract: structuredContract}
+		if s.GitHub != nil {
+			prepared, err := s.GitHub.PrepareContext(ctx, r.Observation)
+			if err != nil {
+				return s.state(ctx, r.ID, "blocked", "Repository context preparation interrupted; resume after connectivity recovers")
+			}
+			rt.Context = &prepared
+		} else {
+			rt.Context = &investigationContext{Version: 1}
+		}
+		if err := s.sanitize(ctx, rt.Context); err != nil {
+			return err
+		}
+		refreshContextHashes(rt.Context)
 		rt.AdmissionID = r.ID
 		if rt.Generation > 1 {
 			rt.AdmissionID = fmt.Sprintf("%s-%d", r.ID, rt.Generation)
@@ -576,10 +591,26 @@ func (s *Service) Step(ctx context.Context) error {
 			return s.state(ctx, r.ID, "needs_attention", "Investigation ended; dk-workflows lifecycle completion needs recovery")
 		}
 		f := state.Outputs.Findings
+		var resultErr error
+		if rt.OutputContract == structuredContract {
+			var draft structuredDraft
+			draft, resultErr = decodeStructured(state.Outputs.Structured)
+			if resultErr == nil {
+				f, resultErr = renderDraft(draft, rt.Context, r.Observation, r.Additions[:min(len(r.Additions), rt.AdditionCount)])
+			}
+		} else if rt.OutputContract != 0 {
+			resultErr = fmt.Errorf("unsupported retained contract")
+		}
 		if e = s.sanitize(ctx, &f); e != nil {
 			return e
 		}
-		validClassification := f.Classification == "confirmed" || f.Classification == "suspected" || f.Classification == "duplicate" || f.Classification == "insufficient_information" || f.Classification == "explained"
+		if resultErr == nil {
+			if rt.OutputContract == structuredContract {
+				resultErr = validateFindings(f)
+			} else if !validText(f.Summary) || !slices.Contains([]string{"confirmed", "suspected", "duplicate", "insufficient_information", "explained"}, f.Classification) {
+				resultErr = fmt.Errorf("invalid legacy findings")
+			}
+		}
 		return s.Store.Write(ctx, func(t *store.Tx) error {
 			var current Report
 			if e := t.Get("issue-report", r.ID, &current); e != nil {
@@ -590,7 +621,7 @@ func (s *Service) Step(ctx context.Context) error {
 				transition(&current, "queued", "New evidence requires a fresh investigation after lifecycle completion")
 				return save(t, current)
 			}
-			if !validText(f.Summary) || !validClassification {
+			if resultErr != nil {
 				rt.UnusableResult = true
 				if e := t.Put("report-runtime", r.ID, rt); e != nil {
 					return e
@@ -615,6 +646,13 @@ func (s *Service) Step(ctx context.Context) error {
 		// Engine uncertainty requires explicit reconciliation before retrying effects.
 		if e = s.Engine.Complete(ctx, rt); e != nil {
 			return s.state(ctx, r.ID, "needs_attention", "Workflow stopped; inspect and finalize retained dk-workflows lifecycle records before resuming")
+		}
+		if rt.OutputContract == structuredContract && state.Status == "failed" && strings.Contains(state.Error, "invalid structured output") {
+			rt.UnusableResult = true
+			if err := s.putRuntime(ctx, r.ID, rt); err != nil {
+				return err
+			}
+			return s.state(ctx, r.ID, "needs_attention", "Investigation finalized with unusable findings; resume to start a fresh investigation")
 		}
 		return s.state(ctx, r.ID, "needs_attention", "Workflow stopped ("+state.Status+"); inspect retained engine attempts, reconcile effects and resume explicitly")
 	}

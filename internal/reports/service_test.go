@@ -58,6 +58,8 @@ func get(t *testing.T, s *Service, ctx context.Context, id string) Report {
 }
 
 type fakeEngine struct {
+	rawResult                    json.RawMessage
+	workflowError                string
 	prepareErr                   error
 	resumeErr                    error
 	completeErr                  error
@@ -87,8 +89,12 @@ func (e *fakeEngine) Start(_ context.Context, r Runtime) (WorkflowState, error) 
 	return e.result(), nil
 }
 func (e *fakeEngine) result() WorkflowState {
-	s := WorkflowState{ID: "workflow-1", Status: e.status}
+	s := WorkflowState{ID: "workflow-1", Status: e.status, Error: e.workflowError}
 	s.Outputs.Findings = e.findings
+	s.Outputs.Structured = mustJSON(draftFixture(e.findings))
+	if e.rawResult != nil {
+		s.Outputs.Structured = e.rawResult
+	}
 	return s
 }
 func (e *fakeEngine) Status(context.Context, Runtime, string) (WorkflowState, error) {
@@ -108,6 +114,8 @@ func (e *fakeEngine) Complete(context.Context, Runtime) error {
 }
 
 type fakeGitHub struct {
+	preparations                       int
+	preparedContext                    *investigationContext
 	createErr                          error
 	creates, refreshes, tracks         int
 	uncertain                          bool
@@ -122,6 +130,13 @@ type fakeGitHub struct {
 	created                            []Findings
 }
 
+func (g *fakeGitHub) PrepareContext(context.Context, Submission) (investigationContext, error) {
+	g.preparations++
+	if g.preparedContext != nil {
+		return *g.preparedContext, nil
+	}
+	return investigationContext{Version: 1, Repositories: []repositoryContext{{Repository: DefaultRepository, Candidates: []duplicateCandidate{{Number: 17}, {Number: 31}}}, {Repository: routes["agent-workflow"]}, {Repository: routes["dk-workflows"]}}}, nil
+}
 func (g *fakeGitHub) Validate(context.Context, Findings) error {
 	if g.onValidate != nil {
 		g.onValidate()
@@ -160,7 +175,7 @@ func (g *fakeGitHub) Track(context.Context, Issue, string) ([]Fix, []Release, er
 	return g.fixes, g.releases, g.errorTrack
 }
 func findings() Findings {
-	return Findings{Classification: "suspected", Summary: "Runtime evidence supports a suspected delivery regression", Repository: DefaultRepository, Component: "code-factory", Labels: []string{}, Title: "Answer delivery fails after reconnect", Body: "Expected the answer to reach the task; actual response was an error. Reproduction is unknown."}
+	return Findings{Classification: "suspected", Summary: "Runtime evidence supports a suspected delivery regression", Repository: DefaultRepository, Component: "code-factory", SourcePath: "internal/reports/service.go", SourceCommit: strings.Repeat("a", 40), OwnershipReason: "The captured implementation owns answer delivery", Labels: []string{}, Title: "Answer delivery fails after reconnect", Body: "Expected the answer to reach the task; actual response was an error. Reproduction is unknown."}
 }
 func setupEngine(s *Service) (*fakeEngine, *fakeGitHub) {
 	e := &fakeEngine{status: "succeeded", findings: findings()}
@@ -563,6 +578,7 @@ func TestEvidenceAfterWorkerCompletionRequiresFreshGeneration(t *testing.T) {
 				t.Fatal(err)
 			}
 			engine.findings.Classification = "explained"
+			engine.findings.MissingInformation = ""
 			step(t, s, ctx)
 			rt, err := s.runtime(ctx, r.ID)
 			if err != nil || rt.Generation != 2 || rt.AdditionCount != 1 || len(engine.preparedReports[1].Additions) != 1 || engine.preparedReports[1].Additions[0] != addition.Text || engine.requests[0].AdmissionID == engine.requests[1].AdmissionID || get(t, s, ctx, r.ID).Processing != "complete" {
@@ -749,6 +765,7 @@ func TestMissingPrerequisitesInformationAndExplicitRecovery(t *testing.T) {
 	}
 	engine.status = "succeeded"
 	engine.findings.Classification = "explained"
+	engine.findings.MissingInformation = ""
 	if _, e = s.ResumeReport(ctx, ResumeInput{ID: r.ID, Reconciled: true, Note: "Inspected attempts; no external effects occurred"}); e != nil {
 		t.Fatal(e)
 	}
@@ -783,6 +800,7 @@ func TestDuplicateReuseRoutingBlockAndSingleInvestigation(t *testing.T) {
 		t.Fatal("duplicate created another issue")
 	}
 	engine.findings.Classification = "suspected"
+	engine.findings.DuplicateNumber = 0
 	github.validateErr = errors.New("destination outside dk-code-factory")
 	step(t, s, ctx)
 	step(t, s, ctx)
@@ -1217,6 +1235,7 @@ func TestDelayedPublicationSuccessPreservesEstablishedIssue(t *testing.T) {
 		s, ctx := fixture(t)
 		engine, github := setupEngine(s)
 		engine.findings.Classification = "insufficient_information"
+		engine.findings.MissingInformation = "Which contract detail did the host observe?"
 		r := submit(t, s, ctx)
 		step(t, s, ctx)
 		oldRuntime, _ := s.runtime(ctx, r.ID)
@@ -1224,6 +1243,7 @@ func TestDelayedPublicationSuccessPreservesEstablishedIssue(t *testing.T) {
 			t.Fatal(err)
 		}
 		engine.findings.Classification = "explained"
+		engine.findings.MissingInformation = ""
 		step(t, s, ctx)
 		newerRuntime, _ := s.runtime(ctx, r.ID)
 		before := get(t, s, ctx, r.ID)
@@ -1407,6 +1427,7 @@ func TestUncertainResumeLifecycleNeedsAcknowledgedRecovery(t *testing.T) {
 	engine.resumeErr = nil
 	engine.status = "succeeded"
 	engine.findings.Classification = "explained"
+	engine.findings.MissingInformation = ""
 	step(t, restarted, ctx)
 	if get(t, s, ctx, r.ID).Processing != "complete" || engine.resumes != 2 {
 		t.Fatal("explicit recovery failed")
@@ -1455,6 +1476,7 @@ func TestFinalizedUnusableFindingsReleaseSlotAndAllowFreshInvestigation(t *testi
 			}
 			engine.findings = findings()
 			engine.findings.Classification = "explained"
+			engine.findings.MissingInformation = ""
 			step(t, s, ctx)
 			if get(t, s, ctx, other.ID).Processing != "complete" || engine.starts != 2 || github.creates != 0 {
 				t.Fatal("finalized unusable report blocked queued work")
@@ -1514,4 +1536,8 @@ func TestRejectedCreationCanResumeWithoutTreatingItAsAnUnknownEffect(t *testing.
 	if get(t, s, ctx, r.ID).Processing != "complete" || github.creates != 2 {
 		t.Fatal("rejected creation did not recover")
 	}
+}
+
+func draftFixture(f Findings) structuredDraft {
+	return structuredDraft{Version: structuredContract, Classification: f.Classification, Summary: f.Summary, MissingInformation: f.MissingInformation, Component: f.Component, SourcePath: f.SourcePath, SourceCommit: f.SourceCommit, OwnershipReason: f.OwnershipReason, DuplicateNumber: f.DuplicateNumber, Title: f.Title, Labels: f.Labels, Restriction: "none", GuidanceReviewed: []string{}, Answers: []fieldAnswer{}, Content: reportContent{Environment: "Fixture host", Reproduction: "Reproduction unknown; reconnect timing unavailable", Expected: "Answer delivered", Actual: "Answer failed", Evidence: f.Body, Findings: f.Summary, Uncertainty: "Suspected, not proven"}}
 }

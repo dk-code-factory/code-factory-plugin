@@ -291,6 +291,18 @@ export function ReportedIssues({ cursor }: { cursor: number }) {
                 Information requested: {detail.findings.missingInformation}
               </p>
             )}
+            {detail.findings?.body?.startsWith("Layout limitation:") && (
+              <p role="status">{detail.findings.body.split("\n")[0]}</p>
+            )}
+            {detail.findings?.body && (
+              <details>
+                <summary>Issue draft</summary>
+                <h4>{detail.findings.title}</h4>
+                <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                  {detail.findings.body}
+                </pre>
+              </details>
+            )}
             <h4>GitHub</h4>
             {detail.issue ? (
               <>

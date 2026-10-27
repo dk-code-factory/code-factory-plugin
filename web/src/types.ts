@@ -277,6 +277,8 @@ export interface IssueReport {
   versions: Record<string, string>;
   installedVersion: string;
   findings?: {
+    title?: string;
+    body?: string;
     classification: string;
     summary: string;
     missingInformation: string;

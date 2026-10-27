@@ -28,7 +28,7 @@ The list expresses logical composition, not required component boundaries.
 | `P-INBOX-LIST` | `W-ITEM-ROW` repeated by item ID, or `W-INBOX-EMPTY` | Full-width filtered list on the active Working, Issues, My PRs or Review PRs page. Selection opens one item conversation. |
 | `P-ITEM-DETAIL` | `W-ITEM-OVERVIEW`, `W-ITEM-ACTIONS`, `W-PRIORITY`, `W-RELATIONSHIPS`, `W-TICKET-CONTEXT`, `W-PR-EVIDENCE`, `W-ITEM-HISTORY`; contextual Back-only `W-NAVIGATION` instance. | Item summary above chat and collapsed triage/details below it on PAGE-AGENT. Submitted PR reviews are visible above chat rather than hidden in Activity. |
 | `P-REPORT-LIST` | Search, processing/component/version filters, report rows, pagination and manual refresh. | The shared persistent report ledger. |
-| `P-REPORT-DETAIL` | Observation, findings, missing information, evidence, GitHub and delivery, freshness and recovery. | The selected durable report ID. |
+| `P-REPORT-DETAIL` | Observation, findings with collapsible issue draft and visible layout limitation, required information, evidence, GitHub and delivery, freshness and recovery. | The selected durable report ID. |
 <!-- /specs:panes-1 -->
 
 ## Agent panes

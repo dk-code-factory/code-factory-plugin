@@ -393,7 +393,7 @@ func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(t *tes
 					reply(w, map[string]any{"number": 17, "html_url": "https://github.com/" + DefaultRepository + "/issues/17", "state": "open"})
 				case strings.Contains(r.URL.Path, "/contents/"):
 					reply(w, map[string]string{"type": "file"})
-				case strings.HasSuffix(r.URL.Path, "/issues"):
+				case strings.HasPrefix(r.URL.Path, "/repos/") && strings.HasSuffix(r.URL.Path, "/issues"):
 					markerReads.Add(1)
 					reply(w, []any{})
 				default:
@@ -414,7 +414,7 @@ func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(t *tes
 			step(t, s, ctx)
 			current := get(t, s, ctx, r.ID)
 			rt, e := s.runtime(ctx, r.ID)
-			if e != nil || current.Issue != nil || tokens.Load() != 1 {
+			if e != nil || current.Issue != nil || tokens.Load() != 2 {
 				t.Fatal("unexpected operation outcome", current.Processing, rt, e, tokens.Load())
 			}
 			if lostResponse {
@@ -436,7 +436,7 @@ func TestHTTPPublicationRecoveryDistinguishesTokenFailureFromLostResponse(t *tes
 			}
 			step(t, s, ctx)
 			step(t, s, ctx)
-			if get(t, s, ctx, r.ID).Processing != "complete" || posts.Load() != 1 || markerReads.Load() != 1 || tokens.Load() != 2 {
+			if get(t, s, ctx, r.ID).Processing != "complete" || posts.Load() != 1 || markerReads.Load() != 1 || tokens.Load() != 4 {
 				t.Fatal("fresh authenticated operation failed", posts.Load(), markerReads.Load(), tokens.Load())
 			}
 		})
