@@ -6380,3 +6380,27 @@ for (const response of ["success", "failure"] as const) {
     } finally { release(); }
   });
 }
+
+
+test("single Codex execution settings retain the selected iteration skill without launching", async ({page}) => {
+  const snapshot=initial();
+  snapshot.skills.push({id:"iteration",name:"dk-workflows:dk-pr-iter",path:"/fixture/SKILL.md",content:"",managed:false});
+  const {ui,calls,state}=await host(page,{snapshot,surface:"settings"});
+  await ui.getByText("System defaults",{exact:true}).click();
+  await expect(ui.getByLabel("Session execution",{exact:true})).toHaveValue("workflow");
+  await ui.getByLabel("Session execution",{exact:true}).selectOption("single-codex");
+  await ui.getByLabel("PR iteration skill",{exact:true}).selectOption("iteration");
+  await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
+  await expect.poll(()=>state.config.executionMode).toBe("single-codex");
+  expect(state.config.prReviewSkillId).toBe("iteration");
+  await ui.getByLabel("Request budget per hour",{exact:true}).fill("1400");
+  await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
+  await expect.poll(()=>state.config.githubRequestsPerHour).toBe(1400);
+  expect(state.config.executionMode).toBe("single-codex");
+  expect(state.config.prReviewSkillId).toBe("iteration");
+  await ui.getByLabel("Session execution",{exact:true}).selectOption("workflow");
+  await expect(ui.getByLabel("PR iteration skill",{exact:true})).toHaveCount(0);
+  await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
+  await expect.poll(()=>state.config.executionMode).toBe("workflow");
+  expect(calls.filter(c=>["start_run","prepare_pr_review","post_retained_review"].includes(c.name))).toHaveLength(0);
+});

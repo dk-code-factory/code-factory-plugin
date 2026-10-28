@@ -136,6 +136,7 @@ export default function Settings({
         <summary>System defaults</summary>
         <SaveForm save={() => save("save_settings", { ...config })}>
           <SystemReviewSettings
+            skills={snap.skills}
             usage={snap.githubUsage}
             config={config}
             profiles={snap.profiles}

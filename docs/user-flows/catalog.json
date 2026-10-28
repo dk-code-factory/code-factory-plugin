@@ -1145,6 +1145,46 @@
             "S7"
           ],
           "purpose": "Delayed success and failure responses from an earlier On save cannot replace a newer committed Off policy observation or restore an obsolete error; exactly one save occurs and no start/post runs."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "single Codex execution settings retain the selected iteration skill without launching",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Saves single Codex mode and the installed iteration skill, preserves both during unrelated budget edits, switches back to workflow and never launches or publishes."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexReviewRetainsSkillModeAndNativeSession(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Preparation freezes direct execution and a full iteration skill snapshot; changing settings prepares engine reviews without rerouting the existing native session or its follow-up."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexConfigurationRejectsMissingDisabledOrWrongSkill(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Missing, disabled and unrelated iteration skills and unknown modes cannot be saved."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestAutomaticReviewPreservesProfileSkills(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Automatic native reviews with nil, empty, unrelated or already-selected profile skills and workflow reviews with empty skills start and complete under the unchanged selected profile. Derived skills are retained once; actual profile changes still block automatic validation."
         }
       ],
       "suites": [
@@ -2181,6 +2221,14 @@
             "S5"
           ],
           "purpose": "An opted-in automatic request creates one retained review claim and records dependency rejection as blocked without evidence capture or a native-turn fallback."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestAutomaticReviewPreservesProfileSkills(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Automatic native reviews with nil, empty, unrelated or already-selected profile skills and workflow reviews with empty skills start and complete under the unchanged selected profile. Derived skills are retained once; actual profile changes still block automatic validation."
         }
       ],
       "suites": [
@@ -5477,6 +5525,40 @@
             "S10"
           ],
           "purpose": "A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexReviewRetainsSkillModeAndNativeSession(",
+          "scenarios": [
+            "S3",
+            "S6"
+          ],
+          "purpose": "Preparation freezes direct execution and a full iteration skill snapshot; changing settings prepares engine reviews without rerouting the existing native session or its follow-up."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestAutomaticReviewPreservesProfileSkills(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Automatic native reviews with nil, empty, unrelated or already-selected profile skills and workflow reviews with empty skills start and complete under the unchanged selected profile. Derived skills are retained once; actual profile changes still block automatic validation."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexExplicitSkillsRemainSelectedAndUnmodified(",
+          "scenarios": [
+            "S3",
+            "S6"
+          ],
+          "purpose": "Explicit empty or already-selected skills remain the retained profile selection while the iteration bundle is attached once without modifying the caller backing slice."
         }
       ],
       "suites": [
@@ -6729,6 +6811,23 @@
             "S8"
           ],
           "purpose": "Continue/resume with fixture and production adapters refuses the held exclusive maintenance gate without changing runs, sessions, messages or work counters; after release capability and stale-turn checks remain and valid continuation reuses its completed checkpoint."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexReviewRetainsSkillModeAndNativeSession(",
+          "scenarios": [
+            "S1",
+            "S6"
+          ],
+          "purpose": "Single-session review follows up in the original native session after global settings switch back to workflow."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution."
         }
       ],
       "suites": [
@@ -9479,6 +9578,15 @@
             "S7"
           ],
           "purpose": "A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution."
         }
       ],
       "suites": [

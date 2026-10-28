@@ -2801,7 +2801,8 @@
         "UI-DEFERRED-SKILLS",
         "UI-PR-POSTING",
         "API-REVIEW-POLICY",
-        "UI-REVIEW-POLICY-UNRESOLVED"
+        "UI-REVIEW-POLICY-UNRESOLVED",
+        "API-SINGLE-CODEX-EXPLICIT-SKILLS"
       ],
       "gaps": [
         {
@@ -2934,7 +2935,8 @@
         "UI-FULL-ACCESS",
         "ADMIN-REMOVED-SKILL",
         "UI-PR-POSTING",
-        "API-REVIEW-POLICY"
+        "API-REVIEW-POLICY",
+        "API-SINGLE-CODEX-EXPLICIT-SKILLS"
       ],
       "gaps": [
         {
@@ -11648,7 +11650,12 @@
         "API-REVIEW-IMPORT",
         "API-REVIEW-IMPORT-GLOBAL",
         "UI-REVIEW-IMPORT-EDITS",
-        "UI-REVIEW-CONFIG-DRAFT"
+        "UI-REVIEW-CONFIG-DRAFT",
+        "UI-SINGLE-CODEX-MODE",
+        "API-SINGLE-CODEX-SESSION",
+        "API-SINGLE-CODEX-VALIDATION",
+        "API-SINGLE-CODEX-RESTART",
+        "API-AUTOMATIC-SESSION-PROFILE"
       ],
       "gaps": [],
       "suites": [
@@ -11656,9 +11663,9 @@
         "browser",
         "go"
       ],
-      "element_description": "System review-request policy, default review and implementation pipelines, plugin-check interval and save feedback. Ordered reviewer bindings, private review rules, automatic review posting and one-time DK import with conflict feedback.",
-      "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins. A supported saved interval outside the offered presets displays its actual minutes and is preserved by unrelated saves. Posting defaults off globally; repository false is explicit and null inherits. An empty reviewer list blocks before diff capture. Global DK import applies only its reported reviewer/rule fields to the current draft; unrelated edits made while settings load remain intact. Unrelated settings edits preserve an invalid ordered-reviewer draft and its validation; only changed reviewer configuration resets the draft.",
-      "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review honors a configured read-only/ask profile or an explicit full-access/never/authorized profile. Selecting authority does not enable automatic review by itself. Persist ordered bindings and private rules for future workflows; import preserves existing Factory values and reports unresolved DK settings."
+      "element_description": "System review-request policy, default review and implementation pipelines, plugin-check interval and save feedback. Ordered reviewer bindings, private review rules, automatic review posting and one-time DK import with conflict feedback. Session execution selector and installed dk-pr-iter skill selector.",
+      "state_description": "Queue only and manual plugin checks are defaults. A repository can inherit or override review behavior and pipelines. Enabled periodic checks refresh metadata and never install plugins. A supported saved interval outside the offered presets displays its actual minutes and is preserved by unrelated saves. Posting defaults off globally; repository false is explicit and null inherits. An empty reviewer list blocks before diff capture. Global DK import applies only its reported reviewer/rule fields to the current draft; unrelated edits made while settings load remain intact. Unrelated settings edits preserve an invalid ordered-reviewer draft and its validation; only changed reviewer configuration resets the draft. Single Codex mode requires an available dk-pr-iter skill; it changes only newly prepared work. Existing missing mode values retain workflow behavior.",
+      "interactions": "Saving changes future automatic/manual policy evaluation; prepared run choices remain immutable. Automatic review honors a configured read-only/ask profile or an explicit full-access/never/authorized profile. Selecting authority does not enable automatic review by itself. Persist ordered bindings and private rules for future workflows; import preserves existing Factory values and reports unresolved DK settings. Single Codex sessions retain their mode and skill snapshot across later settings changes; workflow automatic posting does not govern skill-driven iteration."
     },
     {
       "id": "P-PLUGIN-ADMIN",
@@ -14062,6 +14069,42 @@
       "path": "internal/app/retained_review_test.go",
       "anchor": "func TestReviewRestartDoesNotPromoteOlderArtifactBeforeEngineeringCompletion(",
       "assertion": "A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact."
+    },
+    {
+      "id": "UI-SINGLE-CODEX-MODE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "single Codex execution settings retain the selected iteration skill without launching",
+      "assertion": "Saves single Codex mode and the installed iteration skill, preserves both during unrelated budget edits, switches back to workflow and never launches or publishes."
+    },
+    {
+      "id": "API-SINGLE-CODEX-SESSION",
+      "path": "internal/app/single_codex_test.go",
+      "anchor": "func TestSingleCodexReviewRetainsSkillModeAndNativeSession(",
+      "assertion": "Preparation freezes direct execution and a full iteration skill snapshot; changing settings prepares engine reviews without rerouting the existing native session or its follow-up."
+    },
+    {
+      "id": "API-SINGLE-CODEX-VALIDATION",
+      "path": "internal/app/single_codex_test.go",
+      "anchor": "func TestSingleCodexConfigurationRejectsMissingDisabledOrWrongSkill(",
+      "assertion": "Missing, disabled and unrelated iteration skills and unknown modes cannot be saved."
+    },
+    {
+      "id": "API-SINGLE-CODEX-RESTART",
+      "path": "internal/app/single_codex_test.go",
+      "anchor": "func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(",
+      "assertion": "After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution."
+    },
+    {
+      "id": "API-AUTOMATIC-SESSION-PROFILE",
+      "path": "internal/app/single_codex_test.go",
+      "anchor": "func TestAutomaticReviewPreservesProfileSkills(",
+      "assertion": "Automatic native reviews with nil, empty, unrelated or already-selected profile skills and workflow reviews with empty skills start and complete under the unchanged selected profile. Derived skills are retained once; actual profile changes still block automatic validation."
+    },
+    {
+      "id": "API-SINGLE-CODEX-EXPLICIT-SKILLS",
+      "path": "internal/app/single_codex_test.go",
+      "anchor": "func TestSingleCodexExplicitSkillsRemainSelectedAndUnmodified(",
+      "assertion": "Explicit empty or already-selected skills remain the retained profile selection while the iteration bundle is attached once without modifying the caller backing slice."
     }
   ],
   "source_map": [

@@ -15,6 +15,8 @@ A previously launched run has a live or retained agent session.
 3. Send a clarification during active work to steer the displayed turn.
 4. Send to inactive retained work to continue the same conversation and workspace. Interrupt active work from secondary details when requested, preserving workspace and history.
 
+A single-session launch retains its native session for questions, answers and follow-up even when the system execution setting changes. Skill-required native child work remains coordinated by that session.
+
 ## Alternatives and recovery
 
 Daemon startup automatically continues unfinished work in the same retained session using saved progress. Completed idle sessions remain idle and accept a follow-up without a new task. Explicit interrupts remain stopped until the owner continues them; startup does not undo an interrupt.
@@ -238,6 +240,8 @@ flowchart TD
 - [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewInterruptResumeJoinsOldExecution(`; S8. Immediate Resume rejects until the old worker stops; new scope cannot reuse prior review, while a continue message resumes completed checkpoints.
 - [internal/app/review_workflow_guards_test.go](../../internal/app/review_workflow_guards_test.go) — `func TestReviewTerminationCancelsConcurrentStartAndResume(`; S8. Concurrent retained Start/Resume and termination cancels the replacement execution while preserving pre-lock cancellation of old work.
 - [internal/app/review_maintenance_test.go](../../internal/app/review_maintenance_test.go) — `func TestRetainedReviewContinuationHonorsPluginMaintenance(`; S8. Continue/resume with fixture and production adapters refuses the held exclusive maintenance gate without changing runs, sessions, messages or work counters; after release capability and stale-turn checks remain and valid continuation reuses its completed checkpoint.
+- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestSingleCodexReviewRetainsSkillModeAndNativeSession(`; S1, S6. Single-session review follows up in the original native session after global settings switch back to workflow.
+- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(`; S6. After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution.
 
 ## Verification and gaps
 

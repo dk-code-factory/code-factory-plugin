@@ -262,6 +262,7 @@ flowchart TD
 - [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestCompletionRequiresAssessmentAndSavedArtifactBinding(`; S7. Aggregate save/cancellation, engineering assessment/retention, result retention corruption and result binding-save faults remain incomplete, cannot promote an older incomplete artifact and allow a later retry to reuse reviewer checkpoints.
 - [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestCompletionNotificationFailurePreservesSavedArtifact(`; S7. A progress failure after durable result binding preserves validated complete state and a valid artifact; retry does not repeat engineering assessment or reviewers.
 - [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewRestartDoesNotPromoteOlderArtifactBeforeEngineeringCompletion(`; S7. A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact.
+- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(`; S1, S2. After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution.
 
 ## Verification and gaps
 

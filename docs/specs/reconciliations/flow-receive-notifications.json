@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "9245bc58e51d4868370a3079c5652039f1ce2b1a",
-  "fingerprint": "e45a9f03865a57c82bbb9d6fc744b60265f4c4ffb9b6ecdb43bf2862b6618961",
+  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
+  "fingerprint": "ba0ec08b6f46510ae7c9c9480d5cbc79690d7cc05c500ca5c3a5848e48efd36d",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S4 subscription verification, stable identities, bounded retries, disabled-delivery progress and metadata-only PR/attention alerts are unchanged. Material-review questions reuse the existing attention event route without adding a notification payload or subscription kind.",
-    "implementation": "Compared main notification contract and unchanged event delivery implementation. Review gates publish normal attention metadata and saved-state changes use a separate metadata-only UI journal. Neither new review artifacts nor private rules are inserted into host notification bodies.",
-    "tests": "Read TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications: private context is placed in originating events, resulting bodies omit it, and two ticks deliver exactly one inbox and one attention notification. Existing callback safety/retry/dedup/expiry assertions remain declared; actual host signed-alert timing remains an explicit unverified scenario."
+    "description": "Subscribe to host notifications and manage delivery retains its documented scenarios. Shared Config/Run optional fields and native adapter selection affect launch preparation; this consumer's authored transitions and existing stable IDs remain accurate.",
+    "implementation": "Inspected shared-file diff for receive-notifications; its provider, persisted ownership and UI transitions are unchanged. Missing execution mode preserves workflow behavior; retained runs continue using their own marker and snapshot rather than current settings.",
+    "tests": "Reviewed the existing catalog assertion anchor func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( in internal/events/events_test.go and retained its mapping. New native launch tests supplement the launch contract; fixture suites rerun existing consumer assertions and leave installed-host and accessibility gaps open."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 71.215
+      "seconds": 72.924
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.962
+      "seconds": 25.645
     },
     {
       "command": [
@@ -52,11 +52,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.763
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "d2884de8921a748501cce0fc2df4720ca50f28bcf23f021a614f2c3968656ea5",
+    "flow:receive-notifications": "3a8c16eb8e8916c50fb0a4c54aced8b94ce0d130cfdeea62ea9172a1fa9cbd0b",
     "term:attention-request": "c57bfed41d57a49346961b4b41d759191bfeb3caf737c687a46ae4e79eccd3e9",
     "term:coverage-gap": "69eaf133eee354b731987a2543558b1ec8315a313c9b0af797c771ef8489121a",
     "term:host": "d0dac63dddc81a390e9fdf51b9979158bd6a92d7d977447e8b34ec3ca6d991f0",

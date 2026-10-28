@@ -213,6 +213,7 @@ flowchart TD
 - [internal/app/launch_retry_test.go](../../internal/app/launch_retry_test.go) — `func TestDeferredReviewRetainsRetryWhenActivePrincipalBudgetIsDenied(`; S5, S8. Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch.
 - [internal/app/tracking_test.go](../../internal/app/tracking_test.go) — `TestBackgroundObservationsAdvanceWithoutOpeningAView`; S1. Saved reads trigger no provider work; independent background monitoring starts without a view and persists failed observations while retaining saved item detail.
 - [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestAutomaticReviewUsesNewWorkflowAndNeverNativeFallback(`; S5. An opted-in automatic request creates one retained review claim and records dependency rejection as blocked without evidence capture or a native-turn fallback.
+- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestAutomaticReviewPreservesProfileSkills(`; S5. Automatic native reviews with nil, empty, unrelated or already-selected profile skills and workflow reviews with empty skills start and complete under the unchanged selected profile. Derived skills are retained once; actual profile changes still block automatic validation.
 
 ## Verification and gaps
 

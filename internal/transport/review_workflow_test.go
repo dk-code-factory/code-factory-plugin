@@ -33,6 +33,11 @@ func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(t *testing.T)
 	config.Reviewers = []prreview.Reviewer{{ID: "one", Kind: "skill", SkillID: "pending-install"}}
 	config.AutoPostReview = true
 	config.ReviewRules = "Use comments"
+	if err := a.Runs.SaveSkill(ctx, domain.Skill{Name: "dk-pr-iter", Content: "---\nname: dk-pr-iter\ndescription: Iteration fixture.\n---\nReview."}); err != nil {
+		t.Fatal(err)
+	}
+	config.ExecutionMode = "single-codex"
+	config.PRReviewSkillID = "managed:dk-pr-iter"
 	if err := a.SaveConfig(ctx, config); err != nil {
 		t.Fatal(err)
 	}
@@ -43,13 +48,19 @@ func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(t *testing.T)
 	delete(older, "autoPostReview")
 	delete(older, "reviewers")
 	delete(older, "reviewRules")
+	delete(older, "executionMode")
+	delete(older, "prReviewSkillId")
 	_, bad := mutate(t, "save_settings", older)
 	if bad {
 		t.Fatal("omitted settings rejected")
 	}
 	saved, _ := a.Config(ctx)
-	if !saved.AutoPostReview || len(saved.Reviewers) != 1 || saved.ReviewRules != "Use comments" {
+	if saved.ExecutionMode != "single-codex" || saved.PRReviewSkillID != config.PRReviewSkillID || !saved.AutoPostReview || len(saved.Reviewers) != 1 || saved.ReviewRules != "Use comments" {
 		t.Fatal("omitted settings cleared workflow configuration", saved)
+	}
+	config.ExecutionMode = "workflow"
+	if err := a.SaveConfig(ctx, config); err != nil {
+		t.Fatal(err)
 	}
 	if _, bad = mutate(t, "save_repository", map[string]any{"id": "o/r", "autoPostReview": false, "reviewRules": "Local rules", "reviewers": []prreview.Reviewer{}}); bad {
 		t.Fatal("repo policy rejected")

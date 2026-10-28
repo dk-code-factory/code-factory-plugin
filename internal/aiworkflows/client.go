@@ -49,6 +49,7 @@ type Client struct {
 	wg     sync.WaitGroup
 	closed bool
 
+	native    bool
 	onMessage func(codex.Message)
 }
 
@@ -145,8 +146,20 @@ func Start(ctx context.Context, binary string, extra []string, dataDir string, k
 	return c, nil
 }
 
+// StartNative uses one retained app-server session without the YAML executor.
+// Explicit mode selection is frozen on the application run, never a fallback.
+func StartNative(ctx context.Context, binary string, extra []string, dataDir string, kind Kind, onMessage func(codex.Message)) (*Client, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	client, err := codex.Start(ctx, binary, extra, onMessage)
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+	return &Client{Client: client, ctx: ctx, cancel: cancel, native: true}, nil
+}
+
 func (c *Client) Call(ctx context.Context, method string, params any, out any) error {
-	if method != "turn/start" {
+	if c.native || method != "turn/start" {
 		return c.Client.Call(ctx, method, params, out)
 	}
 	return c.CallWorkflow(ctx, c.kind, params, out)
@@ -156,6 +169,9 @@ func (c *Client) Call(ctx context.Context, method string, params any, out any) e
 // acknowledgement while the workflow keeps running until that turn terminates.
 // Failure before acknowledgement is never retried; delivery may be uncertain.
 func (c *Client) CallWorkflow(ctx context.Context, kind Kind, params any, out any) error {
+	if c.native {
+		return c.Client.Call(ctx, "turn/start", params, out)
+	}
 	if _, ok := roles[kind]; !ok {
 		return fmt.Errorf("unknown AI workflow %q", kind)
 	}
@@ -375,6 +391,10 @@ func (c *Client) observe(msg codex.Message) *turn {
 }
 
 func (c *Client) Close() error {
+	if c.native {
+		c.cancel()
+		return c.Client.Close()
+	}
 	c.mu.Lock()
 	c.closed = true
 	active := c.active != nil

@@ -194,6 +194,8 @@ type Profile struct {
 	Publishing string   `json:"publishing"`
 }
 type Config struct {
+	ExecutionMode         string              `json:"executionMode,omitempty"`
+	PRReviewSkillID       string              `json:"prReviewSkillId,omitempty"`
 	ReviewersConfigured   bool                `json:"reviewersConfigured,omitempty"`
 	ReviewRulesConfigured bool                `json:"reviewRulesConfigured,omitempty"`
 	AutoPostReview        bool                `json:"autoPostReview,omitempty"`
@@ -217,6 +219,7 @@ type Config struct {
 	QuestionHelperModel     string         `json:"questionHelperModel,omitempty"`
 }
 type Run struct {
+	ExecutionMode           string                  `json:"executionMode,omitempty"`
 	ReviewExecution         string                  `json:"reviewExecution,omitempty"`
 	ReviewResult            *prreview.ResultSummary `json:"reviewResult,omitempty"`
 	ReviewWorkflow          string                  `json:"reviewWorkflow,omitempty"`

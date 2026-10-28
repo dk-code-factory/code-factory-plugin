@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "9245bc58e51d4868370a3079c5652039f1ce2b1a",
-  "fingerprint": "8003da81273e512e55b21915756f6fb243f4857ba161e3233569b063f1ac391d",
+  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
+  "fingerprint": "22ee9ef8896e97476c6ad4d9d364a3872a1a07a511376d89626a4c34f9bd9ac5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S5 upgrade/rollback/uninstall, diagnostics and explicit owner dependency maintenance remain unchanged. The pinned workflow SDK change and rebuilt distributable affect delivered code, while the existing release and dependency-operation procedures retain their contracts and stated exclusions.",
-    "implementation": "Compared main operations prose/mappings. New capability diagnostics are ordinary application errors; they do not install upstream dependencies, run models in CI or bypass owner dependency authorization. Existing private API logging, rotation and service boundaries are retained. The excluded ambiguous-baseline skill adoption repair remains excluded. The same existing maintenance exclusion now also guards retained review continue/resume admission through QueueMessage. This repairs a new route under the unchanged mutually exclusive maintenance/work contract; dependency action semantics and excluded baseline-adoption repair remain unchanged.",
-    "tests": "Read TestAPILogActualOwnerHandlerRecordsRejectedInput for an unchanged owner-handler validation response and matching bounded diagnostic record; rotation/concurrency assertions retain private permissions and preserve API behavior on log failure. Release, packaging and installer verification remain required for the coordinator; no real service upgrade, browser consent or installed-host test was performed by this review. The retained continuation maintenance regression directly holds the same exclusive gate as PluginAction/dependency maintenance, checks all four operation/adapter combinations refuse without work/state changes, then verifies normal capability/turn checks and checkpoint reuse after release. It complements the existing active-work/maintenance assertions without claiming live service acceptance."
+    "description": "Inspect health, upgrade, roll back and uninstall retains its documented scenarios. Shared Config/Run optional fields and native adapter selection affect launch preparation; this consumer's authored transitions and existing stable IDs remain accurate.",
+    "implementation": "Inspected shared-file diff for operate-installation; its provider, persisted ownership and UI transitions are unchanged. Missing execution mode preserves workflow behavior; retained runs continue using their own marker and snapshot rather than current settings.",
+    "tests": "Reviewed the existing catalog assertion anchor def test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall( in scripts/test_installer.py and retained its mapping. New native launch tests supplement the launch contract; fixture suites rerun existing consumer assertions and leave installed-host and accessibility gaps open."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 171.633
+      "seconds": 174.814
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 71.215
+      "seconds": 72.924
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.796
+      "seconds": 3.634
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 3.495
+      "seconds": 3.272
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.668
+      "seconds": 21.728
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.181
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.643
+      "seconds": 0.662
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.962
+      "seconds": 25.645
     },
     {
       "command": [
@@ -139,11 +139,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.763
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "5f1d882d011edda9d95ca618f73b33817454d31e88b40bed84e924dbaf8b8f72",
+    "flow:operate-installation": "c621571b6a048e6162fb277b392fc66fdcfc8f20e884b363a95f574689c55036",
     "term:connection-refreshes": "e93abe304d0d2e5fb9c09725e77b49dd688df18e9fde3818b7ceaea7f9f72626",
     "term:connection-submits": "ab2396fbe49e99b3c5388e79051833cf74b82f8f70d56e4c15b4af1028855539",
     "term:coverage-gap": "69eaf133eee354b731987a2543558b1ec8315a313c9b0af797c771ef8489121a",
@@ -180,12 +180,12 @@
     "term:ui-w-diagnostics": "0c1c33a5545a718540b577c0d25ec5983256342c20e198a2c250d4b29eb1a1c8",
     "term:unverified-behavior": "c7c9362aa601126bb24a32d48534a297a87d47a9c712936b58d7134b4fe25c01",
     "term:verification": "c939fa015427cd332b91e63bbdd2077545d034648e89ef310caef974f076566a",
-    "ui:C-BROWSER-LAB": "be889da5495ac06b4a6e5cc1d6bdb73f9ebf5404333f7c516d2276357816c74b",
-    "ui:C-DIAGNOSE": "67deb6777e9fa7e2e8d950983df7b9cc43081754971f0e82811dd655445832db",
-    "ui:P-BROWSER-LAB": "2e14b99515315bf4766a55dacf6f43ee2c0a0435db36ec08a25201e90645913b",
-    "ui:P-DIAGNOSTICS": "33ee350a8abcaf0ccb38fd234d3e86d42cfc6bd416d9aaff4b9dcb8dad3c2b57",
-    "ui:PAGE-BROWSER-LAB": "f1b2a0fc243493cc012bc161640b662457b1553d6d997a22622fa7f0a1883648",
-    "ui:W-BROWSER-LAB": "c78d1e883d47731c4f5e29a3ddf76d0fba5f153092baebef7273de75d65b559c",
-    "ui:W-DIAGNOSTICS": "40801ce89dfb1223a2860b9fa7c8c7d0f2d40cc8e654f326242ff87309002608"
+    "ui:C-BROWSER-LAB": "7dd969cb63c2a2d590a84e823a27607be696e9e19e8b3a8a9cec5694c96c96a6",
+    "ui:C-DIAGNOSE": "a42f56910c7ed64ac8353ee971c831a508948669bf67f7baa30afea84ee63655",
+    "ui:P-BROWSER-LAB": "64d19394c1b79c5fdf9e4d2b580eecbc9368392a1b36a5a0dacc65516f380a5a",
+    "ui:P-DIAGNOSTICS": "8b5f93b1cf0b742f5cf7be08386f5d2931ffd522701dfe0d64c95b1f8191c068",
+    "ui:PAGE-BROWSER-LAB": "d39e35fd3f19453ad8643bcd886ed6aa4de325dcc8252099d751b65c21cb683d",
+    "ui:W-BROWSER-LAB": "95fa960cff279028ee93761ce84566810489f6625dc1456f65261a0901820771",
+    "ui:W-DIAGNOSTICS": "2c3e451990a40428e9afde0ddc834b3b19875d956c592984d2fd26ad37c5924a"
   }
 }

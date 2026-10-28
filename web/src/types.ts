@@ -156,6 +156,8 @@ export interface Entry {
   };
 }
 export interface Config {
+  executionMode?: "workflow" | "single-codex";
+  prReviewSkillId?: string;
   autoPostReview?: boolean;
   reviewers?: Reviewer[] | null;
   reviewRules?: string;
@@ -188,7 +190,7 @@ export interface GitHubUsage {
 }
 export interface Snapshot {
   selectedEntry?: Entry;
-  page?: {offset:number;limit:number;total:number;hasMore:boolean};
+  page?: { offset: number; limit: number; total: number; hasMore: boolean };
   reviewVersions?: Record<string, string>;
   githubUsage?: GitHubUsage;
   viewer?: { login: string; teams: string[] | null; teamError?: string };
