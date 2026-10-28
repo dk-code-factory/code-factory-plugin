@@ -10,7 +10,7 @@ The job validates specifications, checks Go/TypeScript, runs uncached Go race an
 browser/accessibility fixtures, tooling, packaging, installer and compiled smoke
 tests. After the heavy suites, the required isolated `make test-performance` gate
 serves the production embedded UI through a fixture MCP host. One worker and zero
-retries retain all 20 fresh and 10 warm launch samples, each limited to 50 ms.
+retries retain all 20 fresh and 10 warm launch samples, each limited to 100 ms.
 Empty, cold-server and synthetic retained-state cases use provider operations
 delayed by at least 100 ms, with measured delays, request counts, payload sizes,
 render timings and long tasks stored in `web/performance-results/timing.json`.

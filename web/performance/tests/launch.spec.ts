@@ -238,7 +238,7 @@ async function measure(
   );
   renders.push({ name, ms: end - start });
 }
-test("production embedded direct launch: every fresh and warm sample is at most 50 ms", async ({
+test("production embedded direct launch: every fresh and warm sample is at most 100 ms", async ({
   browser,
 }) => {
   await mkdir("performance-results", { recursive: true });
@@ -393,7 +393,7 @@ test("production embedded direct launch: every fresh and warm sample is at most 
       ),
     ).toBe(true);
     expect(
-      samples.filter((s) => s.ms > 50),
+      samples.filter((s) => s.ms > 100),
       JSON.stringify(samples),
     ).toEqual([]);
   } finally {

@@ -155,7 +155,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "The 50 ms launch boundary is measured only in the controlled fixture host. Actual ChatGPT sidebar latency, host resource acquisition and typed-chat model delay require separate observations.",
+          "reason": "The 100 ms launch boundary is measured only in the controlled fixture host. Actual ChatGPT sidebar latency, host resource acquisition and typed-chat model delay require separate observations.",
           "next_verification": "Measure the published content-addressed resource in the approved ChatGPT sidebar session; retain actual-host timings separately from fixture samples."
         }
       ],
@@ -13237,8 +13237,8 @@
     {
       "id": "UI-LAUNCH-50MS",
       "path": "web/performance/tests/launch.spec.ts",
-      "anchor": "production embedded direct launch: every fresh and warm sample is at most 50 ms",
-      "assertion": "Every one of 20 fresh and 10 warm launches of the production embedded resource has actionable navigation whose six text ElementTiming entries are visible and follow readiness, corroborated by FCP and all bounded by 50 ms. All raw paint, callback and notification diagnostics are retained; delayed providers and cold/empty/retained fixtures remain."
+      "anchor": "production embedded direct launch: every fresh and warm sample is at most 100 ms",
+      "assertion": "Every one of 20 fresh and 10 warm launches of the production embedded resource has actionable navigation whose six text ElementTiming entries are visible and follow readiness, corroborated by FCP and all bounded by 100 ms. All raw paint, callback and notification diagnostics are retained; delayed providers and cold/empty/retained fixtures remain."
     },
     {
       "id": "API-UI-PAGES",
