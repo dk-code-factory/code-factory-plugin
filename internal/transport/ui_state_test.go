@@ -5,6 +5,7 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/events"
 	"codefactory/internal/providers"
+	"codefactory/internal/prreview"
 	"codefactory/internal/store"
 	"context"
 	"database/sql"
@@ -20,6 +21,56 @@ import (
 	"testing"
 	"time"
 )
+
+func TestInitialUIProjectionKeepsHistoricalReviewFindingsCompact(t *testing.T) {
+	s, ctx := uiFixture(t)
+	findings := make([]prreview.AggregateFinding, 20)
+	for n := range findings {
+		findings[n].Message = "private-ui-finding" + strings.Repeat("x", 2048)
+	}
+	if err := s.App.Store.Write(ctx, func(tx *store.Tx) error {
+		if err := tx.Put("item", "owner/repo#1", domain.Item{ID: "owner/repo#1", Kind: "issue", State: "open", Title: "Tracked review history"}); err != nil {
+			return err
+		}
+		if err := tx.Put("user", "owner/repo#1", domain.UserState{ID: "owner/repo#1"}); err != nil {
+			return err
+		}
+		for n := 0; n < 100; n++ {
+			id := fmt.Sprintf("review-%03d", n)
+			if err := tx.Put("run", id, map[string]any{"id": id, "itemId": "owner/repo#1", "status": "idle", "reviewWorkflow": prreview.Contract, "reviewComplete": true, "reviewResult": prreview.Result{Complete: true, Findings: findings}}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	cursor, _ := s.App.Store.UILatest(ctx)
+	projection := waitProjection(t, s, ctx, cursor)
+	if len(projection.inbox) != 1 || !projection.inbox[0].Work.Tracked || len(projection.inbox[0].Work.RunIDs) != 100 || projection.inbox[0].Work.Status != "Inactive" {
+		t.Fatal("initial inbox projection lost historical run status", projection.inbox)
+	}
+	state, err := s.readUIState(ctx, UIStateInput{Views: []string{"shell", "messages"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var runs []domain.Run
+	if err := json.Unmarshal(state["runs"].(json.RawMessage), &runs); err != nil {
+		t.Fatal(err)
+	}
+	if len(runs) != 100 {
+		t.Fatal("saved review history was lost", len(runs))
+	}
+	for _, run := range runs {
+		if run.ReviewResult == nil || run.ReviewResult.FindingCount == nil || *run.ReviewResult.FindingCount != 20 {
+			t.Fatal("UI lost review count", run)
+		}
+	}
+	data, _ := json.Marshal(state)
+	if len(data) > 256<<10 || strings.Contains(string(data), "private-ui-finding") || strings.Contains(string(data), `"findings"`) {
+		t.Fatal("initial UI transferred historical finding prose", len(data))
+	}
+}
 
 func uiFixture(t *testing.T) (*Server, context.Context) {
 	t.Helper()

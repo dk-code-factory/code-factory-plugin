@@ -5,6 +5,7 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/events"
 	"codefactory/internal/providers"
+	"codefactory/internal/prreview"
 	"codefactory/internal/reports"
 	"codefactory/internal/setup"
 	"codefactory/internal/store"
@@ -103,9 +104,27 @@ type StartInput struct {
 	ID     string `json:"id"`
 	Resume bool   `json:"resume,omitempty"`
 }
+type ReviewPolicyInput struct {
+	ID             string `json:"id"`
+	AutoPostReview *bool  `json:"autoPostReview,omitempty"`
+	fields         map[string]json.RawMessage
+}
+
+func (in *ReviewPolicyInput) UnmarshalJSON(b []byte) error {
+	type plain ReviewPolicyInput
+	if err := json.Unmarshal(b, (*plain)(in)); err != nil {
+		return err
+	}
+	return json.Unmarshal(b, &in.fields)
+}
+
+type ReviewImportInput struct {
+	Repository string `json:"repository,omitempty"`
+}
 type PRReviewInput struct {
-	ItemID string `json:"itemId,omitempty"`
-	Target string `json:"target,omitempty"`
+	AutoPostReview *bool  `json:"autoPostReview,omitempty"`
+	ItemID         string `json:"itemId,omitempty"`
+	Target         string `json:"target,omitempty"`
 }
 type MessageInput struct {
 	ID           string `json:"id"`
@@ -126,6 +145,9 @@ type CredentialInput struct {
 	Token string `json:"token"`
 }
 type RepositoryInput struct {
+	AutoPostReview          *bool                `json:"autoPostReview,omitempty"`
+	Reviewers               *[]prreview.Reviewer `json:"reviewers,omitempty"`
+	ReviewRules             *string              `json:"reviewRules,omitempty"`
 	fields                  map[string]json.RawMessage
 	AutoReview              *bool  `json:"autoReview,omitempty"`
 	ReviewPrompt            string `json:"reviewPrompt,omitempty"`
@@ -183,7 +205,7 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 	if name == "open_factory" {
 		meta["openai/ui"] = map[string]any{"entrypoints": []any{map[string]any{"type": "global"}}}
 	}
-	openWorld := name == "start_run" || name == "send_message" || name == "answer_request" || name == "manage_codex_plugins" || name == "report_issue" || name == "add_issue_evidence" || name == "resume_issue_report" || name == "refresh_issue_reports"
+	openWorld := name == "post_retained_review" || name == "reconcile_review_publication" || name == "start_run" || name == "send_message" || name == "answer_request" || name == "manage_codex_plugins" || name == "report_issue" || name == "add_issue_evidence" || name == "resume_issue_report" || name == "refresh_issue_reports"
 	destructive := name == "cleanup_run" || name == "manage_codex_plugins"
 	mcp.AddTool(s, &mcp.Tool{Name: name, Description: desc, Meta: meta, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, OpenWorldHint: ptr(openWorld), DestructiveHint: ptr(destructive)}}, func(ctx context.Context, _ *mcp.CallToolRequest, in I) (*mcp.CallToolResult, map[string]any, error) {
 		v, e := f(ctx, in)
@@ -234,6 +256,21 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return s.detail(ctx, in.ID)
 	})
+	bind(m, uri, "read_review_policy", "Read inherited PR automatic posting policy and its effective source.", false, true, func(ctx context.Context, in IDInput) (any, error) { return a.ReadReviewPolicy(ctx, in.ID) })
+	bind(m, uri, "save_review_policy", "Set persistent PR autoPostReview override; omitted preserves, null restores inheritance. Does not post or start work.", false, false, func(ctx context.Context, in ReviewPolicyInput) (any, error) {
+		if _, ok := in.fields["autoPostReview"]; !ok {
+			return a.ReadReviewPolicy(ctx, in.ID)
+		}
+		return a.SaveReviewPolicy(ctx, in.ID, in.AutoPostReview)
+	})
+	bind(m, settingsURI, "import_dk_review_settings", "One-time import of ordered DK reviewers and private review rules for repository or global scope. Existing Code Factory values win; returns conflicts. Does not change DK or installed skills.", false, false, func(ctx context.Context, in ReviewImportInput) (any, error) {
+		return a.ImportDKReviews(ctx, in.Repository)
+	})
+	bind(m, uri, "post_retained_review", "Explicitly post this run's complete immutable review artifact to its bound PR. Defaults to inline COMMENT with empty body; event and summary require explicit user instructions. Server validates current evidence, identity and configuration. On uncertainty reconcile the returned operation, never resubmit.", false, false, func(ctx context.Context, in app.PostRetainedReviewInput) (any, error) {
+		return a.PostRetainedReview(ctx, in)
+	})
+	bind(m, uri, "reconcile_review_publication", "Reconcile an uncertain retained review publication by operation id using complete live receipts. Never submits another mutation.", false, false, func(ctx context.Context, in IDInput) (any, error) { return a.ReconcileRetainedReview(ctx, in.ID) })
+	bind(m, uri, "read_review_publication", "Read retained review publication state, omissions and verified receipt by operation id.", false, true, func(ctx context.Context, in IDInput) (any, error) { return a.ReviewPublication(ctx, in.ID) })
 	bind(m, uri, "read_pr_reviews", "Read GitHub-verified posted reviews for a synchronized PR item id: receipt URL, author, verdict, reviewed commit, submitted time, body and inline comments. Includes all authors; does not attribute them to a run. syncedAt, refresh, error and retryAt describe saved observations and background refresh. Pending drafts and agent publication claims are excluded. Returns immediately and schedules stale/missing observations in the background; never posts, retries publication or starts work. With saved=true, reads use saved observations only and schedule no refresh.", false, true, func(ctx context.Context, in IDInput) (any, error) {
 		if in.Saved {
 			return (&app.App{Store: a.Store, SavedOnly: true}).ReadPRReviews(ctx, in.ID)
@@ -250,6 +287,22 @@ func New(a *app.App, ev *events.Service) *Server {
 			return nil, err
 		}
 		c := in.Config
+		if _, ok := in.fields["reviewers"]; ok {
+			c.ReviewersConfigured = true
+		}
+		if _, ok := in.fields["reviewRules"]; ok {
+			c.ReviewRulesConfigured = true
+		}
+
+		if _, ok := in.fields["autoPostReview"]; !ok {
+			c.AutoPostReview = old.AutoPostReview
+		}
+		if _, ok := in.fields["reviewers"]; !ok {
+			c.Reviewers = old.Reviewers
+		}
+		if _, ok := in.fields["reviewRules"]; !ok {
+			c.ReviewRules = old.ReviewRules
+		}
 		if _, ok := in.fields["autoReview"]; !ok {
 			c.AutoReview = old.AutoReview
 		}
@@ -298,6 +351,15 @@ func New(a *app.App, ev *events.Service) *Server {
 		if _, ok := in.fields["autoReview"]; ok {
 			r.AutoReview = in.AutoReview
 		}
+		if _, ok := in.fields["autoPostReview"]; ok {
+			r.AutoPostReview = in.AutoPostReview
+		}
+		if _, ok := in.fields["reviewers"]; ok {
+			r.Reviewers = in.Reviewers
+		}
+		if _, ok := in.fields["reviewRules"]; ok {
+			r.ReviewRules = in.ReviewRules
+		}
 		if _, ok := in.fields["reviewPrompt"]; ok {
 			r.ReviewPrompt = in.ReviewPrompt
 		}
@@ -328,7 +390,7 @@ func New(a *app.App, ev *events.Service) *Server {
 		if resolved.Status != "resolved" {
 			return resolved, nil
 		}
-		r, e := a.Runs.PreparePRReview(ctx, resolved.ItemID)
+		r, e := a.Runs.PreparePRReviewPolicy(ctx, resolved.ItemID, in.AutoPostReview)
 		return publicRun(r), e
 	})
 	bind(m, uri, "prepare_launch", "Prepare an editable durable launch snapshot using target (run/item ID, GitHub URL or repository shorthand) or legacy itemId, and profileId. Ambiguity returns candidates without preparing. For a PR's configured review pipeline prefer prepare_pr_review; use this tool for investigation, implementation or explicit custom choices. Does not start an agent; inspect the result then call start_run with its id when authorized.", false, false, func(ctx context.Context, in app.LaunchInput) (any, error) {

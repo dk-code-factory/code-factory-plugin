@@ -2,13 +2,167 @@ package store
 
 import (
 	"codefactory/internal/domain"
+	"codefactory/internal/prreview"
 	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
 	"unicode/utf8"
 )
+
+// Observe the bytes delivered by the real store facade before domain decoding
+// can ignore a legacy field and make an oversized SQL projection look compact.
+type runProjectionProbe struct {
+	domain.Run
+	transferred int
+}
+
+func (p *runProjectionProbe) UnmarshalJSON(b []byte) error {
+	if strings.Contains(string(b), `"findings"`) || strings.Contains(string(b), "private-finding-prose") {
+		return fmt.Errorf("SQL transferred legacy finding bodies (%d bytes)", len(b))
+	}
+	p.transferred = len(b)
+	return json.Unmarshal(b, &p.Run)
+}
+
+func TestRunProjectionCountsLegacyFindingsBeforeDecoding(t *testing.T) {
+	ctx := context.Background()
+	s, err := Open(filepath.Join(t.TempDir(), "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	findings := make([]prreview.AggregateFinding, 20)
+	for n := range findings {
+		findings[n].Message = "private-finding-prose" + strings.Repeat("x", 2048)
+	}
+	if err := s.Write(ctx, func(tx *Tx) error {
+		for n := 0; n < 100; n++ {
+			id := fmt.Sprintf("run-%03d", n)
+			if err := tx.Put("run", id, map[string]any{"id": id, "itemId": "o/r#1", "status": "idle", "reviewResult": prreview.Result{Complete: true, Findings: findings, Skipped: []prreview.ReviewerReason{{Reviewer: "limited", Reason: "usage exhausted"}}}}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	// Inspect the actual SQL bytes, before domain decoding could discard fields.
+	var projected []byte
+	if err := s.reader().QueryRowContext(ctx, "SELECT "+publicRunSQL+" FROM entities WHERE kind='run' LIMIT 1").Scan(&projected); err != nil || len(projected) > 2048 || strings.Contains(string(projected), "private-finding-prose") || strings.Contains(string(projected), `"findings"`) {
+		t.Fatal("SQL transferred finding bodies", len(projected), err)
+	}
+	for name, read := range map[string]func() ([]runProjectionProbe, error){
+		"inbox and queue run projection": func() ([]runProjectionProbe, error) {
+			return ListWithout[runProjectionProbe](ctx, s, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
+		},
+		"run projection without omissions": func() ([]runProjectionProbe, error) {
+			return ListWithout[runProjectionProbe](ctx, s, "run")
+		},
+		"selected run projection": func() ([]runProjectionProbe, error) {
+			return Select[runProjectionProbe](ctx, s, "run", "itemId", "o/r#1")
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			runs, err := read()
+			if err != nil || len(runs) != 100 {
+				t.Fatal("SQL run projection transferred legacy bodies", len(runs), err)
+			}
+			transferred := 0
+			for _, run := range runs {
+				transferred += run.transferred
+				if run.Status != "idle" || run.ReviewResult == nil || run.ReviewResult.FindingCount == nil || *run.ReviewResult.FindingCount != 20 || len(run.ReviewResult.Skipped) != 1 {
+					t.Fatal("projection lost run status or review accounting", run)
+				}
+			}
+			if transferred > 256<<10 {
+				t.Fatal("broad SQL transfer was unbounded", transferred)
+			}
+		})
+	}
+	for _, read := range []func() ([]domain.Run, error){
+		func() ([]domain.Run, error) { return Runs(ctx, s, "o/r#1", "") },
+		func() ([]domain.Run, error) { return Select[domain.Run](ctx, s, "run", "itemId", "o/r#1") },
+	} {
+		runs, err := read()
+		if err != nil || len(runs) != 100 {
+			t.Fatal(len(runs), err)
+		}
+		for _, run := range runs {
+			if run.ReviewResult == nil || run.ReviewResult.FindingCount == nil || *run.ReviewResult.FindingCount != 20 || len(run.ReviewResult.Skipped) != 1 {
+				t.Fatal("compact review accounting changed", run)
+			}
+		}
+		data, _ := json.Marshal(runs)
+		if len(data) > 256<<10 || strings.Contains(string(data), "private-finding-prose") {
+			t.Fatal("historical review projection is unbounded", len(data))
+		}
+	}
+	for _, check := range []struct {
+		id     string
+		result any
+		known  bool
+	}{
+		{"clean-legacy", map[string]any{"complete": true, "findings": []any{}}, true},
+		{"clean-current", (prreview.Result{Complete: true}).Summary(), true},
+		{"unknown", map[string]any{"complete": true}, false},
+	} {
+		if err := s.Put(ctx, "run", check.id, map[string]any{"id": check.id, "reviewResult": check.result}, ""); err != nil {
+			t.Fatal(err)
+		}
+		runs, err := Runs(ctx, s, "", check.id)
+		if err != nil || len(runs) != 1 || (runs[0].ReviewResult.FindingCount != nil) != check.known || (check.known && *runs[0].ReviewResult.FindingCount != 0) {
+			t.Fatal("unknown findings falsely became clean", check.id, runs, err)
+		}
+	}
+	projectedRuns, err := ListWithout[runProjectionProbe](ctx, s, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, run := range projectedRuns {
+		switch run.ID {
+		case "unknown":
+			if run.ReviewResult.FindingCount != nil {
+				t.Fatal("broad projection falsely assigned a known count", run)
+			}
+		case "clean-legacy", "clean-current":
+			if run.ReviewResult.FindingCount == nil || *run.ReviewResult.FindingCount != 0 {
+				t.Fatal("broad projection lost known zero count", run)
+			}
+		}
+	}
+	var original map[string]any
+	if err := s.Get(ctx, "run", "run-000", &original); err != nil || len(original["reviewResult"].(map[string]any)["findings"].([]any)) != 20 {
+		t.Fatal("projection changed private historical data", err)
+	}
+}
+
+func TestListWithoutKeepsOtherKindsAndPrivateReadsUnchanged(t *testing.T) {
+	ctx := context.Background()
+	s, err := Open(filepath.Join(t.TempDir(), "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	row := json.RawMessage(`{"id":"same","body":"omit","reviewResult":{"findings":[{"message":"private-finding-prose"}]}}`)
+	for _, kind := range []string{"run", "item", "linked-pr"} {
+		if err := s.Put(ctx, kind, "same", row, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, kind := range []string{"item", "linked-pr"} {
+		rows, err := ListWithout[json.RawMessage](ctx, s, kind, "$.body")
+		if err != nil || len(rows) != 1 || !strings.Contains(string(rows[0]), "private-finding-prose") || strings.Contains(string(rows[0]), `"body"`) || strings.Contains(string(rows[0]), "finding_count") {
+			t.Fatal("run compaction changed another entity kind", kind, rows, err)
+		}
+	}
+	rows, err := s.List(ctx, "run")
+	if err != nil || len(rows) != 1 || !strings.Contains(string(rows[0]), "private-finding-prose") {
+		t.Fatal("private operational read lost original result", rows, err)
+	}
+}
 
 func TestProgressProjectionBackfillAndPrivateRunProjection(t *testing.T) {
 	ctx := context.Background()

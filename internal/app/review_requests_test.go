@@ -45,7 +45,7 @@ func TestPreparePRReviewResolvesDefaultsAndStartsOnlyExplicitly(t *testing.T) {
 				t.Fatal(err)
 			}
 			before := a.Store.Latest(ctx)
-			run, err := a.Runs.PreparePRReview(ctx, pr.ID)
+			run, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -101,7 +101,7 @@ func TestPreparePRReviewHonorsExplicitFullAccess(t *testing.T) {
 				if err := a.SaveConfig(ctx, c); err != nil {
 					t.Fatal(err)
 				}
-				if err := a.ProcessReviewRequests(ctx); err != nil {
+				if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 					t.Fatal(err)
 				}
 				claims, _ := store.List[reviewClaim](ctx, a.Store, "review-claim")
@@ -109,7 +109,7 @@ func TestPreparePRReviewHonorsExplicitFullAccess(t *testing.T) {
 					t.Fatal("explicit full-access automatic profile rejected")
 				}
 			} else {
-				r, err := a.Runs.PreparePRReview(ctx, pr.ID)
+				r, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 				if err != nil || r.Profile.Sandbox != p.Sandbox || r.Profile.Approval != "never" || r.Profile.Publishing != "authorized" {
 					t.Fatal("owner authority was replaced or rejected", err)
 				}
@@ -149,7 +149,7 @@ func TestPreparePRReviewRejectsInvalidTargetsAndUnsafePipelines(t *testing.T) {
 				pr.ID = "unavailable#999"
 			}
 			before, _ := store.List[domain.Run](ctx, a.Store, "run")
-			if _, err := a.Runs.PreparePRReview(ctx, pr.ID); err == nil {
+			if _, err := prepareLegacyPRReview(t, a, ctx, pr.ID); err == nil {
 				t.Fatal("invalid PR review preparation accepted")
 			}
 			after, _ := store.List[domain.Run](ctx, a.Store, "run")
@@ -217,7 +217,7 @@ func claimCount(t *testing.T, a *App) int {
 func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(t *testing.T) {
 	a, pr := reviewFixture(t)
 	ctx := context.WithoutCancel(a.Runs.ctx)
-	if err := a.ProcessReviewRequests(ctx); err != nil {
+	if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 		t.Fatal(err)
 	}
 	if claimCount(t, a) != 0 {
@@ -230,7 +230,7 @@ func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(t *testing.T)
 		t.Fatal(err)
 	}
 	for n := 0; n < 3; n++ {
-		if err := a.ProcessReviewRequests(ctx); err != nil {
+		if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -247,7 +247,7 @@ func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(t *testing.T)
 	if err := a.Runs.Recover(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if err := a.ProcessReviewRequests(ctx); err != nil {
+	if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 		t.Fatal(err)
 	}
 	if claimCount(t, a) != 1 {
@@ -256,10 +256,10 @@ func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(t *testing.T)
 	// A re-request on the same head is a new episode, not a duplicate poll.
 	pr.ReviewRequests = nil
 	_ = a.Store.Put(ctx, "item", pr.ID, pr, "")
-	_ = a.ProcessReviewRequests(ctx)
+	_ = processLegacyReviewRequests(t, a, ctx)
 	pr.ReviewRequests = []string{"me"}
 	_ = a.Store.Put(ctx, "item", pr.ID, pr, "")
-	_ = a.ProcessReviewRequests(ctx)
+	_ = processLegacyReviewRequests(t, a, ctx)
 	if claimCount(t, a) != 2 {
 		t.Fatal("new request episode was ignored")
 	}
@@ -297,7 +297,7 @@ func TestRepositoryQueueOverridePauseDraftAndStaleRequestsDoNotStart(t *testing.
 			}
 			_ = a.Store.Put(ctx, "repository", repo.ID, repo, "")
 			_ = a.Store.Put(ctx, "item", pr.ID, pr, "")
-			if err := a.ProcessReviewRequests(ctx); err != nil {
+			if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 				t.Fatal(err)
 			}
 			if claimCount(t, a) != 0 {
@@ -344,7 +344,7 @@ func TestAutomaticReviewBusyGuardReadsOnlyOwningRunMetadata(t *testing.T) {
 				}
 			}
 			for range 2 {
-				if err := a.ProcessReviewRequests(ctx); err != nil {
+				if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 					t.Fatal("automatic eligibility decoded retained snapshots", err)
 				}
 				if claimCount(t, a) != 0 {
@@ -383,7 +383,7 @@ func TestRepositoryAutoOverrideAndSystemPipelineDefaults(t *testing.T) {
 	if err := a.SaveRepository(ctx, repo); err != nil {
 		t.Fatal(err)
 	}
-	if err := a.ProcessReviewRequests(ctx); err != nil {
+	if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 		t.Fatal(err)
 	}
 	if claimCount(t, a) != 1 {
@@ -402,7 +402,7 @@ func TestAutomaticStartRevalidatesPolicyAndMonitoringPreservesCheckpoint(t *test
 	config, _ := a.Config(ctx)
 	config.AutoReview = true
 	_ = a.SaveConfig(ctx, config)
-	run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review"})
+	run, err := prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -444,13 +444,13 @@ func TestNewPRHeadGetsOneNewReviewAndExtraPromptIsNotDuplicated(t *testing.T) {
 	config, _ := a.Config(ctx)
 	config.AutoReview = true
 	_ = a.SaveConfig(ctx, config)
-	if err := a.ProcessReviewRequests(ctx); err != nil {
+	if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 		t.Fatal(err)
 	}
 	claims, _ := store.List[reviewClaim](ctx, a.Store, "review-claim")
 	var first domain.Run
 	waitFor(t, func() bool { _ = a.Store.Get(ctx, "run", claims[0].RunID, &first); return first.Status == "idle" })
-	prepared, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review", Prompt: first.Prompt})
+	prepared, err := prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review", Prompt: first.Prompt})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -471,7 +471,7 @@ func TestNewPRHeadGetsOneNewReviewAndExtraPromptIsNotDuplicated(t *testing.T) {
 	pr.Head = strings.TrimSpace(string(head))
 	_ = a.Store.Put(ctx, "item", pr.ID, pr, "")
 	for n := 0; n < 3; n++ {
-		if err := a.ProcessReviewRequests(ctx); err != nil {
+		if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 			t.Fatal(err)
 		}
 	}

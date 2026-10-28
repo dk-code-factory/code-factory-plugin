@@ -140,7 +140,7 @@ func deferredProfileReviewFixture(t *testing.T, automatic bool, profile *domain.
 		if err := a.SaveConfig(ctx, c); err != nil {
 			t.Fatal(err)
 		}
-		if err := a.ProcessReviewRequests(ctx); err != nil {
+		if err := processLegacyReviewRequests(t, a, ctx); err != nil {
 			t.Fatal(err)
 		}
 		claims, _ := store.List[reviewClaim](ctx, a.Store, "review-claim")
@@ -153,9 +153,9 @@ func deferredProfileReviewFixture(t *testing.T, automatic bool, profile *domain.
 	} else {
 		var err error
 		if generic {
-			f.run, err = a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: profile.ID})
+			f.run, err = prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: profile.ID})
 		} else {
-			f.run, err = a.Runs.PreparePRReview(ctx, pr.ID)
+			f.run, err = prepareLegacyPRReview(t, a, ctx, pr.ID)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -268,7 +268,7 @@ func TestDeferredReviewLaunchRespectsDeadlineAndRetriesExactlyOnce(t *testing.T)
 			if err := f.a.Runs.RetryDeferredLaunches(ctx); err != nil {
 				t.Fatal(err)
 			}
-			if err := f.a.ProcessReviewRequests(ctx); err != nil {
+			if err := processLegacyReviewRequests(t, f.a, ctx); err != nil {
 				t.Fatal(err)
 			}
 			f.assertSingleLaunch(t)
@@ -710,7 +710,7 @@ func TestDeferredAutomaticLaunchesSerializeAndContinueAfterCompletion(t *testing
 	if out, err := exec.Command("git", "-C", repo.Checkout, "push", "origin", other.Head+":refs/pull/3/head").CombinedOutput(); err != nil {
 		t.Fatalf("local PR head: %s %v", out, err)
 	}
-	if err := f.a.ProcessReviewRequests(ctx); err != nil {
+	if err := processLegacyReviewRequests(t, f.a, ctx); err != nil {
 		t.Fatal(err)
 	}
 	claims, err := store.List[reviewClaim](ctx, f.a.Store, "review-claim")
@@ -800,11 +800,11 @@ func TestDeferredAutomaticLaunchRejectsSupersededRequestEpisode(t *testing.T) {
 	withdrawn := f.pr
 	withdrawn.ReviewRequests = nil
 	importOne(t, f.a, ctx, withdrawn)
-	if err := f.a.ProcessReviewRequests(ctx); err != nil {
+	if err := processLegacyReviewRequests(t, f.a, ctx); err != nil {
 		t.Fatal(err)
 	}
 	importOne(t, f.a, ctx, f.pr)
-	if err := f.a.ProcessReviewRequests(ctx); err != nil {
+	if err := processLegacyReviewRequests(t, f.a, ctx); err != nil {
 		t.Fatal(err)
 	}
 	claims, err := store.List[reviewClaim](ctx, f.a.Store, "review-claim")
@@ -918,7 +918,7 @@ func TestFreshAutomaticStartAndDeferredRetryShareIdleSlot(t *testing.T) {
 	if f.a.Runs.busy() {
 		t.Fatal("fixture is not idle")
 	}
-	fresh, err := f.a.Runs.Prepare(ctx, LaunchInput{ItemID: other.ID, ProfileID: "review"})
+	fresh, err := prepareLegacyReviewLaunch(t, f.a, ctx, LaunchInput{ItemID: other.ID, ProfileID: "review"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1007,7 +1007,7 @@ func TestAutomaticRequestPollSharesAcceptanceCriticalSection(t *testing.T) {
 		}
 	}()
 	done := make(chan error, 1)
-	go func() { done <- f.a.ProcessReviewRequests(ctx) }()
+	go func() { done <- processLegacyReviewRequests(t, f.a, ctx) }()
 	select {
 	case err := <-done:
 		t.Fatal("request poll bypassed fresh/retry serialization", err)
@@ -1484,7 +1484,7 @@ func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(t *testing.T
 	defer release()
 	t.Setenv("CF_FAKE_INTERRUPT_ENTERED", entered)
 	t.Setenv("CF_FAKE_INTERRUPT_RELEASE", releasePath)
-	slow, err := f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+	slow, err := prepareLegacyPRReview(t, f.a, ctx, f.pr.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1535,7 +1535,7 @@ func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(t *testing.T
 	var questionRun domain.Run
 	responsive("unrelated Start", func() error {
 		var err error
-		questionRun, err = f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+		questionRun, err = prepareLegacyPRReview(t, f.a, ctx, f.pr.ID)
 		if err == nil {
 			_, err = f.a.Runs.Start(ctx, questionRun.ID, false)
 		}
@@ -1563,7 +1563,7 @@ func TestSlowInterruptLeavesOtherRunsAndDeferredAdmissionResponsive(t *testing.T
 	var other domain.Run
 	responsive("another Start", func() error {
 		var err error
-		other, err = f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+		other, err = prepareLegacyPRReview(t, f.a, ctx, f.pr.ID)
 		if err == nil {
 			_, err = f.a.Runs.Start(ctx, other.ID, false)
 		}
@@ -1617,7 +1617,7 @@ func TestSlowInterruptCannotChangeReplacementOrCleanedSession(t *testing.T) {
 			defer release()
 			t.Setenv("CF_FAKE_INTERRUPT_ENTERED", entered)
 			t.Setenv("CF_FAKE_INTERRUPT_RELEASE", releasePath)
-			run, err := f.a.Runs.PreparePRReview(ctx, f.pr.ID)
+			run, err := prepareLegacyPRReview(t, f.a, ctx, f.pr.ID)
 			if err != nil {
 				t.Fatal(err)
 			}

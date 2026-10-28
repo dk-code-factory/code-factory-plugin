@@ -225,6 +225,11 @@ func (a *App) ProcessReviewRequests(ctx context.Context) error {
 		if err != nil {
 			claim.Status = "uncertain"
 			claim.Error = "Automatic start was not confirmed. Inspect the retained run; the request will not be replayed."
+			if run.ReviewWorkflow != "" {
+				claim.Status = "blocked"
+				claim.Error = err.Error()
+			}
+
 		} else {
 			claim.Status = "started"
 		}

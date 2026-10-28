@@ -22,7 +22,7 @@ func TestReviewStartUsesActiveGitHubPrincipal(t *testing.T) {
 		t.Run(failure, func(t *testing.T) {
 			a, pr := reviewFixture(t)
 			ctx := a.Runs.ctx
-			run, err := a.Runs.PreparePRReview(ctx, pr.ID)
+			run, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -84,7 +84,7 @@ func TestReviewStartUsesActiveGitHubPrincipal(t *testing.T) {
 func TestReviewExecutionRechecksPrincipalAfterStart(t *testing.T) {
 	a, pr := reviewFixture(t)
 	ctx := a.Runs.ctx
-	run, err := a.Runs.PreparePRReview(ctx, pr.ID)
+	run, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +126,7 @@ func TestReviewExecutionRechecksPrincipalAfterStart(t *testing.T) {
 func TestReviewExecutionReadsFreshPrincipalWithoutSavedLogin(t *testing.T) {
 	a, pr := reviewFixture(t)
 	ctx := a.Runs.ctx
-	run, err := a.Runs.PreparePRReview(ctx, pr.ID)
+	run, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,7 +181,7 @@ func TestReviewStartReturnsWhileActiveIdentityReadIsBlocked(t *testing.T) {
 	a, pr := reviewFixture(t)
 	t.Setenv("CF_FAKE_MODE", "hold")
 	ctx := a.Runs.ctx
-	run, err := a.Runs.PreparePRReview(ctx, pr.ID)
+	run, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +255,7 @@ func TestNonReviewPreparationAndStartDoNotReadPrincipal(t *testing.T) {
 		return providers.GitHubPolicy{RequestsPerHour: 100}, nil
 	})
 	a.GitHub = providers.NewCachedGitHub(live)
-	run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"})
+	run, err := prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"})
 	if err != nil || reads.Load() != 0 {
 		t.Fatal("preparation made a provider request", err, reads.Load())
 	}
@@ -281,7 +281,7 @@ func TestNonReviewRunRetainsIntentAfterReviewDefaultChanges(t *testing.T) {
 			if err := a.Store.Put(ctx, "item", pr.ID, pr, ""); err != nil {
 				t.Fatal(err)
 			}
-			run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"})
+			run, err := prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -414,9 +414,9 @@ func TestManualPRReviewRejectsOwnPullRequests(t *testing.T) {
 			before := a.Store.Latest(ctx)
 			var err error
 			if route == "generic" || route == "configured" {
-				_, err = a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: profile})
+				_, err = prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: profile})
 			} else {
-				_, err = a.Runs.PreparePRReview(ctx, pr.ID)
+				_, err = prepareLegacyPRReview(t, a, ctx, pr.ID)
 			}
 			if err == nil || !strings.Contains(err.Error(), want) {
 				t.Fatalf("review should be rejected with %q: %v", want, err)
@@ -434,7 +434,7 @@ func TestManualPRReviewRejectsOwnPullRequests(t *testing.T) {
 				}
 			}
 			// Other work on the owner's PR remains available.
-			if _, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"}); err != nil {
+			if _, err := prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: "investigate"}); err != nil {
 				t.Fatal("investigation of own PR was blocked", err)
 			}
 		})
@@ -455,7 +455,7 @@ func TestManualPRReviewRetainsEligibilityAfterDefaultChanges(t *testing.T) {
 	if err := a.SaveConfig(ctx, c); err != nil {
 		t.Fatal(err)
 	}
-	r, err := a.Runs.PreparePRReview(ctx, pr.ID)
+	r, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -475,7 +475,7 @@ func TestManualPRReviewRetainsEligibilityAfterDefaultChanges(t *testing.T) {
 func TestManualPRReviewChecksFreshAuthorBeforeProvider(t *testing.T) {
 	a, pr := reviewFixture(t)
 	ctx := a.Runs.ctx
-	r, err := a.Runs.PreparePRReview(ctx, pr.ID)
+	r, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -500,7 +500,7 @@ func TestManualPRReviewRechecksAuthorBeforeStart(t *testing.T) {
 		t.Run(map[bool]string{false: "prepared", true: "legacy"}[legacy], func(t *testing.T) {
 			a, pr := reviewFixture(t)
 			ctx := a.Runs.ctx
-			r, err := a.Runs.PreparePRReview(ctx, pr.ID)
+			r, err := prepareLegacyPRReview(t, a, ctx, pr.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -540,7 +540,7 @@ func TestManualPRReviewExplicitBaseKeepsAcceptedHead(t *testing.T) {
 			if _, err := command(ctx, repo.Checkout, "rev-parse", "--verify", "main^{commit}"); err != nil {
 				t.Fatal(err)
 			}
-			run, err := a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review", Base: "main"})
+			run, err := prepareLegacyReviewLaunch(t, a, ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review", Base: "main"})
 			if err != nil {
 				t.Fatal(err)
 			}

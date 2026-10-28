@@ -31,11 +31,13 @@ Settings is independent of the task UI and has no Inbox/Agents navigation. Savin
 
 - **S6** The owner saves a bounded application GitHub request budget, reserve and notification interval without triggering a repository poll. Usage displays cached counts and observed quotas. Budget-only edits preserve priority assessments. Omitted fields from older forms retain their values; independent skill/agent GitHub usage is identified separately.
 
+- **S7** Ordered reviewers, private rules and automatic posting can be configured globally or per repository. Posting defaults off; explicit false disables and null restores inheritance. Saved policy changes update the effective choice in an open PR without starting or publishing work. One-time DK import preserves Factory settings and reports conflicts.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [codex-plugin](../glossary/README.md#codex-plugin), [plugin-marketplace](../glossary/README.md#plugin-marketplace), [plugin-inventory](../glossary/README.md#plugin-inventory), [plugin-maintenance](../glossary/README.md#plugin-maintenance), [review-policy](../glossary/README.md#review-policy), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification).
-UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE), [C-SKILL-LOAD](../ui/README.md#C-SKILL-LOAD).
+Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [codex-plugin](../glossary/README.md#codex-plugin), [plugin-marketplace](../glossary/README.md#plugin-marketplace), [plugin-inventory](../glossary/README.md#plugin-inventory), [plugin-maintenance](../glossary/README.md#plugin-maintenance), [review-policy](../glossary/README.md#review-policy), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification), [review-workflow](../glossary/README.md#review-workflow), [review-artifact](../glossary/README.md#review-artifact), [review-posting-policy](../glossary/README.md#review-posting-policy), [review-publication-operation](../glossary/README.md#review-publication-operation).
+UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE), [C-SKILL-LOAD](../ui/README.md#C-SKILL-LOAD), [W-PR-REVIEW-POLICY](../ui/README.md#W-PR-REVIEW-POLICY), [W-RETAINED-REVIEW](../ui/README.md#W-RETAINED-REVIEW), [C-PR-POSTING-POLICY](../ui/README.md#C-PR-POSTING-POLICY), [C-REVIEW-PUBLISH](../ui/README.md#C-REVIEW-PUBLISH), [C-REVIEW-RECONCILE](../ui/README.md#C-REVIEW-RECONCILE).
 
 ## Flow diagram
 
@@ -52,6 +54,8 @@ flowchart TD
     N8["Observe plugins or submit one explicit maintenance operation #40;S5#41;"]
     N9(["Uncertain or failed result retains observed state without replay"])
     N10["Save API request budget, reserve and review-notification interval#59; inspect cached usage #40;S6#41;"]
+    N11["Save ordered reviewers, private rules and posting inheritance #40;S7#41;"]
+    N12(["Settings retained with explicit conflicts and inheritance"])
     N0 -->|"accepted"| N1
     N1 --> N2
     N2 --> N3
@@ -69,6 +73,8 @@ flowchart TD
     N0 -->|"API usage settings"| N10
     N10 -->|"valid settings saved"| N6
     N10 -->|"invalid limits"| N4
+    N0 -->|"retained review workflow"| N11
+    N11 -->|"validate evidence and authority"| N12
 ```
 
 ## Implementation references
@@ -105,6 +111,8 @@ flowchart TD
 - [internal/app/skill_snapshots.go](../../internal/app/skill_snapshots.go) — Freeze a selected plugin package and its relative skill entrypoint; materialize bounded retained files with traversal confinement and standalone compatibility. (`func snapshotSkill(`)
 - [web/src/ui-changes.ts](../../web/src/ui-changes.ts) — Plugin administration rereads saved state on shared invalidations; failed reads retry without replaying mutations. (`export function useUIVersion(`)
 - [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — Projection builds quota information from SQLite without provider effects. (`func SavedGitHubUsage(`)
+- [internal/app/review_import.go](../../internal/app/review_import.go) — Ordered reviewer settings, private rules, posting inheritance and one-time conflict-preserving import.
+- [internal/app/review_workflows.go](../../internal/app/review_workflows.go) — Ordered reviewer settings, private rules, posting inheritance and one-time conflict-preserving import.
 
 ## Test references
 
@@ -143,6 +151,18 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a late managed skill read cannot overwrite a later selection or its editor draft`; S2. Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `managed skill read failure blocks saving until an explicit read retry succeeds`; S2. Read failures gate the selected editor save until explicit reload succeeds; no save operation is submitted or replayed.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `notification-only failures refresh saved Settings feedback`; S1. Saved credential-resolution notification feedback updates from its own invalidation bucket.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `review workflow settings preserve ordered bindings and inherited posting overrides`; S7. Ordered binding persistence and inherited posting controls.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestOneTimeDKImportPreservesFactoryValuesAndReportsConflicts(`; S7. Import preservation, conflict feedback and once-only state.
+- [internal/transport/review_workflow_test.go](../../internal/transport/review_workflow_test.go) — `func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(`; S7. Omitted updates preserve values and null restores inheritance.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `saved review policy changes refresh an open PR without polling or starting work`; S7. A saved global posting-policy change refreshes the effective choice in an open PR through shared invalidations, without starting a run or posting a review.
+- [internal/store/ui_journal_test.go](../../internal/store/ui_journal_test.go) — `TestUIJournalCommitsRollbackCASAndLegacyCursor`; S7. A saved PR posting-policy write publishes the owning item ID without stored policy payloads.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestOneTimeGlobalDKImportUsesUserRulesAndPreservesConflicts(`; S7. Supported global DK rule location, reviewer defaults, conflict/source preservation, Factory precedence and once-only import after original source removal.
+- [internal/app/review_workflow_guards_test.go](../../internal/app/review_workflow_guards_test.go) — `func TestDirectCommandReviewerRetainsExecutablePackageAfterSourceRemoval(`; S7. Selected executable command bindings retain their supported package layout and sibling resources while excluding unrelated untracked owner files. Exact tracked sibling names with leading/trailing space and tab survive raw NUL inventory and are consumed by the retained command after source removal.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `global DK review import preserves unrelated edits made while settings are loading`; S7. Delayed import replaces reported reviewer/rule fields while preserving concurrent unrelated draft edits through Save, with no start/post side effect.
+- [internal/app/review_workflow_guards_test.go](../../internal/app/review_workflow_guards_test.go) — `func TestCommandCaptureRejectsOversizeSelectedExecutableAndPackage(`; S7. Oversized standalone/selected untracked executables and selected-plus-tracked package totals fail before unbounded retention.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `absent global reviewers retain invalid draft and validity through unrelated settings edits`; S7. Unrelated renders preserve invalid reviewer draft/error/native validity when global reviewers are absent; invalid Save mutates nothing, while real import/inheritance reset still recovers.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `repository DK import discards stale results when switching editors during ${delay}`; S7. Repository A import/snapshot delays cannot modify subsequently selected B draft or stale import status; Save retains B reviewers/rules/base, including320px layout.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a delayed policy save ${response} preserves a newer committed Off observation`; S7. Delayed success and failure responses from an earlier On save cannot replace a newer committed Off policy observation or restore an obsolete error; exactly one save occurs and no start/post runs.
 
 ## Verification and gaps
 

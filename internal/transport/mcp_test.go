@@ -118,6 +118,12 @@ func TestAuthenticatedMCPDiscoveryToolsAndUI(t *testing.T) {
 				t.Fatal("question queue is not discoverable as a local read", tool)
 			}
 		}
+		if tool["name"] == "post_retained_review" || tool["name"] == "reconcile_review_publication" {
+			annotations := tool["annotations"].(map[string]any)
+			if annotations["openWorldHint"] != true || annotations["readOnlyHint"] == true {
+				t.Fatal("review publication must advertise its external action boundary", tool)
+			}
+		}
 		if tool["name"] == "prepare_pr_review" {
 			reviewFound = true
 			vis := metadata["ui"].(map[string]any)["visibility"].([]any)

@@ -136,6 +136,16 @@ func TestMCPDailyWorkflowsUseOneOrTwoCallsAndReturnDeliveryState(t *testing.T) {
 		t.Fatal(prepared)
 	}
 	id := prepared["id"].(string)
+	// Continue the recorded native review protocol for pre-migration retained runs.
+	// Fresh workflow dependency rejection is covered separately.
+	var legacy domain.Run
+	if err = a.Store.Get(ctx, "run", id, &legacy); err != nil {
+		t.Fatal(err)
+	}
+	legacy.ReviewWorkflow = ""
+	if err = a.Store.Put(ctx, "run", id, legacy, ""); err != nil {
+		t.Fatal(err)
+	}
 	started, bad := f.call(t, "start_run", map[string]any{"id": id})
 	if bad || started["delivery"] != "accepted" || started["runId"] != id || len(f.calls) != 2 {
 		t.Fatal(started, f.calls)

@@ -3,6 +3,7 @@ package app
 import (
 	"codefactory/internal/domain"
 	"codefactory/internal/providers"
+	"codefactory/internal/prreview"
 	"codefactory/internal/reports"
 	"codefactory/internal/store"
 	"context"
@@ -20,6 +21,10 @@ import (
 )
 
 type App struct {
+	ReviewEngine    prreview.EngineAdapter
+	ReviewCollector prreview.Collector
+	ReviewWorkers   prreview.Workers
+	ReviewRemote    prreview.PublicationRemote
 	// SavedOnly disables observation scheduling and provider status probes for
 	// projection builders and UI reads. Background workers use the live App.
 	SavedOnly        bool
@@ -79,6 +84,9 @@ func (a *App) Config(ctx context.Context) (domain.Config, error) {
 	return c, e
 }
 func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
+	if err := prreview.ValidateReviewers(c.Reviewers); err != nil {
+		return err
+	}
 	if c.GitHubRequestsPerHour != 0 && (c.GitHubRequestsPerHour < 60 || c.GitHubRequestsPerHour > 5000) {
 		return fmt.Errorf("GitHub budget must be 60–5000 requests per hour")
 	}
@@ -116,6 +124,8 @@ func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
 	if err != nil {
 		return err
 	}
+	c.ReviewersConfigured = c.ReviewersConfigured || old.ReviewersConfigured || c.Reviewers != nil
+	c.ReviewRulesConfigured = c.ReviewRulesConfigured || old.ReviewRulesConfigured || c.ReviewRules != ""
 	c.PolicyVersion = old.PolicyVersion
 	if old.AssessmentPrompt != c.AssessmentPrompt || string(raw(old.PriorityLabels)) != string(raw(c.PriorityLabels)) {
 		c.PolicyVersion = ID()
@@ -126,6 +136,11 @@ func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
 var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
 
 func (a *App) SaveRepository(ctx context.Context, r domain.Repository) error {
+	if r.Reviewers != nil {
+		if err := prreview.ValidateReviewers(*r.Reviewers); err != nil {
+			return err
+		}
+	}
 	if !repoPattern.MatchString(r.ID) || strings.Contains(r.ID, "..") || strings.HasPrefix(r.Base, "-") {
 		return fmt.Errorf("invalid repository or base")
 	}
@@ -143,6 +158,9 @@ func (a *App) SaveRepository(ctx context.Context, r domain.Repository) error {
 		old.Base = r.Base
 		old.Paused = r.Paused
 		old.AutoReview = r.AutoReview
+		old.AutoPostReview = r.AutoPostReview
+		old.Reviewers = r.Reviewers
+		old.ReviewRules = r.ReviewRules
 		old.ReviewPrompt = r.ReviewPrompt
 		old.ReviewError = ""
 		old.ReviewProfileID = r.ReviewProfileID

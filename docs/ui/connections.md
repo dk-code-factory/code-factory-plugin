@@ -76,6 +76,9 @@ for a clickable navigation control.
 | `C-REVIEW-POLICY` | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed reviews once under the configured authority. | Explicit owner configuration or management choice; opted-in successful repository polls. | Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed reviews once under the configured authority. |
 | `C-REPOSITORY-REVIEW-PROMPT` | Append owner repository instructions to the generic review prompt during immutable launch preparation. | Explicit owner configuration or management choice; opted-in successful repository polls. | Append owner repository instructions to the generic review prompt during immutable launch preparation. |
 | `C-GITHUB-USAGE` | Owner usage settings → persisted request limits and cached accounting | Save system defaults or read cached Settings. | Validates and persists bounded request budget/reserve/poll interval; omitted fields from older clients retain their saved values. Budget-only changes preserve assessment policy identity. |
+| `C-PR-POSTING-POLICY` | Save the PR override and display its inherited effective value/source without publication. | Explicit owner action on the owning retained item or review. | Save the PR override and display its inherited effective value/source without publication. Saved PR, repository and global policy changes refresh the open effective choice through shared change notifications. An older save reply cannot replace a newer saved policy observation or restore its obsolete error. |
+| `C-REVIEW-PUBLISH` | Submit the server-approved inline review to the bound GitHub PR; keep omissions and the verified provider receipt. | Explicit owner action on the owning retained item or review. | Submit the server-approved inline review to the bound GitHub PR; keep omissions and the verified provider receipt. |
+| `C-REVIEW-RECONCILE` | Observe the bound GitHub PR for a unique complete submitted review; never submit a second mutation. | Explicit owner action on the owning retained item or review. | Observe the bound GitHub PR for a unique complete submitted review; never submit a second mutation. |
 <!-- /specs:connections-0 -->
 
 ## Navigation overview
@@ -146,6 +149,8 @@ flowchart LR
     N135["W-PLUGIN-ADMIN"]
     N136["W-SYSTEM-DEFAULTS"]
     N129["W-WORK-STATUS"]
+    N145["W-PR-REVIEW-POLICY"]
+    N146["W-RETAINED-REVIEW"]
     N2 -->|"C-NAVIGATE"| N63
     N2 -->|"C-NAVIGATE"| N64
     N2 -->|"C-NAVIGATE"| N105
@@ -281,6 +286,10 @@ flowchart LR
     N31 -->|"C-SKILL-LOAD"| N31
     N31 -->|"C-SKILL-LOAD"| N31
     N31 -->|"C-SKILL-LOAD"| N31
+    N145 -->|"C-PR-POSTING-POLICY"| N145
+    N146 -->|"C-REVIEW-PUBLISH"| N146
+    N146 -->|"C-REVIEW-PUBLISH"| N146
+    N146 -->|"C-REVIEW-RECONCILE"| N146
 ```
 <!-- /specs:connections -->
 

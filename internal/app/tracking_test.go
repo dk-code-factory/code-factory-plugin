@@ -14,8 +14,61 @@ import (
 
 	"codefactory/internal/domain"
 	"codefactory/internal/providers"
+	"codefactory/internal/prreview"
 	"codefactory/internal/store"
 )
+
+func TestTrackingKeepsHistoricalReviewFindingsCompact(t *testing.T) {
+	a, ctx := fixture(t)
+	i := item()
+	i.Body = ""
+	importOne(t, a, ctx, i)
+	findings := make([]prreview.AggregateFinding, 20)
+	for n := range findings {
+		findings[n].Message = "private-tracked-finding" + strings.Repeat("x", 2048)
+	}
+	if err := a.Store.Write(ctx, func(tx *store.Tx) error {
+		for n := 0; n < 100; n++ {
+			id := fmt.Sprintf("review-%03d", n)
+			if err := tx.Put("run", id, map[string]any{"id": id, "itemId": i.ID, "status": "idle", "reviewWorkflow": prreview.Contract, "reviewComplete": true, "reviewResult": prreview.Result{Complete: true, Outcome: "completed", Findings: findings, Skipped: []prreview.ReviewerReason{{Reviewer: "limited", Reason: "usage exhausted"}}}}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := a.InboxSummaries(ctx, "all")
+	if err != nil || len(entries) != 1 || !entries[0].Work.Tracked || len(entries[0].Work.RunIDs) != 100 || entries[0].Work.Status != "Inactive" {
+		t.Fatal("inbox projection lost historical run status", entries, err)
+	}
+	queue, err := a.TrackWork(ctx, TrackInput{Queue: "working", State: "all", Limit: 20})
+	if err != nil || queue["total"] != 1 {
+		t.Fatal("queue projection lost tracked item", queue, err)
+	}
+	work := queue["items"].([]map[string]any)[0]["work"].(domain.WorkSummary)
+	if !work.Tracked || len(work.RunIDs) != 100 || work.Status != "Inactive" {
+		t.Fatal("queue projection lost historical run status", work)
+	}
+	queueData, _ := json.Marshal(queue)
+	if len(queueData) > 32<<10 || strings.Contains(string(queueData), "private-tracked-finding") || strings.Contains(string(queueData), `"findings"`) {
+		t.Fatal("queue projection retained historical finding bodies", len(queueData))
+	}
+	for _, target := range []string{i.ID, "review-099"} {
+		out, err := a.TrackWork(ctx, TrackInput{Target: target, Limit: 20})
+		if err != nil || out["runCount"] != 100 {
+			t.Fatal(out, err)
+		}
+		review := out["currentRun"].(map[string]any)["review"].(map[string]any)
+		if count := review["findingCount"].(*int); count == nil || *count != 20 || len(review["skippedReviewers"].([]prreview.ReviewerReason)) != 1 {
+			t.Fatal("tracking lost truthful review accounting", review)
+		}
+		data, _ := json.Marshal(out)
+		if len(data) > 32<<10 || strings.Contains(string(data), "private-tracked-finding") || strings.Contains(string(data), `"findings"`) {
+			t.Fatal("tracking transferred historical finding bodies", len(data))
+		}
+	}
+}
 
 func TestTrackingContinuationUsesOnlyActiveTurnTokens(t *testing.T) {
 	for _, status := range []string{"idle", "interrupted", "failed", "running", "waiting"} {

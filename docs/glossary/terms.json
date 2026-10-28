@@ -4778,6 +4778,90 @@
       "category": "element",
       "definition": "The error from loading the selected skill's saved instructions.",
       "scope": "ui-w-skill-settings"
+    },
+    {
+      "id": "review-workflow",
+      "name": "Review workflow",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A retained sequence of preparation, reviewer assessment, validation and publication decisions for a pull request."
+    },
+    {
+      "id": "ordered-reviewer",
+      "name": "Ordered reviewer",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A selected review binding with a stable identity and a position in an ordered assessment list."
+    },
+    {
+      "id": "review-artifact",
+      "name": "Review artifact",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An immutable assessment result bound to its target, reviewed source and governing evidence."
+    },
+    {
+      "id": "review-preparation",
+      "name": "Review preparation",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The reconciled engineering boundaries, evidence, reviewer instructions and unresolved material questions governing an assessment."
+    },
+    {
+      "id": "reviewer-checkpoint",
+      "name": "Reviewer checkpoint",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An immutable recorded reviewer outcome bound to the evidence and execution identity that produced it."
+    },
+    {
+      "id": "review-posting-policy",
+      "name": "Review posting policy",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The effective automatic publication choice resolved from launch, pull-request, repository and global settings in precedence order."
+    },
+    {
+      "id": "review-publication-operation",
+      "name": "Review publication operation",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A retained publication intent binding an approved assessment payload, target, prior state and observed outcome."
+    },
+    {
+      "id": "ui-w-pr-review-policy",
+      "name": "PR review posting policy widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The pull-request publication override and its effective inherited choice."
+    },
+    {
+      "id": "ui-w-retained-review",
+      "name": "Retained review workflow widget",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "The visible progress, completeness, omissions and publication receipt of a retained assessment."
+    },
+    {
+      "id": "ui-c-review-publish",
+      "name": "Retained review publication connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The explicit publication action for a retained assessment."
+    },
+    {
+      "id": "ui-c-review-reconcile",
+      "name": "Review publication reconciliation connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The observation action for an uncertain publication outcome."
+    },
+    {
+      "id": "ui-c-pr-posting-policy",
+      "name": "PR posting policy connection",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "The persistent publication override update for a pull request."
     }
   ]
 }

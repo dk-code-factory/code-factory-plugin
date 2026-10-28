@@ -74,6 +74,19 @@ func TestUIJournalCommitsRollbackCASAndLegacyCursor(t *testing.T) {
 	if err != nil || !changes["observation"]["one"] || changes["observation"]["detail:one"] {
 		t.Fatal("observation did not invalidate its owning item", changes, err)
 	}
+	if err := s.Put(ctx, "pr-review-policy", "one", map[string]bool{"autoPostReview": true}, "review.policy"); err != nil {
+		t.Fatal(err)
+	}
+	policyCursor, _ := s.UILatest(ctx)
+	changes, err = s.UIChanges(ctx, latest, policyCursor)
+	if err != nil || !changes["pr-review-policy"]["one"] {
+		t.Fatal("review policy did not invalidate its owning item", changes, err)
+	}
+	data, _ = json.Marshal(changes)
+	if strings.Contains(string(data), "autoPostReview") {
+		t.Fatal("policy invalidation included stored policy data")
+	}
+
 }
 
 func TestReadViewPinsDataAndCursorAcrossConcurrentConnection(t *testing.T) {

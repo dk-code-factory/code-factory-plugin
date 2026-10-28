@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useUIVersion } from "./ui-changes";
 import { call } from "./bridge";
-import type { Config, Profile, Repository, Snapshot } from "./types";
+import type { Config, Profile, Repository, Snapshot, Reviewer } from "./types";
+
+const emptyReviewers: Reviewer[] = [];
 
 interface PluginRow {
   id: string;
@@ -364,6 +366,9 @@ export function RepositoryAdmin({
     paused: false,
   });
   const [repo, setRepo] = useState<Repository>(empty);
+  const importTarget = useRef({ id: repo.id });
+  if (importTarget.current.id !== repo.id) importTarget.current = { id: repo.id };
+  const repoImportTarget = importTarget.current;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -434,6 +439,9 @@ export function RepositoryAdmin({
             base: repo.base,
             paused: repo.paused ?? false,
             autoReview: repo.autoReview ?? null,
+            autoPostReview: repo.autoPostReview ?? null,
+            reviewers: repo.reviewers ?? null,
+            reviewRules: repo.reviewRules ?? null,
             reviewProfileId: repo.reviewProfileId ?? "",
             implementationProfileId: repo.implementationProfileId ?? "",
             reviewPrompt: repo.reviewPrompt ?? "",
@@ -491,6 +499,37 @@ export function RepositoryAdmin({
               <option value="true">Automatically start review</option>
             </select>
           </label>
+          <PostingPolicySelect
+            label="Repository automatic review posting"
+            value={repo.autoPostReview ?? null}
+            inherited={snap.config.autoPostReview ?? false}
+            change={(autoPostReview) => setRepo({ ...repo, autoPostReview })}
+          />
+          <ReviewConfiguration
+            reviewers={repo.reviewers ?? null}
+            rules={repo.reviewRules ?? null}
+            inherited
+            change={(reviewers, reviewRules) =>
+              setRepo({ ...repo, reviewers, reviewRules })
+            }
+          />
+          <DKReviewImport
+            key={repo.id}
+            repository={repo.id}
+            imported={async (fields) => {
+              if (!fields.length || importTarget.current !== repoImportTarget) return;
+              const next = await call<Pick<Snapshot, "repositories">>("read_ui_state", {
+                views: ["settings"],
+              });
+              const saved = next.repositories.find((r) => r.id === repoImportTarget.id);
+              if (saved)
+                setRepo((current) => importTarget.current === repoImportTarget && current.id === repoImportTarget.id ? {
+                  ...current,
+                  ...(fields.includes("reviewers") ? { reviewers: saved.reviewers } : {}),
+                  ...(fields.includes("reviewRules") ? { reviewRules: saved.reviewRules } : {}),
+                } : current);
+            }}
+          />
           <PipelineSelect
             label="Repository review pipeline"
             value={repo.reviewProfileId ?? ""}
@@ -527,8 +566,9 @@ export function RepositoryAdmin({
             Pause repository monitoring
           </label>
           <p>
-            Automatic reviews use the selected pipeline's sandbox and publishing
-            authority. Repository polling launches work only when automatic
+            Review launches retain the selected pipeline's sandbox. Retained review
+            publication follows the posting policy or an explicit Post action.
+            Repository polling launches work only when automatic
             review is enabled. A request is claimed once per PR head and request
             episode.
           </p>
@@ -563,7 +603,7 @@ export function SystemReviewSettings({
   usage?: import("./types").GitHubUsage;
   config: Config;
   profiles: Profile[];
-  change: (c: Config) => void;
+  change: React.Dispatch<React.SetStateAction<Config>>;
 }) {
   return (
     <>
@@ -658,6 +698,42 @@ export function SystemReviewSettings({
           <option value="true">Automatically start review</option>
         </select>
       </label>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={config.autoPostReview ?? false}
+          onChange={(e) =>
+            change({ ...config, autoPostReview: e.target.checked })
+          }
+        />
+        Automatically post completed reviews
+      </label>
+      <p>
+        Default: off. Automatic posting uses inline COMMENT reviews with an
+        empty review body. PR and launch overrides take precedence.
+      </p>
+      <ReviewConfiguration
+        reviewers={config.reviewers ?? emptyReviewers}
+        rules={config.reviewRules ?? ""}
+        change={(reviewers, reviewRules) =>
+          change({
+            ...config,
+            reviewers: reviewers ?? [],
+            reviewRules: reviewRules ?? "",
+          })
+        }
+      />
+      <DKReviewImport
+        imported={async (fields) => {
+          if (!fields.length) return;
+          const next = await call<Config>("get_settings", {});
+          change((current) => ({
+            ...current,
+            ...(fields.includes("reviewers") ? { reviewers: next.reviewers } : {}),
+            ...(fields.includes("reviewRules") ? { reviewRules: next.reviewRules } : {}),
+          }));
+        }}
+      />
       <PipelineSelect
         label="System review pipeline"
         value={config.reviewProfileId ?? ""}
@@ -699,5 +775,160 @@ export function SystemReviewSettings({
         remains explicit.
       </p>
     </>
+  );
+}
+
+export function PostingPolicySelect({
+  label,
+  value,
+  inherited,
+  change,
+}: {
+  label: string;
+  value: boolean | null;
+  inherited: boolean | undefined;
+  change: (v: boolean | null) => void;
+}) {
+  return (
+    <label>
+      {label}
+      <select
+        aria-label={label}
+        value={value == null ? "inherit" : String(value)}
+        onChange={(e) =>
+          change(
+            e.target.value === "inherit" ? null : e.target.value === "true",
+          )
+        }
+      >
+        <option value="inherit">Inherit ({inherited === undefined ? "unresolved" : inherited ? "On" : "Off"})</option>
+        <option value="false">Off</option>
+        <option value="true">On</option>
+      </select>
+    </label>
+  );
+}
+function ReviewConfiguration({
+  reviewers,
+  rules,
+  inherited,
+  change,
+}: {
+  reviewers: Reviewer[] | null;
+  rules: string | null;
+  inherited?: boolean;
+  change: (reviewers: Reviewer[] | null, rules: string | null) => void;
+}) {
+  const [draft, setDraft] = useState(JSON.stringify(reviewers ?? [], null, 2));
+  const [error, setError] = useState("");
+  const reviewersInput = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    setDraft(JSON.stringify(reviewers ?? [], null, 2));
+    setError("");
+    reviewersInput.current?.setCustomValidity("");
+  }, [reviewers]);
+  return (
+    <fieldset>
+      <legend>Review workflow configuration</legend>
+      {inherited && (
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={reviewers == null}
+            onChange={(e) => change(e.target.checked ? null : [], rules)}
+          />
+          Inherit system reviewers
+        </label>
+      )}
+      <label>
+        Ordered reviewers
+        <textarea
+          aria-label="Ordered reviewers"
+          ref={reviewersInput}
+          disabled={inherited && reviewers == null}
+          value={draft}
+          rows={6}
+onBlur={e=>{try{const value:unknown=JSON.parse(e.target.value);if(Array.isArray(value)&&!e.target.validationMessage)change(value as Reviewer[],rules)}catch{}}}
+          onChange={(e) => {
+            const text = e.target.value;
+            setDraft(text);
+            try {
+              const value: unknown = JSON.parse(text);
+              if (
+                !Array.isArray(value) ||
+                value.some(
+                  (r) =>
+                    !r ||
+                    typeof r.id !== "string" ||
+                    !["skill", "command"].includes(r.kind),
+                )
+              )
+                throw new Error(
+                  "Use an ordered JSON array of skill or command reviewer bindings.",
+                );
+              e.target.setCustomValidity("");
+              setError("");
+
+            } catch (err) {
+              const message = String(err);
+              setError(message);
+              e.target.setCustomValidity(message);
+            }
+          }}
+        />
+      </label>
+      <p>
+        Order is preserved. Skill binding:{" "}
+        <code>{`{"id":"correctness","kind":"skill","skillId":"installed-skill-id"}`}</code>.
+        Command binding uses an argv array containing {"{handoff}"}. An empty
+        list blocks review before fetching the diff.
+      </p>
+      {error && <p role="alert">{error}</p>}
+      {inherited && (
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={rules == null}
+            onChange={(e) => change(reviewers, e.target.checked ? null : "")}
+          />
+          Inherit system private review rules
+        </label>
+      )}
+      <label>
+        Private review rules
+        <textarea
+          aria-label="Private review rules"
+          rows={4}
+          disabled={inherited && rules == null}
+          value={rules ?? ""}
+          onChange={(e) => change(reviewers, e.target.value)}
+        />
+      </label>
+    </fieldset>
+  );
+}
+function DKReviewImport({ repository, imported }: { repository?: string; imported?:(fields:string[])=>Promise<void> }) {
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <div>
+      <button
+        type="button"
+        disabled={busy || repository === ""}
+        onClick={() => {
+          setBusy(true);
+          void call<{ imported: string[]; conflicts: string[] }>(
+            "import_dk_review_settings",
+            { repository },
+          )
+            .then(async r=>{await imported?.(r.imported);setStatus(`Imported: ${r.imported.join(", ")||"none"}. ${r.conflicts.join("; ")}`)})
+            .catch((e) => setStatus(String(e)))
+            .finally(() => setBusy(false));
+        }}
+      >
+        Import DK review settings once
+      </button>
+      {status && <p role="status">{status}</p>}
+    </div>
   );
 }

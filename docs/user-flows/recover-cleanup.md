@@ -47,11 +47,13 @@ Retained recovery claims its intended delivery attempt before agent setup. Setup
 A durable async question retains one current answer route immediately after process loss and across restart. Matching duplicate text retires atomically with history preserved. An originating answer claim remains final through uncertain delivery, stale snapshots and restart, and cannot leave a sibling route answerable.
 Cancelling automatic recovery does not establish that a genuine pending async question was answered or became obsolete. After restart, Take over can still clear its recovery progress while that question remains available for an explicit answer.
 
+- **S7** Interrupted retained reviews resume only after current evidence, action implementation and reviewer bindings validate. Completed checkpoints are reused; changed engineering inputs require a fresh review, and publication uncertainty never authorizes replay. If completion was saved before its parent settled, explicit recovery preserves that completed result without repeating review or publication. A later posting-policy change does not authorize automatic publication during that recovery. A submitted review matching the retained publication intent can be recognized during finished or uncertain-publication recovery without repeating the mutation; unrelated review or governing-scope changes still block reuse. Assessment or result-saving failures preserve incomplete status; only failures after a validated result is saved preserve established completion.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated), [state-deferred](../glossary/README.md#state-deferred).
-UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/README.md#P-RUN-LIST), [P-RUN-DETAIL](../ui/README.md#P-RUN-DETAIL), [W-RUN-ROW](../ui/README.md#W-RUN-ROW), [W-RUN-EMPTY](../ui/README.md#W-RUN-EMPTY), [W-RUN-CONTROLS](../ui/README.md#W-RUN-CONTROLS), [C-SELECT-RUN](../ui/README.md#C-SELECT-RUN), [C-RUN-ACTION](../ui/README.md#C-RUN-ACTION), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE).
+Glossary: [agent-run](../glossary/README.md#agent-run), [workspace](../glossary/README.md#workspace), [state-interrupted](../glossary/README.md#state-interrupted), [state-cleaned](../glossary/README.md#state-cleaned), [coverage-gap](../glossary/README.md#coverage-gap), [unverified-behavior](../glossary/README.md#unverified-behavior), [question-recovery](../glossary/README.md#question-recovery), [session-console](../glossary/README.md#session-console), [state-terminated](../glossary/README.md#state-terminated), [state-deferred](../glossary/README.md#state-deferred), [review-workflow](../glossary/README.md#review-workflow), [review-artifact](../glossary/README.md#review-artifact), [review-posting-policy](../glossary/README.md#review-posting-policy), [review-publication-operation](../glossary/README.md#review-publication-operation).
+UI entities: [PAGE-AGENTS](../ui/README.md#PAGE-AGENTS), [P-RUN-LIST](../ui/README.md#P-RUN-LIST), [P-RUN-DETAIL](../ui/README.md#P-RUN-DETAIL), [W-RUN-ROW](../ui/README.md#W-RUN-ROW), [W-RUN-EMPTY](../ui/README.md#W-RUN-EMPTY), [W-RUN-CONTROLS](../ui/README.md#W-RUN-CONTROLS), [C-SELECT-RUN](../ui/README.md#C-SELECT-RUN), [C-RUN-ACTION](../ui/README.md#C-RUN-ACTION), [PAGE-AGENT](../ui/README.md#PAGE-AGENT), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-QUESTION-RECOVERY](../ui/README.md#W-QUESTION-RECOVERY), [W-SESSION-CONSOLE](../ui/README.md#W-SESSION-CONSOLE), [W-PR-REVIEW-POLICY](../ui/README.md#W-PR-REVIEW-POLICY), [W-RETAINED-REVIEW](../ui/README.md#W-RETAINED-REVIEW), [C-PR-POSTING-POLICY](../ui/README.md#C-PR-POSTING-POLICY), [C-REVIEW-PUBLISH](../ui/README.md#C-REVIEW-PUBLISH), [C-REVIEW-RECONCILE](../ui/README.md#C-REVIEW-RECONCILE).
 
 ## Flow diagram
 
@@ -76,6 +78,8 @@ flowchart TD
     N16["Verify current source and report changed scope or head before initial or automatic continuation #40;S6#41;"]
     N17(["Closed or merged source#59; terminate session and retain history/workspace"])
     N18["Restore deferred pre-agent launch and honor its retained retry deadline #40;S1#41;"]
+    N19["Validate interrupted review evidence and execution identity #40;S7#41;"]
+    N20(["Reuse completed checkpoints or retain explicit blocked state"])
     N0 -->|"send message"| N1
     N1 --> N2
     N0 -->|"cleanup stopped work"| N3
@@ -103,6 +107,8 @@ flowchart TD
     N18 -->|"deadline reached#59; revalidate source and automatic policy"| N16
     N18 -->|"cleanup cancels retry even without attached session"| N3
     N18 -->|"interrupt cancels retry even without attached session"| N14
+    N0 -->|"retained review workflow"| N19
+    N19 -->|"validate evidence and authority"| N20
 ```
 
 ## Implementation references
@@ -136,6 +142,9 @@ flowchart TD
 - [internal/aiworkflows/workflows/question-repair.yml](../../internal/aiworkflows/workflows/question-repair.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/prreview/workflow.go](../../internal/prreview/workflow.go) — Validate a completed retained artifact and governing identity, then recover saved finished completion without reopening posting policy or replaying publication. (`func (w *Workflow) resumePublication(`)
+- [internal/prreview/evidence.go](../../internal/prreview/evidence.go) — Validate actual committed tracked bytes/types/owner-execute modes independently of index flags before retained review recovery and checkpoint reuse. (`func (e Evidence) ValidateCheckout(`)
+- [internal/prreview/git.go](../../internal/prreview/git.go) — Recognize only the exact submitted review proven by its durable approved publication intent while retaining current governing evidence validation during recovery. (`func (g GitCollector) ValidateCurrentAfterPublication(`)
 
 ## Test references
 
@@ -240,6 +249,19 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAdmissionCancellationWinsBeforeAcknowledgementTransfer(`; S1. A queued acknowledgement cannot report successful admission after cancellation takes ownership; output remains undecoded and workflow cancellation is synchronous.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestSuccessfulAdmissionOutlivesCallerUntilClientShutdown(`; S1. After successful admission, caller cancellation preserves observation until native interruption, client cancellation or Close; provider work starts only once.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAcknowledgementTransferRejectsCanceledClient(`; S1. A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission.
+- [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestGuardFailuresStopLaterReviewersAndResume(`; S7. Checkout, source, package and checkpoint changes block reuse.
+- [internal/prreview/publication_test.go](../../internal/prreview/publication_test.go) — `func TestUncertainPublicationOnlyReconciles(`; S7. Lost responses and durable-intent recovery never resubmit.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewRestartResumesCompletedPublicationTail(`; S7. Explicit restart recovery resumes a completed review publication tail without rerunning preparation or producing duplicate review results or submissions.
+- [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestFinishedReviewRecoversValidatedResultWithoutReplay(`; S7. A finished saved result is returned unchanged without callbacks, session saves or reviewer replay; remote, binding, instructions, artifact, identity and checkout drift reject before reuse.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewRestartFinalizesSavedFinishedSessionWithoutReplay(`; S7. A lost parent finalization after saved completion survives manager restart and explicit Resume with the same artifact, one preparation/result and no automatic publication despite later enabled policy; the recovered artifact remains explicitly postable.
+- [internal/prreview/evidence_integrity_test.go](../../internal/prreview/evidence_integrity_test.go) — `func TestCheckoutValidatesTrackedBytesAndModesDespiteIndexFlags(`; S7. Committed tracked bytes and owner-execute mode are verified despite assume-unchanged/skip-worktree; unchanged files and other-execute-only changes remain valid while missing, substituted symlink and FIFO files reject without blocking.
+- [internal/prreview/evidence_integrity_test.go](../../internal/prreview/evidence_integrity_test.go) — `func TestHiddenCheckoutEditsStopReviewersAndCheckpointReuse(`; S7. Hidden tracked edits stop a subsequent reviewer and reject completed checkpoint reuse with no additional worker calls.
+- [internal/prreview/evidence_integrity_test.go](../../internal/prreview/evidence_integrity_test.go) — `func TestCheckoutValidationHonorsCancellation(`; S7. An already cancelled checkout validation returns context.Canceled.
+- [internal/prreview/publication_test.go](../../internal/prreview/publication_test.go) — `func TestCurrentEvidenceAllowsOnlyExactDurablePublicationDelta(`; S7. Current evidence validation accepts only the exact submitted review matching durable approved payload, identity and receipt; external/ambiguous/edited reviews, changed body/head, altered authority and unsubmitted intents reject.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewRestartAcceptsOwnPublicationInCurrentScope(`; S7. Real GitCollector scope validation accepts the workflow own submitted review after finished, uncertain-tail or submitting-tail restart, preserving one artifact and one mutation; the private artifact retains full findings while the saved run carries only its truthful count.
+- [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestCompletionRequiresAssessmentAndSavedArtifactBinding(`; S7. Aggregate save/cancellation, engineering assessment/retention, result retention corruption and result binding-save faults remain incomplete, cannot promote an older incomplete artifact and allow a later retry to reuse reviewer checkpoints.
+- [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestCompletionNotificationFailurePreservesSavedArtifact(`; S7. A progress failure after durable result binding preserves validated complete state and a valid artifact; retry does not repeat engineering assessment or reviewers.
+- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewRestartDoesNotPromoteOlderArtifactBeforeEngineeringCompletion(`; S7. A restarted incomplete review whose aggregate checkpoint SQL write fails retains the same incomplete summary/artifact and rejects posting; later successful retry reuses reviewers and assesses exactly once before replacing the artifact.
 
 ## Verification and gaps
 

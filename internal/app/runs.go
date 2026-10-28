@@ -4,6 +4,7 @@ import (
 	"codefactory/internal/aiworkflows"
 	"codefactory/internal/codex"
 	"codefactory/internal/domain"
+	"codefactory/internal/prreview"
 	"codefactory/internal/store"
 	"context"
 	"encoding/json"
@@ -43,8 +44,10 @@ type Manager struct {
 	cancel               context.CancelFunc
 }
 type session struct {
+	reviewDone          chan struct{}
 	mu                  sync.Mutex
 	ctx                 context.Context
+	cancelMu            sync.Mutex // Protects the replaceable lifetime handle independently of mu.
 	cancel              context.CancelFunc
 	clientless          bool // Immutable lock owner, not an attached provider session.
 	run                 domain.Run
@@ -97,6 +100,12 @@ func (m *Manager) Recover(ctx context.Context) error {
 	acceptedTaskStarts := map[string]bool{}
 	attached := map[string]bool{}
 	for _, r := range runs {
+		if r.ReviewWorkflow != "" {
+			if err := m.recoverReviewWorkflow(ctx, r); err != nil {
+				return err
+			}
+			continue
+		}
 		if err := m.recoverDeferredLaunch(ctx, r); err != nil {
 			return err
 		}
@@ -145,7 +154,7 @@ func (m *Manager) Recover(ctx context.Context) error {
 		return e
 	}
 	for _, a := range atts {
-		if !attached[a.RunID] && a.Status == "pending" && a.Origin != "async" && a.Origin != "text" {
+		if !attached[a.RunID] && a.Status == "pending" && a.Origin != "async" && a.Origin != "text" && a.Origin != "workflow" {
 			a.Status = "stale"
 			if e = m.saveAttention(ctx, a, "attention.resolved"); e != nil {
 				return e
@@ -284,6 +293,9 @@ func (m *Manager) Recover(ctx context.Context) error {
 		}
 	}
 	for _, r := range runs {
+		if r.ReviewWorkflow != "" {
+			continue
+		}
 		if err := m.app.Store.Get(ctx, "run", r.ID, &r); err != nil {
 			return err
 		}
@@ -315,9 +327,15 @@ func (m *Manager) Recover(ctx context.Context) error {
 		m.background(func() { m.deliverMessage(d) })
 	}
 	for _, r := range runs {
+		if r.ReviewWorkflow != "" {
+			continue
+		}
 		m.queueAttentionReconciliation(r.ID)
 	}
 	for _, run := range runs {
+		if run.ReviewWorkflow != "" {
+			continue
+		}
 		id := run.ID
 		m.background(func() { m.recheckAmbiguous(id, "", true) })
 	}
@@ -352,6 +370,9 @@ func (m *Manager) busy() bool {
 	for _, s := range m.sessions() {
 		s.mu.Lock()
 		busy := s.run.Status == "queued" || s.run.Status == "running" || s.run.Status == "starting" || s.run.Status == "waiting"
+		if s.run.ReviewWorkflow != "" && s.run.Status == "waiting" {
+			busy = false
+		}
 		s.mu.Unlock()
 		if busy {
 			return true
@@ -394,8 +415,8 @@ func (m *Manager) lockRun(ctx context.Context, id string, stop bool) (*session, 
 			return nil, nil, fmt.Errorf("daemon is stopping")
 		}
 	}
-	if stop && s.cancel != nil {
-		s.cancel()
+	if stop {
+		s.cancelLifetime()
 	}
 	s.mu.Lock()
 	m.mu.Lock()
@@ -405,7 +426,23 @@ func (m *Manager) lockRun(ctx context.Context, id string, stop bool) (*session, 
 		s.mu.Unlock()
 		return nil, nil, fmt.Errorf("session changed; refresh before retrying")
 	}
+	if stop {
+		// Retained review admission can replace the lifetime while stop waits for
+		// mu. Cancel that current execution too, before returning its locked owner.
+		s.cancelLifetime()
+	}
 	return s, s.mu.Unlock, nil
+}
+
+func (s *session) cancelLifetime() {
+	s.cancelMu.Lock()
+	cancel := s.cancel
+	s.cancelMu.Unlock()
+	// Keep cancellation outside both the handle lock and the session lock when
+	// called before lockRun acquires mu: in-flight provider calls need it to exit.
+	if cancel != nil {
+		cancel()
+	}
 }
 
 func (s *session) stopped() bool {
@@ -420,14 +457,15 @@ func (m *Manager) sessionContext(s *session) context.Context {
 }
 
 type LaunchInput struct {
-	Target    string   `json:"target,omitempty"`
-	ItemID    string   `json:"itemId,omitempty"`
-	ProfileID string   `json:"profileId"`
-	Prompt    string   `json:"prompt,omitempty"`
-	SkillIDs  []string `json:"skillIds,omitempty"`
-	Model     string   `json:"model,omitempty"`
-	Effort    string   `json:"effort,omitempty"`
-	Base      string   `json:"base,omitempty"`
+	AutoPostReview *bool    `json:"autoPostReview,omitempty"`
+	Target         string   `json:"target,omitempty"`
+	ItemID         string   `json:"itemId,omitempty"`
+	ProfileID      string   `json:"profileId"`
+	Prompt         string   `json:"prompt,omitempty"`
+	SkillIDs       []string `json:"skillIds,omitempty"`
+	Model          string   `json:"model,omitempty"`
+	Effort         string   `json:"effort,omitempty"`
+	Base           string   `json:"base,omitempty"`
 }
 
 func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, error) {
@@ -436,7 +474,10 @@ func (m *Manager) Prepare(ctx context.Context, in LaunchInput) (domain.Run, erro
 
 // PreparePRReview resolves the owner's effective review pipeline without starting work.
 func (m *Manager) PreparePRReview(ctx context.Context, itemID string) (domain.Run, error) {
-	return m.prepare(ctx, LaunchInput{ItemID: itemID}, true)
+	return m.PreparePRReviewPolicy(ctx, itemID, nil)
+}
+func (m *Manager) PreparePRReviewPolicy(ctx context.Context, itemID string, policy *bool) (domain.Run, error) {
+	return m.prepare(ctx, LaunchInput{ItemID: itemID, AutoPostReview: policy}, true)
 }
 
 func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (domain.Run, error) {
@@ -512,6 +553,16 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	}
 	prompt = appendLaunchAuthority(prompt, p)
 	r := domain.Run{PRReview: &prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
+	if prReview {
+		r.ReviewWorkflow = prreview.Contract
+		r.ReviewStage = "resolve-configuration"
+		r.AutoPostReview = in.AutoPostReview
+		policy, err := m.app.ReviewPostingPolicy(ctx, item.ID, in.AutoPostReview)
+		if err != nil {
+			return r, err
+		}
+		r.EffectiveAutoPostReview = &policy
+	}
 	r.Branch = "code-factory/" + r.ID
 	r.Worktree = filepath.Join(m.app.DataDir, "worktrees", r.ID)
 	r.Base = in.Base
@@ -589,6 +640,14 @@ func (m *Manager) start(ctx context.Context, id string, resume bool, message str
 }
 
 func (m *Manager) startRun(ctx context.Context, id string, resume bool, message string, recovering bool, recovery *domain.QuestionRecovery) (domain.Run, *session, error) {
+	var retained domain.Run
+	if err := m.app.Store.Get(ctx, "run", id, &retained); err != nil {
+		return domain.Run{}, nil, err
+	}
+	if retained.ReviewWorkflow != "" {
+		r, err := m.startReviewWorkflow(ctx, retained, resume)
+		return r, nil, err
+	}
 	old, unlock, err := m.lockRun(ctx, id, false)
 	if err != nil {
 		return domain.Run{}, nil, err
@@ -681,9 +740,7 @@ func (m *Manager) startRun(ctx context.Context, id string, resume bool, message 
 		return r, nil, err
 	}
 	if old != nil {
-		if old.cancel != nil {
-			old.cancel()
-		}
+		old.cancelLifetime()
 		if recovery != nil {
 			if old.recoveryCancel != nil {
 				old.recoveryCancel()
@@ -790,9 +847,7 @@ func (m *Manager) persist(s *session, event string) error {
 		}
 		if saved.Status == "terminated" || saved.Status == "cleaned" {
 			s.run, s.retired = saved, true
-			if s.cancel != nil {
-				s.cancel()
-			}
+			s.cancelLifetime()
 			return fmt.Errorf("retained run is %s", saved.Status)
 		}
 		if e := t.Put("run", s.run.ID, s.run); e != nil {
@@ -1538,6 +1593,13 @@ func (m *Manager) sendLocked(ctx context.Context, s *session, text, expected str
 	return m.persist(s, "run.state")
 }
 func (m *Manager) Interrupt(ctx context.Context, id string) error {
+	var retained domain.Run
+	if err := m.app.Store.Get(ctx, "run", id, &retained); err != nil {
+		return err
+	}
+	if retained.ReviewWorkflow != "" {
+		return m.interruptReviewWorkflow(ctx, id)
+	}
 	var interruptClient, closeClient *aiworkflows.Client
 	var target map[string]string
 	// Persist cancellation under the current run owner, then release its lock
@@ -1566,9 +1628,7 @@ func (m *Manager) Interrupt(ctx context.Context, id string) error {
 		if s.run.TurnID == "" || s.client == nil {
 			if s.run.Status == "deferred" || s.run.Status == "queued" || s.run.Status == "starting" || s.recovery != nil && s.recovery.Stage == "cancelled" {
 				s.retired = true
-				if s.cancel != nil {
-					s.cancel()
-				}
+				s.cancelLifetime()
 				s.run.Status, s.run.ResumePending, s.run.InterruptRequested = "interrupted", false, true
 				s.run.LaunchRetryAt = time.Time{}
 				closeClient = s.client
@@ -1600,6 +1660,9 @@ func (m *Manager) Answer(ctx context.Context, id string, result json.RawMessage)
 	var a domain.Attention
 	if e := m.app.Store.Get(ctx, "attention", id, &a); e != nil {
 		return e
+	}
+	if a.Origin == "workflow" {
+		return m.answerReviewWorkflow(ctx, a, result)
 	}
 	if a.Origin == "async" || a.Origin == "text" {
 		return m.answerSynthetic(ctx, a, result, nil)

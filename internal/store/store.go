@@ -135,16 +135,11 @@ func (s *Store) List(ctx context.Context, kind string) ([]json.RawMessage, error
 }
 
 // ListWithout removes large fields inside SQLite before transferring/decoding
-// summary records. Paths are bound parameters, never SQL fragments.
+// summary records. Run results are compacted even without additional omissions.
+// Paths are bound parameters, never SQL fragments.
 func ListWithout[T any](ctx context.Context, s *Store, kind string, paths ...string) ([]T, error) {
-	if len(paths) == 0 {
-		return List[T](ctx, s, kind)
-	}
-	args := make([]any, len(paths))
-	for i, path := range paths {
-		args[i] = path
-	}
-	rows, err := s.list(ctx, kind, "json_remove(data,"+strings.TrimSuffix(strings.Repeat("?,", len(paths)), ",")+")", args)
+	expression, args := projection(kind, paths)
+	rows, err := s.list(ctx, kind, expression, args)
 	if err != nil {
 		return nil, err
 	}

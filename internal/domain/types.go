@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"codefactory/internal/prreview"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -8,21 +9,24 @@ import (
 )
 
 type Repository struct {
-	SyncFailures            int       `json:"syncFailures,omitempty"`
-	AutoReview              *bool     `json:"autoReview,omitempty"`
-	ReviewPrompt            string    `json:"reviewPrompt,omitempty"`
-	ReviewError             string    `json:"reviewError,omitempty"`
-	Paused                  bool      `json:"paused,omitempty"`
-	ReviewProfileID         string    `json:"reviewProfileId,omitempty"`
-	ImplementationProfileID string    `json:"implementationProfileId,omitempty"`
-	ID                      string    `json:"id"`
-	Checkout                string    `json:"checkout"`
-	Base                    string    `json:"base"`
-	LastSync                time.Time `json:"lastSync"`
-	LastFull                time.Time `json:"lastFull"`
-	Error                   string    `json:"error"`
-	RetryAt                 time.Time `json:"retryAt"`
-	Imported                bool      `json:"imported"`
+	AutoPostReview          *bool                `json:"autoPostReview,omitempty"`
+	Reviewers               *[]prreview.Reviewer `json:"reviewers,omitempty"`
+	ReviewRules             *string              `json:"reviewRules,omitempty"`
+	SyncFailures            int                  `json:"syncFailures,omitempty"`
+	AutoReview              *bool                `json:"autoReview,omitempty"`
+	ReviewPrompt            string               `json:"reviewPrompt,omitempty"`
+	ReviewError             string               `json:"reviewError,omitempty"`
+	Paused                  bool                 `json:"paused,omitempty"`
+	ReviewProfileID         string               `json:"reviewProfileId,omitempty"`
+	ImplementationProfileID string               `json:"implementationProfileId,omitempty"`
+	ID                      string               `json:"id"`
+	Checkout                string               `json:"checkout"`
+	Base                    string               `json:"base"`
+	LastSync                time.Time            `json:"lastSync"`
+	LastFull                time.Time            `json:"lastFull"`
+	Error                   string               `json:"error"`
+	RetryAt                 time.Time            `json:"retryAt"`
+	Imported                bool                 `json:"imported"`
 }
 type Actor struct {
 	Login string `json:"login"`
@@ -190,9 +194,14 @@ type Profile struct {
 	Publishing string   `json:"publishing"`
 }
 type Config struct {
-	GitHubRequestsPerHour int  `json:"githubRequestsPerHour,omitempty"`
-	GitHubReserve         *int `json:"githubReserve,omitempty"`
-	GitHubPollSeconds     int  `json:"githubPollSeconds,omitempty"`
+	ReviewersConfigured   bool                `json:"reviewersConfigured,omitempty"`
+	ReviewRulesConfigured bool                `json:"reviewRulesConfigured,omitempty"`
+	AutoPostReview        bool                `json:"autoPostReview,omitempty"`
+	Reviewers             []prreview.Reviewer `json:"reviewers,omitempty"`
+	ReviewRules           string              `json:"reviewRules,omitempty"`
+	GitHubRequestsPerHour int                 `json:"githubRequestsPerHour,omitempty"`
+	GitHubReserve         *int                `json:"githubReserve,omitempty"`
+	GitHubPollSeconds     int                 `json:"githubPollSeconds,omitempty"`
 
 	AutoReview              bool           `json:"autoReview,omitempty"`
 	ReviewProfileID         string         `json:"reviewProfileId,omitempty"`
@@ -208,26 +217,38 @@ type Config struct {
 	QuestionHelperModel     string         `json:"questionHelperModel,omitempty"`
 }
 type Run struct {
-	PRReview             *bool     `json:"prReview,omitempty"`
-	AutomaticReview      bool      `json:"automaticReview,omitempty"`
-	ReviewPromptSnapshot string    `json:"reviewPromptSnapshot,omitempty"`
-	ID                   string    `json:"id"`
-	ItemID               string    `json:"itemId"`
-	Profile              Profile   `json:"profile"`
-	Prompt               string    `json:"prompt"`
-	Skills               []Skill   `json:"skills"`
-	Worktree             string    `json:"worktree"`
-	Branch               string    `json:"branch"`
-	Base                 string    `json:"base"`
-	ThreadID             string    `json:"threadId"`
-	TurnID               string    `json:"turnId"`
-	Status               string    `json:"status"`
-	Error                string    `json:"error"`
-	ResumePending        bool      `json:"resumePending"`
-	LaunchRetryAt        time.Time `json:"launchRetryAt"`
-	InterruptRequested   bool      `json:"interruptRequested"`
-	SourceSnapshot       *Item     `json:"sourceSnapshot,omitempty"`
-	Created              time.Time `json:"created"`
+	ReviewExecution         string                  `json:"reviewExecution,omitempty"`
+	ReviewResult            *prreview.ResultSummary `json:"reviewResult,omitempty"`
+	ReviewWorkflow          string                  `json:"reviewWorkflow,omitempty"`
+	ReviewStage             string                  `json:"reviewStage,omitempty"`
+	ReviewArtifact          *prreview.Reference     `json:"reviewArtifact,omitempty"`
+	ReviewComplete          bool                    `json:"reviewComplete,omitempty"`
+	PostingState            string                  `json:"postingState,omitempty"`
+	PostingOperation        string                  `json:"postingOperation,omitempty"`
+	PostingReceipt          *prreview.Receipt       `json:"postingReceipt,omitempty"`
+	ReviewOmissions         []prreview.Omission     `json:"reviewOmissions,omitempty"`
+	AutoPostReview          *bool                   `json:"autoPostReview,omitempty"`
+	EffectiveAutoPostReview *prreview.Policy        `json:"effectiveAutoPostReview,omitempty"`
+	PRReview                *bool                   `json:"prReview,omitempty"`
+	AutomaticReview         bool                    `json:"automaticReview,omitempty"`
+	ReviewPromptSnapshot    string                  `json:"reviewPromptSnapshot,omitempty"`
+	ID                      string                  `json:"id"`
+	ItemID                  string                  `json:"itemId"`
+	Profile                 Profile                 `json:"profile"`
+	Prompt                  string                  `json:"prompt"`
+	Skills                  []Skill                 `json:"skills"`
+	Worktree                string                  `json:"worktree"`
+	Branch                  string                  `json:"branch"`
+	Base                    string                  `json:"base"`
+	ThreadID                string                  `json:"threadId"`
+	TurnID                  string                  `json:"turnId"`
+	Status                  string                  `json:"status"`
+	Error                   string                  `json:"error"`
+	ResumePending           bool                    `json:"resumePending"`
+	LaunchRetryAt           time.Time               `json:"launchRetryAt"`
+	InterruptRequested      bool                    `json:"interruptRequested"`
+	SourceSnapshot          *Item                   `json:"sourceSnapshot,omitempty"`
+	Created                 time.Time               `json:"created"`
 }
 type Attention struct {
 	Resolutions []QuestionResolution `json:"resolutions,omitempty"`

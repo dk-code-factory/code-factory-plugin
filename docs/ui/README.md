@@ -152,6 +152,8 @@ flowchart TD
     N137["P-PLUGIN-ADMIN"]
     N138["P-SYSTEM-DEFAULTS"]
     N142["W-GITHUB-USAGE"]
+    N145["W-PR-REVIEW-POLICY"]
+    N146["W-RETAINED-REVIEW"]
     N0 --> N38
     N0 --> N39
     N0 --> N40
@@ -366,6 +368,12 @@ flowchart TD
     I54["P-SYSTEM-DEFAULTS/W-GITHUB-USAGE"]
     N138 --> I54
     I54 -.->|"type"| N142
+    I55["P-ITEM-DETAIL/W-PR-REVIEW-POLICY"]
+    N43 --> I55
+    I55 -.->|"type"| N145
+    I56["P-RUN-DETAIL/W-RETAINED-REVIEW"]
+    N45 --> I56
+    I56 -.->|"type"| N146
 ```
 <!-- /specs:containment -->
 
@@ -449,6 +457,8 @@ No installed UI, authentication, service or browser-session change is implied.
 | `P-PLUGIN-ADMIN/W-PLUGIN-ADMIN` | `W-PLUGIN-ADMIN` | `P-PLUGIN-ADMIN` | one per displayed settings view |
 | `P-SYSTEM-DEFAULTS/W-SYSTEM-DEFAULTS` | `W-SYSTEM-DEFAULTS` | `P-SYSTEM-DEFAULTS` | one per displayed settings view |
 | `P-SYSTEM-DEFAULTS/W-GITHUB-USAGE` | `W-GITHUB-USAGE` | `P-SYSTEM-DEFAULTS` | one per displayed settings view |
+| `P-ITEM-DETAIL/W-PR-REVIEW-POLICY` | `W-PR-REVIEW-POLICY` | `P-ITEM-DETAIL` | one per displayed owning item or retained review |
+| `P-RUN-DETAIL/W-RETAINED-REVIEW` | `W-RETAINED-REVIEW` | `P-RUN-DETAIL` | one per displayed owning item or retained review |
 <!-- /specs:instances -->
 
 ## Canonical entity names
@@ -479,12 +489,12 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="W-TRANSCRIPT"></a>`W-TRANSCRIPT` | widget | [Transcript widget](../glossary/README.md#ui-w-transcript), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-MESSAGE"></a>`W-MESSAGE` | widget | [Message widget](../glossary/README.md#ui-w-message), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Waiting for GitHub](../glossary/README.md#state-deferred) |
 | <a id="W-DIALOG-FRAME"></a>`W-DIALOG-FRAME` | widget | [Dialog frame widget](../glossary/README.md#ui-w-dialog-frame), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Keyboard focus](../glossary/README.md#keyboard-focus), [Modal dialog](../glossary/README.md#modal-dialog) |
-| <a id="W-LAUNCH-EDITOR"></a>`W-LAUNCH-EDITOR` | widget | [Launch editor widget](../glossary/README.md#ui-w-launch-editor), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
-| <a id="W-LAUNCH-REVIEW"></a>`W-LAUNCH-REVIEW` | widget | [Launch review widget](../glossary/README.md#ui-w-launch-review), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
+| <a id="W-LAUNCH-EDITOR"></a>`W-LAUNCH-EDITOR` | widget | [Launch editor widget](../glossary/README.md#ui-w-launch-editor), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Review posting policy](../glossary/README.md#review-posting-policy), [Review workflow](../glossary/README.md#review-workflow) |
+| <a id="W-LAUNCH-REVIEW"></a>`W-LAUNCH-REVIEW` | widget | [Launch review widget](../glossary/README.md#ui-w-launch-review), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Review posting policy](../glossary/README.md#review-posting-policy), [Review workflow](../glossary/README.md#review-workflow) |
 | <a id="W-QUESTIONS"></a>`W-QUESTIONS` | widget | [Questions widget](../glossary/README.md#ui-w-questions), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-APPROVAL"></a>`W-APPROVAL` | widget | [Approval widget](../glossary/README.md#ui-w-approval), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-ELICITATION"></a>`W-ELICITATION` | widget | [Elicitation widget](../glossary/README.md#ui-w-elicitation), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
-| <a id="W-REPOSITORY-SETTINGS"></a>`W-REPOSITORY-SETTINGS` | widget | [Repository settings widget](../glossary/README.md#ui-w-repository-settings), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Review policy](../glossary/README.md#review-policy), [Repository review prompt](../glossary/README.md#repository-review-prompt) |
+| <a id="W-REPOSITORY-SETTINGS"></a>`W-REPOSITORY-SETTINGS` | widget | [Repository settings widget](../glossary/README.md#ui-w-repository-settings), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Review policy](../glossary/README.md#review-policy), [Repository review prompt](../glossary/README.md#repository-review-prompt), [Ordered reviewer](../glossary/README.md#ordered-reviewer), [Review posting policy](../glossary/README.md#review-posting-policy) |
 | <a id="W-POLICY-SETTINGS"></a>`W-POLICY-SETTINGS` | widget | [Policy settings widget](../glossary/README.md#ui-w-policy-settings), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-PROFILE-SETTINGS"></a>`W-PROFILE-SETTINGS` | widget | [Profile settings widget](../glossary/README.md#ui-w-profile-settings), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="W-SKILL-SETTINGS"></a>`W-SKILL-SETTINGS` | widget | [Skill settings widget](../glossary/README.md#ui-w-skill-settings), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
@@ -592,7 +602,7 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="C-SESSION-CONSOLE"></a>`C-SESSION-CONSOLE` | connection | [Session console connection](../glossary/README.md#ui-c-session-console) |
 | <a id="C-PIPELINE-SELECT"></a>`C-PIPELINE-SELECT` | connection | [Pipeline selection connection](../glossary/README.md#ui-c-pipeline-select) |
 | <a id="W-PLUGIN-ADMIN"></a>`W-PLUGIN-ADMIN` | widget | [Codex plugin admin widget](../glossary/README.md#ui-w-plugin-admin), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Codex plugin](../glossary/README.md#codex-plugin), [Plugin marketplace](../glossary/README.md#plugin-marketplace), [Plugin inventory](../glossary/README.md#plugin-inventory), [Plugin maintenance](../glossary/README.md#plugin-maintenance) |
-| <a id="W-SYSTEM-DEFAULTS"></a>`W-SYSTEM-DEFAULTS` | widget | [System review defaults widget](../glossary/README.md#ui-w-system-defaults), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
+| <a id="W-SYSTEM-DEFAULTS"></a>`W-SYSTEM-DEFAULTS` | widget | [System review defaults widget](../glossary/README.md#ui-w-system-defaults), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Ordered reviewer](../glossary/README.md#ordered-reviewer), [Review posting policy](../glossary/README.md#review-posting-policy) |
 | <a id="P-PLUGIN-ADMIN"></a>`P-PLUGIN-ADMIN` | pane | [Plugin administration pane](../glossary/README.md#ui-p-plugin-admin), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior), [Codex plugin](../glossary/README.md#codex-plugin), [Plugin marketplace](../glossary/README.md#plugin-marketplace), [Plugin inventory](../glossary/README.md#plugin-inventory), [Plugin maintenance](../glossary/README.md#plugin-maintenance) |
 | <a id="P-SYSTEM-DEFAULTS"></a>`P-SYSTEM-DEFAULTS` | pane | [System defaults pane](../glossary/README.md#ui-p-system-defaults), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="C-PLUGIN-MAINTENANCE"></a>`C-PLUGIN-MAINTENANCE` | connection | [Plugin maintenance connection](../glossary/README.md#ui-c-plugin-maintenance), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
@@ -601,4 +611,9 @@ No installed UI, authentication, service or browser-session change is implied.
 | <a id="W-GITHUB-USAGE"></a>`W-GITHUB-USAGE` | widget | [GitHub API usage](../glossary/README.md#ui-w-github-usage), [GitHub request budget](../glossary/README.md#github-request-budget), [GitHub request reserve](../glossary/README.md#github-request-reserve), [GitHub review notification](../glossary/README.md#github-review-notification), [Coverage gap](../glossary/README.md#coverage-gap), [Unverified behavior](../glossary/README.md#unverified-behavior) |
 | <a id="C-GITHUB-USAGE"></a>`C-GITHUB-USAGE` | connection | [GitHub usage settings connection](../glossary/README.md#ui-c-github-usage), [GitHub request budget](../glossary/README.md#github-request-budget), [GitHub request reserve](../glossary/README.md#github-request-reserve), [GitHub review notification](../glossary/README.md#github-review-notification) |
 | <a id="C-SKILL-LOAD"></a>`C-SKILL-LOAD` | connection | [Skill load connection](../glossary/README.md#ui-c-skill-load) |
+| <a id="W-PR-REVIEW-POLICY"></a>`W-PR-REVIEW-POLICY` | widget | [PR review posting policy widget](../glossary/README.md#ui-w-pr-review-policy), [Review workflow](../glossary/README.md#review-workflow), [Review artifact](../glossary/README.md#review-artifact), [Review posting policy](../glossary/README.md#review-posting-policy), [Review publication operation](../glossary/README.md#review-publication-operation) |
+| <a id="W-RETAINED-REVIEW"></a>`W-RETAINED-REVIEW` | widget | [Retained review workflow widget](../glossary/README.md#ui-w-retained-review), [Review workflow](../glossary/README.md#review-workflow), [Review artifact](../glossary/README.md#review-artifact), [Review posting policy](../glossary/README.md#review-posting-policy), [Review publication operation](../glossary/README.md#review-publication-operation) |
+| <a id="C-PR-POSTING-POLICY"></a>`C-PR-POSTING-POLICY` | connection | [PR posting policy connection](../glossary/README.md#ui-c-pr-posting-policy), [Review publication operation](../glossary/README.md#review-publication-operation) |
+| <a id="C-REVIEW-PUBLISH"></a>`C-REVIEW-PUBLISH` | connection | [Retained review publication connection](../glossary/README.md#ui-c-review-publish), [Review publication operation](../glossary/README.md#review-publication-operation) |
+| <a id="C-REVIEW-RECONCILE"></a>`C-REVIEW-RECONCILE` | connection | [Review publication reconciliation connection](../glossary/README.md#ui-c-review-reconcile), [Review publication operation](../glossary/README.md#review-publication-operation) |
 <!-- /specs:terminology -->

@@ -1,0 +1,1150 @@
+{
+  "upstream": "1b0019767a29142bbb4b3855c2fc9f1e4af75b71",
+  "patch": "diff --git a/a.go b/a.go\nindex 123..456 100644\n--- a/a.go\n+++ b/a.go\n@@ -1,3 +1,4 @@\n context\n-old\n+new\n+next\n tail\n",
+  "responses": [
+    {
+      "response": {
+        "findings": []
+      },
+      "valid": true
+    },
+    {
+      "response": {
+        "findings": [
+          {
+            "severity": "Major",
+            "path": "a.go",
+            "line": 2,
+            "message": "Defect and consequence",
+            "fix": "Required outcome"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "response": {
+        "status": "tokens_exhausted",
+        "findings": [],
+        "message": "usage limit"
+      },
+      "valid": true
+    },
+    {
+      "response": {
+        "status": "incomplete",
+        "findings": [],
+        "message": "missing evidence"
+      },
+      "valid": true
+    },
+    {
+      "response": {
+        "findings": [
+          {
+            "severity": "Minor",
+            "path": "a.go",
+            "line": 1,
+            "message": "context",
+            "fix": "bad anchor"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "response": {
+        "findings": [
+          {
+            "severity": "P1",
+            "path": "a.go",
+            "line": 2,
+            "message": "wrong severity",
+            "fix": "fix"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "response": {
+        "findings": [],
+        "authorized": true
+      },
+      "valid": false
+    },
+    {
+      "response": {
+        "findings": null
+      },
+      "valid": false
+    },
+    {
+      "response": {
+        "status": "incomplete",
+        "findings": [],
+        "message": " "
+      },
+      "valid": false
+    }
+  ],
+  "hashes": [
+    {
+      "value": {
+        "b": [
+          "α",
+          "<tag>",
+          3
+        ],
+        "a": true
+      },
+      "sha256": "002cf9de8bc51a400f92cc589a469d32e66cb232c7e4b6b8c0ac7be2abb6c70d"
+    },
+    {
+      "value": {
+        "findings": []
+      },
+      "sha256": "6e96a492bc9fa40d22212c5be0396a203f3dbd4916cf97ebe2f66b6d54fa4a9a"
+    },
+    {
+      "value": "a\n\"b",
+      "sha256": "83b437918e67adaca36c1564682b5426c94222803e801b38d569634c72693013"
+    },
+    {
+      "value": {
+        "path": "src/日本語.go"
+      },
+      "sha256": "fe9aff8f4961f3887f4302352aff47bdb105100de76f041f61de4a0ff145bab1"
+    }
+  ],
+  "locations": [
+    [
+      "a.go",
+      1,
+      "LEFT"
+    ],
+    [
+      "a.go",
+      1,
+      "RIGHT"
+    ],
+    [
+      "a.go",
+      2,
+      "LEFT"
+    ],
+    [
+      "a.go",
+      2,
+      "RIGHT"
+    ],
+    [
+      "a.go",
+      3,
+      "LEFT"
+    ],
+    [
+      "a.go",
+      3,
+      "RIGHT"
+    ],
+    [
+      "a.go",
+      4,
+      "RIGHT"
+    ]
+  ],
+  "decisions_body": "Scope prose.\n\n## Decisions\n\n- **Choice:** Keep ordering.\n- Bound retry depth. Source: https://github.com/o/r/issues/1\n\n## Tests\nIgnored prose\n",
+  "decisions": [
+    {
+      "id": "9522cb56e18699b75a55",
+      "text": "Keep ordering.",
+      "source_type": "description",
+      "references": [
+        "https://github.com/o/r/pull/2#decisions"
+      ],
+      "source": null,
+      "status": "active",
+      "publication_status": "published",
+      "superseded_by": null
+    },
+    {
+      "id": "797c139a14bfbaa3bf5b",
+      "text": "Bound retry depth.",
+      "source_type": "description",
+      "references": [
+        "https://github.com/o/r/issues/1"
+      ],
+      "source": null,
+      "status": "active",
+      "publication_status": "published",
+      "superseded_by": null
+    }
+  ],
+  "analysis": {
+    "boundaries": {
+      "correctness": [
+        {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ]
+        }
+      ],
+      "remediation_depth": [
+        {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ]
+        }
+      ],
+      "performance": [
+        {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ]
+        }
+      ],
+      "compatibility": [
+        {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ]
+        }
+      ],
+      "complexity": [
+        {
+          "text": "Keep established behavior",
+          "agreement": "established",
+          "material": false,
+          "rationale": "Published scope establishes this boundary",
+          "evidence": [
+            "pr/body"
+          ]
+        }
+      ]
+    },
+    "placement": {
+      "production": {
+        "text": "Keep established behavior",
+        "agreement": "established",
+        "material": false,
+        "rationale": "Published scope establishes this boundary",
+        "evidence": [
+          "pr/body"
+        ],
+        "locations": [
+          "a.go"
+        ]
+      },
+      "tests": {
+        "text": "Keep established behavior",
+        "agreement": "established",
+        "material": false,
+        "rationale": "Published scope establishes this boundary",
+        "evidence": [
+          "pr/body"
+        ],
+        "locations": [
+          "a.go"
+        ]
+      },
+      "reuse": {
+        "text": "Keep established behavior",
+        "agreement": "established",
+        "material": false,
+        "rationale": "Published scope establishes this boundary",
+        "evidence": [
+          "pr/body"
+        ],
+        "locations": [
+          "a.go"
+        ]
+      },
+      "entrypoints": {
+        "text": "Keep established behavior",
+        "agreement": "established",
+        "material": false,
+        "rationale": "Published scope establishes this boundary",
+        "evidence": [
+          "pr/body"
+        ],
+        "locations": [
+          "a.go"
+        ]
+      },
+      "dependencies": {
+        "text": "Keep established behavior",
+        "agreement": "established",
+        "material": false,
+        "rationale": "Published scope establishes this boundary",
+        "evidence": [
+          "pr/body"
+        ],
+        "locations": [
+          "a.go"
+        ]
+      }
+    },
+    "test_strategy": [
+      {
+        "behavior": "Changed behavior",
+        "existing": "Current assertions",
+        "missing": "Boundary regression",
+        "level": "unit",
+        "location": "a_test.go",
+        "command": "go test ./...",
+        "rationale": "Direct state assertions",
+        "limitation": "Fixture only",
+        "evidence": [
+          "pr/body"
+        ]
+      }
+    ],
+    "questions": [],
+    "reviewer_addenda": {
+      "one": "Inspect correctness",
+      "two": "Inspect scope"
+    },
+    "worker_instructions": "Inspect pinned scope, rules, code and tests",
+    "completion_criteria": "Check every engineering dimension",
+    "sync_required": false,
+    "sync_reason": ""
+  },
+  "readiness": "ready",
+  "sources": {
+    "runtime/dk-pr-review/scripts/validate_result.py": "03f16953cdf0ef5a9bad8df9fc30b3ed1684a5a6cb0399b5eb02ab3d12436639",
+    "runtime/dk-pr-review/scripts/review_context.py": "b55194c23dc754bad98cc6b195565648d5d203b6cc51ee8381ea05087f9e8e16",
+    "runtime/dk-pr-review/scripts/review-result.schema.json": "0cee3da7e09e959cd0fc8addbf2085bf698cc3d2a24c2eb1258c9713ff00da46",
+    "runtime/dk-pr-post-review/scripts/post_review.py": "06531ea46ad665871450ffb33c22a3278949cbfdfc9c32519f90167a62ce820d",
+    "runtime/dk-pr-decisions/scripts/preparation.py": "05e089c6351f2e746e9afa92ce9714101d76933a6efa680c87c91f044ea9bb40",
+    "runtime/dk-pr-decisions/scripts/decisions.py": "7322b880a176e175fda0a37fc5662d591757ea871e8080a765377ff9a167135e",
+    "runtime/shared/review_sessions.py": "ec821acaa207c574af23134170c730cd97a72ecdb891edf316db3b607d795987",
+    "runtime/shared/review_coverage.py": "c60d5ead9bc7f5c8beb6041ec9b89dc8cd6372ae7530abeffade4a0c3e0e7de6",
+    "runtime/shared/engineering_identity.py": "e1679a1ffa3ebfa5741d0198781893ea81cc0359105dfcbee618fb01cb1178af"
+  },
+  "analysis_responses": [
+    {
+      "analysis": {
+        "boundaries": {
+          "correctness": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "remediation_depth": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "performance": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "compatibility": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "complexity": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ]
+        },
+        "placement": {
+          "production": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "tests": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "reuse": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "entrypoints": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "dependencies": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          }
+        },
+        "test_strategy": [
+          {
+            "behavior": "Changed behavior",
+            "existing": "Current assertions",
+            "missing": "Boundary regression",
+            "level": "unit",
+            "location": "a_test.go",
+            "command": "go test ./...",
+            "rationale": "Direct state assertions",
+            "limitation": "Fixture only",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "questions": [],
+        "reviewer_addenda": {
+          "one": "Inspect correctness",
+          "two": "Inspect scope"
+        },
+        "worker_instructions": "Inspect pinned scope, rules, code and tests",
+        "completion_criteria": "Check every engineering dimension",
+        "sync_required": false,
+        "sync_reason": ""
+      },
+      "valid": true
+    },
+    {
+      "analysis": {
+        "boundaries": {
+          "correctness": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "remediation_depth": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "performance": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "compatibility": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "complexity": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ]
+        },
+        "placement": {
+          "production": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              " "
+            ]
+          },
+          "tests": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "reuse": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "entrypoints": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "dependencies": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          }
+        },
+        "test_strategy": [
+          {
+            "behavior": "Changed behavior",
+            "existing": "Current assertions",
+            "missing": "Boundary regression",
+            "level": "unit",
+            "location": "a_test.go",
+            "command": "go test ./...",
+            "rationale": "Direct state assertions",
+            "limitation": "Fixture only",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "questions": [],
+        "reviewer_addenda": {
+          "one": "Inspect correctness",
+          "two": "Inspect scope"
+        },
+        "worker_instructions": "Inspect pinned scope, rules, code and tests",
+        "completion_criteria": "Check every engineering dimension",
+        "sync_required": false,
+        "sync_reason": ""
+      },
+      "valid": false
+    },
+    {
+      "analysis": {
+        "boundaries": {
+          "correctness": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "remediation_depth": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "performance": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "compatibility": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "complexity": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ]
+        },
+        "placement": {
+          "production": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "tests": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "reuse": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "entrypoints": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "dependencies": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          }
+        },
+        "test_strategy": [
+          {
+            "behavior": "Changed behavior",
+            "existing": "Current assertions",
+            "missing": "Boundary regression",
+            "level": "unit",
+            "location": "a_test.go",
+            "command": "go test ./...",
+            "rationale": "Direct state assertions",
+            "limitation": "Fixture only",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "questions": [
+          {
+            "id": "q",
+            "status": "resolved",
+            "material": true,
+            "statements": " ",
+            "affected_work": "Review scope",
+            "recommendation": "Narrow",
+            "proposed_changes": "Choose scope",
+            "options": [
+              {
+                "choice": "Narrow",
+                "benefits": "Bounded",
+                "costs": "Deferred"
+              },
+              {
+                "choice": "Wide",
+                "benefits": "Coverage",
+                "costs": "Complexity"
+              }
+            ],
+            "resolution": "Resolved by source evidence",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "reviewer_addenda": {
+          "one": "Inspect correctness",
+          "two": "Inspect scope"
+        },
+        "worker_instructions": "Inspect pinned scope, rules, code and tests",
+        "completion_criteria": "Check every engineering dimension",
+        "sync_required": false,
+        "sync_reason": ""
+      },
+      "valid": false
+    },
+    {
+      "analysis": {
+        "boundaries": {
+          "correctness": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "remediation_depth": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "performance": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "compatibility": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "complexity": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ]
+        },
+        "placement": {
+          "production": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "tests": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "reuse": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "entrypoints": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "dependencies": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          }
+        },
+        "test_strategy": [
+          {
+            "behavior": "Changed behavior",
+            "existing": "Current assertions",
+            "missing": "Boundary regression",
+            "level": "unit",
+            "location": "a_test.go",
+            "command": "go test ./...",
+            "rationale": "Direct state assertions",
+            "limitation": "Fixture only",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "questions": [
+          {
+            "id": "q",
+            "status": "resolved",
+            "material": true,
+            "statements": "Conflict",
+            "affected_work": "Review scope",
+            "recommendation": "Narrow",
+            "proposed_changes": "Choose scope",
+            "options": [
+              {
+                "choice": "Narrow",
+                "benefits": "Bounded",
+                "costs": "Deferred"
+              },
+              {
+                "choice": "Wide",
+                "benefits": "Coverage",
+                "costs": "Complexity"
+              }
+            ],
+            "resolution": " ",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "reviewer_addenda": {
+          "one": "Inspect correctness",
+          "two": "Inspect scope"
+        },
+        "worker_instructions": "Inspect pinned scope, rules, code and tests",
+        "completion_criteria": "Check every engineering dimension",
+        "sync_required": false,
+        "sync_reason": ""
+      },
+      "valid": false
+    },
+    {
+      "analysis": {
+        "boundaries": {
+          "correctness": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "remediation_depth": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "performance": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "compatibility": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ],
+          "complexity": [
+            {
+              "text": "Keep established behavior",
+              "agreement": "established",
+              "material": false,
+              "rationale": "Published scope establishes this boundary",
+              "evidence": [
+                "pr/body"
+              ]
+            }
+          ]
+        },
+        "placement": {
+          "production": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "tests": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "reuse": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "entrypoints": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          },
+          "dependencies": {
+            "text": "Keep established behavior",
+            "agreement": "established",
+            "material": false,
+            "rationale": "Published scope establishes this boundary",
+            "evidence": [
+              "pr/body"
+            ],
+            "locations": [
+              "a.go"
+            ]
+          }
+        },
+        "test_strategy": [
+          {
+            "behavior": "Changed behavior",
+            "existing": "Current assertions",
+            "missing": "Boundary regression",
+            "level": "unit",
+            "location": "a_test.go",
+            "command": "go test ./...",
+            "rationale": "Direct state assertions",
+            "limitation": "Fixture only",
+            "evidence": [
+              "pr/body"
+            ]
+          }
+        ],
+        "questions": [],
+        "reviewer_addenda": {
+          "one": "Inspect correctness",
+          "two": "Inspect scope"
+        },
+        "worker_instructions": "Inspect pinned scope, rules, code and tests",
+        "completion_criteria": "Check every engineering dimension",
+        "sync_required": true,
+        "sync_reason": " "
+      },
+      "valid": false
+    }
+  ],
+  "handoff_fields": [
+    "contract",
+    "checkout",
+    "base_sha",
+    "head_sha",
+    "patch",
+    "scope",
+    "decisions",
+    "decision_instructions",
+    "rules",
+    "pr_url",
+    "preparation",
+    "reviewer_addendum"
+  ],
+  "decision_instructions": "Use active entries in the unified decisions array when present. Superseded entries are history, not current constraints. For legacy contexts check all live, discussion, and local decisions."
+}
