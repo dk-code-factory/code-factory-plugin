@@ -415,6 +415,43 @@ else:
 		}
 		t.Log("fake provider exited before controller and lifecycle teardown")
 	})
+	for index, classification := range []string{"invalid", "resolved"} {
+		t.Run("auditor "+classification+" passes workflow contract", func(t *testing.T) {
+			next := Runtime{Generation: 30 + index, AdmissionID: r.ID + "-" + classification, OutputContract: structuredContract, Context: rt.Context}
+			if err := n.Prepare(ctx, r, &next); err != nil {
+				t.Fatal(err)
+			}
+			defer n.Complete(context.Background(), next)
+			defer command(context.Background(), next.Workspace, nil, binary, "stop", "--workspace", next.Workspace)
+			d := draftFixture(f)
+			d.Classification = classification
+			if classification == "resolved" {
+				d.DuplicateNumber = 17
+			}
+			if err := privateWrite(filepath.Join(next.Workspace, "structured-response.json"), mustJSON(d)); err != nil {
+				t.Fatal(err)
+			}
+			state, err := n.Start(ctx, next)
+			if err != nil {
+				t.Fatal(err)
+			}
+			deadline := time.Now().Add(10 * time.Second)
+			for time.Now().Before(deadline) && (state.Status == "running" || state.Status == "queued") {
+				time.Sleep(30 * time.Millisecond)
+				state, err = n.Status(ctx, next, state.ID)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			got, err := decodeStructured(state.Outputs.Structured)
+			if err != nil || state.Status != "succeeded" || got.Classification != classification {
+				t.Fatal(state, got, err)
+			}
+			if !strings.Contains(next.Prompt, "report auditor") || !strings.Contains(next.Prompt, "closed issue alone") {
+				t.Fatal("auditor evidence instructions missing")
+			}
+		})
+	}
 	t.Run("malformed structured result is rejected by the real controller", func(t *testing.T) {
 		next := Runtime{Generation: 20, AdmissionID: r.ID + "-20", OutputContract: structuredContract, Context: rt.Context}
 		if err := n.Prepare(ctx, r, &next); err != nil {

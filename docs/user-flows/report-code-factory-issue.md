@@ -12,10 +12,10 @@ The owner has an authenticated private connection. Automatic investigation requi
 
 1. Submit an observation time, affected surface, expected/actual results and reproduction steps or an explicit unknown-reproduction explanation, with a stable idempotency key. Include host-only errors and responses and available relevant IDs. Separate suspected causes from facts.
 2. Require a private data location outside source checkouts before retaining observations or additional evidence. Retain an accepted report immediately and collect relevant local evidence privately, with origins, capture times, hashes, explicit omissions and truncation. Credentials, authentication and unrelated work are excluded.
-3. Retain a private snapshot of destination status, labels, templates, contribution/security/support guidance and at most ten duplicate candidates per destination before investigation. Reuse that snapshot through polling and recovery of the same investigation; a fresh investigation captures fresh context. Investigate the captured evidence and relevant source through durable local work. Classify confirmed or suspected bugs, duplicates, insufficient information or behavior explained by the contract. Verify component ownership within the organization. The component determines the destination; the investigator supplies narrative facts, template selection and typed answers. Render repository headings and field order, supported labels and form answers consistently.
-4. Publish the verified draft automatically, recording intent before the external effect and retaining the issue identity afterward. Reuse clear duplicates. Reporting authority does not authorize fixing code.
+3. Retain a private snapshot of destination status, labels, templates, contribution/security/support guidance and at most ten duplicate candidates per destination before investigation. Reuse that snapshot through polling and recovery of the same investigation; a fresh investigation captures fresh context. Investigate the captured evidence and relevant source through durable local work. Act as an auditor and trace the reported behavior to relevant source and assertions. Classify confirmed or suspected bugs, duplicates, insufficient information, behavior explained by the contract, invalid defect claims or defects already resolved in the inspected source. An invalid conclusion requires a source-backed explanation; failed reproduction or missing evidence alone cannot invalidate a report. An already-resolved conclusion requires the same defect in a supplied issue candidate and inspection of the captured destination revision for its fix, including possible regressions. Verify component ownership within the organization. The component determines the destination; the investigator supplies narrative facts, template selection and typed answers. Render repository headings and field order, supported labels and form answers consistently.
+4. Publish the verified draft automatically, recording intent before the external effect and retaining the issue identity afterward. Reuse clear duplicates. Deterministically validate source ownership before completing an invalid report without filing. Before completing an already-resolved report without filing, verify the existing issue is closed as completed and has an independently verified fixing commit ancestral to the inspected source revision. Closure alone, not-planned issues, unavailable proof or a fix absent from inspected source cannot establish resolution. Retain verified issue/fix identity and keep release and installed availability independent. Reporting authority does not authorize fixing code.
 5. Keep the shared ledger current with independent processing, outcome, GitHub state, fix references, component versions, published stable/prerelease versions and observed installed versions. Unknown evidence stays Unknown.
-6. Search and filter Reported issues, inspect details, the collapsible issue draft, visible layout limitation and missing-information requests, append host evidence, refresh delivery evidence and explicitly recover blocked or interrupted work.
+6. Search and filter Reported issues, inspect details, the collapsible issue draft, invalid or already-resolved outcome and explanation, visible layout limitation and missing-information requests, append host evidence, refresh delivery evidence and explicitly recover blocked or interrupted work.
 
 A mutation acknowledgement releases its controls independently of later background completion. Shared updates refresh saved lists/details without dismissing uncertain mutation errors or replacing newer selections and evidence drafts.
 
@@ -25,7 +25,7 @@ Repeated submissions with the same key and payload return the same durable repor
 
 Missing, unavailable or unsupported issue layouts use a standard report with environment, reproduction or an explicit unknown-reproduction explanation, expected/actual behavior, relevant evidence, findings and uncertainty, plus a brief layout limitation. Complex Markdown, upload fields and unknown form constructs use this fallback. Missing required facts request actionable information; unsupported choices and checkbox attestations without explicit host evidence are rejected. An observed security/support routing restriction prevents public issue publication even when generic formatting is used. Metadata omissions alone permit generic formatting, while authentication, destination availability and source ownership remain publication requirements.
 
-An investigation that finishes with unusable findings retains an actionable report. Empty information requests, contradictory classifications, invalid duplicate identities and incomplete or oversized drafts are unusable. Retained older investigations and drafts preserve their original output contract and publication identity. It releases investigation capacity only after finalization succeeds; an explicit retry starts a fresh investigation rather than repeating the unusable result.
+An investigation that finishes with unusable findings retains an actionable report. Empty information requests, contradictory classifications, invalid duplicate or resolution identities, unsupported source-backed dispositions and incomplete or oversized drafts are unusable. Retained older investigations and drafts preserve their original output contract and publication identity. It releases investigation capacity only after finalization succeeds; an explicit retry starts a fresh investigation rather than repeating the unusable result.
 
 An uncertain issue publication retains its reconciliation requirements without holding investigation capacity after its investigation has finalized. Other reports can investigate while that issue identity is recovered; the uncertain creation is never repeated.
 
@@ -41,7 +41,7 @@ Journal updates refresh the loaded report range, including a pending request for
 
 - **S1** Complete submissions in a private location outside source checkouts persist; incomplete/conflicting requests and unsafe evidence locations fail before private input is retained, and concurrent retries return one report. Reporting ships in portable, Codex and browser packages.
 - **S2** Relevant local context is captured with redaction and a private manifest; additional host observations are idempotent and resume requests for information.
-- **S3** Durable investigation verifies ownership and supplied duplicate candidates; deterministic routing and template rendering file only a complete verified draft within the organization, or request required facts and respect reporting restrictions.
+- **S3** Durable auditor investigation verifies ownership and supplied duplicate candidates; invalid reports retain a source-backed explanation, and already-resolved reports require completed-issue and fixing-commit ancestry proof without new issue creation; deterministic routing and template rendering file only a complete verified draft within the organization, or request required facts and respect reporting restrictions.
 - **S4** Missing prerequisites, interrupted controllers, deadlines and uncertain effects remain recoverable without replaying issue creation.
 - **S5** Closure, merged fixes, stable/prerelease delivery, dependency releases, mismatched assets and unknown installed versions remain independent; failed/rate-limited refresh preserves successful evidence.
 - **S6** The shared view supports search, details, a collapsible rendered draft and visible layout limitation, information requests, recovery controls, exact GitHub destinations and explicit unknown/version displays. Journal refreshes preserve the loaded report range; query changes reset pagination.
@@ -68,18 +68,22 @@ flowchart TD
     N5["Search reports and inspect details #40;S6#41;"]
     N6(["Retained report remains available"])
     N7(["Reject unsafe private evidence location before retention #40;S1#41;"])
+    N8["Verify completed issue and fixing commit ancestry in inspected source #40;S3#41;"]
     N0 --> N1
     N1 --> N2
     N1 -->|"prerequisite unavailable"| N3
     N2 -->|"required facts, reporting restriction, unusable findings or interrupted effects"| N3
     N3 -->|"evidence supplied or effects reconciled"| N2
     N2 -->|"filed or duplicate"| N4
-    N2 -->|"explained behavior"| N5
+    N2 -->|"explained behavior or source-backed invalid report"| N5
     N4 --> N5
     N5 --> N6
     N3 -->|"retain blocked report"| N6
     N2 -->|"Additional evidence needs investigation before settlement"| N2
     N0 -->|"Unsafe private data location"| N7
+    N2 -->|"auditor proposes already resolved"| N8
+    N8 -->|"fix verified in captured source"| N4
+    N8 -->|"resolution proof unavailable or inconsistent"| N3
 ```
 
 ## Implementation references
@@ -110,6 +114,7 @@ flowchart TD
 - [internal/reports/context.go](../../internal/reports/context.go) — Read-only bounded metadata and duplicate collection pins default-branch documents and sanitizes a private generation snapshot. (`func (g *GitHubAdapter) PrepareContext(`)
 - [internal/reports/draft.go](../../internal/reports/draft.go) — Deterministic component routing, classification validation, repository template rendering and actionable required-field/restriction requests. (`func renderDraft(`)
 - [internal/reports/investigate-legacy.yml](../../internal/reports/investigate-legacy.yml) — Retained unversioned generations preserve their original repository/body output schema.
+- [internal/reports/github.go](../../internal/reports/github.go) — Deterministic completed-issue identity, verified fixing commit and ancestry checks establish resolution in inspected source independently of delivery. (`func (g *GitHubAdapter) VerifyResolution(`)
 
 ## Test references
 
@@ -186,6 +191,11 @@ flowchart TD
 - [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestControllerRejectedContractFinalizesBeforeFreshRecovery(`; S3, S4. Controller schema rejection holds capacity until lifecycle completion succeeds, then explicit recovery prepares fresh context and a new admission without publishing malformed output.
 - [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestFormFieldsWithoutIDsGetStableOrderedIdentities(`; S3. Optional GitHub field IDs normalize to stable ordered identities; an available layout cannot be bypassed by omitting template selection.
 - [internal/reports/context_test.go](../../internal/reports/context_test.go) — `func TestPrivateContextSanitizesSecretsBeforeBodyLimits(`; S2, S3. A known 64-character owner secret crossing the candidate-body byte limit is fully redacted before truncation; retained snapshots exclude its prefix, stay bounded and record omissions.
+- [internal/reports/draft_test.go](../../internal/reports/draft_test.go) — `func TestAuditorDispositionsRequireSourceAndCandidateEvidence(`; S3. Invalid and resolved findings require source ownership and noncontradictory evidence; resolution requires a supplied issue candidate and the captured source revision.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestAuditorInvalidAndResolvedSettleWithoutIssueCreation(`; S3, S5. Auditor output awaits deterministic validation, then persists invalid or resolved outcome without issue creation or repeated investigation; verified fix and release/installed state stay independent.
+- [internal/reports/service_test.go](../../internal/reports/service_test.go) — `func TestAuditorDispositionBlocksAndPreservesFreshEvidence(`; S3, S4. Unavailable provenance or resolution proof blocks settlement; additional evidence and newer generations prevent delayed invalid/resolved findings from completing fresh work.
+- [internal/reports/github_test.go](../../internal/reports/github_test.go) — `func TestResolutionRequiresCompletedIssueVerifiedFixAndSourceAncestry(`; S3, S5. Completed issue alone, reopened/not-planned issues, absent fixes, divergent or older source and unavailable comparisons reject resolution; verified ancestry remains sufficient when releases are unavailable.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — ``reported issues shows auditor ${outcome} outcome without claiming delivery``; S6. Invalid and resolved labels retain auditor reasoning, no recovery/information prompt, known fix links and independent Unknown release/installed evidence without starting work.
 
 ## Verification and gaps
 

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "9135daf735e0679080343dc12a52b0bb23f83098",
-  "fingerprint": "c41c9eb5af49ac55fc562282cd7f4a4d9fd2e615a0615e969a25a2328330efcc",
+  "base": "e362e31df927bea4954ef345d9ae9183f39f2fef",
+  "fingerprint": "d24ae3569fd2f7a388ceeab434fff3629b1fe8bc197b5ead23b9ef509cb9122c",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Notification subscription, callback authority and delivery outcomes remain unchanged. The new UI metadata journal is separate from the legacy event sequence and contains no event payloads.",
-    "implementation": "Inspected central commit instrumentation and the unchanged event subscription handlers. Private buckets produce no UI invalidation, and rollback publishes neither journal changes nor a public projection.",
-    "tests": "STORE-UI-JOURNAL asserts legacy cursor preservation and metadata-only content. Existing callback/subscription and event tests remain mapped; UI cursor reconnect tests establish only fixture delivery behavior."
+    "kind": "structure",
+    "description": "Callback verification, subscriptions, signing and retry delivery are unchanged; report journal events retain their existing saved-state boundary. Shared browser/suite inputs conservatively require fresh review of this unchanged contract.",
+    "implementation": "Reviewed comparison paths against docs/user-flows/receive-notifications.md. Product edits are confined to internal/reports and report UI/skill text; Callback verification, subscriptions, signing and retry delivery are unchanged; report journal events retain their existing saved-state boundary.",
+    "tests": "Existing receive-notifications assertion mappings remain unchanged. The shared factory browser file gains only invalid/resolved Reports cases; broad fixture suites rerun their actual assertions without asserting new real-host coverage."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 47.091
+      "seconds": 40.206
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.912
+      "seconds": 24.899
     },
     {
       "command": [
@@ -52,11 +52,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.722
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "695169e4980b0ad8067ca9cf5975ac574c23f36ea9873748b89cc6cf8d847ce8",
+    "flow:receive-notifications": "5474396287a7e039421c60edd5c5409698332326bdfefd95bb04a4bba18c4324",
     "term:attention-request": "287bafa8ce8f4b9db38ff592301f032e54e163c181f425cfdb4ba33c695df9a2",
     "term:coverage-gap": "805f6284d0fead9eee5889000225bba4bdcd5e6c8f226a1f067319dd7de0f921",
     "term:host": "68319776b55e968213f2297da0c9df4d5cf77f2b4117a5dbded96e5ce35da32e",

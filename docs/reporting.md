@@ -42,7 +42,19 @@ The default repository is `dk-code-factory/code-factory-plugin`. Supported
 component provenance can route `agent-workflow` or `dk-workflows` bugs to their
 own organization repositories. The adapter validates Issues availability, source
 commit/path and supported labels. Uncertain ownership blocks filing. Clear
-existing duplicates are associated with the same issue.
+existing duplicates are associated with the same issue. The investigator acts as
+a report auditor, tracing observations to source and assertions. It can propose
+an invalid report only with source-backed reasoning; missing reproduction or
+evidence alone remains insufficient information. Invalid reports complete after
+deterministic ownership checks and create no issue. Already-resolved reports
+require a supplied candidate for the same defect, a completed issue and an
+independently verified fixing commit present in the captured source revision.
+The deterministic adapter checks that ancestry before retaining the resolved
+outcome and issue/fix links without creating an issue. Reopened or not-planned
+issues, missing proof and fixes absent from inspected source do not qualify.
+New evidence or a newer investigation prevents stale disposition settlement.
+Resolution refers to inspected source; delivery and installed versions stay
+independent.
 
 After the workflow completes, the deterministic `code-factory report-publish
 --data-dir PRIVATE_DIR --id REPORT_ID` command reads its retained draft. It

@@ -212,6 +212,35 @@ func (g *GitHubAdapter) ReadIssue(ctx context.Context, repo string, number int) 
 	}
 	return i.issue(repo)
 }
+
+// A resolved report needs both a completed issue and an independently verified
+// fixing commit present in the source revision the investigator inspected.
+// Package availability and installed versions remain separate observations.
+func (g *GitHubAdapter) VerifyResolution(ctx context.Context, f Findings, issue Issue) ([]Fix, error) {
+	ctx = providers.Revalidate(g.operation(ctx))
+	if !provenanceValid(f) || issue.Repository != f.Repository || issue.Number != f.DuplicateNumber || issue.URL != fmt.Sprintf("https://github.com/%s/issues/%d", f.Repository, f.DuplicateNumber) || issue.State != "closed" || issue.ClosureReason != "completed" {
+		return nil, fmt.Errorf("Resolution requires a verified completed issue identity")
+	}
+	fixes, _, trackErr := g.Track(ctx, issue, f.Component)
+	for _, fix := range fixes {
+		if fix.Repository != f.Repository || fix.Component != f.Component || !commitPattern.MatchString(fix.Commit) {
+			continue
+		}
+		var comparison struct {
+			Status string `json:"status"`
+		}
+		if e := g.get(ctx, "/repos/"+f.Repository+"/compare/"+fix.Commit+"..."+f.SourceCommit, &comparison); e != nil {
+			return nil, e
+		}
+		if comparison.Status == "ahead" || comparison.Status == "identical" {
+			return []Fix{fix}, nil
+		}
+	}
+	if trackErr != nil {
+		return nil, trackErr
+	}
+	return nil, fmt.Errorf("No verified fixing commit is present in the investigated source revision; classify as duplicate, suspected or insufficient information")
+}
 func (g *GitHubAdapter) Create(ctx context.Context, f Findings, marker string) (Issue, error) {
 	ctx = g.operation(ctx)
 	if !allowedRepo(f.Repository) {

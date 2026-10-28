@@ -708,3 +708,74 @@ func TestTrackingNativeWorkflowRelease(t *testing.T) {
 		})
 	}
 }
+
+func TestResolutionRequiresCompletedIssueVerifiedFixAndSourceAncestry(t *testing.T) {
+	for _, test := range []struct {
+		name, state, reason, ancestry           string
+		fixing, failCompare, failReleases, want bool
+	}{
+		{"fixed ancestor", "closed", "completed", "ahead", true, false, false, true},
+		{"exact fix", "closed", "completed", "identical", true, false, false, true},
+		{"closed alone", "closed", "completed", "ahead", false, false, false, false},
+		{"not planned", "closed", "not_planned", "ahead", true, false, false, false},
+		{"reopened", "open", "", "ahead", true, false, false, false},
+		{"old revision", "closed", "completed", "behind", true, false, false, false},
+		{"diverged revision", "closed", "completed", "diverged", true, false, false, false},
+		{"comparison unavailable", "closed", "completed", "ahead", true, true, false, false},
+		{"release unavailable", "closed", "completed", "ahead", true, false, true, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fix := strings.Repeat("b", 40)
+			var posts, comparisons int
+			g := adapter(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != "GET" {
+					posts++
+					http.Error(w, "mutation forbidden", 500)
+					return
+				}
+				switch {
+				case strings.HasSuffix(r.URL.Path, "/timeline"):
+					if !test.fixing {
+						reply(w, []any{})
+						return
+					}
+					reply(w, []any{map[string]any{"event": "closed", "commit_id": fix, "commit_url": "https://api.github.com/repos/" + DefaultRepository + "/commits/" + fix}})
+				case strings.HasSuffix(r.URL.Path, "/commits/"+fix):
+					reply(w, map[string]any{"sha": fix, "html_url": "https://github.com/" + DefaultRepository + "/commit/" + fix, "commit": map[string]string{"message": "Fixes #17"}})
+				case strings.Contains(r.URL.Path, "/compare/"):
+					comparisons++
+					if r.URL.Path != "/repos/"+DefaultRepository+"/compare/"+fix+"..."+strings.Repeat("a", 40) {
+						t.Error("wrong ancestry direction", r.URL.Path)
+					}
+					if test.failCompare {
+						http.Error(w, "unavailable", 503)
+						return
+					}
+					reply(w, map[string]string{"status": test.ancestry})
+				case strings.HasSuffix(r.URL.Path, "/releases"):
+					if test.failReleases {
+						http.Error(w, "unavailable", 503)
+						return
+					}
+					reply(w, []any{})
+				default:
+					t.Error("unexpected request", r.URL.Path)
+					http.NotFound(w, r)
+				}
+			})
+			f := findings()
+			f.Classification, f.DuplicateNumber = "resolved", 17
+			issue := Issue{Repository: DefaultRepository, Number: 17, URL: "https://github.com/" + DefaultRepository + "/issues/17", State: test.state, ClosureReason: test.reason}
+			fixes, err := g.VerifyResolution(context.Background(), f, issue)
+			if (err == nil) != test.want || posts != 0 {
+				t.Fatal(fixes, err, posts)
+			}
+			if test.want && (len(fixes) != 1 || fixes[0].Commit != fix || fixes[0].Version != "") {
+				t.Fatal("resolution invented delivery", fixes)
+			}
+			if (test.state != "closed" || test.reason != "completed") && comparisons != 0 {
+				t.Fatal("unresolved issue reached ancestry verification")
+			}
+		})
+	}
+}

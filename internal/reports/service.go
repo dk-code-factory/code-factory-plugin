@@ -29,6 +29,7 @@ type GitHub interface {
 	Validate(context.Context, Findings) error
 	FindMarker(context.Context, string, string) (*Issue, error)
 	ReadIssue(context.Context, string, int) (Issue, error)
+	VerifyResolution(context.Context, Findings, Issue) ([]Fix, error)
 	Create(context.Context, Findings, string) (Issue, error)
 	Track(context.Context, Issue, string) ([]Fix, []Release, error)
 }
@@ -638,8 +639,8 @@ func (s *Service) Step(ctx context.Context) error {
 			case "explained":
 				current.Outcome = "explained_behavior"
 				transition(&current, "complete", f.Summary)
-			case "confirmed", "suspected", "duplicate":
-				transition(&current, "filing", "Verifying ownership and draft before publication")
+			case "confirmed", "suspected", "duplicate", "invalid", "resolved":
+				transition(&current, "filing", "Verifying ownership and investigation disposition")
 			}
 			return save(t, current)
 		})
@@ -752,7 +753,7 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 	if rt.CreateAttempted {
 		return s.reconcilePublication(ctx, &r, rt)
 	}
-	if r.Issue != nil {
+	if r.Issue != nil && (r.Findings == nil || (r.Findings.Classification != "invalid" && r.Findings.Classification != "resolved")) {
 		return s.finishIssue(ctx, r.ID, *r.Issue, r.Outcome, rt.AdmissionID)
 	}
 	if s.GitHub == nil || r.Findings == nil {
@@ -762,8 +763,30 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 	if e := s.sanitize(ctx, &f); e != nil {
 		return e
 	}
+	if !slices.Contains([]string{"confirmed", "suspected", "duplicate", "invalid", "resolved"}, f.Classification) {
+		return s.publicationState(ctx, r.ID, rt, "blocked", "Investigation disposition does not authorize publication", false)
+	}
+	if f.Classification == "invalid" || f.Classification == "resolved" {
+		if e := validateFindings(f); e != nil {
+			return s.publicationState(ctx, r.ID, rt, "blocked", e.Error(), false)
+		}
+	}
 	if e := s.GitHub.Validate(ctx, f); e != nil {
 		return s.publicationState(ctx, r.ID, rt, "blocked", e.Error(), false)
+	}
+	if f.Classification == "invalid" {
+		return s.finishDisposition(ctx, r.ID, rt, f, nil, nil)
+	}
+	if f.Classification == "resolved" {
+		i, e := s.GitHub.ReadIssue(ctx, f.Repository, f.DuplicateNumber)
+		if e != nil {
+			return s.publicationState(ctx, r.ID, rt, "blocked", e.Error(), false)
+		}
+		fixes, e := s.GitHub.VerifyResolution(ctx, f, i)
+		if e != nil {
+			return s.publicationState(ctx, r.ID, rt, "blocked", e.Error(), false)
+		}
+		return s.finishDisposition(ctx, r.ID, rt, f, &i, fixes)
 	}
 	if f.Classification == "duplicate" {
 		if f.DuplicateNumber < 1 {
@@ -844,6 +867,36 @@ func (s *Service) publish(ctx context.Context, r Report, rt Runtime) error {
 		return s.publicationState(ctx, r.ID, rt, "needs_attention", "GitHub creation result uncertain; reconcile before resuming", false)
 	}
 	return s.finishIssue(ctx, r.ID, issue, "filed", rt.AdmissionID)
+}
+
+// Dispositions have no external mutation to recover. Settle only the current
+// generation and evidence snapshot, so delayed reads cannot dismiss fresh work.
+func (s *Service) finishDisposition(ctx context.Context, id string, expected Runtime, f Findings, issue *Issue, fixes []Fix) error {
+	return s.Store.Write(ctx, func(t *store.Tx) error {
+		var r Report
+		var rt Runtime
+		if err := t.Get("issue-report", id, &r); err != nil {
+			return err
+		}
+		if err := t.Get("report-runtime", id, &rt); err != nil {
+			return err
+		}
+		if rt.AdmissionID != expected.AdmissionID || rt.CreateAttempted || r.Processing != "filing" {
+			return nil
+		}
+		if len(r.Additions) > rt.AdditionCount {
+			transition(&r, "queued", "New evidence requires investigation before disposition")
+		} else {
+			r.Outcome = f.Classification
+			if issue != nil {
+				r.Issue = issue
+				r.Fixes = fixes
+			}
+			transition(&r, "complete", f.Summary)
+		}
+		r.Updated = time.Now().UTC()
+		return save(t, r)
+	})
 }
 
 // PublishReport is the deterministic post-workflow CLI command. It accepts no

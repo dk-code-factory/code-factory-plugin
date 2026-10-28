@@ -297,3 +297,41 @@ func TestControllerRejectedContractFinalizesBeforeFreshRecovery(t *testing.T) {
 		t.Fatal("recovery replayed rejected contract", fresh)
 	}
 }
+
+func TestAuditorDispositionsRequireSourceAndCandidateEvidence(t *testing.T) {
+	for _, classification := range []string{"invalid", "resolved"} {
+		t.Run(classification, func(t *testing.T) {
+			c := draftContext()
+			c.Repositories[0].Revision = strings.Repeat("a", 40)
+			d := draftFixture(findings())
+			d.Classification = classification
+			d.Title, d.Content, d.TemplateID, d.Answers = "", reportContent{}, "", nil
+			if classification == "resolved" {
+				d.DuplicateNumber = 17
+			}
+			f, err := renderDraft(d, c, observation(), nil)
+			if err != nil || f.Classification != classification || f.Body != "" {
+				t.Fatal(f, err)
+			}
+			for _, mutate := range []func(*structuredDraft){
+				func(d *structuredDraft) { d.SourceCommit = "" },
+				func(d *structuredDraft) { d.SourcePath = "../private" },
+				func(d *structuredDraft) { d.OwnershipReason = "" },
+				func(d *structuredDraft) { d.MissingInformation = "What did you see?" },
+				func(d *structuredDraft) { d.DuplicateNumber = 99 },
+			} {
+				bad := d
+				mutate(&bad)
+				if _, err := renderDraft(bad, c, observation(), nil); err == nil {
+					t.Fatal("unsupported disposition accepted", bad)
+				}
+			}
+			if classification == "resolved" {
+				d.SourceCommit = strings.Repeat("b", 40)
+				if _, err := renderDraft(d, c, observation(), nil); err == nil {
+					t.Fatal("resolution accepted outside inspected snapshot")
+				}
+			}
+		})
+	}
+}
