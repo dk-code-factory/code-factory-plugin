@@ -6,7 +6,9 @@ package aiworkflows
 import (
 	"codefactory/internal/codex"
 	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,6 +25,24 @@ import (
 
 //go:embed workflows/*.yml
 var definitions embed.FS
+
+//go:embed client.go workflows/*.yml
+var executionSources embed.FS
+
+// ImplementationIdentity fences retained application worker checkpoints across
+// changes in the YAML/model transport boundary.
+func ImplementationIdentity() string {
+	h := sha256.New()
+	data, _ := executionSources.ReadFile("client.go")
+	h.Write(data)
+	entries, _ := executionSources.ReadDir("workflows")
+	for _, entry := range entries {
+		h.Write([]byte(entry.Name()))
+		data, _ := executionSources.ReadFile("workflows/" + entry.Name())
+		h.Write(data)
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
 
 type Kind string
 

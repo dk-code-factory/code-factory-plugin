@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
-  "fingerprint": "9eb76476799aaadd51cb028d54a6ed8e25c412356dc95d801f8abbf420e5fda9",
+  "base": "21244bcd48687bc4f0657998c05556df28a3fd83",
+  "fingerprint": "e291f74c70ae1f1dc2ebdf6ac325360b5ce55d0888dd56f7e6ea99909548fbec",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S5 already require aligned reviewed contracts and exact fixture verification. Registering docs/ci.md makes the existing completion procedure an explicit freshness input without adding runtime behavior.",
-    "implementation": "Added docs/ci.md implementation reference anchored to Final verification and PR handoff; preserved graph, scenarios, IDs and adoption pin. Commands match specs.py, Makefile and verify.sh plus active DK 1.5.3 stage contracts.",
-    "tests": "Read test_code_and_test_changes_require_reconciliation and test_assertion_and_source_anchors: source/test edits need records and missing anchors fail. Existing structural classification tests permit accurate unchanged behavior; representative PR trial validates procedure only."
+    "description": "The layered registries map new production actions, YAML definitions, worker sources and actual new assertions while preserving stable flow/entity IDs and the pinned historical adoption policy.",
+    "implementation": "Reviewed generated-section ownership and behavior-to-UI-to-glossary direction. Reconciliation records are produced only by the CLI after declared suites pass; no receipts are edited by hand and no adoption entries are extended. Preserved PR22 contributor guidance and its final coordinator handoff; selected main and merge base are the exact actual target, and final committed freshness is checked with --head HEAD after receipt integration.",
+    "tests": "Render and validate accept the complete candidate registries. The mandatory tooling suite checks schema, source/assertion mappings, fixture execution, receipt fingerprints and immutable historical adoption policy for this full branch comparison."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 26.136
+      "seconds": 25.713
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.802
+      "seconds": 0.883
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "a7f2edfdcc3e7686df757c0e67fe538922876a9fae5f2330344ba51dcd869766",
-    "term:coverage-gap": "69eaf133eee354b731987a2543558b1ec8315a313c9b0af797c771ef8489121a",
-    "term:entity": "e815790c48825d517e201611e02c842aa9b53c841ca4b979127c6cf07098759a",
-    "term:glossary": "201ad0a404a9df48ec25be8ba55efd848b678a324a45cfa009e64d5ca4efe9a8",
-    "term:known-limitation": "61608c71ef7bb4c73f0ad2ec21bf2d9e0f4a8b1a4822a945261e332552bd6c91",
-    "term:reconciliation": "a96df3282b07bb4c84e6fac457c14a546fa41500e3096ed4b690dbfced922dca",
-    "term:unverified-behavior": "c7c9362aa601126bb24a32d48534a297a87d47a9c712936b58d7134b4fe25c01",
-    "term:verification": "c939fa015427cd332b91e63bbdd2077545d034648e89ef310caef974f076566a"
+    "flow:maintain-flow-contracts": "cd354fa254caa018ea3a7b1f661fceb0438ec05f5c1b741e91d0737bb2ff7d2a",
+    "term:coverage-gap": "cfae8ea4d15283ea2b2ff526933ede9f3938b4baa3d00cc9b63c7a8785db70bc",
+    "term:entity": "1b557f49e967893a637baeb17393e1ff864c052341def612b13c02617bd22c9b",
+    "term:glossary": "1f0b8b9d13e5bf4d5571ca78f7fe976e6186ec94fb61e184f782a7d19c7727d6",
+    "term:known-limitation": "24090f11922046e255dc2c130a0a2f55bf365862c83d56428e35c0d64d92cea3",
+    "term:reconciliation": "478e2aa9734386d16bba49661b2ef8cf4fe219167ada6b3e344f32bf0dcd90df",
+    "term:unverified-behavior": "ff19a0d3d7cd33da61381af86851bde7a80c04591ff9718b1e0b8a66c4a68198",
+    "term:verification": "de07b88aaee0e29a02a0c7e29453e910e659dbc38f44d5d97b4450c04420cd55"
   }
 }

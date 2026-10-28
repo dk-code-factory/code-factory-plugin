@@ -19,6 +19,16 @@ import (
 )
 
 func (m *Manager) taskSandbox(ctx context.Context, r domain.Run) ([]string, error) {
+	return m.taskSandboxWithReadables(ctx, r, nil)
+}
+
+func (m *Manager) taskSandboxWithReadables(ctx context.Context, r domain.Run, additional []string) ([]string, error) {
+	return m.taskSandboxWithNativeChild(ctx, r, additional, false)
+}
+
+// Explicit command reviewers can launch native providers without a selected
+// profile skill. Reuse the same child context as packaged-skill execution.
+func (m *Manager) taskSandboxWithNativeChild(ctx context.Context, r domain.Run, additional []string, nativeChild bool) ([]string, error) {
 	scratch := filepath.Join(m.app.DataDir, "scratch", r.ID)
 	for _, dir := range []string{"tmp", "cache", "data", "state"} {
 		if err := os.MkdirAll(filepath.Join(scratch, dir), 0700); err != nil {
@@ -81,12 +91,15 @@ func (m *Manager) taskSandbox(ctx context.Context, r domain.Run) ([]string, erro
 		filepath.Join(home, ".codex", "skills"), filepath.Join(home, ".codex", "agents"),
 		filepath.Join(home, ".codex", "plugins", "cache"), filepath.Join(home, ".agents", "skills"),
 		filepath.Join(home, ".gitconfig"), filepath.Join(config, "git"), ghConfig}
+	readable = append(readable, additional...)
 	commandPath := commandenv.Path(m.ProviderBin, os.Getenv("PATH"))
 	writableScratch := []string{}
 	for _, skill := range r.Skills {
-		if _, packaged := skill.Files[filepath.Join(".codex-plugin", "plugin.json")]; !packaged {
-			continue
+		if _, packaged := skill.Files[filepath.Join(".codex-plugin", "plugin.json")]; packaged {
+			nativeChild = true
 		}
+	}
+	if nativeChild {
 		readable = append(readable, filepath.Join(home, ".codex", "config.toml"), filepath.Join(home, ".codex", "auth.json"), filepath.Join(home, ".codex", "accounts"), filepath.Join(home, ".codex", "models_cache.json"), filepath.Join(config, "dk-code-factory", "updates.json"))
 		companion, err := commandenv.CodexCompanion(binary)
 		if err != nil {
@@ -147,7 +160,6 @@ func (m *Manager) taskSandbox(ctx context.Context, r domain.Run) ([]string, erro
 			}
 			readable = append(readable, path)
 		}
-		break
 	}
 	if m.ProviderBin != "" {
 		readable = append(readable, m.ProviderBin)

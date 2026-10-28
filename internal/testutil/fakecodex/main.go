@@ -3,16 +3,29 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 )
 
 func main() {
+	if path := os.Getenv("CF_FAKE_PID_RECORD"); path != "" {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		if err != nil {
+			os.Exit(5)
+		}
+		fmt.Fprintln(f, os.Getpid())
+		_ = f.Close()
+	}
+
 	if path := os.Getenv("CF_FAKE_ARGS_RECORD"); path != "" && len(os.Args) > 1 && os.Args[1] == "app-server" {
 		b, _ := json.Marshal(os.Args[1:])
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
@@ -40,7 +53,10 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Buffer(make([]byte, 4096), 2<<20)
 	enc := json.NewEncoder(os.Stdout)
+	var sendMu sync.Mutex
 	send := func(v any) {
+		sendMu.Lock()
+		defer sendMu.Unlock()
 		if e := enc.Encode(v); e != nil {
 			os.Exit(2)
 		}
@@ -52,6 +68,9 @@ func main() {
 	complete := func(status string) {
 		notify("turn/completed", map[string]any{"turn": map[string]any{"id": turnID, "status": status}})
 	}
+	var activeTool *exec.Cmd
+	commands := map[string]*exec.Cmd{}
+	var commandMu sync.Mutex
 	mode := os.Getenv("CF_FAKE_MODE")
 	for scanner.Scan() {
 		var m struct {
@@ -85,7 +104,7 @@ func main() {
 				time.Sleep(5 * time.Millisecond)
 			}
 		}
-		if path := os.Getenv("CF_FAKE_RECORD"); path != "" && (m.Method == "initialize" || m.Method == "thread/start" || m.Method == "thread/resume" || m.Method == "turn/start") {
+		if path := os.Getenv("CF_FAKE_RECORD"); path != "" && (m.Method == "initialize" || m.Method == "thread/start" || m.Method == "thread/resume" || m.Method == "turn/start" || ((os.Getenv("CF_FAKE_REVIEW_RESPONSES") != "" || mode == "retained-tool") && (m.Method == "command/exec" || m.Method == "command/exec/terminate" || m.Method == "turn/interrupt"))) {
 			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 			if err != nil {
 				os.Exit(5)
@@ -150,6 +169,63 @@ func main() {
 			} else {
 				reply(map[string]any{"data": []any{}})
 			}
+
+		case "command/exec":
+			if os.Getenv("CF_FAKE_REVIEW_RESPONSES") == "" {
+				reply(map[string]any{})
+				continue
+			}
+			var argv []string
+			var env map[string]string
+			var cwd string
+			_ = json.Unmarshal(m.Params["command"], &argv)
+			_ = json.Unmarshal(m.Params["env"], &env)
+			_ = json.Unmarshal(m.Params["cwd"], &cwd)
+			if len(argv) == 0 {
+				os.Exit(6)
+			}
+			cmd := exec.Command(argv[0], argv[1:]...)
+			cmd.Dir = cwd
+			cmd.Env = os.Environ()
+			for key, value := range env {
+				cmd.Env = append(cmd.Env, key+"="+value)
+			}
+			var processID string
+			_ = json.Unmarshal(m.Params["processId"], &processID)
+			cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+			var output bytes.Buffer
+			cmd.Stdout = &output
+			if err := cmd.Start(); err != nil {
+				reply(map[string]any{"exitCode": 1, "stdout": "", "stderr": ""})
+				continue
+			}
+			commandMu.Lock()
+			commands[processID] = cmd
+			commandMu.Unlock()
+			responseID := append(json.RawMessage{}, m.ID...)
+			go func() {
+				err := cmd.Wait()
+				status := 0
+				if err != nil {
+					status = 1
+				}
+				commandMu.Lock()
+				delete(commands, processID)
+				commandMu.Unlock()
+				send(map[string]any{"id": responseID, "result": map[string]any{"exitCode": status, "stdout": output.String(), "stderr": ""}})
+			}()
+		case "command/exec/terminate":
+			var processID string
+			_ = json.Unmarshal(m.Params["processId"], &processID)
+			commandMu.Lock()
+			cmd := commands[processID]
+			commandMu.Unlock()
+			if cmd == nil {
+				send(map[string]any{"id": m.ID, "error": map[string]any{"code": -1, "message": "unknown process"}})
+				continue
+			}
+			_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+			reply(map[string]any{})
 		case "turn/start":
 			turnNumber++
 			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || strings.HasPrefix(mode, "async-question") || os.Getenv("CF_FAKE_COMPLETE_STEER") == "1" {
@@ -160,6 +236,30 @@ func main() {
 			inputText := ""
 			for _, in := range inputs {
 				inputText += in.Text
+			}
+
+			if mode == "retained-tool" {
+				activeTool = exec.Command("python3", "-c", `import os,signal,sys,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); open(sys.argv[1],'w').write(str(os.getpid())); time.sleep(3600)`, os.Getenv("CF_FAKE_TOOL_PID"))
+				activeTool.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+				if err := activeTool.Start(); err != nil {
+					os.Exit(7)
+				}
+				reply(map[string]any{"turn": map[string]string{"id": turnID}})
+				continue
+			}
+			if root := os.Getenv("CF_FAKE_REVIEW_RESPONSES"); root != "" && strings.HasPrefix(inputText, "Code Factory retained review stage: ") {
+				stage, _, _ := strings.Cut(strings.TrimPrefix(inputText, "Code Factory retained review stage: "), "\n")
+				if stage != "preparation" && stage != "material-choice" && stage != "skill-review" && stage != "completion" {
+					os.Exit(6)
+				}
+				response, err := os.ReadFile(filepath.Join(root, stage+".json"))
+				if err != nil {
+					os.Exit(6)
+				}
+				reply(map[string]any{"turn": map[string]string{"id": turnID}})
+				notify("item/completed", map[string]any{"turnId": turnID, "item": map[string]string{"type": "agentMessage", "text": string(response)}})
+				complete("completed")
+				continue
 			}
 			if strings.Contains(inputText, "question-only recovery clarification") {
 				turnID = fmt.Sprintf("clarify-%d", turnNumber)
@@ -340,6 +440,11 @@ func main() {
 				}
 			}
 		case "turn/interrupt":
+			if activeTool != nil {
+				_ = syscall.Kill(-activeTool.Process.Pid, syscall.SIGKILL)
+				_ = activeTool.Wait()
+				activeTool = nil
+			}
 			if entered := os.Getenv("CF_FAKE_INTERRUPT_ENTERED"); entered != "" {
 				params, _ := json.Marshal(m.Params)
 				if err := os.WriteFile(entered, params, 0600); err != nil {

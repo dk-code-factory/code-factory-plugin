@@ -10,12 +10,15 @@ import (
 )
 
 var ErrWaiting = errors.New("review workflow suspended for a material decision")
+var ErrWorkerCleanup = errors.New("review worker cleanup could not be verified")
 
 type Gate struct {
-	ID         string          `json:"id"`
-	EvidenceID string          `json:"evidence_id"`
-	Questions  []Question      `json:"questions"`
-	Answer     json.RawMessage `json:"answer,omitempty"`
+	EngineGateID string          `json:"engine_gate_id,omitempty"`
+	AnswerID     string          `json:"answer_id,omitempty"`
+	ID           string          `json:"id"`
+	EvidenceID   string          `json:"evidence_id"`
+	Questions    []Question      `json:"questions"`
+	Answer       json.RawMessage `json:"answer,omitempty"`
 }
 type SessionIdentity struct {
 	PRURL         string   `json:"pr_url"`
@@ -38,23 +41,26 @@ type Checkpoint struct {
 	Reason    string          `json:"reason,omitempty"`
 }
 type Session struct {
-	MaterialCheck       *Reference           `json:"material_check,omitempty"`
-	MaterialCorrections int                  `json:"material_corrections"`
-	Implementation      string               `json:"implementation_identity"`
-	Version             int                  `json:"session_version"`
-	ID                  string               `json:"id"`
-	Target              string               `json:"target"`
-	Stage               string               `json:"stage"`
-	Status              string               `json:"status"`
-	Identity            *SessionIdentity     `json:"identity,omitempty"`
-	Evidence            *Reference           `json:"evidence,omitempty"`
-	Preparation         *Reference           `json:"preparation,omitempty"`
-	Preparations        []Reference          `json:"preparations"`
-	Reviews             map[string]Reference `json:"reviews"`
-	History             []Reference          `json:"review_history"`
-	Results             []Reference          `json:"results"`
-	Gate                *Gate                `json:"gate,omitempty"`
-	Answers             []Gate               `json:"answers"`
+	WorkerImplementation string               `json:"worker_implementation,omitempty"`
+	EngineRunID          string               `json:"engine_run_id,omitempty"`
+	EngineGeneration     int64                `json:"engine_generation,omitempty"`
+	MaterialCheck        *Reference           `json:"material_check,omitempty"`
+	MaterialCorrections  int                  `json:"material_corrections"`
+	Implementation       string               `json:"implementation_identity"`
+	Version              int                  `json:"session_version"`
+	ID                   string               `json:"id"`
+	Target               string               `json:"target"`
+	Stage                string               `json:"stage"`
+	Status               string               `json:"status"`
+	Identity             *SessionIdentity     `json:"identity,omitempty"`
+	Evidence             *Reference           `json:"evidence,omitempty"`
+	Preparation          *Reference           `json:"preparation,omitempty"`
+	Preparations         []Reference          `json:"preparations"`
+	Reviews              map[string]Reference `json:"reviews"`
+	History              []Reference          `json:"review_history"`
+	Results              []Reference          `json:"results"`
+	Gate                 *Gate                `json:"gate,omitempty"`
+	Answers              []Gate               `json:"answers"`
 }
 type ReviewerReason struct {
 	Reviewer string `json:"reviewer"`
@@ -161,12 +167,22 @@ type CompletionAssessment struct {
 // Workers is the model boundary. Implementations must apply retained native skill
 // instructions or execute a retained command binding with a git-diff-v1 handoff.
 // Calls are child work only; parent status is owned by Workflow.
+// A return certifies joined child work or no admission. Implementations must
+// wrap ErrWorkerCleanup whenever admitted work may remain after the return.
 type Workers interface {
 	Prepare(context.Context, PreparationInput, string) ([]byte, error)
 	MaterialChoice(context.Context, PreparationInput, Analysis) (MaterialCheck, error)
 	Review(context.Context, Binding, Handoff, string) ([]byte, error)
 	Completion(context.Context, Preparation, Result) (CompletionAssessment, error)
 }
+
+func WorkerIdentity(workers Workers) string {
+	if source, ok := workers.(interface{ ExecutionIdentity() string }); ok {
+		return source.ExecutionIdentity()
+	}
+	return ""
+}
+
 type Workflow struct {
 	Adapter     EngineAdapter
 	Collector   Collector
@@ -190,7 +206,15 @@ func (w *Workflow) step(ctx context.Context, s *Session, stage string) error {
 	}
 	return ctx.Err()
 }
-func (w *Workflow) Run(ctx context.Context, s *Session) (Result, error) {
+func (w *Workflow) Run(ctx context.Context, s *Session) (result Result, err error) {
+	defer func() {
+		if err != nil && !errors.Is(err, ErrWaiting) && !result.Complete && s.Status != "completed" && !(s.Gate != nil && len(s.Gate.Answer) == 0) {
+			s.Status = "incomplete"
+			if w.Save != nil {
+				_ = w.Save(context.WithoutCancel(ctx), s)
+			}
+		}
+	}()
 	if len(w.Bindings) == 0 {
 		return Result{}, errors.New("PR review requires at least one ordered reviewer; configure reviewers in Code Factory settings before fetching the diff")
 	}
@@ -216,6 +240,7 @@ func (w *Workflow) Run(ctx context.Context, s *Session) (Result, error) {
 	if s.Version == 0 {
 		s.Version = 2
 		s.Implementation = ImplementationIdentity()
+		s.WorkerImplementation = WorkerIdentity(w.Workers)
 		s.Status = "active"
 		s.Reviews = map[string]Reference{}
 		s.Preparations = []Reference{}
@@ -223,37 +248,79 @@ func (w *Workflow) Run(ctx context.Context, s *Session) (Result, error) {
 		s.Results = []Reference{}
 		s.Answers = []Gate{}
 	}
-	if s.Implementation != ImplementationIdentity() {
+	if s.Implementation != ImplementationIdentity() || s.WorkerImplementation != WorkerIdentity(w.Workers) {
 		return Result{}, errors.New("review action implementation changed; start a fresh review")
 	}
 	if s.Version != 2 {
 		return Result{}, errors.New("legacy review session must use its retained runtime")
 	}
-	if s.Gate != nil && len(s.Gate.Answer) == 0 {
-		return Result{}, ErrWaiting
-	}
 	return w.Adapter.Execute(ctx, w, s)
 }
-func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err error) {
+
+// reviewExecution is shared by fixture orchestration and registered SDK actions.
+// Durable artifacts remain the authority when an engine checkpoint is reused.
+type reviewExecution struct {
+	w        *Workflow
+	s        *Session
+	e        Evidence
+	p        Preparation
+	result   Result
+	failure  error
+	executed map[string]bool
+}
+
+func newReviewExecution(w *Workflow, s *Session) *reviewExecution {
+	return &reviewExecution{w: w, s: s, executed: map[string]bool{}}
+}
+func (r *reviewExecution) hydrate() error {
+	if r.s.Evidence != nil {
+		if err := r.w.Artifacts.Load(*r.s.Evidence, &r.e); err != nil {
+			return err
+		}
+	}
+	if r.s.Preparation != nil {
+		if err := r.w.Artifacts.Load(*r.s.Preparation, &r.p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (w *Workflow) execute(ctx context.Context, s *Session) (Result, error) {
 	if s.Status == "completed" {
 		return w.resumePublication(ctx, s)
 	}
-
-	result = Result{Findings: []AggregateFinding{}, Executed: []string{}, Reused: []string{}, Skipped: []ReviewerReason{}}
-	defer func() {
-		if err != nil && !errors.Is(err, ErrWaiting) && !result.Complete {
-			if result.Outcome == "" {
-				result.Outcome = "provider_failed"
-				result.Reason = err.Error()
-			}
-			s.Status = "incomplete"
-			_ = w.Save(context.WithoutCancel(ctx), s)
+	if s.Gate != nil && len(s.Gate.Answer) == 0 {
+		return Result{}, ErrWaiting
+	}
+	r := newReviewExecution(w, s)
+	if err := r.hydrate(); err != nil {
+		return Result{}, err
+	}
+	if err := r.capture(ctx); err != nil {
+		return Result{}, err
+	}
+	if err := r.prepare(ctx); err != nil {
+		return Result{}, err
+	}
+	for _, binding := range w.Bindings {
+		if err := r.review(ctx, binding); err != nil {
+			r.failure = err
+			break
 		}
-	}()
+	}
+	result, err := r.complete(ctx)
+	if err == nil && result.Complete {
+		return w.resumePublication(ctx, s)
+	}
+	return result, err
+}
+func (r *reviewExecution) capture(ctx context.Context) (err error) {
+	w, s := r.w, r.s
 	if err = w.step(ctx, s, "capture-evidence"); err != nil {
 		return
 	}
-	var e Evidence
+	e := r.e
+	defer func() { r.e = e }()
 	if s.Evidence == nil {
 		e, err = w.Collector.Capture(ctx, s.Target, w.Artifacts.Root)
 		if err != nil {
@@ -287,30 +354,35 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 			return
 		}
 	}
-	var prepared *Preparation
-	guard := func() error {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		if err := e.Validate(); err != nil {
-			return err
-		}
-		if err := w.Collector.ValidateCurrent(ctx, e); err != nil {
-			return err
-		}
-		for _, b := range w.Bindings {
-			if err := b.Validate(); err != nil {
-				return err
-			}
-		}
-		if prepared != nil {
-			if err := prepared.Validate(e, w.Bindings); err != nil {
-				return err
-			}
-		}
-		return e.ValidateCheckout(ctx)
+	return w.Save(ctx, s)
+}
+func (r *reviewExecution) guard(ctx context.Context) error {
+	w, s, e := r.w, r.s, r.e
+	if err := ctx.Err(); err != nil {
+		return err
 	}
-	if err = guard(); err != nil {
+	if err := e.Validate(); err != nil {
+		return err
+	}
+	if err := w.Collector.ValidateCurrent(ctx, e); err != nil {
+		return err
+	}
+	for _, b := range w.Bindings {
+		if err := b.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.Preparation != nil {
+		if err := r.p.Validate(e, w.Bindings); err != nil {
+			return err
+		}
+	}
+	return e.ValidateCheckout(ctx)
+}
+func (r *reviewExecution) prepare(ctx context.Context) (err error) {
+	w, s, e := r.w, r.s, r.e
+	defer func() { r.e = e }()
+	if err = r.guard(ctx); err != nil {
 		return
 	}
 	if err = w.step(ctx, s, "prepare"); err != nil {
@@ -328,6 +400,7 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 		prior = &saved
 	}
 	p := Preparation{}
+	defer func() { r.p = p }()
 	if prior != nil && prior.Readiness == "ready" && s.Gate == nil {
 		p = *prior
 	} else {
@@ -359,7 +432,7 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 		if err != nil {
 			return
 		}
-		if err = guard(); err != nil {
+		if err = r.guard(ctx); err != nil {
 			return
 		}
 		var check MaterialCheck
@@ -425,7 +498,7 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 				err = errors.New("independent material decision still lacks a validated question after its bounded correction")
 				return
 			}
-			if err = guard(); err != nil {
+			if err = r.guard(ctx); err != nil {
 				return
 			}
 		}
@@ -468,11 +541,111 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 		return
 	}
 	s.Identity = &identity
-	prepared = &p
+	r.p = p
 	s.Status = "active"
 	if err = w.step(ctx, s, "ordered-reviewers"); err != nil {
 		return
 	}
+	return nil
+}
+func (r *reviewExecution) review(ctx context.Context, binding Binding) (err error) {
+	w, s, e, p := r.w, r.s, r.e, r.p
+	identity := *s.Identity
+	result := &r.result
+	record := func(b Binding, status string, response Response, reason string) error {
+		cp := Checkpoint{1, s.ID, identity, b.Reviewer.ID, status, response, reason}
+		ref, er := w.Artifacts.Retain(cp)
+		if er != nil {
+			return er
+		}
+		s.Reviews[b.Reviewer.ID] = ref
+		s.History = append(s.History, ref)
+		return w.Save(context.WithoutCancel(ctx), s)
+	}
+	name := binding.Reviewer.ID
+	if err = r.guard(ctx); err != nil {
+		result.GuardFailure = true
+		return err
+	}
+	if ref, ok := s.Reviews[name]; ok {
+		var cp Checkpoint
+		if err = w.Artifacts.Load(ref, &cp); err != nil {
+			result.GuardFailure = true
+			return err
+		}
+		if cp.Version != 1 || cp.SessionID != s.ID || cp.Reviewer != name || Digest(cp.Identity) != Digest(identity) {
+			err = errors.New("reviewer checkpoint identity changed")
+			result.GuardFailure = true
+			return err
+		}
+		if cp.Status == "completed" {
+			var validated Response
+			validated, err = ValidateResponse(rawJSON(cp.Result), e.Patch)
+			if err != nil || validated.Status != "" {
+				err = errors.New("invalid completed reviewer checkpoint")
+				result.GuardFailure = true
+				return err
+			}
+			return nil
+		}
+	}
+	if err = record(binding, "running", Response{}, ""); err != nil {
+		result.GuardFailure = true
+		return err
+	}
+	var response Response
+	var reviewErr error
+	correction := ""
+	for attempt := 0; attempt < 2; attempt++ {
+		var b []byte
+		reviewEvidence := cloneJSON(e)
+		reviewEvidence.Decisions = preparedDecisions(e, p.Answers)
+		b, reviewErr = w.Workers.Review(ctx, binding, NewHandoff(reviewEvidence, p, p.Analysis.ReviewerAddenda[name]), correction)
+		if errors.Is(reviewErr, ErrWorkerCleanup) {
+			return reviewErr
+		}
+		if reviewErr != nil {
+			break
+		}
+		response, reviewErr = ValidateResponse(b, e.Patch)
+		if reviewErr == nil {
+			break
+		}
+		previous := b
+		if len(previous) > 12000 {
+			previous = previous[:12000]
+		}
+		correction = "Validator error: " + reviewErr.Error() + "\nPrevious response: " + string(previous)
+	}
+	if err = r.guard(ctx); err != nil {
+		result.GuardFailure = true
+		return err
+	}
+	if reviewErr != nil {
+		if err = record(binding, "failed", Response{}, reviewErr.Error()); err != nil {
+			result.GuardFailure = true
+			return err
+		}
+		return nil
+	}
+	switch response.Status {
+	case "tokens_exhausted":
+		err = record(binding, "exhausted", response, response.Message)
+	case "incomplete":
+		err = record(binding, "incomplete", response, response.Message)
+	default:
+		r.executed[name] = true
+		err = record(binding, "completed", response, "")
+	}
+	if err != nil {
+		result.GuardFailure = true
+		return err
+	}
+	return nil
+}
+func (r *reviewExecution) aggregate() (Result, error) {
+	w, s, e := r.w, r.s, r.e
+	result := Result{Findings: []AggregateFinding{}, Executed: []string{}, Reused: []string{}, Skipped: []ReviewerReason{}}
 	appendFindings := func(response Response, name string) {
 		for _, f := range response.Findings {
 			found := false
@@ -488,102 +661,54 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 			}
 		}
 	}
-	record := func(b Binding, status string, response Response, reason string) error {
-		cp := Checkpoint{1, s.ID, identity, b.Reviewer.ID, status, response, reason}
-		ref, er := w.Artifacts.Retain(cp)
-		if er != nil {
-			return er
-		}
-		s.Reviews[b.Reviewer.ID] = ref
-		s.History = append(s.History, ref)
-		return w.Save(context.WithoutCancel(ctx), s)
-	}
-	for _, binding := range w.Bindings {
-		name := binding.Reviewer.ID
-		if err = guard(); err != nil {
-			result.GuardFailure = true
-			break
-		}
-		if ref, ok := s.Reviews[name]; ok {
-			var cp Checkpoint
-			if err = w.Artifacts.Load(ref, &cp); err != nil {
-				result.GuardFailure = true
-				break
-			}
-			if cp.Version != 1 || cp.SessionID != s.ID || cp.Reviewer != name || Digest(cp.Identity) != Digest(identity) {
-				err = errors.New("reviewer checkpoint identity changed")
-				result.GuardFailure = true
-				break
-			}
-			if cp.Status == "completed" {
-				var validated Response
-				validated, err = ValidateResponse(rawJSON(cp.Result), e.Patch)
-				if err != nil || validated.Status != "" {
-					err = errors.New("invalid completed reviewer checkpoint")
-					result.GuardFailure = true
-					break
-				}
-				appendFindings(cp.Result, name)
-				result.Reused = append(result.Reused, name)
-				continue
-			}
-		}
-		if err = record(binding, "running", Response{}, ""); err != nil {
-			result.GuardFailure = true
-			break
-		}
-		var response Response
-		var reviewErr error
-		correction := ""
-		for attempt := 0; attempt < 2; attempt++ {
-			var b []byte
-			reviewEvidence := cloneJSON(e)
-			reviewEvidence.Decisions = preparedDecisions(e, p.Answers)
-			b, reviewErr = w.Workers.Review(ctx, binding, NewHandoff(reviewEvidence, p, p.Analysis.ReviewerAddenda[name]), correction)
-			if reviewErr != nil {
-				break
-			}
-			response, reviewErr = ValidateResponse(b, e.Patch)
-			if reviewErr == nil {
-				break
-			}
-			previous := b
-			if len(previous) > 12000 {
-				previous = previous[:12000]
-			}
-			correction = "Validator error: " + reviewErr.Error() + "\nPrevious response: " + string(previous)
-		}
-		if err = guard(); err != nil {
-			result.GuardFailure = true
-			break
-		}
-		if reviewErr != nil {
-			if err = record(binding, "failed", Response{}, reviewErr.Error()); err != nil {
-				result.GuardFailure = true
-				break
-			}
-			result.Failed = append(result.Failed, ReviewerFailure{name, "failed", reviewErr.Error()})
+
+	for _, b := range w.Bindings {
+		ref, ok := s.Reviews[b.Reviewer.ID]
+		if !ok {
 			continue
 		}
-		switch response.Status {
-		case "tokens_exhausted":
-			result.Skipped = append(result.Skipped, ReviewerReason{name, response.Message})
-			err = record(binding, "exhausted", response, response.Message)
-		case "incomplete":
-			result.Failed = append(result.Failed, ReviewerFailure{name, "incomplete", response.Message})
-			err = record(binding, "incomplete", response, response.Message)
-		default:
-			appendFindings(response, name)
-			result.Executed = append(result.Executed, name)
-			err = record(binding, "completed", response, "")
+		var cp Checkpoint
+		if err := w.Artifacts.Load(ref, &cp); err != nil {
+			return result, err
 		}
-		if err != nil {
-			result.GuardFailure = true
-			break
+		if cp.Version != 1 || cp.SessionID != s.ID || cp.Reviewer != b.Reviewer.ID || s.Identity == nil || Digest(cp.Identity) != Digest(*s.Identity) {
+			return result, errors.New("reviewer checkpoint identity changed")
+		}
+		switch cp.Status {
+		case "completed":
+			v, err := ValidateResponse(rawJSON(cp.Result), e.Patch)
+			if err != nil || v.Status != "" {
+				return result, errors.New("invalid completed reviewer checkpoint")
+			}
+			appendFindings(cp.Result, b.Reviewer.ID)
+			if r.executed[b.Reviewer.ID] {
+				result.Executed = append(result.Executed, b.Reviewer.ID)
+			} else {
+				result.Reused = append(result.Reused, b.Reviewer.ID)
+			}
+		case "exhausted":
+			result.Skipped = append(result.Skipped, ReviewerReason{b.Reviewer.ID, cp.Reason})
+		default:
+			result.Failed = append(result.Failed, ReviewerFailure{b.Reviewer.ID, cp.Status, cp.Reason})
 		}
 	}
+	if len(result.Executed)+len(result.Reused)+len(result.Skipped)+len(result.Failed) != len(w.Bindings) && r.failure == nil {
+		return result, errors.New("configured reviewer accounting is incomplete")
+	}
+	return result, nil
+}
+func (r *reviewExecution) complete(ctx context.Context) (result Result, err error) {
+	w, s, e, p := r.w, r.s, r.e, r.p
+	identity := *s.Identity
+	result, err = r.aggregate()
 	if err == nil {
-		err = guard()
+		err = r.failure
+	}
+	if err != nil {
+		result.GuardFailure = true
+	}
+	if err == nil {
+		err = r.guard(ctx)
 		if err != nil {
 			result.GuardFailure = true
 		}
@@ -631,7 +756,7 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 			}
 		}
 		if err == nil {
-			err = guard()
+			err = r.guard(ctx)
 			if err != nil {
 				result.GuardFailure = true
 			}
@@ -667,6 +792,7 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 	s.Stage = "evaluate-posting-policy"
 	if saveErr := w.Save(context.WithoutCancel(ctx), s); saveErr != nil {
 		s.Results = previousResults
+		s.Status = "incomplete"
 		return result, saveErr
 	}
 	// Completion belongs to the durably bound artifact, not reviewer readiness.
@@ -674,19 +800,6 @@ func (w *Workflow) execute(ctx context.Context, s *Session) (result Result, err 
 	if w.Progress != nil {
 		if progressErr := w.Progress(context.WithoutCancel(ctx), s.Stage); progressErr != nil {
 			return result, progressErr
-		}
-	}
-	if result.Complete && w.OnComplete != nil {
-		if stageErr := w.step(ctx, s, "publish-and-reconcile"); stageErr != nil {
-			return result, stageErr
-		}
-		if postErr := w.OnComplete(ctx, ref); postErr != nil {
-			return result, postErr
-		}
-	}
-	if err == nil {
-		if saveErr := w.step(ctx, s, "finished"); saveErr != nil {
-			return result, saveErr
 		}
 	}
 	return result, err
@@ -756,6 +869,7 @@ func AcceptAnswer(s *Session, gateID, evidenceID string, answer json.RawMessage)
 			return errors.New("missing material decision answer")
 		}
 	}
+	s.Gate.AnswerID = Digest([]any{s.ID, gateID, evidenceID, json.RawMessage(answer)})
 	s.Gate.Answer = append(json.RawMessage{}, answer...)
 	s.Answers = append(s.Answers, *s.Gate)
 	s.Status = "active"

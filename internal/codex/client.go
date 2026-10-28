@@ -4,6 +4,9 @@ package codex
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +19,20 @@ import (
 	"syscall"
 	"time"
 )
+
+//go:embed client.go sandbox.go
+var protocolSources embed.FS
+
+// ImplementationIdentity fences retained model work across transport/policy changes.
+func ImplementationIdentity() string {
+	h := sha256.New()
+	for _, name := range []string{"client.go", "sandbox.go"} {
+		data, _ := protocolSources.ReadFile(name)
+		h.Write([]byte(name))
+		h.Write(data)
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
 
 type Message struct {
 	ID     json.RawMessage `json:"id,omitempty"`
@@ -44,6 +61,7 @@ type Client struct {
 	queueBytes int
 	wake       chan struct{}
 	readerDone bool
+	exited     chan struct{}
 	once       sync.Once
 	OnMessage  func(Message)
 }
@@ -147,7 +165,7 @@ func Start(ctx context.Context, binary string, extra []string, onMessage func(Me
 	if e = cmd.Start(); e != nil {
 		return nil, fmt.Errorf("could not start Codex app-server")
 	}
-	c := &Client{cmd: cmd, stdin: in, pending: map[string]chan Message{}, done: make(chan struct{}), OnMessage: onMessage, wake: make(chan struct{}, 1)}
+	c := &Client{cmd: cmd, stdin: in, pending: map[string]chan Message{}, done: make(chan struct{}), exited: make(chan struct{}), OnMessage: onMessage, wake: make(chan struct{}, 1)}
 	go c.read(out)
 	go c.dispatch()
 
@@ -179,6 +197,7 @@ func (c *Client) read(r io.Reader) {
 	}
 	_ = c.Close()
 	_ = c.cmd.Wait()
+	close(c.exited)
 	c.queueMu.Lock()
 	c.readerDone = true
 	c.queueMu.Unlock()
@@ -327,3 +346,7 @@ func Inspect(ctx context.Context, binary string) Status {
 	}
 	return status
 }
+
+// WaitClosed joins OS process teardown without waiting for notification callbacks,
+// which may themselves be waiting for an application session lock.
+func (c *Client) WaitClosed() { <-c.exited }

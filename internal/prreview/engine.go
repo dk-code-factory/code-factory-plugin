@@ -3,7 +3,6 @@ package prreview
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 	"io/fs"
 	"strings"
@@ -12,6 +11,7 @@ import (
 )
 
 const (
+	EngineRevision   = "0606a1b9d16e8741bab684233ab49b96f34ea02e"
 	GoActions        = workflows.RegisteredGoActionsV1
 	OrderedIteration = "ordered-dynamic-iteration-v1"
 	ExternalWaits    = "durable-external-input-v1"
@@ -19,10 +19,10 @@ const (
 
 var RequiredCapabilities = []string{GoActions, OrderedIteration, ExternalWaits}
 
-// EngineAdapter is the sole assumed upstream boundary. Implementations must pin
+// EngineAdapter owns the upstream execution boundary. Implementations must pin
 // actions and typed schemas, checkpoint ordered child workflows and suspend waits
 // without occupying workers. Native turn completion is never parent completion.
-// Until upstream implements these contracts the production adapter fails closed.
+// Runtime dependencies are checked before evidence capture or model execution.
 type EngineAdapter interface {
 	Check(context.Context) error
 	Execute(context.Context, *Workflow, *Session) (Result, error)
@@ -53,14 +53,8 @@ func requireCapabilities(available []string) error {
 	}
 	return fmt.Errorf("PR review workflow dependency unavailable: agent-workflow requires %s (upstream issues %s); no review actions or model turns started", strings.Join(missing, ", "), strings.Join(issues, ", "))
 }
-func (a NativeAdapter) Execute(ctx context.Context, _ *Workflow, _ *Session) (Result, error) {
-	if err := a.Check(ctx); err != nil {
-		return Result{}, err
-	}
-	return Result{}, errors.New("native PR review execution adapter is not configured; no review actions or model turns started")
-}
 
-// FixtureAdapter executes the assumed application contract deterministically.
+// FixtureAdapter executes the application stages without the SDK journal.
 // It is opt-in from tests, never selected by fixture-mode environment variables.
 type FixtureAdapter struct{}
 
@@ -72,15 +66,23 @@ func (FixtureAdapter) Execute(ctx context.Context, w *Workflow, s *Session) (Res
 // The implementation identity is embedded at build time. Checkpoints cannot
 // silently cross deterministic action implementations after an application update.
 //
-//go:embed artifacts.go contracts.go dk_preparation.go decisions.go evidence.go git.go patch.go preparation.go publication.go workflow.go engine.go
+//go:embed artifacts.go contracts.go dk_preparation.go decisions.go evidence.go git.go patch.go preparation.go publication.go workflow.go engine.go native.go workflows/*.yml
 var implementation embed.FS
 
 func ImplementationIdentity() string {
-	entries, _ := fs.ReadDir(implementation, ".")
-	sources := map[string]string{}
-	for _, entry := range entries {
-		b, _ := implementation.ReadFile(entry.Name())
-		sources[entry.Name()] = Hash(b)
-	}
+	sources := map[string]string{"engine-revision": EngineRevision}
+	_ = fs.WalkDir(implementation, ".", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !entry.IsDir() {
+			data, err := implementation.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			sources[path] = Hash(data)
+		}
+		return nil
+	})
 	return Digest(sources)
 }

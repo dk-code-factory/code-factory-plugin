@@ -156,15 +156,21 @@ func retainedFixture(t *testing.T) (*App, domain.Item, *retainedWorkers, *retain
 	}
 	workers := &retainedWorkers{analysis: fixture.Analysis}
 	collector := &retainedCollector{e: e}
-	a.ReviewEngine = prreview.FixtureAdapter{}
+	a.ReviewEngine = nil
 	a.ReviewWorkers = workers
 	a.ReviewCollector = collector
 	return a, pr, workers, collector
 }
+
+type unavailableReviewEngine struct{ prreview.FixtureAdapter }
+
+func (unavailableReviewEngine) Check(context.Context) error {
+	return errors.New("missing " + prreview.OrderedIteration)
+}
 func TestFreshReviewDependencyDiagnosticAndLaunchPolicySnapshot(t *testing.T) {
 	a, pr, _, collector := retainedFixture(t)
 	ctx := a.Runs.ctx
-	a.ReviewEngine = nil
+	a.ReviewEngine = unavailableReviewEngine{}
 	on, off := true, false
 	c, _ := a.Config(ctx)
 	c.AutoPostReview = true
@@ -401,7 +407,7 @@ func TestOneTimeGlobalDKImportUsesUserRulesAndPreservesConflicts(t *testing.T) {
 func TestAutomaticReviewUsesNewWorkflowAndNeverNativeFallback(t *testing.T) {
 	a, pr, _, collector := retainedFixture(t)
 	ctx := a.Runs.ctx
-	a.ReviewEngine = nil
+	a.ReviewEngine = unavailableReviewEngine{}
 	c, _ := a.Config(ctx)
 	c.AutoReview = true
 	if err := a.SaveConfig(ctx, c); err != nil {
@@ -577,19 +583,31 @@ func TestReviewInterruptResumeJoinsOldExecution(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitRetainedReviewValue(t, workers.second, "second reviewer")
-	if err = a.Runs.Interrupt(ctx, run.ID); err != nil {
-		t.Fatal(err)
+	interrupted := make(chan error, 1)
+	go func() { interrupted <- a.Runs.Interrupt(ctx, run.ID) }()
+	waitFor(t, func() bool {
+		var current domain.Run
+		_ = a.Store.Get(ctx, "run", run.ID, &current)
+		return current.InterruptRequested
+	})
+	select {
+	case err := <-interrupted:
+		t.Fatalf("interrupt returned before worker joined: %v", err)
+	default:
 	}
 	if _, err = a.Runs.Start(ctx, run.ID, true); err == nil || !strings.Contains(err.Error(), "still stopping") {
 		t.Fatal("replacement overlapped old worker", err)
 	}
 	release()
+	if err := waitRetainedReviewValue(t, interrupted, "joined interrupt"); err != nil {
+		t.Fatal(err)
+	}
 	waitFor(t, func() bool {
 		owner, _ := a.Runs.get(run.ID)
 		owner.mu.Lock()
 		defer owner.mu.Unlock()
 		select {
-		case <-owner.reviewDone:
+		case <-owner.reviewResult.done:
 			return true
 		default:
 			return false
@@ -804,6 +822,15 @@ func TestReviewRestartFinalizesSavedFinishedSessionWithoutReplay(t *testing.T) {
 		_ = a.Store.Get(ctx, "run", run.ID, &saved)
 		return saved.ReviewStage == "finished"
 	})
+	waitGuardReviewDone(t, a, run.ID)
+	owner, _ := a.Runs.get(run.ID)
+	owner.mu.Lock()
+	finalErr := owner.reviewResult.err
+	owner.mu.Unlock()
+	var joined retainedReview
+	if err = a.Store.Get(ctx, "review-workflow", run.ID, &joined); err != nil || joined.PendingWorker != nil || finalErr == nil || !strings.Contains(finalErr.Error(), "fixture lost parent finalization") {
+		t.Fatal("verified workers lost their durable proof or finalization error", joined, finalErr, err)
+	}
 	a.Runs.Close()
 	if err = a.Store.Get(ctx, "run", run.ID, &saved); err != nil || saved.Status != "running" || !saved.ReviewComplete || saved.ReviewArtifact == nil {
 		t.Fatal("lost finalization boundary not retained", saved, err)
