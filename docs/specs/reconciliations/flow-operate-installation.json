@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
-  "fingerprint": "22ee9ef8896e97476c6ad4d9d364a3872a1a07a511376d89626a4c34f9bd9ac5",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "fe7cf739680f4eaef818f69b2168d474887cb0c857f22294deca104a80a1b858",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Inspect health, upgrade, roll back and uninstall retains its documented scenarios. Shared Config/Run optional fields and native adapter selection affect launch preparation; this consumer's authored transitions and existing stable IDs remain accurate.",
-    "implementation": "Inspected shared-file diff for operate-installation; its provider, persisted ownership and UI transitions are unchanged. Missing execution mode preserves workflow behavior; retained runs continue using their own marker and snapshot rather than current settings.",
-    "tests": "Reviewed the existing catalog assertion anchor def test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall( in scripts/test_installer.py and retained its mapping. New native launch tests supplement the launch contract; fixture suites rerun existing consumer assertions and leave installed-host and accessibility gaps open."
+    "description": "S1-S5 retain health inspection, compatible upgrade/rollback and private-state preservation. Merge completion remains separate from release delivery and deployment.",
+    "implementation": "Installer and service configuration are unchanged; the new contributor sequence explicitly leaves installed-host tests under the existing runbook.",
+    "tests": "Read test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall: token survives rerun and failed upgrade, rollback restores version and uninstall retains state/vault. No interruption coverage is newly claimed."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 174.814
+      "seconds": 172.57
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.924
+      "seconds": 72.398
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.634
+      "seconds": 3.192
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 3.272
+      "seconds": 2.83
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.728
+      "seconds": 21.851
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.645
+      "seconds": 26.136
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.802
     }
   ],
   "dependencies": {

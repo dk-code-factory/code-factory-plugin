@@ -9,6 +9,8 @@ Use the [layered specification guide](docs/specs/README.md) and
 and behavior changes. Preserve glossary → meaning, UI → glossary, and flows →
 UI/glossary dependency ownership. Review real assertions before claiming coverage.
 
+Follow the [final verification and PR handoff](docs/ci.md#final-verification-and-pr-handoff)
+for focused checks, complete reconciliation and one final iteration coordinator.
 Run `make ci FLOW_BASE=main` locally. Hosted checks and release delivery are
 explained in [docs/ci.md](docs/ci.md). Ordinary verification forces fixture mode;
 real provider, public connection and installed-host checks are explicit opt-ins.

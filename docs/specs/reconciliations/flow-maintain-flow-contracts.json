@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "9245bc58e51d4868370a3079c5652039f1ce2b1a",
-  "fingerprint": "061e4e88f50b98b4631a12915b4b65bc640fbed2ffd3feb108582e1fbeff16eb",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "9eb76476799aaadd51cb028d54a6ed8e25c412356dc95d801f8abbf420e5fda9",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S5 layered specification, impact, reviewed reconciliation, immutable comparisons and fixture-only CI rules are unchanged. This rebase preserves all main stable IDs and pinned adoption while adding source/assertion traceability for retained review and saved-state integration.",
-    "implementation": "Compared main catalog policy and specification tooling. Glossary owns meaning, UI owns structural contracts and assertion inventories, and flows consume both; generated reference bodies are rendered from registries. Only the coordinator will generate receipts with the CLI after real verification. The new catalog test mappings do not alter suite commands or claim adoption for new behavior. The intended comparison now uses main 9245bc58e51d4868370a3079c5652039f1ce2b1a after the second guarded rebase; recomputed direct UI scope remains exactly the same 134 contracts with 11 behavior children.",
-    "tests": "Read deterministic-render/prose-preservation and graph-validation assertions, and validated the rendered current registries. The earlier conflict integration ran 201 specification tests successfully; final branch reconciliation and make ci are still coordinator work. No receipt was hand-edited, no historical adoption base/list changed and no model/provider work is part of this review."
+    "description": "S1-S5 already require aligned reviewed contracts and exact fixture verification. Registering docs/ci.md makes the existing completion procedure an explicit freshness input without adding runtime behavior.",
+    "implementation": "Added docs/ci.md implementation reference anchored to Final verification and PR handoff; preserved graph, scenarios, IDs and adoption pin. Commands match specs.py, Makefile and verify.sh plus active DK 1.5.3 stage contracts.",
+    "tests": "Read test_code_and_test_changes_require_reconciliation and test_assertion_and_source_anchors: source/test edits need records and missing anchors fail. Existing structural classification tests permit accurate unchanged behavior; representative PR trial validates procedure only."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.962
+      "seconds": 26.136
     },
     {
       "command": [
@@ -41,11 +41,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.802
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "1bab2bd56a365797935270ab5a2bb7d48ddc6aab92dc25299c7a10ba6ddf751e",
+    "flow:maintain-flow-contracts": "a7f2edfdcc3e7686df757c0e67fe538922876a9fae5f2330344ba51dcd869766",
     "term:coverage-gap": "69eaf133eee354b731987a2543558b1ec8315a313c9b0af797c771ef8489121a",
     "term:entity": "e815790c48825d517e201611e02c842aa9b53c841ca4b979127c6cf07098759a",
     "term:glossary": "201ad0a404a9df48ec25be8ba55efd848b678a324a45cfa009e64d5ca4efe9a8",

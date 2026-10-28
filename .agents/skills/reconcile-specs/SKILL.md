@@ -60,6 +60,10 @@ agents and needs no model credentials. Real-provider tests remain opt-in.
 
 ## Handoff
 
+Use the repository's [final verification and PR handoff](../../../docs/ci.md#final-verification-and-pr-handoff)
+after focused checks and complete reconciliation. Retain the active PR workflow's
+preparation identities, independent roles, verification and authorization gates.
+
 Return affected IDs, review classifications and rationale, verification actually
 run, record paths, unresolved gaps and any owner handoffs. A passing fixture gate
 never closes real-host, accessibility, soak or login acceptance.
