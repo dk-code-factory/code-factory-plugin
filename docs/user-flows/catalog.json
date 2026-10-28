@@ -13253,6 +13253,11 @@
         {
           "path": "release/fixed-issues.json",
           "purpose": "Explicit fixed issues backed by ancestor source commits and exact promoted package versions."
+        },
+        {
+          "path": "docs/ci.md",
+          "anchor": "## Final verification and PR handoff",
+          "purpose": "Contributor completion procedure linking existing reconciliation, fixture verification and authorized PR workflow gates."
         }
       ],
       "tests": [

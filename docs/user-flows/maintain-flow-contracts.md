@@ -119,6 +119,7 @@ flowchart TD
 - [.github/workflows/ci.yml](../../.github/workflows/ci.yml) — Hosted full verification on pushes and PRs with read-only permissions and pinned prerequisites/actions. (`name: CI`)
 - [.github/workflows/release.yml](../../.github/workflows/release.yml) — Version-tag and manual dry-run package promotion; scoped publisher permission, no live-machine deployment. (`name: Release`)
 - [release/fixed-issues.json](../../release/fixed-issues.json) — Explicit fixed issues backed by ancestor source commits and exact promoted package versions.
+- [docs/ci.md](../../docs/ci.md) — Contributor completion procedure linking existing reconciliation, fixture verification and authorized PR workflow gates. (`## Final verification and PR handoff`)
 
 ## Test references
 

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "glossary",
-  "base": "9245bc58e51d4868370a3079c5652039f1ce2b1a",
-  "fingerprint": "44487f9c5557049be70f6b6a6892e17cdf11f5db73fdf74728dcdbd5c22ee628",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "fad552bccb513db3b34221b280d2fbbdbde34f2d24ce348f931d602d8166829c",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "terminology",
-    "description": "Added the twelve review-workflow, ordered-reviewer, artifact, preparation, checkpoint, posting-policy, publication-operation and UI control terms. Their definitions describe meanings; no consumer backlinks, procedures, aliases or new naming scopes are introduced. Existing direct-launch, UI-projection and cursor terminology survives unchanged from main.",
-    "implementation": "Compared main terms with the rebased registry and inspected retained workflow/artifact/policy types. Stable term identities remain intact; UI and flows consume the new vocabulary in the prescribed direction. The pinned historical adoption base and product-flow list are unchanged.",
-    "tests": "Registry validation accepts all 639 terms, 150 entities and 16 flows after rendering. Inspected the deterministic-render/reference assertions in scripts/test_specs.py; neither reference validation nor fixture execution establishes production workflow or host acceptance."
+    "kind": "structure",
+    "description": "Reconciliation remains a reviewed consistency decision; verification remains recorded execution against identified inputs. Contributor instructions link the existing procedures without changing any of 639 term definitions.",
+    "implementation": "No glossary registry, naming scope, alias or foundation reference changes; only consumer instructions and maintain-flow-contracts mapping change. Glossary to meaning ownership and no-backlink policy remain intact.",
+    "tests": "Read test_dependency_direction and schema mutations: foundation consumer links and procedural definitions reject. The handoff keeps all procedure links in consumer docs and claims no additional term coverage."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.962
+      "seconds": 26.136
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.802
     }
   ],
   "dependencies": {
@@ -461,7 +461,7 @@
     "term:keyboard-focus": "a4911cb4f34a733995609c7c9c3f76d9c1fa869662c3b12cdd27e2fd76ede54d",
     "term:known-limitation": "61608c71ef7bb4c73f0ad2ec21bf2d9e0f4a8b1a4822a945261e332552bd6c91",
     "term:modal-dialog": "a17afe3b7ba202475c837b392aa41a6644fa42da585f9776acfcf6c92bd84896",
-    "term:ordered-reviewer": "4ddf5b7182a0454fb3e3b63acf7574225353c3618714cb432735eaac0df7cd88",
+    "term:ordered-reviewer": "6a2298ff0e084218262ea3eb3a24cc010d413d440645ed8794f11c69828f19d7",
     "term:owner": "774bc8b8135b560ded6265d687c614305970f6221a5c2bc1bedc5cce9ec1bc25",
     "term:page": "7bb56c82060047e782eaa3d776cb3b250bdce555f815d7ffa6b6bd52e7dde2dc",
     "term:pane": "f26e06d7358d2e5cc5ea3034cef3add9bdeba0c167c8c04e68f81dda7d9123f2",
@@ -480,14 +480,14 @@
     "term:report-processing": "4d9405d3b5a9affc090ed53453d470ccf41c6768cdea83ffce3265a41b5e49fb",
     "term:repository": "b66d9292668620d9bb4e4301cb3da30820a70cc5974f8cc6705b1002033980c9",
     "term:repository-review-prompt": "302afeb1aabee96c1ea490877e19e7cec3cdb1e5100220b949994f31b3236c50",
-    "term:review-artifact": "3f1a5b67e5a23270901ce91ca9b444728172cdd84f1936d5f3bfc825f20a6537",
+    "term:review-artifact": "3cb9b6ffb6c2051bd58b9073835f3404aa537e836249e9c017df332ab58a77fb",
     "term:review-policy": "473ab3151325e7b5225335cd7fa845f4eae21d7f289d361cc825766633c91f00",
-    "term:review-posting-policy": "7692019718afb7575db5847e61caba2c5e37d99aca0fe2307e86e0ca300de7c5",
-    "term:review-preparation": "8d5a32b619320d29ec03feb428b4b4909d38b5082076565afbef4335977c617d",
-    "term:review-publication-operation": "df7ebf416b97d0920ae1506ebb2d86b9d76507cc4cc45a45e24613a279ea81a1",
+    "term:review-posting-policy": "ff93381ff659794213b8b721fb9fb4a5051ea9588bfd2f3434b4793a1b8f6149",
+    "term:review-preparation": "9e039dc37650dca0c59e28d6119ab200ac0d08954b6e6c2025fc8a9078af8d4b",
+    "term:review-publication-operation": "1bc38dc837e439b0a7fe15140009724fffa29b5921a7d03753471cdc5bbb9f78",
     "term:review-request-claim": "4e16f7c645c7504ac025ebc56175b4a5e286aa717ac73a6b317f4647ae2b6289",
-    "term:review-workflow": "45e806159a33ca2921b1a08a177c4b235fa052f02fdc3489848c5ac335f0b91a",
-    "term:reviewer-checkpoint": "de6d94ed16f9a48164d9d871097f320388167aeecb386b713f45deccbc00faa8",
+    "term:review-workflow": "561a266b2184501b87e7c2d1f02e0cb342e4f7af4415cb0a9ba193cc9863e733",
+    "term:reviewer-checkpoint": "d668ea95030b026d57192e86842f85d40b47551b7afacf6f3a042a16738ac148",
     "term:session-console": "d8be3a9627a0afef4dbcbda0730943b816a57e18744a08d6b1875df5fd6781c1",
     "term:shell": "e5f0bed8e494948b6d4b37078e01ba630205db20bc61480cfd62a5b0b3403847",
     "term:skill": "2bf77e1968a4a282f5a08f8cce116fcdb31915da34e073a8f81cc3af1407eba2",
@@ -546,7 +546,7 @@
     "term:ui-c-pipeline-select": "91d230f8fbc44394f19e1225b7b82a46876c4296dd682431a924b401d2490da6",
     "term:ui-c-plugin-maintenance": "bd9f3156c6b6a68878120176811c1e50e63b55b593d9963732238e27fc10b8c8",
     "term:ui-c-policy-save": "9e6c13689b15286346d0ca46d5b92a4a624183ea839a383e1c303ea423111c71",
-    "term:ui-c-pr-posting-policy": "1e4038c290bf71ce437c835fa501921cca0138ce6cee3afd227b5e40a4105d23",
+    "term:ui-c-pr-posting-policy": "a4d52f816b0e79e857bc7ade6ebde0cd960af01723a0a328460963a177cbb396",
     "term:ui-c-prepare": "56e3dfe97e0dd0a90094555954bc07dec4a1059a35d9e2dfdb0c8493816f149a",
     "term:ui-c-priority": "3f1141a8627501043ac63182da83b9a1f4f17caf56e9d354cad96c6966b0e0b9",
     "term:ui-c-profile-save": "01755f97aa1754e9ec1b7b4f6db1ff72b5f34a1cda42a3a5109c8de607ae5061",
@@ -560,8 +560,8 @@
     "term:ui-c-repository-review-prompt": "693d0da2fb88aa1864db8ccbe4d640a6597d176abb2edf356f8215631762b6c2",
     "term:ui-c-repository-save": "dd5804d42b678fcfa37aa6c49bfff7aca934da3631969891375a5ab142a840a8",
     "term:ui-c-review-policy": "214ea7524a8ec369a94cf47556190f1403aadca1d99d6c9f58414b7e2e42f953",
-    "term:ui-c-review-publish": "003f34ec2b600da0d35581478f70986dff75fcf632233f4278e441a3ca5d4bb2",
-    "term:ui-c-review-reconcile": "1368567f69f0e64fabe3437974c8d4f7bc323189250930cefcae649b5966785c",
+    "term:ui-c-review-publish": "83fee7ee94200cf4650977c21f2510a6e8bf908b3422d26b1a6d5d4d7bb892e7",
+    "term:ui-c-review-reconcile": "d00633c57b38be801a3998604cc9a6413e603b0ee9da821871984b441cafb1ce",
     "term:ui-c-run-action": "5340c68bda96436a93844d8e5eedff71faa0d239c5fad48c7a77565d015d570e",
     "term:ui-c-run-attention": "b68442247112e3a72504c8a3f688b9e2f755c16ea4daa2bf851783319d0829bf",
     "term:ui-c-select-item": "4056f6e1e1f1c87fa216f13ac2be6fa4ccccb26c41caec3aff59d72137a887f1",
@@ -656,7 +656,7 @@
     "term:ui-w-plugin-admin": "362cb930e65704db07da6aba3820ec53566f2312c10619d4d6df890bd2b72d4c",
     "term:ui-w-policy-settings": "7e7a3dc37b25359a3c410c2eb675dc645c29d96f64c37773a79318676f7c24d7",
     "term:ui-w-pr-evidence": "568a9e75408b16ac94c56e989ea8c692459253acb26a6de6b9ccb74a6e8760e0",
-    "term:ui-w-pr-review-policy": "4cfd5ed8d04d36eb238659758c8897769d03ce5bb5557c52edda7efc59d6867e",
+    "term:ui-w-pr-review-policy": "e3d8ddaaa3f2d224141d3ea651592a1df2f956a9eb92fa8d9294128fbbbd5c58",
     "term:ui-w-priority": "c038feeffb6de02d4a21ea239ae7c5f76d7200a80604e53c5140fe626849d452",
     "term:ui-w-profile-settings": "65961126687070cdf0598cc237551c74f09a57113523d859a9f23aedc1493534",
     "term:ui-w-question-recovery": "b8d2d19ffa181b312214fc25af1cdb1db623b83e3fbde474cc7c6e7a3bacb875",
@@ -665,7 +665,7 @@
     "term:ui-w-report-detail": "bc7416bd45d7045c20d81c58cd8acf1e29e4376f83355a2f5f3f12004a18582c",
     "term:ui-w-report-list": "454c17312c335ebe5db5f866913db7172f0647b725f4d6a8081d043cb60e57ea",
     "term:ui-w-repository-settings": "28dab3d5493b63e4f23e44ebbdd5c41265e8749b061783bbfd3eae5c5a69cd93",
-    "term:ui-w-retained-review": "8b6ef8f6ea3c67b7951a20f538acafd4ae53236f32c4ca452b164c4bdef4b408",
+    "term:ui-w-retained-review": "34ea07e4243b3166a790459dd8e065bfa379b68c6432aa878f664258036edec6",
     "term:ui-w-run-controls": "96213748c8209e0035b13745361cc61ec7bbae20e026ad4e53a1b60cca989643",
     "term:ui-w-run-empty": "4711c06990a78d6f241e451342c9e7236b6b263448dea2fa979b2d343a0b9337",
     "term:ui-w-run-row": "18ec4b3ddd0e4672a441642d5b8968ce2d501813740dc361148baced4055c29a",

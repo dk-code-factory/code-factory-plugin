@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
-  "fingerprint": "ba0ec08b6f46510ae7c9c9480d5cbc79690d7cc05c500ca5c3a5848e48efd36d",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "44d18a4e356bebf598fbbb7762e195841fb464ec41d71703e00c392e58b69b46",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Subscribe to host notifications and manage delivery retains its documented scenarios. Shared Config/Run optional fields and native adapter selection affect launch preparation; this consumer's authored transitions and existing stable IDs remain accurate.",
-    "implementation": "Inspected shared-file diff for receive-notifications; its provider, persisted ownership and UI transitions are unchanged. Missing execution mode preserves workflow behavior; retained runs continue using their own marker and snapshot rather than current settings.",
-    "tests": "Reviewed the existing catalog assertion anchor func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( in internal/events/events_test.go and retained its mapping. New native launch tests supplement the launch contract; fixture suites rerun existing consumer assertions and leave installed-host and accessibility gaps open."
+    "description": "S1-S4 retain supported subscriptions, callback verification, stable deliveries and disabled-delivery boundaries. Agent event waiting is distinct contributor guidance.",
+    "implementation": "Notification service and configuration are unchanged; no new subscription, callback or network route is introduced.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signature matches, duplicate Subscribe retains ID, 503 retry retains event ID, acknowledged delivery is not repeated and expired subscription does not deliver."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.924
+      "seconds": 72.398
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.645
+      "seconds": 26.136
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.802
     }
   ],
   "dependencies": {

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-interact-agent",
-  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
-  "fingerprint": "4d6f6ca437a09c200ab8873df503aa59f739025639dafe9d47f915061a4bff2f",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "ef146961ad6073cca118ea4b0b1448582178cdc0968e88b35f0706e06a348ca6",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S1 and S6 retain the same native session for questions and follow-up; changing system defaults cannot replace a prepared session. Existing attention and uncertainty semantics remain.",
-    "implementation": "StartNative routes provider methods directly through the same codex transport; CallWorkflow repair stays in that client, while state, message delivery and answer claims remain owned by Manager.",
-    "tests": "Read same-thread and delivered-message assertions in the single-session fixture. Opt-in real lifecycle covers question, duplicate/stale answer, skill loading, follow-up, interrupt and resume; fixture reconciliation does not claim live-host acceptance. Inspected TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch: an actual new Manager recovers the retained native review after global workflow selection; exact mode/thread/cwd/authority/skill snapshot and workspace checkpoint persist, both turns receive the retained entrypoint, repeated recovery resumes once without replay or YAML artifacts."
+    "kind": "structure",
+    "description": "S1-S5 retain same-thread question, answer and follow-up interactions. Contributor status-message consolidation does not suppress product messages.",
+    "implementation": "MCP bridge, run message and follow-up handlers are unchanged; the new waiting instructions govern delegated PR work only.",
+    "tests": "Read assembled MCP bridge browser fixture: no start_run before explicit Start, one Answer completes the task, one follow-up send_message and exactly one start_run are asserted."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 174.814
+      "seconds": 172.57
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.924
+      "seconds": 72.398
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.645
+      "seconds": 26.136
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.802
     },
     {
       "command": [
@@ -81,11 +81,11 @@
         "test-performance"
       ],
       "exit_code": 0,
-      "seconds": 10.138
+      "seconds": 10.193
     }
   ],
   "dependencies": {
-    "flow:interact-agent": "41dd5cfa564387bdd19ae0e6b391f0c49ab91e1e63cd55c5b0ab42e0f0d2d1ff",
+    "flow:interact-agent": "044da7395aa610c76e4cb5a938d1f2a68df0b62581c43ca3ddfb67f2ec6151c2",
     "term:agent-run": "af7530019b59b465becd765ea9f3ef31d2dae9821473d1b915a0b9b99f62100c",
     "term:codex-plugin": "576ac2195662841852858c7fc15333c9623aaadc9371f721ca4cb80fe049ae7a",
     "term:connection-closes": "89463dd6e9a3dbbf425faacf4320bf9d23a52bdd7d52bed9f392c9b364b09b28",
@@ -689,8 +689,8 @@
     "ui:W-ITEM-HISTORY": "574d3953f93737f90ab135f4c4d0e14517342dc72a44d71f2ea5048c98d664a9",
     "ui:W-ITEM-OVERVIEW": "5ca824e2b2419cf8f265e9413bb6dffec9567c467f9b624fb7798e82aee5d10c",
     "ui:W-ITEM-ROW": "d07f9571a232fee02f6a6a9a45bfe483933cf6de47a62bf2699a5d9b481ef319",
-    "ui:W-LAUNCH-EDITOR": "34f838c5c4c2c2adfb90e38678a1718a2a42aec870fb1e9f52fa32a7c4609027",
-    "ui:W-LAUNCH-REVIEW": "e79a541defe43b846116232576d0ac82217f37872763644662ce3036fe216d3e",
+    "ui:W-LAUNCH-EDITOR": "28eceaf58fd8b6625dd90cc5fbf143db26fd41301e3cadc53e22a76f06704016",
+    "ui:W-LAUNCH-REVIEW": "d5f9897d3ad2a610432cb1aa6655a55a09d0e57fbd252910cfb94123e2fcd28c",
     "ui:W-MESSAGE": "f8d650748ed0f803371ffe7f5d87e92f1e293955a0178c6cc22ef25c392865d2",
     "ui:W-NAVIGATION": "cfdf31199dd37932b19bdf3bfee70554636cc2b78978c398fcc22d8ad07f064b",
     "ui:W-NEW-CHAT": "fa2d23f14413695550e80356c6e1e3ac2724dbd92c98e79e82ee8585ef8b4577",
@@ -713,7 +713,7 @@
     "ui:W-SESSION-CONSOLE": "f46fbe101e8353741178497bd95a6347b78cc1a54551979b9c456836833f8f47",
     "ui:W-SKILL-SETTINGS": "37d8f9d7ad7bb05dfe467849c2f47e84c21dd1924008a5fbde7cf397bf5e012a",
     "ui:W-SYNC-HEALTH": "d7bc554e0458596ef75d5bae2e4f70eec4894b2bddf065412715f9ae53c64cc7",
-    "ui:W-SYSTEM-DEFAULTS": "a38cf1af81d53c76854d8f290f1c3f0d46c3096e9a3ba98c39a4b3f23816020b",
+    "ui:W-SYSTEM-DEFAULTS": "d9387d67ec996627ae3224332f3b33dce43eaff465dd6c2be3c8524defc7c855",
     "ui:W-TICKET-CONTEXT": "864e54e04963dfbadb187c1001a7cca64a084cfaf7d46b6fa89876135427eb1c",
     "ui:W-TRANSCRIPT": "4510c4f82661a7afca49f47f567ad77a94dfba9051f5bb871f1580f546d64197",
     "ui:W-WAITING-ROW": "c0a140637f15fc854eb2fb4f80838cf8aad91dbd5c740069bc275ddb3d18ac38",

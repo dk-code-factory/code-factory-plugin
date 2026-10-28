@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-sync-inbox",
-  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
-  "fingerprint": "bb72afb1805a66d56841b9a70da1ae8768ca9f6af695190853e4adace831c357",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "712e1a513a7e5ba724df6f18d62d756ef75f63fbfffba34d6b3437a03f61f235",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Synchronize repository issues and pull requests retains its documented scenarios. Shared Config/Run optional fields and native adapter selection affect launch preparation; this consumer's authored transitions and existing stable IDs remain accurate.",
-    "implementation": "Inspected shared-file diff for sync-inbox; its provider, persisted ownership and UI transitions are unchanged. Missing execution mode preserves workflow behavior; retained runs continue using their own marker and snapshot rather than current settings.",
-    "tests": "Reviewed the existing catalog assertion anchor func TestScheduledSyncRecoversCredentialsAndFindsNewItems( in internal/app/app_test.go and retained its mapping. New native launch tests supplement the launch contract; fixture suites rerun existing consumer assertions and leave installed-host and accessibility gaps open. Reviewed automatic scheduling assertions for native nil/empty/unrelated/already-selected profiles and workflow empty profiles: claims start, reviews complete idle, raw selected profile remains identical, retained native skills are deduplicated and a genuine later profile change still rejects validation. Explicit selection fixture preserves empty shape and backing-slice content while retaining one iteration bundle."
+    "description": "S1-S10 retain baseline import, independent repository progress and scheduled synchronization; PR coordination waiting introduces no application scheduling changes.",
+    "implementation": "Synchronization source and checkpoint storage are unchanged; event-based agent waiting is a contributor instruction only.",
+    "tests": "Read TestScheduledSyncRecoversCredentialsAndFindsNewItems: revoked access cannot advance checkpoint, recovery imports an unread baseline, later item is New and interval stays 30 seconds."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 174.814
+      "seconds": 172.57
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.924
+      "seconds": 72.398
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.645
+      "seconds": 26.136
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.802
     },
     {
       "command": [
@@ -81,11 +81,11 @@
         "test-performance"
       ],
       "exit_code": 0,
-      "seconds": 10.138
+      "seconds": 10.193
     }
   ],
   "dependencies": {
-    "flow:sync-inbox": "716646aa7c8032a1fe152e9d18a0ec74e2d25ca2350c04eef994e6c6965f8985",
+    "flow:sync-inbox": "0e7498e2c701593e58972700adea697f849cce389ae97d65e3459aaeb1ea512a",
     "term:codex-plugin": "576ac2195662841852858c7fc15333c9623aaadc9371f721ca4cb80fe049ae7a",
     "term:connection-closes": "89463dd6e9a3dbbf425faacf4320bf9d23a52bdd7d52bed9f392c9b364b09b28",
     "term:connection-external": "9104d29a917fcc822322d02757bb44fed6aae54f62673befe0385c31fec5fa8b",
@@ -691,8 +691,8 @@
     "ui:W-ITEM-HISTORY": "574d3953f93737f90ab135f4c4d0e14517342dc72a44d71f2ea5048c98d664a9",
     "ui:W-ITEM-OVERVIEW": "5ca824e2b2419cf8f265e9413bb6dffec9567c467f9b624fb7798e82aee5d10c",
     "ui:W-ITEM-ROW": "d07f9571a232fee02f6a6a9a45bfe483933cf6de47a62bf2699a5d9b481ef319",
-    "ui:W-LAUNCH-EDITOR": "34f838c5c4c2c2adfb90e38678a1718a2a42aec870fb1e9f52fa32a7c4609027",
-    "ui:W-LAUNCH-REVIEW": "e79a541defe43b846116232576d0ac82217f37872763644662ce3036fe216d3e",
+    "ui:W-LAUNCH-EDITOR": "28eceaf58fd8b6625dd90cc5fbf143db26fd41301e3cadc53e22a76f06704016",
+    "ui:W-LAUNCH-REVIEW": "d5f9897d3ad2a610432cb1aa6655a55a09d0e57fbd252910cfb94123e2fcd28c",
     "ui:W-MESSAGE": "f8d650748ed0f803371ffe7f5d87e92f1e293955a0178c6cc22ef25c392865d2",
     "ui:W-NAVIGATION": "cfdf31199dd37932b19bdf3bfee70554636cc2b78978c398fcc22d8ad07f064b",
     "ui:W-NEW-CHAT": "fa2d23f14413695550e80356c6e1e3ac2724dbd92c98e79e82ee8585ef8b4577",
@@ -715,7 +715,7 @@
     "ui:W-SESSION-CONSOLE": "f46fbe101e8353741178497bd95a6347b78cc1a54551979b9c456836833f8f47",
     "ui:W-SKILL-SETTINGS": "37d8f9d7ad7bb05dfe467849c2f47e84c21dd1924008a5fbde7cf397bf5e012a",
     "ui:W-SYNC-HEALTH": "d7bc554e0458596ef75d5bae2e4f70eec4894b2bddf065412715f9ae53c64cc7",
-    "ui:W-SYSTEM-DEFAULTS": "a38cf1af81d53c76854d8f290f1c3f0d46c3096e9a3ba98c39a4b3f23816020b",
+    "ui:W-SYSTEM-DEFAULTS": "d9387d67ec996627ae3224332f3b33dce43eaff465dd6c2be3c8524defc7c855",
     "ui:W-TICKET-CONTEXT": "864e54e04963dfbadb187c1001a7cca64a084cfaf7d46b6fa89876135427eb1c",
     "ui:W-TRANSCRIPT": "4510c4f82661a7afca49f47f567ad77a94dfba9051f5bb871f1580f546d64197",
     "ui:W-WAITING-ROW": "c0a140637f15fc854eb2fb4f80838cf8aad91dbd5c740069bc275ddb3d18ac38",

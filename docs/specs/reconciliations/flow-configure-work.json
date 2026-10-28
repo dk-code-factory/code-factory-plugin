@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-configure-work",
-  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
-  "fingerprint": "8e4fda0433c38c78a6108bf6021b4e93bf43d81c168be51a3cbf670c3c135375",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "6f1587bac487d8d40b1ea7152f48e82e6e42d6e4005b446f842158438661cd34",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S4 now selects execution mode and validates an available dk-pr-iter skill; old forms retain omitted values and saving never launches work.",
-    "implementation": "SaveConfig validates mode and skill; save_settings preserves omitted keys; SystemReviewSettings controls are explicit and affect future preparation.",
-    "tests": "Read single Codex settings browser assertions for mode persistence, unrelated budget edit and switching back with no start/post. Configuration fixtures reject absent, disabled and wrong skills; API omission fixture preserves both new fields. Inspected TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch: an actual new Manager recovers the retained native review after global workflow selection; exact mode/thread/cwd/authority/skill snapshot and workspace checkpoint persist, both turns receive the retained entrypoint, repeated recovery resumes once without replay or YAML artifacts. Reviewed automatic scheduling assertions for native nil/empty/unrelated/already-selected profiles and workflow empty profiles: claims start, reviews complete idle, raw selected profile remains identical, retained native skills are deduplicated and a genuine later profile change still rejects validation. Explicit selection fixture preserves empty shape and backing-slice content while retaining one iteration bundle."
+    "kind": "structure",
+    "description": "S1-S7 repository, policy, profile and skill settings retain existing behavior; contributor completion does not change application configuration.",
+    "implementation": "No Settings or profile implementation changes occur; reviewer configuration in the handoff refers only to the external PR workflow.",
+    "tests": "Read settings save repository and priority rows: saved feedback, owner/repo summary, priorityLabels, hidden Jira integration and helper-model payload checks remain intact."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 174.814
+      "seconds": 172.57
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.924
+      "seconds": 72.398
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.645
+      "seconds": 26.136
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.802
     },
     {
       "command": [
@@ -81,11 +81,11 @@
         "test-performance"
       ],
       "exit_code": 0,
-      "seconds": 10.138
+      "seconds": 10.193
     }
   ],
   "dependencies": {
-    "flow:configure-work": "a02d30f76c464037ce3fd19bdb421c8555ea97f2dbac6d5f4b911fcacc35e290",
+    "flow:configure-work": "af21f7ae5b86ce853e13c4992a66aa8b6d9e0e4f05e4ad19f90fb5629df0ec12",
     "term:codex-plugin": "576ac2195662841852858c7fc15333c9623aaadc9371f721ca4cb80fe049ae7a",
     "term:connection-closes": "89463dd6e9a3dbbf425faacf4320bf9d23a52bdd7d52bed9f392c9b364b09b28",
     "term:connection-external": "9104d29a917fcc822322d02757bb44fed6aae54f62673befe0385c31fec5fa8b",
@@ -690,8 +690,8 @@
     "ui:W-ITEM-HISTORY": "574d3953f93737f90ab135f4c4d0e14517342dc72a44d71f2ea5048c98d664a9",
     "ui:W-ITEM-OVERVIEW": "5ca824e2b2419cf8f265e9413bb6dffec9567c467f9b624fb7798e82aee5d10c",
     "ui:W-ITEM-ROW": "d07f9571a232fee02f6a6a9a45bfe483933cf6de47a62bf2699a5d9b481ef319",
-    "ui:W-LAUNCH-EDITOR": "34f838c5c4c2c2adfb90e38678a1718a2a42aec870fb1e9f52fa32a7c4609027",
-    "ui:W-LAUNCH-REVIEW": "e79a541defe43b846116232576d0ac82217f37872763644662ce3036fe216d3e",
+    "ui:W-LAUNCH-EDITOR": "28eceaf58fd8b6625dd90cc5fbf143db26fd41301e3cadc53e22a76f06704016",
+    "ui:W-LAUNCH-REVIEW": "d5f9897d3ad2a610432cb1aa6655a55a09d0e57fbd252910cfb94123e2fcd28c",
     "ui:W-MESSAGE": "f8d650748ed0f803371ffe7f5d87e92f1e293955a0178c6cc22ef25c392865d2",
     "ui:W-NAVIGATION": "cfdf31199dd37932b19bdf3bfee70554636cc2b78978c398fcc22d8ad07f064b",
     "ui:W-NEW-CHAT": "fa2d23f14413695550e80356c6e1e3ac2724dbd92c98e79e82ee8585ef8b4577",
@@ -714,7 +714,7 @@
     "ui:W-SESSION-CONSOLE": "f46fbe101e8353741178497bd95a6347b78cc1a54551979b9c456836833f8f47",
     "ui:W-SKILL-SETTINGS": "37d8f9d7ad7bb05dfe467849c2f47e84c21dd1924008a5fbde7cf397bf5e012a",
     "ui:W-SYNC-HEALTH": "d7bc554e0458596ef75d5bae2e4f70eec4894b2bddf065412715f9ae53c64cc7",
-    "ui:W-SYSTEM-DEFAULTS": "a38cf1af81d53c76854d8f290f1c3f0d46c3096e9a3ba98c39a4b3f23816020b",
+    "ui:W-SYSTEM-DEFAULTS": "d9387d67ec996627ae3224332f3b33dce43eaff465dd6c2be3c8524defc7c855",
     "ui:W-TICKET-CONTEXT": "864e54e04963dfbadb187c1001a7cca64a084cfaf7d46b6fa89876135427eb1c",
     "ui:W-TRANSCRIPT": "4510c4f82661a7afca49f47f567ad77a94dfba9051f5bb871f1580f546d64197",
     "ui:W-WAITING-ROW": "c0a140637f15fc854eb2fb4f80838cf8aad91dbd5c740069bc275ddb3d18ac38",

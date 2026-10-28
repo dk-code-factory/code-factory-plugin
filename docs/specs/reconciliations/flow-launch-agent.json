@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-launch-agent",
-  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
-  "fingerprint": "5ead0e20c003b3c81a1eb12e725ea4d1966092a6149eeafa85c3d99edd35f15e",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "151eedbe82e7180a6e5fd717c959e117c7fccfb49df4dde03a3c56202d70a586",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S3 freezes execution mode and full iteration skill package with each proposal. S9 engine capability gates apply only to workflow reviews; native reviews are explicit choices.",
-    "implementation": "Prepare records ExecutionMode and adds the selected iteration skill; Start chooses StartNative from the retained run while existing ReviewWorkflow dispatch remains untouched. Exact snapshot paths reach the text prompt because Codex structured inputs require discovery. Selected profile skill identity is retained separately from cloned effective bundles so derived skill attachment cannot invalidate automatic policy comparison; the existing validator remains unchanged.",
-    "tests": "Read TestSingleCodexReviewRetainsSkillModeAndNativeSession: existing prepared native review starts after settings switch, engine preparation retains its marker, follow-up keeps thread and native prompt references the snapshot; no review YAML execution is recorded. Inspected TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch: an actual new Manager recovers the retained native review after global workflow selection; exact mode/thread/cwd/authority/skill snapshot and workspace checkpoint persist, both turns receive the retained entrypoint, repeated recovery resumes once without replay or YAML artifacts. Reviewed automatic scheduling assertions for native nil/empty/unrelated/already-selected profiles and workflow empty profiles: claims start, reviews complete idle, raw selected profile remains identical, retained native skills are deduplicated and a genuine later profile change still rejects validation. Explicit selection fixture preserves empty shape and backing-slice content while retaining one iteration bundle."
+    "kind": "structure",
+    "description": "S1-S10 retain reviewed proposals and explicit Start authority. One PR coordinator does not alter the product launch, publishing or approval contract.",
+    "implementation": "Runs and proposal code are unchanged; contributor merge remains separately authorized and never inferred from fixture or review success.",
+    "tests": "Read TestAgentQuestionExactlyOnceAndRecovery: prepare precedes Start, a blocking question owns the waiting run/turn, wrong-turn steering and duplicate answers fail and worktree is retained."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 174.814
+      "seconds": 172.57
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.924
+      "seconds": 72.398
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.645
+      "seconds": 26.136
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.802
     },
     {
       "command": [
@@ -81,11 +81,11 @@
         "test-performance"
       ],
       "exit_code": 0,
-      "seconds": 10.138
+      "seconds": 10.193
     }
   ],
   "dependencies": {
-    "flow:launch-agent": "63bb4771adb0ce0cf7f17676ebac8318b91962ba5dd7b957fe6c46c8c7384b2e",
+    "flow:launch-agent": "063bf8e67f0dc1dfae9068ceedd1337b6e34655f54c0a2fb31e41096125524dc",
     "term:agent-pipeline": "0d8d1877d73f5e2803947b314b62d302f28882ea3da0d4e822510f9e63c9e94c",
     "term:agent-run": "af7530019b59b465becd765ea9f3ef31d2dae9821473d1b915a0b9b99f62100c",
     "term:codex-plugin": "576ac2195662841852858c7fc15333c9623aaadc9371f721ca4cb80fe049ae7a",
@@ -692,8 +692,8 @@
     "ui:W-ITEM-HISTORY": "574d3953f93737f90ab135f4c4d0e14517342dc72a44d71f2ea5048c98d664a9",
     "ui:W-ITEM-OVERVIEW": "5ca824e2b2419cf8f265e9413bb6dffec9567c467f9b624fb7798e82aee5d10c",
     "ui:W-ITEM-ROW": "d07f9571a232fee02f6a6a9a45bfe483933cf6de47a62bf2699a5d9b481ef319",
-    "ui:W-LAUNCH-EDITOR": "34f838c5c4c2c2adfb90e38678a1718a2a42aec870fb1e9f52fa32a7c4609027",
-    "ui:W-LAUNCH-REVIEW": "e79a541defe43b846116232576d0ac82217f37872763644662ce3036fe216d3e",
+    "ui:W-LAUNCH-EDITOR": "28eceaf58fd8b6625dd90cc5fbf143db26fd41301e3cadc53e22a76f06704016",
+    "ui:W-LAUNCH-REVIEW": "d5f9897d3ad2a610432cb1aa6655a55a09d0e57fbd252910cfb94123e2fcd28c",
     "ui:W-MESSAGE": "f8d650748ed0f803371ffe7f5d87e92f1e293955a0178c6cc22ef25c392865d2",
     "ui:W-NAVIGATION": "cfdf31199dd37932b19bdf3bfee70554636cc2b78978c398fcc22d8ad07f064b",
     "ui:W-NEW-CHAT": "fa2d23f14413695550e80356c6e1e3ac2724dbd92c98e79e82ee8585ef8b4577",
@@ -716,7 +716,7 @@
     "ui:W-SESSION-CONSOLE": "f46fbe101e8353741178497bd95a6347b78cc1a54551979b9c456836833f8f47",
     "ui:W-SKILL-SETTINGS": "37d8f9d7ad7bb05dfe467849c2f47e84c21dd1924008a5fbde7cf397bf5e012a",
     "ui:W-SYNC-HEALTH": "d7bc554e0458596ef75d5bae2e4f70eec4894b2bddf065412715f9ae53c64cc7",
-    "ui:W-SYSTEM-DEFAULTS": "a38cf1af81d53c76854d8f290f1c3f0d46c3096e9a3ba98c39a4b3f23816020b",
+    "ui:W-SYSTEM-DEFAULTS": "d9387d67ec996627ae3224332f3b33dce43eaff465dd6c2be3c8524defc7c855",
     "ui:W-TICKET-CONTEXT": "864e54e04963dfbadb187c1001a7cca64a084cfaf7d46b6fa89876135427eb1c",
     "ui:W-TRANSCRIPT": "4510c4f82661a7afca49f47f567ad77a94dfba9051f5bb871f1580f546d64197",
     "ui:W-WAITING-ROW": "c0a140637f15fc854eb2fb4f80838cf8aad91dbd5c740069bc275ddb3d18ac38",

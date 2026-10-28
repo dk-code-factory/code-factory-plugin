@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-answer-attention",
-  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
-  "fingerprint": "ff78a00dd48850c4e06b763ccc2e320d21a0cadaef89655bfd303ccfb112f540",
+  "base": "ba3b604e319165a6e562bf5901ecc71d29a353fd",
+  "fingerprint": "39cf0e3788782eb3ac8ecdaf67386054d013910e1f15949d8e3127091a551c45",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Answer agent questions and approval requests retains its documented scenarios. Shared Config/Run optional fields and native adapter selection affect launch preparation; this consumer's authored transitions and existing stable IDs remain accurate.",
-    "implementation": "Inspected shared-file diff for answer-attention; its provider, persisted ownership and UI transitions are unchanged. Missing execution mode preserves workflow behavior; retained runs continue using their own marker and snapshot rather than current settings.",
-    "tests": "Reviewed the existing catalog assertion anchor func TestAgentQuestionExactlyOnceAndRecovery( in internal/app/app_test.go and retained its mapping. New native launch tests supplement the launch contract; fixture suites rerun existing consumer assertions and leave installed-host and accessibility gaps open."
+    "description": "S1-S5 preserve owning run/turn, exactly-once answers and native approval boundaries; real-host and helper acceptance gaps stay open.",
+    "implementation": "Attention validation and helper implementations are unchanged; the handoff explicitly retains pending user decisions and authorization sources.",
+    "tests": "Read TestAgentQuestionExactlyOnceAndRecovery: attention matches waiting run/turn, stale steering rejects, first answer succeeds and duplicate answer rejects. Fixture success adds no host acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 174.814
+      "seconds": 172.57
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.924
+      "seconds": 72.398
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.645
+      "seconds": 26.136
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.802
     },
     {
       "command": [
@@ -81,7 +81,7 @@
         "test-performance"
       ],
       "exit_code": 0,
-      "seconds": 10.138
+      "seconds": 10.193
     }
   ],
   "dependencies": {
@@ -689,8 +689,8 @@
     "ui:W-ITEM-HISTORY": "574d3953f93737f90ab135f4c4d0e14517342dc72a44d71f2ea5048c98d664a9",
     "ui:W-ITEM-OVERVIEW": "5ca824e2b2419cf8f265e9413bb6dffec9567c467f9b624fb7798e82aee5d10c",
     "ui:W-ITEM-ROW": "d07f9571a232fee02f6a6a9a45bfe483933cf6de47a62bf2699a5d9b481ef319",
-    "ui:W-LAUNCH-EDITOR": "34f838c5c4c2c2adfb90e38678a1718a2a42aec870fb1e9f52fa32a7c4609027",
-    "ui:W-LAUNCH-REVIEW": "e79a541defe43b846116232576d0ac82217f37872763644662ce3036fe216d3e",
+    "ui:W-LAUNCH-EDITOR": "28eceaf58fd8b6625dd90cc5fbf143db26fd41301e3cadc53e22a76f06704016",
+    "ui:W-LAUNCH-REVIEW": "d5f9897d3ad2a610432cb1aa6655a55a09d0e57fbd252910cfb94123e2fcd28c",
     "ui:W-MESSAGE": "f8d650748ed0f803371ffe7f5d87e92f1e293955a0178c6cc22ef25c392865d2",
     "ui:W-NAVIGATION": "cfdf31199dd37932b19bdf3bfee70554636cc2b78978c398fcc22d8ad07f064b",
     "ui:W-NEW-CHAT": "fa2d23f14413695550e80356c6e1e3ac2724dbd92c98e79e82ee8585ef8b4577",
@@ -713,7 +713,7 @@
     "ui:W-SESSION-CONSOLE": "f46fbe101e8353741178497bd95a6347b78cc1a54551979b9c456836833f8f47",
     "ui:W-SKILL-SETTINGS": "37d8f9d7ad7bb05dfe467849c2f47e84c21dd1924008a5fbde7cf397bf5e012a",
     "ui:W-SYNC-HEALTH": "d7bc554e0458596ef75d5bae2e4f70eec4894b2bddf065412715f9ae53c64cc7",
-    "ui:W-SYSTEM-DEFAULTS": "a38cf1af81d53c76854d8f290f1c3f0d46c3096e9a3ba98c39a4b3f23816020b",
+    "ui:W-SYSTEM-DEFAULTS": "d9387d67ec996627ae3224332f3b33dce43eaff465dd6c2be3c8524defc7c855",
     "ui:W-TICKET-CONTEXT": "864e54e04963dfbadb187c1001a7cca64a084cfaf7d46b6fa89876135427eb1c",
     "ui:W-TRANSCRIPT": "4510c4f82661a7afca49f47f567ad77a94dfba9051f5bb871f1580f546d64197",
     "ui:W-WAITING-ROW": "c0a140637f15fc854eb2fb4f80838cf8aad91dbd5c740069bc275ddb3d18ac38",
