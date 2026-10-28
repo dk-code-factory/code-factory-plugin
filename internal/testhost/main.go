@@ -46,6 +46,9 @@ func run() error {
 		return e
 	}
 	defer os.RemoveAll(dir)
+	if os.Getenv("CODE_FACTORY_PERFORMANCE") == "1" {
+		return servePerformance(ctx, dir, basePort+1)
+	}
 	s, e := store.Open(filepath.Join(dir, "state.db"))
 	if e != nil {
 		return e

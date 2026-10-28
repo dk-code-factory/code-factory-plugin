@@ -138,6 +138,7 @@ flowchart TD
 - [internal/aiworkflows/workflows/question-repair.yml](../../internal/aiworkflows/workflows/question-repair.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/transport/ui_state.go](../../internal/transport/ui_state.go) — Requested public projections exclude credential and private retained-source buckets. (`func (s *Server) readUIState(`)
 
 ## Test references
 
@@ -193,6 +194,8 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestStatusStoreSerializationOmitsPrivateOutputsAnswersAndErrors(`; S2. Distinct run/job/step/iteration output, answer and provider-error canaries are absent from private status records; useful status identity and original in-memory execution remain intact.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCheckpointFailureReportsDiagnosticWithoutChangingCompletion(`; S2. Late diagnostic uses a generic message and originating identities without prompt, answer or provider-error content.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(`; S2. Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIProjectionExcludesPrivateSourceSkillFilesAndCredentials`; S1. Messages/settings public projections contain no source snapshot, skill files/content or saved owner credential markers.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIManagedSkillEditorReadsOnlySelectedContent`; S1. Only the selected authorized managed content is returned; broad lists and all editor reads omit private files/unrelated bodies.
 
 ## Verification and gaps
 

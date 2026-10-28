@@ -54,6 +54,23 @@ func (g *GitHub) ConfigureUsage(s *store.Store, policy func(context.Context) (Gi
 }
 func (g *GitHub) Managed() bool { return g.policy != nil }
 
+// SavedGitHubUsage derives public quota information from SQLite alone. It has
+// no authenticated transport and cannot reserve or perform a provider request.
+func SavedGitHubUsage(ctx context.Context, s *store.Store, budget int, reserve *int) (GitHubUsage, error) {
+	if budget == 0 {
+		budget = 600
+	}
+	r := 100
+	if reserve != nil {
+		r = *reserve
+	}
+	g := NewGitHub()
+	g.ConfigureUsage(s, func(context.Context) (GitHubPolicy, error) {
+		return GitHubPolicy{RequestsPerHour: budget, Reserve: r}, nil
+	})
+	return g.UsageStatus(ctx)
+}
+
 // All managed transports, including publication subprocesses, hold the same
 // request lock through reservation, HTTP response and durable observations.
 func (g *GitHub) lockUsage(ctx context.Context) (func(), error) {

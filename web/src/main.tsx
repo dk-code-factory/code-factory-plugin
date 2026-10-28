@@ -1,4 +1,6 @@
 import React, {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -22,9 +24,20 @@ import type {
   QuestionRecovery,
 } from "./types";
 import "./style.css";
-import { ReportedIssues } from "./reports";
-import { PluginAdmin, RepositoryAdmin, SystemReviewSettings } from "./admin";
-import { PostedReviews } from "./reviews";
+import {
+  publishUIChange,
+  useUIVersion,
+  useUIResyncVersion,
+  type UIChange,
+} from "./ui-changes";
+const ReportedIssues = lazy(() =>
+  import("./reports").then((m) => ({ default: m.ReportedIssues })),
+);
+
+const PostedReviews = lazy(() =>
+  import("./reviews").then((m) => ({ default: m.PostedReviews })),
+);
+const Settings = lazy(() => import("./settings"));
 
 function latestRun(runs: Run[], itemId: string) {
   const retained = runs
@@ -77,7 +90,14 @@ function Factory() {
   const [snap, setSnap] = useState<Snapshot>();
   const settingsView =
     document.documentElement.dataset.codeFactoryView === "settings";
-  const [tab, setTab] = useState(settingsView ? "Settings" : "Inbox");
+  const boot = (
+    window as unknown as {
+      factoryBoot?: { tab: string; search: string; filter: string };
+    }
+  ).factoryBoot;
+  const [tab, setTab] = useState(
+    settingsView ? "Settings" : (boot?.tab ?? "Inbox"),
+  );
   const [runBack, setRunBack] = useState("Messages");
   const pageRef = useRef<HTMLElement>(null);
   const positions = useRef(
@@ -85,6 +105,14 @@ function Factory() {
   );
   const [error, setError] = useState("");
   const [pollError, setPollError] = useState("");
+  const [viewError, setViewError] = useState("");
+  const viewRetry = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const viewBackoff = useRef(1000);
+  const viewNeedsRetry = useRef(false);
+  const latestRefresh = useRef<() => Promise<number>>(async () => 0);
+  const [appliedQuery, setAppliedQuery] = useState("");
   const [connection, setConnection] = useState("Connecting to Work…");
   const [selected, setSelected] = useState("");
   const [runId, setRunId] = useState("");
@@ -98,15 +126,22 @@ function Factory() {
   const [consoleRuns, setConsoleRuns] = useState<Record<string, boolean>>({});
   const [queries, setQueries] = useState<
     Record<string, { filter: string; search: string }>
-  >({});
+  >(boot ? { [boot.tab]: { search: boot.search, filter: boot.filter } } : {});
   const filter = queries[tab]?.filter ?? "open";
   const search = queries[tab]?.search ?? "";
-  const setFilter = (filter: string) =>
+  const [pages, setPages] = useState<Record<string, number>>({});
+  const offset = pages[tab] ?? 0;
+  const setOffset = (value: number) =>
+    setPages((old) => ({ ...old, [tab]: value }));
+  const setFilter = (filter: string) => {
+    setOffset(0);
     setQueries((old) => ({
       ...old,
       [tab]: { search: old[tab]?.search ?? "", filter },
     }));
-  const setSearch = (search: string) =>
+  };
+  const setSearch = (search: string) => {
+    setOffset(0);
     setQueries((old) => ({
       ...old,
       [tab]: {
@@ -114,22 +149,181 @@ function Factory() {
         search,
       },
     }));
+  };
   const [chatDrafts, setChatDrafts] = useState<Record<string, ChatDraft>>({});
   const activeView = useRef({ tab, selected });
   activeView.current = { tab, selected };
   const cursor = useRef(0);
   const mounted = useRef(true);
+  const request = useRef(0);
+  const stateEpoch = useRef(0);
+  const getStateEpoch = useCallback(() => stateEpoch.current, []);
+  const appliedCursor = useRef(0);
+  const hasData = useRef(false);
+  const dirtyDomains = useRef(new Map<string, number>());
+  const acceptedRuns = useRef(new Map<string, Run>());
+  const launchOpen = Boolean(launch || draftRun);
+  const queryRef = useRef({
+    tab,
+    filter,
+    search,
+    offset,
+    selected,
+    launchOpen,
+  });
+  queryRef.current = { tab, filter, search, offset, selected, launchOpen };
   const refresh = useCallback(async () => {
-    const s = await call<Snapshot>(
-      settingsView ? "open_settings" : "read_snapshot",
-    );
-    if (mounted.current && s.cursor >= cursor.current) {
-      setSnap(s);
-      cursor.current = s.cursor;
+    const generation = ++request.current;
+    const q = queryRef.current;
+    const queue = (
+      {
+        Working: "working",
+        Inbox: "issues",
+        Mine: "mine",
+        Review: "review",
+      } as Record<string, string>
+    )[q.tab];
+    const dirty = new Map(dirtyDomains.current);
+    const views = settingsView
+      ? ["settings"]
+      : [
+          ...(!hasData.current ||
+          ["identity", "repository", "profile", "config"].some((d) =>
+            dirty.has(d),
+          )
+            ? ["shell"]
+            : []),
+          ...(!hasData.current ||
+          ["run", "attention", "question-recovery"].some((d) => dirty.has(d)) ||
+          ["Agent", "Messages"].includes(q.tab)
+            ? ["messages"]
+            : []),
+          ...(queue ? ["inbox"] : []),
+          ...(q.tab === "Agent" ? ["reviews"] : []),
+          ...(q.launchOpen ? ["launch"] : []),
+        ];
+    if (!views.length) views.push("selection");
+    let s: Partial<Snapshot>;
+    try {
+      s = await call<Partial<Snapshot>>("read_ui_state", {
+        views,
+        queue,
+        filter: q.filter,
+        search: q.search,
+        offset: q.offset,
+        limit: 50,
+        id: q.selected,
+      });
+    } catch (error) {
+      if (mounted.current && generation === request.current) {
+        viewNeedsRetry.current = true;
+        setViewError(
+          isConnectionFailure(error)
+            ? "Connection interrupted. Retrying saved view…"
+            : String(error),
+        );
+        setConnection(
+          isConnectionFailure(error)
+            ? "Retrying saved view…"
+            : "Saved view unavailable",
+        );
+        clearTimeout(viewRetry.current);
+        if (isConnectionFailure(error)) {
+          viewRetry.current = setTimeout(() => {
+            if (mounted.current && !document.hidden)
+              void latestRefresh.current().catch(() => {});
+          }, viewBackoff.current);
+          viewBackoff.current = Math.min(viewBackoff.current * 2, 30000);
+        }
+      }
+      throw error;
+    }
+    if (
+      mounted.current &&
+      generation === request.current &&
+      (s.cursor ?? 0) >= appliedCursor.current
+    ) {
+      appliedCursor.current = s.cursor ?? 0;
+      if (queue && s.inbox)
+        setAppliedQuery(JSON.stringify([q.tab, q.filter, q.search, q.offset]));
+      clearTimeout(viewRetry.current);
+      viewNeedsRetry.current = false;
+      viewBackoff.current = 1000;
+      setViewError("");
+      hasData.current = true;
+      const covered = new Set<string>();
+      if (views.includes("shell"))
+        for (const d of ["identity", "repository", "profile", "config"])
+          covered.add(d);
+      if (views.includes("messages"))
+        for (const d of ["run", "attention", "question-recovery"])
+          covered.add(d);
+      if (views.includes("inbox"))
+        for (const d of [
+          "item",
+          "user",
+          "assessment",
+          "relationship",
+          "ticket",
+          "linked-pr",
+        ])
+          covered.add(d);
+      if (views.includes("reviews")) covered.add("pr-reviews");
+      if (views.includes("launch") || views.includes("settings"))
+        for (const d of ["repository", "profile", "config", "skill"])
+          covered.add(d);
+      if (views.includes("settings"))
+        for (const d of ["github-usage", "github-notifications"])
+          covered.add(d);
+      for (const [domain, invalidatedAt] of dirty) {
+        if (
+          covered.has(domain) &&
+          (s.cursor ?? 0) >= invalidatedAt &&
+          dirtyDomains.current.get(domain) === invalidatedAt
+        ) {
+          dirtyDomains.current.delete(domain);
+        }
+      }
+      let saved = s;
+      if (s.runs) {
+        const runs = new Map(s.runs.map((run) => [run.id, run]));
+        for (const [id, accepted] of acceptedRuns.current) {
+          const projected = runs.get(id);
+          // Successful Start cannot return to prepared. A projection may still
+          // precede acceptance; retain that local acknowledgement until it catches up.
+          if (!projected || projected.status === "prepared")
+            runs.set(id, accepted);
+          else acceptedRuns.current.delete(id);
+        }
+        saved = { ...s, runs: [...runs.values()] };
+      }
+      setSnap(
+        (old) =>
+          ({
+            inbox: [],
+            runs: [],
+            attention: [],
+            repositories: [],
+            profiles: [],
+            skills: [],
+            ...old,
+            ...saved,
+          }) as Snapshot,
+      );
       setConnection("Connected");
       setPollError("");
     }
+    return s.cursor ?? 0;
   }, [settingsView]);
+  latestRefresh.current = refresh;
+  const firstQuery = useRef(true);
+  useEffect(() => {
+    if (firstQuery.current) {
+      firstQuery.current = false;
+      return;
+    }
+    void refresh().catch(() => {});
+  }, [tab, filter, search, offset, selected, launchOpen, refresh]);
   const action = useCallback(
     async (
       name: string,
@@ -145,73 +339,127 @@ function Factory() {
         else setError(String(e));
         succeeded = false;
       }
-      // Failed mutations can still change durable state, such as retiring a
-      // session before dirty cleanup is refused. Keep that state visible.
-      try {
-        await refresh();
-      } catch (e) {
-        setPollError(
-          isConnectionFailure(e)
-            ? "Connection interrupted. Retrying automatically."
-            : String(e),
-        );
-      }
+      // Publication carries later state updates, including effects of failed
+      // mutations. Acceptance does not wait for projection or provider completion.
       return succeeded;
     },
-    [refresh],
+    [],
   );
   useEffect(() => {
     mounted.current = true;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
+    let busy = false;
+    let initialized = false;
     let backoff = 1000;
-    let inFlight = false;
-    let failures = 0;
-    async function poll() {
-      if (stopped || inFlight) return;
-      inFlight = true;
+    async function watch() {
+      if (stopped || busy) return;
+      busy = true;
       try {
-        if (!snapRef.current) {
-          await refresh();
-          snapRef.current = true;
+        if (!initialized) {
+          cursor.current = await refresh();
+          initialized = true;
         } else {
-          const p = await call<EventPage>("read_changes", {
+          const change = await call<UIChange>("watch_ui_changes", {
             after: cursor.current,
-            limit: 200,
+            waitMs: 25000,
           });
-          if (p.events.length) {
-            await refresh();
-          } else {
-            cursor.current = Math.max(cursor.current, p.cursor);
+          if (stopped) return;
+          if (change.resync || Object.keys(change.changes).length) {
+            if (change.resync) {
+              // A hidden view does not refresh immediately, but any reply from
+              // the previous state epoch must already be obsolete.
+              request.current++;
+              stateEpoch.current++;
+              setAppliedQuery("");
+              appliedCursor.current = 0;
+              acceptedRuns.current.clear();
+              dirtyDomains.current.clear();
+            }
+            // One publication updates panel subscribers and the affected active view.
+            publishUIChange(change);
+            const domains = Object.keys(change.changes);
+            for (const domain of domains)
+              dirtyDomains.current.set(domain, change.cursor);
+            if (change.resync)
+              for (const domain of [
+                "identity",
+                "repository",
+                "profile",
+                "config",
+                "run",
+                "attention",
+                "question-recovery",
+              ])
+                dirtyDomains.current.set(domain, change.cursor);
+            const q = queryRef.current;
+            const inboxDomains = [
+              "item",
+              "user",
+              "assessment",
+              "relationship",
+              "ticket",
+              "linked-pr",
+              "identity",
+              "run",
+              "attention",
+              "repository",
+              "config",
+              "profile",
+            ];
+            const relevant = settingsView
+              ? domains.some((d) =>
+                  [
+                    "repository",
+                    "config",
+                    "profile",
+                    "skill",
+                    "github-usage",
+                    "github-notifications",
+                  ].includes(d),
+                )
+              : q.tab === "Reported issues"
+                ? domains.some((d) =>
+                    ["run", "attention", "question-recovery"].includes(d),
+                  )
+                : domains.some(
+                    (d) =>
+                      inboxDomains.includes(d) ||
+                      d === "question-recovery" ||
+                      d === "pr-reviews",
+                  );
+            if (
+              !document.hidden &&
+              (change.resync ||
+                relevant ||
+                (q.launchOpen && domains.includes("skill")))
+            )
+              await refresh();
           }
-          setConnection("Connected");
+          cursor.current = change.cursor;
         }
-        setPollError("");
-        failures = 0;
+        if (!stopped) {
+          if (!viewNeedsRetry.current) setConnection("Connected");
+          setPollError("");
+        }
         backoff = 1000;
       } catch (e) {
         if (!stopped) {
-          failures++;
           setConnection("Reconnecting…");
-          if (!isConnectionFailure(e) || failures >= 3)
-            setPollError(
-              isConnectionFailure(e)
-                ? "Connection interrupted. Retrying automatically."
-                : String(e),
-            );
+          if (!isConnectionFailure(e)) setPollError(String(e));
           backoff = Math.min(backoff * 2, 30000);
         }
+      } finally {
+        busy = false;
+        if (!stopped) timer = setTimeout(watch, backoff === 1000 ? 0 : backoff);
       }
-      inFlight = false;
-      if (!stopped) timer = setTimeout(poll, document.hidden ? 15000 : backoff);
     }
-    const snapRef = { current: false };
-    // The poll loop owns initialization and retries it after a failed handshake.
-    void poll();
+    void watch();
     const visible = () => {
       if (!document.hidden) {
         clearTimeout(timer);
-        void poll();
+        void refresh().catch((e) => setPollError(String(e)));
+        void watch();
       }
     };
     document.addEventListener("visibilitychange", visible);
@@ -219,6 +467,7 @@ function Factory() {
       stopped = true;
       mounted.current = false;
       clearTimeout(timer);
+      clearTimeout(viewRetry.current);
       document.removeEventListener("visibilitychange", visible);
     };
   }, [refresh]);
@@ -237,64 +486,10 @@ function Factory() {
   const currentAttention = pending.find((a) => a.id === attentionId);
   const queue = ["Working", "Inbox", "Mine", "Review"].includes(tab);
   const viewer = snap?.viewer;
-  const visibleItems = (
-    snap?.inbox.filter((v) => {
-      const own =
-        viewer?.login &&
-        v.item.author.toLowerCase() === viewer.login.toLowerCase();
-      const requested =
-        viewer?.login &&
-        (v.item.reviewRequests?.some(
-          (login) => login.toLowerCase() === viewer.login.toLowerCase(),
-        ) ||
-          v.item.reviewTeams?.some((team) =>
-            viewer.teams?.some(
-              (mine) => mine.toLowerCase() === team.toLowerCase(),
-            ),
-          ));
-      if (
-        v.queues
-          ? !v.queues.includes(
-              (
-                {
-                  Working: "working",
-                  Inbox: "issues",
-                  Mine: "mine",
-                  Review: "review",
-                } as Record<string, string>
-              )[tab],
-            )
-          : tab === "Working"
-            ? !snap?.runs.some(
-                (r) => r.itemId === v.item.id && r.status !== "prepared",
-              ) || v.item.state !== "open"
-            : tab === "Inbox"
-              ? v.item.kind !== "issue"
-              : tab === "Mine"
-                ? v.item.kind !== "pr" || !own
-                : v.item.kind !== "pr" || !requested
-      )
-        return false;
-      return (
-        (filter === "all" ||
-          (filter === "pending" &&
-            v.item.state === "open" &&
-            !v.hasPullRequest) ||
-          (filter === "open" && v.item.state === "open") ||
-          (filter === "new" && v.user.new) ||
-          (filter === "unread" && v.unread) ||
-          (filter === "acted-on" && v.user.actions.length > 0)) &&
-        `${v.item.title} ${v.item.id}`
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      );
-    }) ?? []
-  ).sort(
-    (a, b) =>
-      (a.priority ?? 4) - (b.priority ?? 4) ||
-      Date.parse(b.item.updated) - Date.parse(a.item.updated) ||
-      a.item.id.localeCompare(b.item.id),
-  );
+  const currentQuery = JSON.stringify([tab, filter, search, offset]);
+  const queryReady = appliedQuery === currentQuery;
+  const visibleItems = queryReady ? (snap?.inbox ?? []) : [];
+
   const pageKey = tab === "Agent" ? `Agent:${runId || selected}` : tab;
   function navigate(next: string) {
     positions.current.set(pageKey, {
@@ -307,6 +502,7 @@ function Factory() {
     setTab(next);
   }
   useLayoutEffect(() => {
+    if (queue && !queryReady) return;
     const saved = positions.current.get(pageKey);
     const target = saved?.focus
       ? [...document.querySelectorAll<HTMLElement>("[data-focus-key]")].find(
@@ -316,7 +512,6 @@ function Factory() {
     const heading = pageRef.current?.querySelector<HTMLElement>("h1, h2");
     if (!target && heading) heading.tabIndex = -1;
     const formFocused =
-      tab === "Settings" &&
       pageRef.current?.contains(document.activeElement) &&
       document.activeElement?.matches("input, select, textarea");
     const fallback = queue
@@ -328,9 +523,11 @@ function Factory() {
         : tab === "Settings"
           ? pageRef.current?.querySelector<HTMLElement>("summary")
           : (heading ?? pageRef.current);
-    if (!formFocused) (target ?? fallback)?.focus({ preventScroll: true });
-    window.scrollTo(0, saved?.scroll ?? 0);
-  }, [pageKey]);
+    if (!formFocused) {
+      (target ?? fallback)?.focus({ preventScroll: true });
+      window.scrollTo(0, saved?.scroll ?? 0);
+    }
+  }, [pageKey, Boolean(snap), queryReady]);
   const openRun = (id: string) => {
     const run = snap?.runs.find((r) => r.id === id);
     if (tab !== "Agent") setRunBack("Messages");
@@ -375,6 +572,7 @@ function Factory() {
     navigate("Agent");
   };
   const acceptRun = (run: Run, itemId: string, origin: string) => {
+    acceptedRuns.current.set(run.id, run);
     setSnap((old) =>
       old
         ? { ...old, runs: [...old.runs.filter((r) => r.id !== run.id), run] }
@@ -397,9 +595,11 @@ function Factory() {
   };
   const attentionRun = snap?.runs.find((r) => r.id === currentAttention?.runId);
   const currentRun = snap?.runs.find((r) => r.id === runId);
-  const agentEntry = snap?.inbox.find(
-    (e) => e.item.id === (currentRun?.itemId ?? selected),
-  );
+  const agentItemId = currentRun?.itemId ?? selected;
+  const agentEntry =
+    snap?.selectedEntry?.item.id === agentItemId
+      ? snap.selectedEntry
+      : snap?.inbox.find((e) => e.item.id === agentItemId);
   return (
     <main>
       {!settingsView && (
@@ -453,6 +653,11 @@ function Factory() {
           {pollError}
         </div>
       )}
+      {viewError && (
+        <div role="alert" className="error">
+          {viewError}
+        </div>
+      )}
       {error && (
         <div role="alert" className="error">
           {error}
@@ -461,35 +666,10 @@ function Factory() {
           </button>
         </div>
       )}
-      {!snap ? (
-        <p className="empty">Loading…</p>
-      ) : (
-        <>
-          {tab === "Reported issues" && <ReportedIssues cursor={snap.cursor} />}
-          {queue && (
-            <section
-              className="page"
-              aria-label={
-                tab === "Working"
-                  ? "Working"
-                  : tab === "Inbox"
-                    ? "Issues"
-                    : tab === "Mine"
-                      ? "My PRs"
-                      : "Review PRs"
-              }
-              ref={pageRef}
-              tabIndex={-1}
-            >
-              <h1 className="sr-only">
-                {tab === "Working"
-                  ? "Working"
-                  : tab === "Inbox"
-                    ? "Issues"
-                    : tab === "Mine"
-                      ? "My PRs"
-                      : "Review PRs"}
-              </h1>
+      <Suspense fallback={<p role="status">Loading view…</p>}>
+        {!snap ? (
+          <section className="page" aria-label="Loading saved view">
+            {queue && (
               <div className="toolbar">
                 <input
                   aria-label="Search inbox"
@@ -502,463 +682,569 @@ function Factory() {
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
                 >
-                  {[
-                    ...(tab === "Inbox" ? ["pending"] : []),
-                    "open",
-                    "all",
-                    "new",
-                    "unread",
-                    "acted-on",
-                  ].map((f) => (
-                    <option key={f}>{f}</option>
-                  ))}
+                  {["open", "all", "pending", "new", "unread", "acted-on"].map(
+                    (f) => (
+                      <option key={f}>{f}</option>
+                    ),
+                  )}
                 </select>
               </div>
-              {snap.repositories
-                .filter((r) => r.error)
-                .map((r) => (
-                  <p className="error" role="alert" key={r.id}>
-                    {r.id} · {r.error}
+            )}
+            <p role="status">Loading saved state…</p>
+          </section>
+        ) : (
+          <>
+            {tab === "Reported issues" && <ReportedIssues />}
+            {queue && (
+              <section
+                className="page"
+                aria-label={
+                  tab === "Working"
+                    ? "Working"
+                    : tab === "Inbox"
+                      ? "Issues"
+                      : tab === "Mine"
+                        ? "My PRs"
+                        : "Review PRs"
+                }
+                ref={pageRef}
+                tabIndex={-1}
+              >
+                <h1 className="sr-only">
+                  {tab === "Working"
+                    ? "Working"
+                    : tab === "Inbox"
+                      ? "Issues"
+                      : tab === "Mine"
+                        ? "My PRs"
+                        : "Review PRs"}
+                </h1>
+                <div className="toolbar">
+                  <input
+                    aria-label="Search inbox"
+                    placeholder="Search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  <select
+                    aria-label="Inbox filter"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  >
+                    {[
+                      ...(tab === "Inbox" ? ["pending"] : []),
+                      "open",
+                      "all",
+                      "new",
+                      "unread",
+                      "acted-on",
+                    ].map((f) => (
+                      <option key={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+                {snap.repositories
+                  .filter((r) => r.error)
+                  .map((r) => (
+                    <p className="error" role="alert" key={r.id}>
+                      {r.id} · {r.error}
+                    </p>
+                  ))}
+                {["Mine", "Review"].includes(tab) && !viewer?.login && (
+                  <p role="alert">
+                    GitHub identity unavailable. Check the connection in
+                    Settings.
                   </p>
-                ))}
-              {["Mine", "Review"].includes(tab) && !viewer?.login && (
-                <p role="alert">
-                  GitHub identity unavailable. Check the connection in Settings.
-                </p>
-              )}
-              {tab === "Review" && viewer?.teamError && (
-                <p role="alert">{viewer.teamError}</p>
-              )}
-              <section className="item-list" aria-label="Items">
-                {visibleItems.map((v) => (
-                  <div className="inbox-row" key={v.item.id}>
-                    <button
-                      className="item"
-                      data-focus-key={`item-${v.item.id}`}
-                      aria-describedby={`meta-${v.item.id}`}
-                      onClick={() => {
-                        openWorkItem(v);
-                      }}
-                    >
-                      <b className={`priority p${v.priority}`}>
-                        {v.priority === null ? "Pending" : `P${v.priority}`}
-                      </b>
-                      <span className="item-title">
-                        {v.unread && <span className="dot" />}
-                        {v.item.title}
-                      </span>
-                    </button>
-                    <div className="item-meta" id={`meta-${v.item.id}`}>
-                      {v.item.url ? (
-                        <a
-                          className="source-link"
-                          href={v.item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Open ${v.item.kind === "pr" ? "pull request" : "issue"} ${v.item.id} on GitHub`}
-                          title="Open on GitHub"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            void openLink(v.item.url)
-                              .then((result) => {
-                                if (result.isError)
-                                  setError("The host could not open GitHub.");
-                              })
-                              .catch((e) =>
-                                setError(`Could not open GitHub: ${String(e)}`),
-                              );
+                )}
+                {tab === "Review" && viewer?.teamError && (
+                  <p role="alert">{viewer.teamError}</p>
+                )}
+                <div className="pagination">
+                  <button
+                    disabled={offset === 0}
+                    onClick={() => setOffset(Math.max(0, offset - 50))}
+                  >
+                    Previous items
+                  </button>
+                  <span>{snap.page?.total ?? visibleItems.length} items</span>
+                  <button
+                    disabled={!snap.page?.hasMore}
+                    onClick={() => setOffset(offset + 50)}
+                  >
+                    Next items
+                  </button>
+                </div>
+                <section className="item-list" aria-label="Items">
+                  {!queryReady && <p role="status">Loading saved items…</p>}
+                  {visibleItems.map((v) => (
+                    <div className="inbox-row" key={v.item.id}>
+                      <button
+                        className="item"
+                        data-focus-key={`item-${v.item.id}`}
+                        aria-describedby={`meta-${v.item.id}`}
+                        onClick={() => {
+                          openWorkItem(v);
+                        }}
+                      >
+                        <b className={`priority p${v.priority}`}>
+                          {v.priority === null ? "Pending" : `P${v.priority}`}
+                        </b>
+                        <span className="item-title">
+                          {v.unread && <span className="dot" />}
+                          {v.item.title}
+                        </span>
+                      </button>
+                      <div className="item-meta" id={`meta-${v.item.id}`}>
+                        {v.item.url ? (
+                          <a
+                            className="source-link"
+                            href={v.item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Open ${v.item.kind === "pr" ? "pull request" : "issue"} ${v.item.id} on GitHub`}
+                            title="Open on GitHub"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              void openLink(v.item.url)
+                                .then((result) => {
+                                  if (result.isError)
+                                    setError("The host could not open GitHub.");
+                                })
+                                .catch((e) =>
+                                  setError(
+                                    `Could not open GitHub: ${String(e)}`,
+                                  ),
+                                );
+                            }}
+                          >
+                            {v.item.id}
+                          </a>
+                        ) : (
+                          <span>{v.item.id}</span>
+                        )}
+                        <WorkStatus
+                          status={v.work?.status}
+                          run={latestRun(snap.runs, v.item.id)}
+                          blocked={waiting.some(
+                            (a) =>
+                              a.blocking &&
+                              snap.runs.find((r) => r.id === a.runId)
+                                ?.itemId === v.item.id,
+                          )}
+                        />
+                        {v.work && v.work.runIds.length > 1 && (
+                          <span>{v.work.runIds.length} sessions</span>
+                        )}
+                        {v.item.pr && <PRStatus pr={v.item.pr} />}
+                        {v.linkedPullRequests?.map((pr) => (
+                          <span key={pr.id}>
+                            {pr.id} · <PRStatus pr={pr} />
+                          </span>
+                        ))}
+                        {v.item.kind === "pr" && <span>PR</span>}
+                        {v.item.state !== "open" && <span>{v.item.state}</span>}
+                        {v.item.draft && <span>Draft</span>}
+                        {v.user.new && <b className="badge">New</b>}
+                        {v.user.actions.length > 0 && <span>Acted on</span>}
+                      </div>
+                    </div>
+                  ))}
+                  {queryReady &&
+                    (search !== "" || filter !== "open") &&
+                    visibleItems.length === 0 && (
+                      <div className="empty">
+                        <p>No matching items</p>
+                        <button
+                          onClick={() => {
+                            setSearch("");
+                            setFilter("all");
                           }}
                         >
-                          {v.item.id}
-                        </a>
-                      ) : (
-                        <span>{v.item.id}</span>
-                      )}
+                          Clear filters
+                        </button>
+                      </div>
+                    )}
+                  {queryReady &&
+                    !snap.inbox.length &&
+                    search === "" &&
+                    filter === "open" && (
+                      <div className="empty">
+                        {snap.repositories.length > 0 ? (
+                          <p>No items yet.</p>
+                        ) : (
+                          <p>No repositories configured.</p>
+                        )}
+                      </div>
+                    )}
+                </section>
+              </section>
+            )}
+            {tab === "Messages" && (
+              <section
+                className="page item-list"
+                aria-label="Messages"
+                ref={pageRef}
+                tabIndex={-1}
+              >
+                <h1 className="sr-only">Messages</h1>
+                <section aria-label="Waiting for you">
+                  {waiting.map((a) => {
+                    const run = snap.runs.find((r) => r.id === a.runId);
+                    const item = snap.inbox.find(
+                      (e) => e.item.id === run?.itemId,
+                    );
+                    return (
+                      <button
+                        className="item"
+                        key={a.id}
+                        onClick={() => openAttention(a.id)}
+                      >
+                        <span className="item-title">
+                          {item?.item.title ?? run?.itemId ?? "Agent"}
+                        </span>
+                        <span>
+                          {run?.itemId} ·{" "}
+                          {a.method.includes("Approval")
+                            ? "Approval needed"
+                            : a.blocking
+                              ? "Reply needed"
+                              : "Question · agent continues"}
+                        </span>
+                        {a.params.command && <span>{a.params.command}</span>}
+                        {a.params.questions?.[0]?.question && (
+                          <span>{a.params.questions[0].question}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {!waiting.length && (
+                    <p className="empty">No messages waiting for you.</p>
+                  )}
+                </section>
+              </section>
+            )}
+            {tab === "Agent" && (
+              <section
+                className="page detail"
+                aria-label="Agent"
+                ref={pageRef}
+                tabIndex={-1}
+              >
+                <button
+                  className="back"
+                  data-focus-key="back-agent"
+                  onClick={() => navigate(runBack)}
+                >
+                  ←{" "}
+                  {runBack === "Inbox"
+                    ? "Issues"
+                    : runBack === "Mine"
+                      ? "My PRs"
+                      : runBack === "Review"
+                        ? "Review PRs"
+                        : runBack === "Working"
+                          ? "Working"
+                          : "Messages"}
+                </button>
+                {agentEntry ? (
+                  <ItemDetail
+                    key={agentEntry.item.id}
+                    id={agentEntry.item.id}
+                    reviewVersion={
+                      (snap.reviewVersions?.[agentEntry.item.id] ?? "") +
+                      JSON.stringify(
+                        snap.runs
+                          .filter((r) => r.itemId === agentEntry.item.id)
+                          .map((r) => [r.id, r.status, r.turnId]),
+                      )
+                    }
+                    entry={agentEntry}
+                    action={action}
+                    onLaunch={setLaunch}
+                    workStatus={
                       <WorkStatus
-                        status={v.work?.status}
-                        run={latestRun(snap.runs, v.item.id)}
+                        status={agentEntry.work?.status}
+                        run={
+                          currentRun ?? latestRun(snap.runs, agentEntry.item.id)
+                        }
                         blocked={waiting.some(
-                          (a) =>
-                            a.blocking &&
-                            snap.runs.find((r) => r.id === a.runId)?.itemId ===
-                              v.item.id,
+                          (a) => a.blocking && a.runId === runId,
                         )}
                       />
-                      {v.work && v.work.runIds.length > 1 && (
-                        <span>{v.work.runIds.length} sessions</span>
-                      )}
-                      {v.item.pr && <PRStatus pr={v.item.pr} />}
-                      {v.linkedPullRequests?.map((pr) => (
-                        <span key={pr.id}>
-                          {pr.id} · <PRStatus pr={pr} />
-                        </span>
-                      ))}
-                      {v.item.kind === "pr" && <span>PR</span>}
-                      {v.item.state !== "open" && <span>{v.item.state}</span>}
-                      {v.item.draft && <span>Draft</span>}
-                      {v.user.new && <b className="badge">New</b>}
-                      {v.user.actions.length > 0 && <span>Acted on</span>}
-                    </div>
-                  </div>
-                ))}
-                {snap.inbox.length > 0 && visibleItems.length === 0 && (
-                  <div className="empty">
-                    <p>No matching items</p>
-                    <button
-                      onClick={() => {
-                        setSearch("");
-                        setFilter("all");
-                      }}
-                    >
-                      Clear filters
-                    </button>
-                  </div>
-                )}
-                {!snap.inbox.length && (
-                  <div className="empty">
-                    {snap.repositories.length > 0 ? (
-                      <p>No items yet.</p>
-                    ) : (
-                      <p>No repositories configured.</p>
-                    )}
-                  </div>
-                )}
-              </section>
-            </section>
-          )}
-          {tab === "Messages" && (
-            <section
-              className="page item-list"
-              aria-label="Messages"
-              ref={pageRef}
-              tabIndex={-1}
-            >
-              <h1 className="sr-only">Messages</h1>
-              <section aria-label="Waiting for you">
-                {waiting.map((a) => {
-                  const run = snap.runs.find((r) => r.id === a.runId);
-                  const item = snap.inbox.find(
-                    (e) => e.item.id === run?.itemId,
-                  );
-                  return (
-                    <button
-                      className="item"
-                      key={a.id}
-                      onClick={() => openAttention(a.id)}
-                    >
-                      <span className="item-title">
-                        {item?.item.title ?? run?.itemId ?? "Agent"}
-                      </span>
-                      <span>
-                        {run?.itemId} ·{" "}
-                        {a.method.includes("Approval")
-                          ? "Approval needed"
-                          : a.blocking
-                            ? "Reply needed"
-                            : "Question · agent continues"}
-                      </span>
-                      {a.params.command && <span>{a.params.command}</span>}
-                      {a.params.questions?.[0]?.question && (
-                        <span>{a.params.questions[0].question}</span>
-                      )}
-                    </button>
-                  );
-                })}
-                {!waiting.length && (
-                  <p className="empty">No messages waiting for you.</p>
-                )}
-              </section>
-            </section>
-          )}
-          {tab === "Agent" && (
-            <section
-              className="page detail"
-              aria-label="Agent"
-              ref={pageRef}
-              tabIndex={-1}
-            >
-              <button
-                className="back"
-                data-focus-key="back-agent"
-                onClick={() => navigate(runBack)}
-              >
-                ←{" "}
-                {runBack === "Inbox"
-                  ? "Issues"
-                  : runBack === "Mine"
-                    ? "My PRs"
-                    : runBack === "Review"
-                      ? "Review PRs"
-                      : runBack === "Working"
-                        ? "Working"
-                        : "Messages"}
-              </button>
-              {agentEntry ? (
-                <ItemDetail
-                  key={agentEntry.item.id}
-                  id={agentEntry.item.id}
-                  reviewVersion={(snap.reviewVersions?.[agentEntry.item.id] ?? "") + JSON.stringify(snap.runs.filter(r => r.itemId === agentEntry.item.id).map(r => [r.id,r.status,r.turnId]))}
-                  entry={agentEntry}
-                  action={action}
-                  onLaunch={setLaunch}
-                  workStatus={
-                    <WorkStatus
-                      status={agentEntry.work?.status}
-                      run={
-                        currentRun ?? latestRun(snap.runs, agentEntry.item.id)
-                      }
-                      blocked={waiting.some(
-                        (a) => a.blocking && a.runId === runId,
-                      )}
-                    />
-                  }
-                  history={
-                    <details className="work-history">
-                      <summary>Work history</summary>
-                      {!snap.runs.some(
-                        (r) => r.itemId === agentEntry.item.id,
-                      ) && <p>No work history.</p>}
-                      {snap.runs
-                        .filter(
+                    }
+                    history={
+                      <details className="work-history">
+                        <summary>Work history</summary>
+                        {!snap.runs.some(
+                          (r) => r.itemId === agentEntry.item.id,
+                        ) && <p>No work history.</p>}
+                        {snap.runs
+                          .filter(
+                            (r) =>
+                              r.itemId === agentEntry.item.id &&
+                              r.status !== "prepared",
+                          )
+                          .map((r) => (
+                            <button
+                              className="item"
+                              data-focus-key={`run-${r.id}`}
+                              key={r.id}
+                              onClick={() => openRun(r.id)}
+                            >
+                              {r.profile.name} ·{" "}
+                              {new Date(r.created).toLocaleString()} ·{" "}
+                              {r.status}
+                            </button>
+                          ))}
+                        {snap.runs.some(
                           (r) =>
                             r.itemId === agentEntry.item.id &&
-                            r.status !== "prepared",
-                        )
-                        .map((r) => (
-                          <button
-                            className="item"
-                            data-focus-key={`run-${r.id}`}
-                            key={r.id}
-                            onClick={() => openRun(r.id)}
-                          >
-                            {r.profile.name} ·{" "}
-                            {new Date(r.created).toLocaleString()} · {r.status}
-                          </button>
-                        ))}
-                      {snap.runs.some(
-                        (r) =>
-                          r.itemId === agentEntry.item.id &&
-                          r.status === "prepared",
-                      ) && (
-                        <details>
-                          <summary>Draft launches</summary>
-                          {snap.runs
-                            .filter(
-                              (r) =>
-                                r.itemId === agentEntry.item.id &&
-                                r.status === "prepared",
-                            )
-                            .sort(
-                              (a, b) =>
-                                Date.parse(b.created) - Date.parse(a.created),
-                            )
-                            .map((r) => (
-                              <button
-                                className="item"
-                                key={r.id}
-                                onClick={() => setDraftRun(r)}
-                              >
-                                {r.profile.name} ·{" "}
-                                {new Date(r.created).toLocaleString()}
-                              </button>
-                            ))}
-                        </details>
-                      )}
-                    </details>
-                  }
-                  target={linkDrafts[agentEntry.item.id] ?? ""}
-                  setTarget={(value) =>
-                    setLinkDrafts((old) => ({
-                      ...old,
-                      [agentEntry.item.id]:
-                        typeof value === "function"
-                          ? value(old[agentEntry.item.id] ?? "")
-                          : value,
-                    }))
-                  }
-                  conversation={
-                    currentRun ? (
-                      <Agent
-                        consoleView={!!consoleRuns[runId]}
-                        setConsoleView={(value) =>
-                          setConsoleRuns((old) => ({ ...old, [runId]: value }))
-                        }
-                        recovery={snap.questionRecoveries?.find(
-                          (r) =>
-                            r.runId === runId &&
-                            ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(r.stage),
+                            r.status === "prepared",
+                        ) && (
+                          <details>
+                            <summary>Draft launches</summary>
+                            {snap.runs
+                              .filter(
+                                (r) =>
+                                  r.itemId === agentEntry.item.id &&
+                                  r.status === "prepared",
+                              )
+                              .sort(
+                                (a, b) =>
+                                  Date.parse(b.created) - Date.parse(a.created),
+                              )
+                              .map((r) => (
+                                <button
+                                  className="item"
+                                  key={r.id}
+                                  onClick={() => setDraftRun(r)}
+                                >
+                                  {r.profile.name} ·{" "}
+                                  {new Date(r.created).toLocaleString()}
+                                </button>
+                              ))}
+                          </details>
                         )}
-                        key={runId}
-                        embedded
-                        run={currentRun}
-                        title={
-                          snap.inbox.find(
-                            (e) => e.item.id === currentRun.itemId,
-                          )?.item.title ?? currentRun.itemId
-                        }
-                        message={messageDrafts[runId] ?? ""}
-                        setMessage={(value) =>
-                          setMessageDrafts((old) => ({
-                            ...old,
-                            [runId]:
-                              typeof value === "function"
-                                ? value(old[runId] ?? "")
-                                : value,
-                          }))
-                        }
-                        attention={pending.filter((a) => a.runId === runId)}
-                        action={action}
-                        openAttention={openAttention}
-                        onError={setError}
-                      />
-                    ) : (
-                      <NewChat
-                        profiles={snap.profiles}
-                        entry={agentEntry}
-                        draft={
-                          chatDrafts[agentEntry.item.id] ?? {
-                            message: expandPrompt(undefined, agentEntry),
-                          }
-                        }
-                        setDraft={(update) =>
-                          setChatDrafts((old) => ({
-                            ...old,
-                            [agentEntry.item.id]: update(
-                              old[agentEntry.item.id] ?? {
-                                message: expandPrompt(undefined, agentEntry),
-                              },
-                            ),
-                          }))
-                        }
-                        started={(run) =>
-                          acceptRun(run, agentEntry.item.id, runBack)
-                        }
-                      />
-                    )
-                  }
-                />
-              ) : currentRun ? (
-                <Agent
-                  consoleView={!!consoleRuns[runId]}
-                  setConsoleView={(value) =>
-                    setConsoleRuns((old) => ({ ...old, [runId]: value }))
-                  }
-                  recovery={snap.questionRecoveries?.find(
-                    (r) =>
-                      r.runId === runId &&
-                      ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(r.stage),
-                  )}
-                  key={runId}
-                  run={currentRun}
-                  title={
-                    snap.inbox.find((e) => e.item.id === currentRun.itemId)
-                      ?.item.title ?? currentRun.itemId
-                  }
-                  message={messageDrafts[runId] ?? ""}
-                  setMessage={(value) =>
-                    setMessageDrafts((old) => ({
-                      ...old,
-                      [runId]:
-                        typeof value === "function"
-                          ? value(old[runId] ?? "")
-                          : value,
-                    }))
-                  }
-                  attention={pending.filter((a) => a.runId === runId)}
-                  action={action}
-                  openAttention={openAttention}
-                  onError={setError}
-                />
-              ) : (
-                <p className="empty">Agent unavailable.</p>
-              )}
-            </section>
-          )}
-          {settingsView && tab === "Settings" && (
-            <section
-              className="page"
-              aria-label="Settings"
-              ref={pageRef}
-              tabIndex={-1}
-            >
-              <h1>Settings</h1>
-              <Settings snap={snap} action={action} />
-            </section>
-          )}
-          {(launch || draftRun) && (
-            <Launch
-              entry={
-                launch ?? snap.inbox.find((e) => e.item.id === draftRun?.itemId)
-              }
-              initialRun={draftRun}
-              changed={refresh}
-              snap={snap}
-              close={() => {
-                setLaunch(undefined);
-                setDraftRun(undefined);
-              }}
-              started={(run) => {
-                setLaunch(undefined);
-                setDraftRun(undefined);
-                setSnap((old) =>
-                  old
-                    ? {
-                        ...old,
-                        runs: [...old.runs.filter((r) => r.id !== run.id), run],
-                      }
-                    : old,
-                );
-                setSelected(run.itemId);
-                setRunBack(tab === "Agent" ? runBack : "Messages");
-                setRunId(run.id);
-                navigate("Agent");
-                void refresh().catch((e) => setError(String(e)));
-              }}
-            />
-          )}
-          {currentAttention && (
-            <AttentionDialog
-              key={currentAttention.id}
-              attention={currentAttention}
-              context={`${snap.inbox.find((e) => e.item.id === attentionRun?.itemId)?.item.title ?? attentionRun?.itemId ?? currentAttention.runId} · ${attentionRun?.profile.name ?? "Agent"}`}
-              close={() => setAttentionId("")}
-              dismiss={
-                currentAttention.origin === "text"
-                  ? async () => {
-                      await call("dismiss_question", {
-                        id: currentAttention.id,
-                      });
-                      setAttentionId("");
-                      await refresh();
+                      </details>
                     }
-                  : undefined
-              }
-              answer={async (answer) => {
-                await call("answer_request", {
-                  id: currentAttention.id,
-                  answer,
-                });
-                openRun(currentAttention.runId);
-                try {
-                  await refresh();
-                } catch (e) {
-                  setError(String(e));
+                    target={linkDrafts[agentEntry.item.id] ?? ""}
+                    setTarget={(value) =>
+                      setLinkDrafts((old) => ({
+                        ...old,
+                        [agentEntry.item.id]:
+                          typeof value === "function"
+                            ? value(old[agentEntry.item.id] ?? "")
+                            : value,
+                      }))
+                    }
+                    conversation={
+                      currentRun ? (
+                        <Agent
+                          consoleView={!!consoleRuns[runId]}
+                          setConsoleView={(value) =>
+                            setConsoleRuns((old) => ({
+                              ...old,
+                              [runId]: value,
+                            }))
+                          }
+                          recovery={snap.questionRecoveries?.find(
+                            (r) =>
+                              r.runId === runId &&
+                              [
+                                "checking",
+                                "clarifying",
+                                "requesting-form",
+                                "awaiting-answer",
+                                "answered",
+                              ].includes(r.stage),
+                          )}
+                          key={runId}
+                          embedded
+                          run={currentRun}
+                          title={
+                            snap.inbox.find(
+                              (e) => e.item.id === currentRun.itemId,
+                            )?.item.title ?? currentRun.itemId
+                          }
+                          message={messageDrafts[runId] ?? ""}
+                          setMessage={(value) =>
+                            setMessageDrafts((old) => ({
+                              ...old,
+                              [runId]:
+                                typeof value === "function"
+                                  ? value(old[runId] ?? "")
+                                  : value,
+                            }))
+                          }
+                          attention={pending.filter((a) => a.runId === runId)}
+                          action={action}
+                          openAttention={openAttention}
+                          onError={setError}
+                        />
+                      ) : (
+                        <NewChat
+                          getStateEpoch={getStateEpoch}
+                          profiles={snap.profiles}
+                          entry={agentEntry}
+                          draft={
+                            chatDrafts[agentEntry.item.id] ?? {
+                              message: expandPrompt(undefined, agentEntry),
+                            }
+                          }
+                          setDraft={(update) =>
+                            setChatDrafts((old) => ({
+                              ...old,
+                              [agentEntry.item.id]: update(
+                                old[agentEntry.item.id] ?? {
+                                  message: expandPrompt(undefined, agentEntry),
+                                },
+                              ),
+                            }))
+                          }
+                          started={(run) =>
+                            acceptRun(run, agentEntry.item.id, runBack)
+                          }
+                        />
+                      )
+                    }
+                  />
+                ) : currentRun ? (
+                  <Agent
+                    consoleView={!!consoleRuns[runId]}
+                    setConsoleView={(value) =>
+                      setConsoleRuns((old) => ({ ...old, [runId]: value }))
+                    }
+                    recovery={snap.questionRecoveries?.find(
+                      (r) =>
+                        r.runId === runId &&
+                        [
+                          "checking",
+                          "clarifying",
+                          "requesting-form",
+                          "awaiting-answer",
+                          "answered",
+                        ].includes(r.stage),
+                    )}
+                    key={runId}
+                    run={currentRun}
+                    title={
+                      snap.inbox.find((e) => e.item.id === currentRun.itemId)
+                        ?.item.title ?? currentRun.itemId
+                    }
+                    message={messageDrafts[runId] ?? ""}
+                    setMessage={(value) =>
+                      setMessageDrafts((old) => ({
+                        ...old,
+                        [runId]:
+                          typeof value === "function"
+                            ? value(old[runId] ?? "")
+                            : value,
+                      }))
+                    }
+                    attention={pending.filter((a) => a.runId === runId)}
+                    action={action}
+                    openAttention={openAttention}
+                    onError={setError}
+                  />
+                ) : (
+                  <p className="empty">Agent unavailable.</p>
+                )}
+              </section>
+            )}
+            {settingsView && tab === "Settings" && (
+              <section
+                className="page"
+                aria-label="Settings"
+                ref={pageRef}
+                tabIndex={-1}
+              >
+                <h1>Settings</h1>
+                <Settings snap={snap} action={action} />
+              </section>
+            )}
+            {(launch || draftRun) && (
+              <Launch
+                getStateEpoch={getStateEpoch}
+                entry={
+                  launch ??
+                  snap.inbox.find((e) => e.item.id === draftRun?.itemId)
                 }
-                setAttentionId("");
-              }}
-              chat={() => {
-                if (currentAttention.origin === "text")
-                  setConsoleRuns((old) => ({
-                    ...old,
-                    [currentAttention.runId]: true,
-                  }));
-                openRun(currentAttention.runId);
-                setAttentionId("");
-              }}
-            />
-          )}
-        </>
-      )}
+                initialRun={draftRun}
+                changed={async () => {
+                  await refresh();
+                }}
+                snap={snap}
+                close={() => {
+                  setLaunch(undefined);
+                  setDraftRun(undefined);
+                }}
+                started={(run) => {
+                  acceptedRuns.current.set(run.id, run);
+                  setLaunch(undefined);
+                  setDraftRun(undefined);
+                  setSnap((old) =>
+                    old
+                      ? {
+                          ...old,
+                          runs: [
+                            ...old.runs.filter((r) => r.id !== run.id),
+                            run,
+                          ],
+                        }
+                      : old,
+                  );
+                  setSelected(run.itemId);
+                  setRunBack(tab === "Agent" ? runBack : "Messages");
+                  setRunId(run.id);
+                  navigate("Agent");
+                  void refresh().catch((e) => setError(String(e)));
+                }}
+              />
+            )}
+            {currentAttention && (
+              <AttentionDialog
+                key={currentAttention.id}
+                attention={currentAttention}
+                context={`${snap.inbox.find((e) => e.item.id === attentionRun?.itemId)?.item.title ?? attentionRun?.itemId ?? currentAttention.runId} · ${attentionRun?.profile.name ?? "Agent"}`}
+                close={() => setAttentionId("")}
+                dismiss={
+                  currentAttention.origin === "text"
+                    ? async () => {
+                        await call("dismiss_question", {
+                          id: currentAttention.id,
+                        });
+                        setAttentionId("");
+                        await refresh();
+                      }
+                    : undefined
+                }
+                answer={async (answer) => {
+                  await call("answer_request", {
+                    id: currentAttention.id,
+                    answer,
+                  });
+                  openRun(currentAttention.runId);
+                  try {
+                    await refresh();
+                  } catch (e) {
+                    setError(String(e));
+                  }
+                  setAttentionId("");
+                }}
+                chat={() => {
+                  if (currentAttention.origin === "text")
+                    setConsoleRuns((old) => ({
+                      ...old,
+                      [currentAttention.runId]: true,
+                    }));
+                  openRun(currentAttention.runId);
+                  setAttentionId("");
+                }}
+              />
+            )}
+          </>
+        )}
+      </Suspense>
     </main>
   );
 }
@@ -1062,19 +1348,33 @@ function NewChat({
   setDraft,
   started,
   profiles,
+  getStateEpoch,
 }: {
   entry: Entry;
   draft: ChatDraft;
   setDraft: (update: (old: ChatDraft) => ChatDraft) => void;
   started: (run: Run) => void;
   profiles: Profile[];
+  getStateEpoch: () => number;
 }) {
   const update = (patch: Partial<ChatDraft>) =>
     setDraft((old) => ({ ...old, ...patch }));
   const profile = draft.profile;
+  const stale = (epoch: number) => {
+    if (epoch === getStateEpoch()) return false;
+    update({
+      busy: false,
+      uncertain: true,
+      error:
+        "Saved state changed during the request. Check this run before retrying.",
+    });
+    return true;
+  };
   async function check(run: Run, failure: string) {
+    const epoch = getStateEpoch();
     try {
       const data = await call<{ run: Run }>("read_run", { id: run.id });
+      if (stale(epoch)) return;
       if (!data.run || data.run.id !== run.id)
         throw new Error("Run status could not be verified.");
       if (data.run.status !== "prepared") {
@@ -1088,6 +1388,7 @@ function NewChat({
             `${failure} The run is still prepared. You can Start again.`.trim(),
         });
     } catch (e) {
+      if (stale(epoch)) return;
       update({
         busy: false,
         uncertain: true,
@@ -1099,6 +1400,7 @@ function NewChat({
   async function start() {
     if (draft.busy || draft.uncertain || !profile || !draft.message.trim())
       return;
+    const epoch = getStateEpoch();
     const message = draft.message;
     update({ busy: true, error: "" });
     let prepared =
@@ -1115,6 +1417,7 @@ function NewChat({
           base: "",
         });
         update({ prepared, preparedMessage: message });
+        if (stale(epoch)) return;
         const authority = (p: Profile) =>
           JSON.stringify([
             p.id,
@@ -1134,15 +1437,18 @@ function NewChat({
           return;
         }
       } catch (e) {
+        if (stale(epoch)) return;
         update({ busy: false, error: String(e) });
         return;
       }
     }
     try {
       const run = await call<Run>("start_run", { id: prepared.id });
+      if (stale(epoch)) return;
       update({ busy: false, uncertain: false, error: "" });
       started(run);
     } catch (e) {
+      if (stale(epoch)) return;
       update({ uncertain: true });
       await check(prepared, String(e));
     }
@@ -1288,18 +1594,33 @@ function ItemDetail({
     setDetailVersion((version) => version + 1);
     return true;
   }
-  const linkedRevision=JSON.stringify(entry?.linkedPullRequests?.map(pr=>[pr.id,pr.head,pr.state,pr.reviewDecision,pr.ci,pr.error,pr.syncedAt]));
+  const itemVersion = useUIVersion(["item", "user", "observation"], id);
+  const linkVersion = useUIVersion(["relationship", "linked-pr", "ticket"]);
+  const repositoryVersion = useUIVersion(
+    ["repository"],
+    entry?.item.repository,
+  );
+  const linkedRevision = JSON.stringify(
+    entry?.linkedPullRequests?.map((pr) => [
+      pr.id,
+      pr.head,
+      pr.state,
+      pr.reviewDecision,
+      pr.ci,
+      pr.error,
+      pr.syncedAt,
+    ]),
+  );
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
     let delay = 1000;
     async function load() {
       try {
-        const data = await call<Detail>("read_item", { id });
+        const data = await call<Detail>("read_item", { id, saved: true });
         if (alive) {
           setDetail(data);
           setLoadError(undefined);
-          if(data.observation?.refresh === "pending") timer=setTimeout(load,1000);
         }
       } catch (error) {
         if (!alive) return;
@@ -1321,10 +1642,19 @@ function ItemDetail({
       alive = false;
       clearTimeout(timer);
     };
-  }, [id, entry?.item.revision, linkedRevision, detailVersion]);
+  }, [
+    id,
+    entry?.item.revision,
+    linkedRevision,
+    detailVersion,
+    itemVersion,
+    linkVersion,
+    repositoryVersion,
+  ]);
   useEffect(() => {
     if (
-      detail?.item.id === id && !detail.refreshError &&
+      detail?.item.id === id &&
+      !detail.refreshError &&
       (!detail.observation || detail.observation.refresh === "fresh")
     )
       void action("item_action", {
@@ -1332,7 +1662,14 @@ function ItemDetail({
         action: "read",
         revision: detail.item.revision,
       });
-  }, [detail?.item.id, detail?.item.revision, detail?.refreshError, detail?.observation?.refresh, id, action]);
+  }, [
+    detail?.item.id,
+    detail?.item.revision,
+    detail?.refreshError,
+    detail?.observation?.refresh,
+    id,
+    action,
+  ]);
   if (!detail || detail.item.id !== id || !entry)
     return (
       <>
@@ -1351,20 +1688,33 @@ function ItemDetail({
       </>
     );
   const i = detail.item;
-  const summaryParagraph = i.body
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.replace(/^ {0,3}#{1,6}(?:[ \t]+.*)?$/gm, "").trim())
-    .find(Boolean) ?? "";
+  const summaryParagraph =
+    i.body
+      .split(/\n\s*\n/)
+      .map((paragraph) =>
+        paragraph.replace(/^ {0,3}#{1,6}(?:[ \t]+.*)?$/gm, "").trim(),
+      )
+      .find(Boolean) ?? "";
   const summary = summaryParagraph.slice(0, 600);
   return (
     <>
-      {detail.observation?.refresh === "pending" && <p role="status">Refreshing saved details…</p>}
+      {detail.observation?.refresh === "pending" && (
+        <p role="status">Refreshing saved details…</p>
+      )}
       {(detail.refreshError || detail.observation?.refresh === "cooldown") && (
         <p role={detail.refreshError ? "alert" : "status"}>
-          {detail.refreshError || "Refresh deferred; showing saved information."}{" "}
-          {detail.observation?.refresh === "cooldown" && detail.observation.retryAt &&
-            <>Retry after {new Date(detail.observation.retryAt).toLocaleString()}. </>}
-          <button onClick={() => setDetailVersion(v => v + 1)}>Retry detail refresh</button>
+          {detail.refreshError ||
+            "Refresh deferred; showing saved information."}{" "}
+          {detail.observation?.refresh === "cooldown" &&
+            detail.observation.retryAt && (
+              <>
+                Retry after{" "}
+                {new Date(detail.observation.retryAt).toLocaleString()}.{" "}
+              </>
+            )}
+          <button onClick={() => setDetailVersion((v) => v + 1)}>
+            Retry detail refresh
+          </button>
         </p>
       )}
       {loadError && (
@@ -1395,12 +1745,21 @@ function ItemDetail({
       {!!(detail.linkedPullRequests ?? entry.linkedPullRequests)?.length && (
         <section aria-label="Linked pull requests">
           <h2>Linked pull requests</h2>
-          {(detail.linkedPullRequests ?? entry.linkedPullRequests)!.map((pr) => (
-            <PullRequestInfo key={pr.id} pr={pr} linked />
-          ))}
+          {(detail.linkedPullRequests ?? entry.linkedPullRequests)!.map(
+            (pr) => (
+              <PullRequestInfo key={pr.id} pr={pr} linked />
+            ),
+          )}
         </section>
       )}
-      {i.kind === "pr" && <PostedReviews itemId={i.id} head={i.head} version={reviewVersion} />}
+      {i.kind === "pr" && (
+        <PostedReviews
+          itemId={i.id}
+          head={i.head}
+          version={reviewVersion}
+          repository={i.repository}
+        />
+      )}
       {conversation}
       <details className="item-details">
         <summary>Item details</summary>
@@ -1592,6 +1951,7 @@ function Launch({
   started,
   initialRun,
   changed,
+  getStateEpoch,
 }: {
   entry?: Entry;
   initialRun?: Run;
@@ -1599,6 +1959,7 @@ function Launch({
   snap: Snapshot;
   close: () => void;
   started: (run: Run) => void;
+  getStateEpoch: () => number;
 }) {
   const [profileId, setProfileId] = useState(
     initialRun?.profile.id ??
@@ -1635,7 +1996,17 @@ function Launch({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const dialogRef = useModalFocus(close);
+  const stale = (epoch: number) => {
+    if (epoch === getStateEpoch()) return false;
+    setUncertain(true);
+    setBusy(false);
+    setError(
+      "Saved state changed during the request. Check this run before retrying.",
+    );
+    return true;
+  };
   async function prepare() {
+    const epoch = getStateEpoch();
     setBusy(true);
     setError("");
     try {
@@ -1649,9 +2020,11 @@ function Launch({
         base,
       });
       setPrepared(run);
+      if (stale(epoch)) return;
       setEditing(false);
       void changed().catch(() => {});
     } catch (e) {
+      if (stale(epoch)) return;
       setError(String(e));
     } finally {
       setBusy(false);
@@ -1664,12 +2037,14 @@ function Launch({
     }
   }, []);
   async function checkStart(id: string, failure = "") {
+    const epoch = getStateEpoch();
     setBusy(true);
     try {
       const { run } = await call<{ run: Run; attention: Attention[] }>(
         "read_run",
         { id },
       );
+      if (stale(epoch)) return;
       if (!run || run.id !== id)
         throw new Error("Run status could not be verified.");
       if (run.status !== "prepared") {
@@ -1681,6 +2056,7 @@ function Launch({
         `${failure} The run is still prepared. You can Start again.`.trim(),
       );
     } catch (e) {
+      if (stale(epoch)) return;
       setUncertain(true);
       setError(
         `${failure} Start status is uncertain. Check status before trying again. ${String(e)}`.trim(),
@@ -1877,14 +2253,17 @@ function Launch({
                   className="primary"
                   disabled={busy || uncertain}
                   onClick={async () => {
+                    const epoch = getStateEpoch();
                     setBusy(true);
                     setError("");
                     try {
                       const r = await call<Run>("start_run", {
                         id: prepared.id,
                       });
+                      if (stale(epoch)) return;
                       started(r);
                     } catch (e) {
+                      if (stale(epoch)) return;
                       setUncertain(true);
                       await checkStart(prepared.id, String(e));
                     }
@@ -1913,7 +2292,9 @@ function Launch({
 function transcriptEvents(events: JournalEvent[]) {
   const decoded: JournalEvent[] = [];
   let pending: JournalEvent[] = [];
-  let depth = 0, quoted = false, escaped = false;
+  let depth = 0,
+    quoted = false,
+    escaped = false;
   const flush = () => {
     decoded.push(...pending);
     pending = [];
@@ -1927,8 +2308,11 @@ function transcriptEvents(events: JournalEvent[]) {
       decoded.push(event);
       continue;
     }
-    if (pending.length &&
-        (pending[0].data.method !== method || pending[0].entity !== event.entity)) flush();
+    if (
+      pending.length &&
+      (pending[0].data.method !== method || pending[0].entity !== event.entity)
+    )
+      flush();
     pending.push(event);
     for (const char of String(event.data.params?.delta ?? "")) {
       if (quoted) {
@@ -1941,9 +2325,18 @@ function transcriptEvents(events: JournalEvent[]) {
     }
     if (depth === 0 && !quoted) {
       try {
-        const params: unknown = JSON.parse(pending.map((part) => part.data.params?.delta ?? "").join(""));
-        if (!params || typeof params !== "object" || Array.isArray(params)) throw new Error("Invalid provider params");
-        decoded.push({ ...pending[0], data: { method: method.slice(0, -6), params: params as Record<string, unknown> } });
+        const params: unknown = JSON.parse(
+          pending.map((part) => part.data.params?.delta ?? "").join(""),
+        );
+        if (!params || typeof params !== "object" || Array.isArray(params))
+          throw new Error("Invalid provider params");
+        decoded.push({
+          ...pending[0],
+          data: {
+            method: method.slice(0, -6),
+            params: params as Record<string, unknown>,
+          },
+        });
         pending = [];
       } catch {
         flush();
@@ -1987,7 +2380,10 @@ function transcriptBlocks(events: JournalEvent[]) {
             ? "Message saved. Delivering to agent…"
             : p.state === "delivered"
               ? "Message delivered to agent."
-              : String(p.error ?? "Agent delivery is uncertain. Check this session before sending again.");
+              : String(
+                  p.error ??
+                    "Agent delivery is uncertain. Check this session before sending again.",
+                );
     } else if (m.includes("agentMessage/delta")) {
       label = "Agent";
       text = String(p.delta ?? "");
@@ -2090,47 +2486,93 @@ function Agent({
   const [busy, setBusy] = useState(false);
   const pageCursor = useRef(0);
   const [historyVersion, setHistoryVersion] = useState(0);
+  const runVersion = useUIVersion(["run", "transcript"], run.id);
+  const resyncVersion = useUIResyncVersion();
+  const previousResync = useRef(resyncVersion);
+  const [browsingHistory, setBrowsingHistory] = useState(false);
+  const transcriptVersion = browsingHistory ? 0 : runVersion;
   const deferred = run.status === "deferred";
   const canMessage =
     !!run.threadId &&
-    ["idle", "running", "waiting", "interrupted", "failed"].includes(run.status);
+    ["idle", "running", "waiting", "interrupted", "failed"].includes(
+      run.status,
+    );
+  const requestHistory = useRef<() => void>(() => {});
+  const outputSeen = useRef(transcriptVersion);
   useEffect(() => {
-    let stop = false;
+    if (previousResync.current !== resyncVersion) {
+      previousResync.current = resyncVersion;
+      pageCursor.current = 0;
+      setEvents([]);
+      setCursor(0);
+      setMore(false);
+    }
+    let stopped = false;
+    let inFlight = false;
+    let pending = false;
+    let retrying = false;
     let timer: ReturnType<typeof setTimeout>;
     let delay = 1000;
     async function load() {
+      pending = true;
+      if (stopped || document.hidden || inFlight || retrying) return;
+      inFlight = true;
       try {
-        const p = await call<EventPage>("read_transcript", {
-          id: run.id,
-          after: pageCursor.current,
-          limit: 100,
-        });
-        if (!stop) {
+        while (!stopped && pending && !document.hidden) {
+          pending = false;
+          const p = await call<EventPage>("read_transcript", {
+            id: run.id,
+            after: pageCursor.current,
+            limit: 100,
+          });
+          if (stopped) return;
           setEvents((old) => [...old, ...p.events].slice(-1000));
           pageCursor.current = p.cursor;
           setCursor(p.cursor);
           setMore(p.hasMore);
           setHistoryError(undefined);
           delay = 1000;
+          if (p.hasMore && !browsingHistory) pending = true;
         }
-      } catch (e) {
-        if (!stop)
+      } catch (error) {
+        if (!stopped) {
           setHistoryError({
-            message: isConnectionFailure(e)
+            message: isConnectionFailure(error)
               ? "Connection interrupted. Retrying conversation…"
-              : String(e),
-            retrying: isConnectionFailure(e),
+              : String(error),
+            retrying: isConnectionFailure(error),
           });
-        delay = Math.min(delay * 2, 30000);
+          retrying = true;
+          timer = setTimeout(() => {
+            retrying = false;
+            void load();
+          }, delay);
+          delay = Math.min(delay * 2, 30000);
+        }
+      } finally {
+        inFlight = false;
       }
-      if (!stop) timer = setTimeout(load, document.hidden ? 15000 : delay);
     }
+    const visible = () => {
+      if (!document.hidden && (!browsingHistory || pending)) void load();
+    };
+    requestHistory.current = () => void load();
+    outputSeen.current = transcriptVersion;
+    document.addEventListener("visibilitychange", visible);
     void load();
     return () => {
-      stop = true;
+      stopped = true;
       clearTimeout(timer);
+      document.removeEventListener("visibilitychange", visible);
+      requestHistory.current = () => {};
     };
-  }, [run.id, historyVersion]);
+  }, [run.id, historyVersion, resyncVersion, browsingHistory]);
+  useEffect(() => {
+    if (outputSeen.current !== transcriptVersion) {
+      outputSeen.current = transcriptVersion;
+      requestHistory.current();
+    }
+  }, [transcriptVersion]);
   const blocks = transcriptBlocks(events);
   const conversation = blocks.filter((b) =>
     ["Agent", "You", "Run error", "Message delivery"].includes(b.label),
@@ -2185,7 +2627,13 @@ function Agent({
         )}
       </div>
       {recovery &&
-        ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(recovery.stage) && (
+        [
+          "checking",
+          "clarifying",
+          "requesting-form",
+          "awaiting-answer",
+          "answered",
+        ].includes(recovery.stage) && (
           <section aria-label="Question recovery">
             <p role="status">
               {recovery.stage === "checking"
@@ -2193,10 +2641,10 @@ function Agent({
                 : recovery.stage === "clarifying"
                   ? `Clarifying whether input is needed · attempt ${recovery.attempts} of 2`
                   : recovery.stage === "awaiting-answer"
-                  ? "Question ready for your answer."
-                  : recovery.stage === "answered"
-                    ? "Returning to the selected task mode…"
-                    : `Preparing a question · attempt ${recovery.attempts} of 2`}
+                    ? "Question ready for your answer."
+                    : recovery.stage === "answered"
+                      ? "Returning to the selected task mode…"
+                      : `Preparing a question · attempt ${recovery.attempts} of 2`}
             </p>
             <button
               onClick={() => {
@@ -2248,10 +2696,23 @@ function Agent({
           </p>
         )}
       </div>
-      {hasMore && <p>Loading more history after event {cursor}…</p>}
+      {hasMore &&
+        (browsingHistory ? (
+          <button onClick={() => setHistoryVersion((v) => v + 1)}>
+            Load next history page
+          </button>
+        ) : (
+          <p>Loading more history after event {cursor}…</p>
+        ))}
+      {browsingHistory && (
+        <button onClick={() => setBrowsingHistory(false)}>
+          Follow latest history
+        </button>
+      )}
       {events.length >= 1000 && (
         <button
           onClick={() => {
+            setBrowsingHistory(true);
             pageCursor.current = 0;
             setEvents([]);
             setCursor(0);
@@ -2298,7 +2759,15 @@ function Agent({
           disabled={
             busy ||
             !message.trim() ||
-            !canMessage || !!recovery && ["checking", "clarifying", "requesting-form", "awaiting-answer", "answered"].includes(recovery.stage)
+            !canMessage ||
+            (!!recovery &&
+              [
+                "checking",
+                "clarifying",
+                "requesting-form",
+                "awaiting-answer",
+                "answered",
+              ].includes(recovery.stage))
           }
         >
           Send message
@@ -2325,7 +2794,9 @@ function Agent({
         <p>
           Workspace: <code>{run.worktree}</code>
         </p>
-        {["idle", "interrupted", "failed", "terminated"].includes(run.status) && (
+        {["idle", "interrupted", "failed", "terminated"].includes(
+          run.status,
+        ) && (
           <>
             <p>
               Cleanup retires the retained session and removes a clean worktree.
@@ -2576,456 +3047,6 @@ function ApprovalDetails({ params }: { params: Attention["params"] }) {
           </React.Fragment>
         ))}
     </dl>
-  );
-}
-function SaveForm({
-  save,
-  children,
-}: {
-  save: () => Promise<void>;
-  children: React.ReactNode;
-}) {
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        if (busy) return;
-        setBusy(true);
-        setStatus("Saving…");
-        setError("");
-        try {
-          await save();
-          setStatus("Saved.");
-        } catch (e) {
-          setStatus("");
-          setError(String(e));
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <fieldset className="form-fields" disabled={busy}>
-        {children}
-      </fieldset>
-      {status && <p role="status">{status}</p>}
-      {error && <p role="alert">{error}</p>}
-    </form>
-  );
-}
-function Settings({ snap, action }: { snap: Snapshot; action: Action }) {
-  async function save(name: string, args: Record<string, unknown>) {
-    let error = "Could not save.";
-    if (
-      !(await action(name, args, (message) => {
-        error = message;
-      }))
-    )
-      throw new Error(error.replace(/^Error: /, ""));
-  }
-  const [config, setConfig] = useState<Config>(snap.config);
-  const [labels, setLabels] = useState(
-    Object.entries(snap.config.priorityLabels).map(([label, priority]) => ({
-      label,
-      priority,
-    })),
-  );
-  const [profile, setProfile] = useState<Profile>(snap.profiles[0]);
-  const [skillDirectory, setSkillDirectory] = useState("/");
-  const [skillName, setSkillName] = useState("");
-  const [skillContent, setSkillContent] = useState(
-    "---\nname: my-skill\ndescription: Explain when this skill applies.\n---\n\n",
-  );
-  const [diagnostics, setDiagnostics] =
-    useState<import("./types").Diagnostics>();
-  const [diagnosticState, setDiagnosticState] = useState("");
-  const [diagnosticError, setDiagnosticError] = useState("");
-  return (
-    <div className="settings">
-      <details className="settings-section" open>
-        <summary>Repositories</summary>
-        <RepositoryAdmin snap={snap} save={save} />
-        <SaveForm save={() => save("discover_skills", { cwd: skillDirectory })}>
-          <label>
-            Skill discovery directory
-            <input
-              value={skillDirectory}
-              onChange={(e) => setSkillDirectory(e.target.value)}
-              required
-            />
-          </label>
-          <button>Discover local skills</button>
-        </SaveForm>
-      </details>
-      <details className="settings-section">
-        <summary>Plugins & skills</summary>
-        <PluginAdmin skills={snap.skills} />
-      </details>
-      <details className="settings-section">
-        <summary>System defaults</summary>
-        <SaveForm save={() => save("save_settings", { ...config })}>
-          <SystemReviewSettings
-            usage={snap.githubUsage}
-            config={config}
-            profiles={snap.profiles}
-            change={setConfig}
-          />
-          <button>Save system defaults</button>
-        </SaveForm>
-      </details>
-      <details className="settings-section">
-        <summary>Priorities & notifications</summary>
-        <SaveForm
-          save={async () => {
-            const names = labels.map((row) => row.label.trim());
-            if (
-              names.some((name) => !name) ||
-              new Set(names).size !== names.length
-            )
-              throw new Error(
-                "Use a unique, nonempty label for each priority row.",
-              );
-            const priorityLabels = Object.fromEntries(
-              labels.map((row) => [row.label.trim(), row.priority]),
-            );
-            await save("save_settings", { ...config, priorityLabels });
-            setConfig((current) => ({ ...current, priorityLabels }));
-          }}
-        >
-          <fieldset>
-            <legend>GitHub priority labels</legend>
-            {labels.map((row, index) => (
-              <div className="priority-row" key={index}>
-                <label>
-                  Label
-                  <input
-                    aria-label={`Priority label ${index + 1}`}
-                    value={row.label}
-                    onChange={(e) =>
-                      setLabels(
-                        labels.map((v, n) =>
-                          n === index ? { ...v, label: e.target.value } : v,
-                        ),
-                      )
-                    }
-                    required
-                  />
-                </label>
-                <label>
-                  Priority
-                  <select
-                    aria-label={`Mapped priority ${index + 1}`}
-                    value={row.priority}
-                    onChange={(e) =>
-                      setLabels(
-                        labels.map((v, n) =>
-                          n === index
-                            ? { ...v, priority: Number(e.target.value) }
-                            : v,
-                        ),
-                      )
-                    }
-                  >
-                    {[0, 1, 2, 3].map((v) => (
-                      <option value={v} key={v}>
-                        P{v}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  aria-label={`Remove priority label ${index + 1}`}
-                  onClick={() =>
-                    setLabels(labels.filter((_, n) => n !== index))
-                  }
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setLabels([...labels, { label: "", priority: 2 }])}
-            >
-              Add priority label
-            </button>
-          </fieldset>
-          <label>
-            Assessment prompt
-            <textarea
-              value={config.assessmentPrompt}
-              onChange={(e) =>
-                setConfig({ ...config, assessmentPrompt: e.target.value })
-              }
-              rows={5}
-            />
-          </label>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={config.notifications}
-              onChange={(e) =>
-                setConfig({ ...config, notifications: e.target.checked })
-              }
-            />
-            Background notifications
-          </label>
-          <label>
-            Question helper model (optional)
-            <input
-              value={config.questionHelperModel ?? ""}
-              onChange={(event) =>
-                setConfig({
-                  ...config,
-                  questionHelperModel: event.target.value,
-                })
-              }
-              placeholder="Use the session model"
-            />
-          </label>
-          <button>Save settings</button>
-        </SaveForm>
-      </details>
-      <details className="settings-section">
-        <summary>Launch profiles</summary>
-        <select
-          aria-label="Edit profile"
-          value={profile.id}
-          onChange={(e) =>
-            setProfile(snap.profiles.find((p) => p.id === e.target.value)!)
-          }
-        >
-          {snap.profiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={() =>
-            setProfile({
-              id: crypto.randomUUID(),
-              name: "New profile",
-              prompt: "Investigate {{title}}.\n{{body}}",
-              skills: [],
-              model: "",
-              effort: "",
-              sandbox: "read-only",
-              approval: "on-request",
-              publishing: "ask",
-            })
-          }
-        >
-          New profile
-        </button>
-        <SaveForm save={() => save("save_profile", { ...profile })}>
-          <label>
-            Name
-            <input
-              value={profile.name}
-              onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Prompt template
-            <textarea
-              value={profile.prompt}
-              onChange={(e) =>
-                setProfile({ ...profile, prompt: e.target.value })
-              }
-              rows={5}
-            />
-          </label>
-          <label>
-            Model
-            <input
-              value={profile.model}
-              onChange={(e) =>
-                setProfile({ ...profile, model: e.target.value })
-              }
-            />
-          </label>
-          <label>
-            Effort
-            <input
-              value={profile.effort}
-              onChange={(e) =>
-                setProfile({ ...profile, effort: e.target.value })
-              }
-            />
-          </label>
-          <label>
-            Agent mode
-            <select
-              value={profile.mode || "default"}
-              onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  mode: e.target.value as "default" | "plan",
-                })
-              }
-            >
-              <option value="default">Default</option>
-              <option value="plan">Plan · interactive questions</option>
-            </select>
-          </label>
-          <label>
-            Sandbox
-            <select
-              value={profile.sandbox}
-              onChange={(e) =>
-                setProfile({ ...profile, sandbox: e.target.value })
-              }
-            >
-              {["read-only", "workspace-write", "danger-full-access"].map(
-                (x) => (
-                  <option key={x}>{x}</option>
-                ),
-              )}
-            </select>
-          </label>
-          <label>
-            Approval policy
-            <select
-              value={profile.approval}
-              onChange={(e) =>
-                setProfile({ ...profile, approval: e.target.value })
-              }
-            >
-              {["on-request", "untrusted", "never"].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Publishing authority
-            <select
-              value={profile.publishing}
-              onChange={(e) =>
-                setProfile({ ...profile, publishing: e.target.value })
-              }
-            >
-              <option value="ask">Ask before publishing</option>
-              <option value="authorized">Publishing authorized by task</option>
-            </select>
-          </label>
-          <fieldset>
-            <legend>Default skills</legend>
-            {snap.skills.map((s) => (
-              <label className="check" key={s.id}>
-                <input
-                  type="checkbox"
-                  disabled={s.disabled}
-                  checked={(profile.skills ?? []).includes(s.id)}
-                  onChange={(e) =>
-                    setProfile({
-                      ...profile,
-                      skills: e.target.checked
-                        ? [...(profile.skills ?? []), s.id]
-                        : (profile.skills ?? []).filter((id) => id !== s.id),
-                    })
-                  }
-                />
-                {s.name}
-                {s.disabled ? " · disabled or unavailable" : ""}
-              </label>
-            ))}
-          </fieldset>
-          <button>Save profile</button>
-        </SaveForm>
-      </details>
-      <details className="settings-section">
-        <summary>Managed skills</summary>
-        <select
-          aria-label="Edit managed skill"
-          onChange={(e) => {
-            const s = snap.skills.find((s) => s.id === e.target.value);
-            if (s) {
-              setSkillName(s.name);
-              setSkillContent(s.content);
-            }
-          }}
-        >
-          <option value="">Create a skill</option>
-          {snap.skills
-            .filter((s) => s.managed)
-            .map((s) => (
-              <option value={s.id} key={s.id}>
-                {s.name}
-              </option>
-            ))}
-        </select>
-        <SaveForm
-          save={() =>
-            save("save_skill", { name: skillName, content: skillContent })
-          }
-        >
-          <label>
-            Skill name
-            <input
-              value={skillName}
-              onChange={(e) => setSkillName(e.target.value)}
-              required
-              placeholder="my-skill"
-            />
-          </label>
-          <label>
-            Skill instructions
-            <textarea
-              value={skillContent}
-              onChange={(e) => setSkillContent(e.target.value)}
-              rows={10}
-            />
-          </label>
-          <button>Save skill</button>
-        </SaveForm>
-      </details>
-      <details className="settings-section">
-        <summary>Connection diagnostics</summary>
-        <button
-          disabled={diagnosticState === "Checking…"}
-          onClick={async () => {
-            setDiagnosticState("Checking…");
-            setDiagnosticError("");
-            try {
-              setDiagnostics(
-                await call<import("./types").Diagnostics>("diagnostics"),
-              );
-              setDiagnosticState("Checked.");
-            } catch (e) {
-              setDiagnosticState("");
-              setDiagnosticError(String(e));
-            }
-          }}
-        >
-          Check connection
-        </button>
-        {diagnosticState && <p role="status">{diagnosticState}</p>}
-        {diagnosticError && <p role="alert">{diagnosticError}</p>}
-        {diagnostics !== undefined && (
-          <div>
-            <p>
-              Version {diagnostics.version} · {diagnostics.at}
-            </p>
-            <ul>
-              {diagnostics.checks.map((c) => (
-                <li key={c.id}>
-                  <strong>{c.state}</strong> · {c.id}: {c.detail}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <p>
-          GitHub and Codex reuse local sign-in. The setup skill can guide
-          authorization using Work computer access.
-        </p>
-      </details>
-    </div>
   );
 }
 createRoot(document.getElementById("root")!).render(<Factory />);

@@ -5,33 +5,31 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
+	"encoding/json"
 	"time"
 )
 
 func (s *Server) dashboard(ctx context.Context) (map[string]any, error) {
-	entries, err := s.App.InboxSummaries(ctx, "all")
+	p, err := s.publishedUI(ctx)
 	if err != nil {
 		return nil, err
 	}
-	counts := map[string]int{}
-	for _, e := range entries {
-		for _, q := range e.Queues {
-			counts[q]++
-		}
-	}
-	runs, err := store.ListWithout[domain.Run](ctx, s.App.Store, "run", "$.skills", "$.prompt", "$.profile", "$.sourceSnapshot", "$.reviewPromptSnapshot")
-	if err != nil {
+	entries, counts := p.inbox, p.counts
+
+	var runs []domain.Run
+	if err := json.Unmarshal(p.data["runs"], &runs); err != nil {
 		return nil, err
 	}
 	states := map[string]int{}
 	for _, r := range runs {
 		states[r.Status]++
 	}
-	attention, err := s.App.ListAttention(ctx, app.AttentionInput{Limit: 1})
-	if err != nil {
+	var hasAttention bool
+	if err := json.Unmarshal(p.data["hasAttention"], &hasAttention); err != nil {
 		return nil, err
 	}
-	return map[string]any{"itemCount": len(entries), "queues": counts, "runCount": len(runs), "runStates": states, "hasAttention": len(attention.Requests) > 0, "readAt": time.Now().UTC(), "detailTool": "track_work", "appSnapshotTool": "read_snapshot"}, nil
+
+	return map[string]any{"itemCount": len(entries), "queues": counts, "runCount": len(runs), "runStates": states, "hasAttention": hasAttention, "readAt": time.Now().UTC(), "cursor": p.cursor, "publishedAt": p.published, "detailTool": "track_work", "appSnapshotTool": "read_ui_state"}, nil
 }
 
 // A successful mutation response establishes local acceptance/delivery only.

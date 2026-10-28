@@ -4315,4 +4315,88 @@ The control requesting an observation of submitted reviews.
 `state-terminated` · state
 
 Work has ended because its source item closed or merged; the retained session cannot continue.
+
+<a id="direct-launch"></a>
+## Direct launch
+
+`direct-launch` · domain
+
+Opening an application surface through a dedicated host control without a conversational model turn.
+
+<a id="ui-projection"></a>
+## UI projection
+
+`ui-projection` · domain
+
+An immutable public view of saved application state associated with one change cursor.
+
+<a id="ui-change-cursor"></a>
+## UI change cursor
+
+`ui-change-cursor` · domain
+
+A position identifying the saved changes included in a published UI projection.
+
+<a id="element-w-inbox-query-previous"></a>
+## previous
+
+`element-w-inbox-query-previous` · element · scope: ui-w-inbox-query
+
+The control selecting the preceding saved result page.
+
+<a id="element-w-inbox-query-next"></a>
+## next
+
+`element-w-inbox-query-next` · element · scope: ui-w-inbox-query
+
+The control selecting the following saved result page.
+
+<a id="element-w-inbox-query-total"></a>
+## total
+
+`element-w-inbox-query-total` · element · scope: ui-w-inbox-query
+
+The count of saved items matching a query before pagination.
+
+<a id="element-w-transcript-next-history"></a>
+## next history page
+
+`element-w-transcript-next-history` · element · scope: ui-w-transcript
+
+The control advancing to the next retained history page.
+
+<a id="element-w-transcript-follow-latest"></a>
+## follow latest history
+
+`element-w-transcript-follow-latest` · element · scope: ui-w-transcript
+
+The control returning a retained history view to its latest updates.
+
+<a id="ui-c-skill-load"></a>
+## Skill load connection
+
+`ui-c-skill-load` · ui-connection
+
+The connection supplying saved managed instructions to the selected editor.
+
+<a id="element-w-skill-settings-reload"></a>
+## reload
+
+`element-w-skill-settings-reload` · element · scope: ui-w-skill-settings
+
+The control loading the selected skill's saved instructions again.
+
+<a id="element-w-skill-settings-load-status"></a>
+## load status
+
+`element-w-skill-settings-load-status` · element · scope: ui-w-skill-settings
+
+The indicator describing a pending selected-skill read.
+
+<a id="element-w-skill-settings-load-error"></a>
+## load error
+
+`element-w-skill-settings-load-error` · element · scope: ui-w-skill-settings
+
+The error from loading the selected skill's saved instructions.
 <!-- /specs:terms -->

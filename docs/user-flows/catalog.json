@@ -189,9 +189,34 @@
           "-bench",
           "BenchmarkInboxRetainedHistory",
           "-benchtime=3x"
+        ],
+        [
+          "go",
+          "test",
+          "./internal/transport",
+          "-run",
+          "^$",
+          "-bench",
+          "BenchmarkUIOutputPublication",
+          "-benchtime=3x"
         ]
       ],
       "inputs": [
+        "internal",
+        "go.mod",
+        "go.sum"
+      ]
+    },
+    "ui-performance": {
+      "commands": [
+        [
+          "make",
+          "test-performance"
+        ]
+      ],
+      "inputs": [
+        "Makefile",
+        "web",
         "internal",
         "go.mod",
         "go.sum"
@@ -598,7 +623,7 @@
           "anchor": "func (m *Manager) SaveSkill("
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "purpose": "Settings editor",
           "anchor": "function Settings("
         },
@@ -718,6 +743,16 @@
           "path": "internal/app/skill_snapshots.go",
           "anchor": "func snapshotSkill(",
           "purpose": "Freeze a selected plugin package and its relative skill entrypoint; materialize bounded retained files with traversal confinement and standalone compatibility."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function useUIVersion(",
+          "purpose": "Plugin administration rereads saved state on shared invalidations; failed reads retry without replaying mutations."
+        },
+        {
+          "path": "internal/providers/github_usage.go",
+          "anchor": "func SavedGitHubUsage(",
+          "purpose": "Projection builds quota information from SQLite without provider effects."
         }
       ],
       "tests": [
@@ -965,6 +1000,46 @@
             "S5"
           ],
           "purpose": "MCP schema accepts distinct plugin-read freshness markers and sees a newly saved operation without changing the journal; existing auth/settings/selector guards remain."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIManagedSkillEditorReadsOnlySelectedContent",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Broad settings/launch projections omit skill content/files; the app-only managed editor returns only selected content with a read cursor, rejects unmanaged skills and excludes private files."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "the managed skill editor loads selected saved instructions and saves an existing skill",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a late managed skill read cannot overwrite a later selection or its editor draft",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "managed skill read failure blocks saving until an explicit read retry succeeds",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Read failures gate the selected editor save until explicit reload succeeds; no save operation is submitted or replayed."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "notification-only failures refresh saved Settings feedback",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Saved credential-resolution notification feedback updates from its own invalidation bucket."
         }
       ],
       "suites": [
@@ -1008,7 +1083,8 @@
         "C-REVIEW-POLICY",
         "C-REPOSITORY-REVIEW-PROMPT",
         "W-GITHUB-USAGE",
-        "C-GITHUB-USAGE"
+        "C-GITHUB-USAGE",
+        "C-SKILL-LOAD"
       ],
       "terms": [
         "repository",
@@ -1955,6 +2031,14 @@
             "S8"
           ],
           "purpose": "Actual managed identity HTTP preflight uses the shared budget after the source read; denial preserves the same automatic claim, retry deadline and no-agent state across restart, then revalidates source and identity before one launch."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "TestBackgroundObservationsAdvanceWithoutOpeningAView",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Saved reads trigger no provider work; independent background monitoring starts without a view and persists failed observations while retaining saved item detail."
         }
       ],
       "suites": [
@@ -2413,6 +2497,51 @@
           "path": "internal/transport/tracking.go",
           "anchor": "func (s *Server) dashboard(",
           "purpose": "Targeted saved-state reads, compact tracking, durable progress or asynchronous observation without delaying status."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) startUIState()",
+          "purpose": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested saved views, complete-dataset filters and 50-row default pagination."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (s *Store) ReadView(",
+          "purpose": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function publishUIChange(",
+          "purpose": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+        },
+        {
+          "path": "web/defer-ui.mjs",
+          "anchor": "const scripts =",
+          "purpose": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+        },
+        {
+          "path": "web/index.html",
+          "anchor": "id=\"boot-nav\"",
+          "purpose": "Actionable navigation and query controls precede runtime/SDK initialization."
+        },
+        {
+          "path": "internal/store/store.go",
+          "anchor": "func (s *Store) Write(",
+          "purpose": "Post-commit durable invalidations preserve legacy event contracts."
+        },
+        {
+          "path": "internal/testhost/performance.go",
+          "anchor": "func servePerformance(",
+          "purpose": "Production embedded resource with retained-state, provider-latency and cold-server fixtures."
+        },
+        {
+          "path": "web/playwright.performance.config.ts",
+          "anchor": "workers: 1",
+          "purpose": "Isolated one-worker, zero-retry production performance verification."
         }
       ],
       "tests": [
@@ -2715,12 +2844,109 @@
             "S6"
           ],
           "purpose": "Error-free cooldown displays saved detail, retry time and explicit Retry; retry while still deferred preserves unread and draft with zero read markers, then a permitted fresh response marks exactly once and preserves draft without launching work."
+        },
+        {
+          "path": "web/performance/tests/launch.spec.ts",
+          "anchor": "production embedded direct launch: every fresh and warm sample is at most 100 ms",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Every one of 20 fresh and 10 warm built-resource direct launches has actionable painted navigation within 100 ms; empty/cold/retained states use delayed provider fixtures and retain timing evidence."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIProjectionPaginatesAndSearchesCompleteRetainedStateWithoutProviders",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "All 1,000 saved items are reachable through 50-row pages; body search finds a later item, selection remains reachable and no provider endpoint is called."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIWatchPublishesCommittedStateAndReconcilesOtherConnections",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Rollback produces no invalidation; an independent connection commit wakes the watch only after matching saved state and its cursor are published."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIWatchCoalescesBurstsConcurrentWritersReconnectAndResync",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Two writers retain all affected IDs through a reconnect; invalidations contain metadata only and unavailable/future cursors require resync."
+        },
+        {
+          "path": "internal/store/ui_journal_test.go",
+          "anchor": "TestUIJournalCommitsRollbackCASAndLegacyCursor",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Rollbacks and failed CAS produce no UI journal entry; successful CAS does, private buckets are excluded and legacy event cursors remain unchanged."
+        },
+        {
+          "path": "internal/store/ui_journal_test.go",
+          "anchor": "TestReadViewPinsDataAndCursorAcrossConcurrentConnection",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A concurrent connection commit cannot mix a newer entity with an older cursor inside a WAL read view."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "published inbox responses preserve the newer query when older reads finish later",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A delayed earlier query cannot replace a later selection/result, and legacy broad-read polling is absent."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "hidden views catch up through the shared subscription without rereading panels while hidden",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A durable update is observed by the single watch while a hidden view performs no panel reads; visibility restores the latest saved item."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "inbox pagination and complete-dataset search keep later saved items reachable",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Three pages expose all 125 fixture items; searching on the last page resets pagination and opens item 125."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "the shared subscription updates Messages while Reported issues is open",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a selected item outside the current page never renders an earlier selected entry",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "queue navigation cannot activate rows belonging to the previous query",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Previous-query rows cannot be activated under a newly selected queue while its saved read is pending."
         }
       ],
       "suites": [
         "go",
         "browser",
-        "inbox-performance"
+        "inbox-performance",
+        "ui-performance"
       ],
       "gaps": [
         {
@@ -2768,7 +2994,10 @@
         "coverage-gap",
         "unverified-behavior",
         "working-queue",
-        "implementation-relationship"
+        "implementation-relationship",
+        "direct-launch",
+        "ui-projection",
+        "ui-change-cursor"
       ],
       "graph": {
         "start": "n0",
@@ -4544,6 +4773,38 @@
             "S2"
           ],
           "purpose": "A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "launch customization loads saved skills only when its deferred view opens",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Deferred saved launch data supplies selectable skills to preparation while explicit Start remains separate."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A restored authoritative prepared state clears the local accepted-run overlay without replaying Start."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "Start response cannot cross a full resync epoch",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Parameterized first-message and modal starts reject old-epoch success while keeping the request uncertain without replay."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a delayed Start status check cannot install acceptance after full resync",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Status checks cannot apply acceptance from a pre-resync request to restored state."
         }
       ],
       "suites": [
@@ -6821,6 +7082,14 @@
             "S4"
           ],
           "purpose": "Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIOpeningSummaryUsesEligibleSavedAttention",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "The cached opening indication follows saved queue ownership/status eligibility instead of counting all raw pending records."
         }
       ],
       "suites": [
@@ -8495,7 +8764,8 @@
         "S3",
         "S4",
         "S5",
-        "S6"
+        "S6",
+        "S7"
       ],
       "implementation": [
         {
@@ -8645,6 +8915,51 @@
           "path": "internal/aiworkflows/workflows/task.yml",
           "anchor": "name:",
           "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) startUIState()",
+          "purpose": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested saved views, complete-dataset filters and 50-row default pagination."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (s *Store) ReadView(",
+          "purpose": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function publishUIChange(",
+          "purpose": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+        },
+        {
+          "path": "web/defer-ui.mjs",
+          "anchor": "const scripts =",
+          "purpose": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+        },
+        {
+          "path": "web/index.html",
+          "anchor": "id=\"boot-nav\"",
+          "purpose": "Actionable navigation and query controls precede runtime/SDK initialization."
+        },
+        {
+          "path": "internal/store/store.go",
+          "anchor": "func (s *Store) Write(",
+          "purpose": "Post-commit durable invalidations preserve legacy event contracts."
+        },
+        {
+          "path": "internal/testhost/performance.go",
+          "anchor": "func servePerformance(",
+          "purpose": "Production embedded resource with retained-state, provider-latency and cold-server fixtures."
+        },
+        {
+          "path": "web/playwright.performance.config.ts",
+          "anchor": "workers: 1",
+          "purpose": "Isolated one-worker, zero-retry production performance verification."
         }
       ],
       "tests": [
@@ -8964,11 +9279,277 @@
             "S2"
           ],
           "purpose": "Failed terminal persistence emits one sanitized originating-turn diagnostic after immediate native completion; an active follow-up is preserved and native work is not replayed."
+        },
+        {
+          "path": "web/performance/tests/launch.spec.ts",
+          "anchor": "production embedded direct launch: every fresh and warm sample is at most 100 ms",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Every one of 20 fresh and 10 warm built-resource direct launches has actionable painted navigation within 100 ms; empty/cold/retained states use delayed provider fixtures and retain timing evidence."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIProjectionPaginatesAndSearchesCompleteRetainedStateWithoutProviders",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "All 1,000 saved items are reachable through 50-row pages; body search finds a later item, selection remains reachable and no provider endpoint is called."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIWatchPublishesCommittedStateAndReconcilesOtherConnections",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Rollback produces no invalidation; an independent connection commit wakes the watch only after matching saved state and its cursor are published."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIWatchCoalescesBurstsConcurrentWritersReconnectAndResync",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Two writers retain all affected IDs through a reconnect; invalidations contain metadata only and unavailable/future cursors require resync."
+        },
+        {
+          "path": "internal/store/ui_journal_test.go",
+          "anchor": "TestUIJournalCommitsRollbackCASAndLegacyCursor",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Rollbacks and failed CAS produce no UI journal entry; successful CAS does, private buckets are excluded and legacy event cursors remain unchanged."
+        },
+        {
+          "path": "internal/store/ui_journal_test.go",
+          "anchor": "TestReadViewPinsDataAndCursorAcrossConcurrentConnection",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "A concurrent connection commit cannot mix a newer entity with an older cursor inside a WAL read view."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "published inbox responses preserve the newer query when older reads finish later",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "A delayed earlier query cannot replace a later selection/result, and legacy broad-read polling is absent."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "hidden views catch up through the shared subscription without rereading panels while hidden",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "A durable update is observed by the single watch while a hidden view performs no panel reads; visibility restores the latest saved item."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "inbox pagination and complete-dataset search keep later saved items reachable",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Three pages expose all 125 fixture items; searching on the last page resets pagination and opens item 125."
+        },
+        {
+          "path": "web/performance/tests/launch.spec.ts",
+          "anchor": "production embedded direct launch: every fresh and warm sample is at most 100 ms",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "All fresh and warm samples meet the 100 ms controlled fixture launch boundary; actual host latency remains unverified."
+        },
+        {
+          "path": "internal/app/tracking_test.go",
+          "anchor": "TestBackgroundObservationsAdvanceWithoutOpeningAView",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Saved reads trigger no provider work; independent background monitoring starts without a view and persists failed observations while retaining saved item detail."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "the shared subscription updates Messages while Reported issues is open",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a selected item outside the current page never renders an earlier selected entry",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "observation-only publications refresh the selected saved error without a broad read",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Saved provider errors refresh the selected item on an owner-ID invalidation, without loading broad shared state."
+        },
+        {
+          "path": "internal/web/embed_test.go",
+          "anchor": "TestProductionShellPrecedesDeferredRuntime",
+          "scenarios": [
+            "S7"
+          ],
+          "purpose": "Critical shell HTML and working event handlers appear before the inert runtime text; executable runtime parsing remains deferred past shell paint."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "full resync to an earlier cursor reloads Reports and preserves its evidence draft",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Restoring an earlier database cursor reloads the selected report after a previous higher publication without clearing its evidence draft."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "full resync reloads plugin administration at an earlier cursor without clearing its draft",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Plugin administration rereads saved inventory after a lower-cursor full resync while preserving the selector draft and performing no management mutation."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Full resync for the same run ID restarts incremental history from zero, removes invalid old output, reloads selected saved observation and keeps the message draft."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "older retained history stays inspectable across updates and advances only on request",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "A 1,300-event run exposes its beginning in an inspectable bounded window; background updates do not move that window, explicit next advances it and follow latest resumes updates without clearing the draft."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIInitialPublicationNeedsNoLifetimeInvalidationHistory",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "A full current-state publication succeeds without decoding retired lifetime invalidations, and an older cursor requires full resync."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUITranscriptPublicationLeavesSummariesCurrentAndNotifiesOnlyHistory",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Output-only commits publish a transcript-domain invalidation with unchanged summaries, while a real run-state commit still updates visible work state."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "transcript-only publications update output without broad state reads",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "A transcript-only publication updates the open conversation without a broad saved-state read."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "repository-only resume refreshes selected detail and posted-review freshness",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Repository-only resume updates posted-review monitoring status and reloads selected saved detail while preserving its draft and making no sync/start call."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "BenchmarkUIOutputPublication",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Record allocation and duration evidence for output publication on 1,000 items, 3,000 relationships and 100 runs; this profile alone makes no latency-gate coverage claim."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A restored authoritative prepared state clears the local accepted-run overlay without replaying Start."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "continuing transcript publications coalesce while delayed reads still render valid prefixes",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "Continuous slow saved reads render valid prefixes with one request in flight instead of starving on repeated publication."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "hidden retained history pauses pagination and resumes on visibility without a new publication",
+          "scenarios": [
+            "S2",
+            "S3"
+          ],
+          "purpose": "An in-flight prefix may complete after hide; continuation pauses until visibility resumes, even without new events."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a hidden full resync rejects a delayed reply from the previous state epoch",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A delayed pre-resync snapshot cannot become current while the widget is hidden or block restored state on show."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "a hidden older read cannot consume newer run and attention invalidations",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A delayed older response while hidden cannot clear later run/attention work; show refreshes both current items and Messages."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "failed requested view reads recover without a new journal publication",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Exhausted transport retries for a requested view retain local error feedback despite healthy idle watches, then recover automatically without a new commit."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "observation-only completion refreshes posted review monitoring state",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A saved review observation completion clears pending status on observation-only invalidation even when the review record version is unchanged."
         }
       ],
       "suites": [
         "go",
-        "browser"
+        "browser",
+        "ui-performance",
+        "inbox-performance"
       ],
       "gaps": [
         {
@@ -9000,6 +9581,16 @@
           "scenario": "S6",
           "reason": "Synthetic fixture measurements cover saved lookup/publication, queue pages, configured launch, nonsecret answer/local delivery, retained-thread follow-up and explicit dashboard paths. No installed-version or real Work acceptance is established by this development port. Actual-host normal, ambiguous-target, retained-history/large-page, changed-head receipt, cooldown/error and uncertain-delivery variants remain unverified.",
           "next_verification": "Observe normal conversational paths and the ambiguity, history/large-page, changed-head, cooldown/error and uncertain-delivery variants through an explicitly scoped private-pilot campaign for the installed port version; keep fixture and host evidence separate."
+        },
+        {
+          "version": 1,
+          "id": "gap-flow-direct-launch-host",
+          "scenario": "S7",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "user-flow-maintainer",
+          "reason": "The 100 ms bound covers the production embedded UI in a controlled fixture host. Actual ChatGPT sidebar latency and typed-chat model processing have not been measured on this build.",
+          "next_verification": "Measure actual direct sidebar launches in the approved host/session and record their latency separately; preserve the fixture boundary."
         }
       ],
       "ui": [
@@ -9037,7 +9628,10 @@
         "coverage-gap",
         "unverified-behavior",
         "session-console",
-        "published-review"
+        "published-review",
+        "direct-launch",
+        "ui-projection",
+        "ui-change-cursor"
       ],
       "graph": {
         "start": "n0",
@@ -9088,6 +9682,16 @@
             "id": "saved_tracking",
             "label": "Read saved work, questions and publication with explicit freshness and bounded history",
             "scenario": "S6"
+          },
+          {
+            "id": "direct_launch",
+            "label": "Open directly with actionable navigation before saved data and background work finish",
+            "scenario": "S7"
+          },
+          {
+            "id": "browse_history",
+            "label": "Inspect an older retained history window without advancing on background updates",
+            "scenario": "S2"
           }
         ],
         "edges": [
@@ -9165,6 +9769,30 @@
             "from": "saved_tracking",
             "to": "n6",
             "label": "saved result or explicit unknown/ambiguity"
+          },
+          {
+            "from": "n0",
+            "to": "direct_launch",
+            "label": "Direct sidebar entrypoint"
+          },
+          {
+            "from": "direct_launch",
+            "to": "n6"
+          },
+          {
+            "from": "n2",
+            "to": "browse_history",
+            "label": "View history from the beginning"
+          },
+          {
+            "from": "browse_history",
+            "to": "browse_history",
+            "label": "Load next history page"
+          },
+          {
+            "from": "browse_history",
+            "to": "n2",
+            "label": "Follow latest history"
           }
         ]
       }
@@ -9654,6 +10282,11 @@
           "path": "internal/aiworkflows/workflows/task.yml",
           "anchor": "name:",
           "purpose": "Embedded model-turn workflow definition and native structured-output contract where applicable."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested public projections exclude credential and private retained-source buckets."
         }
       ],
       "tests": [
@@ -10075,6 +10708,22 @@
             "S2"
           ],
           "purpose": "Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIProjectionExcludesPrivateSourceSkillFilesAndCredentials",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Messages/settings public projections contain no source snapshot, skill files/content or saved owner credential markers."
+        },
+        {
+          "path": "internal/transport/ui_state_test.go",
+          "anchor": "TestUIManagedSkillEditorReadsOnlySelectedContent",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Only the selected authorized managed content is returned; broad lists and all editor reads omit private files/unrelated bodies."
         }
       ],
       "suites": [

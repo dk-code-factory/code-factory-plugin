@@ -10,10 +10,10 @@ The owner has opened the separate connected Settings view. Repository access is 
 
 ## Main flow
 
-1. Open the independent Settings view and its initially expanded Repositories form, focused on the first repository when none is configured. Save its identifier and optional checkout/base; show feedback while remaining in Settings.
+1. Load the independent Settings view only when opened; its cached administration data follows the shared saved-state subscription. Open the independent Settings view and its initially expanded Repositories form, focused on the first repository when none is configured. Save its identifier and optional checkout/base; show feedback while remaining in Settings.
 2. Expand Priorities & notifications to edit label/priority rows, the assessment policy and the optional question helper model.
 3. Create or edit work profiles, including prompts, model settings, permissions and publishing authority.
-4. Discover local skills or save managed skill content, then select skills for future launches.
+4. Discover local skills or save managed skill content, then select skills for future launches. Selecting an existing managed skill loads its saved instructions on demand; Save waits for that selected read, and an earlier response cannot overwrite a later selection or editor draft.
 5. Inspect cached GitHub API usage and choose the application request budget, quota reserve and review-notification interval.
 
 ## Alternatives and recovery
@@ -35,7 +35,7 @@ Settings is independent of the task UI and has no Inbox/Agents navigation. Savin
 ## Terminology and UI references
 
 Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [codex-plugin](../glossary/README.md#codex-plugin), [plugin-marketplace](../glossary/README.md#plugin-marketplace), [plugin-inventory](../glossary/README.md#plugin-inventory), [plugin-maintenance](../glossary/README.md#plugin-maintenance), [review-policy](../glossary/README.md#review-policy), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification).
-UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE).
+UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE), [C-SKILL-LOAD](../ui/README.md#C-SKILL-LOAD).
 
 ## Flow diagram
 
@@ -75,7 +75,7 @@ flowchart TD
 
 - [internal/app/app.go](../../internal/app/app.go) — Settings and repository/profile validation (`func (a *App) SaveConfig(`)
 - [internal/app/runs.go](../../internal/app/runs.go) — Skill discovery, snapshots and managed persistence; SaveSkill accepts nonempty names of at most 63 lowercase ASCII letters, digits or hyphens and content beginning with `---\n`, without parsing frontmatter or validating the remaining content. (`func (m *Manager) SaveSkill(`)
-- [web/src/main.tsx](../../web/src/main.tsx) — Settings editor (`function Settings(`)
+- [web/src/settings.tsx](../../web/src/settings.tsx) — Settings editor (`function Settings(`)
 - [internal/domain/types.go](../../internal/domain/types.go) — Defaults and profile choices
 - [internal/store/store.go](../../internal/store/store.go) — Shared domain, persistence, transport or dependency contract
 - [internal/transport/mcp.go](../../internal/transport/mcp.go) — Shared domain, persistence, transport or dependency contract
@@ -103,6 +103,8 @@ flowchart TD
 - [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Bundled administration skill exposes the same owner tool controls. (`name: code-factory-admin`)
 - [internal/app/github_usage.go](../../internal/app/github_usage.go) — Bind system budget settings to private durable accounting and carry over existing cooldowns. (`func (a *App) EnableGitHubUsage(`)
 - [internal/app/skill_snapshots.go](../../internal/app/skill_snapshots.go) — Freeze a selected plugin package and its relative skill entrypoint; materialize bounded retained files with traversal confinement and standalone compatibility. (`func snapshotSkill(`)
+- [web/src/ui-changes.ts](../../web/src/ui-changes.ts) — Plugin administration rereads saved state on shared invalidations; failed reads retry without replaying mutations. (`export function useUIVersion(`)
+- [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — Projection builds quota information from SQLite without provider effects. (`func SavedGitHubUsage(`)
 
 ## Test references
 
@@ -136,6 +138,11 @@ flowchart TD
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `plugin status polling clears recovered read failures while retaining drafts`; S5. Failed plugin read recovers through a later successful poll, removes only its read alert, retains selector draft/inventory and issues no maintenance mutation.
 - [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `system defaults display and retain a supported nonpreset plugin interval`; S5. Saved supported30-minute interval is displayed accurately and retained through an unrelated budget save.
 - [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S5. MCP schema accepts distinct plugin-read freshness markers and sees a newly saved operation without changing the journal; existing auth/settings/selector guards remain.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIManagedSkillEditorReadsOnlySelectedContent`; S2. Broad settings/launch projections omit skill content/files; the app-only managed editor returns only selected content with a read cursor, rejects unmanaged skills and excludes private files.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `the managed skill editor loads selected saved instructions and saves an existing skill`; S2. Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a late managed skill read cannot overwrite a later selection or its editor draft`; S2. Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `managed skill read failure blocks saving until an explicit read retry succeeds`; S2. Read failures gate the selected editor save until explicit reload succeeds; no save operation is submitted or replayed.
+- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `notification-only failures refresh saved Settings feedback`; S1. Saved credential-resolution notification feedback updates from its own invalidation bucket.
 
 ## Verification and gaps
 

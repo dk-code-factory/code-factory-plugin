@@ -324,8 +324,12 @@ func TestNonblockingApprovalsCrashAndResume(t *testing.T) {
 }
 func TestAssessmentCacheAndInvalidation(t *testing.T) {
 	t.Setenv("CF_FAKE_MODE", "inference")
+	record := filepath.Join(t.TempDir(), "assessment-requests.jsonl")
+	t.Setenv("CF_FAKE_RECORD", record)
 	a, ctx := fixture(t)
 	v := item()
+	v.Activity = []domain.Activity{{Body: "retained assessment history"}}
+	v.Checks = json.RawMessage(`{"name":"retained assessment check"}`)
 	importOne(t, a, ctx, v)
 	if e := a.AssessNext(ctx); e != nil {
 		t.Fatal(e)
@@ -336,6 +340,10 @@ func TestAssessmentCacheAndInvalidation(t *testing.T) {
 	}
 	if as.Status != "complete" || as.Priority != 1 {
 		t.Fatal(as)
+	}
+	requests, err := os.ReadFile(record)
+	if err != nil || !strings.Contains(string(requests), "retained assessment history") || !strings.Contains(string(requests), "retained assessment check") {
+		t.Fatal("compact candidate selection lost full assessment inputs", err)
 	}
 	seq := a.Store.Latest(ctx)
 	if e := a.AssessNext(ctx); e != nil {

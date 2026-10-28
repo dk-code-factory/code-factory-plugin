@@ -297,6 +297,7 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestInteractiveCompletionDoesNotWaitForCheckpointFlush(`; S1. Blocked workflow checkpoint cannot delay native completion/answer routing; closing drains the successful checkpoint.
 - [internal/app/attention_answers_test.go](../../internal/app/attention_answers_test.go) — `func TestNativeAnswerRejectsDurableInterruptBeforeProviderCompletion(`; S3. Durable interruption rejects a native answer before provider completion without claiming attention or saving its reply; completion stales the original request.
 - [internal/app/workflows_test.go](../../internal/app/workflows_test.go) — `func TestAnsweredContinuationPreservesStateOnStorageFailure(`; S4. Storage faults before dispatch preserve idle and an answered unclaimed recovery; a fault after acknowledgement preserves the active turn and diagnostic, with no erroneous idle event or repeated continuation after storage recovers.
+- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIOpeningSummaryUsesEligibleSavedAttention`; S1. The cached opening indication follows saved queue ownership/status eligibility instead of counting all raw pending records.
 
 ## Verification and gaps
 

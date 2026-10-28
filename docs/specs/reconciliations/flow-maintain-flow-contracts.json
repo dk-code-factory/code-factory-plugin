@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "f184049d9ed471b64a63652fc0534cf79b86599c",
-  "fingerprint": "f4fba0978cb5b16c9437a16f8245f2b212270dcb8be140b3d2cc644171cf20f5",
+  "base": "9135daf735e0679080343dc12a52b0bb23f83098",
+  "fingerprint": "4bf640248ea519c6b416694cca1f488ef1904befe8e133a34bac8b277674613e",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Reconcile flow contracts with implementation and tests: authored scenarios S1, S2, S3, S4, S5 and graph transitions are unchanged. Impact comes from shared Go/browser/release suite inputs, module declarations and consumed UI mappings; the only product behavior changes are the reporting draft and investigation boundaries.",
-    "implementation": "Reviewed the maintain-flow-contracts contract and its implementation/reference mappings against the branch changes. Shared IssueReport fields are optional additions and report processing stays within the separate reports service. Existing task, attention, connection, installation and publication controls preserve their prior transitions; no glossary or consumer ownership is reversed.",
-    "tests": "Reviewed the existing mapped assertion purposes, including def test_code_and_test_changes_require_reconciliation(; def test_description_changes_require_both_code_and_tests(. Existing fixture suites remain selected and their assertions are unchanged; new reporting assertions do not claim coverage for this flow or close its outstanding real-host/acceptance gaps."
+    "kind": "behavior",
+    "description": "S4/S5 require the isolated production UI performance gate after heavy fixture suites, retaining every sample and failure evidence while maintaining the same comparison/adoption policy.",
+    "implementation": "Inspected Makefile, verify.sh, hosted artifact upload and public-root CI sequence. Registries map moved Settings anchors and new implementation/assertion inputs; no reconciliation receipt is edited manually.",
+    "tests": "The CI runner assertion requires the performance target after ordinary test execution, and the real make test-performance fixture exercises the built resource. Tooling/schema/fingerprint suites and branch CI remain mandatory."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.164
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.931
+      "seconds": 24.912
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.742
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "cc3c802a6651f36c7cdbe9a71e51a5d3a03b7d68e1b5445a58c6531c841d6516",
-    "term:coverage-gap": "1d347ba7589e9c052f0bac793e1765be9aba86e88f18fd049cb758e132e24a3b",
-    "term:entity": "e4dbace6b17f9423afb8167d068303ffb3b18acabf4d6965ad7bf512d6baa5ba",
-    "term:glossary": "52284e020e3dfd535a120e5735b8ee615be2f8ad2aeae1cf9d2657cdf8c449cf",
-    "term:known-limitation": "bfb4621eddaf4e3ea1207ef24f3f58a5b92b7eacc14fc2dfb420ea2382d5bb5e",
-    "term:reconciliation": "6bbf74c66f84caa735376d58e08cacfd92e33bfaf9af90379f5cfb6140a487a0",
-    "term:unverified-behavior": "702c6ec67471b05c8eceb8d624aa3326c111680fd87d97a71611789008ab072e",
-    "term:verification": "b949deafc9512b604250894d4bb1c44949328377556c96bb8a5c4b35d6f1d594"
+    "flow:maintain-flow-contracts": "74f7ef76cfd6677fde98edbf26e1ff8786583d41a34f0bcfdf3caa75d3411a0e",
+    "term:coverage-gap": "805f6284d0fead9eee5889000225bba4bdcd5e6c8f226a1f067319dd7de0f921",
+    "term:entity": "47d410975007d25ce0f48d1ffd164e701602f9d51d2ea84f266954c49fb4cd1a",
+    "term:glossary": "76f9c6a561169ecf2dc280609d4e0857537a5feea710fa27e1ea48df078e3e6d",
+    "term:known-limitation": "3b170735e6a78071bae728d416af5297d6bd62715db9f6bff985c9a97c2e404e",
+    "term:reconciliation": "b0a54dfd302c701d527342541cf98cffb0f86ddbeb63969d8d3e89e7dde2bdae",
+    "term:unverified-behavior": "433756cb9068d05bbaac06b016e9cbddfb200012bda4c0f5b3b6643e85997b76",
+    "term:verification": "3b749c272e9bd9eb4393bd79bea89871fd2ee0fc3eb60e571f4c810f02b28e84"
   }
 }

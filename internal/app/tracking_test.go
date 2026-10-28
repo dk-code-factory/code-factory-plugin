@@ -216,6 +216,63 @@ func TestSavedReadsDoNotWaitForSynchronizationOrBlockedGitHubAndDeduplicate(t *t
 	}
 }
 
+func TestBackgroundObservationsAdvanceWithoutOpeningAView(t *testing.T) {
+	a, ctx := fixture(t)
+	i := item()
+	i.Kind = "pr"
+	i.Head = "saved-head"
+	i.Body = ""
+	importOne(t, a, ctx, i)
+	entered := make(chan struct{}, 10)
+	release := make(chan struct{})
+	var once sync.Once
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		entered <- struct{}{}
+		<-release
+		http.Error(w, "fixture provider unavailable", 503)
+	}))
+	defer server.Close()
+	defer once.Do(func() { close(release) })
+	gh := &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(context.Context) (string, error) { return "fixture", nil }}
+	gh.ConfigureUsage(a.Store, func(context.Context) (providers.GitHubPolicy, error) {
+		return providers.GitHubPolicy{RequestsPerHour: 600}, nil
+	})
+	a.GitHub = gh
+	reader := &App{Store: a.Store, SavedOnly: true}
+	before := a.Store.Latest(ctx)
+	if _, err := reader.ItemDetail(ctx, i.ID); err != nil {
+		t.Fatal(err)
+	}
+	if calls.Load() != 0 || a.Store.Latest(ctx) != before {
+		t.Fatal("saved UI read initiated external work")
+	}
+	a.RefreshSavedObservations(ctx)
+	select {
+	case <-entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("background monitoring required an open view")
+	}
+	detail, err := reader.ItemDetail(ctx, i.ID)
+	if err != nil || detail["item"].(domain.Item).Head != "saved-head" || detail["observation"].(Observation).Refresh != "pending" {
+		t.Fatal("pending provider blocked saved detail", detail, err)
+	}
+	once.Do(func() { close(release) })
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		var status Observation
+		_ = a.Store.Get(ctx, "observation", "detail:"+i.ID, &status)
+		if status.Error != "" {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("provider failure not saved")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 func TestObservationPauseCooldownAndFailureRetainSavedState(t *testing.T) {
 	a, ctx := fixture(t)
 	i := item()
@@ -252,6 +309,51 @@ func TestObservationPauseCooldownAndFailureRetainSavedState(t *testing.T) {
 	if err != nil || out.Refresh != "cooldown" || calls.Load() != before {
 		t.Fatal(out, err)
 	}
+	// Keep the worker's pending marker and in-memory ownership alive after
+	// its result has committed, making the cleanup window deterministic.
+	key := "reviews:" + i.ID
+	waitFor(t, func() bool {
+		a.refreshMu.Lock()
+		defer a.refreshMu.Unlock()
+		return !a.refreshing[key]
+	})
+	if err := a.Store.Put(ctx, "observation", key, Observation{
+		Refresh: "pending", LastAttempt: failed.LastAttempt.Add(-time.Millisecond),
+	}, ""); err != nil {
+		t.Fatal(err)
+	}
+	a.refreshMu.Lock()
+	a.refreshing[key] = true
+	a.refreshMu.Unlock()
+	for _, reader := range []*App{a, {Store: a.Store, SavedOnly: true}} {
+		out, err := reader.ReadPRReviews(ctx, i.ID)
+		if err != nil || out.Refresh != "cooldown" || out.Error == "" || len(out.Reviews) != 1 || calls.Load() != before {
+			t.Fatal("completed saved result hidden during worker cleanup", out, err)
+		}
+	}
+	if err := a.Store.Put(ctx, "observation", key, Observation{
+		Refresh: "complete", LastAttempt: failed.LastAttempt,
+	}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := a.ReadPRReviews(ctx, i.ID); err != nil || out.Refresh != "cooldown" {
+		t.Fatal("completed marker hidden before worker ownership cleanup", out, err)
+	}
+	// A genuinely newer attempt still takes precedence over the older result.
+	if err := a.Store.Put(ctx, "observation", key, Observation{
+		Refresh: "pending", LastAttempt: failed.LastAttempt.Add(time.Millisecond),
+	}, ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, reader := range []*App{a, {Store: a.Store, SavedOnly: true}} {
+		out, err := reader.ReadPRReviews(ctx, i.ID)
+		if err != nil || out.Refresh != "pending" || calls.Load() != before {
+			t.Fatal("newer pending attempt lost", out, err)
+		}
+	}
+	a.refreshMu.Lock()
+	delete(a.refreshing, key)
+	a.refreshMu.Unlock()
 	var repo domain.Repository
 	_ = a.Store.Get(ctx, "repository", i.Repository, &repo)
 	repo.Paused = true

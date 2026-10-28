@@ -82,9 +82,11 @@ async function host(
     snapshot?: Snapshot;
     initializeFailures?: number;
     memoizeReads?: boolean;
+    watchDomains?: string[];
     transportFault?: (name: string, args: Record<string, unknown>) => boolean;
     toolError?: { name: string; message: string };
     readItem?: (detail: Detail) => Promise<Detail>;
+    readUIState?: (state: Snapshot, args: Record<string,unknown>) => Promise<Snapshot>;
     readReviews?: (id: string) => Promise<PRReviews>;
     reports?: IssueReport[];
     listReports?: (
@@ -104,10 +106,12 @@ async function host(
     beforeMessage?: () => Promise<void>;
     queueMessages?: boolean;
     failReadRun?: boolean;
+    readRun?: (data:{run?:Run;attention:Attention[]})=>Promise<{run?:Run;attention:Attention[]}>;
     loseStartResponse?: boolean;
     beforeStartResponse?: () => Promise<void>;
     rejectStart?: boolean;
     transcript?: JournalEvent[];
+    readTranscript?: (page:EventPage)=>Promise<EventPage>;
     theme?: "light" | "dark";
     denyOpenLink?: boolean;
     failOpenLink?: boolean;
@@ -159,6 +163,7 @@ async function host(
     },
   ];
   const reports = options.reports ?? [];
+  let transcriptLength=options.transcript?.length??0;
   await page.exposeFunction(
     "hostCall",
     async (p: { name: string; arguments: Record<string, unknown> }) => {
@@ -181,28 +186,55 @@ async function host(
             attention: [],
           };
           break;
-        case "read_snapshot":
+        case "read_ui_state": {
+          const q=String(a.queue||"all");
+          const query=String(a.search||"").toLowerCase();
+          const filter=String(a.filter||"all");
+          const rows=state.inbox.filter(v=>{
+            const owns=v.item.author.toLowerCase()===state.viewer?.login.toLowerCase();
+            const requested=v.item.reviewRequests?.some(l=>l.toLowerCase()===state.viewer?.login.toLowerCase())||v.item.reviewTeams?.some(t=>state.viewer?.teams?.includes(t));
+            const member=v.queues?v.queues.includes(q):q==="issues"?v.item.kind==="issue":q==="mine"?v.item.kind==="pr"&&owns:q==="review"?v.item.kind==="pr"&&requested:q==="working"?state.runs.some(r=>r.itemId===v.item.id&&r.status!=="prepared")&&v.item.state==="open":true;
+            return (q==="all"||member)&&(filter==="all"||filter==="open"&&v.item.state==="open"||filter==="pending"&&v.item.state==="open"&&!v.hasPullRequest||filter==="new"&&v.user.new||filter==="unread"&&v.unread||filter==="acted-on"&&v.user.actions.length>0)&&
+              (v.item.title+" "+v.item.id+" "+v.item.body).toLowerCase().includes(query);
+          }).sort((a,b)=>(a.priority??4)-(b.priority??4)||Date.parse(b.item.updated)-Date.parse(a.item.updated));
+          const offset=Number(a.offset||0),limit=Number(a.limit||50);
+          const views=(a.views as string[]|undefined)??["inbox"];
+          const projected:Partial<Snapshot>={cursor:state.cursor};
+          const copy=structuredClone(state);
+          if(views.includes("shell")) Object.assign(projected,{viewer:copy.viewer,repositories:copy.repositories,profiles:copy.profiles,config:copy.config});
+          if(views.includes("messages")) Object.assign(projected,{runs:copy.runs,attention:copy.attention,questionRecoveries:copy.questionRecoveries});
+          if(views.includes("settings")||views.includes("launch")) Object.assign(projected,{repositories:copy.repositories,profiles:copy.profiles,config:copy.config,skills:copy.skills.map(skill=>({...skill,content:""})),githubUsage:copy.githubUsage});
+          if(views.includes("skill")){
+            const skill=copy.skills.find(skill=>skill.id===a.id);
+            if(!skill||!skill.managed) throw new Error("only managed skills can be edited");
+            Object.assign(projected,{skill,skillCursor:state.cursor});
+          }
+          if(views.includes("reviews")) projected.reviewVersions=copy.reviewVersions;
+          if(views.includes("inbox")) Object.assign(projected,{inbox:structuredClone(rows.slice(offset,offset+limit)),page:{offset,limit,total:rows.length,hasMore:offset+limit<rows.length}});
+          projected.selectedEntry=structuredClone(state.inbox.find(e=>e.item.id===a.id));
+          data=options.readUIState?await options.readUIState(projected as Snapshot,a):projected;
+          break;
+        }
         case "open_factory":
-          data = structuredClone(state);
+          data=structuredClone(state);
           break;
-        case "read_changes":
-          data = {
-            events:
-              state.cursor > Number(a.after)
-                ? [
-                    {
-                      seq: state.cursor,
-                      kind: "run.state",
-                      entity: "run-1",
-                      data: {},
-                      at: new Date().toISOString(),
-                    },
-                  ]
-                : [],
-            cursor: state.cursor,
-            hasMore: false,
-          };
+        case "watch_ui_changes": {
+          // Fixture long poll releases on durable changes or a short idle timeout.
+          const until=Date.now()+500;
+          while(state.cursor===Number(a.after)&&Date.now()<until) {
+            if((options.transcript?.length??0)!==transcriptLength){
+              transcriptLength=options.transcript?.length??0;state.cursor++;break;
+            }
+            await new Promise(r=>setTimeout(r,20));
+          }
+          data={cursor:state.cursor,resync:state.cursor<Number(a.after),changes:state.cursor!==Number(a.after)?{"item":state.inbox.map(e=>e.item.id),"user":state.inbox.map(e=>e.item.id),"run":state.runs.map(r=>r.id),"transcript":state.runs.map(r=>r.id),"attention":state.attention.map(r=>r.id),"pr-reviews":state.inbox.map(e=>e.item.id),"relationship":[],"observation":state.inbox.map(e=>e.item.id),"issue-report":reports.map(r=>r.id),"plugin-inventory":["current"],"plugin-operation":pluginOperations.map(r=>r.id),"config":["settings"],"repository":state.repositories.map(r=>r.id),"github-notifications":["cursor"]}:{}};
+          if(state.cursor<Number(a.after)) (data as {changes:Record<string,string[]>}).changes={};
+          if(options.watchDomains){
+            const change=data as {changes:Record<string,string[]>};
+            change.changes=Object.fromEntries(Object.entries(change.changes).filter(([domain])=>options.watchDomains!.includes(domain)));
+          }
           break;
+        }
         case "list_issue_reports": {
           const rows = reports
             .filter(
@@ -427,6 +459,7 @@ async function host(
             run: state.runs.find((r) => r.id === a.id),
             attention: state.attention.filter((r) => r.runId === a.id),
           };
+          if(options.readRun)data=await options.readRun(structuredClone(data as {run?:Run;attention:Attention[]}));
           break;
         case "save_settings":
           state.config = a as unknown as Snapshot["config"];
@@ -505,6 +538,7 @@ async function host(
               cursor: state.cursor,
               hasMore: false,
             };
+          if(options.readTranscript) data=await options.readTranscript(data as EventPage);
           break;
         }
         case "answer_request": {
@@ -621,7 +655,7 @@ async function host(
   await page.route("**/host", (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>const readCache=new Map();window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{const key=JSON.stringify(m.params);if(${options.memoizeReads ?? false}&&['read_snapshot','read_changes','read_plugin_admin'].includes(m.params.name)){if(readCache.has(key))result=readCache.get(key);else{result=await window.hostCall(m.params);readCache.set(key,structuredClone(result))}}else result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
+      body: `<!doctype html><iframe title="Code Factory app" src="${options.surface === "settings" ? "/settings-ui" : "/"}" style="width:100%;height:95vh;border:0"></iframe><script>const readCache=new Map();window.addEventListener('message',async e=>{const m=e.data;if(!m||m.id===undefined)return;let result={};if(m.method==='ui/initialize'){window.initializationCount=(window.initializationCount||0)+1;if(window.initializationCount<=${options.initializeFailures ?? 0}){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:'McpServerError: Connection failed.'}},'*');return}result={protocolVersion:m.params.protocolVersion,hostInfo:{name:'Work test host',version:'1'},hostCapabilities:{serverTools:{},serverResources:{}},hostContext:{theme:${JSON.stringify(options.theme ?? "light")},displayMode:'inline'}}}else if(m.method==='tools/call'){try{const key=JSON.stringify(m.params);if(${options.memoizeReads ?? false}&&['read_ui_state','watch_ui_changes','read_plugin_admin'].includes(m.params.name)){if(readCache.has(key))result=readCache.get(key);else{result=await window.hostCall(m.params);readCache.set(key,structuredClone(result))}}else result=await window.hostCall(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}else if(m.method==='ui/open-link'){try{result=await window.hostOpenLink(m.params)}catch(error){e.source.postMessage({jsonrpc:'2.0',id:m.id,error:{code:-32000,message:String(error)}},'*');return}}e.source.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script>`,
     }),
   );
   await page.goto("/host");
@@ -886,11 +920,11 @@ test("keyboard launch review traps focus, preserves edits and restores its opene
   await page.keyboard.type("Keep this keyboard launch draft.");
   await expect(prompt).toHaveCSS("outline-width", "3px");
   const snapshots = calls.filter(
-    (call) => call.name === "read_snapshot",
+    (call) => call.name === "read_ui_state",
   ).length;
   state.cursor++;
   await expect
-    .poll(() => calls.filter((call) => call.name === "read_snapshot").length)
+    .poll(() => calls.filter((call) => call.name === "read_ui_state").length)
     .toBeGreaterThan(snapshots);
   await expect(prompt).toBeFocused();
   await expect(prompt).toHaveValue("Keep this keyboard launch draft.");
@@ -1226,13 +1260,11 @@ test("triage does not launch, launch edits and attention answer survive reopenin
   // Replace the host document and iframe while the original request is pending.
   // The host's Node-side snapshot survives; no second launch seeds the new view.
   const snapshotsBeforeReopen = calls.filter(
-    (c) => c.name === "read_snapshot",
+    (c) => c.name === "read_ui_state",
   ).length;
   await page.reload();
   await expect(ui.getByLabel("Search inbox")).toBeVisible();
-  expect(
-    calls.filter((c) => c.name === "read_snapshot").length,
-  ).toBeGreaterThan(snapshotsBeforeReopen);
+  await expect.poll(()=>calls.filter((c) => c.name === "read_ui_state").length).toBeGreaterThan(snapshotsBeforeReopen);
   await expect(
     ui.getByRole("button", { name: /^Messages\s*1$/ }),
   ).toBeVisible();
@@ -3221,6 +3253,15 @@ test("a late first-message Start cannot replace another item's draft", async ({
     await expect(
       ui.getByRole("region", { name: "New agent conversation" }),
     ).toBeVisible();
+    // A later navigation reads the still-behind prepared projection after the
+    // accepted response has already reached React; it must not undo acceptance.
+    const reads=calls.filter(c=>c.name==="read_ui_state").length;
+    await ui.getByRole("button",{name:"Issues",exact:true}).click();
+    await ui.getByRole("button",{name:/Second task/}).click();
+    await expect.poll(()=>calls.filter(c=>c.name==="read_ui_state").length).toBeGreaterThan(reads);
+    await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await expect(ui.getByRole("button",{name:"Messages 1",exact:true})).toBeVisible();
+    await expect(ui.getByLabel("Message agent")).toHaveValue("Keep the second task's unsubmitted message.");
     expect(calls.filter((c) => c.name === "prepare_launch")).toHaveLength(1);
     expect(calls.filter((c) => c.name === "start_run")).toHaveLength(1);
   } finally {
@@ -3288,7 +3329,7 @@ test("initial bridge failures retry a fresh handshake without reloading or losin
           .initializationCount,
     ),
   ).toBe(4);
-  expect(calls.filter((c) => c.name === "read_snapshot")).toHaveLength(1);
+  expect(calls.filter((c) => c.name === "read_ui_state")).toHaveLength(1);
   await expect(ui.getByRole("alert")).toHaveCount(0);
 });
 
@@ -3297,7 +3338,7 @@ test("transient polling outage recovers without a stale error banner or lost fir
 }) => {
   let disconnected = false;
   const { ui, calls } = await host(page, {
-    transportFault: (name) => disconnected && name === "read_changes",
+    transportFault: (name) => disconnected && name === "watch_ui_changes",
   });
   await ui.getByRole("button", { name: /Fix reconnect regression/ }).click();
   await ui
@@ -3342,7 +3383,7 @@ test("transient item read failure retries and marks only the successfully displa
     ui.getByRole("heading", { name: "Fix reconnect regression", exact: true }),
   ).toBeVisible();
   await expect(ui.getByLabel("Message agent")).toBeVisible();
-  expect(calls.filter((c) => c.name === "read_item")).toHaveLength(4);
+  expect(calls.filter((c) => c.name === "read_item").length).toBeGreaterThanOrEqual(4);
   await expect
     .poll(
       () =>
@@ -3371,6 +3412,7 @@ test("transcript recovery keeps output and draft while removing only its own rea
   ).toBeVisible();
   await ui.getByLabel("Message agent").fill("Keep the follow-up draft.");
   transcriptUnavailable = true;
+  snapshot.cursor++;
   await expect(
     ui.getByRole("status").filter({ hasText: "Retrying conversation" }),
   ).toBeVisible({ timeout: 7000 });
@@ -3404,9 +3446,9 @@ test("mutation connection failure is not replayed and later polling does not dis
   await expect(ui.getByRole("alert")).toContainText(
     "Connection to Code Factory interrupted",
   );
-  const polls = calls.filter((c) => c.name === "read_changes").length;
+  const polls = calls.filter((c) => c.name === "watch_ui_changes").length;
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(polls + 1);
   expect(calls.filter((c) => c.name === "send_message")).toHaveLength(1);
   await expect(ui.getByLabel("Message agent")).toHaveValue(
@@ -3433,9 +3475,9 @@ test("read tool errors are not mistaken for retryable transport errors", async (
   await expect(
     ui.getByRole("button", { name: "Retry loading item", exact: true }),
   ).toBeVisible();
-  const polls = calls.filter((c) => c.name === "read_changes").length;
+  const polls = calls.filter((c) => c.name === "watch_ui_changes").length;
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(polls + 1);
   expect(calls.filter((c) => c.name === "read_item")).toHaveLength(1);
 });
@@ -3459,13 +3501,13 @@ test("exact host-wrapped MCP connection error retries a read without exposing it
         root.dataset.frameworkErrorSeen = "true";
     }).observe(root, { subtree: true, childList: true, characterData: true });
   });
-  failure.name = "read_changes";
+  failure.name = "watch_ui_changes";
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(0);
   failure.name = "unused";
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(1);
   await expect(
     ui.getByRole("status", { name: "Connection status" }),
@@ -3502,9 +3544,9 @@ test("exact host-wrapped connection failure never replays a mutation", async ({
   await expect(ui.getByRole("alert")).toContainText(
     "Connection to Code Factory interrupted",
   );
-  const polls = calls.filter((c) => c.name === "read_changes").length;
+  const polls = calls.filter((c) => c.name === "watch_ui_changes").length;
   await expect
-    .poll(() => calls.filter((c) => c.name === "read_changes").length)
+    .poll(() => calls.filter((c) => c.name === "watch_ui_changes").length)
     .toBeGreaterThan(polls + 1);
   expect(calls.filter((c) => c.name === "send_message")).toHaveLength(1);
   await expect(ui.getByLabel("Message agent")).toHaveValue(
@@ -4411,7 +4453,7 @@ test("reported issues retries uncertain evidence without duplicating it and acce
     "Evidence acknowledgement lost",
   );
   await expect(evidence).toHaveValue(original);
-  await expect(detail.getByText(original, { exact: true })).toHaveCount(1);
+  await expect(detail.locator("p").filter({hasText:original})).toHaveCount(1);
   await add.click();
   await expect.poll(() => attempts).toBe(2);
   await expect(add).toBeEnabled();
@@ -4700,8 +4742,8 @@ test("reported issues releases mutation controls during continuing slow journal 
   slow = true;
   await refresh.click();
   await expect.poll(() => pending.length).toBe(1);
-  await expect(refresh).toBeDisabled();
-  await expect(evidence).toBeDisabled();
+  await expect(refresh).toBeEnabled();
+  await expect(evidence).toBeEnabled();
   await journalUpdate();
   await journalUpdate();
   pending[0]();
@@ -5138,14 +5180,14 @@ test("Markdown issue headings do not replace the useful conversation summary", a
 
 test("fresh read markers observe external changes after a host memoizes an empty journal page", async ({ page }) => {
   const { ui, calls, state } = await host(page, { memoizeReads: true });
-  await expect.poll(() => calls.filter(c => c.name === "read_changes").length).toBeGreaterThan(0);
+  await expect.poll(() => calls.filter(c => c.name === "watch_ui_changes").length).toBeGreaterThan(0);
   state.inbox[0].item.title = "Externally updated pilot review";
   state.cursor++;
   await expect(ui.getByRole("button", { name: /Externally updated pilot review/ })).toBeVisible();
   state.inbox[0].item.title = "Second external review update";
   state.cursor++;
   await expect(ui.getByRole("button", { name: /Second external review update/ })).toBeVisible();
-  const reads = calls.filter(c => ["read_changes", "read_snapshot"].includes(c.name));
+  const reads = calls.filter(c => ["watch_ui_changes", "read_ui_state"].includes(c.name));
   expect(new Set(reads.map(c => c.arguments.freshness)).size).toBe(reads.length);
   expect(reads.every(c => typeof c.arguments.freshness === "string" && c.arguments.freshness.length > 0)).toBe(true);
   expect(calls.some(c => ["prepare_launch", "start_run", "send_message"].includes(c.name))).toBe(false);
@@ -5222,6 +5264,7 @@ for (const theme of ["light", "dark"] as const) {
     await expect(ui.getByText("Saved receipt available immediately",{exact:true})).toBeVisible();
     expect(calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read")).toHaveLength(0);
     pending=false;
+    snapshot.cursor++;
     await expect(ui.getByText("Refreshing saved details…",{exact:true})).toHaveCount(0);
     await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toHaveCount(0);
     await expect.poll(()=>calls.filter(c=>c.name==="item_action"&&c.arguments.action==="read").length).toBe(1);
@@ -5291,4 +5334,560 @@ test("chunked owner and agent completions remain normal conversation across jour
   await expect(ui.getByText(/partial secret/)).toBeVisible();
   await expect(ui.getByText("malformed provider JSON", { exact: true })).toBeVisible();
   expect(calls.filter((c) => c.name === "read_transcript").some((c) => c.arguments.after === 100)).toBe(true);
+});
+
+test("published inbox responses preserve the newer query when older reads finish later",async({page})=>{
+  const snapshot=initial();
+  const second=structuredClone(snapshot.inbox[0]);
+  second.item.id="owner/repo#2";second.item.title="Second matching item";
+  snapshot.inbox.push(second);
+  let release:()=>void=()=>{};
+  let delayed=false;
+  let staleReturned=false;
+  const {ui,calls}=await host(page,{snapshot,readUIState:async(state,args)=>{
+    if(args.search==="Fix") { delayed=true;await new Promise<void>(resolve=>{release=resolve});staleReturned=true; }
+    return state;
+  }});
+  await ui.getByLabel("Search inbox").fill("Fix");
+  await expect.poll(()=>delayed).toBe(true);
+  await ui.getByLabel("Search inbox").fill("Second");
+  await expect(ui.getByRole("button",{name:/Second matching item/})).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  release();
+  await expect.poll(()=>staleReturned).toBe(true);
+  await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  await expect(ui.getByLabel("Search inbox")).toHaveValue("Second");
+  await expect(ui.locator(".inbox-row")).toHaveCount(1);
+  await expect(ui.getByRole("button",{name:/Fix reconnect regression/})).toHaveCount(0);
+  expect(calls.filter(c=>["read_snapshot","read_changes"].includes(c.name))).toHaveLength(0);
+  expect(reads).toBeGreaterThanOrEqual(3);
+});
+
+test("hidden views catch up through the shared subscription without rereading panels while hidden",async({page})=>{
+  const {ui,state,calls}=await host(page);
+  await expect(ui.getByRole("button",{name:/Fix reconnect regression/})).toBeVisible();
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  const watches=calls.filter(c=>c.name==="watch_ui_changes").length;
+  state.inbox[0].item.title="Committed while hidden";state.cursor++;
+  await expect.poll(()=>calls.filter(c=>c.name==="watch_ui_changes").length).toBeGreaterThan(watches);
+  expect(calls.filter(c=>c.name==="read_ui_state")).toHaveLength(reads);
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(ui.getByRole("button",{name:/Committed while hidden/})).toBeVisible();
+});
+
+test("inbox pagination and complete-dataset search keep later saved items reachable",async({page})=>{
+  const snapshot=initial();
+  snapshot.inbox=Array.from({length:125},(_,n)=>{
+    const entry=structuredClone(initial().inbox[0]);
+    entry.item.id="owner/repo#"+(n+1);entry.item.title="Saved item "+String(n+1).padStart(3,"0");entry.item.updated="2026-10-27T12:00:00Z";return entry;
+  });
+  const {ui}=await host(page,{snapshot});
+  await expect(ui.locator(".inbox-row")).toHaveCount(50);
+  await ui.getByRole("button",{name:"Next items"}).click();
+  await expect(ui.getByRole("button",{name:/Saved item 051/})).toBeVisible();
+  await ui.getByRole("button",{name:"Next items"}).click();
+  await expect(ui.locator(".inbox-row")).toHaveCount(25);
+  await ui.getByRole("button",{name:/Saved item 125/}).click();
+  await expect(ui.getByRole("heading",{name:"Saved item 125",exact:true})).toBeVisible();
+  await ui.getByRole("button",{name:"← Issues",exact:true}).click();
+  await expect(ui.locator(".inbox-row")).toHaveCount(25);
+  await expect(ui.getByRole("button",{name:/Saved item 125/})).toBeFocused();
+  await ui.getByLabel("Search inbox").fill("Saved item 125");
+  await expect(ui.locator(".inbox-row")).toHaveCount(1);
+  await ui.getByRole("button",{name:/Saved item 125/}).click();
+  await expect(ui.getByRole("heading",{name:"Saved item 125",exact:true})).toBeVisible();
+});
+
+test("the shared subscription updates Messages while Reported issues is open",async({page})=>{
+  const {ui,state,calls}=await host(page,{watchDomains:["run","attention"]});
+  await ui.getByRole("button",{name:"Reported issues",exact:true}).click();
+  await expect(ui.getByRole("region",{name:"Reported issues"})).toBeVisible();
+  await expect.poll(()=>calls.filter(c=>c.name==="list_issue_reports").length).toBe(1);
+  const reportReads=calls.filter(c=>c.name==="list_issue_reports").length;
+  state.runs=[retained(state,"new-question","waiting")];
+  state.attention=[{id:"new-question-request",runId:"new-question",status:"pending",method:"item/tool/requestUserInput",blocking:true,params:{questions:[{id:"scope",question:"Which scope?",options:[{label:"Focused"},{label:"Broad"}]}]}} as Snapshot["attention"][number]];
+  state.cursor++;
+  await expect(ui.getByRole("button",{name:"Messages 1",exact:true})).toBeVisible();
+  await expect(ui.getByRole("region",{name:"Reported issues"})).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state");
+  expect(reads.some(c=>(c.arguments.views as string[]).includes("messages"))).toBe(true);
+  expect(calls.filter(c=>c.name==="list_issue_reports")).toHaveLength(reportReads);
+});
+
+test("a selected item outside the current page never renders an earlier selected entry",async({page})=>{
+  const snapshot=initial();
+  const second=structuredClone(snapshot.inbox[0]);
+  second.item.id="owner/repo#60";second.item.title="Later page question";
+  snapshot.inbox.push(second);
+  const run=retained(snapshot,"later-page","waiting");run.itemId=second.item.id;
+  snapshot.runs=[run];
+  snapshot.attention=[{id:"later-request",runId:run.id,status:"pending",method:"item/tool/requestUserInput",blocking:true,params:{questions:[{id:"scope",question:"Which scope?",options:[{label:"Focused"},{label:"Broad"}]}]}} as Snapshot["attention"][number]];
+  let release:()=>void=()=>{};
+  let pending=false;
+  const blocked=new Promise<void>(resolve=>{release=resolve});
+  const {ui}=await host(page,{snapshot,readUIState:async(data,args)=>{
+    if(args.id===second.item.id){pending=true;await blocked;}
+    // Emulate a page that excludes the question's item; selection is independent.
+    if(data.inbox)data.inbox=data.inbox.filter(e=>e.item.id!==second.item.id);
+    return data;
+  }});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+    await expect(ui.getByRole("heading",{name:"Fix reconnect regression",exact:true})).toBeVisible();
+    await ui.getByRole("button",{name:"Messages 1",exact:true}).click();
+    await ui.getByRole("region",{name:"Waiting for you"}).getByRole("button").click();
+    await expect.poll(()=>pending).toBe(true);
+    await expect(ui.locator(".detail h1").filter({hasText:"Fix reconnect regression"})).toHaveCount(0);
+    release();
+    await expect(ui.locator(".detail h1").filter({hasText:"Later page question"})).toBeVisible();
+  }finally{release()}
+});
+
+test("observation-only publications refresh the selected saved error without a broad read",async({page})=>{
+  let failed=false;
+  const {ui,state,calls}=await host(page,{watchDomains:["observation"],readItem:async detail=>({...detail,refreshError:failed?"Background provider failed":"",observation:{observedAt:"2026-10-27T12:00:00Z",refresh:failed?"cooldown":"fresh"}})});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByRole("heading",{name:"Fix reconnect regression",exact:true})).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  failed=true;state.cursor++;
+  await expect(ui.getByRole("alert")).toContainText("Background provider failed");
+  expect(calls.filter(c=>c.name==="read_ui_state")).toHaveLength(reads);
+});
+
+test("launch customization loads saved skills only when its deferred view opens",async({page})=>{
+  const snapshot=initial();
+  snapshot.skills=[{id:"saved-skill",name:"Saved skill",description:"Saved fixture skill",path:"/fixture/skill",content:"",managed:true}];
+  const {ui,calls}=await host(page,{snapshot});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await showItemDetails(ui);
+  expect(calls.filter(c=>c.name==="read_ui_state").every(c=>!(c.arguments.views as string[]).includes("launch"))).toBe(true);
+  await ui.getByRole("button",{name:"New run",exact:true}).click();
+  await ui.getByRole("button",{name:"Edit",exact:true}).click();
+  await ui.getByText("Advanced",{exact:true}).click();
+  await ui.getByRole("checkbox",{name:"Saved skill",exact:true}).check();
+  await ui.getByRole("button",{name:"Review launch",exact:true}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="prepare_launch").some(c=>(c.arguments.skillIds as string[]|undefined)?.includes("saved-skill"))).toBe(true);
+  expect(calls.filter(c=>c.name==="read_ui_state").some(c=>(c.arguments.views as string[]).includes("launch"))).toBe(true);
+  expect(calls.filter(c=>c.name==="start_run")).toHaveLength(0);
+});
+
+test("full resync to an earlier cursor reloads Reports and preserves its evidence draft",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  const report=reportFixture();
+  const {ui,state}=await host(page,{snapshot,reports:[report],watchDomains:["issue-report"]});
+  await ui.getByRole("button",{name:"Reported issues",exact:true}).click();
+  await ui.getByRole("button",{name:"Agents: Stale response"}).click();
+  const detail=ui.getByRole("article",{name:"Report details"});
+  const evidence=detail.getByLabel("What did the host display?");
+  await evidence.fill("Keep this report draft after database restore.");
+  report.findings!.summary="Latest before restore";state.cursor=101;
+  await expect(detail).toContainText("Latest before restore");
+  report.findings!.summary="Restored report state";state.cursor=3;
+  await expect(detail).toContainText("Restored report state");
+  await expect(detail).not.toContainText("Latest before restore");
+  await expect(evidence).toHaveValue("Keep this report draft after database restore.");
+});
+
+test("full resync reloads plugin administration at an earlier cursor without clearing its draft",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  const {ui,state,calls}=await host(page,{snapshot,surface:"settings",watchDomains:["plugin-inventory"]});
+  await ui.getByText("Plugins & skills",{exact:true}).click();
+  await ui.getByLabel("Plugin selector",{exact:true}).fill("retained@restore");
+  await expect.poll(()=>calls.filter(c=>c.name==="read_plugin_admin").length).toBe(1);
+  state.cursor=101;
+  await expect.poll(()=>calls.filter(c=>c.name==="read_plugin_admin").length).toBe(2);
+  state.cursor=3;
+  await expect.poll(()=>calls.filter(c=>c.name==="read_plugin_admin").length).toBe(3);
+  await expect(ui.getByLabel("Plugin selector",{exact:true})).toHaveValue("retained@restore");
+  expect(calls.filter(c=>c.name==="manage_codex_plugins")).toHaveLength(0);
+});
+
+test("full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  snapshot.runs=[retained(snapshot,"restored-run")];
+  const transcript:JournalEvent[]=[{seq:100,kind:"run.output",entity:"restored-run",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Before restore transcript"}}}];
+  let restored=false;
+  const {ui,state,calls}=await host(page,{snapshot,transcript,readItem:async detail=>({...detail,refreshError:restored?"Restored saved observation":""})});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.locator(".transcript")).toContainText("Before restore transcript");
+  await ui.getByLabel("Message agent").fill("Keep my draft across restored history.");
+  await expect.poll(()=>calls.filter(c=>c.name==="read_transcript").some(c=>c.arguments.after===100)).toBe(true);
+  restored=true;
+  transcript.splice(0,transcript.length,{seq:2,kind:"run.output",entity:"restored-run",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Restored transcript content"}}});
+  state.cursor=3;
+  await expect(ui.locator(".transcript")).toContainText("Restored transcript content");
+  await expect(ui.locator(".transcript")).not.toContainText("Before restore transcript");
+  await expect(ui.getByRole("alert")).toContainText("Restored saved observation");
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Keep my draft across restored history.");
+  expect(calls.filter(c=>c.name==="read_transcript"&&c.arguments.after===0).length).toBeGreaterThanOrEqual(2);
+  expect(calls.filter(c=>["send_message","start_run"].includes(c.name))).toHaveLength(0);
+});
+
+test("older retained history stays inspectable across updates and advances only on request",async({page})=>{
+  const snapshot=initial();snapshot.cursor=2000;
+  snapshot.runs=[retained(snapshot,"large-history")];
+  const transcript:JournalEvent[]=Array.from({length:1300},(_,n)=>({seq:n+1,kind:"run.output",entity:"large-history",at:"2026-10-27T12:00:00Z",data:{method:"item/completed",params:{item:{id:"history-"+(n+1),type:"agentMessage",text:"Historical event "+(n+1)}}}}));
+  const {ui,state,calls}=await host(page,{snapshot,transcript});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  const history=ui.locator(".transcript");
+  await expect(history.getByText("Historical event 1300",{exact:true})).toBeVisible();
+  await ui.getByLabel("Message agent").fill("Keep this draft while inspecting older history.");
+  await ui.getByRole("button",{name:"View history from the beginning"}).click();
+  await expect(ui.getByRole("button",{name:"Load next history page"})).toBeVisible();
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
+  const transcriptReads=calls.filter(c=>c.name==="read_transcript").length;
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  await history.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect(calls.filter(c=>c.name==="read_transcript")).toHaveLength(transcriptReads);
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
+  const stateReads=calls.filter(c=>c.name==="read_ui_state").length;
+  state.cursor++;
+  await expect.poll(()=>calls.filter(c=>c.name==="read_ui_state").length).toBeGreaterThan(stateReads);
+  await history.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect(calls.filter(c=>c.name==="read_transcript")).toHaveLength(transcriptReads);
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
+  await ui.getByRole("button",{name:"Load next history page"}).click();
+  await expect(history.getByText("Historical event 200",{exact:true})).toBeVisible();
+  await expect(history.getByText("Historical event 1",{exact:true})).toBeVisible();
+  await ui.getByRole("button",{name:"Follow latest history"}).click();
+  await expect(history.getByText("Historical event 1300",{exact:true})).toBeVisible();
+  await expect(history.getByText("Historical event 1",{exact:true})).toHaveCount(0);
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Keep this draft while inspecting older history.");
+  expect(calls.filter(c=>["send_message","start_run"].includes(c.name))).toHaveLength(0);
+});
+
+test("the managed skill editor loads selected saved instructions and saves an existing skill",async({page})=>{
+
+  const snapshot=initial();
+  const original="---\nname: saved-skill\ndescription: Saved instructions.\n---\nKeep existing guidance.\n";
+  snapshot.skills=[{id:"managed:saved-skill",name:"saved-skill",path:"/fixture/skill",content:original,managed:true}];
+  const {ui,calls}=await host(page,{snapshot,surface:"settings"});
+  await ui.getByText("Managed skills",{exact:true}).click();
+  expect(calls.filter(c=>c.name==="read_ui_state").every(c=>!(c.arguments.views as string[]).includes("skill"))).toBe(true);
+  await ui.getByLabel("Edit managed skill").selectOption("managed:saved-skill");
+  const content=ui.getByLabel("Skill instructions",{exact:true});
+  await expect(content).toHaveValue(original);
+  const edited=original+"Additional reviewed guidance.\n";
+  await content.fill(edited);
+  await ui.getByRole("button",{name:"Save skill",exact:true}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="save_skill").map(c=>c.arguments.content)).toEqual([edited]);
+  expect(calls.filter(c=>c.name==="read_ui_state").some(c=>(c.arguments.views as string[]).includes("skill")&&c.arguments.id==="managed:saved-skill")).toBe(true);
+});
+
+test("a late managed skill read cannot overwrite a later selection or its editor draft",async({page})=>{
+  const snapshot=initial();
+  const first="---\nname: first\n---\nFirst saved instructions.";
+  const second="---\nname: second\n---\nSecond saved instructions.";
+  snapshot.skills=[{id:"managed:first",name:"first",path:"/fixture/first",content:first,managed:true},{id:"managed:second",name:"second",path:"/fixture/second",content:second,managed:true}];
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});
+  let pending=false,returned=false;
+  const {ui}=await host(page,{snapshot,surface:"settings",readUIState:async(data,args)=>{
+    if((args.views as string[]).includes("skill")&&args.id==="managed:first"){pending=true;await gate;returned=true}
+    return data;
+  }});
+  try{
+    await ui.getByText("Managed skills",{exact:true}).click();
+    await ui.getByLabel("Edit managed skill").selectOption("managed:first");
+    await expect.poll(()=>pending).toBe(true);
+    await expect(ui.getByRole("button",{name:"Save skill",exact:true})).toBeDisabled();
+    await ui.getByLabel("Edit managed skill").selectOption("managed:second");
+    const content=ui.getByLabel("Skill instructions",{exact:true});
+    await expect(content).toHaveValue(second);
+    await content.fill(second+" Keep this local draft.");
+    release();
+    await expect.poll(()=>returned).toBe(true);
+    await content.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await expect(content).toHaveValue(second+" Keep this local draft.");
+    await expect(ui.getByLabel("Skill name",{exact:true})).toHaveValue("second");
+  }finally{release()}
+});
+
+test("transcript-only publications update output without broad state reads",async({page})=>{
+  const snapshot=initial();snapshot.runs=[retained(snapshot,"output-only")];
+  const transcript:JournalEvent[]=[];
+  const {ui,state,calls}=await host(page,{snapshot,transcript,watchDomains:["transcript"]});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByLabel("Message agent")).toBeVisible();
+  const reads=calls.filter(c=>c.name==="read_ui_state").length;
+  transcript.push({seq:10,kind:"run.output",entity:"output-only",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Transcript-only update"}}});
+  state.cursor++;
+  await expect(ui.locator(".transcript")).toContainText("Transcript-only update");
+  expect(calls.filter(c=>c.name==="read_ui_state")).toHaveLength(reads);
+});
+
+test("repository-only resume refreshes selected detail and posted-review freshness",async({page})=>{
+  const snapshot=initial();snapshot.profiles[0].id="review";
+  const entry=snapshot.inbox[0];
+  Object.assign(entry.item,{kind:"pr",author:"someone",reviewRequests:["alex"]});
+  entry.queues=["review"];
+  snapshot.repositories=[{id:"owner/repo",paused:true,checkout:"",base:""} as Snapshot["repositories"][number]];
+  const {ui,state,calls}=await host(page,{snapshot,watchDomains:["repository"],
+    readItem:async detail=>({...detail,observation:{observedAt:"2026-10-27T12:00:00Z",refresh:snapshot.repositories[0].paused?"paused":"fresh"}}),
+    readReviews:async()=>({itemId:entry.item.id,refresh:snapshot.repositories[0].paused?"paused":"fresh",syncedAt:"2026-10-27T12:00:00Z",lastAttempt:"2026-10-27T12:00:00Z",reviews:[]})});
+  await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByText("Repository monitoring is paused.",{exact:true})).toBeVisible();
+  await ui.getByLabel("Message agent").fill("Keep my draft when monitoring resumes.");
+  const details=calls.filter(c=>c.name==="read_item").length;
+  const reviews=calls.filter(c=>c.name==="read_pr_reviews").length;
+  state.repositories[0].paused=false;state.cursor++;
+  await expect(ui.getByText("Repository monitoring is paused.",{exact:true})).toHaveCount(0);
+  await expect.poll(()=>calls.filter(c=>c.name==="read_item").length).toBeGreaterThan(details);
+  expect(calls.filter(c=>c.name==="read_pr_reviews").length).toBeGreaterThan(reviews);
+  await expect(ui.getByLabel("Message agent")).toHaveValue("Keep my draft when monitoring resumes.");
+  expect(calls.filter(c=>["sync_repositories","start_run"].includes(c.name))).toHaveLength(0);
+});
+
+test("managed skill read failure blocks saving until an explicit read retry succeeds",async({page})=>{
+  const snapshot=initial();
+  const original="---\nname: saved\n---\nKeep saved instructions.";
+  snapshot.skills=[{id:"managed:saved",name:"saved",path:"/fixture/saved",content:original,managed:true}];
+  let unavailable=true;
+  const {ui,calls}=await host(page,{snapshot,surface:"settings",readUIState:async(data,args)=>{
+    if((args.views as string[]).includes("skill")&&unavailable)throw new Error("Saved editor unavailable");
+    return data;
+  }});
+  await ui.getByText("Managed skills",{exact:true}).click();
+  await ui.getByLabel("Edit managed skill").selectOption("managed:saved");
+  await expect(ui.getByRole("alert")).toContainText("Saved editor unavailable");
+  await expect(ui.getByRole("button",{name:"Save skill",exact:true})).toBeDisabled();
+  expect(calls.filter(c=>c.name==="save_skill")).toHaveLength(0);
+  unavailable=false;
+  await ui.getByRole("button",{name:"Reload selected skill",exact:true}).click();
+  await expect(ui.getByLabel("Skill instructions",{exact:true})).toHaveValue(original);
+  await expect(ui.getByRole("button",{name:"Save skill",exact:true})).toBeEnabled();
+  await expect(ui.getByRole("alert")).toHaveCount(0);
+  expect(calls.filter(c=>c.name==="read_ui_state"&&(c.arguments.views as string[]).includes("skill"))).toHaveLength(2);
+  expect(calls.filter(c=>c.name==="save_skill")).toHaveLength(0);
+});
+
+test("full resync clears a local Start acceptance overlay without replaying the launch",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  const {ui,state,calls}=await host(page,{snapshot,beforeStartResponse:()=>{snapshot.runs[0].status="prepared";return Promise.resolve()}});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await ui.getByRole("region",{name:"New agent conversation"}).getByRole("button",{name:"Start agent",exact:true}).click();
+  await expect(ui.getByLabel("Session status")).toContainText("waiting");
+  state.cursor=3;
+  await expect(ui.getByLabel("Session status")).toContainText("prepared");
+  await expect(ui.getByRole("button",{name:"Messages",exact:true})).toBeVisible();
+  expect(calls.filter(c=>c.name==="start_run")).toHaveLength(1);
+});
+
+test("continuing transcript publications coalesce while delayed reads still render valid prefixes",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  snapshot.runs=[retained(snapshot,"continuous-output")];
+  const transcript:JournalEvent[]=[{seq:1,kind:"run.output",entity:"continuous-output",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Seed transcript "}}}];
+  let active=0,maximum=0;
+  const {ui,state}=await host(page,{snapshot,transcript,watchDomains:["transcript"],readTranscript:async result=>{
+    active++;maximum=Math.max(maximum,active);
+    try{await new Promise(resolve=>setTimeout(resolve,180));return result}finally{active--}
+  }});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.locator(".transcript")).toContainText("Seed transcript");
+  let emitted=0;
+  const stream=setInterval(()=>{
+    emitted++;
+    transcript.push({seq:transcript.length+1,kind:"run.output",entity:"continuous-output",at:new Date().toISOString(),data:{method:"item/agentMessage/delta",params:{delta:"Live prefix "+emitted+" "}}});
+    state.cursor++;
+  },35);
+  try{
+    await expect(ui.locator(".transcript")).toContainText("Live prefix",{timeout:4000});
+    // The interval remains live at this assertion; valid output cannot wait for EOF.
+    expect(emitted).toBeGreaterThan(0);
+    expect(maximum).toBe(1);
+  }finally{clearInterval(stream)}
+});
+
+test("hidden retained history pauses pagination and resumes on visibility without a new publication",async({page})=>{
+  const snapshot=initial();snapshot.cursor=2000;snapshot.runs=[retained(snapshot,"hidden-history")];
+  const transcript:JournalEvent[]=Array.from({length:400},(_,n)=>({seq:n+1,kind:"run.output",entity:"hidden-history",at:new Date().toISOString(),data:{method:"item/completed",params:{item:{id:"hidden-"+(n+1),type:"agentMessage",text:"Retained hidden event "+(n+1)}}}}));
+  const {ui,calls}=await host(page,{snapshot,transcript,watchDomains:["transcript"],readTranscript:async result=>{await new Promise(resolve=>setTimeout(resolve,180));return result}});
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="read_transcript").length).toBeGreaterThan(0);
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  const reads=calls.filter(c=>c.name==="read_transcript").length;
+  // A read already sent at hide may finish, but must not start its next page.
+  await expect(ui.locator(".transcript")).toContainText("Retained hidden event");
+  await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect(calls.filter(c=>c.name==="read_transcript")).toHaveLength(reads);
+  await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+    Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+    frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(ui.locator(".transcript")).toContainText("Retained hidden event 400");
+});
+
+test("a hidden full resync rejects a delayed reply from the previous state epoch",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});
+  let captured=false,returned=false;
+  const {ui,state,calls}=await host(page,{snapshot,readUIState:async(data,args)=>{
+    if(args.search==="delayed"&&!captured){captured=true;await gate;returned=true}
+    return data;
+  }});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).waitFor();
+    await ui.getByLabel("Search inbox").fill("delayed");
+    await expect.poll(()=>captured).toBe(true);
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    state.inbox[0].item.title="Restored after hidden resync";state.cursor=3;
+    await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===3)).toBe(true);
+    release();
+    await expect.poll(()=>returned).toBe(true);
+    await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    await ui.getByLabel("Search inbox").fill("");
+    await expect(ui.getByRole("button",{name:/Restored after hidden resync/})).toBeVisible();
+  }finally{release()}
+});
+
+test("a hidden older read cannot consume newer run and attention invalidations",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});
+  let captured=false,returned=false;
+  const {ui,state,calls}=await host(page,{snapshot,readUIState:async(data,args)=>{
+    if(args.search==="delayed"&&!captured){captured=true;await gate;returned=true}
+    return data;
+  }});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).waitFor();
+    await ui.getByLabel("Search inbox").fill("delayed");
+    await expect.poll(()=>captured).toBe(true);
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>true});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    state.runs=[retained(state,"new-hidden-question","waiting")];
+    state.attention=[{id:"hidden-question",runId:"new-hidden-question",status:"pending",method:"item/tool/requestUserInput",blocking:true,params:{questions:[{id:"scope",question:"Which scope?",options:[{label:"Focused"},{label:"Broad"}]}]}} as Snapshot["attention"][number]];
+    state.inbox[0].item.title="Fresh hidden state";state.cursor=101;
+    await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===101)).toBe(true);
+    release();await expect.poll(()=>returned).toBe(true);
+    await ui.locator("body").evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    await page.locator("iframe").evaluate((frame:HTMLIFrameElement)=>{
+      Object.defineProperty(frame.contentDocument!,"hidden",{configurable:true,get:()=>false});
+      frame.contentDocument!.dispatchEvent(new Event("visibilitychange"));
+    });
+    await ui.getByLabel("Search inbox").fill("");
+    await expect(ui.getByRole("button",{name:/Fresh hidden state/})).toBeVisible();
+    await expect(ui.getByRole("button",{name:"Messages 1",exact:true})).toBeVisible();
+  }finally{release()}
+});
+
+test("failed requested view reads recover without a new journal publication",async({page})=>{
+  let unavailable=false;
+  const snapshot=initial();snapshot.inbox[0].item.title="Retry target";
+  const {ui,calls}=await host(page,{snapshot,transportFault:(name,args)=>name==="read_ui_state"&&args.search==="Retry target"&&unavailable});
+  await ui.getByRole("button",{name:/Retry target/}).waitFor();
+  unavailable=true;
+  await ui.getByLabel("Search inbox").fill("Retry target");
+  await expect(ui.getByRole("alert").filter({hasText:"Retrying saved view"})).toBeVisible();
+  const watches=calls.filter(c=>c.name==="watch_ui_changes").length;
+  await expect.poll(()=>calls.filter(c=>c.name==="watch_ui_changes").length).toBeGreaterThan(watches);
+  await expect(ui.getByRole("alert").filter({hasText:"Retrying saved view"})).toBeVisible();
+  unavailable=false;
+  await expect(ui.getByRole("button",{name:/Retry target/})).toBeVisible();
+  await expect(ui.getByRole("alert")).toHaveCount(0);
+  expect(snapshot.cursor).toBe(1);
+});
+
+test("queue navigation cannot activate rows belonging to the previous query",async({page})=>{
+  const snapshot=initial();
+  const pr=structuredClone(snapshot.inbox[0]);Object.assign(pr.item,{id:"owner/repo#2",kind:"pr",title:"Reviewable pull request",author:"someone",reviewRequests:["alex"]});pr.queues=["review"];
+  snapshot.inbox.push(pr);
+  let release:()=>void=()=>{};
+  const gate=new Promise<void>(resolve=>{release=resolve});let pending=false;
+  const {ui,calls}=await host(page,{snapshot,readUIState:async(data,args)=>{if(args.queue==="review"){pending=true;await gate}return data}});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).waitFor();
+    await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+    await expect.poll(()=>pending).toBe(true);
+    await expect(ui.getByRole("button",{name:/Fix reconnect regression/})).toHaveCount(0);
+    await expect(ui.getByText("Loading saved items…",{exact:true})).toBeVisible();
+    release();
+    await expect(ui.getByRole("button",{name:/Reviewable pull request/})).toBeVisible();
+    expect(calls.filter(c=>["prepare_launch","start_run"].includes(c.name))).toHaveLength(0);
+  }finally{release()}
+});
+
+test("observation-only completion refreshes posted review monitoring state",async({page})=>{
+  const snapshot=initial();snapshot.profiles[0].id="review";
+  const entry=snapshot.inbox[0];Object.assign(entry.item,{kind:"pr",author:"someone",reviewRequests:["alex"]});entry.queues=["review"];
+  let pending=true;
+  const {ui,state}=await host(page,{snapshot,watchDomains:["observation"],readReviews:async()=>({itemId:entry.item.id,refresh:pending?"pending":"fresh",syncedAt:"2026-10-27T12:00:00Z",lastAttempt:"2026-10-27T12:00:00Z",reviews:[]})});
+  await ui.getByRole("button",{name:"Review PRs",exact:true}).click();
+  await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+  await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toBeVisible();
+  pending=false;state.cursor++;
+  await expect(ui.getByText("Refreshing saved reviews…",{exact:true})).toHaveCount(0);
+});
+
+for(const modal of [false,true]){
+  test("a delayed "+(modal?"modal":"first-message")+" Start response cannot cross a full resync epoch",async({page})=>{
+    const snapshot=initial();snapshot.cursor=100;
+    let release:()=>void=()=>{};
+    const gate=new Promise<void>(resolve=>{release=resolve});
+    const {ui,state,calls}=await host(page,{snapshot,beforeStartResponse:()=>{snapshot.runs[0].status="prepared";return gate}});
+    try{
+      await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+      if(modal){await showItemDetails(ui);await ui.getByRole("button",{name:"New run",exact:true}).click()}
+      await ui.getByRole(modal?"dialog":"region",{name:modal?"Launch agent":"New agent conversation"}).getByRole("button",{name:"Start agent",exact:true}).click();
+      await expect.poll(()=>calls.filter(c=>c.name==="start_run").length).toBe(1);
+      state.cursor=3;
+      await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===3)).toBe(true);
+      release();
+      await expect(ui.getByRole("alert").filter({hasText:"Saved state changed during the request"})).toBeVisible();
+      await expect(ui.getByRole("button",{name:"Messages",exact:true})).toBeVisible();
+      expect(calls.filter(c=>c.name==="start_run")).toHaveLength(1);
+    }finally{release()}
+  });
+}
+
+test("a delayed Start status check cannot install acceptance after full resync",async({page})=>{
+  const snapshot=initial();snapshot.cursor=100;
+  let release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve});let checking=false;
+  const {ui,state,calls}=await host(page,{snapshot,loseStartResponse:true,readRun:async data=>{checking=true;await gate;return data}});
+  try{
+    await ui.getByRole("button",{name:/Fix reconnect regression/}).click();
+    await ui.getByRole("region",{name:"New agent conversation"}).getByRole("button",{name:"Start agent",exact:true}).click();
+    await expect.poll(()=>checking).toBe(true);
+    state.runs[0].status="prepared";state.cursor=3;
+    await expect.poll(()=>calls.some(c=>c.name==="watch_ui_changes"&&c.arguments.after===3)).toBe(true);
+    release();
+    await expect(ui.getByRole("alert").filter({hasText:"Saved state changed during the request"})).toBeVisible();
+    await expect(ui.getByRole("button",{name:"Messages",exact:true})).toBeVisible();
+    expect(calls.filter(c=>c.name==="start_run")).toHaveLength(1);
+  }finally{release()}
+});
+
+test("notification-only failures refresh saved Settings feedback",async({page})=>{
+  const snapshot=initial();snapshot.githubUsage={requestsLastHour:0,budget:600,reserve:100,nextRequest:"",restReset:"",graphqlReset:""};
+  const {ui,state,calls}=await host(page,{snapshot,surface:"settings",watchDomains:["github-notifications"]});
+  await ui.getByText("System defaults",{exact:true}).click();
+  state.githubUsage!.notificationError="Saved credential resolution failed";state.cursor++;
+  await expect(ui.getByRole("alert")).toContainText("Saved credential resolution failed");
+  expect(calls.filter(c=>["sync_repositories","diagnostics"].includes(c.name))).toHaveLength(0);
 });

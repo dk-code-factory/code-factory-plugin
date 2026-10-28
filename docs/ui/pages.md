@@ -15,7 +15,7 @@ contains navigation to the other. Both may remain open concurrently.
 <!-- specs:surfaces -->
 | Surface | Context |
 | --- | --- |
-| `S-FACTORY` | Five work tabs, Reported issues and one conversation page. Settings opens independently. |
+| `S-FACTORY` | Five work tabs, Reported issues and one conversation page. Settings opens independently. A direct sidebar launch exposes usable navigation before saved data or secondary interfaces arrive. |
 | `S-SETTINGS` | A separate MCP Apps settings document using the same authenticated connection and bridged tools. No Inbox/Agents navigation, attention, launch overlay or task pane. |
 <!-- /specs:surfaces -->
 

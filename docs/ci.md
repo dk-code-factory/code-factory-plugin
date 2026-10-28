@@ -8,7 +8,17 @@ matching Playwright Chromium. All actions are pinned to full commit SHAs.
 
 The job validates specifications, checks Go/TypeScript, runs uncached Go race and
 browser/accessibility fixtures, tooling, packaging, installer and compiled smoke
-tests. It forces fixture mode and needs no model credentials or installed service.
+tests. After the heavy suites, the required isolated `make test-performance` gate
+serves the production embedded UI through a fixture MCP host. One worker and zero
+retries retain all 20 fresh and 10 warm launch samples, each limited to 100 ms.
+Empty, cold-server and synthetic retained-state cases use provider operations
+delayed by at least 100 ms, with measured delays, request counts, payload sizes,
+render timings and long tasks stored in `web/performance-results/timing.json`.
+CI uploads that JSON, environment details and failure traces on every run.
+The fixture serves both the launch host and the exact embedded resource directly
+over HTTP; timed requests do not pass through Playwright routing, which
+[disables HTTP caching](https://playwright.dev/docs/api/class-page#page-route).
+These measurements do not establish real ChatGPT sidebar latency. The launch endpoint uses [text ElementTiming](https://w3c.github.io/element-timing/#report-text-element-timing) for all six visible navigation labels, corroborated by [first contentful paint](https://www.w3.org/TR/paint-timing/#sec-PerformancePaintTiming). Action handlers must be usable before those paint entries. Browser [shared monotonic timestamps](https://www.w3.org/TR/hr-time-3/#examples) translate the entries to the parent click origin. FCP, every navigation paint/intersection, animation-frame callbacks, parent notification elapsed and raw message-delivery lag remain in the evidence; callbacks are diagnostics rather than presentation proof. It forces fixture mode and needs no model credentials or installed service.
 Successful builds upload Linux x86-64 and portable plugin packages, SHA256SUMS and
 a CI manifest bound to the exact source commit. Failed browser evidence is kept
 separately. Verification has read-only repository permissions.
@@ -35,9 +45,9 @@ decisions. Every later revision uses the ordinary fail-closed specification gate
 The original fourteen-flow historical adoption pin remains unchanged and is not a
 public CI bypass; its private historical commit is not published.
 
-Concurrent local checkouts can set `CODE_FACTORY_TEST_UI_PORT` and
-`CODE_FACTORY_TEST_HOST_PORT` for fixture listeners, for example
-`CODE_FACTORY_TEST_UI_PORT=43173 CODE_FACTORY_TEST_HOST_PORT=43174 make ci FLOW_BASE=main`.
+Concurrent local checkouts can set `CODE_FACTORY_TEST_BASE_PORT` for fixture
+listeners, for example `CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`.
+The daemon uses the following port, 43174 in this example.
 Defaults remain 4173 and 4174. Both listeners stay on loopback; strict port
 ownership, fresh servers, health checks and direct-connection assertions use the
 selected ports. Installed service routes are unchanged.

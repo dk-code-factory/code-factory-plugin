@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "f184049d9ed471b64a63652fc0534cf79b86599c",
-  "fingerprint": "a9a274a735ab8030d8061fafd68eadd40faa0b3f302e9420fe90a2c04b1dd541",
+  "base": "9135daf735e0679080343dc12a52b0bb23f83098",
+  "fingerprint": "c41c9eb5af49ac55fc562282cd7f4a4d9fd2e615a0615e969a25a2328330efcc",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Subscribe to host notifications and manage delivery: authored scenarios S1, S2, S3, S4 and graph transitions are unchanged. Impact comes from shared Go/browser/release suite inputs, module declarations and consumed UI mappings; the only product behavior changes are the reporting draft and investigation boundaries.",
-    "implementation": "Reviewed the receive-notifications contract and its implementation/reference mappings against the branch changes. Shared IssueReport fields are optional additions and report processing stays within the separate reports service. Existing task, attention, connection, installation and publication controls preserve their prior transitions; no glossary or consumer ownership is reversed.",
-    "tests": "Reviewed the existing mapped assertion purposes, including func TestSubscriptionVerificationRetryDedupRefreshAndExpiry(; func TestCallbackSafetyAndFailedChallenge(. Existing fixture suites remain selected and their assertions are unchanged; new reporting assertions do not claim coverage for this flow or close its outstanding real-host/acceptance gaps."
+    "kind": "refactor",
+    "description": "Notification subscription, callback authority and delivery outcomes remain unchanged. The new UI metadata journal is separate from the legacy event sequence and contains no event payloads.",
+    "implementation": "Inspected central commit instrumentation and the unchanged event subscription handlers. Private buckets produce no UI invalidation, and rollback publishes neither journal changes nor a public projection.",
+    "tests": "STORE-UI-JOURNAL asserts legacy cursor preservation and metadata-only content. Existing callback/subscription and event tests remain mapped; UI cursor reconnect tests establish only fixture delivery behavior."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 49.276
+      "seconds": 47.091
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.164
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.931
+      "seconds": 24.912
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.763
+      "seconds": 0.742
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "4370d478880ac0a8994a0b0d91d89d9a2dd48bd7082900853d98fafc5e888dd1",
-    "term:attention-request": "2b49ca25b895a49ce0e6859aff0e9b5139f49ff40336644a58db616982e6bf78",
-    "term:coverage-gap": "1d347ba7589e9c052f0bac793e1765be9aba86e88f18fd049cb758e132e24a3b",
-    "term:host": "842e01ad154a3c650789612661a1ae455921503f15967aa7afe29a725669b73a",
-    "term:known-limitation": "bfb4621eddaf4e3ea1207ef24f3f58a5b92b7eacc14fc2dfb420ea2382d5bb5e",
-    "term:subscription": "1c79ad0aedcc4c226d38f1fc5a71477eb67fc4dde1838f1cd837da64e2b88997",
-    "term:unverified-behavior": "702c6ec67471b05c8eceb8d624aa3326c111680fd87d97a71611789008ab072e"
+    "flow:receive-notifications": "695169e4980b0ad8067ca9cf5975ac574c23f36ea9873748b89cc6cf8d847ce8",
+    "term:attention-request": "287bafa8ce8f4b9db38ff592301f032e54e163c181f425cfdb4ba33c695df9a2",
+    "term:coverage-gap": "805f6284d0fead9eee5889000225bba4bdcd5e6c8f226a1f067319dd7de0f921",
+    "term:host": "68319776b55e968213f2297da0c9df4d5cf77f2b4117a5dbded96e5ce35da32e",
+    "term:known-limitation": "3b170735e6a78071bae728d416af5297d6bd62715db9f6bff985c9a97c2e404e",
+    "term:subscription": "9b62de398436694da44734426f6f6ee135a86d453b1632a300a9b168e82c48ae",
+    "term:unverified-behavior": "433756cb9068d05bbaac06b016e9cbddfb200012bda4c0f5b3b6643e85997b76"
   }
 }

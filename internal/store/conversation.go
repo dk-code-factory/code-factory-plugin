@@ -21,7 +21,7 @@ func (t *Tx) ConversationVersion(runID string) (int64, error) {
 // ConversationEvidence excludes tool output, other runs and internal recovery
 // input. Oversized individual events are omitted, never truncated into evidence.
 func (s *Store) ConversationEvidence(ctx context.Context, runID string, since time.Time) ([]domain.Event, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT seq,data,at FROM events
+	rows, err := s.reader().QueryContext(ctx, `SELECT seq,data,at FROM events
 		WHERE entity=? AND kind='run.output' AND at>?
 		AND length(data)<=16384
 		AND json_extract(data,'$.method')='item/completed'

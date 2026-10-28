@@ -68,6 +68,7 @@ func registerUIResource(m *mcp.Server, html string) string {
 }
 
 type Server struct {
+	ui          *uiState
 	apiLogOnce  sync.Once
 	apiLog      *apiCallLog
 	App         *app.App
@@ -80,6 +81,7 @@ type Empty struct {
 }
 type IDInput struct {
 	ID        string `json:"id"`
+	Saved     bool   `json:"saved,omitempty" jsonschema:"Read saved observations only without scheduling provider refresh."`
 	Freshness string `json:"freshness,omitempty" jsonschema:"Use a new marker when reading current state after waiting or a mutation."`
 }
 type Page struct {
@@ -178,6 +180,9 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 		meta["ui"].(map[string]any)["resourceUri"] = resourceURI
 		meta["openai/outputTemplate"] = resourceURI
 	}
+	if name == "open_factory" {
+		meta["openai/ui"] = map[string]any{"entrypoints": []any{map[string]any{"type": "global"}}}
+	}
 	openWorld := name == "start_run" || name == "send_message" || name == "answer_request" || name == "manage_codex_plugins" || name == "report_issue" || name == "add_issue_evidence" || name == "resume_issue_report" || name == "refresh_issue_reports"
 	destructive := name == "cleanup_run" || name == "manage_codex_plugins"
 	mcp.AddTool(s, &mcp.Tool{Name: name, Description: desc, Meta: meta, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, OpenWorldHint: ptr(openWorld), DestructiveHint: ptr(destructive)}}, func(ctx context.Context, _ *mcp.CallToolRequest, in I) (*mcp.CallToolResult, map[string]any, error) {
@@ -193,6 +198,7 @@ func New(a *app.App, ev *events.Service) *Server {
 	s := &Server{App: a, Events: ev}
 	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.1.0"}, &mcp.ServerOptions{Instructions: "Code Factory manages a GitHub issue/PR inbox and local Codex runs, not email. Open the repository dashboard with open_factory and the separate configuration view with open_settings; no mailbox address or webmail URL is needed. Opening or listing never launches an agent. For checking reviews/agents and publication use track_work; omit target and filter queue for triage. Use track_work then send_message for follow-up. Open the dashboard only when explicitly requested. For agents waiting for human input, call list_attention with a fresh marker, show the exact questions and options, and use answer_request only with the user’s answer and the request ID. Never invent an answer, replay uncertain delivery or collect secrets in chat. Use returned delivery state and pending attention; a queued message is saved, not yet delivered, and accepted does not mean complete. On uncertainty use track_work, never replay. To run a PR review pipeline: call prepare_pr_review with target URL or repository shorthand, inspect the returned profile, skills, prompt and authority, then call start_run with the returned run id when authorized. prepare_pr_review resolves repository then system review defaults automatically. Use prepare_launch for other or customized launches. An explicit request to run a review authorizes starting the matching prepared review; ask only if authority or scope needs clarification. Successful start_run establishes launch acceptance; answer_request establishes local answer delivery. send_message saves the message and establishes queue acceptance only; its messageDelivery state tracks later agent delivery. These responses include pending attention. Report that returned state without adding a verification read or polling in the same launch/answer/message workflow; acceptance/delivery does not establish task completion. Use track_work for later user-requested status or uncertain responses. Never place credentials in chat.", Capabilities: &mcp.ServerCapabilities{}, SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
 	s.MCP = m
+	s.startUIState()
 	uri := registerUIResource(m, web.HTML)
 	bind(m, uri, "report_issue", "Report suspected Code Factory defective behavior. Persists an idempotent observation immediately, captures private local evidence, and queues automatic investigation and issue filing. Does not authorize fixing code.", false, false, func(ctx context.Context, in reports.Submission) (any, error) { return a.Reports.Submit(ctx, in) })
 	bind(m, uri, "add_issue_evidence", "Append missing host observations to a report; local runtime evidence is collected server-side. Resumes investigations waiting for information.", false, false, func(ctx context.Context, in reports.EvidenceInput) (any, error) {
@@ -222,8 +228,18 @@ func New(a *app.App, ev *events.Service) *Server {
 		}
 		return inboxSummaries(out), nil
 	})
-	bind(m, uri, "read_item", "Read saved item detail immediately with observation time and background refresh state. freshness never forces GitHub. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) { return s.detail(ctx, in.ID) })
-	bind(m, uri, "read_pr_reviews", "Read GitHub-verified posted reviews for a synchronized PR item id: receipt URL, author, verdict, reviewed commit, submitted time, body and inline comments. Includes all authors; does not attribute them to a run. syncedAt, refresh, error and retryAt describe saved observations and background refresh. Pending drafts and agent publication claims are excluded. Returns immediately and schedules stale/missing observations in the background; never posts, retries publication or starts work.", false, true, func(ctx context.Context, in IDInput) (any, error) { return a.ReadPRReviews(ctx, in.ID) })
+	bind(m, uri, "read_item", "Read saved item detail immediately with observation time and background refresh state. freshness never forces GitHub. Does not mark read; the UI marks the displayed revision separately.", false, true, func(ctx context.Context, in IDInput) (any, error) {
+		if in.Saved {
+			return (&app.App{Store: a.Store, SavedOnly: true}).ItemDetail(ctx, in.ID)
+		}
+		return s.detail(ctx, in.ID)
+	})
+	bind(m, uri, "read_pr_reviews", "Read GitHub-verified posted reviews for a synchronized PR item id: receipt URL, author, verdict, reviewed commit, submitted time, body and inline comments. Includes all authors; does not attribute them to a run. syncedAt, refresh, error and retryAt describe saved observations and background refresh. Pending drafts and agent publication claims are excluded. Returns immediately and schedules stale/missing observations in the background; never posts, retries publication or starts work. With saved=true, reads use saved observations only and schedule no refresh.", false, true, func(ctx context.Context, in IDInput) (any, error) {
+		if in.Saved {
+			return (&app.App{Store: a.Store, SavedOnly: true}).ReadPRReviews(ctx, in.ID)
+		}
+		return a.ReadPRReviews(ctx, in.ID)
+	})
 	bind(m, uri, "item_action", "Mark displayed revision read, unread, acknowledge, record action, or override priority.", false, false, func(ctx context.Context, in UserAction) (any, error) {
 		return nil, a.UserAction(ctx, in.ID, in.Action, in.Revision, in.Priority)
 	})
@@ -429,6 +445,8 @@ func New(a *app.App, ev *events.Service) *Server {
 		return map[string]any{"events": ev, "cursor": next, "hasMore": next < a.Store.Latest(ctx)}, e
 	})
 	bind(m, uri, "read_snapshot", "Read current UI state and a cursor for incremental updates.", true, true, func(ctx context.Context, _ Empty) (any, error) { return s.snapshot(ctx) })
+	bind(m, uri, "read_ui_state", "Read published saved UI projections for requested views, filters and pagination. No provider requests or external refresh.", true, true, func(ctx context.Context, in UIStateInput) (any, error) { return s.readUIState(ctx, in) })
+	bind(m, uri, "watch_ui_changes", "Wait for a published UI projection after a cursor, default 25 seconds. Returns metadata-only invalidations; resync requires reading current views.", true, true, func(ctx context.Context, in WatchUIInput) (any, error) { return s.watchUIChanges(ctx, in) })
 	type TranscriptInput struct {
 		ID        string `json:"id"`
 		After     int64  `json:"after,omitempty"`

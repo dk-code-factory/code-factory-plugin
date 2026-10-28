@@ -252,6 +252,19 @@ else:
 			t.Fatal(e)
 		}
 		activePath := filepath.Join(rt.Workspace, "active-lifecycle.json")
+		// stop acknowledges shutdown before the controller has joined its
+		// workers. Wait for the durable stopped state before another resume.
+		stopDeadline = time.Now().Add(10 * time.Second)
+		for time.Now().Before(stopDeadline) {
+			stopped, e = n.Status(ctx, rt, state.ID)
+			if e == nil && (stopped.Status == "needs_attention" || stopped.Status == "canceled") {
+				break
+			}
+			time.Sleep(30 * time.Millisecond)
+		}
+		if e != nil || (stopped.Status != "needs_attention" && stopped.Status != "canceled") {
+			t.Fatal("resumed controller shutdown did not settle", stopped, e)
+		}
 		activeReceipt, err := os.ReadFile(activePath)
 		if err != nil {
 			t.Fatal(err)

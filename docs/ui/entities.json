@@ -8,7 +8,10 @@
       "terms": [
         "ui-s-factory",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "direct-launch",
+        "ui-projection",
+        "ui-change-cursor"
       ],
       "contains": [
         "P-IDENTITY",
@@ -61,6 +64,36 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) startUIState()",
+          "purpose": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested saved views, complete-dataset filters and 50-row default pagination."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (s *Store) ReadView(",
+          "purpose": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function publishUIChange(",
+          "purpose": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+        },
+        {
+          "path": "web/defer-ui.mjs",
+          "anchor": "const scripts =",
+          "purpose": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+        },
+        {
+          "path": "web/index.html",
+          "anchor": "id=\"boot-nav\"",
+          "purpose": "Actionable navigation and query controls precede runtime/SDK initialization."
         }
       ],
       "assertions": [
@@ -76,7 +109,17 @@
         "UI-DIRECT-CHAT",
         "UI-WAITING-MESSAGES",
         "UI-CONNECT-INIT",
-        "UI-CONNECT-POLL"
+        "UI-CONNECT-POLL",
+        "UI-LAUNCH-50MS",
+        "API-UI-PAGES",
+        "API-UI-COMMIT",
+        "API-UI-BURSTS",
+        "STORE-UI-JOURNAL",
+        "STORE-UI-SNAPSHOT",
+        "UI-QUERY-ORDER",
+        "UI-HIDDEN-SUBSCRIPTION",
+        "UI-INBOX-PAGES",
+        "UI-SHELL-ORDER"
       ],
       "gaps": [
         {
@@ -105,14 +148,24 @@
           "owner": "ui-specification-maintainer",
           "reason": "The former permanent footer is retired from the compact source UI with fixture absence assertions. Installed-host confirmation of the compact replacement remains unverified.",
           "next_verification": "Verify the installed compact build has no permanent footer across its navigable pages; keep earlier-build observations separate."
+        },
+        {
+          "version": 1,
+          "id": "gap-ui-direct-launch-host",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "ui-specification-maintainer",
+          "reason": "The 100 ms launch boundary is measured only in the controlled fixture host. Actual ChatGPT sidebar latency, host resource acquisition and typed-chat model delay require separate observations.",
+          "next_verification": "Measure the published content-addressed resource in the approved ChatGPT sidebar session; retain actual-host timings separately from fixture samples."
         }
       ],
       "suites": [
         "tooling",
         "browser",
-        "go"
+        "go",
+        "ui-performance"
       ],
-      "context": "Five work tabs, Reported issues and one conversation page. Settings opens independently.",
+      "context": "Five work tabs, Reported issues and one conversation page. Settings opens independently. A direct sidebar launch exposes usable navigation before saved data or secondary interfaces arrive.",
       "state_description": "The owned body, root and main surfaces paint the active host light/dark theme background, including when host-injected document styling makes html transparent; body covers at least the viewport height."
     },
     {
@@ -206,7 +259,10 @@
       "terms": [
         "ui-w-navigation",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "direct-launch",
+        "ui-projection",
+        "ui-change-cursor"
       ],
       "contains": [],
       "elements": [
@@ -285,6 +341,36 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) startUIState()",
+          "purpose": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested saved views, complete-dataset filters and 50-row default pagination."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (s *Store) ReadView(",
+          "purpose": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function publishUIChange(",
+          "purpose": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+        },
+        {
+          "path": "web/defer-ui.mjs",
+          "anchor": "const scripts =",
+          "purpose": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+        },
+        {
+          "path": "web/index.html",
+          "anchor": "id=\"boot-nav\"",
+          "purpose": "Actionable navigation and query controls precede runtime/SDK initialization."
         }
       ],
       "assertions": [
@@ -300,7 +386,20 @@
         "UI-NO-INLINE-SETTINGS",
         "UI-WORK-QUEUES",
         "UI-WAITING-MESSAGES",
-        "UI-WORKING-MONITOR"
+        "UI-WORKING-MONITOR",
+        "UI-LAUNCH-50MS",
+        "API-UI-PAGES",
+        "API-UI-COMMIT",
+        "API-UI-BURSTS",
+        "STORE-UI-JOURNAL",
+        "STORE-UI-SNAPSHOT",
+        "UI-QUERY-ORDER",
+        "UI-HIDDEN-SUBSCRIPTION",
+        "UI-INBOX-PAGES",
+        "UI-NAV-MESSAGES",
+        "UI-SHELL-ORDER",
+        "API-OVERVIEW-ATTENTION",
+        "UI-HIDDEN-DIRTY"
       ],
       "gaps": [
         {
@@ -316,7 +415,8 @@
       "suites": [
         "tooling",
         "browser",
-        "go"
+        "go",
+        "ui-performance"
       ],
       "element_description": "Working, Issues, My PRs, Review PRs, Messages and Reported issues controls, current page, attention count and contextual Back.",
       "state_description": "Compact tabs wrap within the viewport, including Reported issues. Messages counts unanswered valid questions and approvals, including nonblocking and retained textual/message questions, and hides zero.",
@@ -389,7 +489,8 @@
         "UI-CONNECT-POLL",
         "UI-CONNECT-MUTATION",
         "UI-CONNECT-HOST-WRAP",
-        "UI-CONNECT-HOST-MUTATION"
+        "UI-CONNECT-HOST-MUTATION",
+        "UI-VIEW-RETRY"
       ],
       "gaps": [
         {
@@ -507,7 +608,10 @@
       "terms": [
         "ui-w-inbox-query",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "direct-launch",
+        "ui-projection",
+        "ui-change-cursor"
       ],
       "contains": [],
       "elements": [
@@ -518,6 +622,18 @@
         {
           "id": "W-INBOX-QUERY.filter",
           "term": "element-w-inbox-query-filter"
+        },
+        {
+          "id": "W-INBOX-QUERY.previous",
+          "term": "element-w-inbox-query-previous"
+        },
+        {
+          "id": "W-INBOX-QUERY.next",
+          "term": "element-w-inbox-query-next"
+        },
+        {
+          "id": "W-INBOX-QUERY.total",
+          "term": "element-w-inbox-query-total"
         }
       ],
       "states": [
@@ -560,13 +676,53 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) startUIState()",
+          "purpose": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested saved views, complete-dataset filters and 50-row default pagination."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (s *Store) ReadView(",
+          "purpose": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function publishUIChange(",
+          "purpose": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+        },
+        {
+          "path": "web/defer-ui.mjs",
+          "anchor": "const scripts =",
+          "purpose": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+        },
+        {
+          "path": "web/index.html",
+          "anchor": "id=\"boot-nav\"",
+          "purpose": "Actionable navigation and query controls precede runtime/SDK initialization."
         }
       ],
       "assertions": [
         "UI-TRIAGE",
         "ITEM-STATE",
         "API-UI-CONTENT",
-        "UI-NO-MATCHES"
+        "UI-NO-MATCHES",
+        "UI-LAUNCH-50MS",
+        "API-UI-PAGES",
+        "API-UI-COMMIT",
+        "API-UI-BURSTS",
+        "STORE-UI-JOURNAL",
+        "STORE-UI-SNAPSHOT",
+        "UI-QUERY-ORDER",
+        "UI-HIDDEN-SUBSCRIPTION",
+        "UI-INBOX-PAGES",
+        "UI-QUERY-IDENTITY"
       ],
       "gaps": [
         {
@@ -584,9 +740,9 @@
         "browser",
         "go"
       ],
-      "element_description": "**search** and **filter** in one compact row.",
-      "state_description": "Matches search against title and identifier, without case sensitivity; combines it with the selected filter.",
-      "interactions": "Filters the current focused queue with independent per-tab query state; selecting a row replaces the list with chat."
+      "element_description": "Search, filter, previous/next saved-result pages and the total matching count.",
+      "state_description": "Search applies case-insensitively to the complete saved title, identifier, body, author and labels, together with queue/filter membership; default pages contain 50 rows.",
+      "interactions": "Each tab retains its query and current page. Previous/Next expose the complete result set; a changed search or filter starts at the first page. Back restores row focus on the retained page when the row still exists. Selection remains reachable outside the current page."
     },
     {
       "id": "W-SYNC-HEALTH",
@@ -783,7 +939,8 @@
         "UI-WAKE-MESSAGE",
         "UI-OPEN-AGENT",
         "API-COMPACT-INBOX",
-        "UI-COMPACT-REVIEW"
+        "UI-COMPACT-REVIEW",
+        "UI-QUERY-IDENTITY"
       ],
       "gaps": [
         {
@@ -998,7 +1155,10 @@
         "UI-DETAIL-DEFERRED",
         "UI-ITEM-SUMMARY-MARKDOWN",
         "UI-DETAIL-OBSERVATION-READ",
-        "UI-DETAIL-COOLDOWN-RETRY"
+        "UI-DETAIL-COOLDOWN-RETRY",
+        "UI-OBSERVATION-ONLY",
+        "UI-RESYNC-HISTORY",
+        "UI-REPOSITORY-FRESHNESS"
       ],
       "gaps": [
         {
@@ -1568,7 +1728,9 @@
         "UI-POSTED-REVIEWS",
         "API-UI",
         "UI-SAVED-OBSERVATIONS",
-        "API-GITHUB-QUERY-CACHE"
+        "API-GITHUB-QUERY-CACHE",
+        "UI-REPOSITORY-FRESHNESS",
+        "UI-REVIEW-OBSERVATION"
       ],
       "gaps": [
         {
@@ -2121,7 +2283,7 @@
         "go"
       ],
       "element_description": "Whole-notice **answer** button; **blocking-label** or **continuing-label**.",
-      "state_description": "Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question · agent continues; unconfirmed completion and unresolved clarification create no notice.",
+      "state_description": "Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question \u00b7 agent continues; unconfirmed completion and unresolved clarification create no notice.",
       "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them."
     },
     {
@@ -2173,6 +2335,14 @@
         {
           "id": "W-TRANSCRIPT.console",
           "term": "element-w-transcript-console"
+        },
+        {
+          "id": "W-TRANSCRIPT.next-history",
+          "term": "element-w-transcript-next-history"
+        },
+        {
+          "id": "W-TRANSCRIPT.follow-latest",
+          "term": "element-w-transcript-follow-latest"
         }
       ],
       "states": [
@@ -2236,7 +2406,13 @@
         "UI-CONVERSATION-EMPTY",
         "UI-SESSION-CONSOLE",
         "UI-QUEUED-MESSAGE",
-        "UI-CONVERSATION-CHUNKS"
+        "UI-CONVERSATION-CHUNKS",
+        "UI-RESYNC-HISTORY",
+        "UI-HISTORY-WINDOW",
+        "API-UI-OUTPUT-DOMAIN",
+        "UI-OUTPUT-SUBSCRIPTION",
+        "UI-STREAM-PROGRESS",
+        "UI-HIDDEN-HISTORY"
       ],
       "gaps": [
         {
@@ -2245,17 +2421,17 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "`UI-TRIAGE`, `UI-ASSEMBLED` assert displayed output and follow-up. Further block variants, retention threshold/history reset, disabled states and rejected-send drafts are not comprehensively asserted.",
-          "next_verification": "For W-TRANSCRIPT: Add browser fixtures for transcript block variants, retention/history reset, message disabled states and rejected sends that preserve the draft."
+          "reason": "Local fixtures cover a 1,300-event bounded history window, explicit continuation, latest-following and lower-cursor full resync with retained drafts. Further block variants, message disabled-state combinations and all rejected-send variants remain incompletely asserted; installed-host acceptance remains unverified.",
+          "next_verification": "Exercise remaining transcript block variants, disabled message states and rejected sends; separately verify history browsing and resync in the approved installed host."
         }
       ],
       "suites": [
         "tooling",
         "browser"
       ],
-      "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too.",
+      "element_description": "Human-facing **live-region** Conversation with Agent/You messages and readable errors, repeated **block-label**/**block-text**, **waiting**, **loading-more**, **restart-history** and **read-error**. Commands, plans, diffs, internal summaries and raw output are **technical-activity** under Details; structured **error-details** are there too. Older-history browsing exposes next-history and follow-latest controls.",
       "state_description": "The normal conversation contains agent progress/final messages, user replies, saved-message delivery status and readable errors. Saved messages show queued, delivering, delivered or uncertain feedback; changes replace the same message status block. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream shows Waiting for an agent update. Details is collapsed initially and stays closed through updates. Read failures retain output/drafts and clear local read feedback after recovery. Automatic repair/continuation inputs are labeled Question recovery and shown under Details or in the console; actual user answers retain their ordinary role. Completed owner and agent messages remain normal Conversation content across fetched journal pages; incomplete or malformed raw fragments remain technical activity under Details.",
-      "interactions": "Details reveals retained technical activity without starting or changing agent work. Pending question/approval controls remain outside the collapsed data. History paging/reset and the 1,000-event retained limit remain unchanged. Session console reveals the full event stream using the same session and reply draft."
+      "interactions": "Details reveals retained technical activity without starting or changing agent work. Opening the beginning enters a bounded history window that remains inspectable across background updates. Next history page advances on request; Follow latest history resumes automatic updates. The retained display remains limited to 1,000 events. A full state resync reloads history from its beginning without clearing the reply draft. Session console uses the same retained session and draft. Continuing publications coalesce behind one in-flight saved read while valid prefixes remain visible. Hidden views pause new history reads and resume on visibility even without another publication."
     },
     {
       "id": "W-MESSAGE",
@@ -2363,7 +2539,7 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**text** “Message agent” textarea; **send** button.",
+      "element_description": "**text** \u201cMessage agent\u201d textarea; **send** button.",
       "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/deferred/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft. Unresolved classification permits explicit owner messaging. A cancelled pre-agent launch without a retained thread also keeps the composer disabled.",
       "interactions": "Active messages require the displayed expected turn. A successful send records the message durably and clears only unchanged submitted text before agent delivery; failed acceptance preserves the draft. Background delivery restores the retained session using this submitted message as its first new turn and makes no GitHub preflight. The UI never calls Resume separately or automatically replays a mutation. Later delivery status remains visible in the conversation."
     },
@@ -2598,7 +2774,8 @@
         "API-UI-CONTENT",
         "UI-DRAFT-LAUNCHES",
         "UI-READABLE-APPROVALS",
-        "ADMIN-REMOVED-SKILL"
+        "ADMIN-REMOVED-SKILL",
+        "UI-DEFERRED-SKILLS"
       ],
       "gaps": [
         {
@@ -3208,7 +3385,7 @@
       ],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -3337,7 +3514,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -3372,7 +3549,7 @@
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
         }
@@ -3472,7 +3649,7 @@
       ],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -3507,7 +3684,7 @@
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
         },
@@ -3574,12 +3751,24 @@
         {
           "id": "W-SKILL-SETTINGS.save-result",
           "term": "element-w-skill-settings-save-result"
+        },
+        {
+          "id": "W-SKILL-SETTINGS.reload",
+          "term": "element-w-skill-settings-reload"
+        },
+        {
+          "id": "W-SKILL-SETTINGS.load-status",
+          "term": "element-w-skill-settings-load-status"
+        },
+        {
+          "id": "W-SKILL-SETTINGS.load-error",
+          "term": "element-w-skill-settings-load-error"
         }
       ],
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -3614,7 +3803,7 @@
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
         }
@@ -3623,7 +3812,11 @@
         "UI-SETTINGS",
         "API-UI",
         "API-UI-CONTENT",
-        "UI-SETTINGS-EDITORS"
+        "UI-SETTINGS-EDITORS",
+        "API-UI-SKILL-EDITOR",
+        "UI-SKILL-EDITOR-LOAD",
+        "UI-SKILL-EDITOR-RACE",
+        "UI-SKILL-EDITOR-ERROR"
       ],
       "gaps": [
         {
@@ -3641,9 +3834,9 @@
         "browser",
         "go"
       ],
-      "element_description": "**managed-skill** select with Create a skill option; **name** required input; **instructions** text area; **save**. **save-result** beside each form.",
-      "state_description": "Existing choices include managed skills only. Selecting an existing skill loads name/content. Selecting Create a skill currently does not reset populated fields. Saving disables the form; success or an exact error appears beside it; failed inputs remain.",
-      "interactions": "Save creates/replaces managed skill content. No delete, rename migration or file-tree editor is present."
+      "element_description": "**managed-skill** select with Create a skill option; **name** required input; **instructions** text area; **save**. **save-result** beside each form. Selected content has load-status/load-error feedback and an explicit reload control.",
+      "state_description": "Create a skill selects a fresh authoring template and clears the previous name/instructions. Selecting an existing managed skill loads its saved instructions. Failed reads retain the prior draft but gate Save until a successful selected read or explicit new selection.",
+      "interactions": "Selecting a managed skill loads only its saved authoring content. Broad metadata and launch lists omit content/files. Loading/error states disable Save; explicit reload retries the read, and late prior selections cannot replace the current editor or draft. Save creates/replaces managed skill content. No delete, rename migration or file-tree editor is present."
     },
     {
       "id": "W-DIAGNOSTICS",
@@ -3691,7 +3884,7 @@
       ],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -3943,7 +4136,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -3966,7 +4159,7 @@
         "tooling",
         "go"
       ],
-      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”.",
+      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** \u201cConnect Code Factory\u201d, **deny** \u201cCancel\u201d.",
       "state_description": "Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages.",
       "interactions": "Allow or Deny consumes the request and redirects to its registered host callback. No credential field."
     },
@@ -4678,7 +4871,7 @@
         "go"
       ],
       "composition": "`W-RUN-ROW` repeated by run ID, or `W-RUN-EMPTY`",
-      "context": "Collapsed Work history inside the selected item’s Item details, containing only that item’s retained conversations and nested Draft launches."
+      "context": "Collapsed Work history inside the selected item\u2019s Item details, containing only that item\u2019s retained conversations and nested Draft launches."
     },
     {
       "id": "P-RUN-DETAIL",
@@ -4781,7 +4974,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -4857,7 +5050,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -4929,7 +5122,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -5002,7 +5195,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -5075,7 +5268,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -5760,7 +5953,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6091,7 +6284,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -6465,7 +6658,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6653,7 +6846,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-NAVIGATION` → one embedded `PAGE-*`",
+      "endpoint_description": "`W-NAVIGATION` \u2192 one embedded `PAGE-*`",
       "trigger": "Working, Issues, My PRs, Review PRs, Messages or Reported issues tab.",
       "interactions": "Navigates between four task queues with independent query state; configuration remains a separate document.",
       "from": [
@@ -6676,7 +6869,10 @@
       "terms": [
         "ui-c-filter",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "direct-launch",
+        "ui-projection",
+        "ui-change-cursor"
       ],
       "contains": [],
       "elements": [],
@@ -6716,6 +6912,36 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Prepare(",
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) startUIState()",
+          "purpose": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested saved views, complete-dataset filters and 50-row default pagination."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (s *Store) ReadView(",
+          "purpose": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function publishUIChange(",
+          "purpose": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+        },
+        {
+          "path": "web/defer-ui.mjs",
+          "anchor": "const scripts =",
+          "purpose": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+        },
+        {
+          "path": "web/index.html",
+          "anchor": "id=\"boot-nav\"",
+          "purpose": "Actionable navigation and query controls precede runtime/SDK initialization."
         }
       ],
       "assertions": [
@@ -6727,7 +6953,17 @@
         "UI-WORK-QUEUES",
         "API-QUEUE-LINKS",
         "API-REVIEW-SYNC",
-        "API-REVIEW-IDENTITY"
+        "API-REVIEW-IDENTITY",
+        "UI-LAUNCH-50MS",
+        "API-UI-PAGES",
+        "API-UI-COMMIT",
+        "API-UI-BURSTS",
+        "STORE-UI-JOURNAL",
+        "STORE-UI-SNAPSHOT",
+        "UI-QUERY-ORDER",
+        "UI-HIDDEN-SUBSCRIPTION",
+        "UI-INBOX-PAGES",
+        "UI-QUERY-IDENTITY"
       ],
       "gaps": [
         {
@@ -6745,9 +6981,9 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-INBOX-QUERY` → `P-INBOX-LIST`",
+      "endpoint_description": "`W-INBOX-QUERY` \u2192 `P-INBOX-LIST`",
       "trigger": "Search text and filter value.",
-      "interactions": "Applies per-tab kind/ownership/review membership, filter and query. Pending issues exclude linked PRs; lists sort by priority then update time.",
+      "interactions": "Search and filter the complete saved focused queue before pagination; default pages contain 50 rows. Changing the query resets its page, and older responses cannot replace later queries.",
       "from": [
         "W-INBOX-QUERY"
       ],
@@ -6816,7 +7052,8 @@
         "UI-DIRECT-CHAT",
         "UI-DETAIL-DEFERRED",
         "UI-DETAIL-OBSERVATION-READ",
-        "UI-DETAIL-COOLDOWN-RETRY"
+        "UI-DETAIL-COOLDOWN-RETRY",
+        "UI-PAGED-SELECTION"
       ],
       "gaps": [
         {
@@ -6834,7 +7071,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Work row → item conversation",
+      "endpoint_description": "Work row \u2192 item conversation",
       "trigger": "Click a row; item ID.",
       "interactions": "Loads and marks the displayed item revision read, continues the newest retained conversation or shows a prefilled first message. Never starts or prepares on selection.",
       "from": [
@@ -6931,7 +7168,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read.",
+      "endpoint_description": "`W-ITEM-ACTIONS` \u2192 persisted item state \u2192 shared snapshot indicators; detail history is a separately retained read.",
       "trigger": "Unread, acknowledge New or record action; item ID.",
       "interactions": "Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. A deferred provider refresh leaves the displayed saved information unread until a successful retry.",
       "from": [
@@ -7014,7 +7251,7 @@
         "go",
         "browser"
       ],
-      "endpoint_description": "`W-PRIORITY.override` → local priority state and displayed item",
+      "endpoint_description": "`W-PRIORITY.override` \u2192 local priority state and displayed item",
       "trigger": "Picker change; automatic clears the override.",
       "interactions": "Saves immediately, disables during submission and restores the saved value with inline error on failure.",
       "from": [
@@ -7106,7 +7343,7 @@
         "go",
         "browser"
       ],
-      "endpoint_description": "`W-RELATIONSHIPS` → selected item's relationships/context",
+      "endpoint_description": "`W-RELATIONSHIPS` \u2192 selected item's relationships/context",
       "trigger": "Add submits `source` and `target`; Remove submits `source`, `target` and `remove: true`.",
       "interactions": "Submits local Add/Remove, then refreshes selected relationships without clearing unrelated drafts. A late earlier response cannot replace later selected detail.",
       "from": [
@@ -7188,7 +7425,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS.launch` → `D-LAUNCH`",
+      "endpoint_description": "`W-ITEM-ACTIONS.launch` \u2192 `D-LAUNCH`",
       "trigger": "Selected item entry.",
       "interactions": "New run under Item details prepares an optional proposal and opens its durable review. No workspace/process starts until Start.",
       "from": [
@@ -7268,7 +7505,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-EDITOR.profile` → its editable fields",
+      "endpoint_description": "`W-LAUNCH-EDITOR.profile` \u2192 its editable fields",
       "trigger": "Select a profile.",
       "interactions": "Replaces prompt/model/effort/skill drafts; keeps the current base draft.",
       "from": [
@@ -7360,9 +7597,9 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Default launch or editor Review → prepared review",
+      "endpoint_description": "Default launch or editor Review \u2192 prepared review",
       "trigger": "Default launch, or explicit Review after customization.",
-      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account’s own PR and missing author/identity without creating a proposal.",
+      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account\u2019s own PR and missing author/identity without creating a proposal.",
       "from": [
         "W-LAUNCH-EDITOR.review",
         "W-ITEM-ACTIONS.launch"
@@ -7426,7 +7663,8 @@
       "assertions": [
         "UI-TRIAGE",
         "UI-ASSEMBLED",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-DEFERRED-SKILLS"
       ],
       "gaps": [
         {
@@ -7443,7 +7681,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.edit` → `P-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.edit` \u2192 `P-LAUNCH-EDITOR`",
       "trigger": "Edit launch click.",
       "interactions": "Returns to the editor. The preceding prepared record is retained, not modified/deleted.",
       "from": [
@@ -7520,7 +7758,8 @@
         "UI-START-UNKNOWN",
         "UI-START-CONFIRMED",
         "ADMIN-PLUGIN-GATE",
-        "API-REVIEW-AUTHOR-START"
+        "API-REVIEW-AUTHOR-START",
+        "UI-START-CHECK-EPOCH"
       ],
       "gaps": [
         {
@@ -7547,7 +7786,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.start` → `PAGE-AGENTS`/`P-RUN-DETAIL`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.start` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`",
       "trigger": "Prepared run ID.",
       "interactions": "Explicit Start only. Error/lost response reads the same run; accepted work opens, still-prepared work permits retry, unknown status disables Start/Edit and offers Check start status. PR review Start rechecks the current author and identity and rejects self review without queuing work; the retained proposal remains available.",
       "from": [
@@ -7635,8 +7874,8 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Retained run or draft row → conversation or review",
-      "trigger": "Retained conversation or draft row inside the owning item’s Work history.",
+      "endpoint_description": "Retained run or draft row \u2192 conversation or review",
+      "trigger": "Retained conversation or draft row inside the owning item\u2019s Work history.",
       "interactions": "Opens the selected retained conversation within the owning item, preserving the originating work queue Back context. Prepared rows reopen their existing immutable review without preparing or starting again.",
       "from": [
         "W-RUN-ROW.select"
@@ -7740,7 +7979,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-RUN-CONTROLS` → selected run → Agents widgets",
+      "endpoint_description": "`W-RUN-CONTROLS` \u2192 selected run \u2192 Agents widgets",
       "trigger": "Explicit Interrupt, question-recovery Take over session, or Cleanup for the selected retained run.",
       "interactions": "Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary. Source closure or merge permanently terminates the session while retaining its history and workspace.",
       "from": [
@@ -7846,7 +8085,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-MESSAGE` → selected run → `W-TRANSCRIPT`",
+      "endpoint_description": "`W-MESSAGE` \u2192 selected run \u2192 `W-TRANSCRIPT`",
       "trigger": "Message text and displayed current-turn context.",
       "interactions": "Send with current-turn identity while active. Acknowledge durable local queue acceptance before contacting the agent; background delivery restores the same retained session when needed. Saved source context is explicitly unverified; task-required GitHub reads belong to the agent. Accepted sends clear unchanged submitted drafts; rejected acceptance preserves them. Delivery uncertainty remains visible and is never automatically replayed. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
@@ -7930,7 +8169,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` → `D-ATTENTION`",
+      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` \u2192 `D-ATTENTION`",
       "trigger": "Notice click; request ID belonging to the selected run.",
       "interactions": "Opens that request without answering.",
       "from": [
@@ -8022,7 +8261,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Messages request → owning run and attention dialog",
+      "endpoint_description": "Messages request \u2192 owning run and attention dialog",
       "trigger": "Select one pending request.",
       "interactions": "Selects that exact owning run and request; identifies item/profile and returns to that conversation after answering. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
@@ -8107,7 +8346,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Attention dialog → owning conversation",
+      "endpoint_description": "Attention dialog \u2192 owning conversation",
       "trigger": "Current attention's owning run ID.",
       "interactions": "Closes attention and opens the owning conversation without submitting an answer.",
       "from": [
@@ -8207,7 +8446,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state",
+      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` \u2192 request/run state",
       "trigger": "Response matched to current request ID.",
       "interactions": "Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them. Once interruption is requested, native questions reject new responses while the agent is stopping.",
       "from": [
@@ -8297,7 +8536,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "Launch/attention close control → underlying page",
+      "endpoint_description": "Launch/attention close control \u2192 underlying page",
       "trigger": "Close click or Escape inside the active dialog.",
       "interactions": "Dismisses only that dialog and restores its connected opener when permitted. No attention answer or interrupt is sent.",
       "from": [
@@ -8323,7 +8562,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -8382,7 +8621,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` → repository summary / sync inputs",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` \u2192 repository summary / sync inputs",
       "trigger": "Repository ID, checkout and default base.",
       "interactions": "Shows saving/success/error within the independent settings view. Successful saves remain there; other open task views receive refreshed shared data without navigation or draft reset.",
       "from": [
@@ -8408,7 +8647,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -8443,7 +8682,7 @@
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
         }
@@ -8470,7 +8709,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` → profile and launch skill choices",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` \u2192 profile and launch skill choices",
       "trigger": "Explicit skill discovery directory, initially the filesystem root.",
       "interactions": "Loads/discovers skills and refreshes shared choices without saving the repository first.",
       "from": [
@@ -8496,7 +8735,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -8531,7 +8770,7 @@
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
         }
@@ -8557,7 +8796,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-POLICY-SETTINGS` → config / priority assessment inputs",
+      "endpoint_description": "`W-POLICY-SETTINGS` \u2192 config / priority assessment inputs",
       "trigger": "Label/priority rows, assessment prompt and notification setting; disabled Jira values are not editable here.",
       "interactions": "Submits configuration; later background assessment can update priority displays. Does not create a host subscription.",
       "from": [
@@ -8584,7 +8823,7 @@
       ],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -8619,7 +8858,7 @@
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
         }
@@ -8646,7 +8885,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-PROFILE-SETTINGS` → future `W-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-PROFILE-SETTINGS` \u2192 future `W-LAUNCH-EDITOR`",
       "trigger": "Saved profile draft.",
       "interactions": "Refreshes available/default launch settings; existing prepared snapshots stay unchanged.",
       "from": [
@@ -8673,7 +8912,7 @@
       ],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -8708,7 +8947,7 @@
           "purpose": "Backend errors can occur even if the UI enabled a button; display/response handling is part of its widget contract."
         },
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function SaveForm(",
           "purpose": "Form-specific saving, success and exact-error feedback while retaining failed values."
         }
@@ -8717,7 +8956,8 @@
         "UI-SETTINGS",
         "API-UI",
         "API-UI-CONTENT",
-        "UI-SETTINGS-EDITORS"
+        "UI-SETTINGS-EDITORS",
+        "UI-SKILL-EDITOR-LOAD"
       ],
       "gaps": [
         {
@@ -8735,7 +8975,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-SKILL-SETTINGS` → profile/launch skill choices",
+      "endpoint_description": "`W-SKILL-SETTINGS` \u2192 profile/launch skill choices",
       "trigger": "Managed skill name/instructions.",
       "interactions": "Refreshes shared skills; immutable prepared skill snapshots stay unchanged.",
       "from": [
@@ -8761,7 +9001,7 @@
       "states": [],
       "implementation": [
         {
-          "path": "web/src/main.tsx",
+          "path": "web/src/settings.tsx",
           "anchor": "function Settings(",
           "purpose": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge."
         },
@@ -8821,7 +9061,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-DIAGNOSTICS` → its result display",
+      "endpoint_description": "`W-DIAGNOSTICS` \u2192 its result display",
       "trigger": "Check connection click.",
       "interactions": "Shows local Checking feedback and then health results or an exact local error. No repair or page transition.",
       "from": [
@@ -8839,7 +9079,10 @@
       "terms": [
         "ui-c-state-refresh",
         "coverage-gap",
-        "unverified-behavior"
+        "unverified-behavior",
+        "direct-launch",
+        "ui-projection",
+        "ui-change-cursor"
       ],
       "contains": [],
       "elements": [],
@@ -8899,6 +9142,36 @@
           "path": "internal/providers/github_cache.go",
           "anchor": "type CachedGitHub struct {",
           "purpose": "Shared metadata query cache beneath saved-state reads; post-turn verification explicitly refreshes live without replacing prior successful observations on error."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) startUIState()",
+          "purpose": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "func (s *Server) readUIState(",
+          "purpose": "Requested saved views, complete-dataset filters and 50-row default pagination."
+        },
+        {
+          "path": "internal/store/snapshot.go",
+          "anchor": "func (s *Store) ReadView(",
+          "purpose": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+        },
+        {
+          "path": "web/src/ui-changes.ts",
+          "anchor": "export function publishUIChange(",
+          "purpose": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+        },
+        {
+          "path": "web/defer-ui.mjs",
+          "anchor": "const scripts =",
+          "purpose": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+        },
+        {
+          "path": "web/index.html",
+          "anchor": "id=\"boot-nav\"",
+          "purpose": "Actionable navigation and query controls precede runtime/SDK initialization."
         }
       ],
       "assertions": [
@@ -8919,7 +9192,40 @@
         "UI-LINKED-DETAIL-REFRESH",
         "UI-READ-FRESHNESS",
         "UI-SAVED-OBSERVATIONS",
-        "API-GITHUB-QUERY-CACHE"
+        "API-GITHUB-QUERY-CACHE",
+        "UI-LAUNCH-50MS",
+        "API-UI-PAGES",
+        "API-UI-COMMIT",
+        "API-UI-BURSTS",
+        "STORE-UI-JOURNAL",
+        "STORE-UI-SNAPSHOT",
+        "UI-QUERY-ORDER",
+        "UI-HIDDEN-SUBSCRIPTION",
+        "UI-INBOX-PAGES",
+        "API-UI-PRIVATE",
+        "UI-NAV-MESSAGES",
+        "UI-PAGED-SELECTION",
+        "UI-OBSERVATION-ONLY",
+        "UI-DEFERRED-SKILLS",
+        "UI-SHELL-ORDER",
+        "UI-RESYNC-REPORT",
+        "UI-RESYNC-PLUGIN",
+        "UI-RESYNC-HISTORY",
+        "API-UI-INITIAL-PUBLICATION",
+        "API-UI-OUTPUT-DOMAIN",
+        "UI-OUTPUT-SUBSCRIPTION",
+        "UI-REPOSITORY-FRESHNESS",
+        "UI-ACCEPTANCE-RESYNC",
+        "UI-STREAM-PROGRESS",
+        "UI-HIDDEN-HISTORY",
+        "UI-HIDDEN-RESYNC",
+        "API-OVERVIEW-ATTENTION",
+        "UI-HIDDEN-DIRTY",
+        "UI-VIEW-RETRY",
+        "UI-REVIEW-OBSERVATION",
+        "UI-START-EPOCH",
+        "UI-START-CHECK-EPOCH",
+        "UI-NOTIFICATION-FRESHNESS"
       ],
       "gaps": [
         {
@@ -8946,9 +9252,9 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Shared updated state → Inbox/Agents/Settings summaries, shell counts",
-      "trigger": "Successful polling or action refresh.",
-      "interactions": "Refreshes shared snapshot after successful or failed actions, preserving action errors. Successful selected item mutations also trigger a separate guarded detail reread. Background work/attention updates do not save local drafts. Only an explicit allowlist of read operations retries transient transport errors. The exact host-wrapped McpServerError connection failure is recognized as transport; other tool/business errors and all mutations are never automatically replayed. Poll recovery clears only polling feedback, not action failures. Dashboard refreshes use item summaries; selected-item reads fetch full activity and raw checks separately. Known read calls carry a unique freshness marker so host reuse of an earlier response cannot freeze an empty journal page or saved snapshot. This marker does not change server state, source authority or mutation replay rules. Saved item detail and review reads return immediately with observation state. Pending observations reread through the bridge, preserving saved content. Freshness markers never force provider requests or bypass monitoring pauses, budgets and cooldowns. Provider query cache hits preserve original observation times. Post-turn publication verification uses live data through the same cache boundary; live failure retains prior saved observations with an error.",
+      "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
+      "trigger": "A committed saved-state publication advances the shared UI change cursor.",
+      "interactions": "One authenticated host subscription waits up to 25 seconds for metadata-only invalidations. A background worker publishes immutable saved projections and their cursor atomically. Reads perform no provider requests, dependency probes or external refreshes. Affected views reread saved state; hidden views catch up on visibility, bursts coalesce and older responses cannot replace newer queries or selections. Rollbacks emit no invalidation; commits from other processes are reconciled. Missing cursors require full resync. Known reads retry bounded transport failures. Mutations never replay automatically, and acceptance is separate from later completion. Drafts, focus, selection and uncertain-action errors survive updates. Older snapshot/change contracts remain available. Full resync advances local subscription identity even when the server cursor decreases; incremental transcript state is then reloaded from its beginning. Local successful Start acknowledgement remains visible while a published run is missing or still prepared. A published non-prepared run replaces that overlay; full resync clears it. Saved reads clear only invalidations whose captured cursor and requested views they cover. A failed current-view read retains separate feedback and retries transient transport failure without requiring another publication. Queue rows remain bound to the applied queue/query/page identity.",
       "from": [
         "S-FACTORY"
       ],
@@ -9022,7 +9328,8 @@
       "assertions": [
         "UI-TRIAGE",
         "UI-ASSEMBLED",
-        "API-UI-CONTENT"
+        "API-UI-CONTENT",
+        "UI-HISTORY-WINDOW"
       ],
       "gaps": [
         {
@@ -9039,7 +9346,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "History pages → `W-TRANSCRIPT`",
+      "endpoint_description": "History pages \u2192 `W-TRANSCRIPT`",
       "trigger": "Selected run and current history cursor; optional reset to beginning.",
       "interactions": "Refreshes display only. Resetting history does not resume/replay agent work.",
       "from": [
@@ -9090,7 +9397,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "Package page links → artifacts / external host setup",
+      "endpoint_description": "Package page links \u2192 artifacts / external host setup",
       "trigger": "Download or follow documented setup instructions.",
       "interactions": "External package downloads and OAuth connection guidance. Only a valid observed registration enables the primary browser package. Portable downloads stay advanced; no connection is fabricated.",
       "from": [
@@ -9118,7 +9425,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -9141,7 +9448,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "External host → `PAGE-OWNER-CONSENT` → registered host callback",
+      "endpoint_description": "External host \u2192 `PAGE-OWNER-CONSENT` \u2192 registered host callback",
       "trigger": "Valid private request; Allow or Deny.",
       "interactions": "External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL.",
       "from": [
@@ -9225,7 +9532,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ELICITATION.open-authorization` → external authorization page",
+      "endpoint_description": "`W-ELICITATION.open-authorization` \u2192 external authorization page",
       "trigger": "Request-supplied URL opened through host.",
       "interactions": "External. Continue reports the user's completion decision; it does not independently prove external success.",
       "from": [
@@ -9273,7 +9580,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` → alternate local transport session",
+      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` \u2192 alternate local transport session",
       "trigger": "Single-use private setup input.",
       "interactions": "Submits and removes form on success; does not navigate into Settings or activate Jira.",
       "from": [
@@ -9326,7 +9633,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-BROWSER-LAB` controls → isolated browser → screenshot/location",
+      "endpoint_description": "`W-BROWSER-LAB` controls \u2192 isolated browser \u2192 screenshot/location",
       "trigger": "Explicit lab navigation/click/key/scroll operations.",
       "interactions": "Developer utility feedback loop; never an Inbox/Agents page transition.",
       "from": [
@@ -9607,7 +9914,7 @@
         "browser",
         "go"
       ],
-      "element_description": "**heading**, **subtitle**, **refresh** “Refresh issues and releases”; shared **error** alert; **search** “Search reports”, **processing-filter**, **component-filter**, **version-filter**; **empty** result message; repeated **select** report button, **row-processing**, **row-component**, **row-id**; conditional **load-more** “Load more reports”.",
+      "element_description": "**heading**, **subtitle**, **refresh** \u201cRefresh issues and releases\u201d; shared **error** alert; **search** \u201cSearch reports\u201d, **processing-filter**, **component-filter**, **version-filter**; **empty** result message; repeated **select** report button, **row-processing**, **row-component**, **row-id**; conditional **load-more** \u201cLoad more reports\u201d.",
       "state_description": "Rows show independent processing and component identity, with an Unknown component fallback and aria-pressed selection. Zero results show the empty message, including while an initial query is pending. Load more is present only with a next cursor and disabled only while its requested additional page is pending; background refresh keeps it usable; refresh is disabled during a mutation. The shared error alert also reports detail, mutation and external-link failures.",
       "interactions": "Query changes reset pagination through C-REPORT-QUERY. C-REPORT-MORE extends the loaded range; journal updates preserve and refresh it, including a pending Load more request. C-REPORT-SELECT reads the selected report. C-REPORT-REFRESH reads issue and release evidence without starting an agent. Continuing slow background refreshes do not prevent an additional page request; repeated clicks while that request is pending do not add extra pages."
     },
@@ -9783,7 +10090,8 @@
         "UI-REPORTS-DETAIL-PROGRESS",
         "UI-REPORTS-MUTATION-PROGRESS",
         "UI-REPORTS-EVIDENCE-RETRY",
-        "UI-REPORTS-DRAFT"
+        "UI-REPORTS-DRAFT",
+        "UI-RESYNC-REPORT"
       ],
       "gaps": [
         {
@@ -9802,7 +10110,7 @@
       ],
       "element_description": "**surface** heading, **id**, **processing**, **outcome**, **observed**, **expected**, **actual**, **reproduction**, **message**, conditional **findings** with the Issue draft disclosure and visible layout limitation, and **missing-information** including repository-required facts; **open-issue**, **issue-state**, **closure-reason**; repeated **open-fix**, **open-release**, **linked-fix**, **stable-availability**, **prerelease-availability**, **installed-version**, repeated **observed-version**; **issue-freshness**, **release-freshness**; repeated **additions**, **evidence** input and **add-evidence**; conditional **recovery-note**, **effects-acknowledgement**, **resume**; **evidence-history** disclosure with repeated **evidence-manifest** and **history**.",
       "state_description": "No detail article is displayed until the selected report is read. Unknown evidence remains Unknown; processing and outcome stay independent of issue closure, fix, stable, prerelease and installed versions. Freshness shows last successful verification and, on error, its retry time. Add evidence requires a nonblank draft and is disabled during a mutation. Resume is shown for blocked, needs attention or needs information; needs attention shows the note and acknowledgement, both required when a workflow ID exists. Evidence/history starts collapsed. Only current selected-report detail reads can update findings, processing and recovery controls; superseded reads are discarded. Journal detail refreshes coalesce while a read is pending, allowing a slow response to display before the queued refresh. When a rendered issue body exists, Issue draft starts collapsed and reveals its title and complete text on demand. A generic layout limitation remains visible outside that disclosure. Required repository fields use the existing information request and host-evidence controls.",
-      "interactions": "C-REPORT-EVIDENCE appends host observations and can queue information requests. C-REPORT-RECOVER submits the note and acknowledgement for retained work. Successful mutations reread details and the loaded list. Changing selection resets local evidence/recovery drafts. C-REPORT-OPEN-LINK opens retained issue, fix and release URLs through the host; it does not establish external delivery. Mutation controls become usable after their own detail/list refresh, independently of continuing queued journal refreshes."
+      "interactions": "C-REPORT-EVIDENCE appends host observations and can queue information requests. C-REPORT-RECOVER submits the note and acknowledgement for retained work. Successful mutations reread details and the loaded list. Changing selection resets local evidence/recovery drafts. C-REPORT-OPEN-LINK opens retained issue, fix and release URLs through the host; it does not establish external delivery. Mutation controls become usable on acknowledgement; guarded detail/list rereads continue independently without clearing uncertain-action errors or drafts."
     },
     {
       "id": "C-REPORT-SELECT",
@@ -9848,7 +10156,7 @@
       ],
       "connection_type": "connection-selects",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.select` → `W-REPORT-DETAIL`",
+      "endpoint_description": "`W-REPORT-LIST.select` \u2192 `W-REPORT-DETAIL`",
       "trigger": "Report row selection",
       "interactions": "Reads selected report without starting an agent. Selection and mutation ordering discard superseded details; journal updates queue a refresh behind a pending read so details can progress during ongoing changes."
     },
@@ -9896,7 +10204,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-DETAIL.add-evidence` → `W-REPORT-DETAIL`, `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-DETAIL.add-evidence` \u2192 `W-REPORT-DETAIL`, `W-REPORT-LIST`",
       "trigger": "Add evidence; selected report ID, draft text and retained idempotency key.",
       "interactions": "Append idempotent host observations and queue reports waiting for information. After an uncertain response, an unchanged draft can be retried without duplicate additions; editing the retained draft permits another observation."
     },
@@ -9944,7 +10252,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-DETAIL.resume` → `W-REPORT-DETAIL`, `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-DETAIL.resume` \u2192 `W-REPORT-DETAIL`, `W-REPORT-LIST`",
       "trigger": "Resume or reconcile report; selected report ID, recovery note and effects acknowledgement.",
       "interactions": "Validate recovery prerequisites and acknowledgement before resuming retained work."
     },
@@ -9991,7 +10299,7 @@
       ],
       "connection_type": "connection-refreshes",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.refresh` → `W-REPORT-LIST`, `W-REPORT-DETAIL`",
+      "endpoint_description": "`W-REPORT-LIST.refresh` \u2192 `W-REPORT-LIST`, `W-REPORT-DETAIL`",
       "trigger": "Refresh issues and releases",
       "interactions": "Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent."
     },
@@ -10014,7 +10322,7 @@
       ],
       "connection_type": "connection-selects",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.search/processing-filter/component-filter/version-filter` → `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-LIST.search/processing-filter/component-filter/version-filter` \u2192 `W-REPORT-LIST`",
       "trigger": "Search or processing/component/version filter changes; current query values.",
       "interactions": "Loads the matching report subset and resets the loaded range to its first page. Existing selected detail remains independently selected.",
       "assertions": [
@@ -10057,7 +10365,7 @@
       ],
       "connection_type": "connection-refreshes",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.load-more` → `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-LIST.load-more` \u2192 `W-REPORT-LIST`",
       "trigger": "Load more reports; current query, next cursor and loaded range.",
       "interactions": "Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range. Background refresh leaves pagination available; an already pending page request suppresses duplicate clicks.",
       "assertions": [
@@ -10102,7 +10410,7 @@
       ],
       "connection_type": "connection-external",
       "external_boundary": true,
-      "endpoint_description": "`W-REPORT-DETAIL.open-issue/open-fix/open-release` → external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL`",
+      "endpoint_description": "`W-REPORT-DETAIL.open-issue/open-fix/open-release` \u2192 external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL`",
       "trigger": "Open a retained issue, fix or release URL through the host.",
       "interactions": "Sends the stored URL to the host open-link boundary; a fix without a PR uses its repository/commit URL. Failures use the shared report error alert. Opening a link does not verify issue, fix or release state.",
       "assertions": [
@@ -10486,7 +10794,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Host open_settings invocation → independent settings document",
+      "endpoint_description": "Host open_settings invocation \u2192 independent settings document",
       "trigger": "The settings entry tool advertises its own content-specific resource and output template.",
       "interactions": "Opens configuration in its own view. The inbox entry and legacy resource remain inbox-only. Both surfaces reuse authenticated bridged tools without owner credentials or direct iframe localhost access.",
       "from": [
@@ -10732,7 +11040,8 @@
         "UI-CHAT-LATE",
         "UI-CHAT-PREPARE-ERROR",
         "UI-PIPELINE",
-        "UI-ADMIN-PIPELINE"
+        "UI-ADMIN-PIPELINE",
+        "UI-ACCEPTANCE-RESYNC"
       ],
       "gaps": [
         {
@@ -10777,14 +11086,16 @@
         "UI-CHAT-CONFIRMED",
         "UI-CHAT-LATE",
         "UI-CHAT-PREPARE-ERROR",
-        "ADMIN-PLUGIN-GATE"
+        "ADMIN-PLUGIN-GATE",
+        "UI-ACCEPTANCE-RESYNC",
+        "UI-START-EPOCH"
       ],
       "gaps": [],
       "suites": [
         "tooling",
         "browser"
       ],
-      "endpoint_description": "First-message Start → retained run conversation",
+      "endpoint_description": "First-message Start \u2192 retained run conversation",
       "trigger": "Explicit Start with the visible message and authority.",
       "interactions": "Prepares then starts once; verifies the same run after an uncertain response. Preserves per-item draft and recovery state.",
       "from": [
@@ -11182,7 +11493,8 @@
         "ADMIN-PLUGIN-GATE",
         "UI-PLUGIN-READ-RECOVERY",
         "ADMIN-REMOVED-SKILL",
-        "API-UI"
+        "API-UI",
+        "UI-RESYNC-PLUGIN"
       ],
       "gaps": [
         {
@@ -11596,7 +11908,8 @@
         "API-GITHUB-CACHE",
         "API-GITHUB-NOTIFICATIONS",
         "API-GITHUB-INDEX",
-        "UI-GITHUB-USAGE"
+        "UI-GITHUB-USAGE",
+        "UI-NOTIFICATION-FRESHNESS"
       ],
       "gaps": [
         {
@@ -11672,7 +11985,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Owner usage settings → persisted request limits and cached accounting",
+      "endpoint_description": "Owner usage settings \u2192 persisted request limits and cached accounting",
       "trigger": "Save system defaults or read cached Settings.",
       "interactions": "Validates and persists bounded request budget/reserve/poll interval; omitted fields from older clients retain their saved values. Budget-only changes preserve assessment policy identity.",
       "from": [
@@ -11686,6 +11999,53 @@
         "W-REPOSITORY-SETTINGS"
       ],
       "connection_type": "connection-submits",
+      "external_boundary": false
+    },
+    {
+      "id": "C-SKILL-LOAD",
+      "kind": "connection",
+      "terms": [
+        "ui-c-skill-load"
+      ],
+      "contains": [],
+      "elements": [],
+      "states": [],
+      "implementation": [
+        {
+          "path": "web/src/settings.tsx",
+          "anchor": "async function loadSkill(",
+          "purpose": "Read selected managed content on demand with a generation guard and explicit read retry."
+        },
+        {
+          "path": "internal/transport/ui_state.go",
+          "anchor": "case \"skill\":",
+          "purpose": "App-only selected managed content read excludes private files and unrelated skill bodies."
+        }
+      ],
+      "assertions": [
+        "API-UI-SKILL-EDITOR",
+        "UI-SKILL-EDITOR-LOAD",
+        "UI-SKILL-EDITOR-RACE",
+        "UI-SKILL-EDITOR-ERROR"
+      ],
+      "gaps": [],
+      "suites": [
+        "tooling",
+        "browser",
+        "go"
+      ],
+      "endpoint_description": "Saved managed skill selection \u2192 selected authoring fields",
+      "trigger": "Select or reload one managed skill.",
+      "interactions": "Loads saved content for the selected managed editor, retains other drafts on failure and rejects stale selection responses.",
+      "from": [
+        "W-SKILL-SETTINGS.managed-skill",
+        "W-SKILL-SETTINGS.reload"
+      ],
+      "to": [
+        "W-SKILL-SETTINGS.name",
+        "W-SKILL-SETTINGS.instructions"
+      ],
+      "connection_type": "connection-selects",
       "external_boundary": false
     }
   ],
@@ -12230,7 +12590,7 @@
       "id": "UI-REPORTS-MUTATION-PROGRESS",
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues releases mutation controls during continuing slow journal refreshes\"",
-      "assertion": "After a mutation renders its own refreshed list, refresh, evidence and acknowledged recovery controls become usable while queued journal refreshes remain pending; a second evidence submission reaches the selected report."
+      "assertion": "After mutation acknowledgement, refresh, evidence and acknowledged recovery controls become usable while saved detail/list and queued journal refreshes remain pending; another evidence submission still reaches the selected report."
     },
     {
       "id": "UI-REPORTS-EVIDENCE-RETRY",
@@ -12272,7 +12632,7 @@
       "id": "UI-ATTENTION-CONTEXT",
       "path": "web/tests/factory.spec.ts",
       "anchor": "global attention selects its owning run and returns to its conversation after answering",
-      "assertion": "Global dialog identifies title/profile; answer leaves owning conversation selected and next message targets its run. After answering the removed global shortcut, keyboard focus moves to the owning task heading. Cross-run attention entered from another item’s agent resets Back to the Agents list, avoiding the unrelated item."
+      "assertion": "Global dialog identifies title/profile; answer leaves owning conversation selected and next message targets its run. After answering the removed global shortcut, keyboard focus moves to the owning task heading. Cross-run attention entered from another item\u2019s agent resets Back to the Agents list, avoiding the unrelated item."
     },
     {
       "id": "UI-START-UNKNOWN",
@@ -12320,7 +12680,7 @@
       "id": "UI-SINGLE-PAGE",
       "path": "web/tests/factory.spec.ts",
       "anchor": "single-page navigation preserves list context and drafts at",
-      "assertion": "1280px and 390px in both themes: no brand/header/footer/split/adjacent detail; full-width list; item replaces list; Back restores query/scroll/row focus; agent Back origins and per-record drafts remain without implicit work. Priority is inside the row selection button to the left of the title’s first line, with no duplicate metadata badge or narrow overflow; checked geometrically in both themes at 390/1280px with a long title."
+      "assertion": "1280px and 390px in both themes: no brand/header/footer/split/adjacent detail; full-width list; item replaces list; Back restores query/scroll/row focus; agent Back origins and per-record drafts remain without implicit work. Priority is inside the row selection button to the left of the title\u2019s first line, with no duplicate metadata badge or narrow overflow; checked geometrically in both themes at 390/1280px with a long title."
     },
     {
       "id": "UI-PAGE-FALLBACK",
@@ -12428,7 +12788,7 @@
       "id": "UI-CHAT-LATE",
       "path": "web/tests/factory.spec.ts",
       "anchor": "a late first-message Start cannot replace another item",
-      "assertion": "A withheld first-message Start response is processed while saved reads remain prepared: Messages changes to Messages 1 only after the returned waiting run reaches React. After that barrier, the later selected item and exact unsubmitted draft remain; exactly one prepare/Start is sent."
+      "assertion": "A withheld first-message Start response is processed while saved reads remain prepared: Messages changes to Messages 1 only after the returned waiting run reaches React. After that barrier, the later selected item and exact unsubmitted draft remain; exactly one prepare/Start is sent. Reopening the second item forces a saved read after acknowledgement; a still-prepared projection cannot undo accepted Start or replace its draft."
     },
     {
       "id": "UI-CHAT-PREPARE-ERROR",
@@ -12873,6 +13233,240 @@
       "path": "web/tests/factory.spec.ts",
       "anchor": "\"reported issues exposes rendered draft limitations and required repository fields\"",
       "assertion": "Required repository fields appear as information requests; appended host evidence queues work, fallback limitations remain visible, opening Issue draft reveals title and complete body, and finalized unusable work recovers through acknowledged controls."
+    },
+    {
+      "id": "UI-LAUNCH-50MS",
+      "path": "web/performance/tests/launch.spec.ts",
+      "anchor": "production embedded direct launch: every fresh and warm sample is at most 100 ms",
+      "assertion": "Every one of 20 fresh and 10 warm launches of the production embedded resource has actionable navigation whose six text ElementTiming entries are visible and follow readiness, corroborated by FCP and all bounded by 100 ms. All raw paint, callback and notification diagnostics are retained; delayed providers and cold/empty/retained fixtures remain."
+    },
+    {
+      "id": "API-UI-PAGES",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIProjectionPaginatesAndSearchesCompleteRetainedStateWithoutProviders",
+      "assertion": "All 1,000 saved items are reachable through 50-row pages; body search finds a later item, selection remains reachable and no provider endpoint is called."
+    },
+    {
+      "id": "API-UI-COMMIT",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIWatchPublishesCommittedStateAndReconcilesOtherConnections",
+      "assertion": "Rollback produces no invalidation; an independent connection commit wakes the watch only after matching saved state and its cursor are published."
+    },
+    {
+      "id": "API-UI-BURSTS",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIWatchCoalescesBurstsConcurrentWritersReconnectAndResync",
+      "assertion": "Two writers retain all affected IDs through a reconnect; invalidations contain metadata only and unavailable/future cursors require resync."
+    },
+    {
+      "id": "STORE-UI-JOURNAL",
+      "path": "internal/store/ui_journal_test.go",
+      "anchor": "TestUIJournalCommitsRollbackCASAndLegacyCursor",
+      "assertion": "Rollbacks and failed CAS produce no UI journal entry; successful CAS does, private buckets are excluded and legacy event cursors remain unchanged."
+    },
+    {
+      "id": "STORE-UI-SNAPSHOT",
+      "path": "internal/store/ui_journal_test.go",
+      "anchor": "TestReadViewPinsDataAndCursorAcrossConcurrentConnection",
+      "assertion": "A concurrent connection commit cannot mix a newer entity with an older cursor inside a WAL read view."
+    },
+    {
+      "id": "UI-QUERY-ORDER",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "published inbox responses preserve the newer query when older reads finish later",
+      "assertion": "A delayed earlier query cannot replace a later selection/result, and legacy broad-read polling is absent."
+    },
+    {
+      "id": "UI-HIDDEN-SUBSCRIPTION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "hidden views catch up through the shared subscription without rereading panels while hidden",
+      "assertion": "A durable update is observed by the single watch while a hidden view performs no panel reads; visibility restores the latest saved item."
+    },
+    {
+      "id": "UI-INBOX-PAGES",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "inbox pagination and complete-dataset search keep later saved items reachable",
+      "assertion": "Three pages expose all 125 fixture items; searching on the last page resets pagination and opens item 125."
+    },
+    {
+      "id": "API-UI-PRIVATE",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIProjectionExcludesPrivateSourceSkillFilesAndCredentials",
+      "assertion": "Published messages/settings exclude retained private source snapshots, skill content/files and owner credentials."
+    },
+    {
+      "id": "UI-NAV-MESSAGES",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "the shared subscription updates Messages while Reported issues is open",
+      "assertion": "A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list."
+    },
+    {
+      "id": "UI-PAGED-SELECTION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a selected item outside the current page never renders an earlier selected entry",
+      "assertion": "A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item."
+    },
+    {
+      "id": "UI-OBSERVATION-ONLY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "observation-only publications refresh the selected saved error without a broad read",
+      "assertion": "A selected saved error updates on an observation-only item invalidation without a broad state reread."
+    },
+    {
+      "id": "UI-DEFERRED-SKILLS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "launch customization loads saved skills only when its deferred view opens",
+      "assertion": "Saved skills are requested when launch customization opens; selecting one reaches preparation without starting an agent."
+    },
+    {
+      "id": "UI-SHELL-ORDER",
+      "path": "internal/web/embed_test.go",
+      "anchor": "TestProductionShellPrecedesDeferredRuntime",
+      "assertion": "The production navigation and its action handlers precede the large inert runtime payload, with no module parsed before shell paint."
+    },
+    {
+      "id": "UI-RESYNC-REPORT",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync to an earlier cursor reloads Reports and preserves its evidence draft",
+      "assertion": "Restoring an earlier database cursor reloads the selected report after a previous higher publication without clearing its evidence draft."
+    },
+    {
+      "id": "UI-RESYNC-PLUGIN",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync reloads plugin administration at an earlier cursor without clearing its draft",
+      "assertion": "Plugin administration rereads saved inventory after a lower-cursor full resync while preserving the selector draft and performing no management mutation."
+    },
+    {
+      "id": "UI-RESYNC-HISTORY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft",
+      "assertion": "Full resync for the same run ID restarts incremental history from zero, removes invalid old output, reloads selected saved observation and keeps the message draft."
+    },
+    {
+      "id": "UI-HISTORY-WINDOW",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "older retained history stays inspectable across updates and advances only on request",
+      "assertion": "A 1,300-event run exposes its beginning in an inspectable bounded window; background updates do not move that window, explicit next advances it and follow latest resumes updates without clearing the draft. Hiding/showing a completed browsing page does not create an unsolicited Next request."
+    },
+    {
+      "id": "API-UI-SKILL-EDITOR",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIManagedSkillEditorReadsOnlySelectedContent",
+      "assertion": "Broad settings/launch projections omit skill content/files; the app-only managed editor returns only selected content with a read cursor, rejects unmanaged skills and excludes private files."
+    },
+    {
+      "id": "UI-SKILL-EDITOR-LOAD",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "the managed skill editor loads selected saved instructions and saves an existing skill",
+      "assertion": "Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content."
+    },
+    {
+      "id": "UI-SKILL-EDITOR-RACE",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a late managed skill read cannot overwrite a later selection or its editor draft",
+      "assertion": "Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions."
+    },
+    {
+      "id": "API-UI-INITIAL-PUBLICATION",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIInitialPublicationNeedsNoLifetimeInvalidationHistory",
+      "assertion": "A full current-state publication succeeds without decoding retired lifetime invalidations, and an older cursor requires full resync."
+    },
+    {
+      "id": "API-UI-OUTPUT-DOMAIN",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUITranscriptPublicationLeavesSummariesCurrentAndNotifiesOnlyHistory",
+      "assertion": "Output-only commits publish a transcript-domain invalidation with unchanged summaries, while a real run-state commit still updates visible work state."
+    },
+    {
+      "id": "UI-OUTPUT-SUBSCRIPTION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "transcript-only publications update output without broad state reads",
+      "assertion": "A transcript-only publication updates the open conversation without a broad saved-state read."
+    },
+    {
+      "id": "UI-REPOSITORY-FRESHNESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "repository-only resume refreshes selected detail and posted-review freshness",
+      "assertion": "Repository-only resume updates posted-review monitoring status and reloads selected saved detail while preserving its draft and making no sync/start call."
+    },
+    {
+      "id": "UI-SKILL-EDITOR-ERROR",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "managed skill read failure blocks saving until an explicit read retry succeeds",
+      "assertion": "A selected read error disables Save, an explicit reload recovers saved instructions, and neither path replays or submits a save mutation."
+    },
+    {
+      "id": "UI-ACCEPTANCE-RESYNC",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
+      "assertion": "Full resync removes local acknowledgement overlays and returns the selected run to restored authoritative state without another Start."
+    },
+    {
+      "id": "UI-STREAM-PROGRESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "continuing transcript publications coalesce while delayed reads still render valid prefixes",
+      "assertion": "With publications every 35 ms and reads delayed 180 ms, the conversation renders live prefixes before streaming stops and has at most one transcript read in flight."
+    },
+    {
+      "id": "UI-HIDDEN-HISTORY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "hidden retained history pauses pagination and resumes on visibility without a new publication",
+      "assertion": "A read already sent before hide may finish; no further history page starts while hidden, and show resumes static pagination without needing a new publication."
+    },
+    {
+      "id": "UI-HIDDEN-RESYNC",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a hidden full resync rejects a delayed reply from the previous state epoch",
+      "assertion": "An outstanding old-cursor read returning while hidden cannot restore the previous state epoch or block the lower-cursor restored data after visibility resumes."
+    },
+    {
+      "id": "API-OVERVIEW-ATTENTION",
+      "path": "internal/transport/ui_state_test.go",
+      "anchor": "TestUIOpeningSummaryUsesEligibleSavedAttention",
+      "assertion": "Opening hasAttention excludes orphaned and stale pending records using the saved attention queue eligibility; a retained eligible textual ask remains visible."
+    },
+    {
+      "id": "UI-HIDDEN-DIRTY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a hidden older read cannot consume newer run and attention invalidations",
+      "assertion": "A delayed older response while hidden cannot clear later run/attention work; show refreshes both current items and Messages."
+    },
+    {
+      "id": "UI-VIEW-RETRY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "failed requested view reads recover without a new journal publication",
+      "assertion": "Exhausted transport retries for a requested view retain local error feedback despite healthy idle watches, then recover automatically without a new commit."
+    },
+    {
+      "id": "UI-QUERY-IDENTITY",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "queue navigation cannot activate rows belonging to the previous query",
+      "assertion": "A delayed new queue renders loading without previous-query rows or launch actions, then shows only the new result set."
+    },
+    {
+      "id": "UI-REVIEW-OBSERVATION",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "observation-only completion refreshes posted review monitoring state",
+      "assertion": "A saved review observation completion clears pending status on observation-only invalidation even when the review record version is unchanged."
+    },
+    {
+      "id": "UI-START-EPOCH",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "Start response cannot cross a full resync epoch",
+      "assertion": "A delayed Start result cannot reinstall acceptance after full resync or replay launch."
+    },
+    {
+      "id": "UI-START-CHECK-EPOCH",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "a delayed Start status check cannot install acceptance after full resync",
+      "assertion": "An old-epoch status-check result remains uncertain rather than installing a stale accepted run."
+    },
+    {
+      "id": "UI-NOTIFICATION-FRESHNESS",
+      "path": "web/tests/factory.spec.ts",
+      "anchor": "notification-only failures refresh saved Settings feedback",
+      "assertion": "Settings reloads saved notification error feedback on a notification-bucket invalidation without an explicit sync or diagnostics call."
     }
   ],
   "source_map": [
@@ -12951,7 +13545,7 @@
       ]
     },
     {
-      "path": "web/src/main.tsx",
+      "path": "web/src/settings.tsx",
       "anchor": "function Settings(",
       "entities": "All five Settings panes, repository/policy/credential/profile/skill/diagnostics widgets; settings connections.",
       "detail": "Settings drafts are local; collapsed sections and SaveForm own saving/result feedback. Unused Jira controls are absent; its backend remains disabled; diagnostics use the host bridge.",
@@ -13102,7 +13696,7 @@
       "path": "internal/gateway/gateway.go",
       "anchor": "func (g *Gateway) Private(",
       "entities": "`PAGE-OWNER-CONSENT`, `P-OWNER-CONSENT`, `W-OWNER-CONSENT`, `C-CONSENT`.",
-      "detail": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
+      "detail": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
       "anchors": [
         "func (g *Gateway) Private("
       ],
@@ -13236,6 +13830,90 @@
       "anchor": "func validatePRReviewAuthor(",
       "entities": "C-PREPARE and C-START.",
       "detail": "Shared author/identity rejection before review preparation and execution."
+    },
+    {
+      "path": "internal/transport/ui_state.go",
+      "anchor": "func (s *Server) startUIState()",
+      "anchors": [
+        "func (s *Server) startUIState()"
+      ],
+      "location_labels": [
+        "func (s *Server) startUIState()"
+      ],
+      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
+      "detail": "Asynchronous coherent publication, metadata-only watches and independent process reconciliation."
+    },
+    {
+      "path": "internal/transport/ui_state.go",
+      "anchor": "func (s *Server) readUIState(",
+      "anchors": [
+        "func (s *Server) readUIState("
+      ],
+      "location_labels": [
+        "func (s *Server) readUIState("
+      ],
+      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
+      "detail": "Requested saved views, complete-dataset filters and 50-row default pagination."
+    },
+    {
+      "path": "internal/store/snapshot.go",
+      "anchor": "func (s *Store) ReadView(",
+      "anchors": [
+        "func (s *Store) ReadView("
+      ],
+      "location_labels": [
+        "func (s *Store) ReadView("
+      ],
+      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
+      "detail": "Atomic saved state/cursor WAL snapshot and durable metadata-only journal."
+    },
+    {
+      "path": "web/src/ui-changes.ts",
+      "anchor": "export function publishUIChange(",
+      "anchors": [
+        "export function publishUIChange("
+      ],
+      "location_labels": [
+        "export function publishUIChange("
+      ],
+      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
+      "detail": "One subscription dispatches affected domain/ID versions and defers hidden panel reads."
+    },
+    {
+      "path": "web/defer-ui.mjs",
+      "anchor": "const scripts =",
+      "anchors": [
+        "const scripts ="
+      ],
+      "location_labels": [
+        "const scripts ="
+      ],
+      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
+      "detail": "Production resource postpones bundled runtime parsing until after actionable shell paint."
+    },
+    {
+      "path": "web/index.html",
+      "anchor": "id=\"boot-nav\"",
+      "anchors": [
+        "id=\"boot-nav\""
+      ],
+      "location_labels": [
+        "id=\"boot-nav\""
+      ],
+      "entities": "S-FACTORY, W-NAVIGATION, C-STATE-REFRESH, W-INBOX-QUERY, C-FILTER",
+      "detail": "Actionable navigation and query controls precede runtime/SDK initialization."
+    },
+    {
+      "path": "web/src/settings.tsx",
+      "anchor": "async function loadSkill(",
+      "anchors": [
+        "async function loadSkill("
+      ],
+      "location_labels": [
+        "async function loadSkill("
+      ],
+      "entities": "W-SKILL-SETTINGS, C-SKILL-LOAD",
+      "detail": "Explicit app-only managed content read with load/error feedback, guarded selections and no private file disclosure."
     }
   ],
   "coverage_groups": [
@@ -13274,7 +13952,16 @@
         "UI-SETTINGS-SEPARATE",
         "UI-SETTINGS-CONCURRENT",
         "API-SETTINGS-RESOURCE",
-        "API-SETTINGS-DOCUMENT"
+        "API-SETTINGS-DOCUMENT",
+        "UI-LAUNCH-50MS",
+        "API-UI-PAGES",
+        "API-UI-COMMIT",
+        "API-UI-BURSTS",
+        "STORE-UI-JOURNAL",
+        "STORE-UI-SNAPSHOT",
+        "UI-QUERY-ORDER",
+        "UI-HIDDEN-SUBSCRIPTION",
+        "UI-INBOX-PAGES"
       ],
       "gap": {
         "version": 1,
@@ -14194,6 +14881,7 @@
             "C-DISCOVER-SKILLS",
             "C-POLICY-SAVE",
             "C-PROFILE-SAVE",
+            "C-SKILL-LOAD",
             "C-SKILL-SAVE",
             "C-DIAGNOSE",
             "C-STATE-REFRESH",
@@ -14229,7 +14917,7 @@
           ],
           "headers": [
             "ID",
-            "From → to",
+            "From \u2192 to",
             "Trigger and carried context",
             "Result/type"
           ]

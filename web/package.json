@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node defer-ui.mjs",
     "check": "tsc --noEmit",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:performance": "playwright test -c playwright.performance.config.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "2.0.3",
