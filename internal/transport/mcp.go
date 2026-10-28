@@ -287,6 +287,12 @@ func New(a *app.App, ev *events.Service) *Server {
 			return nil, err
 		}
 		c := in.Config
+		if _, ok := in.fields["executionMode"]; !ok {
+			c.ExecutionMode = old.ExecutionMode
+		}
+		if _, ok := in.fields["prReviewSkillId"]; !ok {
+			c.PRReviewSkillID = old.PRReviewSkillID
+		}
 		if _, ok := in.fields["reviewers"]; ok {
 			c.ReviewersConfigured = true
 		}

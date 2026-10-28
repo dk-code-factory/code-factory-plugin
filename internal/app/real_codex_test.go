@@ -16,12 +16,28 @@ import (
 // This is deliberately opt-in: it uses existing local authentication and model
 // calls, operates only in a temporary Git repository, and publishes nothing.
 func TestRealCodexInteractiveLifecycle(t *testing.T) {
+	for _, mode := range []string{"workflow", "single-codex"} {
+		t.Run(mode, func(t *testing.T) { realCodexInteractiveLifecycle(t, mode) })
+	}
+}
+
+func realCodexInteractiveLifecycle(t *testing.T, mode string) {
 	if os.Getenv("CODE_FACTORY_REAL_CODEX") != "1" {
 		t.Skip("set CODE_FACTORY_REAL_CODEX=1 for real model lifecycle acceptance")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Minute)
 	defer cancel()
-	dir := t.TempDir()
+	// The native sandbox masks /tmp. Match installed data placement so retained
+	// skill snapshots and worktrees remain visible through their scoped grants.
+	cache, e := os.UserCacheDir()
+	if e != nil {
+		t.Fatal(e)
+	}
+	dir, e := os.MkdirTemp(cache, "code-factory-real-lifecycle-")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer os.RemoveAll(dir)
 	s, e := store.Open(filepath.Join(dir, "state.db"))
 	if e != nil {
 		t.Fatal(e)
@@ -63,6 +79,16 @@ func TestRealCodexInteractiveLifecycle(t *testing.T) {
 	}
 	if e = a.Runs.SaveSkill(ctx, domain.Skill{Name: "pilot-skill", Content: "---\nname: pilot-skill\ndescription: Read-only pilot marker.\n---\n\nInclude PILOT_SKILL_LOADED in your final response.\n"}); e != nil {
 		t.Fatal(e)
+	}
+	if mode == "single-codex" {
+		if e = a.Runs.SaveSkill(ctx, domain.Skill{Name: "dk-pr-iter", Content: "---\nname: dk-pr-iter\ndescription: Unused PR iteration fixture for local issue lifecycle.\n---\nNever publish."}); e != nil {
+			t.Fatal(e)
+		}
+		config, _ := a.Config(ctx)
+		config.ExecutionMode, config.PRReviewSkillID = mode, "managed:dk-pr-iter"
+		if e = a.SaveConfig(ctx, config); e != nil {
+			t.Fatal(e)
+		}
 	}
 	r, e := a.Runs.Prepare(ctx, LaunchInput{ItemID: item.ID, ProfileID: p.ID})
 	if e != nil {
@@ -119,13 +145,29 @@ func TestRealCodexInteractiveLifecycle(t *testing.T) {
 	}
 	idle := func() bool { _ = s.Get(ctx, "run", r.ID, &r); return r.Status == "idle" }
 	wait(idle)
-	history, e := s.RunEvents(ctx, r.ID, 0, 200)
-	if e != nil {
-		t.Fatal(e)
+	foundSkill := false
+	var cursor int64
+	for {
+		history, err := s.RunEvents(ctx, r.ID, cursor, 200)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, _ := json.Marshal(history)
+		foundSkill = foundSkill || contains(string(b), "PILOT_SKILL_LOADED")
+		next, _ := history["cursor"].(int64)
+		if next <= cursor {
+			break
+		}
+		cursor = next
 	}
-	b, _ := json.Marshal(history)
-	if !contains(string(b), "PILOT_SKILL_LOADED") {
-		t.Fatal("skill was not observed in real output")
+	if !foundSkill {
+		final, _ := s.TurnFinalText(ctx, r.ID, attention.TurnID)
+		if live, err := a.Runs.get(r.ID); err == nil {
+			live.mu.Lock()
+			final += " live=" + live.finalText
+			live.mu.Unlock()
+		}
+		t.Fatalf("skill was not observed in complete real output; fixture final: %s", final)
 	}
 	if e = a.Runs.Message(ctx, r.ID, "Reply with PILOT_FOLLOWUP_OK. Do not ask another question.", ""); e != nil {
 		t.Fatal(e)

@@ -116,8 +116,13 @@ available while another query waits on the network.
 
 ## Layout
 
-All model-producing turns run through YAML workflows. Tasks, reviews, priority
-assessments, question classification, attention reconciliation and question repair
+Workflow-mode model turns run through YAML workflows. Settings → System defaults
+can instead select a single retained Codex session for tasks and PR review, with
+the installed `dk-workflows:dk-pr-iter` skill handling review and CI iteration.
+Select its installed skill entry before saving; existing prepared/running sessions
+keep their saved mode and authority. See [review modes](docs/pr-review-workflows.md).
+Priority
+assessments, question classification, attention reconciliation and workflow-mode question repair
 use embedded definitions in `internal/aiworkflows/workflows/` with the pinned
 `agent-workflow` Go executor. Its Codex adapter preserves the retained session,
 native questions and approvals, selected skills and permission profile. Private

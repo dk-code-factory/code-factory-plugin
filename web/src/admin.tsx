@@ -595,11 +595,13 @@ export function RepositoryAdmin({
   );
 }
 export function SystemReviewSettings({
+  skills,
   config,
   profiles,
   change,
   usage,
 }: {
+  skills: import("./types").Skill[];
   usage?: import("./types").GitHubUsage;
   config: Config;
   profiles: Profile[];
@@ -686,6 +688,55 @@ export function SystemReviewSettings({
           </p>
         )}
       </fieldset>
+      <label>
+        Session execution
+        <select
+          aria-label="Session execution"
+          value={config.executionMode || "workflow"}
+          onChange={(e) =>
+            change({
+              ...config,
+              executionMode: e.target.value as Config["executionMode"],
+            })
+          }
+        >
+          <option value="workflow">Workflow engine</option>
+          <option value="single-codex">
+            Single Codex session with dk-pr-iter
+          </option>
+        </select>
+      </label>
+      {config.executionMode === "single-codex" && (
+        <label>
+          PR iteration skill
+          <select
+            aria-label="PR iteration skill"
+            value={config.prReviewSkillId || ""}
+            onChange={(e) =>
+              change({ ...config, prReviewSkillId: e.target.value })
+            }
+          >
+            <option value="">Select installed dk-pr-iter</option>
+            {skills
+              .filter(
+                (s) =>
+                  !s.disabled &&
+                  ["dk-pr-iter", "dk-workflows:dk-pr-iter"].includes(s.name),
+              )
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} — {s.id}
+                </option>
+              ))}
+          </select>
+        </label>
+      )}
+      <p>
+        Changes apply to newly prepared runs. Existing sessions keep their saved
+        execution mode and skills. Single Codex reviews use dk-pr-iter and the
+        selected profile's authority. Automatic review posting below applies to
+        the workflow engine.
+      </p>
       <label>
         System default for review requests
         <select

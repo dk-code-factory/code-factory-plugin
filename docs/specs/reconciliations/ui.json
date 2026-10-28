@@ -1,822 +1,16 @@
 {
   "version": 1,
   "flow": "ui",
-  "base": "9245bc58e51d4868370a3079c5652039f1ce2b1a",
-  "fingerprint": "6d4acc7b4b10685f151afce60781b86c7f452b68de71d2ae7f446593a53d6dc6",
+  "base": "7764125348b440830d4ee16aeafa3559c707f5ea",
+  "fingerprint": "d5105baaa90c70050ef3c447cd9f8fa10fe7c459010190dcc33a38a445bf481a",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "mixed",
-    "description": "Eleven entity contracts add or change retained-review behavior: W-RUN-CONTROLS, W-LAUNCH-EDITOR, W-LAUNCH-REVIEW, W-QUESTIONS, W-REPOSITORY-SETTINGS, W-SYSTEM-DEFAULTS, W-PR-REVIEW-POLICY, W-RETAINED-REVIEW, C-PR-POSTING-POLICY, C-REVIEW-PUBLISH and C-REVIEW-RECONCILE. The other 123 direct analyzer entries retain their entity behavior and are reviewed structurally for shared mapped-file, assertion-description or instance-composition impact. Each contract below has an explicit decision; no adoption is claimed. Main sidebar, saved-state, history and skill-load identities remain intact.",
-    "implementation": "Compared current and main model/entity/assertion/instance records and inspected changed app, transport, store and web paths. Analyzer direct scope includes any changed mapped file, so broad web/src/main.tsx references also select unchanged connection/package panes. Its review delta changes lazy imports and ItemDetail/Launch/Agent; it does not change their package/connection semantics. New child composition and expanded metadata-only journal assertion descriptions retain structural ownership. Behavioral children below retain related actual code and meaningful tests; native execution remains gated on ordered iteration/durable waits. Finished saved-result recovery now validates its artifact/current evidence and returns before reopening posting, preserving retained completion and explicit artifact authority after lost parent finalization. Rechecked against target main 9245bc58: report-detail definitions/disposition assertions and report source consumers remain exact baseline matches; only retained PR-review contract behavior is classified behavioral. Cycle two preserves newer policy observations over older save replies, projects compact review counts/outcomes rather than full finding prose and recognizes only an exact durable own publication during finished/uncertain recovery. Reviewer readiness no longer exposes completion before engineering assessment and durable result binding. The actual initial-inbox/queue ListWithout facade now compacts legacy review findings before SQL-to-Go transfer.",
-    "tests": "Read the retained review, policy/import/editor race, material-answer, lifecycle/receipt and saved invalidation assertions described per behavioral child. Unchanged children retain their existing owned assertion inventories and explicit gaps; shared test-file edits are not treated as proof of a new child behavior. P-CONNECTION-GUIDE/P-PACKAGE-OVERVIEW retain unchanged native consent/package/landing assertions and need no unrelated test edits. Registry validation and the read-only review-constraint audit are separate from the coordinator pending full verification; host/accessibility gaps remain open. API-REVIEW-FINISHED-RECOVERY is owned by W-RUN-CONTROLS, W-RETAINED-REVIEW and C-REVIEW-PUBLISH; its SQLite failure/restart assertion checks the same complete artifact, zero automatic remote calls and one later explicit post. Preserved the exact target-main two-case invalid/resolved report-disposition browser assertion alongside the appended retained-review cases. New owned assertions cover delayed policy success/failure ordering, SQL-before-decode/initial UI compactness and real own-publication recovery; strict clean rendering requires a known zero finding count. These refine the same eleven behavior contracts; the other children retain their semantic classifications. API-REVIEW-COMPLETION-BOUNDARY verifies the real restarted aggregate-write failure keeps an older artifact incomplete/unpostable, then succeeds from saved checkpoints. API-REVIEW-COMPACT-SQL now probes real ListWithout/Select bytes before domain conversion; final UI payload checks are not substituted for that intermediate proof.",
-    "contracts": {
-      "ui:C-ANSWER": {
-        "kind": "structure",
-        "description": "C-ANSWER (Answer connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels. Retained message/text questions leave actionable attention individually after explicit same-run deci",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, UI-KEYBOARD-ATTENTION, API-UI-CONTENT, UI-ATTENTION-CONTEXT, UI-READABLE-APPROVALS, API-ATTENTION-RECONCILIATION, API-INACTIVE-QUESTION-FOLLOWUP, API-NATIVE-ANSWER-INTERRUPT. No newly claimed behavior for C-ANSWER is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-ATTENTION-CHAT": {
-        "kind": "structure",
-        "description": "C-ATTENTION-CHAT (Attention chat connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Closes attention and opens the owning conversation without submitting an answer.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT. No newly claimed behavior for C-ATTENTION-CHAT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-BACK": {
-        "kind": "structure",
-        "description": "C-BACK (Back navigation) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Restores list query, scroll and row focus when the row exists; missing rows leave a usable focus fallback. Ordinary drafts remain keyed to their records.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SINGLE-PAGE, UI-PAGE-FALLBACK, UI-WORKING-MONITOR. No newly claimed behavior for C-BACK is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-DIAGNOSE": {
-        "kind": "structure",
-        "description": "C-DIAGNOSE (Diagnose connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Shows local Checking feedback and then health results or an exact local error. No repair or page transition.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is API-UI-CONTENT, UI-SETTINGS-EDITORS, API-GITHUB-LOCAL-DIAGNOSTICS. No newly claimed behavior for C-DIAGNOSE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-DISCOVER-SKILLS": {
-        "kind": "structure",
-        "description": "C-DISCOVER-SKILLS (Discover skills connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Loads/discovers skills and refreshes shared choices without saving the repository first.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS. No newly claimed behavior for C-DISCOVER-SKILLS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-DISMISS": {
-        "kind": "structure",
-        "description": "C-DISMISS (Dismiss connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Dismisses only that dialog and restores its connected opener when permitted. No attention answer or interrupt is sent.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, UI-KEYBOARD-LAUNCH, UI-KEYBOARD-ATTENTION, API-UI-CONTENT. No newly claimed behavior for C-DISMISS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-DISMISS-QUESTION": {
-        "kind": "structure",
-        "description": "C-DISMISS-QUESTION (Text question dismissal connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: No reply needed dismisses only local textual attention and closes the form without sending a task turn or answering an approval.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TEXT-DISMISS. No newly claimed behavior for C-DISMISS-QUESTION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-EXTERNAL-AUTH": {
-        "kind": "structure",
-        "description": "C-EXTERNAL-AUTH (External auth connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: External. Continue reports the user's completion decision; it does not independently prove external success.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Elicitation(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT. No newly claimed behavior for C-EXTERNAL-AUTH is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-FILTER": {
-        "kind": "structure",
-        "description": "C-FILTER (Filter connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Search and filter the complete saved focused queue before pagination; default pages contain 50 rows. Changing the query resets its page, and older responses cannot replace later queries.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract. Assertion metadata for STORE-UI-JOURNAL now records PR policy owner-ID invalidation; this does not change existing saved-state interaction semantics.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, API-UI-CONTENT, UI-NO-MATCHES, UI-PAGE-FALLBACK, UI-WORK-QUEUES, API-QUEUE-LINKS, API-REVIEW-SYNC, API-REVIEW-IDENTITY, UI-LAUNCH-50MS, API-UI-PAGES, API-UI-COMMIT, API-UI-BURSTS, STORE-UI-JOURNAL, STORE-UI-SNAPSHOT, UI-QUERY-ORDER, UI-HIDDEN-SUBSCRIPTION, UI-INBOX-PAGES, UI-QUERY-IDENTITY. No newly claimed behavior for C-FILTER is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-FOLLOW-UP": {
-        "kind": "structure",
-        "description": "C-FOLLOW-UP (Follow up connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Send with current-turn identity while active. Acknowledge durable local queue acceptance before contacting the agent; background delivery restores the same retained session when needed. Saved source context is explicitly unverified; task-required GitHub reads belong to the agent. Accepted sends clear unchanged submitted drafts; rejected acceptance preserves ",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT, UI-WAKE-MESSAGE, ADMIN-PLUGIN-GATE, UI-QUEUED-MESSAGE, API-ATTENTION-RECONCILIATION, API-QUESTION-ACTIVE-TURN, API-INACTIVE-QUESTION-FOLLOWUP. No newly claimed behavior for C-FOLLOW-UP is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-GITHUB-USAGE": {
-        "kind": "structure",
-        "description": "C-GITHUB-USAGE (GitHub usage settings connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Validates and persists bounded request budget/reserve/poll interval; omitted fields from older clients retain their saved values. Budget-only changes preserve assessment policy identity.",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function SystemReviewSettings(; internal/providers/github_usage.go at func (g *GitHub) beginRequest(; internal/app/github_usage.go at func (a *App) GitHubStatus(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-GITHUB-USAGE, API-GITHUB-BUDGET, API-GITHUB-CACHE. No newly claimed behavior for C-GITHUB-USAGE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-GLOBAL-ATTENTION": {
-        "kind": "structure",
-        "description": "C-GLOBAL-ATTENTION (Global attention connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Selects that exact owning run and request; identifies item/profile and returns to that conversation after answering. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT, UI-ATTENTION-CONTEXT, UI-WAITING-MESSAGES, API-ATTENTION-RECONCILIATION. No newly claimed behavior for C-GLOBAL-ATTENTION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-ITEM-SOURCE": {
-        "kind": "structure",
-        "description": "C-ITEM-SOURCE (Original item navigation) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Opens through host openLink. It does not select/read/acknowledge or start work. Denied or failed opens remain visible in the current list.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/bridge.ts at export async function openLink(; web/src/reviews.tsx at export function PostedReviews(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-GITHUB-LINK, UI-GITHUB-LINK-ERROR, UI-WORKING-MONITOR, UI-POSTED-REVIEWS. No newly claimed behavior for C-ITEM-SOURCE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-ITEM-STATE": {
-        "kind": "structure",
-        "description": "C-ITEM-STATE (Item state connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. A deferred provider refresh leaves the displayed saved information unread until a successful retry.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, UI-ITEM-ACTIONS, API-UI-CONTENT, UI-DETAIL-DEFERRED, UI-DETAIL-OBSERVATION-READ, UI-DETAIL-COOLDOWN-RETRY. No newly claimed behavior for C-ITEM-STATE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-LAUNCH-EDIT": {
-        "kind": "structure",
-        "description": "C-LAUNCH-EDIT (Launch edit connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Returns to the editor. The preceding prepared record is retained, not modified/deleted.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT, UI-DEFERRED-SKILLS. No newly claimed behavior for C-LAUNCH-EDIT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-LAUNCH-OPEN": {
-        "kind": "structure",
-        "description": "C-LAUNCH-OPEN (Launch open connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: New run under Item details prepares an optional proposal and opens its durable review. No workspace/process starts until Start.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT, UI-DRAFT-LAUNCHES. No newly claimed behavior for C-LAUNCH-OPEN is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-LAUNCH-PROFILE": {
-        "kind": "structure",
-        "description": "C-LAUNCH-PROFILE (Launch profile connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Replaces prompt/model/effort/skill drafts; keeps the current base draft.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT. No newly claimed behavior for C-LAUNCH-PROFILE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-LINK": {
-        "kind": "structure",
-        "description": "C-LINK (Link connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Submits local Add/Remove, then refreshes selected relationships without clearing unrelated drafts. A late earlier response cannot replace later selected detail.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is ITEM-STATE, UI-LINK-REMOVE, API-UI-CONTENT, UI-ITEM-DRAFTS. No newly claimed behavior for C-LINK is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-NAVIGATE": {
-        "kind": "structure",
-        "description": "C-NAVIGATE (Navigate connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Navigates between four task queues with independent query state; configuration remains a separate document.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT, UI-REPORTS-INFO, UI-REPORTS-NAV-NARROW, UI-SINGLE-PAGE, UI-NO-INLINE-SETTINGS, UI-WORKING-MONITOR. No newly claimed behavior for C-NAVIGATE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-OPEN-SETTINGS": {
-        "kind": "structure",
-        "description": "C-OPEN-SETTINGS (Dedicated settings entry) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Opens configuration in its own view. The inbox entry and legacy resource remain inbox-only. Both surfaces reuse authenticated bridged tools without owner credentials or direct iframe localhost access.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS-SEPARATE, UI-SETTINGS-CONCURRENT, API-SETTINGS-RESOURCE, API-SETTINGS-DOCUMENT. No newly claimed behavior for C-OPEN-SETTINGS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-PIPELINE-SELECT": {
-        "kind": "structure",
-        "description": "C-PIPELINE-SELECT (Pipeline selection connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Selecting an agent pipeline updates its authority and automatic prompt while retaining an edited message and invalidating an old prepared proposal.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function NewChat(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-PIPELINE. No newly claimed behavior for C-PIPELINE-SELECT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-PLUGIN-MAINTENANCE": {
-        "kind": "structure",
-        "description": "C-PLUGIN-MAINTENANCE (Plugin maintenance connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Submit explicit plugin management to the pinned CLI through owner MCP tools and poll durable results; no automatic replay.",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function PluginAdmin(; internal/app/plugins.go at func (m *Manager) PluginAction(; internal/domain/admin.go at type PluginInventory struct. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-ADMIN-PLUGINS, UI-ADMIN-UNCERTAIN, ADMIN-PLUGINS, ADMIN-PLUGIN-RECOVERY, UI-PLUGIN-READ-RECOVERY, ADMIN-REMOVED-SKILL, API-UI. No newly claimed behavior for C-PLUGIN-MAINTENANCE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-POLICY-SAVE": {
-        "kind": "structure",
-        "description": "C-POLICY-SAVE (Policy save connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Submits configuration; later background assessment can update priority displays. Does not create a host subscription.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT. No newly claimed behavior for C-POLICY-SAVE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-PR-POSTING-POLICY": {
-        "kind": "behavior",
-        "description": "Adds explicit persistence of the selected PR override to its effective value/source, with null inheritance and saved changes refreshing the open control without review execution.",
-        "implementation": "Read save_review_policy/read_review_policy transport ownership, server precedence and PRReviewPolicyControls shared PR/config/repository invalidation reads. The journal emits metadata-only owner identity. Read the observation generation and target lifetime fence around policy save callbacks.",
-        "tests": "UI-PR-POSTING and API-REVIEW-POLICY distinguish false, null and omitted updates. UI-PR-POSTING-REFRESH verifies saved global invalidation updates an open PR without start/post; STORE-UI-JOURNAL verifies the owner ID and excludes settings payloads. UI-PR-POLICY-SAVE-ORDER delays old success and failure after a newer committed Off read; value/source and absence of obsolete alert remain correct, with exactly one save and no start/post."
-      },
-      "ui:C-PREPARE": {
-        "kind": "structure",
-        "description": "C-PREPARE (Prepare connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account\u2019s own PR and missing author/identity without creating a proposal.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, UI-LAUNCH-ERROR, API-UI-CONTENT, API-REVIEW-AUTHOR-PREPARE, UI-OWN-PR-REJECTION. No newly claimed behavior for C-PREPARE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-PRIORITY": {
-        "kind": "structure",
-        "description": "C-PRIORITY (Priority connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Saves immediately, disables during submission and restores the saved value with inline error on failure.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is ITEM-STATE, API-UI-CONTENT, UI-ITEM-DRAFTS, UI-PRIORITY-ERROR. No newly claimed behavior for C-PRIORITY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-PROFILE-SAVE": {
-        "kind": "structure",
-        "description": "C-PROFILE-SAVE (Profile save connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Refreshes available/default launch settings; existing prepared snapshots stay unchanged.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS. No newly claimed behavior for C-PROFILE-SAVE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPORT-EVIDENCE": {
-        "kind": "structure",
-        "description": "C-REPORT-EVIDENCE (Report evidence connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Append idempotent host observations and queue reports waiting for information. After an uncertain response, an unchanged draft can be retried without duplicate additions; editing the retained draft permits another observation.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-MUTATION-PROGRESS, UI-REPORTS-EVIDENCE-RETRY. No newly claimed behavior for C-REPORT-EVIDENCE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPORT-MORE": {
-        "kind": "structure",
-        "description": "C-REPORT-MORE (Report pagination connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range. Background refresh leaves pagination available; an already pending page request suppresses duplicate clicks.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-PAGE, UI-REPORTS-PAGE-PROGRESS. No newly claimed behavior for C-REPORT-MORE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPORT-OPEN-LINK": {
-        "kind": "structure",
-        "description": "C-REPORT-OPEN-LINK (Report external link connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Sends the stored URL to the host open-link boundary; a fix without a PR uses its repository/commit URL. Failures use the shared report error alert. Opening a link does not verify issue, fix or release state.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-RECOVERY. No newly claimed behavior for C-REPORT-OPEN-LINK is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPORT-QUERY": {
-        "kind": "structure",
-        "description": "C-REPORT-QUERY (Report query connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Loads the matching report subset and resets the loaded range to its first page. Existing selected detail remains independently selected.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-PAGE. No newly claimed behavior for C-REPORT-QUERY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPORT-RECOVER": {
-        "kind": "structure",
-        "description": "C-REPORT-RECOVER (Report recovery connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Validate recovery prerequisites and acknowledgement before resuming retained work.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-DETAIL-ORDER, UI-REPORTS-MUTATION-PROGRESS. No newly claimed behavior for C-REPORT-RECOVER is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPORT-REFRESH": {
-        "kind": "structure",
-        "description": "C-REPORT-REFRESH (Report refresh connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-MUTATION-PROGRESS. No newly claimed behavior for C-REPORT-REFRESH is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPORT-SELECT": {
-        "kind": "structure",
-        "description": "C-REPORT-SELECT (Report selection connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Reads selected report without starting an agent. Selection and mutation ordering discard superseded details; journal updates queue a refresh behind a pending read so details can progress during ongoing changes.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-DETAIL-ORDER, UI-REPORTS-SELECTION-ORDER, UI-REPORTS-DETAIL-PROGRESS. No newly claimed behavior for C-REPORT-SELECT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPOSITORY-REVIEW-PROMPT": {
-        "kind": "structure",
-        "description": "C-REPOSITORY-REVIEW-PROMPT (Repository review prompt connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Append owner repository instructions to the generic review prompt during immutable launch preparation.",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function RepositoryAdmin(; internal/app/review_requests.go at func (a *App) ProcessReviewRequests(; internal/app/app.go at func (a *App) SaveRepository(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-ADMIN-REPO, ADMIN-REVIEW-POLICY. No newly claimed behavior for C-REPOSITORY-REVIEW-PROMPT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REPOSITORY-SAVE": {
-        "kind": "structure",
-        "description": "C-REPOSITORY-SAVE (Repository save connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Shows saving/success/error within the independent settings view. Successful saves remain there; other open task views receive refreshed shared data without navigation or draft reset.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-FEEDBACK, UI-SETTINGS-SEPARATE, UI-SETTINGS-CONCURRENT. No newly claimed behavior for C-REPOSITORY-SAVE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REVIEW-POLICY": {
-        "kind": "structure",
-        "description": "C-REVIEW-POLICY (Review policy connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Resolve system policy and repository override against fresh current user/team review requests; start eligible claimed reviews once under the configured authority.",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function RepositoryAdmin(; internal/app/review_requests.go at func (a *App) ProcessReviewRequests(; internal/app/app.go at func (a *App) SaveRepository(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-ADMIN-REPO, UI-ADMIN-PIPELINE, ADMIN-REVIEW-POLICY, ADMIN-REVIEW-ELIGIBILITY. No newly claimed behavior for C-REVIEW-POLICY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-REVIEW-PUBLISH": {
-        "kind": "behavior",
-        "description": "Adds explicit publication of the owning complete retained artifact to its bound PR, preserving omissions and a provider-verified receipt under server-owned authority.",
-        "implementation": "Read postRetainedReview and Publisher.Post artifact/target checks, current identity/policy/snapshot revalidation, durable intent and no-replay handling. Automatic COMMENT has an empty body, and an empty COMMENT skips mutation. Read Workflow.resumePublication finished-result validation and the return before posting-policy/callback execution. Own-publication recovery uses the exact durable operation/approved payload rather than ignoring unrelated evidence changes. Completion becomes authoritative only after engineering assessment and durable binding of its validated artifact; earlier failed retry state cannot promote the old incomplete artifact.",
-        "tests": "UI-REVIEW-POST asserts one explicit operation sends runId/artifact and displays the verified receipt. API-REVIEW-POSTING checks current policy/launch precedence; receipt/lifecycle projection tests preserve newer operations. Publication tests cover pending drafts, omitted locations, empty COMMENT, approval guards and one mutation. API-REVIEW-FINISHED-RECOVERY verifies actual lost parent finalization, restart and explicit recovery preserve the same complete artifact without automatic publication, followed by one accepted explicit post. API-REVIEW-OWN-PUBLICATION-RECOVERY checks finished/submitting/uncertain-tail restarts preserve the full private artifact and compact count, restore verified completion and never exceed one submission. API-REVIEW-COMPLETION-BOUNDARY exercises actual restart plus failed aggregate SQL save, checks old summary/artifact remain incomplete and unpostable, then verifies successful retry reuses reviewers and assesses once."
-      },
-      "ui:C-REVIEW-RECONCILE": {
-        "kind": "behavior",
-        "description": "Adds observation of an uncertain publication for a unique complete submitted receipt; reconciliation never submits a second mutation.",
-        "implementation": "Read ReconcileRetainedReview, Publisher.Reconcile and projectReviewPublication. Correlated durable operation state, complete receipt matching and current lifecycle/operation ownership guard delayed observations. Own-publication recovery uses the exact durable operation/approved payload rather than ignoring unrelated evidence changes.",
-        "tests": "UI-REVIEW-WORKFLOW asserts one reconcile call, verified receipt/count and zero posting calls. TestUncertainPublicationOnlyReconciles checks lost response, ambiguity and failed state save with one mutation; receipt/lifecycle projection assertions preserve newer durable ownership. API-REVIEW-OWN-PUBLICATION-RECOVERY checks finished/submitting/uncertain-tail restarts preserve the full private artifact and compact count, restore verified completion and never exceed one submission."
-      },
-      "ui:C-RUN-ACTION": {
-        "kind": "structure",
-        "description": "C-RUN-ACTION (Run action connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary. Source closure or merge permanently terminates the session while retaining its history and workspace.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, RUN-RECOVERY, RUN-RECOVERY-2, UI-DIRTY-CLEANUP, API-UI-CONTENT, UI-WAKE-MESSAGE, UI-REPAIR-TAKEOVER, UI-TERMINATED-WORK. No newly claimed behavior for C-RUN-ACTION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-RUN-ATTENTION": {
-        "kind": "structure",
-        "description": "C-RUN-ATTENTION (Run attention connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Opens that request without answering.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT. No newly claimed behavior for C-RUN-ATTENTION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-SELECT-ITEM": {
-        "kind": "structure",
-        "description": "C-SELECT-ITEM (Select item connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Loads and marks the displayed item revision read, continues the newest retained conversation or shows a prefilled first message. Never starts or prepares on selection.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, UI-DETAIL-SELECTION, API-UI-CONTENT, UI-SINGLE-PAGE, UI-DIRECT-CHAT, UI-DETAIL-DEFERRED, UI-DETAIL-OBSERVATION-READ, UI-DETAIL-COOLDOWN-RETRY, UI-PAGED-SELECTION. No newly claimed behavior for C-SELECT-ITEM is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-SELECT-RUN": {
-        "kind": "structure",
-        "description": "C-SELECT-RUN (Select run connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Opens the selected retained conversation within the owning item, preserving the originating work queue Back context. Prepared rows reopen their existing immutable review without preparing or starting again.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, UI-OPEN-AGENT, UI-DRAFT-LAUNCHES, UI-SINGLE-PAGE. No newly claimed behavior for C-SELECT-RUN is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-SESSION-CONSOLE": {
-        "kind": "structure",
-        "description": "C-SESSION-CONSOLE (Session console connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Switches presentation without launching or resuming another process.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SESSION-CONSOLE. No newly claimed behavior for C-SESSION-CONSOLE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-SKILL-LOAD": {
-        "kind": "structure",
-        "description": "C-SKILL-LOAD (Skill load connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Loads saved content for the selected managed editor, retains other drafts on failure and rejects stale selection responses.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at async function loadSkill(; internal/transport/ui_state.go at case \"skill\":. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is API-UI-SKILL-EDITOR, UI-SKILL-EDITOR-LOAD, UI-SKILL-EDITOR-RACE, UI-SKILL-EDITOR-ERROR. No newly claimed behavior for C-SKILL-LOAD is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-SKILL-SAVE": {
-        "kind": "structure",
-        "description": "C-SKILL-SAVE (Skill save connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Refreshes shared skills; immutable prepared skill snapshots stay unchanged.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS, UI-SKILL-EDITOR-LOAD. No newly claimed behavior for C-SKILL-SAVE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-START": {
-        "kind": "structure",
-        "description": "C-START (Start connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Explicit Start only. Error/lost response reads the same run; accepted work opens, still-prepared work permits retry, unknown status disables Start/Edit and offers Check start status. PR review Start rechecks the current author and identity and rejects self review without queuing work; the retained proposal remains available.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, UI-START-RETRY, API-UI-CONTENT, UI-DRAFT-LAUNCHES, UI-START-UNKNOWN, UI-START-CONFIRMED, ADMIN-PLUGIN-GATE, API-REVIEW-AUTHOR-START, UI-START-CHECK-EPOCH. No newly claimed behavior for C-START is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-START-CHAT": {
-        "kind": "structure",
-        "description": "C-START-CHAT (First message start connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Prepares then starts once; verifies the same run after an uncertain response. Preserves per-item draft and recovery state.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function NewChat(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-DIRECT-CHAT, UI-CHAT-UNCERTAIN, UI-ASSEMBLED, UI-CHAT-AUTHORITY, UI-CHAT-CONFIRMED, UI-CHAT-LATE, UI-CHAT-PREPARE-ERROR, ADMIN-PLUGIN-GATE, UI-ACCEPTANCE-RESYNC, UI-START-EPOCH. No newly claimed behavior for C-START-CHAT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-STATE-REFRESH": {
-        "kind": "structure",
-        "description": "C-STATE-REFRESH (State refresh connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: One authenticated host subscription waits up to 25 seconds for metadata-only invalidations. A background worker publishes immutable saved projections and their cursor atomically. Reads perform no provider requests, dependency probes or external refreshes. Affected views reread saved state; hidden views catch up on visibility, bursts coalesce and older respon",
-        "implementation": "The unchanged implementation ownership remains web/src/bridge.ts at export function connect(; web/src/bridge.ts at export async function call<T>(; web/src/bridge.ts at export async function openLink(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract. Assertion metadata for STORE-UI-JOURNAL now records PR policy owner-ID invalidation; this does not change existing saved-state interaction semantics.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, UI-ITEM-ACTIONS, API-UI-CONTENT, UI-CONNECT-INIT, UI-CONNECT-POLL, UI-CONNECT-MUTATION, UI-CONNECT-TOOL-ERROR, UI-CONNECT-HOST-WRAP, UI-CONNECT-HOST-MUTATION, API-COMPACT-INBOX, UI-COMPACT-REVIEW, UI-GITHUB-USAGE, UI-LINKED-DETAIL-REFRESH, UI-READ-FRESHNESS, UI-SAVED-OBSERVATIONS, API-GITHUB-QUERY-CACHE, UI-LAUNCH-50MS, API-UI-PAGES, API-UI-COMMIT, API-UI-BURSTS, STORE-UI-JOURNAL, STORE-UI-SNAPSHOT, UI-QUERY-ORDER, UI-HIDDEN-SUBSCRIPTION, UI-INBOX-PAGES, API-UI-PRIVATE, UI-NAV-MESSAGES, UI-PAGED-SELECTION, UI-OBSERVATION-ONLY, UI-DEFERRED-SKILLS, UI-SHELL-ORDER, UI-RESYNC-REPORT, UI-RESYNC-PLUGIN, UI-RESYNC-HISTORY, API-UI-INITIAL-PUBLICATION, API-UI-OUTPUT-DOMAIN, UI-OUTPUT-SUBSCRIPTION, UI-REPOSITORY-FRESHNESS, UI-ACCEPTANCE-RESYNC, UI-STREAM-PROGRESS, UI-HIDDEN-HISTORY, UI-HIDDEN-RESYNC, API-OVERVIEW-ATTENTION, UI-HIDDEN-DIRTY, UI-VIEW-RETRY, UI-REVIEW-OBSERVATION, UI-START-EPOCH, UI-START-CHECK-EPOCH, UI-NOTIFICATION-FRESHNESS. No newly claimed behavior for C-STATE-REFRESH is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:C-TRANSCRIPT": {
-        "kind": "structure",
-        "description": "C-TRANSCRIPT (Transcript connection) retains its connection contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Refreshes display only. Resetting history does not resume/replay agent work.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT, UI-HISTORY-WINDOW. No newly claimed behavior for C-TRANSCRIPT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:D-ATTENTION": {
-        "kind": "structure",
-        "description": "D-ATTENTION (Attention dialog) retains its dialog contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Request ID and owning run, with item title/profile displayed and run selected before opening.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, UI-KEYBOARD-ATTENTION, UI-AXE-CORE, API-UI-CONTENT, UI-ATTENTION-CONTEXT, UI-READABLE-APPROVALS. No newly claimed behavior for D-ATTENTION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:D-LAUNCH": {
-        "kind": "structure",
-        "description": "D-LAUNCH (Launch dialog) retains its dialog contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Selected item or retained prepared run; default entry prepares the repository or system role profile, while reopening a draft retains its immutable profile.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, UI-KEYBOARD-LAUNCH, UI-LAUNCH-ERROR, UI-START-RETRY, UI-AXE-CORE, API-UI-CONTENT, UI-DRAFT-LAUNCHES, UI-START-UNKNOWN, UI-READABLE-APPROVALS. No newly claimed behavior for D-LAUNCH is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-APPROVAL": {
-        "kind": "structure",
-        "description": "P-APPROVAL (Approval pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Nonquestion command/file/permission approval with original request detail and available decisions.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, UI-READABLE-APPROVALS. No newly claimed behavior for P-APPROVAL is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-ATTENTION-FRAME": {
-        "kind": "structure",
-        "description": "P-ATTENTION-FRAME (Attention frame pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Owning item title/profile, blocking explanation, close, local error and Open agent chat.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, UI-ATTENTION-CONTEXT. No newly claimed behavior for P-ATTENTION-FRAME is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-CONNECTION-GUIDE": {
-        "kind": "structure",
-        "description": "P-CONNECTION-GUIDE (Connection guide pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Host setup guidance, linked browser-package download and artifact metadata links on that same page.",
-        "implementation": "The complete entity/assertion/instance model is identical to main. Its broad web/src/main.tsx mapping at function Factory( selects it because the file changed. The actual diff adds review imports and edits ItemDetail, Launch and Agent, without changing package overview, connection guidance, native consent or public landing behavior.",
-        "tests": "CONSENT-NATIVE remains the unchanged native owner approval origin/referrer/replay fixture; PACKAGE/PACKAGE-2/PACKAGE-LANDING remain unchanged hosted package binding/checksum/registered-browser routing assertions in internal/pluginbundle/hosting_test.go. None of their owned test files changed because this pane behavior did not change; real signed-in-host acceptance remains explicitly unverified."
-      },
-      "ui:P-DIAGNOSTICS": {
-        "kind": "structure",
-        "description": "P-DIAGNOSTICS (Diagnostics pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Explicitly requested health results and provider authorization guidance.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is API-UI-CONTENT, UI-SETTINGS-EDITORS, API-GITHUB-LOCAL-DIAGNOSTICS. No newly claimed behavior for P-DIAGNOSTICS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-ELICITATION": {
-        "kind": "structure",
-        "description": "P-ELICITATION (Elicitation pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Nonquestion elicitation: supported form, external authorization URL or unsupported-native-host notice.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Elicitation(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT. No newly claimed behavior for P-ELICITATION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-FEEDBACK": {
-        "kind": "structure",
-        "description": "P-FEEDBACK (Feedback pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Shell-wide operation errors and initial connection state. Blocker replaces the page body until initial data is available.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT. No newly claimed behavior for P-FEEDBACK is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-IDENTITY": {
-        "kind": "structure",
-        "description": "P-IDENTITY (Identity pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Connection feedback for each independently opened surface. Normal success is screen-reader-only; failures remain visible.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT, UI-SINGLE-PAGE. No newly claimed behavior for P-IDENTITY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-INBOX-LIST": {
-        "kind": "structure",
-        "description": "P-INBOX-LIST (Inbox list pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Full-width filtered list on the active Working, Issues, My PRs or Review PRs page. Selection opens one item conversation.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, API-UI-CONTENT, UI-NO-MATCHES, UI-SINGLE-PAGE, UI-WORKING-MONITOR. No newly claimed behavior for P-INBOX-LIST is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-INBOX-QUERY": {
-        "kind": "structure",
-        "description": "P-INBOX-QUERY (Inbox query pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Independent compact search/filter controls for the current work queue, with repository errors when present.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, API-UI-CONTENT, UI-WORKING-MONITOR. No newly claimed behavior for P-INBOX-QUERY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-ITEM-DETAIL": {
-        "kind": "structure",
-        "description": "P-ITEM-DETAIL (Item detail pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Item summary above chat and collapsed triage/details below it on PAGE-AGENT. Submitted PR reviews are visible above chat rather than hidden in Activity.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract. Composition metadata adds displayed child instances P-ITEM-DETAIL/W-PR-REVIEW-POLICY (W-PR-REVIEW-POLICY); their new behavior is reviewed under those child widget contracts.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, UI-ITEM-ACTIONS, UI-LINK-REMOVE, UI-DETAIL-SELECTION, API-UI-CONTENT, UI-ITEM-DRAFTS, UI-SINGLE-PAGE, UI-DIRECT-CHAT, UI-CONNECT-ITEM, UI-CONNECT-TOOL-ERROR, UI-DETAIL-DEFERRED, UI-DETAIL-OBSERVATION-READ, UI-DETAIL-COOLDOWN-RETRY. No newly claimed behavior for P-ITEM-DETAIL is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-LAUNCH-EDITOR": {
-        "kind": "structure",
-        "description": "P-LAUNCH-EDITOR (Launch editor pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Optional Edit view of a selected item and profile with Advanced customization.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT. No newly claimed behavior for P-LAUNCH-EDITOR is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-LAUNCH-FRAME": {
-        "kind": "structure",
-        "description": "P-LAUNCH-FRAME (Launch frame pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Launch title, originating item and close control; common to both phases.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT. No newly claimed behavior for P-LAUNCH-FRAME is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-LAUNCH-REVIEW": {
-        "kind": "structure",
-        "description": "P-LAUNCH-REVIEW (Launch review pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Default entry into launch; one durable snapshot, also reopened from Draft launches.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT. No newly claimed behavior for P-LAUNCH-REVIEW is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-NAVIGATION": {
-        "kind": "structure",
-        "description": "P-NAVIGATION (Navigation pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Current page and pending requests; below identity, independent of page body.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT, UI-REPORTS-NAV-NARROW. No newly claimed behavior for P-NAVIGATION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-NEW-CHAT": {
-        "kind": "structure",
-        "description": "P-NEW-CHAT (First conversation pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Conditional content in the single active page.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-DIRECT-CHAT, UI-CHAT-UNCERTAIN. No newly claimed behavior for P-NEW-CHAT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-PACKAGE-OVERVIEW": {
-        "kind": "structure",
-        "description": "P-PACKAGE-OVERVIEW (Package overview pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Branding, version, portable download/checksum and privacy text on the public package page.",
-        "implementation": "The complete entity/assertion/instance model is identical to main. Its broad web/src/main.tsx mapping at function Factory( selects it because the file changed. The actual diff adds review imports and edits ItemDetail, Launch and Agent, without changing package overview, connection guidance, native consent or public landing behavior.",
-        "tests": "CONSENT-NATIVE remains the unchanged native owner approval origin/referrer/replay fixture; PACKAGE/PACKAGE-2/PACKAGE-LANDING remain unchanged hosted package binding/checksum/registered-browser routing assertions in internal/pluginbundle/hosting_test.go. None of their owned test files changed because this pane behavior did not change; real signed-in-host acceptance remains explicitly unverified."
-      },
-      "ui:P-PLUGIN-ADMIN": {
-        "kind": "structure",
-        "description": "P-PLUGIN-ADMIN (Plugin administration pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: A collapsed settings disclosure independent of task conversations.",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function PluginAdmin(; internal/app/plugins.go at func (m *Manager) PluginAction(; internal/domain/admin.go at type PluginInventory struct. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-ADMIN-PLUGINS, ADMIN-PLUGINS, UI-PLUGIN-READ-RECOVERY, API-UI. No newly claimed behavior for P-PLUGIN-ADMIN is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-POLICIES": {
-        "kind": "structure",
-        "description": "P-POLICIES (Policies pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Collapsed priority and notification form with ordinary label/priority rows and local feedback.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT. No newly claimed behavior for P-POLICIES is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-PROFILES": {
-        "kind": "structure",
-        "description": "P-PROFILES (Profiles pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: One editable profile and its default skills; connects to future launch preparation.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS. No newly claimed behavior for P-PROFILES is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-QUESTIONS": {
-        "kind": "structure",
-        "description": "P-QUESTIONS (Questions pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Used when the request supplies questions; all question answers are submitted together.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT. No newly claimed behavior for P-QUESTIONS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-REPORT-DETAIL": {
-        "kind": "structure",
-        "description": "P-REPORT-DETAIL (Report detail pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: The selected durable report ID.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-DETAIL-ORDER, UI-REPORTS-SELECTION-ORDER, UI-REPORTS-DETAIL-PROGRESS, UI-REPORTS-DRAFT. No newly claimed behavior for P-REPORT-DETAIL is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-REPORT-LIST": {
-        "kind": "structure",
-        "description": "P-REPORT-LIST (Report list pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: The shared persistent report ledger.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-PAGE, UI-REPORTS-PAGE-PROGRESS. No newly claimed behavior for P-REPORT-LIST is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-REPOSITORIES": {
-        "kind": "structure",
-        "description": "P-REPOSITORIES (Repositories pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Repository drafts and configured-repository summary. Discovery updates the skills available to other panes.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-FEEDBACK, UI-SETTINGS-EDITORS, UI-SETTINGS-SEPARATE, UI-SETTINGS-CONCURRENT. No newly claimed behavior for P-REPOSITORIES is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-RUN-DETAIL": {
-        "kind": "structure",
-        "description": "P-RUN-DETAIL (Run detail pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Conversation content on PAGE-AGENT below the item summary, with origin-specific Back and per-run follow-up drafts.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract. Composition metadata adds displayed child instances P-RUN-DETAIL/W-RETAINED-REVIEW (W-RETAINED-REVIEW); their new behavior is reviewed under those child widget contracts.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, UI-OPEN-AGENT, UI-CONVERSATION-DETAILS, UI-SINGLE-PAGE, UI-CONNECT-TRANSCRIPT, UI-CONVERSATION-DETAILS, UI-CONVERSATION-EMPTY. No newly claimed behavior for P-RUN-DETAIL is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-RUN-LIST": {
-        "kind": "structure",
-        "description": "P-RUN-LIST (Run list pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Collapsed Work history inside the selected item\u2019s Item details, containing only that item\u2019s retained conversations and nested Draft launches.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, UI-DRAFT-LAUNCHES, UI-SINGLE-PAGE, UI-WAKE-MESSAGE. No newly claimed behavior for P-RUN-LIST is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-SKILLS": {
-        "kind": "structure",
-        "description": "P-SKILLS (Skills pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: One managed skill draft and the currently known managed skills.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS. No newly claimed behavior for P-SKILLS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-SYSTEM-DEFAULTS": {
-        "kind": "structure",
-        "description": "P-SYSTEM-DEFAULTS (System defaults pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: A collapsed settings disclosure independent of task conversations.",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function SystemReviewSettings(; internal/app/app.go at func (a *App) SaveConfig(; internal/app/review_requests.go at func autoReviewEnabled(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-ADMIN-REPO, ADMIN-PLUGIN-SKILLS, UI-GITHUB-USAGE, UI-PLUGIN-INTERVAL. No newly claimed behavior for P-SYSTEM-DEFAULTS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:P-WAITING-QUEUE": {
-        "kind": "structure",
-        "description": "P-WAITING-QUEUE (Waiting messages pane) retains its pane contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Conditional content in the single active page.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-WAITING-MESSAGES, API-FALLBACK-RESTART. No newly claimed behavior for P-WAITING-QUEUE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-AGENT": {
-        "kind": "structure",
-        "description": "PAGE-AGENT (Agent page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Item selection continues the newest retained run or opens a prefilled draft. First Start is explicit. Sending a message to inactive retained work restores its session and starts that submitted message. Back restores the originating queue. Work history and prepared drafts stay under Item details.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SINGLE-PAGE, UI-NO-INLINE-SETTINGS, UI-DIRECT-CHAT, UI-CHAT-UNCERTAIN, UI-CHAT-AUTHORITY, UI-CHAT-CONFIRMED, UI-CHAT-LATE, UI-CHAT-PREPARE-ERROR, UI-CONVERSATION-DETAILS, UI-CONVERSATION-EMPTY, UI-WAKE-MESSAGE. No newly claimed behavior for PAGE-AGENT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-AGENTS": {
-        "kind": "structure",
-        "description": "PAGE-AGENTS (Messages page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: List unanswered native questions and approvals, structured message questions and textual fallback asks with their owning session. Live RPC requests require a matching connected session; async/text requests remain answerable through retained session recovery. Selection opens the exact answer dialog.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, RUN-RECOVERY, RUN-RECOVERY-2, UI-AXE-CORE, API-UI-CONTENT, UI-SINGLE-PAGE, UI-NO-INLINE-SETTINGS, UI-WAITING-MESSAGES, UI-SESSION-CONSOLE, API-ASYNC-QUESTION, API-QUESTION-REPAIR. No newly claimed behavior for PAGE-AGENTS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-INBOX": {
-        "kind": "structure",
-        "description": "PAGE-INBOX (Issues page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Issues defaults to open; pending remains the optional open-without-PR filter. Per-tab search, filter, scroll and row focus remain independent.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, ITEM-STATE, UI-AXE-CORE, API-UI-CONTENT, UI-SINGLE-PAGE, UI-PAGE-FALLBACK, UI-NO-INLINE-SETTINGS, UI-WORK-QUEUES, API-QUEUE-LINKS, API-REVIEW-SYNC, API-REVIEW-IDENTITY. No newly claimed behavior for PAGE-INBOX is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-MY-PRS": {
-        "kind": "structure",
-        "description": "PAGE-MY-PRS (My pull requests page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Independent search/filter and restored Back context; item selection opens its conversation directly.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-WORK-QUEUES, API-QUEUE-LINKS, API-REVIEW-SYNC, API-REVIEW-IDENTITY. No newly claimed behavior for PAGE-MY-PRS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-REPORTS": {
-        "kind": "structure",
-        "description": "PAGE-REPORTS (Reported issues page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Entered from Reported issues navigation; journal changes refresh both panes.",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-PAGE, UI-REPORTS-DETAIL-ORDER, UI-REPORTS-SELECTION-ORDER, UI-REPORTS-DETAIL-PROGRESS, UI-REPORTS-PAGE-PROGRESS. No newly claimed behavior for PAGE-REPORTS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-REVIEW-PRS": {
-        "kind": "structure",
-        "description": "PAGE-REVIEW-PRS (Review pull requests page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Independent search/filter and restored Back context; item selection opens its conversation directly.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; internal/providers/github.go at func (g *GitHub) Teams(; internal/app/app.go at func (a *App) Sync(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-WORK-QUEUES, API-QUEUE-LINKS, API-REVIEW-SYNC, API-REVIEW-IDENTITY, API-COMPACT-INBOX, UI-COMPACT-REVIEW. No newly claimed behavior for PAGE-REVIEW-PRS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-SETTINGS": {
-        "kind": "structure",
-        "description": "PAGE-SETTINGS (Settings page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Opened through the dedicated open_settings tool/resource. No Inbox/Agents navigation; saving remains here with local progress/success/error feedback. It does not replace an already-open task view.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, UI-SETTINGS, UI-AXE-CORE, API-UI-CONTENT, UI-SETTINGS-EDITORS, UI-SETTINGS-SEPARATE, UI-SETTINGS-CONCURRENT. No newly claimed behavior for PAGE-SETTINGS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:PAGE-WORKING": {
-        "kind": "structure",
-        "description": "PAGE-WORKING (Working page) retains its page contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Uses server queue membership; idle, failed and interrupted sessions remain tracked. Observed source closure or merge removes its own work, permanently terminates its sessions and retires pending questions, retaining question history and workspaces. A linked implementation PR merge completes the issue's Working membership without terminating its sessions.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-WORKING-MONITOR, API-WORKING. No newly claimed behavior for PAGE-WORKING is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:S-FACTORY": {
-        "kind": "structure",
-        "description": "S-FACTORY (Factory shell) retains its shell contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Five work tabs, Reported issues and one conversation page. Settings opens independently. A direct sidebar launch exposes usable navigation before saved data or secondary interfaces arrive.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at   background: var(--background);; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract. Assertion metadata for STORE-UI-JOURNAL now records PR policy owner-ID invalidation; this does not change existing saved-state interaction semantics.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, UI-AXE-CORE, API-UI-CONTENT, UI-REPORTS-NAV-NARROW, UI-SINGLE-PAGE, UI-NO-INLINE-SETTINGS, UI-WORK-QUEUES, UI-DIRECT-CHAT, UI-WAITING-MESSAGES, UI-CONNECT-INIT, UI-CONNECT-POLL, UI-LAUNCH-50MS, API-UI-PAGES, API-UI-COMMIT, API-UI-BURSTS, STORE-UI-JOURNAL, STORE-UI-SNAPSHOT, UI-QUERY-ORDER, UI-HIDDEN-SUBSCRIPTION, UI-INBOX-PAGES, UI-SHELL-ORDER. No newly claimed behavior for S-FACTORY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:S-SETTINGS": {
-        "kind": "structure",
-        "description": "S-SETTINGS (Settings surface) retains its shell contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: A separate MCP Apps settings document using the same authenticated connection and bridged tools. No Inbox/Agents navigation, attention, launch overlay or task pane.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at   background: var(--background);; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS-SEPARATE, UI-SETTINGS-CONCURRENT, API-SETTINGS-RESOURCE, API-SETTINGS-DOCUMENT. No newly claimed behavior for S-SETTINGS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-APPROVAL": {
-        "kind": "structure",
-        "description": "W-APPROVAL (Approval widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Allow once, Allow for this session, Deny and Cancel label the original choices. Permission grants remain requested-only for the turn. Raw payload stays collapsed; submission disables choices.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function AttentionDialog(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, UI-READABLE-APPROVALS. No newly claimed behavior for W-APPROVAL is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-ATTENTION-NOTICE": {
-        "kind": "structure",
-        "description": "W-ATTENTION-NOTICE (Attention notice widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question \u00b7 agent continues; unconfirmed completion and unresolved clarification create no notice.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, API-ATTENTION-RECONCILIATION, UI-NONBLOCKING-TEXT. No newly claimed behavior for W-ATTENTION-NOTICE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-CONNECTION-BLOCKER": {
-        "kind": "structure",
-        "description": "W-CONNECTION-BLOCKER (Connection blocker widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Initial handshake failures are retried with a fresh bridge instance. Transient failures show Reconnecting; repeated failures show automatic-retry feedback. Success clears only connection/read feedback.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT, UI-CONNECT-INIT, UI-CONNECT-POLL, UI-CONNECT-HOST-WRAP, UI-CONNECT-HOST-MUTATION. No newly claimed behavior for W-CONNECTION-BLOCKER is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-DIAGNOSTICS": {
-        "kind": "structure",
-        "description": "W-DIAGNOSTICS (Diagnostics widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Initially no result. Results distinguish verified, failed and unverified. Checking disables its button; completion or error appears beside it. GitHub credential availability is checked locally; paused or deferred monitoring is unverified, and repository freshness follows the periodic reconciliation schedule.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is API-UI-CONTENT, UI-SETTINGS-EDITORS, API-GITHUB-LOCAL-DIAGNOSTICS. No newly claimed behavior for W-DIAGNOSTICS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-DIALOG-FRAME": {
-        "kind": "structure",
-        "description": "W-DIALOG-FRAME (Dialog frame widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Each modal receives initial focus on its first visible enabled control, contains Tab/Shift+Tab, responds to Escape and restores a connected opener. Polling retains current focus; replacing focused controls recovers focus inside the dialog. Dialogs fit within the iframe at narrow widths, with internal vertical scrolling.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Launch(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, UI-KEYBOARD-LAUNCH, UI-KEYBOARD-ATTENTION, UI-AXE-CORE, API-UI-CONTENT, UI-ATTENTION-CONTEXT, UI-READABLE-APPROVALS. No newly claimed behavior for W-DIALOG-FRAME is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-ELICITATION": {
-        "kind": "structure",
-        "description": "W-ELICITATION (Elicitation widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Uses supported schema constraints for required scalar/select fields, numeric bounds and string lengths. A schema-less unsupported request displays a native-host-support notice. Do not infer complete schema support or complete required-field handling for every field type.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Elicitation(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, INPUT-VALIDATION, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT. No newly claimed behavior for W-ELICITATION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-GITHUB-USAGE": {
-        "kind": "structure",
-        "description": "W-GITHUB-USAGE (GitHub API usage) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Known or unknown cached quota; deferred calls, invalid settings and unavailable notifications remain visible.",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function SystemReviewSettings(; internal/providers/github_usage.go at func (g *GitHub) beginRequest(; internal/app/github_usage.go at func (a *App) GitHubStatus(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is API-GITHUB-BUDGET, API-GITHUB-CACHE, API-GITHUB-NOTIFICATIONS, API-GITHUB-INDEX, UI-GITHUB-USAGE, UI-NOTIFICATION-FRESHNESS. No newly claimed behavior for W-GITHUB-USAGE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-GLOBAL-ERROR": {
-        "kind": "structure",
-        "description": "W-GLOBAL-ERROR (Global error widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Action errors remain until dismissed or a later successful action. Background poll errors are separate and clear on read recovery; recovered polling never clears a mutation failure.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT, UI-CONNECT-POLL, UI-CONNECT-MUTATION, UI-CONNECT-HOST-WRAP, UI-CONNECT-HOST-MUTATION, UI-VIEW-RETRY. No newly claimed behavior for W-GLOBAL-ERROR is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-IDENTITY": {
-        "kind": "structure",
-        "description": "W-IDENTITY (Identity widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Normal Connected status is screen-reader-only. Connecting/disconnected feedback is visible in navigation; the CF mark and application-name brand block are absent.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, UI-KEYBOARD-LAUNCH, UI-AXE-CORE, API-UI-CONTENT, UI-SINGLE-PAGE. No newly claimed behavior for W-IDENTITY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-INBOX-EMPTY": {
-        "kind": "structure",
-        "description": "W-INBOX-EMPTY (Inbox empty widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: No matching items offers Clear filters. A configured empty inbox shows No items yet; no repositories shows No repositories configured. No configuration form or inline Settings navigation is offered.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, API-UI-CONTENT, UI-NO-MATCHES, UI-PAGE-FALLBACK. No newly claimed behavior for W-INBOX-EMPTY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-INBOX-QUERY": {
-        "kind": "structure",
-        "description": "W-INBOX-QUERY (Inbox query widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Search applies case-insensitively to the complete saved title, identifier, body, author and labels, together with queue/filter membership; default pages contain 50 rows.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract. Assertion metadata for STORE-UI-JOURNAL now records PR policy owner-ID invalidation; this does not change existing saved-state interaction semantics.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, API-UI-CONTENT, UI-NO-MATCHES, UI-LAUNCH-50MS, API-UI-PAGES, API-UI-COMMIT, API-UI-BURSTS, STORE-UI-JOURNAL, STORE-UI-SNAPSHOT, UI-QUERY-ORDER, UI-HIDDEN-SUBSCRIPTION, UI-INBOX-PAGES, UI-QUERY-IDENTITY. No newly claimed behavior for W-INBOX-QUERY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-ITEM-ACTIONS": {
-        "kind": "structure",
-        "description": "W-ITEM-ACTIONS (Item actions widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: New run and the priority picker are secondary controls under Item details. Unread, acknowledge and record action remain under Actions.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, UI-ITEM-ACTIONS, UI-AXE-CORE, API-UI-CONTENT, UI-OPEN-AGENT, UI-SINGLE-PAGE, UI-DIRECT-CHAT. No newly claimed behavior for W-ITEM-ACTIONS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-ITEM-HISTORY": {
-        "kind": "structure",
-        "description": "W-ITEM-HISTORY (Item history widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Activity and personal action history have separate collapsed disclosures, hidden when empty. Reference-only activity is omitted. Independent read/New/action state is retained.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, UI-ITEM-ACTIONS, UI-AXE-CORE, API-UI-CONTENT, API-COMPACT-INBOX, UI-COMPACT-REVIEW. No newly claimed behavior for W-ITEM-HISTORY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-ITEM-OVERVIEW": {
-        "kind": "structure",
-        "description": "W-ITEM-OVERVIEW (Item overview widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Item summary and context on the conversation page. Transient loading failures retry with bounded backoff while Back remains available; stale responses are ignored. Tool/business failures require explicit Retry loading item.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, UI-AXE-CORE, API-UI-CONTENT, UI-SINGLE-PAGE, UI-DIRECT-CHAT, UI-CONNECT-ITEM, UI-CONNECT-TOOL-ERROR, UI-CONNECT-HOST-WRAP, UI-CONNECT-HOST-MUTATION, UI-DETAIL-DEFERRED, UI-ITEM-SUMMARY-MARKDOWN, UI-DETAIL-OBSERVATION-READ, UI-DETAIL-COOLDOWN-RETRY, UI-OBSERVATION-ONLY, UI-RESYNC-HISTORY, UI-REPOSITORY-FRESHNESS. No newly claimed behavior for W-ITEM-OVERVIEW is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-ITEM-ROW": {
-        "kind": "structure",
-        "description": "W-ITEM-ROW (Item row widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Compact full-width rows with title and relevant metadata; author and routine open-state labels are omitted. Read/New/action indicators remain independent. Wrapping titles keep priority to the left at wide and narrow widths.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, UI-AXE-CORE, API-UI-CONTENT, UI-SINGLE-PAGE, UI-GITHUB-LINK, UI-GITHUB-LINK-ERROR, UI-WAKE-MESSAGE, UI-OPEN-AGENT, API-COMPACT-INBOX, UI-COMPACT-REVIEW, UI-QUERY-IDENTITY. No newly claimed behavior for W-ITEM-ROW is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-LAUNCH-EDITOR": {
-        "kind": "behavior",
-        "description": "Adds an explicit nullable launch posting override with unresolved inheritance during read loading/failure, visible retry and preserved explicit selection.",
-        "implementation": "Read Launch read_review_policy state, shared policy/config/repository version dependencies, alive response guard and PostingPolicySelect. Preparation sends explicit false separately from null inheritance.",
-        "tests": "UI-PR-POSTING checks false reaches preparation without start/post; UI-REVIEW-POLICY-UNRESOLVED checks delayed/failing inherited reads, visible error, retry to authoritative repository Off and preservation of explicit true. Existing profile/skill/base permutations remain gapped."
-      },
-      "ui:W-LAUNCH-REVIEW": {
-        "kind": "behavior",
-        "description": "Adds the prepared effective automatic-posting value/source while retaining explicit Start, Edit, uncertain acceptance and the pinned prepared snapshot.",
-        "implementation": "Read Launch prepared.effectiveAutoPostReview display and prepare/start transport routing. Server-prepared authority stays authoritative; current policy is independently checked again before publication.",
-        "tests": "UI-PR-POSTING asserts launch false appears as Off from launch and reaches prepare_launch without starting work. API-REVIEW-POLICY asserts presence/null semantics and retained launch authority; existing independent-client Start gap remains open."
-      },
-      "ui:W-MESSAGE": {
-        "kind": "structure",
-        "description": "W-MESSAGE (Message widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Send is disabled while submitting, for blank text, or in prepared/queued/starting/deferred/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, UI-DIRTY-CLEANUP, API-UI-CONTENT, UI-OPEN-AGENT, UI-SINGLE-PAGE, UI-WAKE-MESSAGE, UI-TERMINATED-WORK, UI-QUEUED-MESSAGE, API-QUESTION-ACTIVE-TURN, API-INACTIVE-QUESTION-FOLLOWUP, UI-CLARIFICATION, UI-GITHUB-DEFERRED, UI-FAILED-REVIEW. No newly claimed behavior for W-MESSAGE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-NAVIGATION": {
-        "kind": "structure",
-        "description": "W-NAVIGATION (Navigation widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Compact tabs wrap within the viewport, including Reported issues. Messages counts unanswered valid questions and approvals, including nonblocking and retained textual/message questions, and hides zero.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract. Assertion metadata for STORE-UI-JOURNAL now records PR policy owner-ID invalidation; this does not change existing saved-state interaction semantics.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI, API-UI-CONTENT, UI-REPORTS-INFO, UI-REPORTS-NAV-NARROW, UI-NO-MATCHES, UI-ATTENTION-CONTEXT, UI-SINGLE-PAGE, UI-NO-INLINE-SETTINGS, UI-WORK-QUEUES, UI-WAITING-MESSAGES, UI-WORKING-MONITOR, UI-LAUNCH-50MS, API-UI-PAGES, API-UI-COMMIT, API-UI-BURSTS, STORE-UI-JOURNAL, STORE-UI-SNAPSHOT, UI-QUERY-ORDER, UI-HIDDEN-SUBSCRIPTION, UI-INBOX-PAGES, UI-NAV-MESSAGES, UI-SHELL-ORDER, API-OVERVIEW-ATTENTION, UI-HIDDEN-DIRTY. No newly claimed behavior for W-NAVIGATION is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-NEW-CHAT": {
-        "kind": "structure",
-        "description": "W-NEW-CHAT (First message widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Per-item draft, busy, prepared retry and uncertain states persist across navigation. Start is disabled while busy/unknown. Implementation is the default for issues/My PRs and PR review for Review PRs; unavailable defaults require selection. Changing a pipeline invalidates an old prepared proposal and retains an edited prompt.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function NewChat(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-DIRECT-CHAT, UI-CHAT-UNCERTAIN, UI-ASSEMBLED, UI-CHAT-AUTHORITY, UI-CHAT-CONFIRMED, UI-CHAT-LATE, UI-CHAT-PREPARE-ERROR, UI-PIPELINE, UI-ADMIN-PIPELINE, UI-ACCEPTANCE-RESYNC. No newly claimed behavior for W-NEW-CHAT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-PLUGIN-ADMIN": {
-        "kind": "structure",
-        "description": "W-PLUGIN-ADMIN (Codex plugin admin widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Cached inventory is readable without installation. Queued/running maintenance disables mutations. Failed and uncertain operations preserve previous observations and drafts; unknown remote update/authentication readiness remains explicit. Status-read errors clear after successful polling while mutation uncertainty and drafts remain; recovering a read never re",
-        "implementation": "The unchanged implementation ownership remains web/src/admin.tsx at export function PluginAdmin(; internal/app/plugins.go at func (m *Manager) PluginAction(; internal/domain/admin.go at type PluginInventory struct. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-ADMIN-PLUGINS, UI-ADMIN-UNCERTAIN, ADMIN-PLUGINS, ADMIN-PLUGIN-RECOVERY, ADMIN-PLUGIN-GATE, UI-PLUGIN-READ-RECOVERY, ADMIN-REMOVED-SKILL, API-UI, UI-RESYNC-PLUGIN. No newly claimed behavior for W-PLUGIN-ADMIN is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-POLICY-SETTINGS": {
-        "kind": "structure",
-        "description": "W-POLICY-SETTINGS (Policy settings widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Collapsed initially. Each label maps to P0/P1/P2/P3; empty or duplicate labels are rejected inline. Saving disables the form; success/errors stay beside it.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS. No newly claimed behavior for W-POLICY-SETTINGS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-PR-EVIDENCE": {
-        "kind": "structure",
-        "description": "W-PR-EVIDENCE (Pr evidence widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Lifecycle, approval and current-head CI are independent. Unknown/none/stale data do not imply success. Linked summaries distinguish implementation associations from references. Submitted reviews remain visible above the conversation, including author, verdict, reviewed commit and current/earlier-head distinction. Loading, unverified, successfully empty and s",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is ITEM-STATE, API-UI-CONTENT, UI-WORKING-MONITOR, API-PR-FRESHNESS, API-PR-ROLLUP, API-COMPACT-INBOX, UI-COMPACT-REVIEW, UI-LINKED-DETAIL-REFRESH, API-POSTED-REVIEWS, API-REVIEW-RECEIPTS, UI-POSTED-REVIEWS, API-UI, UI-SAVED-OBSERVATIONS, API-GITHUB-QUERY-CACHE, UI-REPOSITORY-FRESHNESS, UI-REVIEW-OBSERVATION. No newly claimed behavior for W-PR-EVIDENCE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-PR-REVIEW-POLICY": {
-        "kind": "behavior",
-        "description": "Adds a PR override and inherited effective value/source that updates when saved PR, repository or global policy changes, with no start or publication side effect.",
-        "implementation": "Read PRReviewPolicyControls useUIVersion dependencies and alive guarded policy read, ReviewPostingPolicy precedence and metadata-only Tx.invalidate policy owner IDs. Read the observation generation and target lifetime fence around policy save callbacks.",
-        "tests": "UI-PR-POSTING checks false/null source transitions; UI-PR-POSTING-REFRESH changes saved global config and asserts an open PR refresh without start/post. STORE-UI-JOURNAL asserts the committed policy invalidation includes owner ID without stored values; API-REVIEW-POLICY checks transport presence/inheritance. UI-PR-POLICY-SAVE-ORDER delays old success and failure after a newer committed Off read; value/source and absence of obsolete alert remain correct, with exactly one save and no start/post."
-      },
-      "ui:W-PRIORITY": {
-        "kind": "structure",
-        "description": "W-PRIORITY (Priority widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Automatic displays the effective priority. Saved overrides initialize the picker, including P0. Changes save immediately and failure restores the previous value. Assessment failures remain visible; routine rationale is disclosed.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is ITEM-STATE, API-UI-CONTENT, UI-ITEM-DRAFTS, UI-PRIORITY-ERROR. No newly claimed behavior for W-PRIORITY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-PROFILE-SETTINGS": {
-        "kind": "structure",
-        "description": "W-PROFILE-SETTINGS (Profile settings widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Mode: Default/Plan. Sandbox: read-only/workspace-write/danger-full-access. Approval: on-request/untrusted/never. Publishing: ask/authorized. Effort is free text here. Name required. Saving disables the form; success or an exact error appears beside it; failed inputs remain. Discovered plugin and standalone skills can be selected for any review or implementat",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS, UI-ADMIN-PIPELINE, ADMIN-PLUGIN-SKILLS. No newly claimed behavior for W-PROFILE-SETTINGS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-QUESTION-RECOVERY": {
-        "kind": "structure",
-        "description": "W-QUESTION-RECOVERY (Question recovery widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Classification failure asks the retained agent for question-only clarification. Clarification and native-form repair share at most two durably claimed attempts, including setup failure and restart. Only confirmed unanswered questions become text with original blocking status. Unresolved classification stops progress without adding attention.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; internal/app/questions.go at func (m *Manager) repairQuestion(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is API-QUESTION-REPAIR, API-ASYNC-QUESTION, API-REPAIR-TAKEOVER, UI-REPAIR-TAKEOVER, API-FALLBACK-RESTART, RUN-CLASSIFIER-FAILURE, UI-CLARIFICATION. No newly claimed behavior for W-QUESTION-RECOVERY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-QUESTIONS": {
-        "kind": "behavior",
-        "description": "Extends existing question controls to correlated retained-review material gates, with restart persistence and once-only answer acceptance; native and textual questions retain their existing routes.",
-        "implementation": "Read answerReviewWorkflow and Gate/AcceptAnswer identity checks plus transactional attention claim. Recover preserves workflow-origin pending attention rather than applying native staleness cleanup.",
-        "tests": "API-REVIEW-GATE reads the restart-surviving pending gate and duplicate rejection assertions; API-REVIEW-MATERIAL checks bounded independent material correction before a durable gate. Existing secret/form/dialog and real-host gaps remain open."
-      },
-      "ui:W-RELATIONSHIPS": {
-        "kind": "structure",
-        "description": "W-RELATIONSHIPS (Relationships widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Collapsed Relationships disclosure in the item column; opens when returning to an item with an unsubmitted target draft. Manual links retain Remove.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is ITEM-STATE, UI-LINK-REMOVE, UI-DETAIL-SELECTION, UI-AXE-CORE, API-UI-CONTENT, UI-ITEM-DRAFTS, UI-SINGLE-PAGE. No newly claimed behavior for W-RELATIONSHIPS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-REPORT-DETAIL": {
-        "kind": "structure",
-        "description": "W-REPORT-DETAIL retains the complete report-detail contract from target main 9245bc58, including Invalid report and Already resolved auditor explanations, independent release/installed availability, source/fix links and acknowledged report recovery. Its entity definition, assertion inventory and instances are identical to this new comparison base; retained PR-review controls do not change report dispositions.",
-        "implementation": "Compared the full entity/assertion/instance model with main 9245bc58 and verified all internal/reports files, web/src/reports.tsx and the report flow document match the target exactly. Shared main.tsx/test-file integration adds retained PR-review controls separately; it does not change report admission, resolution proof, issue creation, saved delivery or detail-read ownership.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-DETAIL-ORDER, UI-REPORTS-SELECTION-ORDER, UI-REPORTS-DETAIL-PROGRESS, UI-REPORTS-MUTATION-PROGRESS, UI-REPORTS-EVIDENCE-RETRY, UI-REPORTS-DRAFT, UI-RESYNC-REPORT, UI-REPORTS-DISPOSITIONS. The unchanged UI-REPORTS-DISPOSITIONS loop preserves both invalid/resolved labels and explanations, independent Unknown stable/installed availability, applicable fix links, no recovery/information request and no start/resume/refresh effects. Shared retained-review test additions do not constitute new report behavior or real-host acceptance."
-      },
-      "ui:W-REPORT-LIST": {
-        "kind": "structure",
-        "description": "W-REPORT-LIST (Report list widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Rows show independent processing and component identity, with an Unknown component fallback and aria-pressed selection. Zero results show the empty message, including while an initial query is pending. Load more is present only with a next cursor and disabled only while its requested additional page is pending; background refresh keeps it usable; refresh is ",
-        "implementation": "The unchanged implementation ownership remains web/src/reports.tsx at export function ReportedIssues(; web/src/types.ts at export interface IssueReport. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-REPORTS-INFO, UI-REPORTS-RECOVERY, UI-REPORTS-PAGE, UI-REPORTS-PAGE-PROGRESS, UI-REPORTS-MUTATION-PROGRESS. No newly claimed behavior for W-REPORT-LIST is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-REPOSITORY-SETTINGS": {
-        "kind": "behavior",
-        "description": "Adds nullable posting/reviewer/rule overrides, explicit empty reviewer blocking, validated ordered-reviewer drafts and one-time import feedback scoped to the selected repository.",
-        "implementation": "Read ReviewConfiguration validation/reset behavior, repository draft/import generation fencing, presence-aware save_repository and importDKReviews conflict-preserving persistence. Saving settings does not start or publish work.",
-        "tests": "UI-REVIEW-CONFIG checks ordered bindings and false/null inheritance; UI-REVIEW-IMPORT-TARGET delays import or following snapshot, switches editors and asserts the second repository draft/status is not overwritten. API-REVIEW-POLICY/IMPORT tests cover omission, conflicts and once-only import."
-      },
-      "ui:W-RETAINED-REVIEW": {
-        "kind": "behavior",
-        "description": "Adds review stage/completeness, provider skips/failures, prepared authority, publication state, omissions and the owning verified receipt, with appropriate explicit post/reconcile controls. Status remains compact and missing finding counts are unknown rather than clean.",
-        "implementation": "Read RetainedReviewStatus and durable review/publication run projection. An incomplete result is not publishable; uncertain operations reconcile through their retained ID, and delayed projection cannot overwrite a newer receipt or lifecycle. Read Workflow.resumePublication finished-result validation and the return before posting-policy/callback execution. ResultSummary and compactRunSQL preserve counts/outcomes while SQL removes legacy finding bodies before broad transfer/decode; the UI clean indication requires finding_count exactly zero. Own-publication recovery uses the exact durable operation/approved payload rather than ignoring unrelated evidence changes. Completion becomes authoritative only after engineering assessment and durable binding of its validated artifact; earlier failed retry state cannot promote the old incomplete artifact.",
-        "tests": "UI-REVIEW-WORKFLOW asserts failures/skips, absent post on incomplete work, disabled uncertain posting and receipt/omissions after one reconciliation without a post. UI-REVIEW-POST checks owning artifact arguments; API-REVIEW-RECEIPT-PROJECTION and LIFECYCLE-PROJECTION preserve newer durable data. Complete production engine/host acceptance remains gapped. API-REVIEW-FINISHED-RECOVERY verifies actual lost parent finalization, restart and explicit recovery preserve the same complete artifact without automatic publication, followed by one accepted explicit post. API-REVIEW-COMPACT-SQL/UI check 100 large legacy reviews, no finding prose/arrays, truthful counts and explicit bounds. UI-REVIEW-POST checks absent/positive counts suppress clean and exact zero displays it. API-REVIEW-OWN-PUBLICATION-RECOVERY checks finished/submitting/uncertain-tail restarts preserve the full private artifact and compact count, restore verified completion and never exceed one submission. API-REVIEW-COMPLETION-BOUNDARY exercises actual restart plus failed aggregate SQL save, checks old summary/artifact remain incomplete and unpostable, then verifies successful retry reuses reviewers and assesses once. The extended compact SQL assertion uses runProjectionProbe on actual ListWithout/Select bytes before domain conversion, rather than inferring privacy from final UI JSON. Actual tracked-item inbox/queue fixtures preserve all run IDs/statuses, and private List/other-kind controls remain unchanged."
-      },
-      "ui:W-RUN-CONTROLS": {
-        "kind": "behavior",
-        "description": "Adds Resume review workflow in Details for failed/interrupted marked runs while retaining existing native message resume, Interrupt and cleanup boundaries.",
-        "implementation": "Read Agent review-marked control predicates and the retained reviewDone admission fence, protected cancellation lifetime and checkpoint-preserving recovery in review_workflows.go. Main native controls remain separately routed. Read Workflow.resumePublication finished-result validation and the return before posting-policy/callback execution. Own-publication recovery uses the exact durable operation/approved payload rather than ignoring unrelated evidence changes. Completion becomes authoritative only after engineering assessment and durable binding of its validated artifact; earlier failed retry state cannot promote the old incomplete artifact.",
-        "tests": "UI-REVIEW-WORKFLOW checks the failed retained Resume control appears and disappears after idle; API-REVIEW-WORKFLOW checks child completion, interruption and restart reuse. The lifecycle/interrupt matrix gaps remain open. API-REVIEW-FINISHED-RECOVERY verifies actual lost parent finalization, restart and explicit recovery preserve the same complete artifact without automatic publication, followed by one accepted explicit post. API-REVIEW-OWN-PUBLICATION-RECOVERY checks finished/submitting/uncertain-tail restarts preserve the full private artifact and compact count, restore verified completion and never exceed one submission. API-REVIEW-COMPLETION-BOUNDARY exercises actual restart plus failed aggregate SQL save, checks old summary/artifact remain incomplete and unpostable, then verifies successful retry reuses reviewers and assesses once."
-      },
-      "ui:W-RUN-EMPTY": {
-        "kind": "structure",
-        "description": "W-RUN-EMPTY (Run empty widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: The selected item has no retained work history, or its conversation has no messages yet.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT. No newly claimed behavior for W-RUN-EMPTY is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-RUN-ROW": {
-        "kind": "structure",
-        "description": "W-RUN-ROW (Run row widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Retained conversations are scoped to the selected item and carry no activity badge. Prepared drafts appear newest first under Draft launches.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, RUN-RECOVERY, RUN-RECOVERY-2, API-UI-CONTENT, UI-OPEN-AGENT, UI-DRAFT-LAUNCHES, UI-SINGLE-PAGE. No newly claimed behavior for W-RUN-ROW is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-SESSION-CONSOLE": {
-        "kind": "structure",
-        "description": "W-SESSION-CONSOLE (Session console widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Selected instead of the concise conversation; preserves per-run reply draft and existing paging bounds. Deferred work shows Waiting for GitHub, the retained provider reason and next retry time in both conversation and console views. Cancel retry stops the scheduled launch without creating an input request.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SESSION-CONSOLE, UI-GITHUB-DEFERRED, UI-FAILED-REVIEW. No newly claimed behavior for W-SESSION-CONSOLE is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-SKILL-SETTINGS": {
-        "kind": "structure",
-        "description": "W-SKILL-SETTINGS (Skill settings widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Create a skill selects a fresh authoring template and clears the previous name/instructions. Selecting an existing managed skill loads its saved instructions. Failed reads retain the prior draft but gate Save until a successful selected read or explicit new selection.",
-        "implementation": "The unchanged implementation ownership remains web/src/settings.tsx at function Settings(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-SETTINGS, API-UI, API-UI-CONTENT, UI-SETTINGS-EDITORS, API-UI-SKILL-EDITOR, UI-SKILL-EDITOR-LOAD, UI-SKILL-EDITOR-RACE, UI-SKILL-EDITOR-ERROR. No newly claimed behavior for W-SKILL-SETTINGS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-SYNC-HEALTH": {
-        "kind": "structure",
-        "description": "W-SYNC-HEALTH (Sync health widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Only repository synchronization failures are rendered. Routine success times and sync-detail disclosures are absent.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, ITEM-STATE, API-UI-CONTENT, UI-AXE-CORE. No newly claimed behavior for W-SYNC-HEALTH is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-SYSTEM-DEFAULTS": {
-        "kind": "behavior",
-        "description": "Adds global ordered reviewers/private rules and posting default Off, with field-selective DK import and invalid reviewer draft preservation across unrelated configuration edits.",
-        "implementation": "Read SystemReviewSettings import merge and ReviewConfiguration stable default-array/validity handling. SaveConfig validates reviewers; global DK rules use user/rules.json and configured Factory values remain authoritative.",
-        "tests": "UI-REVIEW-IMPORT-EDITS checks unrelated budget/plugin/posting edits survive a delayed import; UI-REVIEW-CONFIG-DRAFT keeps invalid JSON/custom validity across unrelated edits. API-REVIEW-IMPORT-GLOBAL checks user rule location, conflicts, Factory precedence and once-only results."
-      },
-      "ui:W-TICKET-CONTEXT": {
-        "kind": "structure",
-        "description": "W-TICKET-CONTEXT (Ticket context widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Present for available linked ticket records; failures are text in the same display.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function ItemDetail(; web/src/style.css at .overlay; web/src/types.ts at Snapshot. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is ITEM-STATE, API-UI-CONTENT. No newly claimed behavior for W-TICKET-CONTEXT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-TRANSCRIPT": {
-        "kind": "structure",
-        "description": "W-TRANSCRIPT (Transcript widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: The normal conversation contains agent progress/final messages, user replies, saved-message delivery status and readable errors. Saved messages show queued, delivering, delivered or uncertain feedback; changes replace the same message status block. Delta updates merge by message ID, and completed text replaces partial text. A technical-only running stream sh",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Agent(; web/src/main.tsx at function transcriptBlocks(; web/src/style.css at .overlay. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-TRIAGE, UI-ASSEMBLED, API-UI-CONTENT, UI-AXE-CORE, UI-CONVERSATION-DETAILS, UI-CONNECT-TRANSCRIPT, UI-CONVERSATION-EMPTY, UI-SESSION-CONSOLE, UI-QUEUED-MESSAGE, UI-CONVERSATION-CHUNKS, UI-RESYNC-HISTORY, UI-HISTORY-WINDOW, API-UI-OUTPUT-DOMAIN, UI-OUTPUT-SUBSCRIPTION, UI-STREAM-PROGRESS, UI-HIDDEN-HISTORY. No newly claimed behavior for W-TRANSCRIPT is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-WAITING-ROW": {
-        "kind": "structure",
-        "description": "W-WAITING-ROW (Waiting message widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Blocking asks show Reply needed; nonblocking asks show that the agent continues. Stale, answered, cleaned and orphaned requests are excluded.",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function Factory(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-WAITING-MESSAGES, UI-SESSION-CONSOLE, API-ASYNC-QUESTION, API-QUESTION-REPAIR. No newly claimed behavior for W-WAITING-ROW is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      },
-      "ui:W-WORK-STATUS": {
-        "kind": "structure",
-        "description": "W-WORK-STATUS (Work status widget) retains its widget contract from main. Its entity definition, stable identity, terms and existing interactions are unchanged. Retained scope: Server aggregate across started sessions: Not started, Starting, Active, Waiting for GitHub, Waiting for you, Inactive, Failed, Interrupted or Session closed. Blocking attention outranks newer idle work. GitHub completion and runtime activity are independent. After daemon startup, pending sessions continue from their retained progress automatically. Complete",
-        "implementation": "The unchanged implementation ownership remains web/src/main.tsx at function WorkStatus(; internal/app/runs.go at func (m *Manager) Recover(; internal/app/launch_retry.go at func (m *Manager) RetryDeferredLaunches(. Shared mapped-file changes are reviewed for the retained-review integration; they do not redefine this contract.",
-        "tests": "Retained assertion ownership is UI-WAKE-MESSAGE, UI-WAITING-MESSAGES, UI-OPEN-AGENT, UI-FINISHED-STATUS, API-WORKING, UI-WORKING-MONITOR, RUN-AUTO-CONTINUE, UI-TERMINATED-WORK, UI-GITHUB-DEFERRED, UI-FAILED-REVIEW, RUN-LAUNCH-DEFERRED, RUN-LAUNCH-DEFERRED-PROJECTION. No newly claimed behavior for W-WORK-STATUS is inferred from unrelated edits in shared test files; existing fixture scope and stored gaps are preserved."
-      }
-    }
+    "kind": "behavior",
+    "description": "W-SYSTEM-DEFAULTS adds Session execution and installed PR iteration skill selection. Other impacted widgets retain their existing navigation, attention, policy and publication contracts.",
+    "implementation": "Reviewed SystemReviewSettings mode and skill selectors, presence-aware save_settings and SaveConfig validation. Shared types add optional fields; existing entity ownership and endpoints remain accurate. Native task selection does not alter any widget mutation authority.",
+    "tests": "Read UI-SINGLE-CODEX-MODE assertions saving both settings, preserving during budget edits, switching to workflow and forbidding start/post. API-SINGLE-CODEX-SESSION and validation fixtures exercise immutable session mode, exact skill snapshot path and rejection cases. Existing browser assertions and real-host gaps remain mapped. Inspected TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch: an actual new Manager recovers the retained native review after global workflow selection; exact mode/thread/cwd/authority/skill snapshot and workspace checkpoint persist, both turns receive the retained entrypoint, repeated recovery resumes once without replay or YAML artifacts. Reviewed automatic scheduling assertions for native nil/empty/unrelated/already-selected profiles and workflow empty profiles: claims start, reviews complete idle, raw selected profile remains identical, retained native skills are deduplicated and a genuine later profile change still rejects validation. Explicit selection fixture preserves empty shape and backing-slice content while retaining one iteration bundle."
   },
   "verification": [
     {
@@ -838,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 171.633
+      "seconds": 174.814
     },
     {
       "command": [
@@ -849,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 71.215
+      "seconds": 72.924
     },
     {
       "command": [
@@ -857,7 +51,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -871,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.962
+      "seconds": 25.645
     },
     {
       "command": [
@@ -879,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.763
     },
     {
       "command": [
@@ -887,7 +81,7 @@
         "test-performance"
       ],
       "exit_code": 0,
-      "seconds": 9.693
+      "seconds": 10.138
     }
   ],
   "dependencies": {
@@ -1251,7 +445,7 @@
     "term:keyboard-focus": "a4911cb4f34a733995609c7c9c3f76d9c1fa869662c3b12cdd27e2fd76ede54d",
     "term:known-limitation": "61608c71ef7bb4c73f0ad2ec21bf2d9e0f4a8b1a4822a945261e332552bd6c91",
     "term:modal-dialog": "a17afe3b7ba202475c837b392aa41a6644fa42da585f9776acfcf6c92bd84896",
-    "term:ordered-reviewer": "4ddf5b7182a0454fb3e3b63acf7574225353c3618714cb432735eaac0df7cd88",
+    "term:ordered-reviewer": "6a2298ff0e084218262ea3eb3a24cc010d413d440645ed8794f11c69828f19d7",
     "term:plugin-inventory": "86813b317594d2f149de624e3061563396d0be200c0e595a09902862503d4eb3",
     "term:plugin-maintenance": "f66dc027fa70fdb5916e7b43209b5c0f2aba1c8ce760c3b0d747932e3afbeb07",
     "term:plugin-marketplace": "45c3245d40bb38bfd7fca8e1d2d60a93def48b5b08004a24fce3f487c8d45546",
@@ -1260,11 +454,11 @@
     "term:report-outcome": "292e45ebef714c8d11a632017e14e6826d962cac2af086b490add77fcff8c5df",
     "term:report-processing": "4d9405d3b5a9affc090ed53453d470ccf41c6768cdea83ffce3265a41b5e49fb",
     "term:repository-review-prompt": "302afeb1aabee96c1ea490877e19e7cec3cdb1e5100220b949994f31b3236c50",
-    "term:review-artifact": "3f1a5b67e5a23270901ce91ca9b444728172cdd84f1936d5f3bfc825f20a6537",
+    "term:review-artifact": "3cb9b6ffb6c2051bd58b9073835f3404aa537e836249e9c017df332ab58a77fb",
     "term:review-policy": "473ab3151325e7b5225335cd7fa845f4eae21d7f289d361cc825766633c91f00",
-    "term:review-posting-policy": "7692019718afb7575db5847e61caba2c5e37d99aca0fe2307e86e0ca300de7c5",
-    "term:review-publication-operation": "df7ebf416b97d0920ae1506ebb2d86b9d76507cc4cc45a45e24613a279ea81a1",
-    "term:review-workflow": "45e806159a33ca2921b1a08a177c4b235fa052f02fdc3489848c5ac335f0b91a",
+    "term:review-posting-policy": "ff93381ff659794213b8b721fb9fb4a5051ea9588bfd2f3434b4793a1b8f6149",
+    "term:review-publication-operation": "1bc38dc837e439b0a7fe15140009724fffa29b5921a7d03753471cdc5bbb9f78",
+    "term:review-workflow": "561a266b2184501b87e7c2d1f02e0cb342e4f7af4415cb0a9ba193cc9863e733",
     "term:state-acted-on": "fe36ca2006f41635873dc3c515ceb3e5a7b408491b066d0f9a69293e48ef2aef",
     "term:state-blocking": "916d3e6e574996d2e82c502e9454d4faa49f5fe5b1ce56461df7649104b1902e",
     "term:state-cleaned": "23264cabc1dac9c118ca6ad61e55b31463830a3592183c54b45a1a361a4f1e41",
@@ -1315,7 +509,7 @@
     "term:ui-c-pipeline-select": "91d230f8fbc44394f19e1225b7b82a46876c4296dd682431a924b401d2490da6",
     "term:ui-c-plugin-maintenance": "bd9f3156c6b6a68878120176811c1e50e63b55b593d9963732238e27fc10b8c8",
     "term:ui-c-policy-save": "9e6c13689b15286346d0ca46d5b92a4a624183ea839a383e1c303ea423111c71",
-    "term:ui-c-pr-posting-policy": "1e4038c290bf71ce437c835fa501921cca0138ce6cee3afd227b5e40a4105d23",
+    "term:ui-c-pr-posting-policy": "a4d52f816b0e79e857bc7ade6ebde0cd960af01723a0a328460963a177cbb396",
     "term:ui-c-prepare": "56e3dfe97e0dd0a90094555954bc07dec4a1059a35d9e2dfdb0c8493816f149a",
     "term:ui-c-priority": "3f1141a8627501043ac63182da83b9a1f4f17caf56e9d354cad96c6966b0e0b9",
     "term:ui-c-profile-save": "01755f97aa1754e9ec1b7b4f6db1ff72b5f34a1cda42a3a5109c8de607ae5061",
@@ -1329,8 +523,8 @@
     "term:ui-c-repository-review-prompt": "693d0da2fb88aa1864db8ccbe4d640a6597d176abb2edf356f8215631762b6c2",
     "term:ui-c-repository-save": "dd5804d42b678fcfa37aa6c49bfff7aca934da3631969891375a5ab142a840a8",
     "term:ui-c-review-policy": "214ea7524a8ec369a94cf47556190f1403aadca1d99d6c9f58414b7e2e42f953",
-    "term:ui-c-review-publish": "003f34ec2b600da0d35581478f70986dff75fcf632233f4278e441a3ca5d4bb2",
-    "term:ui-c-review-reconcile": "1368567f69f0e64fabe3437974c8d4f7bc323189250930cefcae649b5966785c",
+    "term:ui-c-review-publish": "83fee7ee94200cf4650977c21f2510a6e8bf908b3422d26b1a6d5d4d7bb892e7",
+    "term:ui-c-review-reconcile": "d00633c57b38be801a3998604cc9a6413e603b0ee9da821871984b441cafb1ce",
     "term:ui-c-run-action": "5340c68bda96436a93844d8e5eedff71faa0d239c5fad48c7a77565d015d570e",
     "term:ui-c-run-attention": "b68442247112e3a72504c8a3f688b9e2f755c16ea4daa2bf851783319d0829bf",
     "term:ui-c-select-item": "4056f6e1e1f1c87fa216f13ac2be6fa4ccccb26c41caec3aff59d72137a887f1",
@@ -1420,7 +614,7 @@
     "term:ui-w-plugin-admin": "362cb930e65704db07da6aba3820ec53566f2312c10619d4d6df890bd2b72d4c",
     "term:ui-w-policy-settings": "7e7a3dc37b25359a3c410c2eb675dc645c29d96f64c37773a79318676f7c24d7",
     "term:ui-w-pr-evidence": "568a9e75408b16ac94c56e989ea8c692459253acb26a6de6b9ccb74a6e8760e0",
-    "term:ui-w-pr-review-policy": "4cfd5ed8d04d36eb238659758c8897769d03ce5bb5557c52edda7efc59d6867e",
+    "term:ui-w-pr-review-policy": "e3d8ddaaa3f2d224141d3ea651592a1df2f956a9eb92fa8d9294128fbbbd5c58",
     "term:ui-w-priority": "c038feeffb6de02d4a21ea239ae7c5f76d7200a80604e53c5140fe626849d452",
     "term:ui-w-profile-settings": "65961126687070cdf0598cc237551c74f09a57113523d859a9f23aedc1493534",
     "term:ui-w-question-recovery": "b8d2d19ffa181b312214fc25af1cdb1db623b83e3fbde474cc7c6e7a3bacb875",
@@ -1429,7 +623,7 @@
     "term:ui-w-report-detail": "bc7416bd45d7045c20d81c58cd8acf1e29e4376f83355a2f5f3f12004a18582c",
     "term:ui-w-report-list": "454c17312c335ebe5db5f866913db7172f0647b725f4d6a8081d043cb60e57ea",
     "term:ui-w-repository-settings": "28dab3d5493b63e4f23e44ebbdd5c41265e8749b061783bbfd3eae5c5a69cd93",
-    "term:ui-w-retained-review": "8b6ef8f6ea3c67b7951a20f538acafd4ae53236f32c4ca452b164c4bdef4b408",
+    "term:ui-w-retained-review": "34ea07e4243b3166a790459dd8e065bfa379b68c6432aa878f664258036edec6",
     "term:ui-w-run-controls": "96213748c8209e0035b13745361cc61ec7bbae20e026ad4e53a1b60cca989643",
     "term:ui-w-run-empty": "4711c06990a78d6f241e451342c9e7236b6b263448dea2fa979b2d343a0b9337",
     "term:ui-w-run-row": "18ec4b3ddd0e4672a441642d5b8968ce2d501813740dc361148baced4055c29a",
@@ -1442,155 +636,155 @@
     "term:ui-w-waiting-row": "7a247d5fbba950d4bc9753948e62260cccf2ee6d6253a02a76699f445aea8e47",
     "term:ui-w-work-status": "2a679b5fcd44ab52160386bf34cee7707c9db55e6c658bc3f6ef4a3069203ad0",
     "term:unverified-behavior": "c7c9362aa601126bb24a32d48534a297a87d47a9c712936b58d7134b4fe25c01",
-    "ui:C-ANSWER": "5818db848e4fb7bffd0ac08f78b165d7de0932f9f03eb883d8730920fb0831a3",
-    "ui:C-ATTENTION-CHAT": "b9b8ea0c13c2275361efcf72254de39f7404eb3defa0b8bf36861bc0920f2c2c",
-    "ui:C-BACK": "2572456daedc24d4f077357d97b3643504ba313ef922cee82dffaaf079adc506",
-    "ui:C-BROWSER-LAB": "be889da5495ac06b4a6e5cc1d6bdb73f9ebf5404333f7c516d2276357816c74b",
-    "ui:C-CONSENT": "6c7be7a609463bbff6afd299219c69b64c21c3a3e4a0ac12afa9c0ab1d100653",
-    "ui:C-DIAGNOSE": "67deb6777e9fa7e2e8d950983df7b9cc43081754971f0e82811dd655445832db",
-    "ui:C-DISCOVER-SKILLS": "b34b11e65570d09aac5740201ccff135c505c1175a143a5dc2ebbdb3af538936",
-    "ui:C-DISMISS": "bf9aae3319e82d566e2ed5191b1bbdbd9f4ca89481532a762b736639c03cb8a7",
-    "ui:C-DISMISS-QUESTION": "7d4b549bbe30aab9c32a652120eac32a14414956c52fd7aed45c014d99ddd46c",
-    "ui:C-EXTERNAL-AUTH": "402f95895223eac9be166caaede3fd9c15cc22da1251e6321b1e7931906853b5",
-    "ui:C-FILTER": "f6e63f78d33046073a00e9e0a35bef1afa1dfeed3f7716ff4409eb5bb71e5b81",
-    "ui:C-FOLLOW-UP": "b2356f3cc10fb1edc62eb3941a1958978f532c458a278bf3535e5cfcd5ab3666",
-    "ui:C-GITHUB-USAGE": "8d9f1ff07391e00ce258c5bcd8a123bf549d693c791027bb1882938fe0c946dc",
-    "ui:C-GLOBAL-ATTENTION": "ad3fc4307dc0028eb3ebb67fb485a86f58997bea57edd5e0ec02a5e412f688e2",
-    "ui:C-ITEM-SOURCE": "632619887f45058afd3c1be5fc33cade5fef266f1b55847db9fd90ca51b06a31",
-    "ui:C-ITEM-STATE": "acb48131ddb9f9ab12924156cc4361a2983499175f70f38ce7fdd4ca4fce49f8",
-    "ui:C-LAUNCH-EDIT": "c268ac109db5ac6091e0077b81dd6ae416e99454da36776065dfa40dab53fe12",
-    "ui:C-LAUNCH-OPEN": "9023f21eeaafd938ca7d81591681f91e375e8e175721f308fddc2cbdb6129186",
-    "ui:C-LAUNCH-PROFILE": "e7578ad977d9977cd93218b7b4423775de038ac9eaf617aeff9dc4a031f4875c",
-    "ui:C-LINK": "179e535e3b8b183c20279f9889fc9b69e31831e31620fd1646d70bfff458ccea",
-    "ui:C-NAVIGATE": "497b5d25cbd8c5299755f1d599c175c5e8f4625675e22397aecc3720ab796020",
-    "ui:C-OPEN-SETTINGS": "021d4400c212757516298440d45467f178909358838323d2473711ddb950af63",
-    "ui:C-PACKAGE": "16c46f5404ff1150692d04342d9fb3597cac3a6292f0c7f5c41cf12ea6ef5ca6",
-    "ui:C-PIPELINE-SELECT": "c120cf3a2f840e85e5fe166adc9238c53b1a3f4f525181355825e66345d48115",
-    "ui:C-PLUGIN-MAINTENANCE": "9a3130f5b202c43c1579106968395ee2284b6ff311dad389532d4219742b6818",
-    "ui:C-POLICY-SAVE": "55c4ec3f8c424e23253f6c70f8f56ab2ff500781980b0946a5b7ae014d8485b4",
-    "ui:C-PR-POSTING-POLICY": "18adbbb49949d3ddf2a3ee95a2e102d2f73914d748e7945d41497debe7d436ce",
-    "ui:C-PREPARE": "71c1b00b9555b3deac20a94bd678122f1f9c8686bf5f50273f9b81d6fef28eed",
-    "ui:C-PRIORITY": "3dfd8f1f6fae40ae8bcb102feaa141107b99f5116174c4908c27f772e1cefef2",
-    "ui:C-PROFILE-SAVE": "ae654fe27c9c20f15df31a4350e430af8170a4abd7bfcfa1be08dcd40aba5b7e",
-    "ui:C-REPORT-EVIDENCE": "dcf2d6296507e4b21aaef3e974cb5d57f26d8ba10e16c9b89c1be64ef5d8763c",
-    "ui:C-REPORT-MORE": "6b11e3d03c4f663a19e2fa30bcf7f3d1466f318ba8fa10b7d2c24fae99c8acc5",
-    "ui:C-REPORT-OPEN-LINK": "3051ac94d38ad6fb991b0127339bb5e19552307783469837057e9ee8a121dfee",
-    "ui:C-REPORT-QUERY": "e59368433280f2c10288340f2d73c5627b48418ab1c0c4cef56d8b28fe3a56bd",
-    "ui:C-REPORT-RECOVER": "df2498f2d7604b90d3cc3056c7477dd0c90ee8c3c80d2290b970a949237092ad",
-    "ui:C-REPORT-REFRESH": "c8fc9be70d2af50f55a03b2f7665c283dd732463f8a7017e1ed4a7f19de6de58",
-    "ui:C-REPORT-SELECT": "e9664c617048d33e3818921fee449b70f01f9710fa264791a757657b39efe8e1",
-    "ui:C-REPOSITORY-REVIEW-PROMPT": "136146cf0612981f1d468625b7d094ff55e240c603c83ed6b8ae308a7081ed25",
-    "ui:C-REPOSITORY-SAVE": "f9b1235677ade8b4901fab7e25863aa7e624fc1059cc5134a99ca60ffd8ad28c",
-    "ui:C-REVIEW-POLICY": "64143db8d750d06e3a8166092b4c0b14143df49a66e7994fa79c47067277b6ef",
-    "ui:C-REVIEW-PUBLISH": "c7fbe716859fcb2d26f61680197507caf4b599f3a214bbaa2b8ed1052c7a083b",
-    "ui:C-REVIEW-RECONCILE": "cade10ee6beb36ae1e8af8a94aaa2007b0cfd695321d925e386b5a8159890898",
-    "ui:C-RUN-ACTION": "31eb1342f752533b52aa4d3065f63f21d4a351849ea3a8c81f3f32a13d2c78b5",
-    "ui:C-RUN-ATTENTION": "6a1f276e4816d09aed140461271af6c696df3697ea4295fea4d41ce3a718d0ef",
-    "ui:C-SELECT-ITEM": "1d4848e7f2b985d0c7ee00efdac4056692a33fa6d15cd682b209f6e7d5dedfcf",
-    "ui:C-SELECT-RUN": "6a9f8f7e706b9212d48561050fdc2a9cc215308d6bcc6274e639a8bc0cdecf31",
-    "ui:C-SESSION-CONSOLE": "13caf7da749762f0d67f3515106b0b7e2ec464c2d8ca41be93a3a8ffc41d91a1",
-    "ui:C-SKILL-LOAD": "f894bdd442d544dd1f5ec1b0852c007218131d1a4b11034348472156cb418c0e",
-    "ui:C-SKILL-SAVE": "5ae6ddc9b857f60ad89c97fa289d4a8cb4ed48b2523661e2dc3672791c9ad75f",
-    "ui:C-START": "6f85adf136b1ea2bee2a18c6882b4c3993c9a530593238df778916e2d11456d9",
-    "ui:C-START-CHAT": "acdfc24d466fa5f70d4ed45c18a28c28423239b4945aa80e1cf118b9a621469a",
-    "ui:C-STATE-REFRESH": "3402ca84d8bf03214d39f0bf72524539517709a2ce7779fac083e6c789d39b5a",
-    "ui:C-TRANSCRIPT": "cef409114cca7b15a496c19e00ddae2cc80226def6db63789a86ca044242661b",
-    "ui:C-TUNNEL-KEY": "9b8fb9be5000313d9b03371881a1fb8a60c1d2d8bc636eb1804cc36db2faa6db",
-    "ui:D-ATTENTION": "052c127902c43ddac0ec4965bfdbb1390962914f5c72abc6c9e83a2e87cd585f",
-    "ui:D-LAUNCH": "993b59b20b1f20a77cf3e798be91ae141e12c4bfd96f6f67108fafe88209b008",
-    "ui:P-APPROVAL": "6330456087bab6929f2914ce5c8583184c90fcc45ab07453135a37a18b68881f",
-    "ui:P-ATTENTION-FRAME": "a0a313709f25f504aea4e3891904a6d460565196fa5276a35fcfc212ce096442",
-    "ui:P-BROWSER-LAB": "2e14b99515315bf4766a55dacf6f43ee2c0a0435db36ec08a25201e90645913b",
-    "ui:P-CONNECTION-GUIDE": "99c6f74373ade09fe82aff8b7670e01f741f1bbf44ff1f2d015f8c2fd93c4abe",
-    "ui:P-DIAGNOSTICS": "33ee350a8abcaf0ccb38fd234d3e86d42cfc6bd416d9aaff4b9dcb8dad3c2b57",
-    "ui:P-ELICITATION": "d055ce61e1047cb07cd626e47ce753b324011ec795f3253262f61d133dedc82b",
-    "ui:P-FEEDBACK": "a243c9eede6e3b5b5b230d9e01b88d1fe3997211511463e8674a2c93c60b2e30",
-    "ui:P-IDENTITY": "4981d712819391a23089e66a68bab2e66e260e88278494d462b258d2595ad0dc",
-    "ui:P-INBOX-LIST": "6080c71d9c3d94866669ff779b7d020717dcdc0c30039029b72ac9c24abef7b1",
-    "ui:P-INBOX-QUERY": "205bc3fdab4c37ca94e23328917dd3ff1e46ff3ae2f291e2425989b5f93bdd8c",
-    "ui:P-ITEM-DETAIL": "a0f0ccc73d2fc5eb5a6f5a23174c5c0487843099c982bd2d2042fe355c37a846",
-    "ui:P-LAUNCH-EDITOR": "f7d16b9b604d2ff0cb1df380696ec28879715928ba951013e7cf4c71c91dc83d",
-    "ui:P-LAUNCH-FRAME": "8c44e0fb7736fccf8be7b5e382f0d09a71f53613c6dbdd29bda6fba7fc388a5d",
-    "ui:P-LAUNCH-REVIEW": "c6a3426c52e3deed55af6e8b9cebd4d805bdde21b0fe18eba9644b89add3de90",
-    "ui:P-LOCAL-TUNNEL-KEY": "58cdb15241b131f8a264a18e889bed0a9fe8af20317b0ab884c833c7e173f07b",
-    "ui:P-NAVIGATION": "0a0fa6fd300a2a1c82de0d15c971f54aaad8aafae10a8c0d982653b5cadb4ba4",
-    "ui:P-NEW-CHAT": "1dc1dab5ad204430b7546ff97573e78b5033d7c9f742db065fb6d7974f060504",
-    "ui:P-OWNER-CONSENT": "48ecc8deba782f053a3e6bff83599a475fd4add96ab2f9f13a77186ebc94c526",
-    "ui:P-PACKAGE-OVERVIEW": "c90f04c1ba57a3278ee26bf2722c1295ee08b41266b6b9c18957fb04fb5c2bc8",
-    "ui:P-PLUGIN-ADMIN": "5294307e0bd2a203dce0f88e551df122a3b3a774d455319a8e57db9e8229ab3c",
-    "ui:P-POLICIES": "b8ef87e29c4f6d77d64d4a2a728d7e83b6f3525680f8fb22c7c6386f0649aa21",
-    "ui:P-PROFILES": "7607d5821338e597b3ea3d008f1e6b6264a95b30fe2cb63ea3be2bfc7ceed379",
-    "ui:P-QUESTIONS": "c69513f377455333669c87b93794591dfe5c6fc3aee21be67105a7491a71a24b",
-    "ui:P-REPORT-DETAIL": "82c415ef9e80633a7cf74b772c57662a4a7449c73dae8f4404813166760518ad",
-    "ui:P-REPORT-LIST": "2a423c0f17a5a82ec00819930bc3b0ac66334403daa1bc5c3eef811658c9eb10",
-    "ui:P-REPOSITORIES": "0b0921ec030fc243db12a31ec8799e7e639ddb9bac36c353c304ef24ae18afb8",
-    "ui:P-RUN-DETAIL": "92d9bbb390b717db8f19721e737f0a6c47ebe049b771d00b823a7397fa858a70",
-    "ui:P-RUN-LIST": "666f4699f75e6ebee6a16060a19cf86890f14fb4588b551678b6dd43a847ec7a",
-    "ui:P-SKILLS": "033d9c1df9f9d74b23292d02839b6564b34913a690ebfd4e030d8e80507b5d07",
-    "ui:P-SYSTEM-DEFAULTS": "59880517cc7d60828c1e6c7c7c0749ab6bb9c4cba5edde041e76293a7c6f4cb9",
-    "ui:P-WAITING-QUEUE": "c5ec83bd87d02b78983224e1e4e330624e3ca7c78194447144b1c347b5bd6d98",
-    "ui:PAGE-AGENT": "2e498e35580328484e1def39d5ab1c666ac1e9a4d833927afdcad87bafc9086a",
-    "ui:PAGE-AGENTS": "8d1cdb3ea4fe3252c12a25c8b06a0c72b446d116a8354bb79026b370096245b0",
-    "ui:PAGE-BROWSER-LAB": "f1b2a0fc243493cc012bc161640b662457b1553d6d997a22622fa7f0a1883648",
-    "ui:PAGE-INBOX": "d45285a17bbb157b1516f911fb41e87ac4e756e8e2017462274ec9cacd90764f",
-    "ui:PAGE-LOCAL-TUNNEL-SETUP": "f76082a3d8957ec18c6d9bed5fb0db530b44db2345a0802fabc79cab76b43445",
-    "ui:PAGE-MY-PRS": "870264eb1c7877b07935680b323af57c2a21cd12926a909beeee375482ae3656",
-    "ui:PAGE-OWNER-CONSENT": "70471afbad407879ecffe278453c5252a1bd5775490041d1055b03e308875c5e",
-    "ui:PAGE-PACKAGE": "e17e1bf0b54d6095223707fc0a8bce71fab83dd0a80d5e9cba5485070a29c54a",
-    "ui:PAGE-REPORTS": "998bbbbf257d2985c95708e0f2a446b3a1a885cc94802390f9644d18d9cf1235",
-    "ui:PAGE-REVIEW-PRS": "bc8c6edb66a8598d5ec8f428445c299e1f33d70ae3fe5b96b4845910034bc34e",
-    "ui:PAGE-SETTINGS": "70c9932046ef2d4f8e5dd82df309cc5f4897e78ae19c54e7f7f331d33b402dd4",
-    "ui:PAGE-WORKING": "739f2e82f545670e41025c873e5e360e2edb8b0c25a925fed1e170d2225890f9",
-    "ui:S-FACTORY": "276d1545818f20ed4d7c6eb7f16a40f1063268574b413f4e5d56061a7280db90",
-    "ui:S-SETTINGS": "08c5277247ef0af3172d66c76cb63afa49bd6f5b710d54b09545338b805a58ca",
-    "ui:W-APPROVAL": "764e749f280996a83c367d1b39ec5607888ea23120d7a279cc2c105017e43df6",
-    "ui:W-ATTENTION-NOTICE": "996d4f3aa91b161a19b1c4af6da222d92fd91600b071a8077d56e1cc9617d22b",
-    "ui:W-BROWSER-LAB": "c78d1e883d47731c4f5e29a3ddf76d0fba5f153092baebef7273de75d65b559c",
-    "ui:W-CONNECTION-BLOCKER": "4ecc28a96e9ee9af84fe91ebe44c2d1b49560e09fdd7ffb07e44492d82037e2e",
-    "ui:W-CONNECTION-GUIDE": "6f3d895b08214fba4f1779031f12b7d2e4eb068921f5e5542a75b562365f48ef",
-    "ui:W-DIAGNOSTICS": "40801ce89dfb1223a2860b9fa7c8c7d0f2d40cc8e654f326242ff87309002608",
-    "ui:W-DIALOG-FRAME": "6ea32cb0dc38f96c0542c22142f9163c2b38e3d300181e581df5ace7c7af547c",
-    "ui:W-ELICITATION": "9d2dece8f5361766a31c90ac5252c44001873f86cbaead3b06fba0ab69f11d3e",
-    "ui:W-GITHUB-USAGE": "a630c79146c1746138ebffb3d35ef204387350136119a79bd32295241e1d7aba",
-    "ui:W-GLOBAL-ERROR": "68d5335088f90be64f13b8f6730e3b4a02c87aae05357e6efca317bfc3880173",
-    "ui:W-IDENTITY": "ac576275f0570dcf265fc228d02f02435b0cc179237854808140f5763a2f521e",
-    "ui:W-INBOX-EMPTY": "31275f4cebe337f89a6368f34d69045ee0f68e7cd3125bcfd44e0698e11b9c4f",
-    "ui:W-INBOX-QUERY": "e12ae77b86870a067c68bed6e28873a6eff0ffae5d233b4d98ea02cf4eca4b2e",
-    "ui:W-ITEM-ACTIONS": "cea5ac01715c6cda4894cdfb7137a91b37b03dd4eb234eeb82bd1c6ed6306575",
-    "ui:W-ITEM-HISTORY": "f765a090a68a4f61603cb34fd73bd373bf2d5f640a52be96c110b798b4f85009",
-    "ui:W-ITEM-OVERVIEW": "98d4e138bc8a8d4bca8040eda436ee56deb167947ec75a0d954809f0650edfa1",
-    "ui:W-ITEM-ROW": "dc33ca1285394d35c673b7e444ea1d8e981f245c2b5b5ff8bb71f9e527f449f5",
-    "ui:W-LAUNCH-EDITOR": "77b4e1a2748561f3e389e54dfebd072a46ee1a35049c5762b620022ab361a774",
-    "ui:W-LAUNCH-REVIEW": "32b41617980a454cb708ea508e9b4ebec3ee5072a9de1fc2f433ed295c23ef2e",
-    "ui:W-LOCAL-TUNNEL-KEY": "4dd04d5a77e07373897aaccac5a40eceecf1e3110ed1d82fec01ad3dbb3d1703",
-    "ui:W-MESSAGE": "78140df2df57bde98434dbf442d450d9d1c480d4c4615f58e7fb2beda601829d",
-    "ui:W-NAVIGATION": "846243d88e5255a924369e92d88981e0001a00ecce5d3f0772c688a41bc9130b",
-    "ui:W-NEW-CHAT": "fc96e6bb775e9a8e31a34b7f27215a7583427557c491dfef884657d649630187",
-    "ui:W-OWNER-CONSENT": "9f89eb85749e8af37a5cab24c37a45c9082dc113ee78f04de1a8ea81c6ba76a7",
-    "ui:W-PACKAGE-OVERVIEW": "cb8892ba0d69d965e55de5318c65bcb24737b9cc536758135173caf101bb3a50",
-    "ui:W-PLUGIN-ADMIN": "afe4f41fad6cf671eb426b04c0d96907b1994aa0eb9bf1ed853c97a7bd3d6bc8",
-    "ui:W-POLICY-SETTINGS": "ad6da1ba6ca51adfc1200b8d026e7995b0e418186c031d9698c93c7492abf681",
-    "ui:W-PR-EVIDENCE": "bd426a602c1a1dafdd989843351f170806e7fc9bc59a482bfda9c4f3dd7c6d45",
-    "ui:W-PR-REVIEW-POLICY": "28f3a8f0de7fe3a161c03e94becaefb1e1f97ff6dd1f8e063d5f3b04ca30ae27",
-    "ui:W-PRIORITY": "666f5e6d356115584a3de0b1bb648500f42f5250320b8aeb7e3ad8c2ea34ad24",
-    "ui:W-PROFILE-SETTINGS": "8e7c12be6c37ff022d2fc86b9bab2194ba54de787d5f3de74e2942d733c75dea",
-    "ui:W-QUESTION-RECOVERY": "0d21e65d9970ee2b60696f42df3cb4ffd9afe742eb5f7f4f8cdc1c38025ebc61",
-    "ui:W-QUESTIONS": "3a1a75382ec7cdf58a5831b36d6027ebbc40df4f42bf8e8df6bca9c205eb4b2f",
-    "ui:W-RELATIONSHIPS": "9202369a9c0d5ca283d95bc5f3117b65c397dc24cd239c712cec73b9cf1f31d3",
-    "ui:W-REPORT-DETAIL": "e32dd23e9553d59dcb06cadca52a204f16cfa925890a7f7e32f288b9003f4137",
-    "ui:W-REPORT-LIST": "d862302f6b44f1a9a5c64409d791ffe8a5ab9ddde2a3acfe6eb10f401d0b6a66",
-    "ui:W-REPOSITORY-SETTINGS": "0725c2b8e0ce48e26de5202858c3e759ab753f39536b9ee2b0697b63bd0bf9e7",
-    "ui:W-RETAINED-REVIEW": "463432d30ce54a87a1149bbdbd2a390631d4a47b9b5230aa882bad939250cad2",
-    "ui:W-RUN-CONTROLS": "b4e66b87682ff7d4d0d7c4b4c38c7cacafe05bcdf8103fa67a003f0f0267be1a",
-    "ui:W-RUN-EMPTY": "a94305d2c9b316813eb069af68ccbc881eecbdf1857a5caf8783be2314208949",
-    "ui:W-RUN-ROW": "f85177b36b34526b0a64e35e7b61a5abadb4fe3821a767ffaa48a1366325a6a8",
-    "ui:W-SESSION-CONSOLE": "7575c7ee9ea486eda25fa3080104613c0574227d215543469adf57615a83c8b1",
-    "ui:W-SKILL-SETTINGS": "5341d666c997c36fd0bd7cae6c02d27404d038f03eaff0cc012d9298596ca84b",
-    "ui:W-SYNC-HEALTH": "43887666ad3ad74402c74f05411a14f800cec286a6ed02b586454b88ec15706f",
-    "ui:W-SYSTEM-DEFAULTS": "ceebb834490e76115cbf9a1ac2eecddbad35022551c88a1346d705d1f0ca2019",
-    "ui:W-TICKET-CONTEXT": "a08fed1ce75864ccc8fef9315faf02958c4cd08299094e3c430c244edf2040ad",
-    "ui:W-TRANSCRIPT": "e26d988d4bfbd41fbce251d774e40f9a3341e15c5f0fb4606be89f5bfb5b7aa0",
-    "ui:W-WAITING-ROW": "c815464219d279b43fe21d51d00f922a47b7b0445ad77b4c8f1d56658c208a34",
-    "ui:W-WORK-STATUS": "d25ff1477b05d12b9a4ecae38485f8c12bafbbc56906b706d2c9cd954ec27fd9"
+    "ui:C-ANSWER": "849d0ec059182fae4ca66a84d95e43b467bf57e0c8c6b8fe446997b2d694124d",
+    "ui:C-ATTENTION-CHAT": "887ec9aab76a5a087802308f509e19da363f7ac3f62f335eafc1b3a78b5dd926",
+    "ui:C-BACK": "ee956ad4549ab983f1a3f5e4a5f0618b2d27c79f7f543dd3828a439d54728c8b",
+    "ui:C-BROWSER-LAB": "7dd969cb63c2a2d590a84e823a27607be696e9e19e8b3a8a9cec5694c96c96a6",
+    "ui:C-CONSENT": "dba65b767bf9c5e9cae2672e751377f19f3181e87fd197988ec4105ac66bae8c",
+    "ui:C-DIAGNOSE": "a42f56910c7ed64ac8353ee971c831a508948669bf67f7baa30afea84ee63655",
+    "ui:C-DISCOVER-SKILLS": "afce6d0475f849f2d84707511756a20a9547cd777031287c8044e97404871e2a",
+    "ui:C-DISMISS": "758cd15bb48e33f4674b37f38eae61679d9a0a0b4f23bd7b611b69706b401c6c",
+    "ui:C-DISMISS-QUESTION": "290c5c6a6a879f974db3b601ef24d749ea0e9468e7a64333189a00a1966cdc88",
+    "ui:C-EXTERNAL-AUTH": "18a3eb05e9ca793ab93915cc975eeac7d3d0f161332c9806ebe4f9d6a1b9c72f",
+    "ui:C-FILTER": "d765acbc9b93d7ac74d196341a4cb3ea43e33a1d4b21c4cab64a4f7836bced02",
+    "ui:C-FOLLOW-UP": "d61c77ea9cabcb821580add07181f44cb79a6f0782242b0b843e530cd28f5d0e",
+    "ui:C-GITHUB-USAGE": "baedecafbec6012cdf9003508fad293c96559dbd73bfe53c954a48c6648fd30e",
+    "ui:C-GLOBAL-ATTENTION": "c09ba9d2f1887ef43d51bcbbd7fced889c4486f02dd31cca48fa647bab55e382",
+    "ui:C-ITEM-SOURCE": "f83f76fb4065c05faee5895147eccbbd65f0225d086b971b838f77eb4a10a97d",
+    "ui:C-ITEM-STATE": "5ab075a64bab45714d5c0b967f9ae9d2ea403ae7b217f116216a7cfc013e185d",
+    "ui:C-LAUNCH-EDIT": "7b1c50a23a9f23afbba1ea7b635104f0b14244045440895ca5907b4c258491d3",
+    "ui:C-LAUNCH-OPEN": "7954b44f356f8ae98dd3c909dec746c5e2b70e57b28eedcd5534ec53f3809633",
+    "ui:C-LAUNCH-PROFILE": "234a9eafab1c11806c5296231912523575e350746fa9ef84f92f13d6842334ed",
+    "ui:C-LINK": "00eb113dc2898c7347ccc7d41a7b24cd89f76265ae5c681a1d70a7fa212b6fe1",
+    "ui:C-NAVIGATE": "8afe8dd4ccd5986761104f6b7c8f7b711a48556974e23cf59284d5308ccc4c86",
+    "ui:C-OPEN-SETTINGS": "0435753db4531eef2e66d50720e9f515456578432ebaf63aee90930c20d4a8e8",
+    "ui:C-PACKAGE": "68a7b90c1e753418a7368defb7e13035fb0e4588e9a0a046f8755981e614d7fe",
+    "ui:C-PIPELINE-SELECT": "7e23c90b7b09ac9fa198bfff76af06d19e49b0c234613fa6833be967177f84d9",
+    "ui:C-PLUGIN-MAINTENANCE": "a7ffab9f48c44b494cbbe46d2d824caac0216aa2f2d3d605e9c0cb452aa1eada",
+    "ui:C-POLICY-SAVE": "0e145dde773dde6166364a7675534e450ac2eef1a4fbc34e1208221e2746d12c",
+    "ui:C-PR-POSTING-POLICY": "5fdef1164f0a975da98f6e5e4aa2c25737e656304c864354d1c304c29731ea04",
+    "ui:C-PREPARE": "8d59fca1da79c40b5a744a227a68b37817352b7fbf73486620792772092372dd",
+    "ui:C-PRIORITY": "97de6ce08c59947a542153b9425cf30e779451cfc61c8b73a5a9501331b6bce7",
+    "ui:C-PROFILE-SAVE": "e63b68b295f09f8a4f5499b82214f9246be6fce4bbe0f519e47a2785bf4d1ae1",
+    "ui:C-REPORT-EVIDENCE": "6ea29e41f84fbf57e528cca6fd13e6fbaf9dd15de6f7ac0966b73e2ef1920719",
+    "ui:C-REPORT-MORE": "9f784a148b1031a888f6b04d02c37e4ac27af58c5165822d6b31d342420d7aaf",
+    "ui:C-REPORT-OPEN-LINK": "d89fd6be124b795c5f0f79c9f7c17c74149dc6d6576ac23b7c551c0205176074",
+    "ui:C-REPORT-QUERY": "6565a5207ae0461bb6c4bc6d14effdc610886dcfce4e711736a8a74f2edb653d",
+    "ui:C-REPORT-RECOVER": "fb4b69887c726e4e4ee7c35f81d8afd44a3cc19458a0b9d4c00c147896843165",
+    "ui:C-REPORT-REFRESH": "6e4bc1a327ab1142e9c3c587d7e730d0806a0cadc9402ac30392be685c120e23",
+    "ui:C-REPORT-SELECT": "8e8406278d2489521003a83825b8c1a7b4d3464d1352e1d1f39f30bc3f18f473",
+    "ui:C-REPOSITORY-REVIEW-PROMPT": "99ca2e80d9eb80938c65d7e8a24c110302936fdc9a60544949f5934031df6e4e",
+    "ui:C-REPOSITORY-SAVE": "ccd0589f72d1dbe31f7c7d72c5b996580deffa3aca1a6bf9f880804650526f60",
+    "ui:C-REVIEW-POLICY": "561c5c3ac438ab83cd1521ccca33fb98fceefeaae56dc27fece4e734c4848019",
+    "ui:C-REVIEW-PUBLISH": "1a33b345677cdf3d42ea1ab0d9c99d2db68a63d9d7a76ad39959ab4bf4a7f301",
+    "ui:C-REVIEW-RECONCILE": "484d6d12b5d348a98800c075fe0fd1a3110b3d50d6c45f287ac0a8650cc2f6ae",
+    "ui:C-RUN-ACTION": "2c63b904c17bca2271c521bf307340185d82255a66b51ce55f738d2ab75d1351",
+    "ui:C-RUN-ATTENTION": "3074ac4ea15c6e248148b51e3138bc70905fe597f125e24b0d89d43a74ab4b6a",
+    "ui:C-SELECT-ITEM": "4dd8b47c218451181acad16d869b0fb11d3c6d173168592174dcbbcdaf1845e7",
+    "ui:C-SELECT-RUN": "44edd96599378ddfaf3d86574f92b4f32bd4a6786eb58439d8d7bbc08b716faa",
+    "ui:C-SESSION-CONSOLE": "361352bcb92eb6b5c49d88d965c8ea865aacb17df16b6ef778d243385b9590b5",
+    "ui:C-SKILL-LOAD": "d6f637e5051ec35bc93c77cf61b460d2707308c2ef903282916df604e0648657",
+    "ui:C-SKILL-SAVE": "54a5764708e1c6fce8e9e77e6560a01363d7399b710845b428f9d174f16c8887",
+    "ui:C-START": "da1a62345253421548cba1392e7334e5098be9177eaed5f4b8c32847b94f382d",
+    "ui:C-START-CHAT": "e47f276c1c8e902f17fd2aa2d64fbab30a23d2f9e169c3ae3b243bd2326766fa",
+    "ui:C-STATE-REFRESH": "cd6c63212b8b4bae158db6083386396a6e85766aa094bd7aef4fe5b469a7c240",
+    "ui:C-TRANSCRIPT": "e119fc72bd1513881c96e859dd087c6d826e73d7bd9ff3b73ebde3c319e5b65b",
+    "ui:C-TUNNEL-KEY": "7292bb4ab57086eec689b45587f03c1352a5c95a3af8d125c79895b344075fe1",
+    "ui:D-ATTENTION": "7542eaf18d605a4d86ca305190dbdc3dbac1ad32fb54db4c281f6cce757a899c",
+    "ui:D-LAUNCH": "194e7b45e69de2ee46aab4ad732c1d53ce5b340c5aa12b4e14546dea1dd91e2f",
+    "ui:P-APPROVAL": "3b714c3d9c082010bcb6c02eee521c11840bb3db40e05accd78b1d0996ad7f99",
+    "ui:P-ATTENTION-FRAME": "9f05d8aca0e8200ac651dc55a4cd4995c09532b9ca55dca9f978b1519ede5b77",
+    "ui:P-BROWSER-LAB": "64d19394c1b79c5fdf9e4d2b580eecbc9368392a1b36a5a0dacc65516f380a5a",
+    "ui:P-CONNECTION-GUIDE": "23cac47ff3d36150326feffd5e7ae180fb1ca03958dab423060c8fb28be34a28",
+    "ui:P-DIAGNOSTICS": "8b5f93b1cf0b742f5cf7be08386f5d2931ffd522701dfe0d64c95b1f8191c068",
+    "ui:P-ELICITATION": "17236a8434c6c449f1313b30cf7df4bdc5c4626c3de1e7a33c20c07f6098681a",
+    "ui:P-FEEDBACK": "a9ba99d9c2e7be0e817b7ff494f2045dc0f5f955603621a6981cf7bc0ea48c46",
+    "ui:P-IDENTITY": "68408b118eab89248162c28b792a77031754b038bb580636cc5ebd0625f0ef1d",
+    "ui:P-INBOX-LIST": "a7c1d3c8a54f9e4a3c497ed9280268b773f883bc5423bfa2f0fc45e9542319f7",
+    "ui:P-INBOX-QUERY": "690e3540cbd4ddfe3535e0e999143afb50eea4bf7d5e1b567edefe81bd05ce52",
+    "ui:P-ITEM-DETAIL": "efd5595da915ab8eebbdfd150360608f16a58c5b12424aaa1a4cdfb7b6d978f2",
+    "ui:P-LAUNCH-EDITOR": "8ed63cac0c6e780795f1f0bd07997c14110e57e7ba2a3a49be24d5f59a93e7dd",
+    "ui:P-LAUNCH-FRAME": "75a136b63c5e49048d576c135e4fcc76009803f41773751753a1e1dbb9dfe8dc",
+    "ui:P-LAUNCH-REVIEW": "d7509da6b6b0916fb392e47f6e7ce98012bee80ea60bce8856346e17e7316d44",
+    "ui:P-LOCAL-TUNNEL-KEY": "d5e97d311cedfc4147cddd743b59be0c8e038e81b87a91c7a8be61741f124555",
+    "ui:P-NAVIGATION": "e134b37f079f53cdf0e0001d94bc5cf013cbfef5241efcef55fc1d3ed0cbd38e",
+    "ui:P-NEW-CHAT": "b8efcb4d37936b33791e224b8a232cadf6fa44c8bd87555099def8737c7da0c6",
+    "ui:P-OWNER-CONSENT": "8d746b3a4fc2dc0f7eb8d5b249360e99a0f8ce94c71cd761c4037c5968dfc319",
+    "ui:P-PACKAGE-OVERVIEW": "8f627c948cd35171057d026d50333e489d69fec01d4b44ccfdca90e96575ad8c",
+    "ui:P-PLUGIN-ADMIN": "21eb7a33c0aadd3bae453ee7b2a3564f88e3c9504c7d370559334fffc31c4c23",
+    "ui:P-POLICIES": "2131874a06f58610525596fc62719deefa32dff3f25bc9eca310b8d740610b6b",
+    "ui:P-PROFILES": "16ef68553049b5c3c03f896b544406b2305525c8cc0ee7eb351fc001a0a6a5ce",
+    "ui:P-QUESTIONS": "f48cf6818f9e72a56726b17c3a7fc997181f6d9d23180c6b1b652d5adef58743",
+    "ui:P-REPORT-DETAIL": "51f45313af4428d158e6f108c09242755e4e414d21c82214aa957988aefd71da",
+    "ui:P-REPORT-LIST": "6e76570a7d5b65b8b10e65046af74e3e32301db2727e8f33a039a4e744eb76dd",
+    "ui:P-REPOSITORIES": "a86c48402d195d25d2ee3c5c30a53377812c5652f6c9bdee8bdeb268cfcbbb0e",
+    "ui:P-RUN-DETAIL": "584e35deda94a6c0362abd437a3b486012f01c8c255e0b737f89d8117b478f8b",
+    "ui:P-RUN-LIST": "f4ae8027eca5213c3bb2c984463e7d23f52530c5a27313a50b593083a78c4fa7",
+    "ui:P-SKILLS": "2a868377788cfb981bd0ce2edf80ef38a532fdf50a9089fc0c6f3a20396d7f99",
+    "ui:P-SYSTEM-DEFAULTS": "6874ffc67a9619177f2e991f84af407a57d62cf0f304675cd36703a61620c185",
+    "ui:P-WAITING-QUEUE": "34fe7f4dbfe2f35122c62eb8c28bf9944e7df5a990d27e4e004690f99de798ba",
+    "ui:PAGE-AGENT": "05bcfea2ccec3e9b71ade31b94bc6f79758cc97678ee09f2c369b7a6ce7c4106",
+    "ui:PAGE-AGENTS": "d9e87aacc55744976707dc301404df015735b631163c5c5618fe962bb94f09f3",
+    "ui:PAGE-BROWSER-LAB": "d39e35fd3f19453ad8643bcd886ed6aa4de325dcc8252099d751b65c21cb683d",
+    "ui:PAGE-INBOX": "b4b480d67702cee305013f8db5e3b3e52456a021d576d94bfcc081f60293a1d2",
+    "ui:PAGE-LOCAL-TUNNEL-SETUP": "a182db88d78355a8298418d709639d52279eb6e470f10aa846ca2009ad27ee14",
+    "ui:PAGE-MY-PRS": "3183f60a9caea7d8d9df847148be1826d6982d480479b9f292f015104fb254a2",
+    "ui:PAGE-OWNER-CONSENT": "dbfae055ee5d2ba4e6d26c9bcae3799c4b0063c1d31c42794f9efa15fbd81167",
+    "ui:PAGE-PACKAGE": "d189d179ede648d6d881ab57c93f812990c74c7cad31bfd8e16a7485fa09643e",
+    "ui:PAGE-REPORTS": "da34147382ac2bb234a0ad7fd1401cc7397530bf45be663a3a7274fb30ba8385",
+    "ui:PAGE-REVIEW-PRS": "cce71cd6e7fe32e225f93d8b9b7425e5f33c2abd05948361b9c5a038eddb742f",
+    "ui:PAGE-SETTINGS": "043e2724c368a56888d0a77ebceff7de72d7cee0ce8cab907b1fd7854064b06b",
+    "ui:PAGE-WORKING": "527c07c7cda26f47b4c5272bff525558cb6334b0be705a167062078fe51a9e98",
+    "ui:S-FACTORY": "cb9fa783132db9b94f8a79eff2b375efd65e88eed22bc1d6f42a17cbd199b97b",
+    "ui:S-SETTINGS": "c4d3355098d36080c6bfce8ab7b2f2fb4ba85eea52e79b8265d37526a8784ce3",
+    "ui:W-APPROVAL": "639f52f9d95e26f0cb4432df32f579cc2908ff81f3745dbc3db8ddae7447e4a6",
+    "ui:W-ATTENTION-NOTICE": "58ba49107072b9103463907984d8d7b361d10aeadbfab96efb4ae1d1560c3c80",
+    "ui:W-BROWSER-LAB": "95fa960cff279028ee93761ce84566810489f6625dc1456f65261a0901820771",
+    "ui:W-CONNECTION-BLOCKER": "7a7a46e4031494d44d9ffc66d766b5377f6dbcbe8bea53930b9e1e3ae219e84d",
+    "ui:W-CONNECTION-GUIDE": "f80f13f783bd16472fe22b517e728c89307b2a84283e9efcef66f2dc931d7ec1",
+    "ui:W-DIAGNOSTICS": "2c3e451990a40428e9afde0ddc834b3b19875d956c592984d2fd26ad37c5924a",
+    "ui:W-DIALOG-FRAME": "0af35ce358a6692a482b9a82b7259f2a1aaedde12a16b486c2cd3db569f2e28a",
+    "ui:W-ELICITATION": "6f23cec7627f3b1a54fee75924ad6c081a46f6584352b2cd28b2f433efbcf4f0",
+    "ui:W-GITHUB-USAGE": "c16027768d94c3d6932e95599028c16dd7a520faae46f9e3a353840dd68c86c0",
+    "ui:W-GLOBAL-ERROR": "20e76f77f53c007ae17696e18bdc446618e2a4dd6fe00ab04965848e4b5e211a",
+    "ui:W-IDENTITY": "c410fbe579c5fef6a24c202e8f9e7986db7ae367872937f9f8d2c3e09988f2e2",
+    "ui:W-INBOX-EMPTY": "744bfdeaca667482515e559efd317f96a62ea3b477af9e67dbce197779575c6d",
+    "ui:W-INBOX-QUERY": "0b0b22c85b7ad8a3d0e393dea03e64063b2c306f061163b2b8cd0c2aa70d3fe2",
+    "ui:W-ITEM-ACTIONS": "1dc4fbc72e6618d904ffe755562c6b94dfd3861e72f3d107175c9e6ad6456e3f",
+    "ui:W-ITEM-HISTORY": "574d3953f93737f90ab135f4c4d0e14517342dc72a44d71f2ea5048c98d664a9",
+    "ui:W-ITEM-OVERVIEW": "5ca824e2b2419cf8f265e9413bb6dffec9567c467f9b624fb7798e82aee5d10c",
+    "ui:W-ITEM-ROW": "d07f9571a232fee02f6a6a9a45bfe483933cf6de47a62bf2699a5d9b481ef319",
+    "ui:W-LAUNCH-EDITOR": "34f838c5c4c2c2adfb90e38678a1718a2a42aec870fb1e9f52fa32a7c4609027",
+    "ui:W-LAUNCH-REVIEW": "e79a541defe43b846116232576d0ac82217f37872763644662ce3036fe216d3e",
+    "ui:W-LOCAL-TUNNEL-KEY": "f6727e86a6f45c91a99b334a44cbfd2dd10332210bec0ba0a3acfa1ef81e76b4",
+    "ui:W-MESSAGE": "f8d650748ed0f803371ffe7f5d87e92f1e293955a0178c6cc22ef25c392865d2",
+    "ui:W-NAVIGATION": "cfdf31199dd37932b19bdf3bfee70554636cc2b78978c398fcc22d8ad07f064b",
+    "ui:W-NEW-CHAT": "fa2d23f14413695550e80356c6e1e3ac2724dbd92c98e79e82ee8585ef8b4577",
+    "ui:W-OWNER-CONSENT": "0a8043a067a34a895e1778e66973465897d5f8a2759dc15d3cbd901733758c32",
+    "ui:W-PACKAGE-OVERVIEW": "bc65c6b6348497884ed26e25d97facae384f9b081d8d6543bad548f703a36409",
+    "ui:W-PLUGIN-ADMIN": "b6aa4edbc47af0d3993d541ba2835e4b97f1f69f83c2a4d5ba1ac390d535eb38",
+    "ui:W-POLICY-SETTINGS": "a78568706673046cb2b62b332674a2aa06003b33b929c5d4bf11269ce76029d3",
+    "ui:W-PR-EVIDENCE": "780ca151278de585796f15750e87c4349048f1b3860074beee9612984ac2ada3",
+    "ui:W-PR-REVIEW-POLICY": "59359ca9c23ff50fc123bfb37ec5217f92eac6928aa7b8a7d3b76db8d8084557",
+    "ui:W-PRIORITY": "b50e15e196dbff345ee64bc3994270d0547a704808f67cfa7103ee8c1e645184",
+    "ui:W-PROFILE-SETTINGS": "c4601a37827da1aa9c6717bd43ec1e6033118e14fc99b482b9ef4f84847306b9",
+    "ui:W-QUESTION-RECOVERY": "afd690ac95454e3806c77375b2526b559fed3dfcdb71119e9f8ab22ac0e18f2a",
+    "ui:W-QUESTIONS": "e962ed698e868b2e1c8d5b5841dc10e8f09108d688ff98537d90f67542465fe6",
+    "ui:W-RELATIONSHIPS": "dc5d296e51d328a55511908c8bfef2c303d4c7d7b157e0eff3752cf5cb53f5bb",
+    "ui:W-REPORT-DETAIL": "81a75de755ac898b6c611194c7858d7a2022863cc86b51e02f022054b7584e2e",
+    "ui:W-REPORT-LIST": "ef412054f333f0f50fd5b7830be5922da62d66010e5b2423da9d91d037c0fdb2",
+    "ui:W-REPOSITORY-SETTINGS": "26425da263902f0d9fb7b5047b963437ded6f9fc302b1837e49e6b5c9eecccb0",
+    "ui:W-RETAINED-REVIEW": "9cfcbf74fa28931b44dde0fd9f2632fcfd5cddffd4da7d99d0aa735dc82802fe",
+    "ui:W-RUN-CONTROLS": "1eacbf0b3e84978598a4fadd44468420f7523b8970526252dbd980c49e89df29",
+    "ui:W-RUN-EMPTY": "6002de8d7e5a8c7b444da2f4627521ac3b627348861c3b4460450cc88fbcbe8a",
+    "ui:W-RUN-ROW": "02633e2cea95f213b4d85d1f3e12504f1afbe6d573844e27b6a7b9e319b4e3b5",
+    "ui:W-SESSION-CONSOLE": "f46fbe101e8353741178497bd95a6347b78cc1a54551979b9c456836833f8f47",
+    "ui:W-SKILL-SETTINGS": "37d8f9d7ad7bb05dfe467849c2f47e84c21dd1924008a5fbde7cf397bf5e012a",
+    "ui:W-SYNC-HEALTH": "d7bc554e0458596ef75d5bae2e4f70eec4894b2bddf065412715f9ae53c64cc7",
+    "ui:W-SYSTEM-DEFAULTS": "a38cf1af81d53c76854d8f290f1c3f0d46c3096e9a3ba98c39a4b3f23816020b",
+    "ui:W-TICKET-CONTEXT": "864e54e04963dfbadb187c1001a7cca64a084cfaf7d46b6fa89876135427eb1c",
+    "ui:W-TRANSCRIPT": "4510c4f82661a7afca49f47f567ad77a94dfba9051f5bb871f1580f546d64197",
+    "ui:W-WAITING-ROW": "c0a140637f15fc854eb2fb4f80838cf8aad91dbd5c740069bc275ddb3d18ac38",
+    "ui:W-WORK-STATUS": "2ac922802301aa9a12fefad7055fbd0a3e31328c888c6c579ac2b4940cfcbf90"
   }
 }

@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -539,11 +540,24 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	if in.Effort != "" {
 		p.Effort = in.Effort
 	}
-	skills := p.Skills
 	if in.SkillIDs != nil {
-		skills = in.SkillIDs
+		p.Skills = slices.Clone(in.SkillIDs)
 	}
-	p.Skills = skills
+	// Preserve the selected profile for automatic policy revalidation. Derived
+	// skills belong only to the effective retained bundles.
+	skills := slices.Clone(p.Skills)
+	if prReview && config.ExecutionMode == "single-codex" {
+		if config.PRReviewSkillID == "" {
+			return domain.Run{}, fmt.Errorf("select the installed dk-pr-iter skill in Settings")
+		}
+		found := false
+		for _, id := range skills {
+			found = found || id == config.PRReviewSkillID
+		}
+		if !found {
+			skills = append(skills, config.PRReviewSkillID)
+		}
+	}
 	prompt := in.Prompt
 	if prompt == "" {
 		prompt = strings.NewReplacer("{{title}}", item.Title, "{{body}}", item.Body, "{{url}}", item.URL).Replace(p.Prompt)
@@ -551,9 +565,12 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	if prReview {
 		prompt = appendPRReviewPrompt(prompt, item, repo.ReviewPrompt)
 	}
+	if prReview && config.ExecutionMode == "single-codex" {
+		prompt += "\nUse the selected $dk-pr-iter skill to iterate this pull request through review and CI. Follow its lifecycle, review budgets and completion gates. Keep this retained Codex session as coordinator; use native subagents only as required by the skill. Never merge without an explicit user request."
+	}
 	prompt = appendLaunchAuthority(prompt, p)
-	r := domain.Run{PRReview: &prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
-	if prReview {
+	r := domain.Run{ExecutionMode: config.ExecutionMode, PRReview: &prReview, ReviewPromptSnapshot: repo.ReviewPrompt, SourceSnapshot: sourceSnapshot(item), ID: ID(), ItemID: item.ID, Profile: p, Prompt: prompt, Status: "prepared", Created: time.Now().UTC(), Skills: []domain.Skill{}}
+	if prReview && config.ExecutionMode != "single-codex" {
 		r.ReviewWorkflow = prreview.Contract
 		r.ReviewStage = "resolve-configuration"
 		r.AutoPostReview = in.AutoPostReview
@@ -1015,7 +1032,11 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	if review {
 		kind = aiworkflows.Review
 	}
-	c, e := aiworkflows.Start(s.ctx, m.CodexBinary(), sandboxArgs, m.app.DataDir, kind, func(msg codex.Message) { m.onMessage(s, msg) })
+	startClient := aiworkflows.Start
+	if r.ExecutionMode == "single-codex" {
+		startClient = aiworkflows.StartNative
+	}
+	c, e := startClient(s.ctx, m.CodexBinary(), sandboxArgs, m.app.DataDir, kind, func(msg codex.Message) { m.onMessage(s, msg) })
 	if e != nil {
 		s.mu.Unlock()
 		m.fail(s, e)
@@ -1140,8 +1161,13 @@ func (m *Manager) launch(s *session, resume bool, message string) {
 	}
 	input := []map[string]any{{"type": "text", "text": text}}
 	for _, sk := range r.Skills {
+		// Native skill inputs only resolve discovered paths. Retained snapshots
+		// deliberately live outside discovery roots, so supply their exact
+		// entrypoint as well instead of depending on mutable installed skills.
+		text += "\nSelected retained skill " + sk.Name + ": read and follow " + sk.Path + " before working. Resolve its package resources relative to this entrypoint, preserving its lifecycle and workflow requirements."
 		input = append(input, map[string]any{"type": "skill", "name": sk.Name, "path": sk.Path})
 	}
+	input[0]["text"] = text
 	turn := map[string]any{"threadId": result.Thread.ID, "input": input, "startIfIdle": true}
 	s.mu.Lock()
 	applyMode(turn, s.run.Profile)

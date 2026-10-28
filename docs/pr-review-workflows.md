@@ -1,8 +1,26 @@
 # Retained PR review workflows
 
-Fresh PR reviews use `code-factory-pr-review-v1`. Existing retained runs without
-that marker keep the original native-turn execution and recovery path. No
-installed skill or unrelated profile is replaced.
+Settings → System defaults → Session execution selects `workflow` or
+`single-codex` for newly prepared work. Existing installations without this field
+retain workflow behavior until the owner selects a mode. The selected mode is
+saved with each run; changing it never reroutes existing proposals or sessions.
+
+Single Codex mode starts one retained native app-server session directly for
+tasks and PR reviews. Select the installed `dk-workflows:dk-pr-iter` skill in
+PR iteration skill; unavailable, disabled or unrelated skills are rejected.
+Review preparation adds this skill and snapshots its complete package resources.
+The session follows dk-pr-iter's review/CI loop, lifecycle and native child-agent
+contracts, subject to the selected profile's sandbox and publishing authority.
+Its messages, questions, interrupt and resume use the existing session controls.
+This mode does not use Factory's retained review artifacts or automatic posting
+policy; dk-pr-iter owns its private evidence and publication procedure. It is an
+explicit selection and does not activate after an engine failure. Read-only
+profiles can inspect but cannot perform dk-pr-iter fixes; choose an appropriate
+writable profile explicitly when iteration is intended.
+
+Workflow-mode PR reviews use `code-factory-pr-review-v1`. Existing retained runs
+without that marker keep the original native-turn execution and recovery path.
+No installed skill or unrelated profile is replaced.
 
 The Go review subsystem follows the procedures pinned at DK commit
 `1b0019767a29142bbb4b3855c2fc9f1e4af75b71`:
@@ -37,8 +55,8 @@ explicitly by deterministic tests and is never enabled by an environment variabl
 or production configuration. The production execution bridge stays gated until
 all required contracts can be integrated; a supported library capability alone
 does not establish application action readiness. Missing-capability diagnostics
-name only the absent contracts and their upstream issues. There is no fallback to
-the old single model turn for a fresh review.
+name only the absent contracts and their upstream issues. There is no automatic fallback for a workflow-mode review. Single Codex mode is
+selected explicitly before preparing a new run.
 
 ## Execution and retained state
 
