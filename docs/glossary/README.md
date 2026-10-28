@@ -2807,7 +2807,7 @@ The progress of an observation through investigation, information requests, publ
 
 `report-outcome` · domain
 
-The investigation disposition identifying a filed issue, a duplicate or explained behavior.
+The investigation disposition identifying a filed issue, a duplicate, explained behavior, an invalid defect claim or a defect already fixed in the inspected source.
 
 <a id="evidence-manifest"></a>
 ## Evidence manifest

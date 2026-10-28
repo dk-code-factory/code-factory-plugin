@@ -135,7 +135,7 @@ func (g *fakeGitHub) PrepareContext(context.Context, Submission) (investigationC
 	if g.preparedContext != nil {
 		return *g.preparedContext, nil
 	}
-	return investigationContext{Version: 1, Repositories: []repositoryContext{{Repository: DefaultRepository, Candidates: []duplicateCandidate{{Number: 17}, {Number: 31}}}, {Repository: routes["agent-workflow"]}, {Repository: routes["dk-workflows"]}}}, nil
+	return investigationContext{Version: 1, Repositories: []repositoryContext{{Repository: DefaultRepository, Revision: strings.Repeat("a", 40), Candidates: []duplicateCandidate{{Number: 17}, {Number: 31}}}, {Repository: routes["agent-workflow"]}, {Repository: routes["dk-workflows"]}}}, nil
 }
 func (g *fakeGitHub) Validate(context.Context, Findings) error {
 	if g.onValidate != nil {
@@ -155,6 +155,9 @@ func (g *fakeGitHub) ReadIssue(context.Context, string, int) (Issue, error) {
 		g.onRead()
 	}
 	return g.issue, g.errorRead
+}
+func (g *fakeGitHub) VerifyResolution(context.Context, Findings, Issue) ([]Fix, error) {
+	return g.fixes, g.errorTrack
 }
 func (g *fakeGitHub) Create(_ context.Context, f Findings, _ string) (Issue, error) {
 	g.creates++
@@ -1540,4 +1543,98 @@ func TestRejectedCreationCanResumeWithoutTreatingItAsAnUnknownEffect(t *testing.
 
 func draftFixture(f Findings) structuredDraft {
 	return structuredDraft{Version: structuredContract, Classification: f.Classification, Summary: f.Summary, MissingInformation: f.MissingInformation, Component: f.Component, SourcePath: f.SourcePath, SourceCommit: f.SourceCommit, OwnershipReason: f.OwnershipReason, DuplicateNumber: f.DuplicateNumber, Title: f.Title, Labels: f.Labels, Restriction: "none", GuidanceReviewed: []string{}, Answers: []fieldAnswer{}, Content: reportContent{Environment: "Fixture host", Reproduction: "Reproduction unknown; reconnect timing unavailable", Expected: "Answer delivered", Actual: "Answer failed", Evidence: f.Body, Findings: f.Summary, Uncertainty: "Suspected, not proven"}}
+}
+
+func TestAuditorInvalidAndResolvedSettleWithoutIssueCreation(t *testing.T) {
+	for _, classification := range []string{"invalid", "resolved"} {
+		t.Run(classification, func(t *testing.T) {
+			s, ctx := fixture(t)
+			engine, github := setupEngine(s)
+			engine.findings.Classification = classification
+			engine.findings.Title, engine.findings.Body = "", ""
+			if classification == "resolved" {
+				engine.findings.DuplicateNumber = 17
+				github.issue.State, github.issue.ClosureReason = "closed", "completed"
+				github.fixes = []Fix{{Repository: DefaultRepository, Component: "code-factory", Commit: strings.Repeat("b", 40)}}
+			}
+			r := submit(t, s, ctx)
+			step(t, s, ctx) // The agent investigates; it cannot settle the disposition.
+			if got := get(t, s, ctx, r.ID); got.Processing != "filing" || got.Outcome != "" {
+				t.Fatal(got)
+			}
+			step(t, s, ctx) // Deterministic validation settles the retained findings.
+			got := get(t, s, ctx, r.ID)
+			if got.Processing != "complete" || got.Outcome != classification || github.creates != 0 || engine.starts != 1 || engine.completions != 1 {
+				t.Fatal(got, github.creates, engine.starts, engine.completions)
+			}
+			if classification == "invalid" && got.Issue != nil {
+				t.Fatal("invalid report acquired issue")
+			}
+			if classification == "resolved" && (got.Issue == nil || got.Issue.Number != 17 || len(got.Fixes) != 1 || len(got.Releases) != 0 || got.InstalledVersion != "") {
+				t.Fatal("resolution inferred delivery or lost fix", got)
+			}
+			if err := s.PublishReport(ctx, r.ID); err != nil {
+				t.Fatal(err)
+			}
+			step(t, s, ctx)
+			if github.creates != 0 || engine.starts != 1 {
+				t.Fatal("settled disposition replayed")
+			}
+		})
+	}
+}
+
+func TestAuditorDispositionBlocksAndPreservesFreshEvidence(t *testing.T) {
+	for _, classification := range []string{"invalid", "resolved"} {
+		for _, phase := range []string{"ownership", "verification", "new-evidence", "new-generation"} {
+			t.Run(classification+"/"+phase, func(t *testing.T) {
+				s, ctx := fixture(t)
+				engine, github := setupEngine(s)
+				engine.findings.Classification = classification
+				if classification == "resolved" {
+					engine.findings.DuplicateNumber = 17
+				}
+				r := submit(t, s, ctx)
+				step(t, s, ctx)
+				switch phase {
+				case "ownership":
+					github.validateErr = errors.New("source provenance unavailable")
+				case "verification":
+					github.validateErr = errors.New("source path unavailable")
+					if classification == "resolved" {
+						github.validateErr = nil
+						github.errorTrack = errors.New("fix ancestry not verified")
+					}
+				case "new-evidence":
+					github.onValidate = func() {
+						if _, err := s.AddEvidence(ctx, EvidenceInput{ID: r.ID, IdempotencyKey: "new", Text: "The same failure persists on current source"}); err != nil {
+							t.Fatal(err)
+						}
+					}
+				case "new-generation":
+					github.onValidate = func() {
+						rt, err := s.runtime(ctx, r.ID)
+						if err != nil {
+							t.Fatal(err)
+						}
+						rt.AdmissionID += "-new"
+						if err := s.putRuntime(ctx, r.ID, rt); err != nil {
+							t.Fatal(err)
+						}
+					}
+				}
+				step(t, s, ctx)
+				got := get(t, s, ctx, r.ID)
+				if got.Outcome != "" || github.creates != 0 || got.Processing == "complete" {
+					t.Fatal("stale or unverified disposition completed", got)
+				}
+				if phase == "new-evidence" && (got.Processing != "queued" || len(got.Additions) != 1) {
+					t.Fatal("fresh evidence lost", got)
+				}
+				if (phase == "ownership" || phase == "verification") && got.Processing != "blocked" {
+					t.Fatal("verification failure not actionable", got)
+				}
+			})
+		}
+	}
 }

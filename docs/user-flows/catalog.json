@@ -13948,6 +13948,11 @@
         {
           "path": "internal/reports/investigate-legacy.yml",
           "purpose": "Retained unversioned generations preserve their original repository/body output schema."
+        },
+        {
+          "path": "internal/reports/github.go",
+          "anchor": "func (g *GitHubAdapter) VerifyResolution(",
+          "purpose": "Deterministic completed-issue identity, verified fixing commit and ancestry checks establish resolution in inspected source independently of delivery."
         }
       ],
       "tests": [
@@ -14588,6 +14593,49 @@
             "S3"
           ],
           "purpose": "A known 64-character owner secret crossing the candidate-body byte limit is fully redacted before truncation; retained snapshots exclude its prefix, stay bounded and record omissions."
+        },
+        {
+          "path": "internal/reports/draft_test.go",
+          "anchor": "func TestAuditorDispositionsRequireSourceAndCandidateEvidence(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Invalid and resolved findings require source ownership and noncontradictory evidence; resolution requires a supplied issue candidate and the captured source revision."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestAuditorInvalidAndResolvedSettleWithoutIssueCreation(",
+          "scenarios": [
+            "S3",
+            "S5"
+          ],
+          "purpose": "Auditor output awaits deterministic validation, then persists invalid or resolved outcome without issue creation or repeated investigation; verified fix and release/installed state stay independent."
+        },
+        {
+          "path": "internal/reports/service_test.go",
+          "anchor": "func TestAuditorDispositionBlocksAndPreservesFreshEvidence(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Unavailable provenance or resolution proof blocks settlement; additional evidence and newer generations prevent delayed invalid/resolved findings from completing fresh work."
+        },
+        {
+          "path": "internal/reports/github_test.go",
+          "anchor": "func TestResolutionRequiresCompletedIssueVerifiedFixAndSourceAncestry(",
+          "scenarios": [
+            "S3",
+            "S5"
+          ],
+          "purpose": "Completed issue alone, reopened/not-planned issues, absent fixes, divergent or older source and unavailable comparisons reject resolution; verified ancestry remains sufficient when releases are unavailable."
+        },
+        {
+          "path": "web/tests/factory.spec.ts",
+          "anchor": "`reported issues shows auditor ${outcome} outcome without claiming delivery`",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Invalid and resolved labels retain auditor reasoning, no recovery/information prompt, known fix links and independent Unknown release/installed evidence without starting work."
         }
       ],
       "suites": [
@@ -14677,6 +14725,11 @@
             "label": "Reject unsafe private evidence location before retention",
             "scenario": "S1",
             "terminal": true
+          },
+          {
+            "id": "resolution",
+            "label": "Verify completed issue and fixing commit ancestry in inspected source",
+            "scenario": "S3"
           }
         ],
         "edges": [
@@ -14711,7 +14764,7 @@
           {
             "from": "investigate",
             "to": "view",
-            "label": "explained behavior"
+            "label": "explained behavior or source-backed invalid report"
           },
           {
             "from": "track",
@@ -14735,6 +14788,21 @@
             "from": "submit",
             "to": "reject",
             "label": "Unsafe private data location"
+          },
+          {
+            "from": "investigate",
+            "to": "resolution",
+            "label": "auditor proposes already resolved"
+          },
+          {
+            "from": "resolution",
+            "to": "track",
+            "label": "fix verified in captured source"
+          },
+          {
+            "from": "resolution",
+            "to": "recover",
+            "label": "resolution proof unavailable or inconsistent"
           }
         ]
       }

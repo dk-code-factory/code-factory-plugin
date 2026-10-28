@@ -13,6 +13,12 @@ const statuses = [
   "needs_attention",
 ];
 const label = (text: string) => text.replaceAll("_", " ");
+const outcomeLabel = (text: string) =>
+  text === "invalid"
+    ? "Invalid report"
+    : text === "resolved"
+      ? "Already resolved"
+      : label(text || "Unknown");
 const knownDate = (text?: string) =>
   text && !text.startsWith("0001-")
     ? new Date(text).toLocaleString()
@@ -274,7 +280,7 @@ export function ReportedIssues() {
               <dt>Processing</dt>
               <dd>{label(detail.processing)}</dd>
               <dt>Outcome</dt>
-              <dd>{label(detail.outcome || "Unknown")}</dd>
+              <dd>{outcomeLabel(detail.outcome)}</dd>
               <dt>Observed</dt>
               <dd>{knownDate(detail.observation.observedAt)}</dd>
               <dt>Expected</dt>
@@ -289,6 +295,12 @@ export function ReportedIssues() {
               </dd>
             </dl>
             <p>{detail.message}</p>
+            {detail.outcome === "resolved" && (
+              <p>
+                Fix verified in the investigated source revision. Release
+                availability and installed versions are tracked separately.
+              </p>
+            )}
             {detail.findings && <p>{detail.findings.summary}</p>}
             {detail.findings?.missingInformation && (
               <p role="status">

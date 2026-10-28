@@ -243,6 +243,7 @@ These references identify existing assertions and explicit remaining gaps.
 | `UI-START-EPOCH` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Start response cannot cross a full resync epoch` | A delayed Start result cannot reinstall acceptance after full resync or replay launch. |
 | `UI-START-CHECK-EPOCH` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `a delayed Start status check cannot install acceptance after full resync` | An old-epoch status-check result remains uncertain rather than installing a stale accepted run. |
 | `UI-NOTIFICATION-FRESHNESS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `notification-only failures refresh saved Settings feedback` | Settings reloads saved notification error feedback on a notification-bucket invalidation without an explicit sync or diagnostics call. |
+| `UI-REPORTS-DISPOSITIONS` | [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — ``reported issues shows auditor ${outcome} outcome without claiming delivery`` | Invalid and resolved dispositions show their explanation and completed outcome without information/recovery controls; resolved links a known issue/fix while stable and installed availability remain Unknown, and viewing starts no investigation. |
 <!-- /specs:references-assertions -->
 
 ## Entity coverage

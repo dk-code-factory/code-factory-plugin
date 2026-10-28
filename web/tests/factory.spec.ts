@@ -5891,3 +5891,72 @@ test("notification-only failures refresh saved Settings feedback",async({page})=
   await expect(ui.getByRole("alert")).toContainText("Saved credential resolution failed");
   expect(calls.filter(c=>["sync_repositories","diagnostics"].includes(c.name))).toHaveLength(0);
 });
+
+for (const outcome of ["invalid", "resolved"]) {
+  test(`reported issues shows auditor ${outcome} outcome without claiming delivery`, async ({
+    page,
+  }) => {
+    const report = reportFixture();
+    report.processing = "complete";
+    report.outcome = outcome;
+    report.findings = {
+      classification: outcome,
+      summary:
+        outcome === "invalid"
+          ? "Source contract confirms expected behavior."
+          : "Verified fixing commit is present in the inspected revision.",
+      missingInformation: "",
+    };
+    if (outcome === "resolved") {
+      report.issue = {
+        repository: "dk-code-factory/code-factory-plugin",
+        number: 17,
+        url: "https://github.com/dk-code-factory/code-factory-plugin/issues/17",
+        state: "closed",
+        closureReason: "completed",
+      };
+      report.fixes = [
+        {
+          repository: report.issue.repository,
+          component: "code-factory",
+          commit: "b".repeat(40),
+        },
+      ];
+    }
+    const { ui, calls } = await host(page, { reports: [report] });
+    await ui
+      .getByRole("button", { name: "Reported issues", exact: true })
+      .click();
+    await ui.getByRole("button", { name: "Agents: Stale response" }).click();
+    const detail = ui.getByRole("article", { name: "Report details" });
+    await expect(detail.getByRole("definition").nth(1)).toHaveText(
+      outcome === "invalid" ? "Invalid report" : "Already resolved",
+    );
+    await expect(detail).toContainText(report.findings.summary);
+    await expect(detail).toContainText("Stable availability: Unknown");
+    await expect(detail).toContainText(
+      "Observed installed Code Factory version: Unknown",
+    );
+    await expect(detail.getByRole("button", { name: "Resume" })).toHaveCount(0);
+    await expect(detail.getByText("Information requested:")).toHaveCount(0);
+    if (outcome === "resolved") {
+      await expect(detail).toContainText(
+        "Fix verified in the investigated source revision.",
+      );
+      await expect(
+        detail.getByRole("button", { name: "Open fix commit" }),
+      ).toBeVisible();
+    } else {
+      await expect(
+        detail.getByRole("button", { name: /Open GitHub issue/ }),
+      ).toHaveCount(0);
+    }
+    expect(
+      calls.some((c) =>
+        ["start_run", "resume_issue_report", "refresh_issue_reports"].includes(
+          c.name,
+        ),
+      ),
+    ).toBe(false);
+  });
+}

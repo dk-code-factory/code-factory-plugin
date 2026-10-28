@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "9135daf735e0679080343dc12a52b0bb23f83098",
-  "fingerprint": "f3326d0dd8b0dc2cdf9c53c93bf868cacff99017d99b24247b63f9ed649a5aac",
+  "base": "e362e31df927bea4954ef345d9ae9183f39f2fef",
+  "fingerprint": "d43e13b381aef0af2a0ce4f866ecf1e6f59dbe9d1b29a7d062189b0fc42d41ed",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Packaging, installer/service authority and explicit live-host opt-ins retain their contract. No installed service, browser session, network route or real provider is changed by these fixtures.",
-    "implementation": "Inspected fixture-only production-host assembly, build embedding and unchanged package/installer entrypoints. Generated embedded resources remain reproducible and content-addressed after deferred startup transformation.",
-    "tests": "Release/packaging/installer/smoke and browser-control fixture suites remain required. The isolated performance evidence is synthetic and does not close installed-host, login, soak or delivery acceptance gaps."
+    "kind": "structure",
+    "description": "Service health, upgrade, rollback and dependency administration remain separate from report investigation; no live services or update policies are changed. Shared browser/suite inputs conservatively require fresh review of this unchanged contract.",
+    "implementation": "Reviewed comparison paths against docs/user-flows/operate-installation.md. Product edits are confined to internal/reports and report UI/skill text; Service health, upgrade, rollback and dependency administration remain separate from report investigation; no live services or update policies are changed.",
+    "tests": "Existing operate-installation assertion mappings remain unchanged. The shared factory browser file gains only invalid/resolved Reports cases; broad fixture suites rerun their actual assertions without asserting new real-host coverage."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.241
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 122.451
+      "seconds": 125.909
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 47.091
+      "seconds": 40.206
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.908
+      "seconds": 2.609
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.548
+      "seconds": 2.549
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.503
+      "seconds": 21.188
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.161
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.912
+      "seconds": 24.899
     },
     {
       "command": [
@@ -139,11 +139,11 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.742
+      "seconds": 0.722
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "3e7030daeab063cf28ff1f1307742890e48c04a6daab255f5b7c55651db254e6",
+    "flow:operate-installation": "5f12fe97e6585352f9625beb71662e4572d690298b6ac3bb602d56a407b3d1d0",
     "term:connection-refreshes": "d787db30d657a7e890b6c72866dabb219a98933d97c110211e440f8e7b3a523f",
     "term:connection-submits": "3a00c99a96b41a48cd8aa11463802c1f1fcd2e5fd2b0d06b4248425f78345952",
     "term:coverage-gap": "805f6284d0fead9eee5889000225bba4bdcd5e6c8f226a1f067319dd7de0f921",
@@ -180,12 +180,12 @@
     "term:ui-w-diagnostics": "9767a9b9712d032dd7695f9496d508b218fc194f699052f6240e543be2980abf",
     "term:unverified-behavior": "433756cb9068d05bbaac06b016e9cbddfb200012bda4c0f5b3b6643e85997b76",
     "term:verification": "3b749c272e9bd9eb4393bd79bea89871fd2ee0fc3eb60e571f4c810f02b28e84",
-    "ui:C-BROWSER-LAB": "f7f3f51ca56acc02b3973872d1a3caac9dc7f35c58b87fa455d9f61266d9de1e",
-    "ui:C-DIAGNOSE": "2f07c4dc2f9dee0da50416b4b9e520424cfc472eda0b0b4df7a0efea95b7b9f9",
-    "ui:P-BROWSER-LAB": "8b358f7fd397613de50c834d229d8b2d06343914453d3c2a8f7ad9849d6394a3",
-    "ui:P-DIAGNOSTICS": "d91d8d13cabe3a8e7896bacd5a1feabbfd66c5784893a6a7614675badede919d",
-    "ui:PAGE-BROWSER-LAB": "ce5b306eeceb62826232907953f4c3177970c64fe2b891a420428a9e29d873dc",
-    "ui:W-BROWSER-LAB": "60e5710b65204ab1f50950dff0704f56447537099fdfdab5f595dca36af70da6",
-    "ui:W-DIAGNOSTICS": "bcbf5758224b58403a9edf5a0d7f46153e9e8f2c8282ee906bb30a71be93100c"
+    "ui:C-BROWSER-LAB": "1e909ffcdaeac7e218c9eba3530865e39da6d4442513c2c944d20e5ceedfdcf6",
+    "ui:C-DIAGNOSE": "d78919c357a1a456dbe297f4a0de2b7f3f9e44b79b69730961354086482091e8",
+    "ui:P-BROWSER-LAB": "9c18a914c7d90da946b251fc5ca39eeca97f744e60bf019953de4e1b555f15d8",
+    "ui:P-DIAGNOSTICS": "cd6a9f083744ee0644fd8022791d27111ccfd3f3ac13cdc7c5f35e059460cf30",
+    "ui:PAGE-BROWSER-LAB": "1c789be21cf39c5a17fa966952e66938579358c77c6db816ca5a404032fd73e2",
+    "ui:W-BROWSER-LAB": "fba07dbee549cbd0b57ae15fbe87cba78a5c2de71da796232fbf79d91816fa05",
+    "ui:W-DIAGNOSTICS": "2ec7b7df643c63719feee91a77f539b9a57bbc724d1230baea90032fd1bfac2f"
   }
 }

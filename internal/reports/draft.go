@@ -281,7 +281,11 @@ func validateFindings(f Findings) error {
 		if f.DuplicateNumber != 0 || validText(f.MissingInformation) {
 			return fmt.Errorf("contradictory explained result")
 		}
-	case "duplicate":
+	case "invalid":
+		if f.DuplicateNumber != 0 || validText(f.MissingInformation) || !provenanceValid(f) {
+			return fmt.Errorf("source-backed invalid disposition required")
+		}
+	case "duplicate", "resolved":
 		if f.DuplicateNumber < 1 || validText(f.MissingInformation) || !provenanceValid(f) {
 			return fmt.Errorf("verified duplicate identity and ownership required")
 		}
@@ -313,6 +317,9 @@ func renderDraft(d structuredDraft, c *investigationContext, observation Submiss
 	if r == nil {
 		return f, fmt.Errorf("unsupported ownership")
 	}
+	if f.Classification == "resolved" && f.SourceCommit != r.Revision {
+		return f, fmt.Errorf("resolution must inspect the captured repository revision")
+	}
 	for _, doc := range r.Documents {
 		if !strings.Contains(strings.ToLower(doc.Path), "issue_template") && !slices.Contains(d.GuidanceReviewed, doc.Path) {
 			return f, fmt.Errorf("repository guidance must be reviewed")
@@ -339,7 +346,10 @@ func renderDraft(d structuredDraft, c *investigationContext, observation Submiss
 			return f, fmt.Errorf("unsupported label")
 		}
 	}
-	if f.Classification == "duplicate" {
+	if f.Classification == "invalid" {
+		return f, validateFindings(f)
+	}
+	if f.Classification == "duplicate" || f.Classification == "resolved" {
 		found := false
 		for _, candidate := range r.Candidates {
 			if candidate.Number == f.DuplicateNumber {

@@ -3025,7 +3025,7 @@
       "name": "Report outcome",
       "aliases": [],
       "category": "domain",
-      "definition": "The investigation disposition identifying a filed issue, a duplicate or explained behavior."
+      "definition": "The investigation disposition identifying a filed issue, a duplicate, explained behavior, an invalid defect claim or a defect already fixed in the inspected source."
     },
     {
       "id": "evidence-manifest",

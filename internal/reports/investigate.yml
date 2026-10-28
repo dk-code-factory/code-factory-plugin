@@ -19,7 +19,7 @@ jobs:
               additionalProperties: false
               required: [classification, summary, missingInformation, component, sourcePath, sourceCommit, ownershipReason, duplicateNumber, title, content, templateId, answers, labels, guidanceReviewed, restriction, restrictionReason, version]
               properties:
-                classification: {type: string, enum: [confirmed, suspected, duplicate, insufficient_information, explained]}
+                classification: {type: string, enum: [confirmed, suspected, duplicate, insufficient_information, explained, invalid, resolved]}
                 summary: {type: string}
                 missingInformation: {type: string}
                 component: {type: string, enum: [code-factory, plugin, agent-workflow, dk-workflows, unknown]}

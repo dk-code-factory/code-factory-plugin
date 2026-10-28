@@ -46,7 +46,7 @@ type Change struct {
 	Detail string    `json:"detail"`
 }
 type Findings struct {
-	Classification     string   `json:"classification"` // confirmed, suspected, duplicate, insufficient_information, explained
+	Classification     string   `json:"classification"` // confirmed, suspected, duplicate, insufficient_information, explained, invalid, resolved
 	Summary            string   `json:"summary"`
 	MissingInformation string   `json:"missingInformation"`
 	Component          string   `json:"component"`
