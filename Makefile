@@ -34,6 +34,7 @@ test: ui plugin-embed fake-provider
 	node --test scripts/test_browser_lab.mjs
 	node --test scripts/test_browser_control.mjs
 	python3 scripts/test_ci.py
+	python3 scripts/test_browser_benchmark.py
 	python3 scripts/test_user_flows.py
 	python3 -m unittest discover -s scripts -p 'test_specs*.py'
 test-performance: ui plugin-embed fake-provider
@@ -94,6 +95,7 @@ specs-gaps:
 
 specs-ci: specs-validate
 	python3 scripts/test_ci.py
+	python3 scripts/test_browser_benchmark.py
 	python3 scripts/test_user_flows.py
 	python3 -m unittest discover -s scripts -p 'test_specs*.py'
 	$(MAKE) specs-check

@@ -40,6 +40,9 @@ and shared daemon scenarios ordered. Repeated serial and bounded-worker samples
 retain outcomes and resource evidence without retrying failed assertions. A failed
 sample stops comparison and retains partial evidence; comparison never replaces
 full verification, isolated launch-performance acceptance or release provenance.
+Qualification validates the complete discovered inventory, requires each scenario
+to pass once without skips or retries, and retains discovery failure diagnostics.
+
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -127,6 +130,7 @@ flowchart TD
 - [release/fixed-issues.json](../../release/fixed-issues.json) — Explicit fixed issues backed by ancestor source commits and exact promoted package versions.
 - [docs/ci.md](../../docs/ci.md) — Contributor completion procedure linking existing reconciliation, fixture verification and authorized PR workflow gates. (`## Final verification and PR handoff`)
 - [.github/workflows/browser-benchmark.yml](../../.github/workflows/browser-benchmark.yml) — Read-only fixture-only hosted serial/two-worker correctness comparison with repeated zero-retry samples and retained timing/resource evidence. (`name: Browser correctness benchmark`)
+- [scripts/benchmark_browser.py](../../scripts/benchmark_browser.py) — Compare complete correctness inventories and successful single executions across serial and bounded-parallel qualification runs.
 
 ## Test references
 
@@ -353,6 +357,15 @@ flowchart TD
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_hosted_dispatch_passes_exact_comparison_through_real_graph(`; S4, S5. Hosted dispatcher passes exact base/head SHAs unchanged through the real Make graph while sharing preparation once.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_workflow_does_not_prepare_npm_outside_graph(`; S4, S5. Hosted workflow delegates verification to ci.py without a separate npm or browser installation.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_browser_benchmark_retains_samples_and_stops_on_failure(`; S4, S5. Execute the hosted benchmark shell with stub tests: preserve four independent zero-retry samples and resource records; stop immediately with the failed sample exit code and retain partial output.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_file_move_preserves_inventory_and_duplicates_count(`; S3. File movement preserves scenario identity while missing or duplicated scenarios fail qualification.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_failure_skip_retry_and_missing_test_cannot_pass(`; S3. Failure, skip, interruption, retry and incomplete discovery cannot be accepted as equivalent passing execution.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_nonzero_discovery_retains_both_diagnostics(`; S3. Nonzero discovery retains both diagnostic streams and reports their paths.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_main_runs_complete_worker_order_and_accepts_zero_metrics(`; S3. Run the complete qualifier main path with stub subprocess outputs: preserve 1/2/2/1 ordering, accepted zero elapsed/RSS and all successful report artifacts.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_main_stops_on_execution_report_or_metric_failure_and_retains_evidence(`; S3. The main path stops at the second sample on nonzero execution, invalid report or malformed/nonfinite/negative metrics, retaining failed status, prior success and raw diagnostics without another invocation.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_report_requires_one_project_and_result_and_expected_status(`; S3. With unchanged title inventory, reject zero/multiple project executions, zero/multiple results and unexpected expected/result status.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_report_rejects_extra_distinct_title(`; S3. An extra distinct scenario title cannot qualify against the discovered inventory.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_main_accepts_matching_baseline_inventory(`; S3. Equivalent baseline title multisets allow all four samples even when suite nesting changes.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_main_rejects_discovery_and_baseline_before_any_sample(`; S3. Empty/error/malformed/nonzero discovery and mismatched/invalid baselines stop before every sample while retaining both discovery diagnostic streams.
 
 ## Verification and gaps
 

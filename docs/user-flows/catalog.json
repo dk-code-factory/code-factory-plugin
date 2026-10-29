@@ -166,6 +166,10 @@
         [
           "python3",
           "scripts/test_ci.py"
+        ],
+        [
+          "python3",
+          "scripts/test_browser_benchmark.py"
         ]
       ],
       "inputs": [
@@ -175,7 +179,8 @@
         "scripts/specs_lib",
         "scripts/ci.py",
         "scripts/release.py",
-        ".github/workflows"
+        ".github/workflows",
+        "scripts/benchmark_browser.py"
       ]
     },
     "inbox-performance": {
@@ -14027,6 +14032,10 @@
           "path": ".github/workflows/browser-benchmark.yml",
           "anchor": "name: Browser correctness benchmark",
           "purpose": "Read-only fixture-only hosted serial/two-worker correctness comparison with repeated zero-retry samples and retained timing/resource evidence."
+        },
+        {
+          "path": "scripts/benchmark_browser.py",
+          "purpose": "Compare complete correctness inventories and successful single executions across serial and bounded-parallel qualification runs."
         }
       ],
       "tests": [
@@ -15873,6 +15882,78 @@
             "S5"
           ],
           "purpose": "Execute the hosted benchmark shell with stub tests: preserve four independent zero-retry samples and resource records; stop immediately with the failed sample exit code and retain partial output."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_file_move_preserves_inventory_and_duplicates_count(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "File movement preserves scenario identity while missing or duplicated scenarios fail qualification."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_failure_skip_retry_and_missing_test_cannot_pass(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Failure, skip, interruption, retry and incomplete discovery cannot be accepted as equivalent passing execution."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_nonzero_discovery_retains_both_diagnostics(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Nonzero discovery retains both diagnostic streams and reports their paths."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_main_runs_complete_worker_order_and_accepts_zero_metrics(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Run the complete qualifier main path with stub subprocess outputs: preserve 1/2/2/1 ordering, accepted zero elapsed/RSS and all successful report artifacts."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_main_stops_on_execution_report_or_metric_failure_and_retains_evidence(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "The main path stops at the second sample on nonzero execution, invalid report or malformed/nonfinite/negative metrics, retaining failed status, prior success and raw diagnostics without another invocation."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_report_requires_one_project_and_result_and_expected_status(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "With unchanged title inventory, reject zero/multiple project executions, zero/multiple results and unexpected expected/result status."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_report_rejects_extra_distinct_title(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "An extra distinct scenario title cannot qualify against the discovered inventory."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_main_accepts_matching_baseline_inventory(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Equivalent baseline title multisets allow all four samples even when suite nesting changes."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_main_rejects_discovery_and_baseline_before_any_sample(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Empty/error/malformed/nonzero discovery and mismatched/invalid baselines stop before every sample while retaining both discovery diagnostic streams."
         }
       ],
       "suites": [

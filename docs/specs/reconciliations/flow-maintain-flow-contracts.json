@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "470ada037d99b22d31ae6e289b5683f35e062e18",
-  "fingerprint": "3ddc94e38fdd17518d810e8f7fa53fb49394eb4fe45a85d28f061ff27ae4f55f",
+  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
+  "fingerprint": "fa5da02fcc4356e7a9a66406fc5508dffaa98385659c29e3d499911c10b2d9f8",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "Contributor comparison now explicitly separates independently owned mocked browser sessions from ordered shared-daemon scenarios, and retains repeated zero-retry timing samples without replacing full verification or release provenance. S4/S5 cover these fixture-only boundaries.",
-    "implementation": "Reviewed playwright.config.ts project match/ignore partition, two-worker global cap and one-worker assembled cap. Browser benchmark checks exact PR source with read-only permissions, starts fresh servers per sample and stores separate JSON/time output. Existing performance configuration remains one worker with zero retries. Follow-up CI repair explicitly declares PyYAML 6.0.3 in hosted Python prerequisites and bounds each deterministic workflow-script subprocess with timeout=30; no browser scheduling, permissions or production behavior changes.",
-    "tests": "test_browser_benchmark_retains_samples_and_stops_on_failure executes the workflow shell with deterministic subprocesses: asserts 1,2,1,2 worker sequence, no retries, distinct retained outputs and immediate exit 19 with partial evidence on failure. Full 158-title inventory and byte-identical 129 test statement comparison preserve original assertions. Reinspected subprocess argv, mocked npx, both exit-code subtests, exact worker/retry argv, retained JSON counts/content and GNU-time output assertion. The 30-second timeout applies to the whole deterministic shell invocation; clean Python 3.12 virtualenv verification installs only declared requirements before running the complete test_ci.py suite."
+    "description": "S3 local qualification requires complete discovered title multisets and exactly one passing execution per scenario, without skipped or retried results. GNU-time RSS remains explicitly an individual-process metric. Hosted comparison and all product behavior retain main behavior.",
+    "implementation": "Read specifications, inventory, validate_run, discover and main. Ordinary subprocess.run executes four worker counts 1/2/2/1 with fixture mode and zero retries; discovery retains both output streams before status validation; failed runs retain report and summary. Main browser topology and hosted workflow are unchanged. Numeric parsing now explicitly requires finite nonnegative elapsed time and nonnegative integer RSS before updating accepted metrics; zero remains valid. The failed sample entry is saved before validation and stops later execution on rejection.",
+    "tests": "Read the three mapped regressions: nested file movement preserves inventory but duplicate titles fail; failed/skipped/timedOut/interrupted/retried/missing/error cases raise; a real failing discovery subprocess retains stdout/stderr and reports both paths. These provide local qualifier coverage; full source qualification is an independent acceptance gate. Read actual main-path stubs: success preserves1/2/2/1 and accepts0/0; failure on sample2 exercises execution19, skipped/missing/malformed reports and ten invalid metric spellings. Each checks only two invocations, first passed/second failed, rawreport/stderr/time/discovery retained and no nonstandard summary numbers. Test-only extension now preserves title inventory while rejecting zero/multiple project executions or results and expectedStatus/status violations; extra distinct titles reject. Main accepts a matching nested baseline and rejects nine invalid discovery/baseline cases before any sample, retaining discovery stdout/stderr and no success artifacts. Sixteen isolated guard mutations are detected. Production runner unchanged."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.341
+      "seconds": 25.537
     },
     {
       "command": [
@@ -41,17 +41,25 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 52.701
+      "seconds": 55.856
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_browser_benchmark.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.181
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "a20114f646abde1e729200af52abe8805dd4c7d8d953fc86890ed3f6ce719d4f",
-    "term:coverage-gap": "b2a3e94648d17593561d913cbead453b1495b52ad957daff711823b45277c079",
-    "term:entity": "be331255aebc6c4d89e56627f6da96cf6a364ca819c7ff4622262299cf3a9223",
-    "term:glossary": "c01d15ef288c7a0b0c3a7b9103a1af15a612cb6344933db9a443f14bd2049425",
-    "term:known-limitation": "5a58d910d7da7a17b70cd116437ba99f592d7094dd9a125de3190d6de47a0692",
-    "term:reconciliation": "e72f8e8de1626534c8d93a848f8f91d5e727728e7f274544c145d727ded2231b",
-    "term:unverified-behavior": "c7b630ef89828262479c24ce4a86881d2d1b7e455f5994aba090ece86092c399",
-    "term:verification": "23683576388b4ce204024f05a45a387ebbf0c951801553500a463e6ef75fcba2"
+    "flow:maintain-flow-contracts": "819acdbb7bf07bc3d89dae65293643be054717dd2d60bbbfe807544cf7ced58f",
+    "term:coverage-gap": "d7c023cecaf0b6b45992061bb73b836eed3ea02826c39c4540c503a45a58e1eb",
+    "term:entity": "0f6c1ea198d4b1a13b82fd01dff37b2934b15d561ba201cbe6b825f8e23ef285",
+    "term:glossary": "46fdacf5ee26d8307fc39fd69399367e8c5404e2ed3968cae3b69e4144ca2eb5",
+    "term:known-limitation": "44261af6371dd6656b7089464272f71896fe60692c1da99b4fe1c8f8daefc3f1",
+    "term:reconciliation": "000a78d31b67e515fa131d93042e665e21c8e25a7eef2e1df683211248ca5fc5",
+    "term:unverified-behavior": "7e1675561476a969a8172b05bd23593e3631ecfd3cee4330a703fa3c36b17a0a",
+    "term:verification": "7b1e8277c2c2f5139a314bbfffb535315820b425ac1e1d517db7f916ff2c026f"
   }
 }
