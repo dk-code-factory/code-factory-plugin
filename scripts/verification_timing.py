@@ -113,7 +113,7 @@ def comparison(arguments):
     parser.add_argument("--staged", action="store_true")
     try:
         args, unknown = parser.parse_known_args(shlex.split(arguments))
-        if unknown:
+        if unknown or args.head and args.staged:
             return {"status": "unavailable"}
         base = git("rev-parse", "--verify", args.base + "^{commit}").decode().strip()
         head = git("rev-parse", "--verify", (args.head or "HEAD") + "^{commit}").decode().strip()
@@ -123,7 +123,13 @@ def comparison(arguments):
                   "selection": "index" if args.staged else "commit" if args.head else "worktree",
                   "merge_base": args.merge_base}
         if args.staged:
-            result["index_sha256"] = hashlib.sha256(git("ls-files", "--stage", "-z")).hexdigest()
+            # Hash the selected tree's delta without write-tree's index updates.
+            # Intent-to-add entries are absent from the verifier's selected tree.
+            delta = git("diff", "--cached", "--raw", "--no-abbrev", "--no-renames",
+                        "--no-ext-diff", "--no-textconv", "--ignore-submodules=none",
+                        "--ita-invisible-in-index", "--no-relative", "--no-color",
+                        "-O/dev/null", "-z", head, "--")
+            result["index_sha256"] = hashlib.sha256(delta).hexdigest()
         return result
     except (argparse.ArgumentError, ValueError, OSError, subprocess.CalledProcessError):
         return {"status": "unavailable"}

@@ -21,7 +21,9 @@ The contributor has the source checkout, an available comparison base and the lo
 The callable phase-journal helper records bounded, allowlisted command outcomes,
 monotonic intervals and immutable input/comparison identities. Staged selections
 identify the selected index independently of working changes without exposing
-private names or content. Initial pushes follow the existing reviewed-root or
+private names or content. Intent-to-add entries remain outside that selected
+index until staged, and conflicting committed-head and staged selections leave
+the comparison unavailable. Initial pushes follow the existing reviewed-root or
 merge-base policy; unavailable comparisons stay explicit even when setup fails.
 Reserved phases can still record execution at the journal capacity limit, while
 additional rows remain bounded. Missing work has no invented duration; failures
@@ -398,6 +400,9 @@ flowchart TD
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_staged_comparison_identifies_index_independently_of_worktree(`; S4. Real Git index A and B yield distinct private comparison digests with identical HEAD and worktree identity; unstaged-only edits preserve the index digest, collection leaves the index unchanged and journals export no private names or contents.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_initial_push_setup_failure_preserves_root_policy(`; S5. A zero-before push records only the approved main root bootstrap; unapproved roots and feature refs remain unavailable, and setup failure preserves this truthful initial identity with unstarted verification phases.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_initial_nonroot_push_uses_existing_merge_base_policy(`; S5. A supported zero-before non-root main push records the existing origin/main merge-base policy instead of the zero sentinel; a mismatched checkout head remains unavailable.
+- [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_conflicting_commit_and_index_selection_is_unavailable(`; S4. Conflicting committed-head and staged-index options leave comparison identity unavailable, matching verifier rejection and avoiding a resolved identity in the persisted journal.
+- [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_staged_identity_distinguishes_intent_to_add_without_index_mutation(`; S4. Real Git intent-to-add and fully staged empty files have identical stage listings and worktree identities but different verifier-selected trees and private staged digests; collection leaves the index unchanged and unstaged content remains excluded.
+- [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_staged_identity_ignores_diff_presentation_configuration(`; S4. Staged identity remains stable under custom diff ordering, rename detection, external commands, relative paths, color and abbreviation settings; reading it leaves index bytes unchanged and exports no private text.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_file_move_preserves_inventory_and_duplicates_count(`; S3. File movement preserves scenario identity while missing or duplicated scenarios fail qualification.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_failure_skip_retry_and_missing_test_cannot_pass(`; S3. Failure, skip, interruption, retry and incomplete discovery cannot be accepted as equivalent passing execution.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_nonzero_discovery_retains_both_diagnostics(`; S3. Nonzero discovery retains both diagnostic streams and reports their paths.

@@ -489,6 +489,60 @@ finally:
         for private in ('private-index-name', 'private staged A', 'private staged B', str(self.root)):
             self.assertNotIn(private, journal.path.read_text())
 
+    def test_conflicting_commit_and_index_selection_is_unavailable(self):
+        self.git_history()
+        for arguments in ('--head HEAD --staged', '--staged --head HEAD --merge-base'):
+            with self.subTest(arguments=arguments):
+                self.assertEqual(COMPARISON(arguments), {'status': 'unavailable'})
+        with patch.object(timing, 'comparison', side_effect=COMPARISON):
+            journal = timing.Journal.create(arguments='--head HEAD --staged')
+        self.assertEqual(self.data(journal)['comparison'], {'status': 'unavailable'})
+
+    def test_staged_identity_distinguishes_intent_to_add_without_index_mutation(self):
+        self.git_history()
+        source = self.root / 'private-empty-input'
+        source.touch()
+        timing.git('add', '-N', '--', source.name)
+        states, trees, listings, sources = [], [], [], []
+        for fully_staged in (False, True):
+            if fully_staged:
+                timing.git('add', '--', source.name)
+            # The verifier selects write-tree; it may refresh the cache, so take
+            # the immutable-index baseline only after deriving that selection.
+            trees.append(timing.git('write-tree'))
+            listings.append(timing.git('ls-files', '--stage', '-z'))
+            index = (self.root / '.git/index').read_bytes()
+            states.append(COMPARISON('--staged'))
+            self.assertEqual((self.root / '.git/index').read_bytes(), index)
+            sources.append(WORKING_IDENTITY())
+        self.assertEqual(listings[0], listings[1])
+        self.assertEqual(sources[0], sources[1])
+        self.assertNotEqual(trees[0], trees[1])
+        self.assertNotEqual(states[0]['index_sha256'], states[1]['index_sha256'])
+        source.write_text('private unstaged content')
+        self.assertEqual(COMPARISON('--staged'), states[1])
+        self.assertNotIn('private-empty-input', json.dumps(states))
+        self.assertNotIn('private unstaged content', json.dumps(states))
+
+    def test_staged_identity_ignores_diff_presentation_configuration(self):
+        self.git_history()
+        timing.git('mv', 'source.txt', 'renamed.txt')
+        for name in ('a-input', 'z-input'):
+            (self.root / name).write_text('private staged content')
+            timing.git('add', '--', name)
+        baseline = COMPARISON('--staged')
+        order = self.root / '.git/private-order'
+        order.write_text('z-input\na-input\nrenamed.txt\n')
+        for key, value in (('diff.orderFile', str(order)), ('diff.renames', 'copies'),
+                           ('diff.external', '/private/unavailable-command'),
+                           ('diff.relative', 'true'), ('color.ui', 'always'),
+                           ('core.abbrev', '5')):
+            timing.git('config', key, value)
+        index = (self.root / '.git/index').read_bytes()
+        self.assertEqual(COMPARISON('--staged'), baseline)
+        self.assertEqual((self.root / '.git/index').read_bytes(), index)
+        self.assertNotIn('private', json.dumps(baseline))
+
     def test_instrumentation_failure_preserves_owned_runner_status_and_privacy(self):
         journal = Mock()
         journal.start.side_effect = OSError('/private/home/secret argv=credential')
