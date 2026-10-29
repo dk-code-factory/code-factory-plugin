@@ -27,6 +27,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Start verification timing
+        run: python3 scripts/verification_timing.py hosted-start
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
@@ -38,8 +40,14 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
+      - name: Finish toolchain timing
+        if: always()
+        run: python3 scripts/verification_timing.py setup-finish --outcome '${{ job.status }}'
       - name: Verify exact source comparison and build packages
         run: python3 scripts/ci.py verify
+      - name: Finish verification timing
+        if: always()
+        run: python3 scripts/verification_timing.py hosted-finish --outcome '${{ job.status }}'
       - name: Store verified Linux and plugin packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -65,3 +73,12 @@ jobs:
           path: web/performance-results/
           if-no-files-found: warn
           retention-days: 30
+      - name: Store verification phase timings
+        if: ${{ always() && env.CODE_FACTORY_TIMING_FILE != '' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verification-phase-timings
+          path: ${{ env.CODE_FACTORY_TIMING_FILE }}
+          if-no-files-found: warn
+          retention-days: 7

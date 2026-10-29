@@ -15731,7 +15731,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before verification or artifact creation; fixture mode, artifact identities and main-push-only release proof fail closed."
+          "purpose": "Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before source verification or package-manifest creation; rejected jobs may retain partial timing summaries; fixture mode, artifact identities and main-push-only release proof fail closed."
         },
         {
           "path": "scripts/test_ci.py",
@@ -15978,6 +15978,15 @@
           "purpose": "The real timing CLI and Make worker graph retain running/partial/unstarted phase evidence, preserve SIGTERM status and remove the owned blocked command."
         },
         {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_workflow_finalizes_timing_before_every_artifact_transfer(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The production workflow always attempts timing finalization immediately after exact verification/provenance and before every artifact transfer; timing upload remains last with bounded retention and fail-open publication."
+        },
+        {
           "path": "scripts/test_specs_timing.py",
           "anchor": "def test_malformed_comparison_metadata_cannot_stop_bootstrap_worker(",
           "scenarios": [
@@ -16156,6 +16165,24 @@
             "S5"
           ],
           "purpose": "Actual native worker recursive/simple FLOW_ARGS, assigned flags, quoted refs, last assignment, direct shell entry and ci override match the journal comparison. MAKELEVEL and a worker target-specific variable prove child context; comparison is persisted before version queries and all verification work, with no raw arguments or paths exported."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_dispatch_retains_resolved_identity_through_success_and_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual ci.run_verification invokes real selected-journal refresh and hosted finalization for push, PR, manual main and pinned root on worker success/failure. Exact comparison and initial source survive, source/text parsing are not repeated, fixture0 and actual nonzero status remain authoritative, and no timing warning is emitted."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_dispatch_persists_plan_before_interrupted_version_collection(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Resolved hosted comparison is already durable when version collection raises KeyboardInterrupt/SystemExit143; the real dispatcher starts no worker, propagates the same cancellation, retains source identity and finalizes an interrupted partial journal."
         }
       ],
       "suites": [
