@@ -13747,11 +13747,11 @@
         },
         {
           "path": "Makefile",
-          "purpose": "Local validation and change gates"
+          "purpose": "One worker dependency graph shares phony preparation per invocation, prepares standalone prerequisites and orders phases under parallel flags; public verification wrappers enforce stopping after failure."
         },
         {
           "path": "scripts/verify.sh",
-          "purpose": "Full local verification entry point"
+          "purpose": "Direct fixture-only entry point into the single Make verification graph"
         },
         {
           "path": ".agents/skills/reconcile-user-flows/SKILL.md",
@@ -13902,7 +13902,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Select exact event commits, constrain the reviewed public-root bootstrap and force fixture verification; manifest and verify artifact source identity and content."
+          "purpose": "Select exact event comparisons and restricted reviewed-root bootstrap before entering hosted preparation and verification; preserve artifact provenance"
         },
         {
           "path": "scripts/release.py",
@@ -14192,7 +14192,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "The verify entry point forces fixture mode for submakes and direct commands, including inherited MAKEFLAGS."
+          "purpose": "Direct verification forces fixture mode when entering Make, including inherited command-line opt-ins."
         },
         {
           "path": "scripts/test_specs_ci.py",
@@ -15653,6 +15653,126 @@
             "S5"
           ],
           "purpose": "CLI feature/tag push and manual attempts exit nonzero with a PR/main explanation before invoking verification or artifact-manifest creation."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_local_hosted_and_direct_entrypoints_share_preparation_once(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real Make commands record one locked npm install, frontend build, plugin embed and shared helper build in clean and prepared local, hosted, bootstrap and direct invocations; hosted setup and bootstrap comparison boundaries remain explicit."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_standalone_commands_prepare_their_dependencies(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Standalone UI/build/test/performance/package/plugin commands prepare their required current artifacts. The check fixture asserts npm installation; Go vet still requires existing embedded frontend and plugin outputs."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_independent_invocations_rebuild_changed_inputs_and_missing_outputs(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Every independent invocation reruns preparation after manifest, lockfile, build configuration, tooling, frontend, plugin, fake-provider or module changes and after deleting dependency or artifact outputs; fixture consumers reject stale contents."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_parallel_flags_serialize_verification_phases(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Command events under explicit and inherited -j8 prove verification phases never overlap and performance follows heavy suites before packaging."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_failures_stop_downstream_work_and_propagate_nonzero_status(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Failures at every hosted phase propagate nonzero status and record no downstream commands even with -k -j8; direct-entry dependency failure also stops the graph."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_keep_going_flags_stop_all_verification_entrypoints(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Six public verification entrypoints stop at Go vet failure under explicit/inherited -k or --keep-going, including a MAKEFLAGS assignment and -j8; no later test, performance or packaging command runs."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_keep_going_preserves_shared_preparation_and_comparison_arguments(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Successful explicit/inherited/assigned keep-going runs retain one shared preparation and exact FLOW_BASE/FLOW_ARGS selection; a command-line marker keeps its precedence and literal apostrophes, spaces and equals sign through verification wrappers."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_assigned_makeflags_preserve_variable_flavor_and_literal_dollars(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "All six verification entrypoints retain simple and recursive caller flavors, quoted literal dollars and references under an explicit MAKEFLAGS assignment; the dollar-named TMPDIR remains the existing directory and shared preparation still runs once."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_parallel_flags_preserve_native_variable_flavors(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Explicit and inherited -k/-j8 retain native simple quoted values and recursive references/literal dollars, variable flavor and an existing recursive dollar-named TMPDIR across all six entrypoints with one preparation graph."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_standalone_goals_retain_requested_keep_going(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Serial standalone check/ui goals retain requested -k behavior: Go vet failure returns nonzero and the later independent UI build still completes."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_verification_policy_preserves_dry_run_options(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "All six verification entrypoints preserve -n with explicit/inherited/assigned keep-going flags: no verification tool executes, while planned npm and Go check commands remain visible."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_ci_requires_comparison_before_preparation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Missing local CI comparison fails before executing any preparation or verification tool."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_hosted_dispatch_passes_exact_comparison_through_real_graph(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Hosted dispatcher passes exact base/head SHAs unchanged through the real Make graph while sharing preparation once."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_workflow_does_not_prepare_npm_outside_graph(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Hosted workflow delegates verification to ci.py without a separate npm or browser installation."
         }
       ],
       "suites": [

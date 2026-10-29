@@ -133,7 +133,7 @@ class HostedCITests(unittest.TestCase):
                     self.assertEqual(ci.git("rev-parse", "HEAD"), after)
                     commands = []
                     ci.run_verification(plan, lambda argv, **kwargs: commands.append(argv))
-                    self.assertEqual(commands, [["make", "verify",
+                    self.assertEqual(commands, [["make", "hosted-verify",
                         "FLOW_ARGS=--base " + before + " --head " + after]])
 
     def test_every_verification_command_forces_fixture_mode(self):
@@ -145,11 +145,7 @@ class HostedCITests(unittest.TestCase):
         self.assertIn("--base " + self.first + " --head " + second, calls[0][0][-1])
         calls.clear()
         ci.run_verification({"bootstrap": True}, lambda argv, **kwargs: calls.append(argv))
-        self.assertIn(["make", "build", "check", "test"], calls)
-        self.assertGreater(calls.index(["make", "test-performance"]),
-                           calls.index(["make", "build", "check", "test"]))
-        self.assertIn(["python3", "scripts/test_installer.py"], calls)
-        self.assertIn(["python3", "scripts/smoke.py"], calls)
+        self.assertEqual(calls, [["make", "hosted-verify-bootstrap"]])
 
     def assets(self, head=None):
         directory = self.root / "dist"
@@ -286,6 +282,335 @@ class HostedCITests(unittest.TestCase):
         for key, value in (("head_sha", "a" * 40), ("head_branch", "feature"), ("event", "pull_request"), ("conclusion", "failure"), ("path", ".github/workflows/other.yml")):
             with self.subTest(key=key):
                 self.assertIsNone(release.successful_run([{**good, key: value}], self.first))
+
+
+class VerificationGraphTests(unittest.TestCase):
+    """Run the real Make graph with recording tools, without nested heavy suites."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        source = Path(__file__).resolve().parents[1]
+        for name in ('Makefile', 'scripts/verify.sh'):
+            target = self.root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source / name, target)
+        # A file default must not replace a caller's command-line variable in
+        # recursive verification; inheriting only an environment value loses it.
+        with (self.root / 'Makefile').open('a') as makefile:
+            makefile.write('\nVERIFICATION_COMMAND_MARKER := file default\n')
+            makefile.write('export VERIFICATION_COMMAND_FLAVOR = $(flavor VERIFICATION_COMMAND_MARKER)\n')
+        for name in ('web/package.json', 'web/package-lock.json', 'web/vite.config.ts',
+                     'web/defer-ui.mjs', 'web/src/app.tsx', 'plugin/plugin.json',
+                     'internal/testutil/fakecodex/main.go', 'go.mod'):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('original ' + name)
+        self.tools = self.root / 'tools'
+        self.tools.mkdir()
+        # The recorder validates dependency outputs, so a missing graph edge fails
+        # instead of simply producing an apparently plausible command count.
+        recorder = self.tools / 'recorder'
+        recorder.write_text('''#!/usr/bin/python3
+import hashlib, json, os, pathlib, sys, time
+root = pathlib.Path(os.environ['RECORD_ROOT'])
+command = pathlib.Path(sys.argv[0]).name
+args = sys.argv[1:]
+key = command + ' ' + ' '.join(args)
+inputs = ['web/package.json', 'web/package-lock.json', 'web/vite.config.ts',
+          'web/defer-ui.mjs', 'web/src/app.tsx', 'plugin/plugin.json',
+          'internal/testutil/fakecodex/main.go', 'go.mod']
+digest = hashlib.sha256(b''.join((root / p).read_bytes() for p in inputs)).hexdigest()
+def record(event):
+    with (root / 'commands.jsonl').open('a') as output:
+        output.write(json.dumps(dict(event=event, key=key, fixture=os.environ.get('CODE_FACTORY_REAL_CODEX'), marker=os.environ.get('VERIFICATION_COMMAND_MARKER'), marker_flavor=os.environ.get('VERIFICATION_COMMAND_FLAVOR'), tmpdir=os.environ.get('TMPDIR'), tmpdir_exists=pathlib.Path(os.environ.get('TMPDIR', '/tmp')).is_dir(), digest=digest)) + '\\n')
+def require(*paths):
+    for path in paths:
+        assert (root / path).read_text() == digest, 'stale or missing ' + path
+def produce(path):
+    output = root / path
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(digest)
+record('start')
+time.sleep(0.005)
+if key == os.environ.get('FAIL_COMMAND'):
+    sys.exit(23)
+if key == 'npm ci':
+    produce('web/node_modules/prepared')
+elif key == 'npm run build':
+    require('web/node_modules/prepared')
+    produce('internal/web/dist/index.html')
+elif key == 'python3 scripts/package_plugin.py --embed':
+    produce('internal/pluginbundle/dist/code-factory.zip')
+elif command == 'go' and args[0] == 'build':
+    if args[-1] == './cmd/code-factory':
+        require('internal/web/dist/index.html', 'internal/pluginbundle/dist/code-factory.zip')
+    produce(args[args.index('-o') + 1])
+elif key.startswith('npm ') or command == 'npx':
+    require('web/node_modules/prepared')
+    if key in ('npm test', 'npm run test:performance'):
+        require('internal/web/dist/index.html', 'internal/pluginbundle/dist/code-factory.zip', 'bin/fake-codex')
+elif key == 'go test -race -count=1 ./...':
+    require('internal/web/dist/index.html', 'internal/pluginbundle/dist/code-factory.zip', 'bin/fake-codex')
+elif key == 'python3 scripts/package.py':
+    require('bin/code-factory', 'internal/web/dist/index.html', 'internal/pluginbundle/dist/code-factory.zip')
+record('end')
+''')
+        recorder.chmod(0o755)
+        for name in ('npm', 'npx', 'go', 'python3', 'node'):
+            (self.tools / name).symlink_to(recorder.name)
+        self.env = {**os.environ, 'PATH': str(self.tools) + ':' + os.environ['PATH'],
+                    'RECORD_ROOT': str(self.root), 'CODE_FACTORY_REAL_CODEX': '1'}
+        # Preserve explicitly tested inherited flags without inheriting a parent
+        # Make jobserver whose descriptors subprocess deliberately does not pass.
+        self.env.pop('MAKEFLAGS', None)
+        self.env.pop('MFLAGS', None)
+        self.env.pop('MAKELEVEL', None)
+        self.env.pop('FLOW_BASE', None)
+        self.env.pop('FLOW_ARGS', None)
+
+    def run_make(self, *goals, flags=(), fail=None, inherited_flags=None, direct=False):
+        log = self.root / 'commands.jsonl'
+        log.unlink(missing_ok=True)
+        env = {**self.env}
+        if fail:
+            env['FAIL_COMMAND'] = fail
+        if inherited_flags:
+            env['MAKEFLAGS'] = inherited_flags
+        argv = ['sh', 'scripts/verify.sh'] if direct else ['make', '--no-print-directory']
+        result = subprocess.run([*argv, *flags, *goals], cwd=self.root, env=env,
+                                capture_output=True, text=True, timeout=30)
+        events = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
+        self.assertTrue(all(e['fixture'] == '0' for e in events), events)
+        return result, events
+
+    def successful(self, *goals, **kwargs):
+        result, events = self.run_make(*goals, **kwargs)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return events
+
+    def assert_shared_once(self, events):
+        starts = [e['key'] for e in events if e['event'] == 'start']
+        for command in ('npm ci', 'npm run build', 'go build -o bin/fake-codex ./internal/testutil/fakecodex',
+                        'python3 scripts/package_plugin.py --embed'):
+            self.assertEqual(starts.count(command), 1, starts)
+        # No executable verification phases overlap, including inherited -j.
+        active = None
+        for event in events:
+            if event['event'] == 'start':
+                self.assertIsNone(active, (active, event))
+                active = event['key']
+            else:
+                self.assertEqual(active, event['key'])
+                active = None
+        self.assertIsNone(active)
+        self.assertLess(starts.index('npm test'), starts.index('npm run test:performance'))
+        self.assertLess(starts.index('go test -race -count=1 ./...'), starts.index('npm run test:performance'))
+        self.assertLess(starts.index('npm run test:performance'), starts.index('python3 scripts/package.py'))
+        self.assertLess(starts.index('python3 scripts/package.py'), starts.index('python3 scripts/test_installer.py'))
+        self.assertLess(starts.index('python3 scripts/test_installer.py'), starts.index('python3 scripts/smoke.py'))
+
+    def test_local_hosted_and_direct_entrypoints_share_preparation_once(self):
+        for goal in ('verify', 'ci', 'hosted-verify', 'hosted-verify-bootstrap', 'direct'):
+            for workspace in ('clean', 'prepared'):
+                with self.subTest(goal=goal, workspace=workspace):
+                    if workspace == 'clean':
+                        for name in ('web/node_modules', 'internal/web/dist', 'internal/pluginbundle/dist', 'bin'):
+                            shutil.rmtree(self.root / name, ignore_errors=True)
+                    goals = ['FLOW_BASE=main', 'CODE_FACTORY_REAL_CODEX=1']
+                    events = self.successful(*([] if goal == 'direct' else [goal]), *goals, direct=goal == 'direct')
+                    self.assert_shared_once(events)
+                    starts = [e['key'] for e in events if e['event'] == 'start']
+                    if goal.startswith('hosted'):
+                        self.assertEqual(starts.count('python3 -m pip install -r scripts/requirements-dev.txt'), 1)
+                        self.assertEqual(starts.count('npx playwright install --with-deps chromium'), 1)
+                        self.assertLess(starts.index('npm ci'), starts.index('npx playwright install --with-deps chromium'))
+                    if goal == 'hosted-verify-bootstrap':
+                        self.assertFalse(any('specs.py check' in s for s in starts))
+                        self.assertIn('python3 scripts/specs.py validate', starts)
+                    else:
+                        self.assertTrue(any('specs.py check' in s for s in starts))
+
+    def test_standalone_commands_prepare_their_dependencies(self):
+        for goal in ('ui', 'build', 'check', 'test', 'test-performance', 'package', 'plugin'):
+            with self.subTest(goal=goal):
+                for name in ('web/node_modules', 'internal/web/dist', 'internal/pluginbundle/dist', 'bin'):
+                    shutil.rmtree(self.root / name, ignore_errors=True)
+                events = self.successful(goal)
+                starts = [e['key'] for e in events if e['event'] == 'start']
+                self.assertEqual(starts.count('npm ci'), 0 if goal == 'plugin' else 1)
+                if goal in ('test', 'test-performance'):
+                    self.assertEqual(starts.count('go build -o bin/fake-codex ./internal/testutil/fakecodex'), 1)
+
+    def test_independent_invocations_rebuild_changed_inputs_and_missing_outputs(self):
+        self.assert_shared_once(self.successful('verify'))
+        for path in ('web/package.json', 'web/package-lock.json', 'web/vite.config.ts', 'web/defer-ui.mjs',
+                     'web/src/app.tsx', 'plugin/plugin.json', 'internal/testutil/fakecodex/main.go', 'go.mod'):
+            with self.subTest(changed=path):
+                (self.root / path).write_text('changed ' + path)
+                self.assert_shared_once(self.successful('verify'))
+        for path in ('web/node_modules', 'internal/web/dist', 'internal/pluginbundle/dist', 'bin'):
+            with self.subTest(deleted=path):
+                shutil.rmtree(self.root / path)
+                self.assert_shared_once(self.successful('verify'))
+
+    def test_parallel_flags_serialize_verification_phases(self):
+        for goal in ('verify', 'ci', 'hosted-verify', 'hosted-verify-bootstrap'):
+            for flags, inherited in ((('-j8',), None), ((), '-j8 CODE_FACTORY_REAL_CODEX=1')):
+                with self.subTest(goal=goal, flags=flags, inherited=inherited):
+                    self.assert_shared_once(self.successful(goal, 'FLOW_BASE=main', flags=flags, inherited_flags=inherited))
+
+    def test_failures_stop_downstream_work_and_propagate_nonzero_status(self):
+        events = self.successful('hosted-verify')
+        commands = [e['key'] for e in events if e['event'] == 'start']
+        for command in commands:
+            with self.subTest(failure=command):
+                result, failed = self.run_make('hosted-verify', flags=('-k', '-j8'), fail=command)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Error 23', result.stderr)
+                self.assertEqual([e['key'] for e in failed if e['event'] == 'start'], commands[:commands.index(command) + 1])
+        result, events = self.run_make(fail='npm ci', direct=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(events[-1]['key'], 'npm ci')
+
+    def test_keep_going_flags_stop_all_verification_entrypoints(self):
+        comparison = '--base ' + 'a' * 40 + ' --head ' + 'b' * 40
+        for goal in ('verify', 'verify-bootstrap', 'ci', 'hosted-verify',
+                     'hosted-verify-bootstrap', 'direct'):
+            goals = [*([] if goal == 'direct' else [goal]),
+                     'FLOW_BASE=fixture-main', 'FLOW_ARGS=' + comparison]
+            baseline = self.successful(*goals, direct=goal == 'direct')
+            commands = [e['key'] for e in baseline if e['event'] == 'start']
+            expected = commands[:commands.index('go vet ./...') + 1]
+            for flags, inherited in ((('-k', '-j8'), None),
+                                     (('--keep-going', '-j8'), None),
+                                     ((), '-k -j8'),
+                                     ((), '--keep-going -j8'),
+                                     (('MAKEFLAGS=-k -j8',), None)):
+                with self.subTest(goal=goal, flags=flags, inherited=inherited):
+                    result, events = self.run_make(
+                        *goals, direct=goal == 'direct', flags=flags,
+                        inherited_flags=inherited, fail='go vet ./...')
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn('Error 23', result.stderr)
+                    self.assertEqual([e['key'] for e in events if e['event'] == 'start'], expected)
+
+    def test_keep_going_preserves_shared_preparation_and_comparison_arguments(self):
+        comparison = '--base ' + 'a' * 40 + ' --head ' + 'b' * 40
+        marker = "literal 'quoted' value with spaces = retained"
+        for goal in ('verify', 'verify-bootstrap', 'ci', 'hosted-verify',
+                     'hosted-verify-bootstrap', 'direct'):
+            for flags, inherited in ((('-k', '-j8'), None), ((), '-k -j8'),
+                                     (('MAKEFLAGS=-k -j8',), None)):
+                with self.subTest(goal=goal, flags=flags, inherited=inherited):
+                    variables = ['FLOW_BASE=fixture-main', 'FLOW_ARGS=' + comparison]
+                    if inherited:
+                        inherited += ' -- VERIFICATION_COMMAND_MARKER=' + marker.replace(' ', '\\ ')
+                    else:
+                        variables.append('VERIFICATION_COMMAND_MARKER=' + marker)
+                    result, events = self.run_make(
+                        *([] if goal == 'direct' else [goal]), *variables,
+                        direct=goal == 'direct', flags=flags, inherited_flags=inherited)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assert_shared_once(events)
+                    self.assertTrue(all(e['marker'] == marker for e in events), events)
+                    self.assertNotIn(marker, result.stdout)
+                    commands = [e['key'] for e in events if e['event'] == 'start']
+                    if goal.endswith('bootstrap'):
+                        self.assertFalse(any('specs.py check' in command for command in commands))
+                    else:
+                        selected = '--base fixture-main --merge-base' if goal == 'ci' else comparison
+                        self.assertIn('python3 scripts/specs.py check ' + selected, commands)
+
+    def test_assigned_makeflags_preserve_variable_flavor_and_literal_dollars(self):
+        temporary = self.root / 'ci$run'
+        temporary.mkdir()
+        marker = "literal 'quoted' $run ref$value $ preserved"
+        for goal in ('verify', 'verify-bootstrap', 'ci', 'hosted-verify',
+                     'hosted-verify-bootstrap', 'direct'):
+            for assignment, flavor in ((':=', 'simple'), ('=', 'recursive')):
+                with self.subTest(goal=goal, flavor=flavor):
+                    events = self.successful(
+                        *([] if goal == 'direct' else [goal]),
+                        'FLOW_BASE=fixture-main', 'MAKEFLAGS=-k -j8',
+                        'TMPDIR:=' + str(temporary).replace('$', '$$'),
+                        'VERIFICATION_REFERENCE:=ref$$value',
+                        'VERIFICATION_COMMAND_MARKER' + assignment +
+                        "literal 'quoted' $$run $(VERIFICATION_REFERENCE) $$ preserved",
+                        direct=goal == 'direct')
+                    self.assert_shared_once(events)
+                    self.assertTrue(all(e['marker'] == marker and e['marker_flavor'] == flavor
+                                        and e['tmpdir'] == str(temporary) and e['tmpdir_exists']
+                                        for e in events), events)
+
+    def test_parallel_flags_preserve_native_variable_flavors(self):
+        temporary = self.root / 'ci$run'
+        temporary.mkdir()
+        for goal in ('verify', 'verify-bootstrap', 'ci', 'hosted-verify',
+                     'hosted-verify-bootstrap', 'direct'):
+            for flags, inherited in ((('-k', '-j8'), None), ((), '-k -j8')):
+                # GNU Make already re-expands simple-flavor literal dollars
+                # during normal recursive forwarding; keep that behavior out
+                # of the raw-MAKEFLAGS repair's compatibility assertion.
+                for assignment, flavor, expression, expected in (
+                    (':=', 'simple', "literal 'quoted' value with spaces = retained",
+                     "literal 'quoted' value with spaces = retained"),
+                    ('=', 'recursive', "literal 'quoted' $$run $(VERIFICATION_REFERENCE) $$ preserved",
+                     "literal 'quoted' $run reference $ preserved"),
+                ):
+                    with self.subTest(goal=goal, flags=flags, inherited=inherited, flavor=flavor):
+                        events = self.successful(
+                            *([] if goal == 'direct' else [goal]),
+                            'FLOW_BASE=fixture-main',
+                            'TMPDIR=' + str(temporary).replace('$', '$$'),
+                            'VERIFICATION_REFERENCE:=reference',
+                            'VERIFICATION_COMMAND_MARKER' + assignment + expression,
+                            flags=flags, inherited_flags=inherited, direct=goal == 'direct')
+                        self.assert_shared_once(events)
+                        self.assertTrue(all(e['marker'] == expected and e['marker_flavor'] == flavor
+                                            and e['tmpdir'] == str(temporary) and e['tmpdir_exists']
+                                            for e in events), events)
+
+    def test_standalone_goals_retain_requested_keep_going(self):
+        result, events = self.run_make('check', 'ui', flags=('-k', '-j1'), fail='go vet ./...')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(any(e['key'] == 'npm run build' and e['event'] == 'end' for e in events))
+
+    def test_verification_policy_preserves_dry_run_options(self):
+        for goal in ('verify', 'verify-bootstrap', 'ci', 'hosted-verify',
+                     'hosted-verify-bootstrap', 'direct'):
+            for flags, inherited in ((('-n', '-k', '-j8'), None),
+                                     (('-n',), '-k -j8'),
+                                     (('-n', 'MAKEFLAGS=-k -j8'), None)):
+                with self.subTest(goal=goal, flags=flags, inherited=inherited):
+                    result, events = self.run_make(
+                        *([] if goal == 'direct' else [goal]), 'FLOW_BASE=fixture-main',
+                        direct=goal == 'direct', flags=flags, inherited_flags=inherited)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(events, [], 'Dry-run must not execute verification tools')
+                    self.assertIn('npm ci', result.stdout)
+                    self.assertIn('go vet ./...', result.stdout)
+
+    def test_ci_requires_comparison_before_preparation(self):
+        result, events = self.run_make('ci')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(events, [])
+
+    def test_hosted_dispatch_passes_exact_comparison_through_real_graph(self):
+        with patch.object(ci, 'ROOT', self.root), patch.dict(os.environ, self.env):
+            ci.run_verification({'base': 'a' * 40, 'head': 'b' * 40, 'bootstrap': False},
+                                runner=lambda *args, **kwargs: subprocess.run(*args, timeout=30, **kwargs))
+        events = [json.loads(line) for line in (self.root / 'commands.jsonl').read_text().splitlines()]
+        self.assert_shared_once(events)
+        self.assertIn('python3 scripts/specs.py check --base ' + 'a' * 40 + ' --head ' + 'b' * 40,
+                      [e['key'] for e in events])
+
+    def test_workflow_does_not_prepare_npm_outside_graph(self):
+        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()
+        self.assertNotIn('npm ci', workflow)
+        self.assertNotIn('playwright install', workflow)
+        self.assertIn('python3 scripts/ci.py verify', workflow)
 
 
 if __name__ == "__main__":

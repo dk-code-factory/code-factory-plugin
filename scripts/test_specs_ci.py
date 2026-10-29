@@ -128,11 +128,9 @@ class FixtureCIEnvironmentTests(unittest.TestCase):
     def test_ci_overrides_environment_and_command_line_real_provider_opt_ins(self):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
-            (root / 'Makefile').write_bytes((ROOT / 'Makefile').read_bytes())
-            (root / 'scripts').mkdir()
-            script = root / 'scripts/verify.sh'
-            script.write_text('#!/bin/sh\nprintf "%s" "$CODE_FACTORY_REAL_CODEX"\n')
-            script.chmod(0o755)
+            (root / 'Makefile').write_text((ROOT / 'Makefile').read_text().replace(
+                'verify-steps: specs-check build check test test-performance package test-installer smoke',
+                'verify-steps:\n\t@printf \"%s\\n\" \"$$CODE_FACTORY_REAL_CODEX\"'))
             for args in ([], ['CODE_FACTORY_REAL_CODEX=1']):
                 result = subprocess.run(['make', '--no-print-directory', 'ci', 'FLOW_BASE=main', *args],
                                         cwd=root, env={**os.environ, 'CODE_FACTORY_REAL_CODEX': '1'}, capture_output=True, text=True)

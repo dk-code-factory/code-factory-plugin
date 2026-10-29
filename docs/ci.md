@@ -6,6 +6,27 @@ and manual dispatch on main. Hosted Ubuntu
 installs Go from go.mod, Node24, Python3.12, locked npm/Python dependencies and the
 matching Playwright Chromium. All actions are pinned to full commit SHAs.
 
+`make verify` and the direct `scripts/verify.sh` entry point invoke one Make
+worker dependency graph with `--no-keep-going`, so a failed phase stops further
+verification even when `-k` or `--keep-going` was requested. The locked npm
+installation, frontend compilation, plugin embedding and
+shared browser fake-provider preparation targets each run once in that invocation.
+Standalone `ui`, `build`, `test`, `test-performance`, `package` and `plugin`
+commands prepare their own required inputs. `check` installs npm dependencies but
+requires existing embedded frontend and plugin outputs for Go vet; run `make build`
+first if those outputs were deleted. These prerequisites are phony: each independent
+invocation prepares current inputs again, including changed manifests, lockfiles,
+build tooling, sources and deleted outputs. There are no persistent freshness
+stamps. Go compilation caches remain usable; race tests still use `-count=1`.
+
+Hosted verification selects exact comparisons before entering `hosted-verify`,
+which adds locked Python and matching browser installation to the same graph.
+The restricted reviewed-root path uses `hosted-verify-bootstrap`, omitting only
+the nonexistent comparison. Targeted ordering serializes verification phases
+even with inherited parallel Make flags. Performance runs after heavy suites;
+any failed phase stops downstream verification and package production.
+Standalone goals retain the requested Make keep-going behavior.
+
 The job validates specifications, checks Go/TypeScript, runs uncached Go race and
 browser/accessibility fixtures, tooling, packaging, installer and compiled smoke
 tests. After the heavy suites, the required isolated `make test-performance` gate

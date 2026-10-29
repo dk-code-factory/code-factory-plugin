@@ -72,13 +72,9 @@ def run_verification(plan, runner=subprocess.run):
         # No fabricated ancestor or HEAD-to-HEAD comparison: this single reviewed
         # public root has no publishable predecessor. Every source check runs.
         print("Reviewed public root import: full validation/tests; no Git diff exists.", flush=True)
-        commands = [["make", "build", "check", "test"],
-                    ["make", "test-performance"],
-                    ["python3", "scripts/package.py"],
-                    ["python3", "scripts/test_installer.py"],
-                    ["python3", "scripts/smoke.py"]]
+        commands = [["make", "hosted-verify-bootstrap"]]
     else:
-        commands = [["make", "verify", "FLOW_ARGS=--base " + plan["base"] + " --head " + plan["head"]]]
+        commands = [["make", "hosted-verify", "FLOW_ARGS=--base " + plan["base"] + " --head " + plan["head"]]]
     for argv in commands:
         runner(argv, cwd=ROOT, env=env, check=True)
 

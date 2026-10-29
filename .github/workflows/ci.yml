@@ -38,11 +38,6 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
-      - name: Install verification prerequisites
-        run: |
-          python3 -m pip install -r scripts/requirements-dev.txt
-          npm ci --prefix web
-          cd web && npx playwright install --with-deps chromium
       - name: Verify exact source comparison and build packages
         run: python3 scripts/ci.py verify
       - name: Store verified Linux and plugin packages

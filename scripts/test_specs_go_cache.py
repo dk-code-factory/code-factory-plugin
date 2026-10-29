@@ -16,7 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 def configured_go_commands():
     makefile = (ROOT / 'Makefile').read_text()
-    recipe = makefile.split('\ntest:\n', 1)[1].split('\npackage:', 1)[0]
+    recipe = re.search(r'^test:[^\n]*\n((?:\t[^\n]*\n)*)', makefile, re.MULTILINE).group(1)
     make_commands = [shlex.split(line.strip()) for line in recipe.splitlines()
                      if line.strip().startswith('go test ')]
     catalog = json.loads((ROOT / 'docs/user-flows/catalog.json').read_text())
