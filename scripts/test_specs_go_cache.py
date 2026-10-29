@@ -17,8 +17,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 def configured_go_commands():
     makefile = (ROOT / 'Makefile').read_text()
     recipe = re.search(r'^test:[^\n]*\n((?:\t[^\n]*\n)*)', makefile, re.MULTILINE).group(1)
-    make_commands = [shlex.split(line.strip()) for line in recipe.splitlines()
-                     if line.strip().startswith('go test ')]
+    make_commands = []
+    for line in recipe.splitlines():
+        argv = shlex.split(line.strip())
+        if argv[:5] == ['python3', 'scripts/verification_timing.py', 'command', 'correctness', '--']:
+            argv = argv[5:]
+        if argv[:2] == ['go', 'test']:
+            make_commands.append(argv)
     catalog = json.loads((ROOT / 'docs/user-flows/catalog.json').read_text())
     return {'Makefile': make_commands, 'catalog': catalog['suites']['go']['commands']}
 

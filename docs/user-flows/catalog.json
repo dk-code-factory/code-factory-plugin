@@ -13833,11 +13833,11 @@
         },
         {
           "path": "Makefile",
-          "purpose": "One worker dependency graph shares phony preparation per invocation, prepares standalone prerequisites and orders phases under parallel flags; public verification wrappers enforce stopping after failure."
+          "purpose": "One worker dependency graph shares phony preparation per invocation, prepares standalone prerequisites and orders phases under parallel flags; public verification wrappers enforce stopping after failure. Allowlisted timing wrappers observe actual commands and the graph boundary without recreating scheduling."
         },
         {
           "path": "scripts/verify.sh",
-          "purpose": "Direct fixture-only entry point into the single Make verification graph"
+          "purpose": "Direct fixture-only entry point into the single Make verification graph Caller arguments retain native Make forwarding."
         },
         {
           "path": ".agents/skills/reconcile-user-flows/SKILL.md",
@@ -14030,7 +14030,7 @@
         },
         {
           "path": "scripts/verification_timing.py",
-          "purpose": "Callable allowlisted monotonic verification phase journals, immutable source/comparison identities, owned command execution and partial local/hosted evidence. Entry-point wiring is delivered separately."
+          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence Safe startup journals precede source/comparison collection; local finalization retains interrupted unknown fields. The one worker graph resolves its own comparison through a shared metadata prerequisite before toolchains and verification work, without evaluating Make variables in Python. A keyword-only resolved hosted plan retains the setup source snapshot and is committed before version queries; local argument text keeps its existing collection path."
         }
       ],
       "tests": [
@@ -15969,6 +15969,15 @@
           "purpose": "Tracked and untracked input content changes affect source digest while ignored timing outputs do not; captured source identity stays immutable."
         },
         {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_real_graph_cancellation_keeps_partial_journal_and_cleans_owned_command(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The real timing CLI and Make worker graph retain running/partial/unstarted phase evidence, preserve SIGTERM status and remove the owned blocked command."
+        },
+        {
           "path": "scripts/test_specs_timing.py",
           "anchor": "def test_malformed_comparison_metadata_cannot_stop_bootstrap_worker(",
           "scenarios": [
@@ -15976,6 +15985,24 @@
             "S5"
           ],
           "purpose": "Malformed optional comparison metadata remains unavailable without exposing its private argument or terminating a valid bootstrap worker; the actual worker status remains authoritative."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_option_arguments_do_not_disable_timing_or_execute_dry_runs(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual graph runs with include directories and output modes containing n retain complete timing journals under direct, inherited and assigned Make flags; adding -n still executes no tools and creates no journal."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_graph_probe_assertion_failure_cleans_its_owned_worker_group(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A forced graph readiness assertion failure still terminates and reaps the timing wrapper through its runner, removes the owned Make and blocked command, and finalizes interrupted evidence."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -16077,6 +16104,15 @@
           "purpose": "Identity keeps regular-file content, symbolic-link target, tracked absence and executable-mode distinctions while the same inputs hash identically before or after staging."
         },
         {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_native_pipe_and_fifo_jobservers_survive_the_timing_boundary(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual GNU Make retains valid pipe/FIFO authentication and -j2 across the timing worker under native direct, inherited and assigned flags, without unavailable-jobserver fallback, duplicate preparation or fixture opt-in."
+        },
+        {
           "path": "scripts/test_specs_timing.py",
           "anchor": "def test_jobserver_selection_keeps_only_valid_advertised_pipe_descriptors(",
           "scenarios": [
@@ -16111,6 +16147,15 @@
             "S5"
           ],
           "purpose": "Real SIGINT/SIGTERM while source or comparison metadata blocks preserve fresh/preselected partial journals, status130/143, unknown or completed source fields, unstarted null-duration phases and no worker start; bounded harness cleanup remains registered."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_native_expanded_comparison_matches_the_worker_under_variable_overrides(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual native worker recursive/simple FLOW_ARGS, assigned flags, quoted refs, last assignment, direct shell entry and ci override match the journal comparison. MAKELEVEL and a worker target-specific variable prove child context; comparison is persisted before version queries and all verification work, with no raw arguments or paths exported."
         }
       ],
       "suites": [

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
-  "fingerprint": "a54bf0aa3e63d87ef76239e6c327fdc0c479abe2f1b8c76b9265e07661f63059",
+  "base": "a4f473d3d5c7ad59691c7202e79a19a898df4f30",
+  "fingerprint": "f0f5de7b8f8af03cd33020e6556ca5ea80a7b6b62bd96da33eeee0dafede1f10",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "The contributor contract now documents the callable bounded timing journal and explicit descriptor transport. Automatic Make and hosted wiring are deliberately deferred to the next stack slices; product flows and pinned adoption remain unchanged.",
-    "implementation": "Inspected Journal creation, atomic locked updates, immutable framed Git input identity, comparison selection, plan refresh, signal-aware owned execution and fail-open observation. Reviewed runner pass_fds: legacy calls omit the keyword and unrelated inheritable descriptors remain closed. Makefile, ci.py and hosted workflow are unchanged against c5eab65 in this slice.",
-    "tests": "Read the injected-clock overlap and null-duration assertions, four-process writer test, real SIGTERM/cancellation cleanup probes, exact whitespace filename and binary framing identities, privacy bounds and startup signal tests. Twenty-five journal tests pass; the explicit-descriptor child regression checks only the advertised pipe, fixture0, status37 and restored signal handlers. Hosted dispatcher integration tests belong to the final slice."
+    "description": "Native Make verification now automatically retains the bounded local journal. Hosted source selection and workflow upload remain in the next slice. Existing product behavior and pinned adoption remain unchanged.",
+    "implementation": "Inspected the exact Make worker entry, worker-native metadata prerequisite, each fixed phase wrapper and unchanged dependency ordering. Native command-line/inherited variables, target-specific comparison, ci override, dry runs, keep-going policy and pipe/FIFO jobserver capabilities retain their existing semantics. The journal and optional descriptor implementation are byte-identical to the preceding core slice; ci.py and hosted workflow remain unchanged.",
+    "tests": "Read the real Make recorder assertions for single shared preparation, command order, failure/unstarted states, actual expanded comparison before work, dry-run no-journal and actual pipe/FIFO jobservers. Real SIGTERM and forced probe-assertion regressions require partial evidence and removed owned commands. Existing runner/cancellation and privacy assertions remain; actual hosted dispatcher and workflow upload assertions follow in the next slice."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.244
+      "seconds": 1.204
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 29.478
+      "seconds": 29.907
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 56.795
+      "seconds": 245.214
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "10fb48726129efd5f8c1b6c038355cb434df68758041499011c26cceb0739db1",
-    "term:coverage-gap": "2afb1c4bc0f88f27edc9f276c99e13459977270de7e45b0df8d402d76f57fde9",
-    "term:entity": "d7df536845c48956c3ffbb4c8fd56b2591d177820ae7ce1b3dbd072c071f5147",
-    "term:glossary": "3be09482cf238f01b35c66ac4c76a9972634a5eb3b13604ccfa5c75d65aac39c",
-    "term:known-limitation": "ef5a2f3d83d72f15b73413930dc93fa780ea5dafc0df251739b36cdcbcd2a1fa",
-    "term:reconciliation": "6addb889ca4e395d2170ddbf4856a260380e231a9360530f95c188e5ffe74159",
-    "term:unverified-behavior": "2691f6b7cb656f88bb31787b3ffd8da0bc340df5118e6a49155849ba237831c1",
-    "term:verification": "bb52f691cd2516ee839f90320c194dc4d3ca031358a4f1cc428c4b5f4a75d68d"
+    "flow:maintain-flow-contracts": "cbed1e71032f6e69a5f2dd629d50bbc9962affe021d8ae435ffc7638added8f7",
+    "term:coverage-gap": "56c3cb27372dc52bd96f15167fb5906a8f143d857e1b00c03caf4689754d8757",
+    "term:entity": "d06a08ceafb4af3d20f9a5df71924d061ef715c475a4b78f65562391357ef77b",
+    "term:glossary": "3a90546380f0d0bd404cea9ead77c08274ec6f08228dd9beb2ead12e851f53d6",
+    "term:known-limitation": "7f1b78e5da7a3d7ff24a2d85e7aff0b95f597b6dead3c7a14eff5a0b7adcf34f",
+    "term:reconciliation": "cf83369d3e55f556b343edb2c08dddf54d2feb67ab182f6a7a838982c7306f15",
+    "term:unverified-behavior": "b84e97045418f125830922cd3d0aae87e4306db17b6536f17034b06d4b5ce188",
+    "term:verification": "a50975e263be42d1cc70232a17cb8526a8a0de5bbdea3317b292b2bbf6de3e9c"
   }
 }
