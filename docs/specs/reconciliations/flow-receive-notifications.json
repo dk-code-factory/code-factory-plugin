@@ -1,8 +1,8 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
-  "fingerprint": "fc4a32e10013badfb9d720314ea3d73bba278463a154269c7186a2d36a2bc51f",
+  "base": "0ff1fb7f0dba570ea2b0647ee1b3ca725f5f273d",
+  "fingerprint": "535b3693d46263569f5221478e3c30832de29b372f92e2fc36e80ee7c8633b98",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -10,7 +10,7 @@
     "kind": "structure",
     "description": "receive-notifications contract and its existing scenarios retain main behavior; shared verification tooling causes conservative review impact.",
     "implementation": "Compared receive-notifications registry entry and authored flow document against main: no implementation, UI reference, scenario or behavior changes. Main browser layout and per-test state ownership are retained exactly.",
-    "tests": "Existing receive-notifications assertion mappings and bodies are unchanged from main; mandatory tooling gains local inventory, status and retained-discovery regressions. Fixture verification does not close real-host acceptance gaps."
+    "tests": "Existing receive-notifications assertion mappings and bodies are unchanged from main; mandatory tooling gains memory and cancellation regressions alongside preserved strict qualifier assertions. Fixture verification does not close real-host acceptance gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 170.847
+      "seconds": 147.606
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.537
+      "seconds": 25.672
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 55.856
+      "seconds": 56.613
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 4.837
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "85547a60e75aef5b9070145dd818227a8c4f0155a98c348cd5b31351d1ab4c39",
-    "term:attention-request": "72b514af3fd208e969f7043007bbd21df7c2ab2b80fb226dffeb779b1bc136dc",
-    "term:coverage-gap": "d7c023cecaf0b6b45992061bb73b836eed3ea02826c39c4540c503a45a58e1eb",
-    "term:host": "bfc7a486179e192bd08465b973180430b9f69ea065558889bb268acf2aca8c11",
-    "term:known-limitation": "44261af6371dd6656b7089464272f71896fe60692c1da99b4fe1c8f8daefc3f1",
-    "term:subscription": "d30fa0572bfc0c89a7ae6472418bd41fdd5d80bd374a387beaf0f0acb1ae3802",
-    "term:unverified-behavior": "7e1675561476a969a8172b05bd23593e3631ecfd3cee4330a703fa3c36b17a0a"
+    "flow:receive-notifications": "e7db9305efa3fb2e462afdfd043e3dfbbf3e2a9f3c5528395b0c08137a5a38a1",
+    "term:attention-request": "d00575bef3b01fed29c3fccda90ebfa97a08c78c1696553d705246361c0595c8",
+    "term:coverage-gap": "5e19f103952fdf8435d62339cf390863f678ce24114806b5c0cd5944da7cd495",
+    "term:host": "4d3d2619c67190f0df818282232c3372f6dd93572df7d2d5ce5f2eab3009ab9d",
+    "term:known-limitation": "eec9ed4cb1727d1fd3031c98f592302a133a20b443ae1732b7225c1ad4e96eae",
+    "term:subscription": "22e1c94b938175915c624e78e381abd2b31ecd656bbed98a0535527b9c2f9acb",
+    "term:unverified-behavior": "77d6713269bc5ead1774b492c6dd18fdff9e2a88cc04c2c78480cfca1ead826e"
   }
 }

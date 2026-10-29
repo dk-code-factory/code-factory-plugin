@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
-  "fingerprint": "fa5da02fcc4356e7a9a66406fc5508dffaa98385659c29e3d499911c10b2d9f8",
+  "base": "0ff1fb7f0dba570ea2b0647ee1b3ca725f5f273d",
+  "fingerprint": "3c96c54508ceffcdc31e4bed65c0bac2e59575ce9560c3dfdd511a397037e0ca",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S3 local qualification requires complete discovered title multisets and exactly one passing execution per scenario, without skipped or retried results. GNU-time RSS remains explicitly an individual-process metric. Hosted comparison and all product behavior retain main behavior.",
-    "implementation": "Read specifications, inventory, validate_run, discover and main. Ordinary subprocess.run executes four worker counts 1/2/2/1 with fixture mode and zero retries; discovery retains both output streams before status validation; failed runs retain report and summary. Main browser topology and hosted workflow are unchanged. Numeric parsing now explicitly requires finite nonnegative elapsed time and nonnegative integer RSS before updating accepted metrics; zero remains valid. The failed sample entry is saved before validation and stops later execution on rejection.",
-    "tests": "Read the three mapped regressions: nested file movement preserves inventory but duplicate titles fail; failed/skipped/timedOut/interrupted/retried/missing/error cases raise; a real failing discovery subprocess retains stdout/stderr and reports both paths. These provide local qualifier coverage; full source qualification is an independent acceptance gate. Read actual main-path stubs: success preserves1/2/2/1 and accepts0/0; failure on sample2 exercises execution19, skipped/missing/malformed reports and ten invalid metric spellings. Each checks only two invocations, first passed/second failed, rawreport/stderr/time/discovery retained and no nonstandard summary numbers. Test-only extension now preserves title inventory while rejecting zero/multiple project executions or results and expectedStatus/status violations; extra distinct titles reject. Main accepts a matching nested baseline and rejects nine invalid discovery/baseline cases before any sample, retaining discovery stdout/stderr and no success artifacts. Sixteen isolated guard mutations are detected. Production runner unchanged."
+    "description": "Contributor S3 qualifier now measures sampled concurrent workload RSS separately from individual-process metrics, requires positive root/child coverage and retains interruption/failure outcomes with safe cleanup. All merged strict inventory, result cardinality, timing and failure-stopping behavior remains; hosted integration is excluded.",
+    "implementation": "Inspected integrated process_stat/WorkloadMemory session and observed-descendant identities, WNOWAIT direct-leader lifetime through final killpg, identity-revalidated pidfds for other targets, recording signal handlers, 200ms TERM grace and bounded post-KILL waits. Main restores merged math finite/nonnegative guard and handles failed/interrupted samples before later runs. All main web/backend/hosted/foundational source stays unchanged. New ancestry edges now require a held parent pidfd to remain live across fresh child PPID/identity capture and parent start-time revalidation; a stale numeric parent row cannot contaminate known ownership. Same-session selection still depends on the direct root remaining unreaped through final capture/signaling.",
+    "tests": "Read all nine baseline assertions retained through measure-boundary stubs: complete order, zero individualmetrics, earlydiscovery/baseline rejection, exactinventory/project/result/status/retry and invalidmetric stopping. Real four-allocation hierarchy establishes concurrentRSS. Missingcoverage/readfailure tests reject partialmemory. Six signal/phase combinations exercise real SIGINT/SIGTERM during launch(Popen active), measurement andcleanup with owned separate-session children, stale identity and unrelatedsentinel, restoredhandlers/reaping/interruptedsummary. Independentstalledprobe fallback remains. Deterministicdeadline tests propagate descendant/directchild timeouts into mainfailure, closepidfds and retain bounded TERM/KILL. Targetingdenial beforelaunch and duringcleanup remain covered. Added eight deterministic scan interleavings across session/remembered parents, replacement/exit before acquisition or during child reread, asserting exclusion, no known contamination and no unrelated TERM/KILL in cleanup. Stable cross-session reparenting remains accepted. Three ancestry guard mutants detected. Read-failure child lifetime now uses a pipe released by the injected second-sample failure, not wall-clock sleep. Read-failure assertion now executes in an isolated subprocess controlled by a subreaper with an independent timeout and finally cleanup. The callback-suppressed regression proves timeout recovery, probe/pipe-child termination and reaping, and unrelated sibling survival. Production sampler and prior ancestry proofs remain unchanged."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.537
+      "seconds": 25.672
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 55.856
+      "seconds": 56.613
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 4.837
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "819acdbb7bf07bc3d89dae65293643be054717dd2d60bbbfe807544cf7ced58f",
-    "term:coverage-gap": "d7c023cecaf0b6b45992061bb73b836eed3ea02826c39c4540c503a45a58e1eb",
-    "term:entity": "0f6c1ea198d4b1a13b82fd01dff37b2934b15d561ba201cbe6b825f8e23ef285",
-    "term:glossary": "46fdacf5ee26d8307fc39fd69399367e8c5404e2ed3968cae3b69e4144ca2eb5",
-    "term:known-limitation": "44261af6371dd6656b7089464272f71896fe60692c1da99b4fe1c8f8daefc3f1",
-    "term:reconciliation": "000a78d31b67e515fa131d93042e665e21c8e25a7eef2e1df683211248ca5fc5",
-    "term:unverified-behavior": "7e1675561476a969a8172b05bd23593e3631ecfd3cee4330a703fa3c36b17a0a",
-    "term:verification": "7b1e8277c2c2f5139a314bbfffb535315820b425ac1e1d517db7f916ff2c026f"
+    "flow:maintain-flow-contracts": "33e9c7a9c3dcb8602cbeeda94a22f2a13b046cbcee204981b228c23c25055016",
+    "term:coverage-gap": "5e19f103952fdf8435d62339cf390863f678ce24114806b5c0cd5944da7cd495",
+    "term:entity": "bcbdf762c7301fc3ab48d2ef7402888a4c1ccfc13c4a974a0e5a4bf35be817ce",
+    "term:glossary": "3dfb1ea3b9e2c2bcf8be34e91581f3fda10d7bc9a87364f7d8e8e57a0ac4a3e0",
+    "term:known-limitation": "eec9ed4cb1727d1fd3031c98f592302a133a20b443ae1732b7225c1ad4e96eae",
+    "term:reconciliation": "afce8f759ca0583553cb64b5b9312ed6be1783c0d76f03fe32ba18d43ab5c391",
+    "term:unverified-behavior": "77d6713269bc5ead1774b492c6dd18fdff9e2a88cc04c2c78480cfca1ead826e",
+    "term:verification": "ae504f5b26462e7ae1dbeff60797b726f21e4fb02e5b5612230332132837d9ce"
   }
 }
