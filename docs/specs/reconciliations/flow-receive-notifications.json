@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "fd74c2080254b022217cca776e4073e9bc7745f4",
-  "fingerprint": "81f13336e082cc737c17145e1e597f29dfc28fd12c944f1921d6d53357661300",
+  "base": "c347d49b3921dd3fc514369211e7d76c6023f9c4",
+  "fingerprint": "e057f434243e087fa311d79b23ebde7d52a25294d2205fd25130d653ef35ca78",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Verification, filtering, retry identity, acknowledgement deduplication and expiry retain their current behavior.",
-    "implementation": "Event and subscription sources match the comparison snapshot. Engineering timing and its optional artifact delivery do not route notifications, change retry identity or acknowledge events.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signatures validate, equal subscriptions are idempotent, retry preserves event ID, acknowledgement prevents replay and expiry suppresses delivery."
+    "description": "S1-S4 event subscription, signed delivery and notification control are unchanged; untested failure classes and real-host subscription gap remain open.",
+    "implementation": "registerEvents continues dispatching subscribe/list through the event service; no delivery/cursor or event registry implementation changed.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signatures are validated, duplicate Subscribe preserves identity, run entity filtering yields one delivery and a 503 increments Attempts. Other retry classes are not newly claimed."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 149.006
+      "seconds": 149.712
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.071
+      "seconds": 33.889
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 281.941
+      "seconds": 281.978
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.654
+      "seconds": 4.675
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "a75162f4e8acf6685c4ed4b9339e64f29a81e419d48e7ed6a0354525ff0d402d",
-    "term:attention-request": "f5abac2c28efef1af32b39e259edf8d84138d7d5096e84b79c8a24af50f75735",
-    "term:coverage-gap": "dd28b60b57307ab3a42ca073432af483f463ec84dfe08943495a53bc1aac3034",
-    "term:host": "90726443897310f4844e6634d7e99c340e0c534c009d5672680f5f76e2b2c859",
-    "term:known-limitation": "a973deb3df857bb7ba19119ce0160d66ad5eca3e32f667dd9e990ff1b28f4429",
-    "term:subscription": "9fc7ed8741ec785d5bfab0c441f8995715886584b7d42896fe2b4e9cc313ca47",
-    "term:unverified-behavior": "d261df6d77a5f63bf79eab4089162365892b1069957688409522586712d042e1"
+    "flow:receive-notifications": "4ad41702b6b875da5005bc22ab057655674a1475934911392a8162fdeda2c81f",
+    "term:attention-request": "009040e1308dc59018bee9615c7b759209e53fea0003f90c741cd27b9209bbf5",
+    "term:coverage-gap": "163e8f4ab748f9f0969af0e0a06482ccaa8d973118baf97083773ae9389c1daf",
+    "term:host": "a5c78e22bc4d091c45277ae557b8d108723743fc3e15f0ee8b7e33c391767229",
+    "term:known-limitation": "53918426e73a88ba6e2237f763e38a7d1e25b7334d95c10c2fd287923d01c221",
+    "term:subscription": "e523d61452d7420564e6985cd9e65c7af7fc9cf0cef9e363dff627a3768e5b7a",
+    "term:unverified-behavior": "2858f0b73c6d0446de484344bfdc6fb4b5f678f1ccfc5080818798fbe5e71cef"
   }
 }
