@@ -16075,6 +16075,42 @@
             "S5"
           ],
           "purpose": "Real SIGINT and SIGTERM during tool-version collection preserve shell signal status, finalize interrupted partial journals with wall time, leave verification phases unstarted and never launch the worker."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_identity_hashes_exact_whitespace_prefixed_tracked_and_untracked_names(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Space-, tab- and newline-prefixed first Git filenames retain exact NUL-delimited bytes. Tracked and untracked content edits change the digest at unchanged HEAD and dirty state; ignored journals preserve identity and export no filenames, private paths or contents."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_git_text_identities_and_comparisons_remain_normalized(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Returning raw Git bytes preserves normalized head/comparison SHAs, clean status and exact committed or merge-base comparison metadata for text callers."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_identity_frames_binary_contents_and_record_boundaries(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Two different real-Git states at identical HEAD and dirty status cannot share the former ambiguous digest when binary file content imitates another path/mode/content record; journal source identity stays immutable."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_identity_distinguishes_file_link_absence_and_executable_mode(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Identity keeps regular-file content, symbolic-link target, tracked absence and executable-mode distinctions while the same inputs hash identically before or after staging."
         }
       ],
       "suites": [

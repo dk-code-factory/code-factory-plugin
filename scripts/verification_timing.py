@@ -74,25 +74,29 @@ PLAN = [
 ]
 
 def git(*args):
-    return subprocess.check_output(["git", *args], cwd=ROOT, stderr=subprocess.DEVNULL).strip()
+    """Return exact bytes; normalize textual results at their call sites."""
+    return subprocess.check_output(["git", *args], cwd=ROOT, stderr=subprocess.DEVNULL)
 
 
 def identity():
     """Hash inputs without publishing filenames, content, or local paths."""
     try:
-        head = git("rev-parse", "HEAD").decode()
+        head = git("rev-parse", "HEAD").decode().strip()
         digest = hashlib.sha256()
         paths = git("ls-files", "-z", "--cached", "--others", "--exclude-standard").split(b"\0")
         for name in sorted(set(paths) - {b""}):
             path = ROOT / os.fsdecode(name)
-            digest.update(name + b"\0")
             if path.is_symlink():
-                digest.update(b"link\0" + os.fsencode(os.readlink(path)))
+                fields = (name, b"link", os.fsencode(os.readlink(path)))
             elif path.is_file():
-                digest.update(str(path.stat().st_mode & 0o111).encode() + b"\0" + path.read_bytes())
+                fields = (name, b"file", str(path.stat().st_mode & 0o111).encode(), path.read_bytes())
             else:
-                digest.update(b"absent")
-            digest.update(b"\0")
+                fields = (name, b"absent")
+            # Frame records and fields: arbitrary content may contain NUL bytes.
+            digest.update(bytes([len(fields)]))
+            for value in fields:
+                digest.update(len(value).to_bytes(8, "big"))
+                digest.update(value)
         return {"head": head, "inputs_sha256": digest.hexdigest(),
                 "dirty": bool(git("status", "--porcelain", "--untracked-files=normal"))}
     except (OSError, subprocess.CalledProcessError):
@@ -110,10 +114,10 @@ def comparison(arguments):
         args, unknown = parser.parse_known_args(shlex.split(arguments))
         if unknown:
             return {"status": "unavailable"}
-        base = git("rev-parse", "--verify", args.base + "^{commit}").decode()
-        head = git("rev-parse", "--verify", (args.head or "HEAD") + "^{commit}").decode()
+        base = git("rev-parse", "--verify", args.base + "^{commit}").decode().strip()
+        head = git("rev-parse", "--verify", (args.head or "HEAD") + "^{commit}").decode().strip()
         if args.merge_base:
-            base = git("merge-base", base, head).decode()
+            base = git("merge-base", base, head).decode().strip()
         return {"status": "resolved", "base": base, "head": head,
                 "selection": "index" if args.staged else "commit" if args.head else "worktree",
                 "merge_base": args.merge_base}

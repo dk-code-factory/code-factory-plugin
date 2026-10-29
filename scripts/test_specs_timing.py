@@ -309,6 +309,110 @@ finally:
         self.assertNotIn('private-filename', journal.path.read_text())
         self.assertNotIn('/private/home/credential', json.dumps(untracked))
 
+    def test_identity_hashes_exact_whitespace_prefixed_tracked_and_untracked_names(self):
+        for kind in ('tracked', 'untracked'):
+            for prefix in (' ', '\t', '\n', ' \t\n'):
+                with self.subTest(kind=kind, prefix=repr(prefix)):
+                    root = self.root / (kind + '-' + prefix.encode().hex())
+                    root.mkdir()
+                    def git(*arguments):
+                        return subprocess.check_output(['git', *arguments], cwd=root,
+                                                       stderr=subprocess.DEVNULL)
+                    git('init', '-b', 'main')
+                    git('config', 'user.name', 'Fixture')
+                    git('config', 'user.email', 'fixture@example.invalid')
+                    (root / '.gitignore').write_text('/verification-results/\n')
+                    (root / 'z-control').write_text('fixed source\n')
+                    name = prefix + 'private-input' + prefix
+                    source = root / name
+                    if kind == 'tracked':
+                        source.write_text('committed source\n')
+                    git('add', '.')
+                    git('commit', '-m', 'Fixture names')
+                    head = git('rev-parse', 'HEAD').decode().strip()
+                    source.write_text('identity-secret-body: first dirty content\n')
+                    with patch.object(timing, 'ROOT', root):
+                        paths = timing.git('ls-files', '-z', '--cached', '--others', '--exclude-standard')
+                        self.assertTrue(paths.startswith(os.fsencode(name) + b'\0'), paths)
+                        first = WORKING_IDENTITY()
+                        self.assertTrue(first['dirty'])
+                        self.assertEqual(first['head'], head)
+                        with patch.object(timing, 'identity', side_effect=WORKING_IDENTITY):
+                            journal = self.journal()
+                        journal.stop(journal.start('build'), 0)
+                        self.assertEqual(WORKING_IDENTITY(), first)
+                        source.write_text('identity-secret-body: second dirty content\n')
+                        second = WORKING_IDENTITY()
+                        self.assertTrue(second['dirty'])
+                        self.assertEqual(second['head'], head)
+                        self.assertNotEqual(first['inputs_sha256'], second['inputs_sha256'])
+                        self.assertEqual(self.data(journal)['source'], first)
+                        serialized = journal.path.read_text()
+                        for private in ('private-input', 'identity-secret-body', str(root)):
+                            self.assertNotIn(private, serialized)
+                        self.assertEqual(set(second), {'head', 'inputs_sha256', 'dirty'})
+
+    def test_identity_frames_binary_contents_and_record_boundaries(self):
+        self.git_history(root_only=True)
+        def git(*arguments):
+            return subprocess.check_output(['git', *arguments], cwd=self.root,
+                                           stderr=subprocess.DEVNULL)
+        a, b = self.root / 'a', self.root / 'b'
+        a.write_bytes(b'baseline')
+        b.write_bytes(b'Y')
+        a.chmod(0o644)
+        b.chmod(0o644)
+        git('add', '.')
+        git('commit', '-m', 'Fixture framing')
+        git('rm', '--', 'b')
+        a.write_bytes(b'X\0b\x000\0Y')
+        first = WORKING_IDENTITY()
+        self.assertNotIn(b'b', timing.git('ls-files', '-z', '--cached', '--others').split(b'\0'))
+        with patch.object(timing, 'identity', side_effect=WORKING_IDENTITY):
+            journal = self.journal()
+        a.write_bytes(b'X')
+        b.write_bytes(b'Y')
+        b.chmod(0o644)
+        git('add', '--', 'b')
+        second = WORKING_IDENTITY()
+        self.assertIn(b'b', timing.git('ls-files', '-z', '--cached', '--others').split(b'\0'))
+        self.assertEqual(first['head'], second['head'])
+        self.assertTrue(first['dirty'])
+        self.assertTrue(second['dirty'])
+        self.assertNotEqual(first['inputs_sha256'], second['inputs_sha256'])
+        self.assertEqual(self.data(journal)['source'], first)
+        self.assertEqual(set(first), {'head', 'inputs_sha256', 'dirty'})
+
+    def test_identity_distinguishes_file_link_absence_and_executable_mode(self):
+        self.git_history(root_only=True)
+        entry = self.root / 'entry'
+        entry.write_bytes(b'absent')
+        entry.chmod(0o644)
+        regular = WORKING_IDENTITY()['inputs_sha256']
+        subprocess.check_call(['git', 'add', '--', 'entry'], cwd=self.root,
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.assertEqual(WORKING_IDENTITY()['inputs_sha256'], regular)
+        entry.chmod(0o755)
+        executable = WORKING_IDENTITY()['inputs_sha256']
+        entry.chmod(0o644)
+        self.assertEqual(WORKING_IDENTITY()['inputs_sha256'], regular)
+        entry.unlink()
+        entry.symlink_to('absent')
+        link = WORKING_IDENTITY()['inputs_sha256']
+        entry.unlink()
+        missing = WORKING_IDENTITY()['inputs_sha256']
+        self.assertEqual(len({regular, executable, link, missing}), 4)
+
+    def test_git_text_identities_and_comparisons_remain_normalized(self):
+        base, head = self.git_history()
+        self.assertEqual(WORKING_IDENTITY()['head'], head)
+        self.assertFalse(WORKING_IDENTITY()['dirty'])
+        for suffix, merge_base in (('', False), (' --merge-base', True)):
+            with self.subTest(merge_base=merge_base):
+                result = COMPARISON('--base ' + base + ' --head ' + head + suffix)
+                self.assertEqual(result, {'status': 'resolved', 'base': base, 'head': head,
+                                         'selection': 'commit', 'merge_base': merge_base})
+
     def test_instrumentation_failure_preserves_owned_runner_status_and_privacy(self):
         journal = Mock()
         journal.start.side_effect = OSError('/private/home/secret argv=credential')
