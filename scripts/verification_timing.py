@@ -2,9 +2,10 @@
 """Bounded, allowlisted phase evidence for local and hosted verification."""
 import argparse
 import codecs
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import fcntl
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,8 @@ import subprocess
 import sys
 import time
 import uuid
+
+from specs_lib.arguments import argument_parser
 
 ROOT = Path(__file__).resolve().parents[1]
 PHASES = {
@@ -40,6 +43,7 @@ PHASES = {
     'tooling-live-connection-test': 'python3 scripts/test_live_connection_test.py',
     'tooling-connection-probe': 'python3 scripts/test_connection_probe.py',
     'tooling-ci': 'python3 scripts/test_ci.py',
+    'tooling-browser-benchmark': 'python3 scripts/test_browser_benchmark.py',
     'tooling-user-flows': 'python3 scripts/test_user_flows.py',
     'browser-lab': 'node --test scripts/test_browser_lab.mjs',
     'browser-control': 'node --test scripts/test_browser_control.mjs',
@@ -67,6 +71,7 @@ PLAN = [
     'browser-lab',
     'browser-control',
     'tooling-ci',
+    'tooling-browser-benchmark',
     'tooling-user-flows',
     'specification-tests',
     'performance',
@@ -107,14 +112,20 @@ def identity():
 
 def comparison(arguments):
     """Export resolved SHAs, private input digests and selection mode only."""
-    parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
-    parser.add_argument("--base", default="HEAD")
-    parser.add_argument("--head")
-    parser.add_argument("--merge-base", action="store_true")
-    parser.add_argument("--staged", action="store_true")
+    parser = argument_parser(ROOT, exit_on_error=False)
     try:
-        args, unknown = parser.parse_known_args(shlex.split(arguments))
-        if unknown or args.head and args.staged:
+        argv = shlex.split(arguments) if isinstance(arguments, str) else arguments
+        # Preserve the CLI's help/abbreviation/error grammar without exporting
+        # diagnostics that may include private arguments or paths.
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            try:
+                args, unknown = parser.parse_known_args(["check", *argv])
+            except SystemExit as error:
+                if type(error.code) is not int or error.code not in (0, 2):
+                    raise
+                return {"status": "unavailable"}
+        root = args.root if args.root.is_absolute() else ROOT / args.root
+        if unknown or args.head and args.staged or root.resolve() != ROOT.resolve():
             return {"status": "unavailable"}
         base = git("rev-parse", "--verify", args.base + "^{commit}").decode().strip()
         head = git("rev-parse", "--verify", (args.head or "HEAD") + "^{commit}").decode().strip()
@@ -232,12 +243,17 @@ class Journal:
         self.clock = clock
 
     @classmethod
-    def create(cls, *, hosted=False, prerequisites=False, bootstrap=False, arguments=None, metadata=True, clock=time.monotonic):
-        directory = ROOT / "verification-results"
-        directory.mkdir(exist_ok=True)
-        journal = cls(directory / (uuid.uuid4().hex + ".json"), clock)
+    def reserve(cls, *, prerequisites=False, bootstrap=False, clock=time.monotonic):
+        return {"path": str(ROOT / "verification-results" / (uuid.uuid4().hex + ".json")),
+                "clock_origin": clock(), "prerequisites": prerequisites, "bootstrap": bootstrap}
+
+    @classmethod
+    def create(cls, *, hosted=False, prerequisites=False, bootstrap=False, arguments=None, metadata=True,
+               clock=time.monotonic, path=None, clock_origin=None):
+        journal = cls(path or ROOT / "verification-results" / (uuid.uuid4().hex + ".json"), clock)
+        journal.path.parent.mkdir(exist_ok=True)
         data = {"version": 1, "run_id": journal.path.stem, "origin": "hosted" if hosted else "local",
-                "clock_origin": clock(), "wall_seconds": None, "outcome": "running",
+                "clock_origin": clock() if clock_origin is None else clock_origin, "wall_seconds": None, "outcome": "running",
                 "aggregation": "Intervals may overlap or nest; do not sum phase durations as wall time.",
                 "source": {"head": None, "inputs_sha256": None, "dirty": None},
                 "comparison": {"status": "unavailable"},
@@ -301,7 +317,7 @@ class Journal:
                 outcome = "incomplete"
             data.update(outcome=outcome, wall_seconds=end)
 
-    def collect_metadata(self, *, arguments=None, hosted=False):
+    def collect_metadata(self, *, arguments=None, hosted=False, comparison_pending=False):
         # Invalidate prior identities before resolving this invocation's inputs.
         # Each completed field survives interruption of subsequent metadata.
         with self.update() as data:
@@ -310,14 +326,16 @@ class Journal:
         source = identity()
         with self.update() as data:
             data["source"] = source
+        if comparison_pending:
+            return
         plan = hosted_comparison() if hosted else comparison(
             os.environ.get("FLOW_ARGS", "") if arguments is None else arguments)
         with self.update() as data:
             data["comparison"] = plan
 
-    def refresh(self, arguments=None, *, plan=None):
+    def refresh(self, arguments=None, *, plan=None, comparison_pending=False):
         if plan is None:
-            self.collect_metadata(arguments=arguments)
+            self.collect_metadata(arguments=arguments, comparison_pending=comparison_pending)
         else:
             # Hosted CI has already validated these exact commits. Preserve its
             # source snapshot and persist the plan before querying versions.
@@ -328,6 +346,17 @@ class Journal:
         with self.update() as data:
             data["toolchains"] = versions
 
+    def record_specification(self, argv):
+        # The fixed Make command supplies shell-parsed argv, never a separately
+        # expanded environment value. Unknown callers cannot claim its identity.
+        with self.update() as data:
+            data["comparison"] = {"status": "unavailable"}
+        if argv[:3] != ["python3", "scripts/specs.py", "check"]:
+            return
+        plan = comparison(argv[3:])
+        with self.update() as data:
+            data["comparison"] = plan
+
     def bootstrap(self):
         with self.update() as data:
             data["phases"] = [p for p in data["phases"] if p["phase"] != "specifications"]
@@ -336,6 +365,19 @@ class Journal:
 def selected():
     path = os.environ.get("CODE_FACTORY_TIMING_FILE")
     return Journal(path) if path else None
+
+
+
+def materialize_reserved():
+    journal = selected()
+    reservation = os.environ.get("CODE_FACTORY_TIMING_RESERVATION")
+    if journal and reservation and not journal.path.exists():
+        options = json.loads(reservation)
+        if Path(options["path"]) != journal.path:
+            raise ValueError("Mismatched timing reservation")
+        journal = Journal.create(**options, metadata=False)
+        diagnostic("Verification timing: " + journal.path.name, sys.stdout)
+    return journal
 
 
 def jobserver_fds(argv):
@@ -370,6 +412,8 @@ def jobserver_fds(argv):
 
 def execute(phase, argv, *, journal=None, owned=False, runner=None):
     journal = journal or selected()
+    if journal and phase == "specifications" and not os.environ.get("GITHUB_ACTIONS"):
+        observe(journal.record_specification, argv)
     identifier = observe(journal.start, phase, os.environ.get("CODE_FACTORY_TIMING_PARENT")) if journal else None
     prior = os.environ.get("CODE_FACTORY_TIMING_PARENT")
     if identifier is not None:
@@ -401,17 +445,28 @@ def verify(argv=None):
     """Observe one Make worker graph; Make alone selects and orders its work."""
     argv = argv or ["make", "--no-keep-going", "verify-steps"]
     os.environ["CODE_FACTORY_REAL_CODEX"] = "0"
-    journal = None
+    journal, reservation = None, None
+    prior_file = os.environ.get("CODE_FACTORY_TIMING_FILE")
+    prior_reservation = os.environ.get("CODE_FACTORY_TIMING_RESERVATION")
     code, interrupted = 1, False
     try:
         arguments = next((a.split("=", 1)[1] for a in reversed(argv) if a.startswith("FLOW_ARGS=")),
                          os.environ.get("FLOW_ARGS", ""))
-        journal = selected() or observe(Journal.create,
-            prerequisites=any(a.startswith("hosted-verify") for a in argv),
-            bootstrap=any("bootstrap-steps" in a for a in argv), metadata=False)
+        journal = selected()
+        options = {"prerequisites": any(a.startswith("hosted-verify") for a in argv),
+                   "bootstrap": any("bootstrap-steps" in a for a in argv)}
+        if not journal:
+            if os.environ.get("CODE_FACTORY_TIMING_WORKER_CONTEXT") and not os.environ.get("GITHUB_ACTIONS"):
+                reservation = observe(Journal.reserve, **options)
+                if reservation:
+                    journal = Journal(reservation["path"])
+                    os.environ["CODE_FACTORY_TIMING_RESERVATION"] = json.dumps(reservation)
+            else:
+                journal = observe(Journal.create, **options, metadata=False)
         if journal:
             os.environ["CODE_FACTORY_TIMING_FILE"] = str(journal.path)
-            diagnostic("Verification timing: " + journal.path.name, sys.stdout)
+            if not reservation:
+                diagnostic("Verification timing: " + journal.path.name, sys.stdout)
             if not os.environ.get("GITHUB_ACTIONS") and not os.environ.get("CODE_FACTORY_TIMING_WORKER_CONTEXT"):
                 observe(journal.refresh, arguments)
         from specs_lib.processes import run_verification
@@ -426,7 +481,26 @@ def verify(argv=None):
         raise
     finally:
         if journal and not os.environ.get("GITHUB_ACTIONS"):
-            observe(journal.finish, "interrupted" if interrupted else "success" if code == 0 else "failure")
+            def finalize():
+                current = journal
+                if reservation and not current.path.exists():
+                    if code == 0 and not interrupted:
+                        return
+                    current = materialize_reserved()
+                current.finish("interrupted" if interrupted else "success" if code == 0 else "failure")
+            try:
+                observe(finalize)
+            finally:
+                if reservation:
+                    if prior_reservation is None:
+                        os.environ.pop("CODE_FACTORY_TIMING_RESERVATION", None)
+                    else:
+                        os.environ["CODE_FACTORY_TIMING_RESERVATION"] = prior_reservation
+                    if not observe(journal.path.exists):
+                        if prior_file is None:
+                            os.environ.pop("CODE_FACTORY_TIMING_FILE", None)
+                        else:
+                            os.environ["CODE_FACTORY_TIMING_FILE"] = prior_file
 
 
 def hosted_action(action, outcome=None):
@@ -465,9 +539,9 @@ def main():
         observe(hosted_action, args.action, getattr(args, "outcome", None))
     elif args.action == "worker-start":
         def refresh_worker():
-            journal = selected()
+            journal = materialize_reserved()
             if journal and not os.environ.get("GITHUB_ACTIONS"):
-                journal.refresh()
+                journal.refresh(comparison_pending=True)
         observe(refresh_worker)
     elif args.action == "verify":
         return verify(args.argv[1:] if args.argv[:1] == ["--"] else args.argv)

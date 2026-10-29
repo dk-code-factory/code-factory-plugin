@@ -13838,11 +13838,11 @@
         },
         {
           "path": "Makefile",
-          "purpose": "One worker dependency graph shares phony preparation per invocation, prepares standalone prerequisites and orders phases under parallel flags; public verification wrappers enforce stopping after failure."
+          "purpose": "One worker dependency graph shares phony preparation per invocation, prepares standalone prerequisites and orders phases under parallel flags; public verification wrappers enforce stopping after failure. Allowlisted timing wrappers observe actual commands and the graph boundary without recreating scheduling."
         },
         {
           "path": "scripts/verify.sh",
-          "purpose": "Direct fixture-only entry point into the single Make verification graph"
+          "purpose": "Direct fixture-only entry point into the single Make verification graph Caller arguments retain native Make forwarding."
         },
         {
           "path": ".agents/skills/reconcile-user-flows/SKILL.md",
@@ -13891,6 +13891,11 @@
         {
           "path": "scripts/specs_lib/__init__.py",
           "purpose": "Shared specification-tooling package boundary"
+        },
+        {
+          "path": "scripts/specs_lib/arguments.py",
+          "anchor": "def argument_parser(",
+          "purpose": "Shared authoritative unified CLI argument definitions keep actual command observation compatible with supported flags without invoking validation, snapshots or index writes."
         },
         {
           "path": "scripts/specs_lib/core.py",
@@ -14035,7 +14040,7 @@
         },
         {
           "path": "scripts/verification_timing.py",
-          "purpose": "Callable allowlisted monotonic verification phase journals, immutable source/comparison identities, owned command execution and partial local/hosted evidence. Entry-point wiring is delivered separately."
+          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence. Startup journals precede metadata collection; local source identity is collected early and comparison remains unavailable until the actual specification command argv is known. Capture at that command boundary preserves target-specific expansion and shell quoting without evaluating Make variables in Python or changing prerequisite inheritance. Hosted event-pinned plans retain their setup source/comparison identity; comparison-free bootstrap remains unavailable. Newly automatic local runs reserve identity and monotonic origin, materialize at native worker initialization, and retain unknown early-failure/interruption fallback even for dry attempts; successful native dry runs create no file. Direct/supplied/hosted startup remains unchanged."
         },
         {
           "path": "scripts/benchmark_browser.py",
@@ -15413,7 +15418,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "Actual report CLI preserves selected committed comparison and read-only output, omits writes, and retains existing impact stdout."
+          "purpose": "Actual report CLI preserves selected committed comparison and read-only output, omits writes, and retains existing impact stdout. Public committed check output is identical with or without the accepted unused review path."
         },
         {
           "path": "scripts/test_specs_generated_cases.py",
@@ -15765,7 +15770,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Real Make commands record one locked npm install, frontend build, plugin embed and shared helper build in clean and prepared local, hosted, bootstrap and direct invocations; hosted setup and bootstrap comparison boundaries remain explicit."
+          "purpose": "Real Make commands record one locked npm install, frontend build, plugin embed and shared helper build in clean and prepared local, hosted, bootstrap and direct invocations; hosted setup and bootstrap comparison boundaries remain explicit. The existing browser benchmark assertions execute exactly once before performance in every complete native graph."
         },
         {
           "path": "scripts/test_ci.py",
@@ -15948,7 +15953,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Instrumentation failure retains command status, process ownership and fixed nonsensitive warnings."
+          "purpose": "Phase and specification-comparison instrumentation failures retain command status and process ownership with fixed nonsensitive warnings; private paths, argv and credential canaries stay out of diagnostics."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -16163,7 +16168,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "Real Git index A and B yield distinct private comparison digests with identical HEAD and worktree identity; unstaged-only edits preserve the index digest, collection leaves the index unchanged and journals export no private names or contents."
+          "purpose": "Real Git index A and B yield distinct private comparison digests with identical HEAD and worktree identity; unstaged-only edits preserve the index digest, collection leaves the index unchanged and journals export no private names or contents. Output-only --json preserves the exact selected index digest. Shared parsing of unused review and same-root options retains the same index digest."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -16388,6 +16393,132 @@
             "S3"
           ],
           "purpose": "An isolated controller bounds a missing sampling callback independently, kills and reaps the probe and pipe-blocked child, retains timeout diagnostics and preserves an unrelated sibling."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_real_graph_cancellation_keeps_partial_journal_and_cleans_owned_command(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The real timing CLI and local/hosted Make graphs retain running/partial/unstarted phase evidence, preserve SIGTERM status and remove the owned blocked command. Cancellation during hosted setup leaves specification unstarted and comparison unavailable; source/phase truth remains explicit."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_option_arguments_do_not_disable_timing_or_execute_dry_runs(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual graph runs with include directories and output modes containing n retain complete timing journals under direct, inherited and assigned Make flags; adding -n still executes no tools and creates no journal. Native MAKE include-option operands containing -n still execute normally and retain complete timing."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_graph_probe_assertion_failure_cleans_its_owned_worker_group(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A forced graph readiness assertion failure still terminates and reaps the timing wrapper through its runner, removes the owned Make and blocked command, and finalizes interrupted evidence."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_native_pipe_and_fifo_jobservers_survive_the_timing_boundary(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual GNU Make retains valid pipe/FIFO authentication and -j2 across the timing worker under native direct, inherited and assigned flags, without unavailable-jobserver fallback, duplicate preparation or fixture opt-in."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_native_expanded_comparison_matches_the_worker_under_variable_overrides(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Distinct main and HEAD verify default recursive FLOW_BASE, recursive/simple FLOW_ARGS, MAKELEVEL, actual specs-check automatic/target-specific context, literal-dollar refs and ci override against the journal. Startup retains source identity and unavailable local comparison; actual specification argv resolves it before execution. Bootstrap and pre-specification hosted-goal failure retain unavailable comparison, and hosted setup keeps its original variable scope. Output-only --json reaches the actual specification command while preserving the same resolved comparison. Same-root and unused-review options reach the actual specification command while preserving its selected comparison. The parent fixture requires per-invocation started/passed startup observations from each optional fake version query. A private copied-helper mutation resolves comparison prematurely: ordinary commands and final comparison still succeed, but the parent oracle rejects missing passes; the helper is restored in finally and trace files are ignored by fixture Git identity."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_mflags_override_does_not_replace_native_dry_run_state(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Six public entrypoints preserve native dry-run state despite MFLAGS-only overrides: actual dry workers execute no tools or timing journal; active verification retains its complete journal without replacing caller MFLAGS."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_specification_phase_observes_literal_argv_and_preserves_hosted_identity(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The specification phase resolves literal quote/dollar/hash ref argv without reparsing, rejects an unrecognized command prefix as unavailable, preserves pre-pinned hosted comparison and retains command status. Supported output-only --json preserves the selected commit comparison; unknown flags remain unavailable. Shared CLI parsing accepts unused --review and equivalent --root selections; different roots, help, malformed and unknown argv stay unavailable without exporting diagnostics or private paths. Actual parser help and ambiguous-option exits remain quiet/unavailable at the parse boundary."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_reserved_journal_preserves_origin_without_creating_files(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Reservation creates no directory or file; materialization retains its run ID and injected monotonic origin, with final wall time including the reserved interval."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_automatic_journal_materializes_only_at_context_or_early_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The automatic worker materializes before source metadata; successful unobserved dry execution creates no file, while nonzero, missing-child and interruption preserve reserved identity/origin and truthful unknown partial fields."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_automatic_context_preserves_supplied_and_hosted_journals(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Supplied local and hosted journals retain identity, origin, source, comparison and planned phases without another reservation; local finalization and hosted retained running status stay unchanged."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_recursive_make_dry_forms_leave_no_automatic_journal(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Native recursive Make short, grouped, long-alias and abbreviated dry options execute no tools and create no automatic timing file for local and hosted-goal graphs."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_before_context_failure_retains_unknown_automatic_journal(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Native early nonzero, missing Makefile under dry mode and missing executable retain failed unknown partials with null unstarted durations, no command arguments and truthful wall time."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_before_context_signals_retain_unknown_partial_even_for_dry_attempts(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual SIGINT/SIGTERM during native Make parsing before worker context, including dry attempts, finalize unknown partials at reserved identity/origin and remove the owned helper and Make group under finite waits with immediately registered cleanup."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_actual_comparison_metadata_systemexit_stops_before_owned_runner(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable."
         }
       ],
       "suites": [

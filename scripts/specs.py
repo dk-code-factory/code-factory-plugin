@@ -31,6 +31,7 @@ KINDS = {"behavior", "refactor", "terminology", "structure", "adoption"}
 AGENTS = {"specification-coordinator", "glossary-maintainer", "ui-specification-maintainer", "user-flow-maintainer", "specification-reviewer"}
 SKILLS = {"reconcile-specs", "maintain-glossary", "maintain-ui-specs", "reconcile-user-flows"}
 
+from specs_lib.arguments import argument_parser
 from specs_lib.schema import graph_errors, registry_collection_shapes, validate
 from specs_lib.references import decoded_reference, dependency_errors, reference_definition_context, definition_has_reference
 from specs_lib.maintenance import skill_description_is_string, validate_agents
@@ -40,15 +41,7 @@ from specs_lib.receipts import constraints, receipt_errors
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("validate", "render", "impact", "check", "reconcile", "report", "gaps"))
-    parser.add_argument("--root", type=pathlib.Path, default=pathlib.Path(__file__).resolve().parents[1])
-    parser.add_argument("--base", default="HEAD")
-    parser.add_argument("--head")
-    parser.add_argument("--merge-base", action="store_true")
-    parser.add_argument("--staged", action="store_true")
-    parser.add_argument("--json", action="store_true")
-    parser.add_argument("--review", type=pathlib.Path)
+    parser = argument_parser(pathlib.Path(__file__).resolve().parents[1], description=__doc__)
     args = parser.parse_args(argv)
     try:
         root = args.root.resolve()
