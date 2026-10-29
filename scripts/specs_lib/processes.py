@@ -6,12 +6,13 @@ import subprocess
 import time
 
 
-def run_verification(command, *, cwd, log_stream=None, timeout=600):
+def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=()):
     """Run one verifier in an owned session, including descendant cleanup.
 
     Observe completion without reaping the leader until the last group signal.
     Retaining its PID prevents an unrelated process group from reusing that ID
     between command completion and cleanup. This runner targets Linux.
+    Non-stdio descriptors survive exec only when explicitly supplied.
     """
     import user_flows as uf
     interrupted = None
@@ -29,8 +30,10 @@ def run_verification(command, *, cwd, log_stream=None, timeout=600):
         # directly inside Popen could interrupt it before we own its returned PID.
         for signum in (signal.SIGINT, signal.SIGTERM):
             handlers[signum] = signal.signal(signum, interrupt)
+        descriptor_options = {"pass_fds": pass_fds} if pass_fds else {}
         process = subprocess.Popen(command, cwd=cwd, env={**os.environ, **uf.FIXTURE_ENV},
-                                   stdout=log_stream, stderr=log_stream, start_new_session=True)
+                                   stdout=log_stream, stderr=log_stream, start_new_session=True,
+                                   **descriptor_options)
         try:
             deadline = time.monotonic() + timeout
             while True:

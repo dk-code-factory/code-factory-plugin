@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
-  "fingerprint": "fa5da02fcc4356e7a9a66406fc5508dffaa98385659c29e3d499911c10b2d9f8",
+  "base": "0ff1fb7f0dba570ea2b0647ee1b3ca725f5f273d",
+  "fingerprint": "7577a24509a13b5ed168106fa3e9a82ff16a201468a4acdb9e908e173e701ff0",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S3 local qualification requires complete discovered title multisets and exactly one passing execution per scenario, without skipped or retried results. GNU-time RSS remains explicitly an individual-process metric. Hosted comparison and all product behavior retain main behavior.",
-    "implementation": "Read specifications, inventory, validate_run, discover and main. Ordinary subprocess.run executes four worker counts 1/2/2/1 with fixture mode and zero retries; discovery retains both output streams before status validation; failed runs retain report and summary. Main browser topology and hosted workflow are unchanged. Numeric parsing now explicitly requires finite nonnegative elapsed time and nonnegative integer RSS before updating accepted metrics; zero remains valid. The failed sample entry is saved before validation and stops later execution on rejection.",
-    "tests": "Read the three mapped regressions: nested file movement preserves inventory but duplicate titles fail; failed/skipped/timedOut/interrupted/retried/missing/error cases raise; a real failing discovery subprocess retains stdout/stderr and reports both paths. These provide local qualifier coverage; full source qualification is an independent acceptance gate. Read actual main-path stubs: success preserves1/2/2/1 and accepts0/0; failure on sample2 exercises execution19, skipped/missing/malformed reports and ten invalid metric spellings. Each checks only two invocations, first passed/second failed, rawreport/stderr/time/discovery retained and no nonstandard summary numbers. Test-only extension now preserves title inventory while rejecting zero/multiple project executions or results and expectedStatus/status violations; extra distinct titles reject. Main accepts a matching nested baseline and rejects nine invalid discovery/baseline cases before any sample, retaining discovery stdout/stderr and no success artifacts. Sixteen isolated guard mutations are detected. Production runner unchanged."
+    "description": "S4/S5 document callable bounded phase journals, immutable input/comparison identities and truthful partial outcomes. Automatic Make/hosted wiring remains later work. Preserve main S3 inventory completeness, once/no-skip/no-retry qualification and discovery diagnostics.",
+    "implementation": "Read Journal atomic locked updates, framed source identity, index delta without mutation, unavailable contradictory selection and owned runner transport. Helper/runner match848686a exactly; benchmark Make/tooling command/input remain main contributions.",
+    "tests": "Read direct timing assertions for overlap/wall time,48 concurrent rows, signal cleanup, privacy, framing, index-byte invariance and empty intent-to-add distinctions, contradictory head/staged rejection. Runner checks explicit descriptor inheritance and default Popen omission;9 benchmark regressions remain mapped."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.537
+      "seconds": 30.135
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 55.856
+      "seconds": 62.125
     },
     {
       "command": [
@@ -53,13 +53,13 @@
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "819acdbb7bf07bc3d89dae65293643be054717dd2d60bbbfe807544cf7ced58f",
-    "term:coverage-gap": "d7c023cecaf0b6b45992061bb73b836eed3ea02826c39c4540c503a45a58e1eb",
-    "term:entity": "0f6c1ea198d4b1a13b82fd01dff37b2934b15d561ba201cbe6b825f8e23ef285",
-    "term:glossary": "46fdacf5ee26d8307fc39fd69399367e8c5404e2ed3968cae3b69e4144ca2eb5",
-    "term:known-limitation": "44261af6371dd6656b7089464272f71896fe60692c1da99b4fe1c8f8daefc3f1",
-    "term:reconciliation": "000a78d31b67e515fa131d93042e665e21c8e25a7eef2e1df683211248ca5fc5",
-    "term:unverified-behavior": "7e1675561476a969a8172b05bd23593e3631ecfd3cee4330a703fa3c36b17a0a",
-    "term:verification": "7b1e8277c2c2f5139a314bbfffb535315820b425ac1e1d517db7f916ff2c026f"
+    "flow:maintain-flow-contracts": "c58ec0c746734f18f1be42e3e87c6916bee5602426fa64cb7484458dbe9d8078",
+    "term:coverage-gap": "32d0973bef26fbc15e17df0de440de1f6b3e08bd2449a593d00dbf656ccb7f72",
+    "term:entity": "c87af9f3adadce9973cc1d1430bee71ad1c74eb4c6ad818971661182e5431396",
+    "term:glossary": "96d311f6e0a49075595d8a20935d412fb557a86310280f7310e56f51e020b6d9",
+    "term:known-limitation": "de2033ce5b7e3335540e8183ac0a7279327f76237230821873490b8828b489e7",
+    "term:reconciliation": "06be6b085367f5a156d70b5cca6df16b1fed70535546c4e46b25ad19ff60c90b",
+    "term:unverified-behavior": "c5ac4777c07a6439fe8b23473ab79ba8f9785467e00964d83f445588646a0920",
+    "term:verification": "ef8c43be6bd100428d266db9846ebda0dfbb52e2a9756a7029d9648b2e6420ab"
   }
 }
