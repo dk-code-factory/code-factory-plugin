@@ -44,6 +44,11 @@ Qualification validates the complete discovered inventory, requires each scenari
 to pass once without skips or retries, and retains discovery failure diagnostics.
 
 
+Sampled concurrent workload memory is reported separately from the largest
+process with its measurement limits. Missing memory coverage or safe cleanup
+targeting fails qualification. Cancellation bounds owned-workload cleanup,
+preserves unrelated processes and retains an interrupted nonzero result.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -366,6 +371,18 @@ flowchart TD
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_report_rejects_extra_distinct_title(`; S3. An extra distinct scenario title cannot qualify against the discovered inventory.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_main_accepts_matching_baseline_inventory(`; S3. Equivalent baseline title multisets allow all four samples even when suite nesting changes.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_main_rejects_discovery_and_baseline_before_any_sample(`; S3. Empty/error/malformed/nonzero discovery and mismatched/invalid baselines stop before every sample while retaining both discovery diagnostic streams.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_concurrent_process_hierarchy_memory_includes_new_sessions(`; S3. A real short-lived process hierarchy with simultaneous allocations and an escaping session establishes sampled concurrent workload memory.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_memory_requires_root_children_and_positive_rss(`; S3. Missing root/child coverage, zero RSS and empty or malformed process data cannot supply accepted memory evidence.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_memory_read_failure_rejects_partial_measurement(`; S3. A pipe keeps the spawned child alive until the injected second-sample read failure, deterministically rejecting partial evidence without a scheduler-dependent lifetime.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_real_signals_clean_owned_hierarchy_and_retain_interruption(`; S3. Real SIGINT/SIGTERM during launch, measurement and cleanup terminate owned groups and new-session children, preserve unrelated/stale-PID sentinels, restore handlers and retain interrupted summaries.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_cleanup_targeting_failure_is_not_accepted(`; S3. Unavailable safe descendant targeting fails qualification while still terminating and boundedly reaping the pinned original group.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_unavailable_safe_targeting_fails_before_launch(`; S3. Unavailable pidfd support fails before launching a workload that could not be safely cleaned up.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_stalled_probe_fallback_kills_and_reaps_only_owned_children(`; S3. A forced noncooperative cancellation probe survives both cooperative waits, then an independent subreaper controller boundedly kills and reaps its owned hierarchy across sessions while preserving an unrelated sibling.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_main_stops_on_memory_failure_and_retains_diagnostics(`; S3. Missing memory coverage and read failures stop main after prior success, retain raw report/stderr/time and failed error status, and never serialize partial workload metrics.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_cleanup_deadline_failures_stop_main_and_close_owned_handles(`; S3. Deterministic descendant deadline and direct-child wait timeout reach main failure, preserve TERM/KILL targeting and bounded waits, close pidfds and prevent accepted qualification.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_reused_or_exited_parent_never_adopts_or_signals_unrelated_children(`; S3. Deterministic non-atomic proc scans reject replaced or exited session/remembered parents before and during ancestry verification; unrelated children never enter known ownership or receive cleanup signals.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_verified_cross_session_child_stays_known_after_reparenting(`; S3. A verified live parent establishes a cross-session child once; its retained identity remains owned after reparenting without trusting the replaced parent.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_missing_sampling_callback_is_bounded_and_reaps_pipe_child(`; S3. An isolated controller bounds a missing sampling callback independently, kills and reaps the probe and pipe-blocked child, retains timeout diagnostics and preserves an unrelated sibling.
 
 ## Verification and gaps
 

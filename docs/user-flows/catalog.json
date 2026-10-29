@@ -15954,6 +15954,102 @@
             "S3"
           ],
           "purpose": "Empty/error/malformed/nonzero discovery and mismatched/invalid baselines stop before every sample while retaining both discovery diagnostic streams."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_concurrent_process_hierarchy_memory_includes_new_sessions(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A real short-lived process hierarchy with simultaneous allocations and an escaping session establishes sampled concurrent workload memory."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_memory_requires_root_children_and_positive_rss(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Missing root/child coverage, zero RSS and empty or malformed process data cannot supply accepted memory evidence."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_memory_read_failure_rejects_partial_measurement(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A pipe keeps the spawned child alive until the injected second-sample read failure, deterministically rejecting partial evidence without a scheduler-dependent lifetime."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_real_signals_clean_owned_hierarchy_and_retain_interruption(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Real SIGINT/SIGTERM during launch, measurement and cleanup terminate owned groups and new-session children, preserve unrelated/stale-PID sentinels, restore handlers and retain interrupted summaries."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_cleanup_targeting_failure_is_not_accepted(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Unavailable safe descendant targeting fails qualification while still terminating and boundedly reaping the pinned original group."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_unavailable_safe_targeting_fails_before_launch(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Unavailable pidfd support fails before launching a workload that could not be safely cleaned up."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_stalled_probe_fallback_kills_and_reaps_only_owned_children(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A forced noncooperative cancellation probe survives both cooperative waits, then an independent subreaper controller boundedly kills and reaps its owned hierarchy across sessions while preserving an unrelated sibling."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_main_stops_on_memory_failure_and_retains_diagnostics(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Missing memory coverage and read failures stop main after prior success, retain raw report/stderr/time and failed error status, and never serialize partial workload metrics."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_cleanup_deadline_failures_stop_main_and_close_owned_handles(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Deterministic descendant deadline and direct-child wait timeout reach main failure, preserve TERM/KILL targeting and bounded waits, close pidfds and prevent accepted qualification."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_reused_or_exited_parent_never_adopts_or_signals_unrelated_children(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Deterministic non-atomic proc scans reject replaced or exited session/remembered parents before and during ancestry verification; unrelated children never enter known ownership or receive cleanup signals."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_verified_cross_session_child_stays_known_after_reparenting(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A verified live parent establishes a cross-session child once; its retained identity remains owned after reparenting without trusting the replaced parent."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_missing_sampling_callback_is_bounded_and_reaps_pipe_child(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "An isolated controller bounds a missing sampling callback independently, kills and reaps the probe and pipe-blocked child, retains timeout diagnostics and preserves an unrelated sibling."
         }
       ],
       "suites": [
