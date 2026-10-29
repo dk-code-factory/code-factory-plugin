@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "470ada037d99b22d31ae6e289b5683f35e062e18",
-  "fingerprint": "3ddc94e38fdd17518d810e8f7fa53fb49394eb4fe45a85d28f061ff27ae4f55f",
+  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
+  "fingerprint": "a54bf0aa3e63d87ef76239e6c327fdc0c479abe2f1b8c76b9265e07661f63059",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "Contributor comparison now explicitly separates independently owned mocked browser sessions from ordered shared-daemon scenarios, and retains repeated zero-retry timing samples without replacing full verification or release provenance. S4/S5 cover these fixture-only boundaries.",
-    "implementation": "Reviewed playwright.config.ts project match/ignore partition, two-worker global cap and one-worker assembled cap. Browser benchmark checks exact PR source with read-only permissions, starts fresh servers per sample and stores separate JSON/time output. Existing performance configuration remains one worker with zero retries. Follow-up CI repair explicitly declares PyYAML 6.0.3 in hosted Python prerequisites and bounds each deterministic workflow-script subprocess with timeout=30; no browser scheduling, permissions or production behavior changes.",
-    "tests": "test_browser_benchmark_retains_samples_and_stops_on_failure executes the workflow shell with deterministic subprocesses: asserts 1,2,1,2 worker sequence, no retries, distinct retained outputs and immediate exit 19 with partial evidence on failure. Full 158-title inventory and byte-identical 129 test statement comparison preserve original assertions. Reinspected subprocess argv, mocked npx, both exit-code subtests, exact worker/retry argv, retained JSON counts/content and GNU-time output assertion. The 30-second timeout applies to the whole deterministic shell invocation; clean Python 3.12 virtualenv verification installs only declared requirements before running the complete test_ci.py suite."
+    "description": "The contributor contract now documents the callable bounded timing journal and explicit descriptor transport. Automatic Make and hosted wiring are deliberately deferred to the next stack slices; product flows and pinned adoption remain unchanged.",
+    "implementation": "Inspected Journal creation, atomic locked updates, immutable framed Git input identity, comparison selection, plan refresh, signal-aware owned execution and fail-open observation. Reviewed runner pass_fds: legacy calls omit the keyword and unrelated inheritable descriptors remain closed. Makefile, ci.py and hosted workflow are unchanged against c5eab65 in this slice.",
+    "tests": "Read the injected-clock overlap and null-duration assertions, four-process writer test, real SIGTERM/cancellation cleanup probes, exact whitespace filename and binary framing identities, privacy bounds and startup signal tests. Twenty-five journal tests pass; the explicit-descriptor child regression checks only the advertised pipe, fixture0, status37 and restored signal handlers. Hosted dispatcher integration tests belong to the final slice."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.244
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.341
+      "seconds": 29.478
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 52.701
+      "seconds": 56.795
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "a20114f646abde1e729200af52abe8805dd4c7d8d953fc86890ed3f6ce719d4f",
-    "term:coverage-gap": "b2a3e94648d17593561d913cbead453b1495b52ad957daff711823b45277c079",
-    "term:entity": "be331255aebc6c4d89e56627f6da96cf6a364ca819c7ff4622262299cf3a9223",
-    "term:glossary": "c01d15ef288c7a0b0c3a7b9103a1af15a612cb6344933db9a443f14bd2049425",
-    "term:known-limitation": "5a58d910d7da7a17b70cd116437ba99f592d7094dd9a125de3190d6de47a0692",
-    "term:reconciliation": "e72f8e8de1626534c8d93a848f8f91d5e727728e7f274544c145d727ded2231b",
-    "term:unverified-behavior": "c7b630ef89828262479c24ce4a86881d2d1b7e455f5994aba090ece86092c399",
-    "term:verification": "23683576388b4ce204024f05a45a387ebbf0c951801553500a463e6ef75fcba2"
+    "flow:maintain-flow-contracts": "10fb48726129efd5f8c1b6c038355cb434df68758041499011c26cceb0739db1",
+    "term:coverage-gap": "2afb1c4bc0f88f27edc9f276c99e13459977270de7e45b0df8d402d76f57fde9",
+    "term:entity": "d7df536845c48956c3ffbb4c8fd56b2591d177820ae7ce1b3dbd072c071f5147",
+    "term:glossary": "3be09482cf238f01b35c66ac4c76a9972634a5eb3b13604ccfa5c75d65aac39c",
+    "term:known-limitation": "ef5a2f3d83d72f15b73413930dc93fa780ea5dafc0df251739b36cdcbcd2a1fa",
+    "term:reconciliation": "6addb889ca4e395d2170ddbf4856a260380e231a9360530f95c188e5ffe74159",
+    "term:unverified-behavior": "2691f6b7cb656f88bb31787b3ffd8da0bc340df5118e6a49155849ba237831c1",
+    "term:verification": "bb52f691cd2516ee839f90320c194dc4d3ca031358a4f1cc428c4b5f4a75d68d"
   }
 }

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "470ada037d99b22d31ae6e289b5683f35e062e18",
-  "fingerprint": "55b710bf241b42a4ab40018f2b0f0002d5de100db913bb6df5a49011d11fe6e1",
+  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
+  "fingerprint": "5da262c8e27a4d7b7778484df7f4917b57c01edf7a88d37d700f9047c979040e",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Notification subscription and callback verification behavior is unchanged; ordinary fixture checks do not establish live callback delivery. Stable scenario IDs and outstanding acceptance gaps are retained.",
-    "implementation": "Production code and authored product behavior remain unchanged. The browser host helpers are extracted without module-level mutable test state; each mocked host owns its snapshot/calls. Shared assembled-daemon scenarios retain their original order in a single-worker project. receive-notifications mappings follow the original assertion anchors to their feature files. Repair reassessment: the only subsequent code inputs are scripts/requirements-dev.txt (declared YAML test parser) and scripts/test_ci.py (30-second benchmark-fixture subprocess bound); this subject retains the prior reviewed implementation and mapping decisions.",
-    "tests": "Inspected the retained assertion purposes and verified all 129 original test/parameterization statements byte-for-byte, with exact 158-title/multiplicity discovery equivalence. Relevant assertions: internal/events/events_test.go func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( \u2014 Signature verification, duplicate creation, entity filtering, stable identity across a 503 retry, expiry and idempotent unsubscribe fixtures; other failure classes and notification disabling are not asserted.; internal/events/events_test.go func TestCallbackSafetyAndFailedChallenge( \u2014 Callback destination and challenge safety.. Existing non-browser assertions remain unchanged and required suites rerun during reconciliation. The prior assertion review remains applicable: no mapped product assertions, source anchors, glossary definitions or UI entities change in this repair. All required fixture suites are rerun to refresh dependency-sensitive evidence; no acceptance gap is closed."
+    "kind": "structure",
+    "description": "Event delivery, callback validation and webhook signing are unchanged by local phase reporting.. This slice changes operational verification inputs only, with no product contract changes.",
+    "implementation": "Compared this subject and mapped product implementations against c5eab656516393f8673e86a15b3f8bb5e161f9eb: product files, glossary meanings, UI ownership and browser assertion bodies are unchanged. Only the new callable journal and optional runner descriptor keyword alter shared operational fingerprints; no automatic entrypoint integration or adoption policy change is present.",
+    "tests": "Existing subject-owned product assertions remain byte-identical to the target, including its partitioned browser fixtures. The unchanged mapped suites are retained for fresh fixture reconciliation; new journal and explicit-descriptor tests establish tooling behavior without claiming additional product, installed-host or provider acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 128.118
+      "seconds": 135.728
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.244
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.341
+      "seconds": 29.478
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 52.701
+      "seconds": 56.795
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "b83b0eff784594f39d7f321c4b9c4524351a9a0b41b7d25082c66274298d85d3",
-    "term:attention-request": "9e4cf5d434d35eddaff8a2662e8bdcf87dac6cab60233a66890734e8b1ede8b7",
-    "term:coverage-gap": "b2a3e94648d17593561d913cbead453b1495b52ad957daff711823b45277c079",
-    "term:host": "ea46ec20df0eff48ccf0958c4dd357de115d871eafd644dc2dbecf6d0249abb9",
-    "term:known-limitation": "5a58d910d7da7a17b70cd116437ba99f592d7094dd9a125de3190d6de47a0692",
-    "term:subscription": "09c5116a10501b1533f7c90e70f2400696cfef9789dac4999ac30464224dd7e0",
-    "term:unverified-behavior": "c7b630ef89828262479c24ce4a86881d2d1b7e455f5994aba090ece86092c399"
+    "flow:receive-notifications": "e09483d9bbcbe229fb934389528d5ab94af4d75483091388ff1518c33ec7428e",
+    "term:attention-request": "c949c2ebd9cfddf6bbaa18a8138ad152569eaf776e674792076bcfce529c7c82",
+    "term:coverage-gap": "2afb1c4bc0f88f27edc9f276c99e13459977270de7e45b0df8d402d76f57fde9",
+    "term:host": "6daa28743e62f8cb961a28c8bc5913f62d68e25cc787baadc759f7ae976490ab",
+    "term:known-limitation": "ef5a2f3d83d72f15b73413930dc93fa780ea5dafc0df251739b36cdcbcd2a1fa",
+    "term:subscription": "d9f1665d4eb4c8923af825a6351efcf8f7ecb1e9bbb46321493bfcafa24c35fc",
+    "term:unverified-behavior": "2691f6b7cb656f88bb31787b3ffd8da0bc340df5118e6a49155849ba237831c1"
   }
 }
