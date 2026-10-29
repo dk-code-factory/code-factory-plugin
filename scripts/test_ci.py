@@ -6,6 +6,9 @@ import tarfile
 import zipfile
 import os
 import re
+import select
+import signal
+import socket
 from pathlib import Path
 import subprocess
 import shutil
@@ -18,10 +21,14 @@ from unittest.mock import patch
 
 import ci
 import release
+from test_specs_timing import cleanup_process
 
 
 class HostedCITests(unittest.TestCase):
     def setUp(self):
+        isolated = patch.object(ci.timing, "selected", return_value=None)
+        isolated.start()
+        self.addCleanup(isolated.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
@@ -330,10 +337,12 @@ class VerificationGraphTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         source = Path(__file__).resolve().parents[1]
-        for name in ('Makefile', 'scripts/verify.sh'):
+        for name in ('Makefile', 'scripts/verify.sh', 'scripts/verification_timing.py',
+                     'scripts/specs_lib/processes.py', 'scripts/user_flows.py'):
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source / name, target)
+        shutil.copytree(source / 'scripts/specs_lib', self.root / 'scripts/specs_lib', dirs_exist_ok=True)
         # A file default must not replace a caller's command-line variable in
         # recursive verification; inheriting only an environment value loses it.
         with (self.root / 'Makefile').open('a') as makefile:
@@ -355,6 +364,11 @@ import hashlib, json, os, pathlib, sys, time
 root = pathlib.Path(os.environ['RECORD_ROOT'])
 command = pathlib.Path(sys.argv[0]).name
 args = sys.argv[1:]
+if command == 'python3' and args and args[0].endswith('/verification_timing.py'):
+    os.execv('/usr/bin/python3', ['/usr/bin/python3', *args])
+if args in (['--version'], ['version']):
+    print('1.24.2')
+    sys.exit(0)
 key = command + ' ' + ' '.join(args)
 inputs = ['web/package.json', 'web/package-lock.json', 'web/vite.config.ts',
           'web/defer-ui.mjs', 'web/src/app.tsx', 'plugin/plugin.json',
@@ -371,6 +385,12 @@ def produce(path):
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(digest)
 record('start')
+if key == os.environ.get('WAIT_COMMAND'):
+    import socket
+    ready = socket.create_connection(('127.0.0.1', int(os.environ['READY_PORT'])))
+    ready.sendall(str(os.getpid()).encode())
+    ready.close()
+    time.sleep(60)
 time.sleep(0.005)
 if key == os.environ.get('FAIL_COMMAND'):
     sys.exit(23)
@@ -407,8 +427,12 @@ record('end')
         self.env.pop('MAKELEVEL', None)
         self.env.pop('FLOW_BASE', None)
         self.env.pop('FLOW_ARGS', None)
+        for key in list(self.env):
+            if key.startswith('CODE_FACTORY_TIMING_') or key == 'GITHUB_ACTIONS':
+                self.env.pop(key)
 
     def run_make(self, *goals, flags=(), fail=None, inherited_flags=None, direct=False):
+        before = set((self.root / 'verification-results').glob('*.json'))
         log = self.root / 'commands.jsonl'
         log.unlink(missing_ok=True)
         env = {**self.env}
@@ -419,6 +443,8 @@ record('end')
         argv = ['sh', 'scripts/verify.sh'] if direct else ['make', '--no-print-directory']
         result = subprocess.run([*argv, *flags, *goals], cwd=self.root, env=env,
                                 capture_output=True, text=True, timeout=30)
+        created = set((self.root / 'verification-results').glob('*.json')) - before
+        self.last_timing = json.loads(created.pop().read_text()) if created else None
         events = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
         self.assertTrue(all(e['fixture'] == '0' for e in events), events)
         return result, events
@@ -459,6 +485,8 @@ record('end')
                     goals = ['FLOW_BASE=main', 'CODE_FACTORY_REAL_CODEX=1']
                     events = self.successful(*([] if goal == 'direct' else [goal]), *goals, direct=goal == 'direct')
                     self.assert_shared_once(events)
+                    self.assertEqual(self.last_timing['outcome'], 'success')
+                    self.assertTrue(all(row['outcome'] == 'success' for row in self.last_timing['phases']), self.last_timing)
                     starts = [e['key'] for e in events if e['event'] == 'start']
                     if goal.startswith('hosted'):
                         self.assertEqual(starts.count('python3 -m pip install -r scripts/requirements-dev.txt'), 1)
@@ -507,6 +535,11 @@ record('end')
                 result, failed = self.run_make('hosted-verify', flags=('-k', '-j8'), fail=command)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn('Error 23', result.stderr)
+                rows = self.last_timing['phases']
+                self.assertEqual(self.last_timing['outcome'], 'failure')
+                self.assertTrue(any(row['outcome'] == 'failure' and row['exit_code'] == 23 for row in rows), rows)
+                self.assertFalse(any(row['outcome'] == 'running' for row in rows), rows)
+                self.assertTrue(all(row['seconds'] is None and row['exit_code'] is None for row in rows if row['outcome'] == 'unstarted'))
                 self.assertEqual([e['key'] for e in failed if e['event'] == 'start'], commands[:commands.index(command) + 1])
         result, events = self.run_make(fail='npm ci', direct=True)
         self.assertNotEqual(result.returncode, 0)
@@ -627,6 +660,7 @@ record('end')
                         direct=goal == 'direct', flags=flags, inherited_flags=inherited)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertEqual(events, [], 'Dry-run must not execute verification tools')
+                    self.assertIsNone(self.last_timing, 'Dry-run must not create timing evidence')
                     self.assertIn('npm ci', result.stdout)
                     self.assertIn('go vet ./...', result.stdout)
 
@@ -636,13 +670,97 @@ record('end')
         self.assertEqual(events, [])
 
     def test_hosted_dispatch_passes_exact_comparison_through_real_graph(self):
-        with patch.object(ci, 'ROOT', self.root), patch.dict(os.environ, self.env):
+        with patch.object(ci, 'ROOT', self.root), patch.dict(os.environ, self.env, clear=True):
             ci.run_verification({'base': 'a' * 40, 'head': 'b' * 40, 'bootstrap': False},
                                 runner=lambda *args, **kwargs: subprocess.run(*args, timeout=30, **kwargs))
         events = [json.loads(line) for line in (self.root / 'commands.jsonl').read_text().splitlines()]
         self.assert_shared_once(events)
         self.assertIn('python3 scripts/specs.py check --base ' + 'a' * 40 + ' --head ' + 'b' * 40,
                       [e['key'] for e in events])
+
+    def test_option_arguments_do_not_disable_timing_or_execute_dry_runs(self):
+        directory = str(self.root / 'nothing')
+        for flags, inherited in ((('-I', directory), None),
+                                 (('--include-dir=' + directory,), None),
+                                 (('-Oline',), None), (('--output-sync=line',), None),
+                                 ((), '-I' + directory), (('MAKEFLAGS=-I' + directory,), None),
+                                 ((), '--output-sync=line'),
+                                 (('MAKEFLAGS=--output-sync=line',), None)):
+            with self.subTest(flags=flags, inherited=inherited):
+                events = self.successful('verify', flags=flags, inherited_flags=inherited)
+                self.assert_shared_once(events)
+                self.assertEqual(self.last_timing['outcome'], 'success')
+                result, events = self.run_make('verify', flags=('-n', *flags), inherited_flags=inherited)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(events, [])
+                self.assertIsNone(self.last_timing)
+
+    def graph_cancellation_probe(self):
+        listener = socket.socket()
+        self.addCleanup(listener.close)
+        listener.bind(('127.0.0.1', 0))
+        listener.listen(1)
+        environment = {**self.env, 'WAIT_COMMAND': 'npm ci',
+                       'READY_PORT': str(listener.getsockname()[1])}
+        # Exercise the exact boundary CLI used by Make around its worker graph.
+        process = subprocess.Popen([sys.executable, 'scripts/verification_timing.py',
+            'verify', '--', 'make', '--no-keep-going', 'verify-steps'],
+            cwd=self.root, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.addCleanup(cleanup_process, process)
+        ready, _, _ = select.select([listener], [], [], 10)
+        self.assertTrue(ready, 'graph command did not start')
+        connection, _ = listener.accept()
+        with connection:
+            connection.settimeout(2)
+            child_pid = int(connection.recv(32))
+        journal, = (self.root / 'verification-results').glob('*.json')
+        return process, child_pid, journal
+
+    def test_real_graph_cancellation_keeps_partial_journal_and_cleans_owned_command(self):
+        process, child_pid, journal = self.graph_cancellation_probe()
+        running = json.loads(journal.read_text())
+        self.assertEqual(next(row for row in running['phases'] if row['phase'] == 'npm-install')['outcome'], 'running')
+        process.send_signal(signal.SIGTERM)
+        _, errors = process.communicate(timeout=10)
+        self.assertEqual(process.returncode, 143, errors.decode())
+        with self.assertRaises(ProcessLookupError):
+            os.kill(child_pid, 0)
+        data = json.loads(journal.read_text())
+        self.assertEqual(data['outcome'], 'interrupted')
+        rows = {row['phase']: row for row in data['phases']}
+        self.assertEqual(rows['specifications']['outcome'], 'success')
+        self.assertEqual(rows['npm-install']['outcome'], 'interrupted')
+        self.assertEqual(rows['performance']['outcome'], 'unstarted')
+        self.assertIsNone(rows['performance']['seconds'])
+        self.assertFalse(any(row['outcome'] == 'running' for row in data['phases']))
+
+    def test_graph_probe_assertion_failure_cleans_its_owned_worker_group(self):
+        process, child_pid, journal = self.graph_cancellation_probe()
+        leader = os.getpgid(child_pid)
+        with self.assertRaisesRegex(AssertionError, 'forced graph readiness assertion'):
+            try:
+                self.fail('forced graph readiness assertion')
+            finally:
+                cleanup_process(process)
+        self.assertEqual(process.returncode, 143)
+        for pid in (child_pid, leader):
+            with self.assertRaises(ProcessLookupError):
+                os.kill(pid, 0)
+        self.assertEqual(json.loads(journal.read_text())['outcome'], 'interrupted')
+
+    def test_workflow_finalizes_timing_before_every_artifact_transfer(self):
+        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()
+        steps = workflow.split('      - ')[1:]
+        verify = next(i for i, step in enumerate(steps) if step.startswith('name: Verify exact source'))
+        self.assertTrue(steps[verify + 1].startswith('name: Finish verification timing'))
+        self.assertIn('if: always()', steps[verify + 1])
+        self.assertIn('hosted-finish --outcome', steps[verify + 1])
+        uploads = [i for i, step in enumerate(steps) if 'uses: actions/upload-artifact@' in step]
+        self.assertTrue(all(i > verify + 1 for i in uploads))
+        self.assertEqual(uploads[-1], len(steps) - 1)
+        self.assertIn('name: verification-phase-timings', steps[-1])
+        self.assertIn('continue-on-error: true', steps[-1])
+        self.assertIn('retention-days: 7', steps[-1])
 
     def test_workflow_does_not_prepare_npm_outside_graph(self):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()
