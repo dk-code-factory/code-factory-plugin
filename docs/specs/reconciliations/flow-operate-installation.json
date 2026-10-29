@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "470ada037d99b22d31ae6e289b5683f35e062e18",
-  "fingerprint": "920031487f20279859bfc48612c94848bf86f954b79c83c1c4dbb307a11dea87",
+  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
+  "fingerprint": "92262b721d956bef529afee9437637c565ed52fe5fc8abbc0561a6ba86dc73e3",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Health, package provenance, upgrade and rollback behavior remains unchanged; benchmark results cannot authorize releases or installation. Stable scenario IDs and outstanding acceptance gaps are retained.",
-    "implementation": "Production code and authored product behavior remain unchanged. The browser host helpers are extracted without module-level mutable test state; each mocked host owns its snapshot/calls. Shared assembled-daemon scenarios retain their original order in a single-worker project. operate-installation mappings follow the original assertion anchors to their feature files. Repair reassessment: the only subsequent code inputs are scripts/requirements-dev.txt (declared YAML test parser) and scripts/test_ci.py (30-second benchmark-fixture subprocess bound); this subject retains the prior reviewed implementation and mapping decisions.",
-    "tests": "Inspected the retained assertion purposes and verified all 129 original test/parameterization statements byte-for-byte, with exact 158-title/multiplicity discovery equivalence. Relevant assertions: scripts/test_installer.py def test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall( \u2014 Packaged process-backed install/rerun, returned upgrade failure with deferred automatic recovery, explicit rollback, successful upgrade and uninstall/reinstall. It does not interrupt the installer process or establish recovery from a durable pending operation left by interruption.; scripts/test_installer.py def test_interrupted_upgrade_pending_state_restores_database_and_archives_new_state( \u2014 Process-backed fixture hard-kills the upgrade after release activation at the service-restart gate, before installation.json commit, with pending.json and a compatible backup retained. Fresh rollback must select pending state because the committed installation has no previous release; asserts old release health, restoration of the pre-upgrade database sentinel, archiving of a post-kill mutation, unchanged owner token and removal of pending state. Covers this single interruption boundary only.. Existing non-browser assertions remain unchanged and required suites rerun during reconciliation. The prior assertion review remains applicable: no mapped product assertions, source anchors, glossary definitions or UI entities change in this repair. All required fixture suites are rerun to refresh dependency-sensitive evidence; no acceptance gap is closed."
+    "kind": "structure",
+    "description": "Installed-service lifecycle is unchanged; packaging/install/smoke commands retain their order and identities.",
+    "implementation": "Compared product implementation and assertion files against target 470ada037d99b22d31ae6e289b5683f35e062e18; shared Make timing recipes and graph boundary are the only operational changes for operate-installation; no product source or UI contract changed. Shared Make/CI wrappers collect allowlisted timing around existing required commands without removing suites. Reassessed cycle 1 startup metadata/manual-route corrections against target 470ada0: product source, foundation contracts and owned product assertions remain unchanged; only shared operational verification inputs require fresh evidence. Reassessed cycle 2 exact input-identity corrections: raw Git output and internal typed byte framing affect shared verification fingerprints without changing this subject product source, definitions or owned assertions. Cycle 3 review preserves this subject product implementation/assertions and meanings: only shared journal comparison durability and optional native jobserver descriptor transport change. Default runner fixture, cancellation, timeout, group cleanup and callback calls remain unchanged and are freshly verified. Cycle 4 review confirms this subject source, glossary/UI meanings and product assertion bodies remain unchanged against target 470ada0. Shared operational startup now first persists unknown metadata and resolves native worker comparison inside the same Make graph; required suites and their existing assertions remain selected for fresh reconciliation. Post-cap hosted-only correction explicitly separates validated plan metadata from local argument text. This subject product/foundation source and assertions remain unchanged against target470ada0; source/setup identity, verification commands and existing subject-specific reviewed behavior remain preserved. Fresh full reconciliation replaces all shared operational evidence. Re-reviewed against new targetc5eab656, preserving target product/runtime and assertion bytes; PR24 source-derived feature-path reanchors are retained rather than restoring factory.spec.ts. Shared timing semantics equal approved947, with fresh evidence required for this changed base.",
+    "tests": "Read installer lifecycle assertions: rerun preserves owner token, failed upgrade retains current package and backup, rollback restores packaged state, and uninstall keeps state.db/vault.key while removing the launcher. Required suites run freshly through reconciliation; installed-host/provider gaps remain open."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.141
+      "seconds": 0.121
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 88.639
+      "seconds": 87.368
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 128.118
+      "seconds": 128.888
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.03
+      "seconds": 3.071
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.709
+      "seconds": 2.669
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.388
+      "seconds": 21.353
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.341
+      "seconds": 29.165
     },
     {
       "command": [
@@ -139,53 +139,53 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 52.701
+      "seconds": 234.529
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "c873cac191a990d0d46e29c50c4938c1788e7a2c2fa6a1e8736fcb8457498e40",
-    "term:connection-refreshes": "e83799c4d4aaad7a4b34f17aed5cd93c5428576248fc5fb5f47aefeb8683ba9a",
-    "term:connection-submits": "e9a2473f44b5e0e33fb3219c16db07cfebfb996c6306e55993addb3409cb6d5b",
-    "term:coverage-gap": "b2a3e94648d17593561d913cbead453b1495b52ad957daff711823b45277c079",
-    "term:dependency-operation": "a725af4e8e771bc628d63cfcb612eb7b5f33ad2de2b008e914e4394168e27fe5",
-    "term:element-w-browser-lab-key-controls": "c797c65dc8ee7eda20675bfdedfb0259f475474ab202b097489e242f2de97c51",
-    "term:element-w-browser-lab-location": "ad4ffc94a84165fbc7c4baccb2f2e52e2db010ef8216be862a68bac9d8e2b605",
-    "term:element-w-browser-lab-message": "5fc4c05076b16c2c7bbf4382dc4f4abaac0af71bc3c44b8299ca19134ec49020",
-    "term:element-w-browser-lab-navigate": "d4c3eb647cb46f8e71c61a895b19ecce09c4ddc064b9d3a9f9e414e0a45e8d76",
-    "term:element-w-browser-lab-refresh": "e3bca6502a1e2f166c1dd3a2afbd1020c6f4bf245f1401aa64106a849c514d41",
-    "term:element-w-browser-lab-screenshot": "8f0f686c0666990452455afc674616e82ea9aace2b5b46921ab334c3e6de9082",
-    "term:element-w-browser-lab-scroll-up-down": "8cdf5e948a1910fd0e62a5250e0d72ca8377174ba3a6927517fc3632c31accef",
-    "term:element-w-browser-lab-send-text": "274485c119ee39d824a3544fa41878fd659f617efc7bb8e82015b7f5c69343b7",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "8bc0aed92b30937a7b8fe04feda233c966c0556be7677bf46f80277c9f6eb56d",
-    "term:element-w-browser-lab-text-to-send": "09280bf10cc480a35d06b704318e0fdf306c35d48a006790becd3dfb4df2eec3",
-    "term:element-w-browser-lab-url": "c1132e48d6fa27dce986f33af12aba62863acf4ea69211ad5badcbbfab44a6fe",
-    "term:element-w-diagnostics-check-connection": "e7ef598836cc1f0818524adf926786e776501f0f35f3a2e265cf62caf698540c",
-    "term:element-w-diagnostics-check-id": "29eac96fcde68983b889bb366e180ec2238b368fe93f3137047895343ba5ccb7",
-    "term:element-w-diagnostics-check-state": "ded322969a45506743b8fb79e983b1a32c0d350763a80909dc04ae9fb9f630b2",
-    "term:element-w-diagnostics-detail": "e8452f7d18903c703c919cdbd0d0eee1fd19fe3eaa6da655ce6959c69ef066e0",
-    "term:element-w-diagnostics-provider-sign-in-help": "f254f48de7048d759b94de74ebfa8be9f6a5af74d9fca442663b64d64f7296fd",
-    "term:element-w-diagnostics-timestamp": "e8c28b3e4e41ec51b3d468f96ee15afc2a5b1d771f6b94bb02b364881b159f9e",
-    "term:element-w-diagnostics-version": "c41414e111943b20d25d0d1e658572a5a13ead8ca1ed5870546f398b89f8874c",
-    "term:github-skill-source": "e9f65e7a508adc9d80096523a0eff066d7bb441fa3186814e32f6aaf453a5f93",
-    "term:owner": "e3d462cba695f66f74c34c5fba9e0735097255b90f044b5c0a605f97a74c7b6b",
-    "term:state-failed": "222bbdabdeae82bd8e28ce9b809d695f85b90785377d112444dfd905589890ee",
-    "term:state-unverified": "e8abdc1f6969f2f2b619350496351050bbe2da65be8a26b81f5e502b18a40f1b",
-    "term:state-verified": "f57276721299f5ac12b5e2f9ccf796eae10ec47e7a67b23b89538a9dc2800a60",
-    "term:ui-c-browser-lab": "8e4c77f14811af0e19519c0ea4fc5fa5bf3f8bffe6b5b9df9c0cfef41161c924",
-    "term:ui-c-diagnose": "60d4afccf31775da03ce59124ff488b23a5e1c712f41743a3f78e7e2ae147b53",
-    "term:ui-p-browser-lab": "37e3b91939340d2b3324719b7a4b5e4dc698db123a9bfa4e762a6863c9b8f72c",
-    "term:ui-p-diagnostics": "ff3a1ffc0dc576584857c1e314c25490a7632ad4417f7bf940c6452879f1d18c",
-    "term:ui-page-browser-lab": "7e5310afcc83a79b7a96121cacd8fe972a0102e9d5f7c1824f4f9a517461070f",
-    "term:ui-w-browser-lab": "2bc220711150989b2bedc205afb36e1d8dc841f4ad3f9a2a91c7c45d04375d98",
-    "term:ui-w-diagnostics": "b47e153bd0640bd4841250c51fd77241ff54d434054e4d1128a95047c907e146",
-    "term:unverified-behavior": "c7b630ef89828262479c24ce4a86881d2d1b7e455f5994aba090ece86092c399",
-    "term:verification": "23683576388b4ce204024f05a45a387ebbf0c951801553500a463e6ef75fcba2",
-    "ui:C-BROWSER-LAB": "8731a9c7083a21d80243813be204c332de26f0cbcfe0182937c00ef09cd4ac26",
-    "ui:C-DIAGNOSE": "296caafc8f1551881fb488c228e729f097f95d5bef1f171621044ea5d4f344f3",
-    "ui:P-BROWSER-LAB": "d50704d3a62a490872ef7e338e554746a9bad6547f2a273d3f0cd80aed128acf",
-    "ui:P-DIAGNOSTICS": "f4118e329b1746a48cc726cc38454510bc02c111138893571b1ccce9f403222c",
-    "ui:PAGE-BROWSER-LAB": "44edd31e417749f0164642cfef2d56fe17815524e5ddb7c3d54f2a8c9e9b2671",
-    "ui:W-BROWSER-LAB": "d1eaf08a08f81955632e2d22228c7f4e10f486e82bfc7cc9ab8d04233ccb791b",
-    "ui:W-DIAGNOSTICS": "fed59e351f3d6bd048a096a4e47c8d8a55b40e1c35edd0eebd479034cee9c764"
+    "flow:operate-installation": "7d97eed90db64c48beba668816564924e5ea8a0b3a5a376e89803f59c05a4912",
+    "term:connection-refreshes": "c39822368456b246442b799f25ae52adb7344c0552e8bb93515adc1a7f109fdd",
+    "term:connection-submits": "70336ac7ba442d42f1463236d10da53be72c7d1a2dd09c8bea40382314195c95",
+    "term:coverage-gap": "f9baaebd90abc1a41618b554cb582c728e605964980fa1789895f825d84dba01",
+    "term:dependency-operation": "f988d1c9ee6019f0cd52e531e7a34d2a6e6f06be532c5634998b27f472b79af1",
+    "term:element-w-browser-lab-key-controls": "77a94079b8542965eb6e1fb0d21541043de54cca8dc7f8868a768ada4c914e37",
+    "term:element-w-browser-lab-location": "aac3f8667a2c17c23db4907dc0263f3de5e954883746600119adfcfaa43630a8",
+    "term:element-w-browser-lab-message": "85ddc38b14d6c26dfec1efdae81763541e234e9084600e27f693c4378d6e2322",
+    "term:element-w-browser-lab-navigate": "692951a1cb3786460f0177b7dd75d2ec49b97e26b2d938cace8f0aef1d8c7b6a",
+    "term:element-w-browser-lab-refresh": "4b9420ca8ad3faf097896562ccaa72055edf2990590e76ecefbd27f32726e404",
+    "term:element-w-browser-lab-screenshot": "3d9d522280b85f25b9b5b577535a07b3548449689113d54cb7344d20d20960ec",
+    "term:element-w-browser-lab-scroll-up-down": "36aada6bbd5c99d96862edf5cb44b5395b820ab06bab96c352ccd83f0acd35f5",
+    "term:element-w-browser-lab-send-text": "47ed4643e56d4336aa8c8d5cca514dd6a18c3ca219466cda59bd741a9f7d6cc9",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "7a763a614a962cf2fba00353fe8e04df30d48f5b3e09e674683b0eef706c137d",
+    "term:element-w-browser-lab-text-to-send": "438141bb4e0c3dca8d6e2c1fff2a821821a94de16969401da5a61d22248404e3",
+    "term:element-w-browser-lab-url": "6da86c47f897569d69ba1e83dd28fe924e91c53c2308272cb726e8d4593dedf0",
+    "term:element-w-diagnostics-check-connection": "dd7ad892c1a1faa6dfc47ec7c758cd281ac63171f6bde5e4261c0d58c081c8c4",
+    "term:element-w-diagnostics-check-id": "962acfd0892ee45fee3e1dd952d829eaa77d4d163ac257ac4903dce75bd72e3d",
+    "term:element-w-diagnostics-check-state": "63c5ba729e5e733151b451b1f562332b298bb74742882268202410b4e255b916",
+    "term:element-w-diagnostics-detail": "0bbc6defeb2bdac080bf87cac9b595bd1eb07ba5e1a32f5e9475d4bdeb483fcb",
+    "term:element-w-diagnostics-provider-sign-in-help": "54161774fdc0ef8d64800eecbc14c8087460c79a9e5c7d2a8596bb654f0fd56f",
+    "term:element-w-diagnostics-timestamp": "704fd56b02424e250814104278a5e6f10bd26e36afdd732ee21c20fc0e50b292",
+    "term:element-w-diagnostics-version": "efb2ad859101575f1835c2abcc4740fe92300032c4650f23823613b5bf1517c7",
+    "term:github-skill-source": "2d25e95a93a91da801664b60d718a762cb695f39ed9d6ca1d267b8eaffc478d2",
+    "term:owner": "98d5d07681844e8f9d7fcb1b212a4d659f84b1bf8681ad3feecba8ea6d9351e1",
+    "term:state-failed": "f072db6c9a0922f10252a46ff9374b25978148834e7443b0f8d83243272794a5",
+    "term:state-unverified": "44b9824c4a9e406f04d19f773f341e63889aff233c79c6f37607642e0efe30de",
+    "term:state-verified": "c69c6f28175014ee18a7b89ae24791f52142bb4083194a311cbb38223be152f4",
+    "term:ui-c-browser-lab": "ee22d7bab7f1049f1b59ff19fe9a467fdc5d3712ebdf42c3923fb60b7c95c0d5",
+    "term:ui-c-diagnose": "2e7f9c94fc0c20e9aea197c235d2942ddc0d346412a5a12e90783da3b4a0eeac",
+    "term:ui-p-browser-lab": "927adbb6b684572ccde33ecc3204adbbf14cf4446393be8be29f77e196c5a98b",
+    "term:ui-p-diagnostics": "9c768d2bbc0ca51f56c8d2fefe122d722ff173d0e21439e793b4d8ce073a631f",
+    "term:ui-page-browser-lab": "cc440039de7be00452ac76cddd32e114697c07c76329e0c4ebe435974761e3f5",
+    "term:ui-w-browser-lab": "259466aa1bb10d28fd3ec13478448f93c315cf62e85556fdcd1a51ff2837ace1",
+    "term:ui-w-diagnostics": "a8ac069f5d7c53f7c86d8048b11d070d13c3e027123a5002e71da53be19ddf05",
+    "term:unverified-behavior": "400bcdfee1454ebc5b5a67d70d4d631c8194d555a08f80ba3b1b7249d65449ad",
+    "term:verification": "3159075133b5266dc7f74a84919ae67669844c5eb347039585f93d6a4dd040a1",
+    "ui:C-BROWSER-LAB": "1271c34a0d4da0c0796197ec08d27cdc47fa869c881ee922d233b0cea4d2c10a",
+    "ui:C-DIAGNOSE": "8afca49005ad70b53705c1f9229ca469a23328f8a9be1106b93f868182c9380f",
+    "ui:P-BROWSER-LAB": "64ea85a1f16bd03ea75bc05b6edf83d6e5e9fda5df1df5fab447bee4bd057bc8",
+    "ui:P-DIAGNOSTICS": "80dbfa4555b1ece7d111928b353a8c4007652794bf2ec2d342692efe43e92fff",
+    "ui:PAGE-BROWSER-LAB": "e92f2447408a1ac50890d2cd6dcd4f9acecca4b3365d80943260e992e2e7a652",
+    "ui:W-BROWSER-LAB": "0f981fcd9dcb88412608c209629a3e46fc164649ed7ef210ab70dcb3aa111e21",
+    "ui:W-DIAGNOSTICS": "59e7c2f0b3ac6383fb2fb68e1f31866d0cc858c742c74e5b7cb78c660ae30cac"
   }
 }

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "470ada037d99b22d31ae6e289b5683f35e062e18",
-  "fingerprint": "55b710bf241b42a4ab40018f2b0f0002d5de100db913bb6df5a49011d11fe6e1",
+  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
+  "fingerprint": "9abcaf5f34024ff6ecde7a2968b0201e8177b0d1352266bf33d6ff4f98082374",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Notification subscription and callback verification behavior is unchanged; ordinary fixture checks do not establish live callback delivery. Stable scenario IDs and outstanding acceptance gaps are retained.",
-    "implementation": "Production code and authored product behavior remain unchanged. The browser host helpers are extracted without module-level mutable test state; each mocked host owns its snapshot/calls. Shared assembled-daemon scenarios retain their original order in a single-worker project. receive-notifications mappings follow the original assertion anchors to their feature files. Repair reassessment: the only subsequent code inputs are scripts/requirements-dev.txt (declared YAML test parser) and scripts/test_ci.py (30-second benchmark-fixture subprocess bound); this subject retains the prior reviewed implementation and mapping decisions.",
-    "tests": "Inspected the retained assertion purposes and verified all 129 original test/parameterization statements byte-for-byte, with exact 158-title/multiplicity discovery equivalence. Relevant assertions: internal/events/events_test.go func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( \u2014 Signature verification, duplicate creation, entity filtering, stable identity across a 503 retry, expiry and idempotent unsubscribe fixtures; other failure classes and notification disabling are not asserted.; internal/events/events_test.go func TestCallbackSafetyAndFailedChallenge( \u2014 Callback destination and challenge safety.. Existing non-browser assertions remain unchanged and required suites rerun during reconciliation. The prior assertion review remains applicable: no mapped product assertions, source anchors, glossary definitions or UI entities change in this repair. All required fixture suites are rerun to refresh dependency-sensitive evidence; no acceptance gap is closed."
+    "kind": "structure",
+    "description": "Event delivery, callback validation and webhook signing are unchanged by local phase reporting.",
+    "implementation": "Compared product implementation and assertion files against target 470ada037d99b22d31ae6e289b5683f35e062e18; shared Make timing recipes and graph boundary are the only operational changes for receive-notifications; no product source or UI contract changed. Shared Make/CI wrappers collect allowlisted timing around existing required commands without removing suites. Reassessed cycle 1 startup metadata/manual-route corrections against target 470ada0: product source, foundation contracts and owned product assertions remain unchanged; only shared operational verification inputs require fresh evidence. Reassessed cycle 2 exact input-identity corrections: raw Git output and internal typed byte framing affect shared verification fingerprints without changing this subject product source, definitions or owned assertions. Cycle 3 review preserves this subject product implementation/assertions and meanings: only shared journal comparison durability and optional native jobserver descriptor transport change. Default runner fixture, cancellation, timeout, group cleanup and callback calls remain unchanged and are freshly verified. Cycle 4 review confirms this subject source, glossary/UI meanings and product assertion bodies remain unchanged against target 470ada0. Shared operational startup now first persists unknown metadata and resolves native worker comparison inside the same Make graph; required suites and their existing assertions remain selected for fresh reconciliation. Post-cap hosted-only correction explicitly separates validated plan metadata from local argument text. This subject product/foundation source and assertions remain unchanged against target470ada0; source/setup identity, verification commands and existing subject-specific reviewed behavior remain preserved. Fresh full reconciliation replaces all shared operational evidence. Re-reviewed against new targetc5eab656, preserving target product/runtime and assertion bytes; PR24 source-derived feature-path reanchors are retained rather than restoring factory.spec.ts. Shared timing semantics equal approved947, with fresh evidence required for this changed base.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signatures match, repeated subscription shares identity, failure retries the same event ID, acknowledged delivery does not repeat, and expired subscriptions do not deliver. Required suites run freshly through reconciliation; installed-host/provider gaps remain open."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 128.118
+      "seconds": 128.888
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.341
+      "seconds": 29.165
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 52.701
+      "seconds": 234.529
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "b83b0eff784594f39d7f321c4b9c4524351a9a0b41b7d25082c66274298d85d3",
-    "term:attention-request": "9e4cf5d434d35eddaff8a2662e8bdcf87dac6cab60233a66890734e8b1ede8b7",
-    "term:coverage-gap": "b2a3e94648d17593561d913cbead453b1495b52ad957daff711823b45277c079",
-    "term:host": "ea46ec20df0eff48ccf0958c4dd357de115d871eafd644dc2dbecf6d0249abb9",
-    "term:known-limitation": "5a58d910d7da7a17b70cd116437ba99f592d7094dd9a125de3190d6de47a0692",
-    "term:subscription": "09c5116a10501b1533f7c90e70f2400696cfef9789dac4999ac30464224dd7e0",
-    "term:unverified-behavior": "c7b630ef89828262479c24ce4a86881d2d1b7e455f5994aba090ece86092c399"
+    "flow:receive-notifications": "97ca8e0c25bf5b866bcd93caf242fea9dd146f2b7885b831e43cd8a28141aa46",
+    "term:attention-request": "3c2dc9ee253c85b81648822bdb93606b51d11362ad25b07b2955f4ec48cffb1a",
+    "term:coverage-gap": "f9baaebd90abc1a41618b554cb582c728e605964980fa1789895f825d84dba01",
+    "term:host": "9ac852cdc7298d4e6d1ff7772900add3c232378bff8ba5352850fda84be787bf",
+    "term:known-limitation": "2a8c5603dc0cada921f56f1a8564b54daaf6572b2b248ee809cfaae1edb55d76",
+    "term:subscription": "a7bd5bb1ff94687aa2c64cb7fc27700b71cdc2b3602073a8ef396f3edff21306",
+    "term:unverified-behavior": "400bcdfee1454ebc5b5a67d70d4d631c8194d555a08f80ba3b1b7249d65449ad"
   }
 }

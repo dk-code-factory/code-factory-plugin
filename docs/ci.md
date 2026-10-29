@@ -112,3 +112,175 @@ These labels describe the operator's declared conditions, not measured cache hit
 Use multiple samples on the same environment before comparing optimization results;
 this instrumentation itself establishes no speed improvement. Hosted setup failures
 retain event-pinned comparison identity even when verification cannot begin.
+
+## Browser correctness isolation and comparison
+
+Browser correctness tests are partitioned by feature under `web/tests/`.
+The mocked project creates a fresh browser context and host state for each test;
+it can run tests concurrently. The assembled project keeps its three scenarios
+in their original file order with one worker because they share a daemon,
+database and repository fixture. Neither project retries failed assertions.
+Accessibility evidence uses Playwright's per-test output paths. Both projects
+share only the read-only Vite server; mocked tests never mutate the daemon.
+
+Compare the same source with `npm --prefix web test -- --workers=1` and
+`npm --prefix web test -- --workers=2`. Each invocation starts fresh fixture
+servers. Run invocations sequentially in a checkout, with the documented port
+override when other checkouts are active. Correctness uses a bounded default of
+two workers, independent of CPU count; `--workers=1` selects serial execution.
+
+The separate Browser correctness benchmark workflow compares both counts twice
+on Ubuntu when the worker configuration or benchmark workflow changes, and can
+also be dispatched explicitly. It retains complete JSON test results, elapsed
+seconds and GNU time's maximum per-process RSS in KiB. That RSS is not aggregate
+simultaneous memory across browser processes. Samples use prepared dependencies;
+alternating worker counts makes warm-cache ordering visible. The benchmark runs
+on its own runner and never replaces the complete CI verification job or the
+isolated one-worker, zero-retry launch-performance gate.
+
+## Final verification and PR handoff
+
+Use this sequence when a change is ready for final review. The
+[specification guide](specs/README.md) owns reconciliation rules; the active
+`dk-workflows:dk-pr-iter` skill owns PR preparation, review, publication and
+completion gates. Read the installed skill and its stage contracts. This procedure
+uses existing commands and does not replace either contract.
+
+1. During editing, run focused checks for each affected area as soon as they can
+   reveal a regression. Use the catalog's actual assertion anchors and suite
+   commands to choose checks. Inspect impact early with
+   `python3 scripts/specs.py report --base main --merge-base --json`.
+   Fix failures promptly; batching final verification must not postpone serious
+   regressions. Focused success is development evidence, not final acceptance.
+2. Before final handoff, settle the intended scope and comparison. Fetch the
+   target branch, ensure local `main` names the intended target tip, and record
+   its full SHA and `git merge-base main HEAD`. Preserve unrelated work in an
+   isolated worktree. For a different PR target, use that intended comparison
+   consistently and record why; never narrow the comparison to pass a gate.
+3. Run the complete reconciliation sequence below from the repository root.
+   Review every affected subject from the report against both snapshots and
+   actual implementation/assertions. Put substantive subject-specific
+   `description`, `implementation` and `tests` decisions, with their review
+   `kind`, in a private JSON file. Keep stable IDs and the pinned adoption policy.
+   The review path shown here is an example; retain it outside Git.
+
+   ```sh
+   python3 scripts/specs.py render
+   python3 scripts/specs.py validate
+   python3 scripts/specs.py report --base main --merge-base --json
+   # Complete the subject reviews before executing reconciliation.
+   python3 scripts/specs.py reconcile --base main --merge-base --review /tmp/spec-review.json
+   python3 scripts/specs.py check --base main --merge-base
+   make ci FLOW_BASE=main
+   ```
+
+   Reconciliation executes required fixture suites and writes receipts only
+   after success. Never edit receipts by hand. Retain command exit statuses,
+   logs and receipt paths. `make ci` uses the merge base and runs full fixture
+   verification, including the isolated performance gate; it does not replace
+   the reviewed reconciliation. Real providers, public connections and installed
+   hosts remain explicit opt-ins under the [browser runbook](agent-e2e.md).
+4. Commit the relevant inputs, generated sections and CLI-written receipts
+   together. Record the resulting source SHA and confirm the committed
+   comparison with
+   `python3 scripts/specs.py check --base main --merge-base --head HEAD`.
+   Supply the handoff below to one final PR-iteration coordinator. That owner
+   runs the requested DK lifecycle and keeps one current evidence index. Keep
+   the workflow's configured independent reviewers, separate mandatory series
+   cleanup worker and separate completion agent; one coordinator does not combine
+   these roles or waive their gates.
+5. The coordinator pins the remote PR head/base and gathers complete feedback,
+   verified Decisions, instructions, rules, reviewer descriptors and verification
+   inputs into the workflow's preparation. Require readiness before dependent
+   work. Refresh after source, comparison, scope, governing decisions,
+   reviewer configuration or verification inputs change, selecting the active
+   artifact with `prepare --previous-preparation FILE`. Let the workflow decide
+   whether bindings can be reused, incrementally reassessed or need full analysis.
+   Retain both `preparation_id` and `engineering_id`, original evidence, review
+   sessions and budgets. Reuse never grants new review coverage. Follow the
+   required refresh and coverage checks after cleanup, including a no-op cleanup.
+6. After subsequent edits or a changed comparison, recompute impact, reconcile
+   affected subjects and rerun affected verification before claiming freshness.
+   A previously successful full run is final evidence only while its inputs
+   remain valid. Require successful hosted checks for the final published head,
+   completed configured review coverage and both engineering/completion gates.
+   Red checks accepted by a workflow exception are still red; a request for green
+   CI requires success. Recheck the live head and target immediately before an
+   authorized merge, guarding it with the verified head SHA. Merge only when the
+   user requested it; PR iteration alone does not authorize merge. Release and
+   deployment require their separate authorization and delivery evidence.
+
+While children work, do independent work or wait for agent events. Use native
+`wait_agent`, respecting host timeout limits and required user-update cadence.
+A timeout supplies no new evidence: quietly wait again without agent-status
+queries, file inspection or restart merely to obtain a status. Send completion,
+blockers, failures, required decisions and material progress that changes the
+next action. Consolidate child updates; do not relay unchanged worker status.
+Keep required user communication using verified information already available.
+
+For CI, use the active skill's single `ci_wait.py --pr PR_URL --head EXACT_SHA`
+process for each published head; resume that process after tool yields. Do not
+start parallel check polling or a second waiter while it runs. A terminal failure
+permits diagnosis and the workflow's bounded repair/rerun path. Stop dependent
+work on changed-head or incomplete evidence; never turn a timeout into success.
+
+### Completion handoff template
+
+Store full private evidence outside Git. Paths below are an index to retained
+artifacts, not substitutes for fresh workflow gates. Mark unavailable evidence
+and pending decisions explicitly instead of implying completion.
+
+```text
+Repository / worktree / PR URL / issue:
+Head repository and branch / exact source SHA / source tree:
+Target repository and branch / fetched target-tip SHA:
+Effective comparison-base SHA / selection flags (worktree, index or committed):
+Scope and governing instructions / active Decisions and exact user choices:
+Affected subject IDs / review kinds and rationale / private review JSON:
+Verification commands / input identity / exit results / private log paths:
+CLI-written receipt paths / committed comparison check:
+Outstanding gaps and gates / blockers / pending user decisions:
+Coordinator / retained DK runtime / invocation and CLI-reference paths:
+Preparation artifact / preparation_id / engineering_id / run record:
+Configured reviewer sessions and results / remaining review and repair budgets:
+CI waiter result path / exact checked head / hosted check links:
+Series-cleanup assessment / engineering verification / completion evidence:
+Push authorization (exact branch and source instruction):
+Merge authorization (explicit source instruction, or absent):
+Release/deployment authorization and outstanding acceptance:
+Measurement boundary / agent, tool-call, wait and preparation-refresh counts:
+```
+
+For a representative trial, record the start/end events and counting rules with
+private evidence: agents spawned (including nested roles), tool invocations
+(distinguish coordinator and child calls), agent-event waits, CI-waiter processes
+and preparation attempts/refresh outcomes. Count waits as overlapping coordination,
+not recoverable elapsed time. Report actual counts and limitations; fewer messages
+alone do not establish a speedup.
+
+## Delivery
+
+[Release](https://github.com/dk-code-factory/code-factory-plugin/actions/workflows/release.yml)
+runs when an existing vMAJOR.MINOR.PATCH tag is pushed. Manual dispatch on main has
+a dry-run option enabled by default; a real delivery requires an existing version
+tag. Tags must resolve to main-branch history with a successful **push** run of
+CI for that exact SHA and an unexpired package artifact. PR checks or a similarly
+named workflow cannot authorize delivery.
+
+The publisher downloads that CI artifact, verifies its commit, filenames, sizes,
+checksums and complete asset set, then uploads those same bytes to a GitHub release.
+It does not rebuild or overwrite existing releases. Version0 and suffixed tags
+publish prereleases. Only the publisher job has contents-write access, using the
+built-in short-lived GitHub token. No personal token, SSH key or cloud secret is
+needed. CI artifacts expire after30days; rerun their original CI run if necessary.
+
+Deployment to an operator's Linux machine remains manual. No workflow installs
+services, changes Tailscale, signs into providers, starts agents or runs live-host
+acceptance. A green build does not establish that an installation is ready.
+
+The checked CI manifest also identifies daemon and plugin component versions
+from the promoted package bytes. Explicit fixed issues in
+`release/fixed-issues.json` must name full ancestor fix commits with matching
+fixing/closing issue references. Report delivery tracking verifies the published
+release, uploaded asset digests, tag commit, checksum list and component ancestry;
+a tag, closed issue or merged PR alone does not establish release availability.
