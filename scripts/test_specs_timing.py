@@ -14,6 +14,7 @@ import time
 import unittest
 from unittest.mock import Mock, patch
 
+import ci
 import verification_timing as timing
 
 
@@ -71,8 +72,8 @@ class VerificationTimingTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         environment = {key: value for key, value in os.environ.items()
-                       if not key.startswith('CODE_FACTORY_TIMING_') and
-                       key not in ('GITHUB_ACTIONS', 'FLOW_ARGS')}
+                       if not key.startswith(('CODE_FACTORY_TIMING_', 'GITHUB_')) and
+                       key not in ('FLOW_ARGS', 'CI_BOOTSTRAP_SHA')}
         for manager in (patch.dict(os.environ, environment, clear=True),
                         patch.object(timing, 'ROOT', self.root),
                         patch.object(timing, 'identity', return_value={
@@ -376,6 +377,178 @@ finally:
         self.assertEqual(data['outcome'], 'failure')
         self.assertNotIn('/private/token', journal.read_text())
         self.assertEqual(errors.getvalue(), '')
+
+    def git_history(self, *, root_only=False):
+        def git(*arguments):
+            return subprocess.check_output(['git', *arguments], cwd=self.root,
+                                           stderr=subprocess.DEVNULL).decode().strip()
+        git('init', '-b', 'main')
+        git('config', 'user.name', 'Fixture')
+        git('config', 'user.email', 'fixture@example.invalid')
+        (self.root / '.gitignore').write_text('/verification-results/\n')
+        git('add', '.')
+        git('commit', '-m', 'Fixture root')
+        first = git('rev-parse', 'HEAD')
+        if root_only:
+            return first, first
+        (self.root / 'source.txt').write_text('Second source snapshot\n')
+        git('add', '.')
+        git('commit', '-m', 'Fixture child')
+        return first, git('rev-parse', 'HEAD')
+
+    def test_manual_setup_failure_retains_existing_parent_comparison(self):
+        base, head = self.git_history()
+        event = self.root / 'event.json'
+        event.write_text('{}')
+        exported = self.root / 'github-env'
+        environment = {'GITHUB_EVENT_PATH': str(event), 'GITHUB_ENV': str(exported),
+                       'GITHUB_EVENT_NAME': 'workflow_dispatch', 'GITHUB_REF': 'refs/heads/main',
+                       'GITHUB_ACTIONS': 'true'}
+        with patch.dict(os.environ, environment), patch.object(ci, 'ROOT', self.root), \
+                patch.object(timing, 'identity', side_effect=WORKING_IDENTITY), \
+                patch.object(timing, 'toolchains', return_value={'python': '3.12.0'}):
+            timing.hosted_action('hosted-start')
+            additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+            with patch.dict(os.environ, additions):
+                journal = timing.selected()
+                initial = self.data(journal)
+                self.assertEqual(initial['comparison'], {'status': 'resolved', 'base': base,
+                    'head': head, 'bootstrap': False, 'selection': 'commit'})
+                self.assertEqual(initial['comparison'], {'status': 'resolved',
+                    **ci.comparison({}, 'workflow_dispatch', '', 'refs/heads/main'),
+                    'selection': 'commit'})
+                self.assertEqual(initial['source']['head'], head)
+                timing.hosted_action('setup-finish', 'failure')
+                timing.hosted_action('hosted-finish', 'failure')
+        data = self.data(journal)
+        self.assertEqual(data['comparison'], initial['comparison'])
+        self.assertEqual(data['outcome'], 'failure')
+        self.assertEqual(data['phases'][0]['outcome'], 'failure')
+        self.assertTrue(all(row['outcome'] == 'unstarted' for row in data['phases'][1:]))
+
+    def test_manual_root_metadata_preserves_existing_bootstrap_guard(self):
+        _, head = self.git_history(root_only=True)
+        event = self.root / 'event.json'
+        event.write_text('{}')
+        for pin, ref, accepted in (('', 'refs/heads/main', False),
+                                   (head, 'refs/heads/main', True),
+                                   (head, 'refs/heads/feature', False)):
+            with self.subTest(pin=pin, ref=ref), patch.dict(os.environ, {
+                    'GITHUB_EVENT_PATH': str(event), 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                    'GITHUB_REF': ref, 'CI_BOOTSTRAP_SHA': pin}), \
+                    patch.object(ci, 'ROOT', self.root), patch.object(ci, 'git', wraps=ci.git) as git:
+                result = timing.hosted_comparison()
+                self.assertEqual(result, {'status': 'resolved', 'base': None, 'head': head,
+                    'bootstrap': True, 'selection': 'commit'} if accepted else {'status': 'unavailable'})
+                self.assertNotIn(unittest.mock.call('rev-parse', 'HEAD^'), git.call_args_list)
+
+    def test_hosted_manual_metadata_errors_are_private_and_unavailable(self):
+        event = self.root / 'private-event.json'
+        event.write_text('{"private /owner/secret": malformed}')
+        errors = io.StringIO()
+        with patch.dict(os.environ, {'GITHUB_EVENT_PATH': str(event),
+                'GITHUB_EVENT_NAME': 'workflow_dispatch', 'GITHUB_REF': 'refs/heads/main'}), \
+                contextlib.redirect_stderr(errors):
+            self.assertEqual(timing.hosted_comparison(), {'status': 'unavailable'})
+        self.assertEqual(errors.getvalue(), '')
+
+    def test_rejected_manual_feature_retains_only_partial_timing_evidence(self):
+        self.git_history()
+        event = self.root / 'event.json'
+        event.write_text('{}')
+        exported = self.root / 'github-env'
+        environment = {'GITHUB_EVENT_PATH': str(event), 'GITHUB_ENV': str(exported),
+                       'GITHUB_EVENT_NAME': 'workflow_dispatch', 'GITHUB_REF': 'refs/heads/feature',
+                       'GITHUB_ACTIONS': 'true'}
+        with patch.dict(os.environ, environment), patch.object(ci, 'ROOT', self.root), \
+                patch.object(timing, 'toolchains', return_value={}):
+            timing.hosted_action('hosted-start')
+            additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+            with patch.dict(os.environ, additions), patch.object(ci, 'run_verification') as verify, \
+                    patch.object(ci, 'artifact_manifest') as manifest, \
+                    patch.object(sys, 'argv', ['ci', 'verify']), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                timing.hosted_action('setup-finish', 'success')
+                with self.assertRaises(SystemExit) as rejected:
+                    ci.main()
+                self.assertEqual(rejected.exception.code, 1)
+                verify.assert_not_called()
+                manifest.assert_not_called()
+                timing.hosted_action('hosted-finish', 'failure')
+                journal = timing.selected()
+        data = self.data(journal)
+        self.assertEqual(data['comparison'], {'status': 'unavailable'})
+        self.assertEqual(data['outcome'], 'failure')
+        self.assertEqual(data['phases'][0]['outcome'], 'success')
+        self.assertTrue(all(row['outcome'] == 'unstarted' for row in data['phases'][1:]))
+        self.assertFalse((self.root / 'dist').exists())
+
+    def test_local_metadata_signals_finalize_before_worker_starts(self):
+        for number, expected in ((signal.SIGINT, 130), (signal.SIGTERM, 143)):
+            with self.subTest(signal=number):
+                root = self.root / str(number)
+                root.mkdir()
+                tools = root / 'tools'
+                tools.mkdir()
+                listener = socket.socket()
+                self.addCleanup(listener.close)
+                listener.bind(('127.0.0.1', 0))
+                listener.listen(1)
+                version = tools / 'go'
+                version.write_text('#!' + sys.executable + '\n' +
+                    "import os,socket,time\n" +
+                    "connection=socket.create_connection(('127.0.0.1', int(os.environ['METADATA_READY_PORT'])))\n" +
+                    "connection.sendall(str(os.getpid()).encode()); connection.close(); time.sleep(60)\n")
+                version.chmod(0o755)
+                marker = root / 'worker-started'
+                source = '''import pathlib,signal,sys
+import verification_timing as timing
+timing.ROOT = pathlib.Path(sys.argv[1])
+timing.identity = lambda: {'head': 'a'*40, 'inputs_sha256': 'b'*64, 'dirty': False}
+signal.signal(signal.SIGTERM, lambda number, frame: sys.exit(128 + number))
+try:
+    sys.exit(timing.verify([sys.executable, '-c',
+        'import pathlib,sys; pathlib.Path(sys.argv[1]).touch()', sys.argv[2]]))
+except KeyboardInterrupt:
+    sys.exit(130)
+'''
+                environment = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
+                               'METADATA_READY_PORT': str(listener.getsockname()[1])}
+                process = subprocess.Popen([sys.executable, '-c', source, str(root), str(marker)],
+                    cwd=MODULE_DIRECTORY, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                self.addCleanup(cleanup_process, process)
+                ready, _, _ = select.select([listener], [], [], 10)
+                self.assertTrue(ready, 'metadata command did not report readiness')
+                connection, _ = listener.accept()
+                with connection:
+                    connection.settimeout(2)
+                    version_pid = int(connection.recv(32))
+                version_fd = os.pidfd_open(version_pid)
+                def cleanup_version(version_fd=version_fd):
+                    try:
+                        signal.pidfd_send_signal(version_fd, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    finally:
+                        os.close(version_fd)
+                self.addCleanup(cleanup_version)
+                journal, = (root / 'verification-results').glob('*.json')
+                running = json.loads(journal.read_text())
+                self.assertEqual(running['outcome'], 'running')
+                self.assertFalse(marker.exists())
+                process.send_signal(number)
+                _, errors = process.communicate(timeout=8)
+                self.assertEqual(process.returncode, expected, errors.decode())
+                # The stdlib terminates the version child; asynchronous zombie
+                # reaping after SIGINT is outside the owned worker graph contract.
+                exited, _, _ = select.select([version_fd], [], [], 2)
+                self.assertTrue(exited, 'metadata version command remained running')
+                completed = json.loads(journal.read_text())
+                self.assertEqual(completed['outcome'], 'interrupted')
+                self.assertIsNotNone(completed['wall_seconds'])
+                self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None
+                                    for row in completed['phases']))
+                self.assertFalse(marker.exists())
 
     def test_hosted_setup_failure_keeps_initial_event_identity(self):
         event = self.root / 'event.json'

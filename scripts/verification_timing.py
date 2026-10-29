@@ -138,13 +138,19 @@ def toolchains():
 def hosted_comparison():
     try:
         event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+        if os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
+            # Reuse the verifier's main/root policy; a reviewed root has no parent.
+            from ci import comparison as ci_comparison
+            plan = ci_comparison(event, "workflow_dispatch", os.environ.get("CI_BOOTSTRAP_SHA", ""),
+                                 os.environ.get("GITHUB_REF", ""))
+            return {"status": "resolved", **plan, "selection": "commit"}
         if "pull_request" in event:
             base, head = event["pull_request"]["base"]["sha"], event["pull_request"]["head"]["sha"]
         else:
             base, head = event.get("before"), event.get("after")
         if all(isinstance(s, str) and re.fullmatch("[0-9a-f]{40}", s) for s in (base, head)):
             return {"status": "event-pinned", "base": base, "head": head, "selection": "commit"}
-    except (KeyError, OSError, ValueError):
+    except (KeyError, OSError, ValueError, subprocess.CalledProcessError):
         pass
     return {"status": "unavailable"}
 
@@ -283,18 +289,19 @@ def verify(argv=None):
     """Observe one Make worker graph; Make alone selects and orders its work."""
     argv = argv or ["make", "--no-keep-going", "verify-steps"]
     os.environ["CODE_FACTORY_REAL_CODEX"] = "0"
-    journal = selected() or observe(Journal.create,
-        prerequisites=any(a.startswith("hosted-verify") for a in argv),
-        bootstrap=any("bootstrap-steps" in a for a in argv))
-    if journal:
-        os.environ["CODE_FACTORY_TIMING_FILE"] = str(journal.path)
-        print("Verification timing: " + journal.path.name, flush=True)
-        if not os.environ.get("GITHUB_ACTIONS"):
-            arguments = next((a.split("=", 1)[1] for a in argv if a.startswith("FLOW_ARGS=")),
-                             os.environ.get("FLOW_ARGS", ""))
-            observe(journal.refresh, comparison(arguments))
+    journal = None
     code, interrupted = 1, False
     try:
+        journal = selected() or observe(Journal.create,
+            prerequisites=any(a.startswith("hosted-verify") for a in argv),
+            bootstrap=any("bootstrap-steps" in a for a in argv))
+        if journal:
+            os.environ["CODE_FACTORY_TIMING_FILE"] = str(journal.path)
+            print("Verification timing: " + journal.path.name, flush=True)
+            if not os.environ.get("GITHUB_ACTIONS"):
+                arguments = next((a.split("=", 1)[1] for a in argv if a.startswith("FLOW_ARGS=")),
+                                 os.environ.get("FLOW_ARGS", ""))
+                observe(journal.refresh, comparison(arguments))
         from specs_lib.processes import run_verification
         result = run_verification(argv, cwd=ROOT, timeout=float("inf"))
         code = result.returncode

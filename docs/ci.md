@@ -50,8 +50,9 @@ an event-pinned base after a branch rewrite, CI fetches that exact SHA from
 origin and validates it again. Invalid, unavailable or mismatched commits fail;
 there is no guessed-ref fallback. Feature branches are verified through PRs to
 main or sync/local-development. A branch without such a PR receives no automatic
-checks or package artifacts. Manual feature-branch verification fails explicitly before running
-checks or creating artifacts. A successful manual check cannot replace the
+checks or package artifacts. Manual feature-branch verification fails explicitly before
+source checks or verified-build/package artifacts are produced. Partial timing summaries
+may still be retained for rejected runs. A successful manual check cannot replace the
 main-push verification required for release delivery.
 
 ## Public source import

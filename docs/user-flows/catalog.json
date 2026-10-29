@@ -15731,7 +15731,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before verification or artifact creation; fixture mode, artifact identities and main-push-only release proof fail closed."
+          "purpose": "Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before source verification or package-manifest creation; rejected jobs may retain partial timing summaries; fixture mode, artifact identities and main-push-only release proof fail closed."
         },
         {
           "path": "scripts/test_ci.py",
@@ -16030,6 +16030,51 @@
             "S5"
           ],
           "purpose": "An early writer-probe assertion failure still terminates, communicates with and reaps the owned Popen process; concurrent writers register cleanup immediately after creation."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_manual_setup_failure_retains_existing_parent_comparison(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A supported manual main dispatch records the exact existing HEAD-parent comparison before setup; failed setup retains this identity with unstarted verification phases."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_manual_root_metadata_preserves_existing_bootstrap_guard(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Initial manual metadata reuses the verifier main/root policy: only the pinned reviewed main root omits a parent, and neither an unreviewed root nor a feature ref gains a fabricated comparison."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_manual_metadata_errors_are_private_and_unavailable(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Malformed manual event metadata yields unavailable comparison without logging its private content."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_rejected_manual_feature_retains_only_partial_timing_evidence(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual manual feature rejection invokes neither source verification nor package-manifest creation, while the startup/finalization path retains a failed partial timing journal."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_local_metadata_signals_finalize_before_worker_starts(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real SIGINT and SIGTERM during tool-version collection preserve shell signal status, finalize interrupted partial journals with wall time, leave verification phases unstarted and never launch the worker."
         }
       ],
       "suites": [
