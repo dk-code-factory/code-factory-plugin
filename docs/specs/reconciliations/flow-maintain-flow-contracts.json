@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "3daec1d5f382f0f3af74128fb515365cc33233ab",
-  "fingerprint": "0454f966d79997509ca677ed5b040138dc669dc74398a087e648d0124a3a7944",
+  "base": "474a23938437588db36f1cc85d1ed4faaa686204",
+  "fingerprint": "8efd8f196628577319054a8e2ba236ae9e452d656924401cb4acbc4ad3bf7aee",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S3 qualification adds sampled concurrent workload RSS separately from individual-process RSS, requires meaningful root/child coverage, fails closed on unavailable safe targeting, and records interrupted nonzero results after bounded owned-workload cleanup. Existing local inventory and hosted comparison behavior remain.",
-    "implementation": "Read WorkloadMemory session/descendant traversal and PID/start-time tracking; metrics reject missing root, concurrent children or RSS. measure installs recording SIGINT/SIGTERM handlers before Popen, keeps the leader unreaped, and cleanup sends to its pinned group and revalidated pidfds, then boundedly reaps. Schema2 declares sampling limits and restores handlers.",
-    "tests": "Read actual simultaneous 48MiB allocations including a new-session child, malformed/missing data and partial-read failures. Real SIGINT/SIGTERM probes cover measurement and cleanup, handler restoration, stale-PID/unrelated sentinel preservation and interrupted summaries. Independent subreaper fallback deliberately stalls production cooperation and kills/reaps only owned children; unavailable targeting fails before launch or during cleanup."
+    "description": "S4/S5 the existing hosted browser correctness benchmark delegates to the reusable qualifier and triggers for its browser, fixture, build and runner inputs. Existing workflow/job/artifact identities and explicit fixture mode remain; local schema2 qualification behavior is unchanged.",
+    "implementation": "Read the in-place workflow replacement: pinned Python setup, full fixture prerequisites, root-relative runner output and always-upload artifact retention. Existing hosted CI main/sync restrictions and product topology are untouched. The qualifier body is byte-identical to the preceding branch.",
+    "tests": "Read test_browser_benchmark_retains_samples_and_stops_on_failure: execute actual workflow shell using a stub runner for success and exit19, assert exact output argv, retained summary and discovery diagnostic, propagated exit, fixture env, unconditional artifact upload and relevant path triggers. All local qualifier assertions remain unchanged and available in tooling."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.223
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 26.498
+      "seconds": 36.421
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 56.598
+      "seconds": 61.856
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 3.731
+      "seconds": 3.851
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "ef082cec748522c5061afaf633c67640f752e469e720a49550c803cf96276546",
-    "term:coverage-gap": "dde82b845c0c080ab6d51ecae50ea97c471d30ae4376cf79aa4e1cb3366ab8ab",
-    "term:entity": "ea8eead1aaa5d12bcbf5be868cc0f56e06db8d617bf3ce2a72db144966ea178c",
-    "term:glossary": "51f954b65a0f2b98f9e7e6a1a3a253e17512f7ed95bbba003e39c94fad7914f3",
-    "term:known-limitation": "b900f252c0cee4ce629dea33dacf46034d8a5baaca13416a22e3947fb216c96a",
-    "term:reconciliation": "22b9f98512ba5eb064b18dc7e4d7931aac67efc436dd7b5e867da98817cc9b7d",
-    "term:unverified-behavior": "cd8d54e3ad31b362d7f06e91ed4088944714ff20a28567fda6e2d30443aada91",
-    "term:verification": "c234f5f53ef2093115000ab8a51b252695787ac4406bd07f63899477f6241e5c"
+    "flow:maintain-flow-contracts": "93460e96f80c4e741c220bd70ddfb5be6144191d0551b0dc0fbb927daec4ce5a",
+    "term:coverage-gap": "7fa71a4f7cd40bac8da4a708bb834337fb4d0a5e3f0d3afb855a8fccd7159e23",
+    "term:entity": "1f69a307142a20ca7edf8a18e96e53b20a06caf99ac54a2fcf09bdff0e53ade6",
+    "term:glossary": "f58b6f64325704da24874447cc896bbf243996c166c7aaa645ca3aae88c92ffd",
+    "term:known-limitation": "dad91bfb273dfe81cc9fea2e2c22d5e047d6fda4690cddfb024039dc6f1d1c12",
+    "term:reconciliation": "66c351382b248b6f0951c93588a5541568cf0366033ee657998545d349e8fbe6",
+    "term:unverified-behavior": "2092028c2df8ae536f2e6d9f43559d451c5519fa295a0bb718b8002f743771c2",
+    "term:verification": "d90a7d489aa781451476e1a6e415b951fb159e4f4963b82d236b57ea37aff8d2"
   }
 }

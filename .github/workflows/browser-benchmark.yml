@@ -3,7 +3,17 @@ name: Browser correctness benchmark
 on:
   pull_request:
     paths:
-      - web/playwright.config.ts
+      - 'web/**'
+      - 'internal/**'
+      - 'cmd/**'
+      - go.mod
+      - go.sum
+      - Makefile
+      - 'plugin/**'
+      - scripts/package_plugin.py
+      - scripts/benchmark_browser.py
+      - scripts/test_browser_benchmark.py
+      - scripts/test_ci.py
       - .github/workflows/browser-benchmark.yml
   workflow_dispatch:
 
@@ -13,7 +23,7 @@ permissions:
 jobs:
   compare-workers:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       CODE_FACTORY_REAL_CODEX: '0'
     steps:
@@ -29,28 +39,13 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
       - name: Prepare fixture browser suite
-        run: |
-          make fake-provider
-          npm ci --prefix web
-          cd web && npx playwright install --with-deps chromium
+        run: make ui plugin-embed fake-provider browser-deps
       - name: Compare serial and bounded parallel correctness
-        working-directory: web
-        run: |
-          mkdir -p benchmark-results
-          node --version > benchmark-results/environment.txt
-          npx playwright --version >> benchmark-results/environment.txt
-          git rev-parse HEAD >> benchmark-results/environment.txt
-          # Alternate worker counts to expose ordering/cache effects. Each
-          # invocation starts fresh servers and has zero assertion retries.
-          for sample in 1 2; do
-            for workers in 1 2; do
-              /usr/bin/time -f 'elapsed_seconds=%e\nmax_process_rss_kib=%M' \
-                -o "benchmark-results/workers-${workers}-${sample}.txt" \
-                npx playwright test --workers="$workers" --retries=0 --reporter=json \
-                > "benchmark-results/workers-${workers}-${sample}.json"
-            done
-          done
+        run: python3 scripts/benchmark_browser.py --output web/benchmark-results
       - name: Retain correctness comparison
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
