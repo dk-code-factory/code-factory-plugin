@@ -88,6 +88,35 @@ class VerificationTimingTests(unittest.TestCase):
     def data(self, journal):
         return json.loads(journal.path.read_text())
 
+    def test_jobserver_selection_keeps_only_valid_advertised_pipe_descriptors(self):
+        read, write = os.pipe()
+        other_read, other_write = os.pipe()
+        for fd in (read, write, other_read, other_write):
+            self.addCleanup(os.close, fd)
+        regular = tempfile.TemporaryFile()
+        self.addCleanup(regular.close)
+        good = str(read) + ',' + str(write)
+        other = str(other_read) + ',' + str(other_write)
+        with patch.dict(os.environ, {'MAKEFLAGS': '-j2 --jobserver-auth=' + good}):
+            self.assertEqual(timing.jobserver_fds(['make']), (read, write))
+            self.assertEqual(timing.jobserver_fds(['make', '--jobserver-auth=fifo:/private/fifo']), ())
+            self.assertEqual(timing.jobserver_fds(['make', 'MARKER=--jobserver-auth=' + other]),
+                             (read, write))
+        with patch.dict(os.environ, {'MAKEFLAGS': '-j2 --jobserver-fds=' + good}):
+            self.assertEqual(timing.jobserver_fds(['make']), (read, write))
+        with patch.dict(os.environ, {'MAKEFLAGS': '-j2 --jobserver-auth=' + good +
+                ' -- PRIVATE=quoted\\ --jobserver-auth=' + other}):
+            self.assertEqual(timing.jobserver_fds(['make']), (read, write))
+        closed = os.pipe()
+        for fd in closed:
+            os.close(fd)
+        for auth in (str(closed[0]) + ',' + str(closed[1]), '0,1', good.split(',')[0] + ',' +
+                good.split(',')[0], str(write) + ',' + str(read),
+                str(read) + ',' + str(other_write), str(regular.fileno()) + ',' + str(write),
+                'fifo:/private/fifo', '-2,-2', 'invalid', '9' * 5000 + ',4'):
+            with self.subTest(auth=auth[:50]), patch.dict(os.environ, {'MAKEFLAGS': '--jobserver-auth=' + auth}):
+                self.assertEqual(timing.jobserver_fds(['make']), ())
+
     def test_success_and_failure_leave_distinct_unstarted_phases(self):
         successful = self.journal()
         for phase in timing.PLAN:
@@ -588,10 +617,33 @@ finally:
         self.assertFalse((self.root / 'dist').exists())
 
     def test_local_metadata_signals_finalize_before_worker_starts(self):
-        for number, expected in ((signal.SIGINT, 130), (signal.SIGTERM, 143)):
-            with self.subTest(signal=number):
-                root = self.root / str(number)
+        for number, expected, selected in ((number, status, selected)
+                for number, status in ((signal.SIGINT, 130), (signal.SIGTERM, 143))
+                for selected in (False, True)):
+            with self.subTest(signal=number, selected=selected):
+                root = self.root / (str(number) + '-' + str(selected))
                 root.mkdir()
+                def git(*arguments):
+                    return subprocess.check_output(['git', *arguments], cwd=root,
+                        stderr=subprocess.DEVNULL).decode().strip()
+                git('init', '-b', 'main')
+                git('config', 'user.name', 'Fixture')
+                git('config', 'user.email', 'fixture@example.invalid')
+                (root / '.gitignore').write_text('/verification-results/\n')
+                git('add', '.')
+                git('commit', '-m', 'Common source')
+                base = git('rev-parse', 'HEAD')
+                git('checkout', '-b', 'feature')
+                (root / 'feature').write_text('branch source')
+                git('add', '.')
+                git('commit', '-m', 'Branch source')
+                head = git('rev-parse', 'HEAD')
+                git('checkout', 'main')
+                (root / 'main').write_text('advanced main')
+                git('add', '.')
+                git('commit', '-m', 'Advanced target')
+                self.assertNotEqual(git('rev-parse', 'HEAD'), base)
+                git('checkout', 'feature')
                 tools = root / 'tools'
                 tools.mkdir()
                 listener = socket.socket()
@@ -605,20 +657,26 @@ finally:
                     "connection.sendall(str(os.getpid()).encode()); connection.close(); time.sleep(60)\n")
                 version.chmod(0o755)
                 marker = root / 'worker-started'
-                source = '''import pathlib,signal,sys
+                worker = tools / 'make'
+                worker.write_text('#!' + sys.executable + '\nimport os,pathlib\n'
+                                  'pathlib.Path(os.environ["WORKER_MARKER"]).touch()\n')
+                worker.chmod(0o755)
+                source = '''import os,pathlib,signal,sys
 import verification_timing as timing
 timing.ROOT = pathlib.Path(sys.argv[1])
-timing.identity = lambda: {'head': 'a'*40, 'inputs_sha256': 'b'*64, 'dirty': False}
+if sys.argv[2] == 'True':
+    os.environ['CODE_FACTORY_TIMING_FILE'] = str(timing.Journal.create().path)
 signal.signal(signal.SIGTERM, lambda number, frame: sys.exit(128 + number))
 try:
-    sys.exit(timing.verify([sys.executable, '-c',
-        'import pathlib,sys; pathlib.Path(sys.argv[1]).touch()', sys.argv[2]]))
+    sys.exit(timing.verify(['make', '--no-keep-going', 'verify-steps',
+        'FLOW_ARGS=--base main', 'FLOW_ARGS=--base main --merge-base']))
 except KeyboardInterrupt:
     sys.exit(130)
 '''
                 environment = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
-                               'METADATA_READY_PORT': str(listener.getsockname()[1])}
-                process = subprocess.Popen([sys.executable, '-c', source, str(root), str(marker)],
+                               'METADATA_READY_PORT': str(listener.getsockname()[1]),
+                               'FLOW_ARGS': '--base main', 'WORKER_MARKER': str(marker)}
+                process = subprocess.Popen([sys.executable, '-c', source, str(root), str(selected)],
                     cwd=MODULE_DIRECTORY, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 self.addCleanup(cleanup_process, process)
                 ready, _, _ = select.select([listener], [], [], 10)
@@ -639,6 +697,9 @@ except KeyboardInterrupt:
                 journal, = (root / 'verification-results').glob('*.json')
                 running = json.loads(journal.read_text())
                 self.assertEqual(running['outcome'], 'running')
+                expected_comparison = {'status': 'resolved', 'base': base, 'head': head,
+                                       'selection': 'worktree', 'merge_base': True}
+                self.assertEqual(running['comparison'], expected_comparison)
                 self.assertFalse(marker.exists())
                 process.send_signal(number)
                 _, errors = process.communicate(timeout=8)
@@ -649,6 +710,7 @@ except KeyboardInterrupt:
                 self.assertTrue(exited, 'metadata version command remained running')
                 completed = json.loads(journal.read_text())
                 self.assertEqual(completed['outcome'], 'interrupted')
+                self.assertEqual(completed['comparison'], expected_comparison)
                 self.assertIsNotNone(completed['wall_seconds'])
                 self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None
                                     for row in completed['phases']))

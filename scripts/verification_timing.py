@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import shlex
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -181,14 +182,15 @@ class Journal:
         self.clock = clock
 
     @classmethod
-    def create(cls, *, hosted=False, prerequisites=False, bootstrap=False, clock=time.monotonic):
+    def create(cls, *, hosted=False, prerequisites=False, bootstrap=False, arguments=None, clock=time.monotonic):
         directory = ROOT / "verification-results"
         directory.mkdir(exist_ok=True)
         journal = cls(directory / (uuid.uuid4().hex + ".json"), clock)
         data = {"version": 1, "run_id": journal.path.stem, "origin": "hosted" if hosted else "local",
                 "clock_origin": clock(), "wall_seconds": None, "outcome": "running",
                 "aggregation": "Intervals may overlap or nest; do not sum phase durations as wall time.",
-                "source": identity(), "comparison": hosted_comparison() if hosted else comparison(os.environ.get("FLOW_ARGS", "")),
+                "source": identity(), "comparison": hosted_comparison() if hosted else comparison(
+                    os.environ.get("FLOW_ARGS", "") if arguments is None else arguments),
                 "cache_condition": os.environ.get("CODE_FACTORY_TIMING_CACHE", "unspecified")
                     if os.environ.get("CODE_FACTORY_TIMING_CACHE") in ("cold", "prepared") else "unspecified",
                 "toolchains": {}, "phases": [row(p, i) for i, p in enumerate(
@@ -247,8 +249,11 @@ class Journal:
 
     def refresh(self, plan=None):
         with self.update() as data:
-            data["toolchains"] = toolchains()
             data["comparison"] = plan if plan is not None else comparison(os.environ.get("FLOW_ARGS", ""))
+        # Commit the selected identity before any interruptible version queries.
+        versions = toolchains()
+        with self.update() as data:
+            data["toolchains"] = versions
 
     def bootstrap(self):
         with self.update() as data:
@@ -258,6 +263,36 @@ class Journal:
 def selected():
     path = os.environ.get("CODE_FACTORY_TIMING_FILE")
     return Journal(path) if path else None
+
+
+def jobserver_fds(argv):
+    """Retain only the native, open pipe capabilities advertised to Make."""
+    auth = ""
+    # GNU Make escapes whitespace with backslashes, without shell quote syntax.
+    flags = re.findall(r"(?:\\.|[^\s\\])+", os.environ.get("MAKEFLAGS", ""))
+    for arguments in (flags, argv[1:]):
+        arguments = iter(arguments)
+        for argument in arguments:
+            if argument == "--":
+                break
+            option, separator, value = argument.partition("=")
+            if option in ("--jobserver-auth", "--jobserver-fds"):
+                auth = value if separator else next(arguments, "")
+    if not re.fullmatch(r"[0-9]+,[0-9]+", auth):
+        return ()  # FIFO authentication needs no inherited numeric descriptors.
+    try:
+        descriptors = tuple(map(int, auth.split(",")))
+        if min(descriptors) <= 2 or descriptors[0] == descriptors[1]:
+            return ()
+        read, write = (os.fstat(fd) for fd in descriptors)
+        if not all(stat.S_ISFIFO(item.st_mode) for item in (read, write)):
+            return ()
+        if (read.st_dev, read.st_ino) != (write.st_dev, write.st_ino):
+            return ()
+        modes = tuple(fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE for fd in descriptors)
+        return descriptors if modes == (os.O_RDONLY, os.O_WRONLY) else ()
+    except (OSError, ValueError, OverflowError):
+        return ()
 
 
 def execute(phase, argv, *, journal=None, owned=False, runner=None):
@@ -296,18 +331,20 @@ def verify(argv=None):
     journal = None
     code, interrupted = 1, False
     try:
+        arguments = next((a.split("=", 1)[1] for a in reversed(argv) if a.startswith("FLOW_ARGS=")),
+                         os.environ.get("FLOW_ARGS", ""))
         journal = selected() or observe(Journal.create,
             prerequisites=any(a.startswith("hosted-verify") for a in argv),
-            bootstrap=any("bootstrap-steps" in a for a in argv))
+            bootstrap=any("bootstrap-steps" in a for a in argv), arguments=arguments)
         if journal:
             os.environ["CODE_FACTORY_TIMING_FILE"] = str(journal.path)
             print("Verification timing: " + journal.path.name, flush=True)
             if not os.environ.get("GITHUB_ACTIONS"):
-                arguments = next((a.split("=", 1)[1] for a in argv if a.startswith("FLOW_ARGS=")),
-                                 os.environ.get("FLOW_ARGS", ""))
                 observe(journal.refresh, comparison(arguments))
         from specs_lib.processes import run_verification
-        result = run_verification(argv, cwd=ROOT, timeout=float("inf"))
+        descriptors = jobserver_fds(argv)
+        options = {"pass_fds": descriptors} if descriptors else {}
+        result = run_verification(argv, cwd=ROOT, timeout=float("inf"), **options)
         code = result.returncode
         interrupted = code < 0
         return 128 - code if code < 0 else code

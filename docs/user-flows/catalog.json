@@ -13944,7 +13944,7 @@
         },
         {
           "path": "scripts/specs_lib/processes.py",
-          "purpose": "Owned verifier execution and receipt-writing lifecycle",
+          "purpose": "Owned verifier execution and receipt-writing lifecycle Optional explicit descriptor pass-through preserves native pipe jobservers; default callers retain closed unrelated descriptors and unchanged owned cleanup.",
           "anchor": "def run_verification("
         },
         {
@@ -16074,7 +16074,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Real SIGINT and SIGTERM during tool-version collection preserve shell signal status, finalize interrupted partial journals with wall time, leave verification phases unstarted and never launch the worker."
+          "purpose": "Real SIGINT/SIGTERM during metadata collection retain the actual argv-selected comparison on diverged main, including fresh and preselected journals and last-assignment precedence; status130/143, interrupted wall time and no worker start remain truthful."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -16111,6 +16111,33 @@
             "S5"
           ],
           "purpose": "Identity keeps regular-file content, symbolic-link target, tracked absence and executable-mode distinctions while the same inputs hash identically before or after staging."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_native_pipe_and_fifo_jobservers_survive_the_timing_boundary(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual GNU Make retains valid pipe/FIFO authentication and -j2 across the timing worker under native direct, inherited and assigned flags, without unavailable-jobserver fallback, duplicate preparation or fixture opt-in."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_jobserver_selection_keeps_only_valid_advertised_pipe_descriptors(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Only open matching pipe read/write descriptors advertised as jobserver capabilities are selected; closed, invalid, non-pipe, mismatched, stdio, duplicate and overflow values are rejected, FIFO needs no numeric pass-through and variable payloads cannot substitute unrelated descriptors."
+        },
+        {
+          "path": "scripts/test_specs_runner.py",
+          "anchor": "def test_descriptor_passthrough_is_explicit_and_preserves_default_calls(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real child probes preserve only explicit descriptors, close other inheritable pipes, force fixture mode, retain nonzero command status and restored signal handlers, and keep the legacy default Popen call unchanged."
         }
       ],
       "suites": [

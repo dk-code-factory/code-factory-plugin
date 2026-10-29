@@ -9,6 +9,7 @@ import re
 import select
 import signal
 import socket
+import shlex
 from pathlib import Path
 import subprocess
 import shutil
@@ -677,6 +678,49 @@ record('end')
         self.assert_shared_once(events)
         self.assertIn('python3 scripts/specs.py check --base ' + 'a' * 40 + ' --head ' + 'b' * 40,
                       [e['key'] for e in events])
+
+    def test_native_pipe_and_fifo_jobservers_survive_the_timing_boundary(self):
+        probe = self.root / 'jobserver_probe.py'
+        probe.write_text('''import fcntl,json,os,pathlib,re,stat
+flags=os.environ.get('MAKEFLAGS','')
+match=re.search(r'(?:^|\\s)--jobserver-(?:auth|fds)=([^\\s]+)',flags)
+assert match, 'native recursive jobserver authentication was lost'
+auth=match.group(1)
+if auth.startswith('fifo:'):
+    assert stat.S_ISFIFO(pathlib.Path(auth[5:]).stat().st_mode)
+    kind='fifo'
+else:
+    read,write=map(int,auth.split(','))
+    states=[os.fstat(read),os.fstat(write)]
+    assert all(stat.S_ISFIFO(s.st_mode) for s in states)
+    assert (states[0].st_dev,states[0].st_ino)==(states[1].st_dev,states[1].st_ino)
+    assert [fcntl.fcntl(fd,fcntl.F_GETFL)&os.O_ACCMODE for fd in (read,write)]==[os.O_RDONLY,os.O_WRONLY]
+    kind='pipe'
+assert re.search(r'(?:^|\\s)-j2(?:\\s|$)',flags), 'parallel option changed'
+pathlib.Path('jobserver.json').write_text(json.dumps({'kind':kind,'fixture':os.environ['CODE_FACTORY_REAL_CODEX']}))
+''')
+        with (self.root / 'Makefile').open('a') as makefile:
+            makefile.write('\n.PHONY: jobserver-probe\nverify-steps: jobserver-probe\n')
+            makefile.write('jobserver-probe:\n\t+@' + shlex.quote(sys.executable) +
+                           ' ' + shlex.quote(str(probe)) + '\n')
+        help_text = subprocess.check_output(['make', '--help'], env=self.env, text=True)
+        cases = [(('-j2',), None, None), ((), '-j2', None),
+                 (('MAKEFLAGS=-j2',), None, None)]
+        if '--jobserver-style' in help_text:
+            cases.extend(((('--jobserver-style=pipe', '-j2'), None, 'pipe'),
+                          (('--jobserver-style=fifo', '-j2'), None, 'fifo')))
+        for flags, inherited, expected in cases:
+            with self.subTest(flags=flags, inherited=inherited):
+                result, events = self.run_make('verify', flags=flags, inherited_flags=inherited)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertNotIn('jobserver unavailable', result.stderr)
+                self.assert_shared_once(events)
+                state = json.loads((self.root / 'jobserver.json').read_text())
+                self.assertEqual(state['fixture'], '0')
+                self.assertIn(state['kind'], ('pipe', 'fifo'))
+                if expected:
+                    self.assertEqual(state['kind'], expected)
+                self.assertEqual(self.last_timing['outcome'], 'success')
 
     def test_option_arguments_do_not_disable_timing_or_execute_dry_runs(self):
         directory = str(self.root / 'nothing')
