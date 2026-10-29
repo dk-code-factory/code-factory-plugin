@@ -50,8 +50,9 @@ an event-pinned base after a branch rewrite, CI fetches that exact SHA from
 origin and validates it again. Invalid, unavailable or mismatched commits fail;
 there is no guessed-ref fallback. Feature branches are verified through PRs to
 main or sync/local-development. A branch without such a PR receives no automatic
-checks or package artifacts. Manual feature-branch verification fails explicitly before running
-checks or creating artifacts. A successful manual check cannot replace the
+checks or package artifacts. Manual feature-branch verification fails explicitly before
+source checks or verified-build/package artifacts are produced. Partial timing summaries
+may still be retained for rejected runs. A successful manual check cannot replace the
 main-push verification required for release delivery.
 
 ## Public source import
@@ -75,7 +76,13 @@ selected ports. Installed service routes are unchanged.
 
 Local `make ci`, `make verify` and direct `scripts/verify.sh` runs retain a
 version-1 JSON phase summary in ignored `verification-results/<run-id>.json`.
-The journal holds at most 256 phase records and fixed, allowlisted metadata; it includes no raw command arguments,
+Hosted verification starts the same journal after checkout, measures toolchain
+and prerequisite setup, and always attempts to finalize and upload that one file
+as `verification-phase-timings` with seven-day retention. Checkout and artifact
+transfer time are outside the measured verification interval. A runner killed
+before its final steps can prevent upload; the last atomic journal still records
+started work as running rather than successful. The journal holds at most 256
+phase records and fixed, allowlisted metadata; it includes no raw command arguments,
 environment dumps, command output or local paths. A timing-write failure emits a
 fixed warning and preserves the actual command or cancellation status.
 
@@ -103,7 +110,8 @@ cache policy explicit in the measurement notes. Immediately repeat with
 `CODE_FACTORY_TIMING_CACHE=prepared` against identical source and toolchains.
 These labels describe the operator's declared conditions, not measured cache hits.
 Use multiple samples on the same environment before comparing optimization results;
-this instrumentation itself establishes no speed improvement.
+this instrumentation itself establishes no speed improvement. Hosted setup failures
+retain event-pinned comparison identity even when verification cannot begin.
 
 ## Browser correctness isolation and comparison
 

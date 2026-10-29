@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "a4f473d3d5c7ad59691c7202e79a19a898df4f30",
-  "fingerprint": "f0f5de7b8f8af03cd33020e6556ca5ea80a7b6b62bd96da33eeee0dafede1f10",
+  "base": "63765dd30d811aec447a0a2689826fc5efbcb22e",
+  "fingerprint": "d6b384e306e273718888702ca56b081e5353841f42977e25c0d1459184885638",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "Native Make verification now automatically retains the bounded local journal. Hosted source selection and workflow upload remain in the next slice. Existing product behavior and pinned adoption remain unchanged.",
-    "implementation": "Inspected the exact Make worker entry, worker-native metadata prerequisite, each fixed phase wrapper and unchanged dependency ordering. Native command-line/inherited variables, target-specific comparison, ci override, dry runs, keep-going policy and pipe/FIFO jobserver capabilities retain their existing semantics. The journal and optional descriptor implementation are byte-identical to the preceding core slice; ci.py and hosted workflow remain unchanged.",
-    "tests": "Read the real Make recorder assertions for single shared preparation, command order, failure/unstarted states, actual expanded comparison before work, dry-run no-journal and actual pipe/FIFO jobservers. Real SIGTERM and forced probe-assertion regressions require partial evidence and removed owned commands. Existing runner/cancellation and privacy assertions remain; actual hosted dispatcher and workflow upload assertions follow in the next slice."
+    "description": "Hosted setup and exact-source verification now retain the bounded journal through success, failure and cancellation, finalizing before artifact transfer and attempting seven-day upload. Product flows, browser samples and release provenance remain unchanged.",
+    "implementation": "Inspected ci.py selected-journal refresh using the keyword-only resolved plan before version collection, unchanged exact comparison/bootstrap selection and manifest execution, workflow startup after checkout and always-finalization before all artifacts. The helper, owned runner and Make graph are byte-identical to the earlier slices. Upload uses the selected single JSON, fixed name, seven-day retention and fail-open transfer.",
+    "tests": "Read actual selected-journal ci.run_verification regressions for push, PR, manual main and pinned-root plans on success/failure; source remains initial, comparison is exact and no argument reparse occurs. KeyboardInterrupt/SystemExit143 during version collection persists the resolved plan and starts no worker. Workflow assertions require always-finalization before every upload and timing upload last. Existing partial setup/privacy/Make/cancellation regressions remain unchanged."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 29.907
+      "seconds": 28.993
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 245.214
+      "seconds": 245.12
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "cbed1e71032f6e69a5f2dd629d50bbc9962affe021d8ae435ffc7638added8f7",
-    "term:coverage-gap": "56c3cb27372dc52bd96f15167fb5906a8f143d857e1b00c03caf4689754d8757",
-    "term:entity": "d06a08ceafb4af3d20f9a5df71924d061ef715c475a4b78f65562391357ef77b",
-    "term:glossary": "3a90546380f0d0bd404cea9ead77c08274ec6f08228dd9beb2ead12e851f53d6",
-    "term:known-limitation": "7f1b78e5da7a3d7ff24a2d85e7aff0b95f597b6dead3c7a14eff5a0b7adcf34f",
-    "term:reconciliation": "cf83369d3e55f556b343edb2c08dddf54d2feb67ab182f6a7a838982c7306f15",
-    "term:unverified-behavior": "b84e97045418f125830922cd3d0aae87e4306db17b6536f17034b06d4b5ce188",
-    "term:verification": "a50975e263be42d1cc70232a17cb8526a8a0de5bbdea3317b292b2bbf6de3e9c"
+    "flow:maintain-flow-contracts": "cca1420a5e8ba6bd35006e879b5d87d0e9438b4d6b3cbe9e1b5b8d69713a7c6f",
+    "term:coverage-gap": "f9baaebd90abc1a41618b554cb582c728e605964980fa1789895f825d84dba01",
+    "term:entity": "908e6d510e36c4629230bd9b4d3ba7376f19ce3854ea1eddf12e86ecf1eeb443",
+    "term:glossary": "731758b195cd94361e46128cf9f8530e6086100c3283747f1b50ccac6fba4d03",
+    "term:known-limitation": "2a8c5603dc0cada921f56f1a8564b54daaf6572b2b248ee809cfaae1edb55d76",
+    "term:reconciliation": "3a1cb66ba2619817b669bc2698afb13d884e1bfaf7bc0c11cafe16cabdd12061",
+    "term:unverified-behavior": "400bcdfee1454ebc5b5a67d70d4d631c8194d555a08f80ba3b1b7249d65449ad",
+    "term:verification": "3159075133b5266dc7f74a84919ae67669844c5eb347039585f93d6a4dd040a1"
   }
 }

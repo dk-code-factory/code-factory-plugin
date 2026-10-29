@@ -10,6 +10,8 @@ import subprocess
 import tarfile
 import zipfile
 
+import verification_timing as timing
+
 ROOT = Path(__file__).resolve().parents[1]
 SHA = re.compile(r"[0-9a-f]{40}")
 ASSET = re.compile(r"code-factory[-A-Za-z0-9_.]+\.(?:tar\.gz|zip|sha256)")
@@ -68,10 +70,15 @@ def comparison(event, name, bootstrap_sha, ref):
 
 def run_verification(plan, runner=subprocess.run):
     env = {**os.environ, "CODE_FACTORY_REAL_CODEX": "0"}
+    journal = timing.selected()
+    if journal:
+        timing.observe(journal.refresh, plan={"status": "resolved", **plan, "selection": "commit"})
     if plan["bootstrap"]:
         # No fabricated ancestor or HEAD-to-HEAD comparison: this single reviewed
         # public root has no publishable predecessor. Every source check runs.
         print("Reviewed public root import: full validation/tests; no Git diff exists.", flush=True)
+        if journal:
+            timing.observe(journal.bootstrap)
         commands = [["make", "hosted-verify-bootstrap"]]
     else:
         commands = [["make", "hosted-verify", "FLOW_ARGS=--base " + plan["base"] + " --head " + plan["head"]]]
@@ -191,7 +198,15 @@ def main():
             plan = comparison(event, os.environ["GITHUB_EVENT_NAME"], os.environ.get("CI_BOOTSTRAP_SHA", ""), os.environ["GITHUB_REF"])
             print(json.dumps(plan), flush=True)
             run_verification(plan)
-            artifact_manifest(args.directory, plan["head"])
+            journal = timing.selected()
+            identifier = timing.observe(journal.start, "manifest") if journal else None
+            code = 1
+            try:
+                artifact_manifest(args.directory, plan["head"])
+                code = 0
+            finally:
+                if identifier is not None:
+                    timing.observe(journal.stop, identifier, code)
         elif args.command == "manifest":
             artifact_manifest(args.directory, commit(args.head or git("rev-parse", "HEAD")))
         else:

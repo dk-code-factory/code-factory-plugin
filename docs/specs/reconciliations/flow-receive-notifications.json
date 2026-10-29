@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "a4f473d3d5c7ad59691c7202e79a19a898df4f30",
-  "fingerprint": "b20bf25b95fcd01a9fa0b7b02a1054debf6abb53c657254ff070ebe33c2307cb",
+  "base": "63765dd30d811aec447a0a2689826fc5efbcb22e",
+  "fingerprint": "2a964384583b058cf00c0ea5edf5157cb7ddecc60be4c5a02a4381bd166a98a1",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Event delivery, callback validation and webhook signing are unchanged by local phase reporting.. This slice changes operational verification inputs only, with no product contract changes.",
-    "implementation": "Compared this subject and its mapped product files against intended preceding stack tip a4f473d3d5c7ad59691c7202e79a19a898df4f30: product implementations, glossary meanings, UI ownership and browser assertion bodies are unchanged. Only shared operational verification inputs change in this slice. No foundational backlinks, new product behavior or historical-adoption exception is introduced. Native Make verification now automatically retains the bounded local journal. Hosted source selection and workflow upload remain in the next slice. Existing product behavior and pinned adoption remain unchanged.",
-    "tests": "Subject-owned product assertions and fixture suite commands remain identical to the preceding stack tip. The same required suites run afresh for this exact comparison; meaningful tooling regressions exercise this slice without claiming product, provider or installed-host acceptance. Read the real Make recorder assertions for single shared preparation, command order, failure/unstarted states, actual expanded comparison before work, dry-run no-journal and actual pipe/FIFO jobservers. Real SIGTERM and forced probe-assertion regressions require partial evidence and removed owned commands. Existing runner/cancellation and privacy assertions remain; actual hosted dispatcher and workflow upload assertions follow in the next slice."
+    "implementation": "Compared this subject and its mapped product files against intended preceding stack tip 63765dd30d811aec447a0a2689826fc5efbcb22e: product implementations, glossary meanings, UI ownership and browser assertion bodies are unchanged. Only shared operational verification inputs change in this slice. No foundational backlinks, new product behavior or historical-adoption exception is introduced. Hosted setup and exact-source verification now retain the bounded journal through success, failure and cancellation, finalizing before artifact transfer and attempting seven-day upload. Product flows, browser samples and release provenance remain unchanged.",
+    "tests": "Subject-owned product assertions and fixture suite commands remain identical to the preceding stack tip. The same required suites run afresh for this exact comparison; meaningful tooling regressions exercise this slice without claiming product, provider or installed-host acceptance. Read actual selected-journal ci.run_verification regressions for push, PR, manual main and pinned-root plans on success/failure; source remains initial, comparison is exact and no argument reparse occurs. KeyboardInterrupt/SystemExit143 during version collection persists the resolved plan and starts no worker. Workflow assertions require always-finalization before every upload and timing upload last. Existing partial setup/privacy/Make/cancellation regressions remain unchanged."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 135.547
+      "seconds": 144.88
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 29.907
+      "seconds": 28.993
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 245.214
+      "seconds": 245.12
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "83ef7c619450db140622261b64115be2e82ffcfed7e2279ed2c6398e335e8ef8",
-    "term:attention-request": "75c010c7f333932272db78b9108d4996dc3a361c47a7d5aec63f94205f618259",
-    "term:coverage-gap": "56c3cb27372dc52bd96f15167fb5906a8f143d857e1b00c03caf4689754d8757",
-    "term:host": "37496f11f8ae1fb5fa7cc54b9918de9a80d2ab010e88177bed6d77776198e81e",
-    "term:known-limitation": "7f1b78e5da7a3d7ff24a2d85e7aff0b95f597b6dead3c7a14eff5a0b7adcf34f",
-    "term:subscription": "2bcbe06531b875dff669e530510992d5cd2a848187dbd60b5e33c89116a21320",
-    "term:unverified-behavior": "b84e97045418f125830922cd3d0aae87e4306db17b6536f17034b06d4b5ce188"
+    "flow:receive-notifications": "97ca8e0c25bf5b866bcd93caf242fea9dd146f2b7885b831e43cd8a28141aa46",
+    "term:attention-request": "3c2dc9ee253c85b81648822bdb93606b51d11362ad25b07b2955f4ec48cffb1a",
+    "term:coverage-gap": "f9baaebd90abc1a41618b554cb582c728e605964980fa1789895f825d84dba01",
+    "term:host": "9ac852cdc7298d4e6d1ff7772900add3c232378bff8ba5352850fda84be787bf",
+    "term:known-limitation": "2a8c5603dc0cada921f56f1a8564b54daaf6572b2b248ee809cfaae1edb55d76",
+    "term:subscription": "a7bd5bb1ff94687aa2c64cb7fc27700b71cdc2b3602073a8ef396f3edff21306",
+    "term:unverified-behavior": "400bcdfee1454ebc5b5a67d70d4d631c8194d555a08f80ba3b1b7249d65449ad"
   }
 }
