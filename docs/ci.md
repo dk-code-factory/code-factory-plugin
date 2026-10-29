@@ -89,15 +89,12 @@ servers. Run invocations sequentially in a checkout, with the documented port
 override when other checkouts are active. Correctness uses a bounded default of
 two workers, independent of CPU count; `--workers=1` selects serial execution.
 
-The separate Browser correctness benchmark workflow compares both counts twice
-on Ubuntu when the worker configuration or benchmark workflow changes, and can
-also be dispatched explicitly. It retains complete JSON test results, elapsed
-seconds and GNU time's maximum per-process RSS in KiB. That RSS is not aggregate
-simultaneous memory across browser processes. Samples use prepared dependencies;
-alternating worker counts makes warm-cache ordering visible. The benchmark runs
-on its own runner and never replaces the complete CI verification job or the
-isolated one-worker, zero-retry launch-performance gate.
-
+The separate Browser correctness benchmark workflow runs the same qualifier on
+Ubuntu when browser, fixture, build or qualification inputs change, and can also
+be dispatched explicitly. Its existing artifact retains summaries, inventories,
+reports and failure diagnostics for seven days. It runs on its own runner and
+never replaces complete CI verification or the isolated one-worker, zero-retry
+launch-performance gate.
 
 To qualify a fixture or concurrency change, prepare current inputs, then run:
 

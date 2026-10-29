@@ -15881,7 +15881,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Execute the hosted benchmark shell with stub tests: preserve four independent zero-retry samples and resource records; stop immediately with the failed sample exit code and retain partial output."
+          "purpose": "Execute the hosted qualifier command with a stub: preserve the configured evidence path and partial diagnostics, propagate nonzero exit status, retain unconditional artifact upload and cover relevant input triggers."
         },
         {
           "path": "scripts/test_browser_benchmark.py",

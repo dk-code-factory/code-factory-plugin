@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "3daec1d5f382f0f3af74128fb515365cc33233ab",
-  "fingerprint": "95f3f34af936c78035febdbe29d646bf8a0930d54c2b1650151ecd8e2d641d72",
+  "base": "474a23938437588db36f1cc85d1ed4faaa686204",
+  "fingerprint": "7e74a5e4a316fc9eeba62701595ce87497e542e98c1785bd867ab15e8d0ea6c1",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "receive-notifications contract and its existing scenarios retain preceding local-qualifier branch behavior; shared verification tooling causes conservative review impact.",
-    "implementation": "Compared receive-notifications registry entry and authored flow document against the preceding local-qualifier branch: no implementation, UI reference, scenario or behavior changes. Main browser layout and per-test state ownership are retained exactly.",
-    "tests": "Existing receive-notifications assertion mappings and bodies are unchanged from main; mandatory tooling gains sampled-memory and safe-cancellation regressions. Fixture verification does not close real-host acceptance gaps."
+    "description": "receive-notifications contract and its existing scenarios retain preceding memory-and-cancellation branch behavior; shared verification tooling causes conservative review impact.",
+    "implementation": "Compared receive-notifications registry entry and authored flow document against the preceding memory-and-cancellation branch: no implementation, UI reference, scenario or behavior changes. Main browser layout and per-test state ownership are retained exactly.",
+    "tests": "Existing receive-notifications assertion mappings and bodies are unchanged from main; mandatory tooling gains the hosted qualifier invocation regression. Fixture verification does not close real-host acceptance gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 149.268
+      "seconds": 147.864
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.223
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 26.498
+      "seconds": 36.421
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 56.598
+      "seconds": 61.856
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 3.731
+      "seconds": 3.851
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "294a1417ab3197df4561cccf4a4a0af03b9a34c5e38df7f10e915dceb060c0a0",
-    "term:attention-request": "d54c4c75d8a474471dcee8e009f195659577698fb8321790c299224257e4792b",
-    "term:coverage-gap": "dde82b845c0c080ab6d51ecae50ea97c471d30ae4376cf79aa4e1cb3366ab8ab",
-    "term:host": "e0c1568ae53e1df414ace2d06fd1b4bfbe3cc818fea231ff6c4d874b3ab71b37",
-    "term:known-limitation": "b900f252c0cee4ce629dea33dacf46034d8a5baaca13416a22e3947fb216c96a",
-    "term:subscription": "145785a604f5b6d20dcd4092f569ab5c32418b5711dfca002bd089775c76ef82",
-    "term:unverified-behavior": "cd8d54e3ad31b362d7f06e91ed4088944714ff20a28567fda6e2d30443aada91"
+    "flow:receive-notifications": "c9d78161e49ee22fdb0fb875a43463061d1b7bb2f38affa6b97f399f9cfb58f8",
+    "term:attention-request": "7229844027788023afec0faf8a8f8a24230d304a986f2465462305ad5098a091",
+    "term:coverage-gap": "7fa71a4f7cd40bac8da4a708bb834337fb4d0a5e3f0d3afb855a8fccd7159e23",
+    "term:host": "d695b51cc7783d76348c15ca1c41d9c9ba2c5e5819ab9b086c1f1791849dd2c5",
+    "term:known-limitation": "dad91bfb273dfe81cc9fea2e2c22d5e047d6fda4690cddfb024039dc6f1d1c12",
+    "term:subscription": "f547612f3ff8687520c50d65ec81e1f778fac5a5ce53006da737c0048fe35ca8",
+    "term:unverified-behavior": "2092028c2df8ae536f2e6d9f43559d451c5519fa295a0bb718b8002f743771c2"
   }
 }

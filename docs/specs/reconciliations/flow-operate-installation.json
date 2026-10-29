@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "3daec1d5f382f0f3af74128fb515365cc33233ab",
-  "fingerprint": "1a5e135481557d0f46ab48def78a237a498cb6fd3c143ea56647f2656f7ea3de",
+  "base": "474a23938437588db36f1cc85d1ed4faaa686204",
+  "fingerprint": "9ee69f08801438fdb8347a527289bbca77b9e30f2c10d90caf88536c5a8d104a",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "operate-installation contract and its existing scenarios retain preceding local-qualifier branch behavior; shared verification tooling causes conservative review impact.",
-    "implementation": "Compared operate-installation registry entry and authored flow document against the preceding local-qualifier branch: no implementation, UI reference, scenario or behavior changes. Main browser layout and per-test state ownership are retained exactly.",
-    "tests": "Existing operate-installation assertion mappings and bodies are unchanged from main; mandatory tooling gains sampled-memory and safe-cancellation regressions. Fixture verification does not close real-host acceptance gaps."
+    "description": "operate-installation contract and its existing scenarios retain preceding memory-and-cancellation branch behavior; shared verification tooling causes conservative review impact.",
+    "implementation": "Compared operate-installation registry entry and authored flow document against the preceding memory-and-cancellation branch: no implementation, UI reference, scenario or behavior changes. Main browser layout and per-test state ownership are retained exactly.",
+    "tests": "Existing operate-installation assertion mappings and bodies are unchanged from main; mandatory tooling gains the hosted qualifier invocation regression. Fixture verification does not close real-host acceptance gaps."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 89.112
+      "seconds": 87.969
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 149.268
+      "seconds": 147.864
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.189
+      "seconds": 3.53
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.748
+      "seconds": 2.988
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.742
+      "seconds": 21.94
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.16
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.223
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 26.498
+      "seconds": 36.421
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 56.598
+      "seconds": 61.856
     },
     {
       "command": [
@@ -147,53 +147,53 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 3.731
+      "seconds": 3.851
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "c55dc0a994d223073100a9bf243a8be258a02dbd0ff0b64ef8ff7b3ed6377e7b",
-    "term:connection-refreshes": "8ea1d6b5db70af68a6163c26b50d1bad22e5150fc3371da9023d7c4004bb28b2",
-    "term:connection-submits": "30dd7d57f8fc26fc2661596767b6ab0dde8dc25a9685d4fa40f14ed6910be8b9",
-    "term:coverage-gap": "dde82b845c0c080ab6d51ecae50ea97c471d30ae4376cf79aa4e1cb3366ab8ab",
-    "term:dependency-operation": "b7c7df808b420bd8ec1b68371664a0ba4356516ce782b45e6f38b48ee2649519",
-    "term:element-w-browser-lab-key-controls": "24ca38eb34fc2650fb015817387d64ccaa9764dea2ba95465be052602b6500a8",
-    "term:element-w-browser-lab-location": "572a0adf350533f1f4ae5cfba181b1bafb23db3933474998b5da9b3d09ceb398",
-    "term:element-w-browser-lab-message": "97e9b530678db3bc07b437cd3591ecda200b576ad9825c2d61ebf54f299d3cd6",
-    "term:element-w-browser-lab-navigate": "d078d9f88d61c3f792ccdc2a0e8bd2c80e8e6d5b049ab4e2670e3f975ab43b4b",
-    "term:element-w-browser-lab-refresh": "bc48f93ba1713cca9e42c921e96370b81ce482be1c65fc9dbeffd4369553d074",
-    "term:element-w-browser-lab-screenshot": "e64625faca0382226953fd48dc0be8e026d6149a5ad34fa3846dc976d593306a",
-    "term:element-w-browser-lab-scroll-up-down": "45ff1ce76326175f9d62b73c5c28c7645d794db7a9c0b2f670e2147fedb1d300",
-    "term:element-w-browser-lab-send-text": "3bd7425404c0948d6b98f0c826ffa7fdd28e5eb502066091aea8fcec0eebaba9",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "93cedc17197725157af60a4131a3028dff8df7a4296a9939cee3488642543b35",
-    "term:element-w-browser-lab-text-to-send": "ed82416c943898b8194a5ac43267ffe2cf48b500476a2e47f9580b06422d56bc",
-    "term:element-w-browser-lab-url": "6698456addfc1cca73d3810f629a4b7f29c230cbdc8249caa3f36311d54434a9",
-    "term:element-w-diagnostics-check-connection": "fc6dc17da59e85405988692716cd36eab008412cfa3ad802a77a3e5b00928b01",
-    "term:element-w-diagnostics-check-id": "abdc13d23f2122c9d173b281b6fc1ef2a241412392b58c439a1b6c57cd8f32d6",
-    "term:element-w-diagnostics-check-state": "9d71995d9019937457118c5bc030046f285716d0d8f2044a5b3a8108a9d52057",
-    "term:element-w-diagnostics-detail": "a9c8f89d1b2f6f1bf74a8d6d831cae64a270616d6698c91dd1b443064523a876",
-    "term:element-w-diagnostics-provider-sign-in-help": "d42f424ed0f68b61fe2b3febed95c8eb46d5afd342d078630c870ab648a9ebe5",
-    "term:element-w-diagnostics-timestamp": "deadc3822be61d0020aa9209c436801b6ab6132cf4dd4d52d4cbfd8b32a999dd",
-    "term:element-w-diagnostics-version": "7892738b6486edd12291eaec2967046391e84fba551ca60a2a7d946bbb17eb41",
-    "term:github-skill-source": "20a5e9e77c2c47f7d8da5ced9fc4207a4eecd755806d6386599288ce34331046",
-    "term:owner": "b15b5b339e0896a7003a39964c4d36c7024068004a7e52622c47bafc229848e5",
-    "term:state-failed": "08c658885d9ab1ce39da75b473b519985649567578fa077c7122cd2780d91232",
-    "term:state-unverified": "41f9c04f6ff1c96572a7608a20ad411da7d736ec21fd3580a4c110ff4489291b",
-    "term:state-verified": "638e830d71dbdb271a171abfaa8c06f8df6d7c0af6270ac0cf11fbf3c466b1b7",
-    "term:ui-c-browser-lab": "8553d0d17f1a2f9b8dc1b14b308b719724eccb2113afabe08eaff723a6702005",
-    "term:ui-c-diagnose": "42285ea98c50135ebae785f22169b8497c052d16e3aed14d6763a05ef156b7ff",
-    "term:ui-p-browser-lab": "a9b5cdbadfb49c924e69cbb364b48833d051de35dea97e32b57e7aeb1ac418ab",
-    "term:ui-p-diagnostics": "7e496dc159a221a8ee4b4d57da0958d9a6848fa8916111be71f9b5898d6cd43e",
-    "term:ui-page-browser-lab": "f8f262d42c0df15e7da641e76c49694740dfb4c58685e38a0ceadd44821a29c4",
-    "term:ui-w-browser-lab": "49321e520cfac14503f014558465aab0c52aea9892bc13536f0bc2c05079fdd3",
-    "term:ui-w-diagnostics": "23de5729748350fd939da88982c8024a5cf25e4f0c19cc7974d9024d4520af68",
-    "term:unverified-behavior": "cd8d54e3ad31b362d7f06e91ed4088944714ff20a28567fda6e2d30443aada91",
-    "term:verification": "c234f5f53ef2093115000ab8a51b252695787ac4406bd07f63899477f6241e5c",
-    "ui:C-BROWSER-LAB": "abaaf54c29275ded7eebdcb03abe929bbde5dbc2351380165a9ec010a617bb4e",
-    "ui:C-DIAGNOSE": "92e1e58edaf2319bafff32e4fe22b0790b87adf2a0717e897904da8580d89ef1",
-    "ui:P-BROWSER-LAB": "47d3baf3f8de093ddcd5275f93686af12be435c248559b5254aa827f9ce2b5c8",
-    "ui:P-DIAGNOSTICS": "4ab3cff69f5ae310aa8fd3bc75a93759139a7dbfc4527adb8f65ab3b038da752",
-    "ui:PAGE-BROWSER-LAB": "e9b96958592875c7fc604338ce9df28e4578843b13cd30c4352d6cff18ba0b87",
-    "ui:W-BROWSER-LAB": "d08fcd24ce0a32d92ddb191e0ab14d1124b7f1ce5208a67d53762230746ad339",
-    "ui:W-DIAGNOSTICS": "005e4e7446d4c5c327c6a3a138e55c5d4fd5f34f4e938cf58cc190e1e7e083ea"
+    "flow:operate-installation": "39fe49b39948754279ab683c668b321f53eaee0a87f0421ff8cd5c0920b121dd",
+    "term:connection-refreshes": "d0c326e93b328907ae5adcaa293ad2d66581dd7cfa6bb2e4ba969c5ee0a66185",
+    "term:connection-submits": "0cf37d1c6c625c612416c5e1424b9d12e5b03f0e47d84863bc7e219a47d6fd0e",
+    "term:coverage-gap": "7fa71a4f7cd40bac8da4a708bb834337fb4d0a5e3f0d3afb855a8fccd7159e23",
+    "term:dependency-operation": "a363ecfb2e1e2b4516a661bb472c98b2c4defd5bf53f86ff4921d838c7335be9",
+    "term:element-w-browser-lab-key-controls": "7afd34f8b2ff65403c59c14f6f8e05cdaf66733e7c0f036cc0fc8c2d8cc7a2ec",
+    "term:element-w-browser-lab-location": "a8b83afb131583b6381e43dcba4906b23ac443c2a75050ba74d409fefd511e70",
+    "term:element-w-browser-lab-message": "5eb706ce20e15d241b9fdcab5e1fe1f72458be9a21ca810a54d2b05ae32601a5",
+    "term:element-w-browser-lab-navigate": "eb875223e25f0eae8ddb4face91bea55bee95d370955f983c7d8332865cb074d",
+    "term:element-w-browser-lab-refresh": "f264a64e75620587fdb7ea55435a03d1bac345e4367f5ba5f039b2497e201e3f",
+    "term:element-w-browser-lab-screenshot": "d04ea948ea199e5daa4d4cc90847152a9176141929891cbae78518d6baa37f18",
+    "term:element-w-browser-lab-scroll-up-down": "7398aa6913373ca68300923cf713c4c2c6ff9d12ac3d2a92711e0de1d6f28c82",
+    "term:element-w-browser-lab-send-text": "88fbedece096e327c4de20d366afc071f217beaa4c4b50508a4f4b37bac99566",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "17edad22914735f1f997c4424c3ad196aa3b86ab8a8ab8ae681df97da57af0a3",
+    "term:element-w-browser-lab-text-to-send": "48be2e27ae7279febf911d2b0bd38b33f13abec83f5c0da91fff074570de41b5",
+    "term:element-w-browser-lab-url": "9718eb2cff2d34233a183eb2cb49829e8fc086c11a56d731d23feaba1c60bbaa",
+    "term:element-w-diagnostics-check-connection": "8ec80f0e7b1d0e6be5a924fb81f0e692b8eda13ef0a177b1a855cd9a1ef3ba8e",
+    "term:element-w-diagnostics-check-id": "36c4b24cdd6c701eea0e0ec24c15955ef54b13cfd6a48ca56cc2387e8e285847",
+    "term:element-w-diagnostics-check-state": "0602fbd6560796459a8757c2f583b6c541ac1d2797d94a3d0955956062e354a6",
+    "term:element-w-diagnostics-detail": "3e29e04341d25a72dc89440aca6ce27535bca3f54a260b1ad8064570fc933371",
+    "term:element-w-diagnostics-provider-sign-in-help": "a6fa10f60d3367b18408d2d46b9f7ae12cf8bbd3baec95ca1490ae6cf28d67cc",
+    "term:element-w-diagnostics-timestamp": "2493b868daeb9f76ca71e74aecab15088daebd7aa19b192d9447c54972d6528b",
+    "term:element-w-diagnostics-version": "76323e29af2f9b6bc8b3e865ce6c7bc6d2c9b085a20fcbdb06d5072d2d70c609",
+    "term:github-skill-source": "4ad118ec37add939161f1fb95f8230e498a9286408ec73b394ca96644e5b62e5",
+    "term:owner": "6126fde4462f2303b0c1b35c5f325a0aa0d02d2563fae94afa508c776925730e",
+    "term:state-failed": "6ac829d5492fe2a1bc6d285ef0fb7e36a5710a25537b81253641c6ccb39acfee",
+    "term:state-unverified": "053657ba30a825deba5e0178aeae24c3502dc42c23930c48f33ec34b5fbafb5a",
+    "term:state-verified": "b07a63a756ac728505f2a8c8ddcdb76e7c0571ca493ef7ddb4c3d126b9f4f808",
+    "term:ui-c-browser-lab": "ef26214d7e827f43473c0a51c8de0be1ef3bf6d5d4cc679df158261990d1e2e0",
+    "term:ui-c-diagnose": "2c873a13f7a0e36af1bee2d41e440f82cdb6a97b926ba16a42a91b1a2ac91911",
+    "term:ui-p-browser-lab": "65de79532684fe5ceb6ee03739bbef458e5f44c1be667f49ef93badd3e54fb53",
+    "term:ui-p-diagnostics": "4aea070130652ef9a919020201479a7da18e24b580d8870f4e0bf02170802b6e",
+    "term:ui-page-browser-lab": "f5ab2dbc87944819e86510eac981b2137a3033157884b58dde8cfa3f3c781ae0",
+    "term:ui-w-browser-lab": "f79b9741a8dac3639e72e03fec2bca683e38303448b6b780e851c9102c9b02b6",
+    "term:ui-w-diagnostics": "c2c7a3c3be21c1d4ac8237564b856d5afaba98423e9fdc41326318719bd64196",
+    "term:unverified-behavior": "2092028c2df8ae536f2e6d9f43559d451c5519fa295a0bb718b8002f743771c2",
+    "term:verification": "d90a7d489aa781451476e1a6e415b951fb159e4f4963b82d236b57ea37aff8d2",
+    "ui:C-BROWSER-LAB": "2918b2e56ab6fd5ee7f5c324fac790ef18ea73bc4c35336733139e70530db5e3",
+    "ui:C-DIAGNOSE": "7a966c631a708273a4c76f6a7f71b42b5798874f77cee384ea7de972da49746a",
+    "ui:P-BROWSER-LAB": "bc1081377671dc0d1c4c5b56cb14879af7b359bbef27ae447384098cfffb5e41",
+    "ui:P-DIAGNOSTICS": "0b82d8aaf62609f48cbf9e8a056649fa6aaeadd6d75cf9da055d84688a8c8976",
+    "ui:PAGE-BROWSER-LAB": "58554b4f9c4af4e13cf55e89584d4391b2d17f96ac6cf1521f405b4fc5921aea",
+    "ui:W-BROWSER-LAB": "d6b441f05ed98331924d87a32eb08548d6190b9e17a0079efb7bb6bca554e830",
+    "ui:W-DIAGNOSTICS": "f3cf7ef37ebade4c8c4f8033a11f5a04a8c050eae75a9d0a242c95bddf656df0"
   }
 }
