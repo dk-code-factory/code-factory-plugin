@@ -12,6 +12,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import yaml
 from contextlib import redirect_stderr
 from unittest.mock import patch
 
@@ -70,6 +71,43 @@ class HostedCITests(unittest.TestCase):
         self.assertIn("  push:\n    branches: [main]\n", triggers)
         self.assertIn("  pull_request:\n    branches: [main, sync/local-development]\n", triggers)
         self.assertIn("  workflow_dispatch:\n", triggers)
+
+    def test_browser_benchmark_retains_samples_and_stops_on_failure(self):
+        workflow = yaml.safe_load((Path(__file__).resolve().parents[1] /
+            ".github/workflows/browser-benchmark.yml").read_text())
+        job = workflow["jobs"]["compare-workers"]
+        script = next(step["run"] for step in job["steps"]
+            if step.get("name") == "Compare serial and bounded parallel correctness")
+        tools = self.root / "tools"
+        tools.mkdir()
+        npx = tools / "npx"
+        npx.write_text("#!" + sys.executable + "\n" + '''import json, os, sys
+from pathlib import Path
+if "test" in sys.argv:
+    with Path("calls.jsonl").open("a") as output:
+        output.write(json.dumps(sys.argv[1:]) + "\\n")
+    print('{"fixture": true}')
+    sys.exit(int(os.environ.get("SAMPLE_EXIT", "0")))
+print("fixture-version")
+''')
+        npx.chmod(0o755)
+        for code in (0, 19):
+            with self.subTest(exit_code=code):
+                sample = self.root / str(code)
+                sample.mkdir()
+                result = subprocess.run(["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", script],
+                    cwd=sample, env={**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"],
+                        "SAMPLE_EXIT": str(code)}, capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode, code, result.stderr)
+                calls = [json.loads(line) for line in (sample / "calls.jsonl").read_text().splitlines()]
+                workers = [1, 2, 1, 2] if code == 0 else [1]
+                self.assertEqual(calls, [["playwright", "test", "--workers=" + str(w),
+                    "--retries=0", "--reporter=json"] for w in workers])
+                outputs = list((sample / "benchmark-results").glob("*.json"))
+                self.assertEqual(len(outputs), len(workers))
+                for output in outputs:
+                    self.assertEqual(json.loads(output.read_text()), {"fixture": True})
+                    self.assertIn("max_process_rss_kib=", output.with_suffix(".txt").read_text())
 
     def test_feature_push_and_dispatch_reject_before_verification(self):
         event = self.root / "event.json"

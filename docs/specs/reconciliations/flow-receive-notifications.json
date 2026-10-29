@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "1b033eaa3e37a632bd0676cc99463b4ff884033f",
-  "fingerprint": "c65516d136f39574b230f67f8003674c0a9bf63fc11043dc0df4b519db2afb03",
+  "base": "470ada037d99b22d31ae6e289b5683f35e062e18",
+  "fingerprint": "55b710bf241b42a4ab40018f2b0f0002d5de100db913bb6df5a49011d11fe6e1",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Subscribe to host notifications and manage delivery retains its authored scenarios and recovery boundaries: The owner can receive host alerts for inbox, run state and attention changes when the host supports subscriptions. Impact is indirect from shared verification prerequisites; no product behavior changed. Fresh comparison uses main 1b033eaa, including merged PR14 retained-review behavior. This flow and its mapping equal the target exactly; catalog merge proof retains every target mapping and the pinned adoption policy.",
-    "implementation": "The mapped application implementation beginning with internal/events/events.go is unchanged. Make preparation supplies current embedded artifacts to existing fixture commands and preserves -race -count=1, fixture mode and separate reconciliation/CI execution. Compared mapped implementation against current target: this PR changes no application, transport, provider, workflow, installer or report implementation. PR14 production retained workers, immutable checkpoint identities, admission/shutdown and publication reconciliation remain target-owned.",
-    "tests": "TestSubscriptionVerificationRetryDedupRefreshAndExpiry asserts signature validation, same event ID on retry, no repeated acknowledged delivery and no expired delivery. Existing open gaps are retained; preparation sharing adds no real-host, accessibility or provider acceptance claim. Re-inspected current assertions and new target retained-worker coverage; no previous fixture outcome is reused. Full required suites are selected from the merged catalog for fresh CLI execution."
+    "kind": "refactor",
+    "description": "Notification subscription and callback verification behavior is unchanged; ordinary fixture checks do not establish live callback delivery. Stable scenario IDs and outstanding acceptance gaps are retained.",
+    "implementation": "Production code and authored product behavior remain unchanged. The browser host helpers are extracted without module-level mutable test state; each mocked host owns its snapshot/calls. Shared assembled-daemon scenarios retain their original order in a single-worker project. receive-notifications mappings follow the original assertion anchors to their feature files. Repair reassessment: the only subsequent code inputs are scripts/requirements-dev.txt (declared YAML test parser) and scripts/test_ci.py (30-second benchmark-fixture subprocess bound); this subject retains the prior reviewed implementation and mapping decisions.",
+    "tests": "Inspected the retained assertion purposes and verified all 129 original test/parameterization statements byte-for-byte, with exact 158-title/multiplicity discovery equivalence. Relevant assertions: internal/events/events_test.go func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( \u2014 Signature verification, duplicate creation, entity filtering, stable identity across a 503 retry, expiry and idempotent unsubscribe fixtures; other failure classes and notification disabling are not asserted.; internal/events/events_test.go func TestCallbackSafetyAndFailedChallenge( \u2014 Callback destination and challenge safety.. Existing non-browser assertions remain unchanged and required suites rerun during reconciliation. The prior assertion review remains applicable: no mapped product assertions, source anchors, glossary definitions or UI entities change in this repair. All required fixture suites are rerun to refresh dependency-sensitive evidence; no acceptance gap is closed."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 131.311
+      "seconds": 128.118
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.184
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.798
+      "seconds": 25.341
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 52.066
+      "seconds": 52.701
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "16c7e241e4e9f385493d90a756f20b689deee582d01eb7f4fa4e191ff31addf9",
-    "term:attention-request": "62e0d6fa16d9dd4a2ead28516f7239115b5cf7fd47c29b1bbb7df0114032db5e",
-    "term:coverage-gap": "032818063d493f0454a66d274604ee0fc3d347ee58ef45439061def48b26c103",
-    "term:host": "1e405560cc5d912ef80e5410a8ddef9d453239c59ee1feeb7db542d74131d9d3",
-    "term:known-limitation": "49622f53f97431e447b1c48bcbc96e53e2fe7bcd5c5d0087e004e3df4a5640ac",
-    "term:subscription": "0852c49f613bb79c565a662d13a597692efa093eab1dd54aff2a0de18027d6bb",
-    "term:unverified-behavior": "6e67e77216aaea4d1c82a35cf706e768b216fed33750752d4edafb59f115a8c0"
+    "flow:receive-notifications": "b83b0eff784594f39d7f321c4b9c4524351a9a0b41b7d25082c66274298d85d3",
+    "term:attention-request": "9e4cf5d434d35eddaff8a2662e8bdcf87dac6cab60233a66890734e8b1ede8b7",
+    "term:coverage-gap": "b2a3e94648d17593561d913cbead453b1495b52ad957daff711823b45277c079",
+    "term:host": "ea46ec20df0eff48ccf0958c4dd357de115d871eafd644dc2dbecf6d0249abb9",
+    "term:known-limitation": "5a58d910d7da7a17b70cd116437ba99f592d7094dd9a125de3190d6de47a0692",
+    "term:subscription": "09c5116a10501b1533f7c90e70f2400696cfef9789dac4999ac30464224dd7e0",
+    "term:unverified-behavior": "c7b630ef89828262479c24ce4a86881d2d1b7e455f5994aba090ece86092c399"
   }
 }

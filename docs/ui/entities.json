@@ -12945,19 +12945,19 @@
   "assertions": [
     {
       "id": "UI-TRIAGE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "triage does not launch, launch edits and attention answer survive reopening",
       "assertion": "Item selection marks displayed revision read; does not start work; edited prompt and model payload reach preparation; review precedes explicit Start; question dialog answer payload; tab return and same-run follow-up."
     },
     {
       "id": "UI-SETTINGS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "settings save repository and priority rows without unused integrations",
       "assertion": "Dedicated settings stays open after repository save and shows its summary; priority rows save with local status; a subsequent system-default budget save preserves accepted priority labels, assessment prompt and helper model; no unused integration controls or credential submission."
     },
     {
       "id": "UI-ASSEMBLED",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/assembled.spec.ts",
       "anchor": "MCP bridge drives the assembled daemon through launch, question, answer and follow-up",
       "assertion": "Real app/MCP/store/Git with fake provider: selecting a fresh item opens a prefilled first-message chat, explicit Start prepares/starts once, then question/answer and follow-up work through the host bridge with no forbidden direct iframe request."
     },
@@ -13023,55 +13023,55 @@
     },
     {
       "id": "UI-KEYBOARD-LAUNCH",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "keyboard launch review traps focus, preserves edits and restores its opener on Escape",
       "assertion": "Default prepared review and optional Edit retain keyboard focus, trap Tab, preserve polling drafts, reprepare explicitly, restore opener on Escape and never start implicitly."
     },
     {
       "id": "UI-KEYBOARD-ATTENTION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "keyboard attention stays contained through updates and Escape restores the pending opener",
       "assertion": "Keyboard question choices survive polling, Tab remains contained, Escape defers without answering and restores opener; later one answer reaches idle with polite run status."
     },
     {
       "id": "UI-LAUNCH-ERROR",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "launch preparation failure is announced inside the dialog without losing keyboard edits",
       "assertion": "Preparation error is a dialog-local alert, edited prompt remains, retry enables and no Start occurs; Escape restores opener."
     },
     {
       "id": "UI-ITEM-ACTIONS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "item actions refresh visible history while unread, New and drafts remain independent",
       "assertion": "Focused item actions refresh history while read/New/action indicators remain independent; returning to the list shows the resulting flags without a persistent item panel."
     },
     {
       "id": "UI-LINK-REMOVE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "unlink removes the visible relationship without clearing unrelated detail drafts",
       "assertion": "Add displays a manual relationship; Remove removes its row once and retains priority/target drafts."
     },
     {
       "id": "UI-DETAIL-SELECTION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "a delayed relationship refresh cannot replace a later selection or its drafts",
       "assertion": "A held earlier relationship detail response cannot replace a later selected item or its independent drafts."
     },
     {
       "id": "UI-START-RETRY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/assembled.spec.ts",
       "anchor": "lost Start response locates the accepted daemon run without another Start",
       "assertion": "Busy double-click sends one Start; lost response reads the accepted daemon run and selects it without another Start or prepare."
     },
     {
       "id": "UI-DIRTY-CLEANUP",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/assembled.spec.ts",
       "anchor": "sending a message restores the dirty retained daemon session without a Resume action",
       "assertion": "Assembled dirty cleanup preserves workspace, thread, history and draft. Send is enabled when inactive; one send restores the same retained session with no resume start_run call."
     },
     {
       "id": "UI-AXE-CORE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "Axe WCAG A/AA scans the owned app iframe across core states in ${theme} theme",
       "assertion": "Axe4.14.0 A/AA-tag scans target the owned iframe across seven states in light/dark themes after injecting late transparent-html host styling. Computed html stays transparent while body/root/main paint the exact theme background; contrast and iframe-node passes and zero automated violations are required. Manual incompletes/full conformance remain separate."
     },
@@ -13083,13 +13083,13 @@
     },
     {
       "id": "UI-CLARIFICATION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/attention.spec.ts",
       "anchor": "test(\"clarification progress has no attention badge and stops when unresolved\"",
       "assertion": "Active clarification shows shared attempt 1 of 2 and takeover with zero attention badges; a filled draft cannot Send. Unresolved classification removes progress and takeover, retains the draft and permits Send without sending or starting work automatically."
     },
     {
       "id": "UI-NONBLOCKING-TEXT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/attention.spec.ts",
       "anchor": "test(\"nonblocking recovered text question keeps its continuing label\"",
       "assertion": "A recovered explicitly nonblocking text question retains its continuing label without a waiting notice."
     },
@@ -13101,115 +13101,115 @@
     },
     {
       "id": "UI-REPORTS-INFO",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues shares ledger search, information requests and evidence recovery\"",
       "assertion": "Selects shared report details, reads missing-information request, appends exact host evidence with an idempotency key, searches and refreshes without starting work."
     },
     {
       "id": "UI-REPORTS-RECOVERY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues displays independent closure, prerelease delivery and explicit workflow recovery\"",
       "assertion": "Separates closure, unknown fix/stable/installed evidence and dependency prerelease; blocks recovery until acknowledged and asserts the selected report exact GitHub URL reaches the host open-link boundary."
     },
     {
       "id": "UI-REPORTS-PAGE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues paginates and filters processing component and version\"",
       "assertion": "Loads 30 then 32 unique report rows, preserves a pending Load more and the loaded range across journal updates, refreshes later-row text, and resets pagination when processing/component/version filters change."
     },
     {
       "id": "UI-REPORTS-NAV-NARROW",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "test(`reported issues navigation remains keyboard reachable at narrow width in ${theme}`",
       "assertion": "Light/dark 390px fixtures keep Reported issues within the viewport and keyboard reachable alongside the work queues, with no agent launch or implicit report refresh."
     },
     {
       "id": "UI-REPORTS-DETAIL-ORDER",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues keeps newer journal details after a delayed mutation read\"",
       "assertion": "A delayed older mutation detail cannot replace newer journal findings, processing state or recovery controls for the same selected report."
     },
     {
       "id": "UI-REPORTS-SELECTION-ORDER",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues keeps a pending selection read when an older selection mutation finishes\"",
       "assertion": "A mutation finishing for an old report cannot invalidate the pending detail read for the currently selected report."
     },
     {
       "id": "UI-REPORTS-DETAIL-PROGRESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues makes detail progress while journal updates continue\"",
       "assertion": "Controlled detail reads span multiple confirmed journal/list refresh cycles; releasing a response displays its findings, needs-attention state and Recovery note, preserves them during further updates and starts the queued follow-up read."
     },
     {
       "id": "UI-REPORTS-PAGE-PROGRESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues allows pagination during continuing slow journal refreshes\"",
       "assertion": "During delayed list reads spanning continuing confirmed journal polls, Load more remains available; duplicate clicks admit one extra page, render exactly the expected 60 unique rows and keep pagination usable through another background refresh."
     },
     {
       "id": "UI-REPORTS-MUTATION-PROGRESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues releases mutation controls during continuing slow journal refreshes\"",
       "assertion": "After mutation acknowledgement, refresh, evidence and acknowledged recovery controls become usable while saved detail/list and queued journal refreshes remain pending; another evidence submission still reaches the selected report."
     },
     {
       "id": "UI-REPORTS-EVIDENCE-RETRY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues retries uncertain evidence without duplicating it and accepts edited evidence\"",
       "assertion": "After an accepted evidence call loses its acknowledgement, the retained unchanged draft retries with the same key and adds nothing twice; editing the draft submits a distinct key, appends exactly one new observation and clears the successful draft."
     },
     {
       "id": "UI-ITEM-DRAFTS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "item switching restores saved priorities and keeps relationship drafts by item",
       "assertion": "Saved P0 and P3 initialize independently; link drafts survive item/tab switches; every priority and automatic send exact immediate payloads."
     },
     {
       "id": "UI-PRIORITY-ERROR",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "failed immediate priority saves restore the saved value with an inline error",
       "assertion": "Rejected override restores previous picker value and announces an inline failure."
     },
     {
       "id": "UI-NO-MATCHES",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/attention.spec.ts",
       "anchor": "empty filtered inbox offers Clear filters and hides zero attention",
       "assertion": "No-results feedback and Clear filters restore item rows; zero-attention shortcut is absent."
     },
     {
       "id": "UI-OPEN-AGENT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "Open agent targets the newest retained run and keeps message drafts across tabs and runs",
       "assertion": "Selecting an item directly opens its newest retained unfinished run, skips prepared/cleaned candidates and preserves drafts across queues and run changes without preparation/Start."
     },
     {
       "id": "UI-DRAFT-LAUNCHES",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "default launch opens review directly and Draft launches reopens its immutable snapshot newest first",
       "assertion": "Default opens prepared review with mode/policy; newest draft reopens same snapshot after source profile mutation without another prepare or implicit Start."
     },
     {
       "id": "UI-ATTENTION-CONTEXT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/attention.spec.ts",
       "anchor": "global attention selects its owning run and returns to its conversation after answering",
       "assertion": "Global dialog identifies title/profile; answer leaves owning conversation selected and next message targets its run. After answering the removed global shortcut, keyboard focus moves to the owning task heading. Cross-run attention entered from another item’s agent resets Back to the Agents list, avoiding the unrelated item."
     },
     {
       "id": "UI-START-UNKNOWN",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "unverifiable Start disables retry and Edit until read_run locates accepted work",
       "assertion": "Unavailable read_run disables Start/Edit; explicit status check locates accepted work with exactly one Start."
     },
     {
       "id": "UI-SETTINGS-FEEDBACK",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "repository form shows saving and errors beside retained inputs",
       "assertion": "Gated repository save disables fields and displays Saving; failure retains input and displays exact local error."
     },
     {
       "id": "UI-READABLE-APPROVALS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "readable approval choices preserve payloads in a narrow",
       "assertion": "Light/dark 390px embeds show readable command/reason/access; raw data stays collapsed; keyboard submission preserves exact accept/session/deny/cancel/amendment and permission-turn payloads. Actual dialog bounds fit a 390px embed; default launch review and Advanced editor also remain within the iframe."
     },
@@ -13221,61 +13221,61 @@
     },
     {
       "id": "UI-SETTINGS-EDITORS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "collapsed settings editors preserve capabilities and show independent save results",
       "assertion": "Initial repository keyboard focus; profile/mode and managed-skill save payloads, skill discovery, independent Saved feedback and diagnostics display."
     },
     {
       "id": "UI-CONVERSATION-DETAILS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "agent conversation shows human messages and keeps technical activity under Details",
       "assertion": "Both 390px themes show merged progress updates, final reply, user message and readable error; commands/plans/diffs/internal summaries/raw output/error JSON are absent from Conversation and hidden under keyboard-accessible Details. New status messages stream visibly while new command output stays hidden; questions stay actionable, with no Start/Send/answer calls. Scoped Axe scans remain separate from manual accessibility acceptance."
     },
     {
       "id": "UI-START-CONFIRMED",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "confirmed unaccepted Start allows an explicit retry of the same snapshot",
       "assertion": "Failed Start followed by confirmed prepared status allows a second explicit Start of the same run; one prepare only."
     },
     {
       "id": "UI-SINGLE-PAGE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "single-page navigation preserves list context and drafts at",
       "assertion": "1280px and 390px in both themes: no brand/header/footer/split/adjacent detail; full-width list; item replaces list; Back restores query/scroll/row focus; agent Back origins and per-record drafts remain without implicit work. Priority is inside the row selection button to the left of the title’s first line, with no duplicate metadata badge or narrow overflow; checked geometrically in both themes at 390/1280px with a long title."
     },
     {
       "id": "UI-PAGE-FALLBACK",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "page changes keep keyboard focus usable when an unread row leaves the list",
       "assertion": "An opened unread item leaves the filtered list; Back shows the empty-result recovery without a detail placeholder, and Clear filters restores the row."
     },
     {
       "id": "UI-GITHUB-LINK",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "small inbox GitHub links open the original issue and PR without selecting either",
       "assertion": "Narrow light/dark issue+PR identifiers are the only visible source labels, appear once in row metadata outside the selection button, preserve exact href/host payloads, remain keyboard accessible, preserve unread/New and page state, wrap long repository names without overflow and pass scoped Axe; title/row activation opens the item."
     },
     {
       "id": "UI-GITHUB-LINK-ERROR",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "inbox GitHub link ${failure} failure stays in the list with visible feedback",
       "assertion": "Host isError denial and JSON-RPC failure display visible feedback while the inbox remains active, with no read_item/item_action calls."
     },
     {
       "id": "UI-SETTINGS-SEPARATE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "settings has a dedicated ${theme} view without inbox or agent navigation",
       "assertion": "Light/dark settings document has its own heading/forms, no task navigation or inbox/conversation, and remains there after a repository save."
     },
     {
       "id": "UI-SETTINGS-CONCURRENT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "separate settings can save while the inbox view retains its item and agent drafts",
       "assertion": "Two simultaneous bridged iframe documents share saved data without remounting/navigating the task surface or losing its unsent message and relationship target; no implicit work is started."
     },
     {
       "id": "UI-NO-INLINE-SETTINGS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "inbox and agent views have no settings entry or configuration controls",
       "assertion": "All four queues and the conversation expose no Settings navigation or repository configuration fields."
     },
@@ -13293,25 +13293,25 @@
     },
     {
       "id": "UI-WORK-QUEUES",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "focused work queues use GitHub ownership review requests and pending priority",
       "assertion": "Both themes at 390px assert default open unlinked issue membership, P0-first/unknown-last ordering, author and individual/team review membership, independent filters/search, no launch/read on listing, no overflow and scoped Axe."
     },
     {
       "id": "UI-DIRECT-CHAT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "item opens a prefilled conversation and first-message Start stays explicit",
       "assertion": "Item opens Agent with summary, prefilled prompt and closed details; no intermediate item-only page or Open agent control, no work before Start, retained item draft, exact prepare/start payload and conversation afterward."
     },
     {
       "id": "UI-CHAT-UNCERTAIN",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "first-message launch uncertainty survives leaving and reopening its item",
       "assertion": "Uncertain first-message Start remains disabled across Back/reopen; Check reads the same prepared record with no additional Start/preparation."
     },
     {
       "id": "UI-WAITING-MESSAGES",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/attention.spec.ts",
       "anchor": "Messages lists waiting agents and answering removes only its owning request",
       "assertion": "Live pending blocking and nonblocking questions plus approvals appear with owning context; stale, answered, orphaned and disconnected live requests and agent inventories are absent. Selection and answers preserve item/run identity; resolving one leaves the others intact and the final nonblocking question remains answerable."
     },
@@ -13335,109 +13335,109 @@
     },
     {
       "id": "UI-CHAT-AUTHORITY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "first-message launch reviews changed authority before starting its prepared snapshot",
       "assertion": "Changed resolved mode/permissions/publishing values require another explicit Start; the same prepared proposal then starts once."
     },
     {
       "id": "UI-CHAT-CONFIRMED",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "first-message lost Start response locates accepted work without another launch",
       "assertion": "A lost first-message Start response reads the same accepted run and shows its conversation with exactly one preparation and Start."
     },
     {
       "id": "UI-CHAT-LATE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "a late first-message Start cannot replace another item",
       "assertion": "A withheld first-message Start response is processed while saved reads remain prepared: Messages changes to Messages 1 only after the returned waiting run reaches React. After that barrier, the later selected item and exact unsubmitted draft remain; exactly one prepare/Start is sent. Reopening the second item forces a saved read after acknowledgement; a still-prepared projection cannot undo accepted Start or replace its draft."
     },
     {
       "id": "UI-CHAT-PREPARE-ERROR",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "first-message preparation errors retain the editable draft without starting",
       "assertion": "Initial prepare failure displays an inline error, leaves the first message editable and sends no Start."
     },
     {
       "id": "UI-CONNECT-INIT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/connection.spec.ts",
       "anchor": "initial bridge failures retry a fresh handshake without reloading or losing state",
       "assertion": "Three failed SDK initializations recover through four fresh handshakes with one successful initial snapshot and no stale banner."
     },
     {
       "id": "UI-CONNECT-POLL",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "transient polling outage recovers without a stale error banner or lost first message",
       "assertion": "A real SDK JSON-RPC connection fault drives reconnect feedback; healthy reads clear it and preserve the first-message draft with no mutation."
     },
     {
       "id": "UI-CONNECT-ITEM",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "transient item read failure retries and marks only the successfully displayed revision read",
       "assertion": "Three failed item requests retry locally; only the recovered displayed revision is marked read, once."
     },
     {
       "id": "UI-CONNECT-TRANSCRIPT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "transcript recovery keeps output and draft while removing only its own read error",
       "assertion": "After transcript transport failures, previous output and follow-up draft remain and only the local read error disappears on recovery."
     },
     {
       "id": "UI-CONNECT-MUTATION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/connection.spec.ts",
       "anchor": "mutation connection failure is not replayed and later polling does not dismiss it",
       "assertion": "An uncertain Send is attempted once; subsequent healthy polls do not clear its error or submitted draft."
     },
     {
       "id": "UI-CONNECT-TOOL-ERROR",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/connection.spec.ts",
       "anchor": "read tool errors are not mistaken for retryable transport errors",
       "assertion": "Tool-result errors containing Connection failed are not transport failures: item read is attempted once and explicit Retry remains."
     },
     {
       "id": "UI-CONNECT-HOST-WRAP",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/connection.spec.ts",
       "anchor": "exact host-wrapped MCP connection error retries a read without exposing its framework text",
       "assertion": "The exact host McpServerError in an isError envelope retries a known read; a mutation observer proves no framework-error alert appears before recovery."
     },
     {
       "id": "UI-CONNECT-HOST-MUTATION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/connection.spec.ts",
       "anchor": "exact host-wrapped connection failure never replays a mutation",
       "assertion": "The same host-wrapped failure on Send produces one attempt and retains the uncertain draft through later successful polling."
     },
     {
       "id": "UI-CONVERSATION-EMPTY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "technical-only activity leaves a concise waiting state in the conversation",
       "assertion": "A running technical-only stream shows Waiting for an agent update without putting commands in the conversation; technical output remains available inside collapsed Details."
     },
     {
       "id": "UI-WAKE-MESSAGE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "inactive work status and sending a message restore the retained session",
       "assertion": "Both themes render only work-item activity, no Resume action or standalone run header; inactive send targets the retained run without start_run, disables duplicate submits, clears only accepted drafts and preserves failed drafts."
     },
     {
       "id": "UI-FINISHED-STATUS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "cleaned work keeps its Finished item status while offering an explicit fresh conversation",
       "assertion": "With only cleaned retained history, both list and focused item show Finished; a new prefilled conversation still requires explicit Start, with no implicit prepare/start/send."
     },
     {
       "id": "UI-WORKING-MONITOR",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "Working and linked PR monitoring follow server projections",
       "assertion": "Both narrow themes show linked PR lifecycle/review/CI and authoritative Working membership, update after merge, preserve GitHub links and never launch; scoped Axe scans cover the empty Working view."
     },
     {
       "id": "UI-PIPELINE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "first-message pipeline selection preserves an edited prompt",
       "assertion": "Pipeline changes retain edited text; only explicit Start sends the selected profile."
     },
     {
       "id": "UI-SESSION-CONSOLE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "text fallback opens the same session console",
       "assertion": "Text fallback opens technical output in the same session, retains the reply draft across presentation changes and sends the exact question answer without another launch. Automatic repair input is labeled Question recovery in the console and remains outside the concise conversation."
     },
@@ -13479,37 +13479,37 @@
     },
     {
       "id": "UI-REPAIR-TAKEOVER",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/accessibility.spec.ts",
       "anchor": "question recovery progress and keyboard takeover retain",
       "assertion": "Recovery progress shows attempt two of two; keyboard takeover opens the same console, preserves its draft and sends one interrupt without another launch."
     },
     {
       "id": "UI-TEXT-DISMISS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/attention.spec.ts",
       "anchor": "an uncertain textual reply can be dismissed without advancing",
       "assertion": "No reply needed closes only textual attention and sends no answer, message or launch."
     },
     {
       "id": "UI-ADMIN-REPO",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "admin system and repository review policies retain inheritance and extra prompts",
       "assertion": "Both themes at 390px assert queue-only defaults, system opt-in, repo queue/inherit overrides, persisted extra review text, manual poll without explicit UI Start and scoped axe scans."
     },
     {
       "id": "UI-ADMIN-PLUGINS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "plugin admin tracks installs, versions and explicit updates",
       "assertion": "Both narrow themes use a memoizing host while checking installed/enabled/version state, metadata-only checks, explicit keyboard update and install/remove/marketplace payloads. Status reads carry distinct freshness markers and observe completed operations; layout and scoped Axe remain fixture evidence."
     },
     {
       "id": "UI-ADMIN-UNCERTAIN",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "uncertain plugin mutations preserve drafts and never replay automatically",
       "assertion": "An uncertain management response retains selector and mutation feedback after a later successful status read; exactly one management call occurs, with no mutation replay."
     },
     {
       "id": "UI-ADMIN-PIPELINE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "repository review pipeline overrides system defaults and plugin skills remain selectable",
       "assertion": "The requested-PR conversation selects its repository pipeline over the system default without launching; a discovered plugin skill is selectable in a profile and an unavailable skill is disabled."
     },
@@ -13557,7 +13557,7 @@
     },
     {
       "id": "UI-COMPACT-REVIEW",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "review queues from multiple repositories load full details from compact snapshots",
       "assertion": "Both narrow themes display requested PRs from two repositories with compact summaries, read only the selected detail and retain full checks/activity without launching."
     },
@@ -13587,19 +13587,19 @@
     },
     {
       "id": "UI-GITHUB-USAGE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "GitHub usage settings show cached quota and save budget without polling",
       "assertion": "Both narrow themes display cached quota and save request budget/reserve/notification interval without polling repositories, reading item details or starting work; scoped accessibility and overflow assertions apply."
     },
     {
       "id": "UI-DETAIL-DEFERRED",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "a deferred detail refresh retains saved information and unread state until a successful retry",
       "assertion": "Deferred detail refresh shows saved content and an explicit Retry; it does not mark the revision read until a successful retry, and never prepares or starts an agent."
     },
     {
       "id": "UI-LINKED-DETAIL-REFRESH",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "linked PR changes refresh full selected details without consuming another read or launch",
       "assertion": "A linked PR metadata change rereads full selected detail and displays latest checks without marking the item read again or launching work."
     },
@@ -13611,19 +13611,19 @@
     },
     {
       "id": "UI-ITEM-SUMMARY-MARKDOWN",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "Markdown issue headings do not replace the useful conversation summary",
       "assertion": "Conversation summary skips consecutive Markdown-only heading paragraphs, shows meaningful issue text, retains the original full description and never prepares/starts work."
     },
     {
       "id": "UI-READ-FRESHNESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "fresh read markers observe external changes after a host memoizes an empty journal page",
       "assertion": "A host memoizes identical snapshot/journal arguments; after an empty journal reply, two external updates appear automatically, using distinct read markers and no launch/message mutation."
     },
     {
       "id": "UI-FULL-ACCESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "explicit full-access launch shows never approvals and authorized publishing",
       "assertion": "Prepared launch visibly retains full-access/never/authorized authority, starts only on explicit Start, and Settings explains that automatic reviews use the selected authority."
     },
@@ -13641,7 +13641,7 @@
     },
     {
       "id": "UI-POSTED-REVIEWS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "posted reviews show verified verdicts findings and refresh after completion",
       "assertion": "Both narrow themes expose receipts/verdicts/current or earlier commits/body/inline comments, unverified and stale states; snapshot version refresh, host links and manual refresh launch no work; scoped Axe passes."
     },
@@ -13653,19 +13653,19 @@
     },
     {
       "id": "UI-TERMINATED-WORK",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "terminated work retains history and cleanup without allowing continuation",
       "assertion": "In both themes, terminated work shows Stopped and its lifecycle reason, disables message continuation, exposes cleanup, omits Interrupt and sends no start or message action."
     },
     {
       "id": "UI-SAVED-OBSERVATIONS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "saved details and receipts render during background refresh",
       "assertion": "Both themes display saved details/receipts and pending feedback immediately with zero read marks, then automatically reread and mark the fresh matching revision once without launching. Receipt reads carry distinct freshness markers; scoped Axe remains separate from manual acceptance."
     },
     {
       "id": "UI-QUEUED-MESSAGE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "saved message clears its draft before agent delivery and shows uncertainty without replay",
       "assertion": "A durable accepted queue receipt clears only the submitted draft before activation; queued delivery is visible, replaced by uncertainty under the same message ID, and sends/starts are never replayed."
     },
@@ -13683,7 +13683,7 @@
     },
     {
       "id": "UI-OWN-PR-REJECTION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "own PR review rejection preserves the first message without starting",
       "assertion": "Both themes display the own-PR rejection, retain the editable first message and send no Start or create any run."
     },
@@ -13701,25 +13701,25 @@
     },
     {
       "id": "UI-PLUGIN-READ-RECOVERY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "plugin status polling clears recovered read failures while retaining drafts",
       "assertion": "Automatic status polling recovers after transport failures, removes only the plugin read alert, shows cached inventory and preserves the selector draft without any management mutation."
     },
     {
       "id": "UI-PLUGIN-INTERVAL",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "system defaults display and retain a supported nonpreset plugin interval",
       "assertion": "The saved 30-minute interval is visibly selected as Every 30 minutes and remains 30 in the payload and fixture config after an unrelated request-budget save to 120."
     },
     {
       "id": "UI-DETAIL-OBSERVATION-READ",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "saved unread details remain unread when refresh is",
       "assertion": "Paused, cooldown and unavailable saved detail without an error remains visible and unread, accepts a local message draft and performs no read mark, preparation or Start."
     },
     {
       "id": "UI-CONVERSATION-CHUNKS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "chunked owner and agent completions remain normal conversation across journal pages",
       "assertion": "Large Unicode/escaped owner and agent completions cross a 100-event page with correct You/Agent roles; completed content replaces a streamed prefix. Adjacent completion remains separate; incomplete/malformed chunks and command output stay outside Conversation and visible in initially collapsed Details."
     },
@@ -13749,19 +13749,19 @@
     },
     {
       "id": "UI-DETAIL-COOLDOWN-RETRY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "cooldown without an error keeps a retry action and saved details unread until fresh",
       "assertion": "Error-free cooldown renders saved details, deferred status, optional retry time and the existing Retry control. Retrying while deferred keeps unread and the message draft; retrying after fresh data is allowed marks the displayed revision once, clears deferred feedback and retains the draft without launching work."
     },
     {
       "id": "UI-GITHUB-DEFERRED",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
       "assertion": "Working list and focused conversation show Waiting for GitHub, retained reason and localized deadline with exact datetime; no alert or owner question appears. A threadless run cannot send messages; Cancel retry sends one interrupt_run and leaves it inactive without Start/message mutations."
     },
     {
       "id": "UI-FAILED-REVIEW",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "failed reviews keep failure status and alert instead of GitHub retry controls",
       "assertion": "An ordinary failed review keeps Failed in list and detail, displays its original alert, exposes no retry control and permits messaging its retained session."
     },
@@ -13791,7 +13791,7 @@
     },
     {
       "id": "UI-REPORTS-DRAFT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "\"reported issues exposes rendered draft limitations and required repository fields\"",
       "assertion": "Required repository fields appear as information requests; appended host evidence queues work, fallback limitations remain visible, opening Issue draft reveals title and complete body, and finalized unusable work recovers through acknowledged controls."
     },
@@ -13833,19 +13833,19 @@
     },
     {
       "id": "UI-QUERY-ORDER",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "published inbox responses preserve the newer query when older reads finish later",
       "assertion": "A delayed earlier query cannot replace a later selection/result, and legacy broad-read polling is absent."
     },
     {
       "id": "UI-HIDDEN-SUBSCRIPTION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "hidden views catch up through the shared subscription without rereading panels while hidden",
       "assertion": "A durable update is observed by the single watch while a hidden view performs no panel reads; visibility restores the latest saved item."
     },
     {
       "id": "UI-INBOX-PAGES",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "inbox pagination and complete-dataset search keep later saved items reachable",
       "assertion": "Three pages expose all 125 fixture items; searching on the last page resets pagination and opens item 125."
     },
@@ -13857,25 +13857,25 @@
     },
     {
       "id": "UI-NAV-MESSAGES",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "the shared subscription updates Messages while Reported issues is open",
       "assertion": "A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list."
     },
     {
       "id": "UI-PAGED-SELECTION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "a selected item outside the current page never renders an earlier selected entry",
       "assertion": "A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item."
     },
     {
       "id": "UI-OBSERVATION-ONLY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "observation-only publications refresh the selected saved error without a broad read",
       "assertion": "A selected saved error updates on an observation-only item invalidation without a broad state reread."
     },
     {
       "id": "UI-DEFERRED-SKILLS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "launch customization loads saved skills only when its deferred view opens",
       "assertion": "Saved skills are requested when launch customization opens; selecting one reaches preparation without starting an agent."
     },
@@ -13887,25 +13887,25 @@
     },
     {
       "id": "UI-RESYNC-REPORT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "full resync to an earlier cursor reloads Reports and preserves its evidence draft",
       "assertion": "Restoring an earlier database cursor reloads the selected report after a previous higher publication without clearing its evidence draft."
     },
     {
       "id": "UI-RESYNC-PLUGIN",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "full resync reloads plugin administration at an earlier cursor without clearing its draft",
       "assertion": "Plugin administration rereads saved inventory after a lower-cursor full resync while preserving the selector draft and performing no management mutation."
     },
     {
       "id": "UI-RESYNC-HISTORY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft",
       "assertion": "Full resync for the same run ID restarts incremental history from zero, removes invalid old output, reloads selected saved observation and keeps the message draft."
     },
     {
       "id": "UI-HISTORY-WINDOW",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "older retained history stays inspectable across updates and advances only on request",
       "assertion": "A 1,300-event run exposes its beginning in an inspectable bounded window; background updates do not move that window, explicit next advances it and follow latest resumes updates without clearing the draft. Hiding/showing a completed browsing page does not create an unsolicited Next request."
     },
@@ -13917,13 +13917,13 @@
     },
     {
       "id": "UI-SKILL-EDITOR-LOAD",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "the managed skill editor loads selected saved instructions and saves an existing skill",
       "assertion": "Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content."
     },
     {
       "id": "UI-SKILL-EDITOR-RACE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "a late managed skill read cannot overwrite a later selection or its editor draft",
       "assertion": "Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions."
     },
@@ -13941,43 +13941,43 @@
     },
     {
       "id": "UI-OUTPUT-SUBSCRIPTION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "transcript-only publications update output without broad state reads",
       "assertion": "A transcript-only publication updates the open conversation without a broad saved-state read."
     },
     {
       "id": "UI-REPOSITORY-FRESHNESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "repository-only resume refreshes selected detail and posted-review freshness",
       "assertion": "Repository-only resume updates posted-review monitoring status and reloads selected saved detail while preserving its draft and making no sync/start call."
     },
     {
       "id": "UI-SKILL-EDITOR-ERROR",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "managed skill read failure blocks saving until an explicit read retry succeeds",
       "assertion": "A selected read error disables Save, an explicit reload recovers saved instructions, and neither path replays or submits a save mutation."
     },
     {
       "id": "UI-ACCEPTANCE-RESYNC",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
       "assertion": "Full resync removes local acknowledgement overlays and returns the selected run to restored authoritative state without another Start."
     },
     {
       "id": "UI-STREAM-PROGRESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "continuing transcript publications coalesce while delayed reads still render valid prefixes",
       "assertion": "With publications every 35 ms and reads delayed 180 ms, the conversation renders live prefixes before streaming stops and has at most one transcript read in flight."
     },
     {
       "id": "UI-HIDDEN-HISTORY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "hidden retained history pauses pagination and resumes on visibility without a new publication",
       "assertion": "A read already sent before hide may finish; no further history page starts while hidden, and show resumes static pagination without needing a new publication."
     },
     {
       "id": "UI-HIDDEN-RESYNC",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "a hidden full resync rejects a delayed reply from the previous state epoch",
       "assertion": "An outstanding old-cursor read returning while hidden cannot restore the previous state epoch or block the lower-cursor restored data after visibility resumes."
     },
@@ -13989,67 +13989,67 @@
     },
     {
       "id": "UI-HIDDEN-DIRTY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/attention.spec.ts",
       "anchor": "a hidden older read cannot consume newer run and attention invalidations",
       "assertion": "A delayed older response while hidden cannot clear later run/attention work; show refreshes both current items and Messages."
     },
     {
       "id": "UI-VIEW-RETRY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "failed requested view reads recover without a new journal publication",
       "assertion": "Exhausted transport retries for a requested view retain local error feedback despite healthy idle watches, then recover automatically without a new commit."
     },
     {
       "id": "UI-QUERY-IDENTITY",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "queue navigation cannot activate rows belonging to the previous query",
       "assertion": "A delayed new queue renders loading without previous-query rows or launch actions, then shows only the new result set."
     },
     {
       "id": "UI-REVIEW-OBSERVATION",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "observation-only completion refreshes posted review monitoring state",
       "assertion": "A saved review observation completion clears pending status on observation-only invalidation even when the review record version is unchanged."
     },
     {
       "id": "UI-START-EPOCH",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "Start response cannot cross a full resync epoch",
       "assertion": "A delayed Start result cannot reinstall acceptance after full resync or replay launch."
     },
     {
       "id": "UI-START-CHECK-EPOCH",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "a delayed Start status check cannot install acceptance after full resync",
       "assertion": "An old-epoch status-check result remains uncertain rather than installing a stale accepted run."
     },
     {
       "id": "UI-NOTIFICATION-FRESHNESS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "notification-only failures refresh saved Settings feedback",
       "assertion": "Settings reloads saved notification error feedback on a notification-bucket invalidation without an explicit sync or diagnostics call."
     },
     {
       "id": "UI-REPORTS-DISPOSITIONS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/reports.spec.ts",
       "anchor": "`reported issues shows auditor ${outcome} outcome without claiming delivery`",
       "assertion": "Invalid and resolved dispositions show their explanation and completed outcome without information/recovery controls; resolved links a known issue/fix while stable and installed availability remain Unknown, and viewing starts no investigation."
     },
     {
       "id": "UI-REVIEW-CONFIG",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "review workflow settings preserve ordered bindings and inherited posting overrides",
       "assertion": "Ordered skill/command bindings and private rules persist; global posting starts off, repository false and null are distinct, configuration never starts or posts work. At a 320px viewport, strict body-width equality holds before and after configuration edits; the JSON example uses the existing wrapping code presentation. Invalid reviewer JSON blocks repository Save; toggling inheritance on/off restores valid native textarea state and saves [] without another edit."
     },
     {
       "id": "UI-PR-POSTING",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "PR posting policy and launch override show effective source without starting work",
       "assertion": "PR false/null overrides show effective source; launch false reaches preparation and displays launch authority without starting work."
     },
     {
       "id": "UI-REVIEW-WORKFLOW",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "retained review progress exposes incomplete providers and reconciles a verified receipt without reposting",
       "assertion": "Incomplete providers/skips are visible; incomplete reviews cannot post; uncertain results reconcile once and show verified count/receipt/omission without a posting mutation. Details exposes Resume review workflow for failed/interrupted retained reviews and removes it when idle. An observed idle/no-Resume baseline precedes interrupted visibility, so the interrupted assertion cannot reuse the preceding failed DOM."
     },
@@ -14085,7 +14085,7 @@
     },
     {
       "id": "UI-REVIEW-POST",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/sessions.spec.ts",
       "anchor": "retained review explicit posting sends its artifact and displays the server receipt",
       "assertion": "Explicit posting submits only the owning run and artifact reference once, then displays the server-verified receipt. Missing and positive finding counts never show No actionable findings; an explicitly known zero does."
     },
@@ -14097,7 +14097,7 @@
     },
     {
       "id": "UI-PR-POSTING-REFRESH",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "saved review policy changes refresh an open PR without polling or starting work",
       "assertion": "A saved global posting-policy change refreshes the effective choice in an open PR through shared invalidations, without starting a run or posting a review."
     },
@@ -14121,25 +14121,25 @@
     },
     {
       "id": "UI-REVIEW-IMPORT-EDITS",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "global DK review import preserves unrelated edits made while settings are loading",
       "assertion": "A delayed global import applies imported reviewers/rules while preserving intervening request-budget, plugin-interval and automatic-posting draft edits; Save persists all fields without starting or posting work. A real imported reviewer array resets an invalid prior draft and clears native validation."
     },
     {
       "id": "UI-REVIEW-CONFIG-DRAFT",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "absent global reviewers retain invalid draft and validity through unrelated settings edits",
       "assertion": "Absent global reviewers retain invalid JSON draft, displayed error and native custom validity across unrelated budget/posting edits; invalid Save makes no settings mutation."
     },
     {
       "id": "UI-REVIEW-IMPORT-TARGET",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "repository DK import discards stale results when switching editors during ${delay}",
       "assertion": "Repository A import/snapshot delays cannot modify subsequently selected B draft or stale import status; Save retains B reviewers/rules/base, including320px layout."
     },
     {
       "id": "UI-REVIEW-POLICY-UNRESOLVED",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/launch.spec.ts",
       "anchor": "launch posting inheritance stays unresolved on policy failure and retries without losing explicit overrides",
       "assertion": "GlobalOn/repositoryOff launch inheritance stays unresolved during loading/failure, exposes error/retry, recovers authoritativeOff and preserves explicit override without starting work."
     },
@@ -14151,7 +14151,7 @@
     },
     {
       "id": "UI-PR-POLICY-SAVE-ORDER",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/inbox.spec.ts",
       "anchor": "a delayed policy save ${response} preserves a newer committed Off observation",
       "assertion": "An earlier On save response, whether successful or failed, cannot replace a newer committed Off observation or add its obsolete error; the control becomes available after the one save and no start/post occurs."
     },
@@ -14181,7 +14181,7 @@
     },
     {
       "id": "UI-SINGLE-CODEX-MODE",
-      "path": "web/tests/factory.spec.ts",
+      "path": "web/tests/settings.spec.ts",
       "anchor": "single Codex execution settings retain the selected iteration skill without launching",
       "assertion": "Saves single Codex mode and the installed iteration skill, preserves both during unrelated budget edits, switches back to workflow and never launches or publishes."
     },
