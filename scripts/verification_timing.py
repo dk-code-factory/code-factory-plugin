@@ -263,8 +263,14 @@ class Journal:
         with self.update() as data:
             data["comparison"] = plan
 
-    def refresh(self, arguments=None):
-        self.collect_metadata(arguments=arguments)
+    def refresh(self, arguments=None, *, plan=None):
+        if plan is None:
+            self.collect_metadata(arguments=arguments)
+        else:
+            # Hosted CI has already validated these exact commits. Preserve its
+            # source snapshot and persist the plan before querying versions.
+            with self.update() as data:
+                data["comparison"] = plan
         # Commit the selected identity before any interruptible version queries.
         versions = toolchains()
         with self.update() as data:

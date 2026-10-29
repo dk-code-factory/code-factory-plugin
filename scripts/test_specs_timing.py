@@ -818,6 +818,113 @@ except KeyboardInterrupt:
                                     for row in completed['phases']))
                 self.assertFalse(marker.exists())
 
+    def test_hosted_dispatch_retains_resolved_identity_through_success_and_failure(self):
+        root, _ = self.git_history(root_only=True)
+        with patch.object(ci, 'ROOT', self.root), \
+                patch.object(timing, 'identity', side_effect=WORKING_IDENTITY):
+            cases = [('bootstrap', {'before': '0' * 40, 'after': root}, 'push', root)]
+            for group in ('root', 'ordinary'):
+                if group == 'ordinary':
+                    (self.root / 'source').write_text('Ordinary source snapshot')
+                    for argv in (['add', '.'], ['commit', '-m', 'Ordinary source']):
+                        subprocess.run(['git', *argv], cwd=self.root, check=True,
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    head = ci.git('rev-parse', 'HEAD')
+                    cases = [
+                        ('push', {'before': root, 'after': head}, 'push', ''),
+                        ('pr', {'pull_request': {'base': {'sha': root}, 'head': {'sha': head}}},
+                         'pull_request', ''),
+                        ('manual', {}, 'workflow_dispatch', ''),
+                    ]
+                for route, event, name, pin in cases:
+                    plan = ci.comparison(event, name, pin, 'refs/heads/main')
+                    expected = {'status': 'resolved', **plan, 'selection': 'commit'}
+                    for status in (0, 23):
+                        with self.subTest(route=route, status=status):
+                            event_path = self.root / 'event.json'
+                            event_path.write_text(json.dumps(event))
+                            env = {'GITHUB_ACTIONS': 'true', 'GITHUB_EVENT_PATH': str(event_path),
+                                   'GITHUB_EVENT_NAME': name, 'GITHUB_REF': 'refs/heads/main',
+                                   'CI_BOOTSTRAP_SHA': pin, 'CODE_FACTORY_REAL_CODEX': '1'}
+                            errors, calls = io.StringIO(), []
+                            with patch.dict(os.environ, env):
+                                journal = timing.Journal.create(hosted=True)
+                                source = self.data(journal)['source']
+                                self.assertEqual(source['head'], plan['head'])
+                                # One real command models a bounded worker; the
+                                # full suites independently cover the full plan.
+                                with journal.update() as data:
+                                    data['phases'] = [timing.row('build', 0)]
+                                def versions():
+                                    current = self.data(journal)
+                                    self.assertEqual(current['comparison'], expected)
+                                    self.assertEqual(current['source'], source)
+                                    return {'python': '3.12.0'}
+                                def worker(argv, **kwargs):
+                                    calls.append(argv)
+                                    self.assertTrue(kwargs['check'])
+                                    self.assertEqual(kwargs['env']['CODE_FACTORY_REAL_CODEX'], '0')
+                                    command = [sys.executable, '-c',
+                                        "import os; assert os.environ['CODE_FACTORY_REAL_CODEX']=='0'; " +
+                                        'raise SystemExit(' + str(status) + ')']
+                                    with patch.dict(os.environ, kwargs['env'], clear=True):
+                                        code = timing.execute('build', command, journal=journal)
+                                    if code:
+                                        raise subprocess.CalledProcessError(code, argv)
+                                with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(journal.path)}), \
+                                        patch.object(timing, 'identity', wraps=WORKING_IDENTITY) as identities, \
+                                        patch.object(timing, 'comparison', wraps=COMPARISON) as parsing, \
+                                        patch.object(timing, 'toolchains', side_effect=versions), \
+                                        contextlib.redirect_stderr(errors), contextlib.redirect_stdout(io.StringIO()):
+                                    if status:
+                                        with self.assertRaises(subprocess.CalledProcessError) as stopped:
+                                            ci.run_verification(plan, worker)
+                                        self.assertEqual(stopped.exception.returncode, status)
+                                    else:
+                                        ci.run_verification(plan, worker)
+                                    timing.hosted_action('hosted-finish', 'failure' if status else 'success')
+                                completed = self.data(journal)
+                                self.assertEqual(completed['comparison'], expected)
+                                identities.assert_not_called()
+                                parsing.assert_not_called()
+                                self.assertEqual(completed['source'], source)
+                                self.assertEqual(completed['outcome'], 'failure' if status else 'success')
+                                self.assertEqual(completed['phases'][0]['exit_code'], status)
+                                self.assertIsNotNone(completed['wall_seconds'])
+                                self.assertEqual(errors.getvalue(), '')
+                                target = 'hosted-verify-bootstrap' if plan['bootstrap'] else 'hosted-verify'
+                                expected_argv = ['make', target]
+                                if not plan['bootstrap']:
+                                    expected_argv.append('FLOW_ARGS=--base ' + plan['base'] + ' --head ' + plan['head'])
+                                self.assertEqual(calls, [expected_argv])
+                                self.assertEqual(completed['comparison']['base'], None if group == 'root' else root)
+
+    def test_hosted_dispatch_persists_plan_before_interrupted_version_collection(self):
+        plan = {'base': 'c' * 40, 'head': 'a' * 40, 'bootstrap': False}
+        for error in (KeyboardInterrupt(), SystemExit(143)):
+            with self.subTest(error=type(error).__name__):
+                journal = self.journal(hosted=True)
+                source = self.data(journal)['source']
+                expected = {'status': 'resolved', **plan, 'selection': 'commit'}
+                def versions():
+                    self.assertEqual(self.data(journal)['comparison'], expected)
+                    self.assertEqual(self.data(journal)['source'], source)
+                    raise error
+                worker = Mock()
+                with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(journal.path), 'GITHUB_ACTIONS': 'true'}), \
+                        patch.object(timing, 'toolchains', side_effect=versions), \
+                        contextlib.redirect_stderr(io.StringIO()) as errors:
+                    with self.assertRaises(type(error)) as caught:
+                        ci.run_verification(plan, worker)
+                    self.assertIs(caught.exception, error)
+                    timing.hosted_action('hosted-finish', 'cancelled')
+                worker.assert_not_called()
+                self.assertEqual(self.data(journal)['comparison'], expected)
+                self.assertEqual(self.data(journal)['source'], source)
+                self.assertEqual(self.data(journal)['outcome'], 'interrupted')
+                self.assertIsNotNone(self.data(journal)['wall_seconds'])
+                self.assertEqual(errors.getvalue(), '')
+
     def test_hosted_setup_failure_keeps_initial_event_identity(self):
         event = self.root / 'event.json'
         event.write_text(json.dumps({'pull_request': {

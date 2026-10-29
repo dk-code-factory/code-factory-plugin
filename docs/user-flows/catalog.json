@@ -14030,7 +14030,7 @@
         },
         {
           "path": "scripts/verification_timing.py",
-          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence Safe startup journals precede source/comparison collection; local finalization retains interrupted unknown fields. The one worker graph resolves its own comparison through a shared metadata prerequisite before toolchains and verification work, without evaluating Make variables in Python."
+          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence Safe startup journals precede source/comparison collection; local finalization retains interrupted unknown fields. The one worker graph resolves its own comparison through a shared metadata prerequisite before toolchains and verification work, without evaluating Make variables in Python. A keyword-only resolved hosted plan retains the setup source snapshot and is committed before version queries; local argument text keeps its existing collection path."
         }
       ],
       "tests": [
@@ -16165,6 +16165,24 @@
             "S5"
           ],
           "purpose": "Actual native worker recursive/simple FLOW_ARGS, assigned flags, quoted refs, last assignment, direct shell entry and ci override match the journal comparison. MAKELEVEL and a worker target-specific variable prove child context; comparison is persisted before version queries and all verification work, with no raw arguments or paths exported."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_dispatch_retains_resolved_identity_through_success_and_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual ci.run_verification invokes real selected-journal refresh and hosted finalization for push, PR, manual main and pinned root on worker success/failure. Exact comparison and initial source survive, source/text parsing are not repeated, fixture0 and actual nonzero status remain authoritative, and no timing warning is emitted."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_dispatch_persists_plan_before_interrupted_version_collection(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Resolved hosted comparison is already durable when version collection raises KeyboardInterrupt/SystemExit143; the real dispatcher starts no worker, propagates the same cancellation, retains source identity and finalizes an interrupted partial journal."
         }
       ],
       "suites": [

@@ -72,7 +72,7 @@ def run_verification(plan, runner=subprocess.run):
     env = {**os.environ, "CODE_FACTORY_REAL_CODEX": "0"}
     journal = timing.selected()
     if journal:
-        timing.observe(journal.refresh, {"status": "resolved", **plan, "selection": "commit"})
+        timing.observe(journal.refresh, plan={"status": "resolved", **plan, "selection": "commit"})
     if plan["bootstrap"]:
         # No fabricated ancestor or HEAD-to-HEAD comparison: this single reviewed
         # public root has no publishable predecessor. Every source check runs.
