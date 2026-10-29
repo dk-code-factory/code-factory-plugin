@@ -766,7 +766,7 @@
       ],
       "tests": [
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "test(\"settings save repository and priority rows without unused integrations\"",
           "scenarios": [
             "S1"
@@ -790,7 +790,7 @@
           "purpose": "Opt-in real lifecycle saves a profile/skill and observes skill loading; skipped in default fixture verification."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "test(\"repository form shows saving and errors beside retained inputs\"",
           "scenarios": [
             "S1"
@@ -798,7 +798,7 @@
           "purpose": "Saving disables the form; exact inline failure preserves values."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "test(\"collapsed settings editors preserve capabilities and show independent save results\"",
           "scenarios": [
             "S1",
@@ -807,7 +807,7 @@
           "purpose": "Profile/mode and skill saves, discovery and diagnostics have independent local results; initial repository focus is asserted."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "settings has a dedicated ${theme} view without inbox or agent navigation",
           "scenarios": [
             "S1"
@@ -815,7 +815,7 @@
           "purpose": "Repository saves stay within independent configuration, with no task nav."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "separate settings can save while the inbox view retains its item and agent drafts",
           "scenarios": [
             "S1",
@@ -840,7 +840,7 @@
           "purpose": "Settings document root selects only the configuration surface."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "admin system and repository review policies retain inheritance and extra prompts",
           "scenarios": [
             "S4"
@@ -848,7 +848,7 @@
           "purpose": "Both themes at 390px assert queue-only defaults, system opt-in, repo queue/inherit overrides, persisted extra review text, manual poll without explicit UI Start and scoped axe scans."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "plugin admin tracks installs, versions and explicit updates",
           "scenarios": [
             "S5"
@@ -856,7 +856,7 @@
           "purpose": "Both themes use memoized plugin reads with distinct freshness markers to observe check/install/update/remove completion, final inventory and enabled controls without replaying maintenance."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "uncertain plugin mutations preserve drafts and never replay automatically",
           "scenarios": [
             "S5"
@@ -864,7 +864,7 @@
           "purpose": "An uncertain management response displays feedback, retains the selector and submits only once after polling."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "repository review pipeline overrides system defaults and plugin skills remain selectable",
           "scenarios": [
             "S2"
@@ -912,7 +912,7 @@
           "purpose": "Queue override, pause, draft, old sync, absent request, sync error and unsafe review profile cannot launch automatically."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "GitHub usage settings show cached quota and save budget without polling",
           "scenarios": [
             "S6"
@@ -970,7 +970,7 @@
           "purpose": "Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"explicit full-access launch shows never approvals and authorized publishing\"",
           "scenarios": [
             "S2",
@@ -987,7 +987,7 @@
           "purpose": "Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "plugin status polling clears recovered read failures while retaining drafts",
           "scenarios": [
             "S5"
@@ -995,7 +995,7 @@
           "purpose": "Failed plugin read recovers through a later successful poll, removes only its read alert, retains selector draft/inventory and issues no maintenance mutation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "system defaults display and retain a supported nonpreset plugin interval",
           "scenarios": [
             "S5"
@@ -1019,7 +1019,7 @@
           "purpose": "Broad settings/launch projections omit skill content/files; the app-only managed editor returns only selected content with a read cursor, rejects unmanaged skills and excludes private files."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "the managed skill editor loads selected saved instructions and saves an existing skill",
           "scenarios": [
             "S2"
@@ -1027,7 +1027,7 @@
           "purpose": "Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "a late managed skill read cannot overwrite a later selection or its editor draft",
           "scenarios": [
             "S2"
@@ -1035,7 +1035,7 @@
           "purpose": "Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "managed skill read failure blocks saving until an explicit read retry succeeds",
           "scenarios": [
             "S2"
@@ -1043,7 +1043,7 @@
           "purpose": "Read failures gate the selected editor save until explicit reload succeeds; no save operation is submitted or replayed."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "notification-only failures refresh saved Settings feedback",
           "scenarios": [
             "S1"
@@ -1051,7 +1051,7 @@
           "purpose": "Saved credential-resolution notification feedback updates from its own invalidation bucket."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "review workflow settings preserve ordered bindings and inherited posting overrides",
           "scenarios": [
             "S7"
@@ -1075,7 +1075,7 @@
           "purpose": "Omitted and null settings preserve/reset posting overrides and reviewers correctly; a missing retained reviewer skill rejects Start before evidence or model execution."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "saved review policy changes refresh an open PR without polling or starting work",
           "scenarios": [
             "S7"
@@ -1107,7 +1107,7 @@
           "purpose": "Selected executable command bindings retain their supported package layout and sibling resources while excluding unrelated untracked owner files. Exact tracked sibling names with leading/trailing space and tab survive raw NUL inventory and are consumed by the retained command after source removal."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "global DK review import preserves unrelated edits made while settings are loading",
           "scenarios": [
             "S7"
@@ -1123,7 +1123,7 @@
           "purpose": "Oversized standalone/selected untracked executables and selected-plus-tracked package totals fail before unbounded retention."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "absent global reviewers retain invalid draft and validity through unrelated settings edits",
           "scenarios": [
             "S7"
@@ -1131,7 +1131,7 @@
           "purpose": "Unrelated renders preserve invalid reviewer draft/error/native validity when global reviewers are absent; invalid Save mutates nothing, while real import/inheritance reset still recovers."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "repository DK import discards stale results when switching editors during ${delay}",
           "scenarios": [
             "S7"
@@ -1139,7 +1139,7 @@
           "purpose": "Repository A import/snapshot delays cannot modify subsequently selected B draft or stale import status; Save retains B reviewers/rules/base, including320px layout."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "a delayed policy save ${response} preserves a newer committed Off observation",
           "scenarios": [
             "S7"
@@ -1147,7 +1147,7 @@
           "purpose": "Delayed success and failure responses from an earlier On save cannot replace a newer committed Off policy observation or restore an obsolete error; exactly one save occurs and no start/post runs."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "single Codex execution settings retain the selected iteration skill without launching",
           "scenarios": [
             "S4"
@@ -1185,6 +1185,19 @@
             "S4"
           ],
           "purpose": "Automatic native reviews with nil, empty, unrelated or already-selected profile skills and workflow reviews with empty skills start and complete under the unchanged selected profile. Derived skills are retained once; actual profile changes still block automatic validation."
+        },
+        {
+          "path": "web/tests/fixtures.ts",
+          "anchor": "export async function host(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S4",
+            "S5",
+            "S6",
+            "S7"
+          ],
+          "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
         }
       ],
       "suites": [
@@ -1673,7 +1686,7 @@
           "purpose": "Metadata pagination, status reruns, current head and stable semantic revisions."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "Working and linked PR monitoring follow server projections",
           "scenarios": [
             "S4"
@@ -1855,7 +1868,7 @@
           "purpose": "Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "posted reviews show verified verdicts findings and refresh after completion",
           "scenarios": [
             "S9"
@@ -1911,7 +1924,7 @@
           "purpose": "Accepted targeted closed/merged PR refresh terminates only that source session, retires its question and retains history and dirty workspace; a linked open issue keeps its session and question, and reopening cannot resume the terminated run."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
             "S10"
@@ -2048,7 +2061,7 @@
           "purpose": "Separate database connections and transports cannot overlap managed HTTP; a cancelled waiting publication remains BeforeDispatch, exactly two attempts survive, and a later rate-limit deadline is preserved."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
           "scenarios": [
             "S8"
@@ -2745,7 +2758,7 @@
           "purpose": "Baseline, later revisions and independent action history."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"triage does not launch, launch edits and attention answer survive reopening\"",
           "scenarios": [
             "S3"
@@ -2761,7 +2774,7 @@
           "purpose": "Read tools and app-only visibility are exercised."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"item actions refresh visible history while unread, New and drafts remain independent\"",
           "scenarios": [
             "S1",
@@ -2770,7 +2783,7 @@
           "purpose": "Action history refreshes immediately; Mark unread and acknowledge New remain independent, drafts survive and refresh sends no extra read or launch."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"a delayed relationship refresh cannot replace a later selection or its drafts\"",
           "scenarios": [
             "S3"
@@ -2778,7 +2791,7 @@
           "purpose": "A held earlier relationship detail response cannot replace a later selected item or its independent drafts."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/attention.spec.ts",
           "anchor": "test(\"empty filtered inbox offers Clear filters and hides zero attention\"",
           "scenarios": [
             "S3"
@@ -2786,7 +2799,7 @@
           "purpose": "No matching items and Clear filters recover the visible list without launching."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"item switching restores saved priorities and keeps relationship drafts by item\"",
           "scenarios": [
             "S1",
@@ -2795,7 +2808,7 @@
           "purpose": "Saved priorities and per-item link drafts survive selection/tab changes without state leakage."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "single-page navigation preserves list context and drafts at",
           "scenarios": [
             "S1"
@@ -2803,7 +2816,7 @@
           "purpose": "Both themes and 1280px/390px widths assert exclusive list/item/agent pages, Back focus/scroll/query restoration and per-record draft preservation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/accessibility.spec.ts",
           "anchor": "page changes keep keyboard focus usable when an unread row leaves the list",
           "scenarios": [
             "S1",
@@ -2812,7 +2825,7 @@
           "purpose": "A read item disappears from the unread list; Back and Clear filters recover without an empty detail panel."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "small inbox GitHub links open the original issue and PR without selecting either",
           "scenarios": [
             "S3"
@@ -2820,7 +2833,7 @@
           "purpose": "Original issue and pull request links use the host browser, preserve unread/New and keep the list active; row selection stays independent."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "inbox GitHub link ${failure} failure stays in the list with visible feedback",
           "scenarios": [
             "S3"
@@ -2828,7 +2841,7 @@
           "purpose": "Host rejection/failure is visible without marking an item read."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/accessibility.spec.ts",
           "anchor": "focused work queues use GitHub ownership review requests and pending priority",
           "scenarios": [
             "S3"
@@ -2836,7 +2849,7 @@
           "purpose": "Both themes at 390px assert default open unlinked issue membership, P0-first/unknown-last ordering, author and individual/team review membership, independent filters/search, no launch/read on listing, no overflow and scoped Axe."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "item opens a prefilled conversation and first-message Start stays explicit",
           "scenarios": [
             "S3"
@@ -2852,7 +2865,7 @@
           "purpose": "Known forward/reverse PR links and explicit external PR evidence mark issue membership; removal clears it."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "transient item read failure retries and marks only the successfully displayed revision read",
           "scenarios": [
             "S3"
@@ -2860,7 +2873,7 @@
           "purpose": "Three failed item requests retry locally; only the recovered displayed revision is marked read, once."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/connection.spec.ts",
           "anchor": "read tool errors are not mistaken for retryable transport errors",
           "scenarios": [
             "S3"
@@ -2876,7 +2889,7 @@
           "purpose": "Working completion follows explicit implementation links; references do not complete an issue."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "Working and linked PR monitoring follow server projections",
           "scenarios": [
             "S4"
@@ -2892,7 +2905,7 @@
           "purpose": "Megabyte item history and own/linked check lists are absent from the shared snapshot; reviewer membership, body, head and revision remain, and selected-item reads retain exact full content."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "review queues from multiple repositories load full details from compact snapshots",
           "scenarios": [
             "S3"
@@ -2900,7 +2913,7 @@
           "purpose": "Both narrow themes display requested PRs from two repositories using compact summaries and fetch full activity/checks only after selection without preparing or starting work."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "a deferred detail refresh retains saved information and unread state until a successful retry",
           "scenarios": [
             "S2",
@@ -2918,7 +2931,7 @@
           "purpose": "Cheap index preserves full history and cannot reuse current-head status for a changed PR head."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "linked PR changes refresh full selected details without consuming another read or launch",
           "scenarios": [
             "S3",
@@ -2927,7 +2940,7 @@
           "purpose": "Latest linked PR metadata refreshes selected full detail without replaying read or launch actions."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "Markdown issue headings do not replace the useful conversation summary",
           "scenarios": [
             "S3"
@@ -3010,7 +3023,7 @@
           "purpose": "Hold an actual uncommitted write transaction while tracking returns committed saved item/review state without waiting for its writer or the queued local focus hint."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "saved unread details remain unread when refresh is",
           "scenarios": [
             "S5",
@@ -3027,7 +3040,7 @@
           ]
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "cooldown without an error keeps a retry action and saved details unread until fresh",
           "scenarios": [
             "S5",
@@ -3084,7 +3097,7 @@
           "purpose": "A concurrent connection commit cannot mix a newer entity with an older cursor inside a WAL read view."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "published inbox responses preserve the newer query when older reads finish later",
           "scenarios": [
             "S3"
@@ -3092,7 +3105,7 @@
           "purpose": "A delayed earlier query cannot replace a later selection/result, and legacy broad-read polling is absent."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "hidden views catch up through the shared subscription without rereading panels while hidden",
           "scenarios": [
             "S3"
@@ -3100,7 +3113,7 @@
           "purpose": "A durable update is observed by the single watch while a hidden view performs no panel reads; visibility restores the latest saved item."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "inbox pagination and complete-dataset search keep later saved items reachable",
           "scenarios": [
             "S3"
@@ -3108,7 +3121,7 @@
           "purpose": "Three pages expose all 125 fixture items; searching on the last page resets pagination and opens item 125."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "the shared subscription updates Messages while Reported issues is open",
           "scenarios": [
             "S3"
@@ -3116,7 +3129,7 @@
           "purpose": "A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "a selected item outside the current page never renders an earlier selected entry",
           "scenarios": [
             "S3"
@@ -3124,12 +3137,25 @@
           "purpose": "A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "queue navigation cannot activate rows belonging to the previous query",
           "scenarios": [
             "S3"
           ],
           "purpose": "Previous-query rows cannot be activated under a newly selected queue while its saved read is pending."
+        },
+        {
+          "path": "web/tests/fixtures.ts",
+          "anchor": "export async function host(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
         }
       ],
       "suites": [
@@ -3400,7 +3426,7 @@
           "purpose": "Reuse and policy invalidation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"item switching restores saved priorities and keeps relationship drafts by item\"",
           "scenarios": [
             "S1"
@@ -3408,7 +3434,7 @@
           "purpose": "Stored overrides initialize including P0; all priorities and automatic submit immediately for the selected item."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"failed immediate priority saves restore the saved value with an inline error\"",
           "scenarios": [
             "S1"
@@ -3672,7 +3698,7 @@
           "purpose": "Discovered references survive local unlink."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"unlink removes the visible relationship without clearing unrelated detail drafts\"",
           "scenarios": [
             "S2"
@@ -3680,7 +3706,7 @@
           "purpose": "Add displays a manual relationship; Remove removes its row once and retains priority/target drafts."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"a delayed relationship refresh cannot replace a later selection or its drafts\"",
           "scenarios": [
             "S2"
@@ -3688,7 +3714,7 @@
           "purpose": "A held earlier relationship detail response cannot replace a later selected item or its independent drafts."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"item switching restores saved priorities and keeps relationship drafts by item\"",
           "scenarios": [
             "S2"
@@ -3696,7 +3722,7 @@
           "purpose": "Unsubmitted relationship drafts are isolated by item and retained across tabs."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "single-page navigation preserves list context and drafts at",
           "scenarios": [
             "S1"
@@ -3720,7 +3746,7 @@
           "purpose": "Metadata pagination, status reruns, current head and stable semantic revisions."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "Working and linked PR monitoring follow server projections",
           "scenarios": [
             "S4"
@@ -3737,7 +3763,7 @@
           "purpose": "Incidental cross-references cause no scan until the source is selected; inaccessible targets back off without adding repository monitoring."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "linked PR changes refresh full selected details without consuming another read or launch",
           "scenarios": [
             "S4",
@@ -4239,7 +4265,7 @@
           "purpose": "Preparation helper checks no worktree before start; one accepted Start reaches attention. Exactly-once assertions cover answers, not repeated Start requests."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"triage does not launch, launch edits and attention answer survive reopening\"",
           "scenarios": [
             "S1",
@@ -4248,7 +4274,7 @@
           "purpose": "Edited prompt and model reach prepare; UI starts once."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/assembled.spec.ts",
           "anchor": "test(\"MCP bridge drives the assembled daemon through launch, question, answer and follow-up\"",
           "scenarios": [
             "S2"
@@ -4272,7 +4298,7 @@
           "purpose": "Provider protocol regression."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/accessibility.spec.ts",
           "anchor": "test(\"keyboard launch review traps focus, preserves edits and restores its opener on Escape\"",
           "scenarios": [
             "S1"
@@ -4280,7 +4306,7 @@
           "purpose": "Keyboard-only opening, forward/reverse Tab containment, visible focus, draft retention through polling/review, Escape/opener restoration, default prepare plus explicit reprepare and no Start; polite connection status."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/accessibility.spec.ts",
           "anchor": "test(\"launch preparation failure is announced inside the dialog without losing keyboard edits\"",
           "scenarios": [
             "S1"
@@ -4288,7 +4314,7 @@
           "purpose": "Preparation error is a dialog-local alert, edited prompt remains, retry enables and no Start occurs; Escape restores opener."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/assembled.spec.ts",
           "anchor": "test(\"lost Start response locates the accepted daemon run without another Start\"",
           "scenarios": [
             "S2"
@@ -4296,7 +4322,7 @@
           "purpose": "Busy double-click sends once; lost response locates accepted daemon work with read_run without another Start or prepare."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"default launch opens review directly and Draft launches reopens its immutable snapshot newest first\"",
           "scenarios": [
             "S1",
@@ -4305,7 +4331,7 @@
           "purpose": "Default review includes mode and policy; reopening retains original snapshot despite changed source profile."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"unverifiable Start disables retry and Edit until read_run locates accepted work\"",
           "scenarios": [
             "S2"
@@ -4313,7 +4339,7 @@
           "purpose": "Uncertain Start gates duplicate actions until same-run status lookup recovers accepted work."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"confirmed unaccepted Start allows an explicit retry of the same snapshot\"",
           "scenarios": [
             "S2"
@@ -4321,7 +4347,7 @@
           "purpose": "Status-confirmed unaccepted Start permits explicit retry without reprepare."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "item opens a prefilled conversation and first-message Start stays explicit",
           "scenarios": [
             "S1",
@@ -4330,7 +4356,7 @@
           "purpose": "Item opens Agent with summary, prefilled prompt and closed details; no intermediate item-only page or Open agent control, no work before Start, retained item draft, exact prepare/start payload and conversation afterward."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "first-message launch uncertainty survives leaving and reopening its item",
           "scenarios": [
             "S1",
@@ -4339,7 +4365,7 @@
           "purpose": "Uncertain first-message Start remains disabled across Back/reopen; Check reads the same prepared record with no additional Start/preparation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "first-message pipeline selection preserves an edited prompt",
           "scenarios": [
             "S4"
@@ -4379,7 +4405,7 @@
           "purpose": "Selected discovered skill retains its full bundle and executable modes."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "repository review pipeline overrides system defaults and plugin skills remain selectable",
           "scenarios": [
             "S4"
@@ -4612,7 +4638,7 @@
           "purpose": "Native startup receives danger-full-access and approval never, autonomous publishing/decision instructions, private scratch and disabled bounded proxy; no default bounded permission profile leaks into this explicit choice. Existing owner rules and Decisions seed private data even in full-access mode; repeated setup preserves run updates and leaves owner stores unchanged."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"explicit full-access launch shows never approvals and authorized publishing\"",
           "scenarios": [
             "S4",
@@ -4654,7 +4680,7 @@
           "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
             "S8"
@@ -4727,7 +4753,7 @@
           "purpose": "Fresh provider source author supersedes cached author and stops self review before workspace/thread creation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "own PR review rejection preserves the first message without starting",
           "scenarios": [
             "S6"
@@ -4803,7 +4829,7 @@
           "purpose": "Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "a late first-message Start cannot replace another item's draft",
           "purpose": "With a delayed immutable accepted Start response and lagging saved reads, the Messages badge proves React processed the response before asserting another item and exact draft remain selected; private guard removal fails after this barrier.",
           "scenarios": [
@@ -4820,7 +4846,7 @@
           "purpose": "Repeated automatic eligibility reads only owning-run metadata: all four persisted busy states prevent claims and pipeline validation despite unrelated/private frozen payloads; idle ownership reaches normal pipeline validation without provider work."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
           "scenarios": [
             "S8"
@@ -5080,7 +5106,7 @@
           "purpose": "A canceled client lifetime cannot accept or decode a queued native acknowledgement as successful admission."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "launch customization loads saved skills only when its deferred view opens",
           "scenarios": [
             "S1"
@@ -5088,7 +5114,7 @@
           "purpose": "Deferred saved launch data supplies selectable skills to preparation while explicit Start remains separate."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
           "scenarios": [
             "S1"
@@ -5096,7 +5122,7 @@
           "purpose": "A restored authoritative prepared state clears the local accepted-run overlay without replaying Start."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "Start response cannot cross a full resync epoch",
           "scenarios": [
             "S1"
@@ -5104,7 +5130,7 @@
           "purpose": "Parameterized first-message and modal starts reject old-epoch success while keeping the request uncertain without replay."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "a delayed Start status check cannot install acceptance after full resync",
           "scenarios": [
             "S1"
@@ -5200,7 +5226,7 @@
           "purpose": "Inline sides, ranges, omissions and approval guard."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "retained review explicit posting sends its artifact and displays the server receipt",
           "scenarios": [
             "S10"
@@ -5405,7 +5431,7 @@
           "purpose": "Aliased/missing-materiality preparation receives one correction and cannot become clean without the independent material decision gate."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "launch posting inheritance stays unresolved on policy failure and retries without losing explicit overrides",
           "scenarios": [
             "S10"
@@ -5839,6 +5865,21 @@
             "S9"
           ],
           "purpose": "After verified worker return, a failed parent-finalization write remains bound to its original execution. The shared interrupt wait pauses before consuming that result while explicit Resume completes a replacement; the old waiter still returns the same typed persistence error and cannot alter replacement state or replay work."
+        },
+        {
+          "path": "web/tests/fixtures.ts",
+          "anchor": "export async function host(",
+          "scenarios": [
+            "S1",
+            "S10",
+            "S2",
+            "S3",
+            "S4",
+            "S6",
+            "S7",
+            "S8"
+          ],
+          "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
         }
       ],
       "suites": [
@@ -6537,7 +6578,7 @@
       ],
       "tests": [
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/assembled.spec.ts",
           "anchor": "test(\"MCP bridge drives the assembled daemon through launch, question, answer and follow-up\"",
           "scenarios": [
             "S1"
@@ -6553,7 +6594,7 @@
           "purpose": "Stale steering is rejected; matching steering succeeds."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "test(\"Open agent targets the newest retained run and keeps message drafts across tabs and runs\"",
           "scenarios": [
             "S1"
@@ -6561,7 +6602,7 @@
           "purpose": "Item shortcut chooses newest retained work; per-run drafts survive navigation without implicit send/start."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "agent conversation shows human messages and keeps technical activity under Details",
           "scenarios": [
             "S1"
@@ -6569,7 +6610,7 @@
           "purpose": "Human progress/final/user/error messages stay visible; technical activity is one secondary disclosure, live updates preserve the distinction and questions remain actionable."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "single-page navigation preserves list context and drafts at",
           "scenarios": [
             "S1"
@@ -6577,7 +6618,7 @@
           "purpose": "Both themes and 1280px/390px widths assert exclusive list/item/agent pages, Back focus/scroll/query restoration and per-record draft preservation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "transcript recovery keeps output and draft while removing only its own read error",
           "scenarios": [
             "S1"
@@ -6585,7 +6626,7 @@
           "purpose": "After transcript transport failures, previous output and follow-up draft remain and only the local read error disappears on recovery."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/connection.spec.ts",
           "anchor": "mutation connection failure is not replayed and later polling does not dismiss it",
           "scenarios": [
             "S1"
@@ -6593,7 +6634,7 @@
           "purpose": "An uncertain Send is attempted once; subsequent healthy polls do not clear its error or submitted draft."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/connection.spec.ts",
           "anchor": "exact host-wrapped MCP connection error retries a read without exposing its framework text",
           "scenarios": [
             "S1"
@@ -6601,7 +6642,7 @@
           "purpose": "Known host-wrapped transport failures recover on reads without framework banners, and mutations remain one attempt."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/connection.spec.ts",
           "anchor": "exact host-wrapped connection failure never replays a mutation",
           "scenarios": [
             "S1"
@@ -6609,7 +6650,7 @@
           "purpose": "Known host-wrapped transport failures recover on reads without framework banners, and mutations remain one attempt."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "technical-only activity leaves a concise waiting state in the conversation",
           "scenarios": [
             "S1"
@@ -6633,7 +6674,7 @@
           "purpose": "Missing retained worktree returns wake failure without losing the retained record; prepared and cleaned work cannot accept a message."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "inactive work status and sending a message restore the retained session",
           "scenarios": [
             "S1"
@@ -6665,7 +6706,7 @@
           "purpose": "Async questions survive restart and concurrent answers have one claimant."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "text fallback opens the same session console",
           "scenarios": [
             "S4"
@@ -6746,7 +6787,7 @@
           "purpose": "Synced source closure retires active provider work, stales pending questions, survives restart without resurrecting asks and remains terminal after source reopening."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
             "S7"
@@ -6794,7 +6835,7 @@
           "purpose": "Prepared and stale-turn messages reject before any accepted message record exists."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "saved message clears its draft before agent delivery and shows uncertainty without replay",
           "scenarios": [
             "S6"
@@ -6852,7 +6893,7 @@
           "purpose": "Actual provider-loss follow-up uses the returned TrackWork continuation fields, preserves historical turn/thread/workspace/authority and encrypted claim, and resumes exactly the submitted response without original-task or generic replay."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "chunked owner and agent completions remain normal conversation across journal pages",
           "scenarios": [
             "S1"
@@ -6877,7 +6918,7 @@
           ]
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "a late first-message Start cannot replace another item's draft",
           "purpose": "With a delayed immutable accepted Start response and lagging saved reads, the Messages badge proves React processed the response before asserting another item and exact draft remain selected; private guard removal fails after this barrier.",
           "scenarios": [
@@ -6957,7 +6998,7 @@
           "purpose": "Takeover during provider-gated historical reconciliation invalidates the entire queued completion callback, preventing the subsequent stopped-turn classifier from creating fresh recovery or attention."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
           "scenarios": [
             "S3"
@@ -7293,6 +7334,18 @@
             "S8"
           ],
           "purpose": "After verified worker return, a failed parent-finalization write remains bound to its original execution. The shared interrupt wait pauses before consuming that result while explicit Resume completes a replacement; the old waiter still returns the same typed persistence error and cannot alter replacement state or replay work."
+        },
+        {
+          "path": "web/tests/fixtures.ts",
+          "anchor": "export async function host(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4",
+            "S6",
+            "S7"
+          ],
+          "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
         }
       ],
       "suites": [
@@ -7825,7 +7878,7 @@
           "purpose": "Completed idle sessions retain their status and workspace; expired native requests become stale and reject answers."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/assembled.spec.ts",
           "anchor": "test(\"MCP bridge drives the assembled daemon through launch, question, answer and follow-up\"",
           "scenarios": [
             "S1"
@@ -7833,7 +7886,7 @@
           "purpose": "Actual UI dialog through assembled fixture."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/accessibility.spec.ts",
           "anchor": "test(\"keyboard attention stays contained through updates and Escape restores the pending opener\"",
           "scenarios": [
             "S1"
@@ -7841,7 +7894,7 @@
           "purpose": "Keyboard question choices survive polling, Tab remains contained, Escape defers without answering and restores opener; later one answer reaches idle with polite run status."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/attention.spec.ts",
           "anchor": "test(\"global attention selects its owning run and returns to its conversation after answering\"",
           "scenarios": [
             "S1"
@@ -7849,7 +7902,7 @@
           "purpose": "Owning title/profile and run selection survive answer completion."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "readable approval choices preserve payloads in a narrow",
           "scenarios": [
             "S2"
@@ -7857,7 +7910,7 @@
           "purpose": "Both themes preserve original decisions and requested permission-turn payloads behind readable labels."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/attention.spec.ts",
           "anchor": "Messages lists waiting agents and answering removes only its owning request",
           "scenarios": [
             "S1"
@@ -7881,7 +7934,7 @@
           "purpose": "Async questions survive restart and concurrent answers have one claimant."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "text fallback opens the same session console",
           "scenarios": [
             "S4"
@@ -7897,7 +7950,7 @@
           "purpose": "Text-only dismissal cannot approve a native request or launch work."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/attention.spec.ts",
           "anchor": "an uncertain textual reply can be dismissed without advancing",
           "scenarios": [
             "S4"
@@ -7979,7 +8032,7 @@
           "purpose": "Accepted targeted closed/merged PR refresh terminates only that source session, retires its question and retains history and dirty workspace; a linked open issue keeps its session and question, and reopening cannot resume the terminated run."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
             "S3"
@@ -8158,7 +8211,7 @@
           "purpose": "Locally bounded concurrent owner takeover and native answer preserve the durable claim; cancellation stays reachable on stall and late recovery callbacks cannot recreate questions."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/attention.spec.ts",
           "anchor": "test(\"clarification progress has no attention badge and stops when unresolved\"",
           "scenarios": [
             "S4"
@@ -8166,7 +8219,7 @@
           "purpose": "Clarification shows shared attempts and takeover without attention badges; unresolved classification stops progress and permits owner messages."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/attention.spec.ts",
           "anchor": "test(\"nonblocking recovered text question keeps its continuing label\"",
           "scenarios": [
             "S4"
@@ -8580,6 +8633,17 @@
             "S6"
           ],
           "purpose": "An interrupted app projection after SDK gate commit is recovered using exact accepted answer identity; the resumed review completes with each reviewer called once."
+        },
+        {
+          "path": "web/tests/fixtures.ts",
+          "anchor": "export async function host(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
         }
       ],
       "suites": [
@@ -9188,7 +9252,7 @@
           "purpose": "Dirty cleanup returns an error and retains the unsaved file; the assertion does not verify session retirement, interrupted status, stale requests or subsequent explicit resume."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/assembled.spec.ts",
           "anchor": "test(\"sending a message restores the dirty retained daemon session without a Resume action\"",
           "scenarios": [
             "S2",
@@ -9214,7 +9278,7 @@
           "purpose": "Missing retained worktree returns wake failure without losing the retained record; prepared and cleaned work cannot accept a message."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "inactive work status and sending a message restore the retained session",
           "scenarios": [
             "S2"
@@ -9238,7 +9302,7 @@
           "purpose": "Async questions survive restart and concurrent answers have one claimant."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "text fallback opens the same session console",
           "scenarios": [
             "S4"
@@ -9453,7 +9517,7 @@
           "purpose": "Targeted lifecycle revalidation bypasses a cached open state and never falls back after a failed fresh read."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "terminated work retains history and cleanup without allowing continuation",
           "scenarios": [
             "S6"
@@ -9762,7 +9826,7 @@
           "purpose": "Incomplete or malformed completion chunks and complete user/tool payloads supply no stopped-question source; partial text cannot establish a question."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "GitHub-deferred review shows its retry reason and deadline and can cancel before a thread starts",
           "scenarios": [
             "S1",
@@ -10792,7 +10856,7 @@
       ],
       "tests": [
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/assembled.spec.ts",
           "anchor": "test(\"MCP bridge drives the assembled daemon through launch, question, answer and follow-up\"",
           "scenarios": [
             "S1"
@@ -10808,7 +10872,7 @@
           "purpose": "Transcript pagination exposes more history."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "test(\"triage does not launch, launch edits and attention answer survive reopening\"",
           "scenarios": [
             "S3"
@@ -10825,7 +10889,7 @@
           "purpose": "Authenticated tools/resources and discovery fixture."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/accessibility.spec.ts",
           "anchor": "test(`Axe WCAG A/AA scans the owned app iframe across core states in ${theme} theme`",
           "scenarios": [
             "S1"
@@ -10841,7 +10905,7 @@
           "purpose": "Actual SDK fixture asserts stable same-content and changed-content UI identity, matching current tool/resource metadata and exact HTML; only the original exact URI reads current content unadvertised, while unknown/previous hashes and query variants reject. CSP domains stay empty. This does not prove host refresh or installed UI acceptance."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "test(\"Open agent targets the newest retained run and keeps message drafts across tabs and runs\"",
           "scenarios": [
             "S3"
@@ -10849,7 +10913,7 @@
           "purpose": "Open-app per-run message drafts survive run/tab changes, distinct from reload persistence."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "agent conversation shows human messages and keeps technical activity under Details",
           "scenarios": [
             "S2"
@@ -10857,7 +10921,7 @@
           "purpose": "Human progress/final/user/error messages stay visible; technical activity is one secondary disclosure, live updates preserve the distinction and questions remain actionable."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "single-page navigation preserves list context and drafts at",
           "scenarios": [
             "S3"
@@ -10865,7 +10929,7 @@
           "purpose": "Both themes and 1280px/390px widths assert exclusive list/item/agent pages, Back focus/scroll/query restoration and per-record draft preservation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "separate settings can save while the inbox view retains its item and agent drafts",
           "scenarios": [
             "S3"
@@ -10873,7 +10937,7 @@
           "purpose": "Both surfaces remain open independently while shared data refreshes."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/connection.spec.ts",
           "anchor": "initial bridge failures retry a fresh handshake without reloading or losing state",
           "scenarios": [
             "S1",
@@ -10882,7 +10946,7 @@
           "purpose": "Three failed SDK initializations recover through four fresh handshakes with one successful initial snapshot and no stale banner."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "transient polling outage recovers without a stale error banner or lost first message",
           "scenarios": [
             "S1",
@@ -10891,7 +10955,7 @@
           "purpose": "A real SDK JSON-RPC connection fault drives reconnect feedback; healthy reads clear it and preserve the first-message draft with no mutation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "transcript recovery keeps output and draft while removing only its own read error",
           "scenarios": [
             "S1",
@@ -10900,7 +10964,7 @@
           "purpose": "After transcript transport failures, previous output and follow-up draft remain and only the local read error disappears on recovery."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/connection.spec.ts",
           "anchor": "exact host-wrapped MCP connection error retries a read without exposing its framework text",
           "scenarios": [
             "S1"
@@ -10908,7 +10972,7 @@
           "purpose": "Known host-wrapped transport failures recover on reads without framework banners, and mutations remain one attempt."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/connection.spec.ts",
           "anchor": "exact host-wrapped connection failure never replays a mutation",
           "scenarios": [
             "S1"
@@ -10916,7 +10980,7 @@
           "purpose": "Known host-wrapped transport failures recover on reads without framework banners, and mutations remain one attempt."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "technical-only activity leaves a concise waiting state in the conversation",
           "scenarios": [
             "S1"
@@ -10924,7 +10988,7 @@
           "purpose": "Technical-only work does not flood the normal conversation; status and pending attention remain available."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "text fallback opens the same session console",
           "scenarios": [
             "S4"
@@ -10940,7 +11004,7 @@
           "purpose": "Each preparation advances the incremental event cursor with its own prepared run, while retaining no workspace/thread before explicit Start."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"fresh read markers observe external changes after a host memoizes an empty journal page\"",
           "scenarios": [
             "S2",
@@ -10965,7 +11029,7 @@
           "purpose": "Read-only authenticated pagination preserves verdict, author, commit, body and correctly grouped inline comments; pending drafts are excluded."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "posted reviews show verified verdicts findings and refresh after completion",
           "scenarios": [
             "S5"
@@ -11069,7 +11133,7 @@
           "purpose": "Partial/malformed completion history stays unavailable until method reset; newer actual journal projection wins against stale reconstructed progress through its cursor guard."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "chunked owner and agent completions remain normal conversation across journal pages",
           "scenarios": [
             "S2"
@@ -11163,7 +11227,7 @@
           "purpose": "A concurrent connection commit cannot mix a newer entity with an older cursor inside a WAL read view."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "published inbox responses preserve the newer query when older reads finish later",
           "scenarios": [
             "S1",
@@ -11172,7 +11236,7 @@
           "purpose": "A delayed earlier query cannot replace a later selection/result, and legacy broad-read polling is absent."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "hidden views catch up through the shared subscription without rereading panels while hidden",
           "scenarios": [
             "S1",
@@ -11181,7 +11245,7 @@
           "purpose": "A durable update is observed by the single watch while a hidden view performs no panel reads; visibility restores the latest saved item."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "inbox pagination and complete-dataset search keep later saved items reachable",
           "scenarios": [
             "S1",
@@ -11206,7 +11270,7 @@
           "purpose": "Saved reads trigger no provider work; independent background monitoring starts without a view and persists failed observations while retaining saved item detail."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "the shared subscription updates Messages while Reported issues is open",
           "scenarios": [
             "S1"
@@ -11214,7 +11278,7 @@
           "purpose": "A run/attention-only publication updates the Messages badge while Reports remains selected, without rereading the report list."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "a selected item outside the current page never renders an earlier selected entry",
           "scenarios": [
             "S1"
@@ -11222,7 +11286,7 @@
           "purpose": "A delayed selected-entry read for a question outside the current page never renders an earlier item, then shows the correct retained item."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "observation-only publications refresh the selected saved error without a broad read",
           "scenarios": [
             "S1",
@@ -11239,7 +11303,7 @@
           "purpose": "Critical shell HTML and working event handlers appear before the inert runtime text; executable runtime parsing remains deferred past shell paint."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "full resync to an earlier cursor reloads Reports and preserves its evidence draft",
           "scenarios": [
             "S3"
@@ -11247,7 +11311,7 @@
           "purpose": "Restoring an earlier database cursor reloads the selected report after a previous higher publication without clearing its evidence draft."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "full resync reloads plugin administration at an earlier cursor without clearing its draft",
           "scenarios": [
             "S3"
@@ -11255,7 +11319,7 @@
           "purpose": "Plugin administration rereads saved inventory after a lower-cursor full resync while preserving the selector draft and performing no management mutation."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "full resync resets a retained transcript cursor and reloads saved detail while keeping its message draft",
           "scenarios": [
             "S3"
@@ -11263,7 +11327,7 @@
           "purpose": "Full resync for the same run ID restarts incremental history from zero, removes invalid old output, reloads selected saved observation and keeps the message draft."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "older retained history stays inspectable across updates and advances only on request",
           "scenarios": [
             "S2"
@@ -11289,7 +11353,7 @@
           "purpose": "Output-only commits publish a transcript-domain invalidation with unchanged summaries, while a real run-state commit still updates visible work state."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "transcript-only publications update output without broad state reads",
           "scenarios": [
             "S1",
@@ -11298,7 +11362,7 @@
           "purpose": "A transcript-only publication updates the open conversation without a broad saved-state read."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "repository-only resume refreshes selected detail and posted-review freshness",
           "scenarios": [
             "S1",
@@ -11315,7 +11379,7 @@
           "purpose": "Record allocation and duration evidence for output publication on 1,000 items, 3,000 relationships and 100 runs; this profile alone makes no latency-gate coverage claim."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "full resync clears a local Start acceptance overlay without replaying the launch",
           "scenarios": [
             "S3"
@@ -11323,7 +11387,7 @@
           "purpose": "A restored authoritative prepared state clears the local accepted-run overlay without replaying Start."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "continuing transcript publications coalesce while delayed reads still render valid prefixes",
           "scenarios": [
             "S2",
@@ -11332,7 +11396,7 @@
           "purpose": "Continuous slow saved reads render valid prefixes with one request in flight instead of starving on repeated publication."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "hidden retained history pauses pagination and resumes on visibility without a new publication",
           "scenarios": [
             "S2",
@@ -11341,7 +11405,7 @@
           "purpose": "An in-flight prefix may complete after hide; continuation pauses until visibility resumes, even without new events."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "a hidden full resync rejects a delayed reply from the previous state epoch",
           "scenarios": [
             "S3"
@@ -11349,7 +11413,7 @@
           "purpose": "A delayed pre-resync snapshot cannot become current while the widget is hidden or block restored state on show."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/attention.spec.ts",
           "anchor": "a hidden older read cannot consume newer run and attention invalidations",
           "scenarios": [
             "S3"
@@ -11357,7 +11421,7 @@
           "purpose": "A delayed older response while hidden cannot clear later run/attention work; show refreshes both current items and Messages."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "failed requested view reads recover without a new journal publication",
           "scenarios": [
             "S3"
@@ -11365,7 +11429,7 @@
           "purpose": "Exhausted transport retries for a requested view retain local error feedback despite healthy idle watches, then recover automatically without a new commit."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "observation-only completion refreshes posted review monitoring state",
           "scenarios": [
             "S3"
@@ -11373,7 +11437,7 @@
           "purpose": "A saved review observation completion clears pending status on observation-only invalidation even when the review record version is unchanged."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/sessions.spec.ts",
           "anchor": "retained review progress exposes incomplete providers and reconciles a verified receipt without reposting",
           "scenarios": [
             "S8"
@@ -11381,7 +11445,7 @@
           "purpose": "Visible failures, omissions and a verified receipt without reposting."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/launch.spec.ts",
           "anchor": "saved review policy changes refresh an open PR without polling or starting work",
           "scenarios": [
             "S8"
@@ -11449,7 +11513,7 @@
           "purpose": "An actual tracked-item initial inbox build preserves all 100 run IDs/statuses; shell/messages output retains truthful counts under 256 KiB without historical finding arrays or prose. Intermediate transfer exclusion is established separately by the raw ListWithout/Select probe."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "a delayed policy save ${response} preserves a newer committed Off observation",
           "scenarios": [
             "S8"
@@ -11472,6 +11536,19 @@
             "S8"
           ],
           "purpose": "Run-only summary compaction leaves item/linked-PR omission behavior and original private run List reads unchanged."
+        },
+        {
+          "path": "web/tests/fixtures.ts",
+          "anchor": "export async function host(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S8"
+          ],
+          "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
         }
       ],
       "suites": [
@@ -12267,7 +12344,7 @@
           "purpose": "Temporary local tunnel setup form only: origin, reachability, expiry and concurrent single-submission fixture."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/settings.spec.ts",
           "anchor": "test(\"settings save repository and priority rows without unused integrations\"",
           "scenarios": [
             "S1"
@@ -12339,7 +12416,7 @@
           "purpose": "Async questions survive restart and concurrent answers have one claimant."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "text fallback opens the same session console",
           "scenarios": [
             "S4"
@@ -12708,6 +12785,15 @@
             "S5"
           ],
           "purpose": "An explicit bounded command reviewer with empty profile skills receives the existing task-private native launcher, retained plugin inventory, dummy authentication references and native overrides. Read-only supported invocation uses its private native context with only state directories writable; workspace-write keeps its selected policy. Root deny, private-sibling exclusion, filtered environment and retained stdin remain intact. Protocol fixtures use dummy stores and synthetic kernel flags, not native OS sandbox enforcement."
+        },
+        {
+          "path": "web/tests/fixtures.ts",
+          "anchor": "export async function host(",
+          "scenarios": [
+            "S1",
+            "S4"
+          ],
+          "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
         }
       ],
       "suites": [
@@ -13936,6 +14022,11 @@
           "path": "docs/ci.md",
           "anchor": "## Final verification and PR handoff",
           "purpose": "Contributor completion procedure linking existing reconciliation, fixture verification and authorized PR workflow gates."
+        },
+        {
+          "path": ".github/workflows/browser-benchmark.yml",
+          "anchor": "name: Browser correctness benchmark",
+          "purpose": "Read-only fixture-only hosted serial/two-worker correctness comparison with repeated zero-retry samples and retained timing/resource evidence."
         }
       ],
       "tests": [
@@ -15773,6 +15864,15 @@
             "S5"
           ],
           "purpose": "Hosted workflow delegates verification to ci.py without a separate npm or browser installation."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_browser_benchmark_retains_samples_and_stops_on_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Execute the hosted benchmark shell with stub tests: preserve four independent zero-retry samples and resource records; stop immediately with the failed sample exit code and retain partial output."
         }
       ],
       "suites": [
@@ -16174,7 +16274,7 @@
           "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues shares ledger search, information requests and evidence recovery\"",
           "scenarios": [
             "S2",
@@ -16183,7 +16283,7 @@
           "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues displays independent closure, prerelease delivery and explicit workflow recovery\"",
           "scenarios": [
             "S4",
@@ -16225,7 +16325,7 @@
           "purpose": "Assertions inspect the corresponding retained state, boundary effects or visible report behavior."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues paginates and filters processing component and version\"",
           "scenarios": [
             "S6"
@@ -16317,7 +16417,7 @@
           "purpose": "Issue/release rate-limit deadlines stop other operations and reports, retain previous delivery evidence and leave skipped operation/row freshness untouched."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues keeps newer journal details after a delayed mutation read\"",
           "scenarios": [
             "S4",
@@ -16326,7 +16426,7 @@
           "purpose": "An older mutation read cannot overwrite newer journal processing, findings or recovery controls for the selected report."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues keeps a pending selection read when an older selection mutation finishes\"",
           "scenarios": [
             "S6"
@@ -16371,7 +16471,7 @@
           "purpose": "Atomic evidence/admission checks reject stale unclaimed drafts during validation/marker races and preserve known issue identity; durable or uncertain create claims settle once without replay."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues makes detail progress while journal updates continue\"",
           "scenarios": [
             "S4",
@@ -16380,7 +16480,7 @@
           "purpose": "Per-read delays span ongoing confirmed journal updates while selected findings and recovery controls become visible and remain current before the queued refresh."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues allows pagination during continuing slow journal refreshes\"",
           "scenarios": [
             "S6"
@@ -16453,7 +16553,7 @@
           "purpose": "Delayed duplicate successes preserve newer/same-generation established identities, outcomes, timestamps and Runtime; a newer claimed creation retains ownership while safe missing-identity recovery preserves newer processing/outcome."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues releases mutation controls during continuing slow journal refreshes\"",
           "scenarios": [
             "S4",
@@ -16470,7 +16570,7 @@
           "purpose": "Actual delivery validation from a workflow-depth local clone accepts checked packages containing a historical fix commit, preserving fix ancestry and exact artifact download without publication."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues retries uncertain evidence without duplicating it and accepts edited evidence\"",
           "scenarios": [
             "S2",
@@ -16680,7 +16780,7 @@
           "purpose": "Unversioned retained drafts keep their destination/body through publication without structured re-rendering."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "\"reported issues exposes rendered draft limitations and required repository fields\"",
           "scenarios": [
             "S2",
@@ -16752,7 +16852,7 @@
           "purpose": "Completed issue alone, reopened/not-planned issues, absent fixes, divergent or older source and unavailable comparisons reject resolution; verified ancestry remains sufficient when releases are unavailable."
         },
         {
-          "path": "web/tests/factory.spec.ts",
+          "path": "web/tests/reports.spec.ts",
           "anchor": "`reported issues shows auditor ${outcome} outcome without claiming delivery`",
           "scenarios": [
             "S6"

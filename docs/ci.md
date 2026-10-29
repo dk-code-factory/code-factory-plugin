@@ -73,6 +73,31 @@ Defaults remain 4173 and 4174. Both listeners stay on loopback; strict port
 ownership, fresh servers, health checks and direct-connection assertions use the
 selected ports. Installed service routes are unchanged.
 
+## Browser correctness isolation and comparison
+
+Browser correctness tests are partitioned by feature under `web/tests/`.
+The mocked project creates a fresh browser context and host state for each test;
+it can run tests concurrently. The assembled project keeps its three scenarios
+in their original file order with one worker because they share a daemon,
+database and repository fixture. Neither project retries failed assertions.
+Accessibility evidence uses Playwright's per-test output paths. Both projects
+share only the read-only Vite server; mocked tests never mutate the daemon.
+
+Compare the same source with `npm --prefix web test -- --workers=1` and
+`npm --prefix web test -- --workers=2`. Each invocation starts fresh fixture
+servers. Run invocations sequentially in a checkout, with the documented port
+override when other checkouts are active. Correctness uses a bounded default of
+two workers, independent of CPU count; `--workers=1` selects serial execution.
+
+The separate Browser correctness benchmark workflow compares both counts twice
+on Ubuntu when the worker configuration or benchmark workflow changes, and can
+also be dispatched explicitly. It retains complete JSON test results, elapsed
+seconds and GNU time's maximum per-process RSS in KiB. That RSS is not aggregate
+simultaneous memory across browser processes. Samples use prepared dependencies;
+alternating worker counts makes warm-cache ordering visible. The benchmark runs
+on its own runner and never replaces the complete CI verification job or the
+isolated one-worker, zero-retry launch-performance gate.
+
 ## Final verification and PR handoff
 
 Use this sequence when a change is ready for final review. The

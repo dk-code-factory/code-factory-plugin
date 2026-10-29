@@ -35,6 +35,12 @@ may receive separate explicit contract decisions without waiving behavior tests.
 - **S4** The same checker evaluates working changes, the staged index, and explicit committed branch/PR comparisons. Each verification invocation shares preparation once, while independent verification and standalone build/test invocations prepare their required current inputs and deleted outputs. Failed verification phases stop downstream work even when keep-going flags are requested; standalone goals retain their requested keep-going behavior. Explicit MAKEFLAGS assignment forwards caller variables with their existing expansion flavor and literal dollars. Parallel execution flags preserve phase order and isolated performance checks. Default verification uses fixtures; provider execution requires a separate explicit opt-in.
 - **S5** Remote verification covers PRs to main or sync/local-development and main pushes or manual checks, preserving exact comparisons and a single reviewed public-root bootstrap. Feature branches without a PR receive no automatic checks or artifacts; feature-branch manual verification is rejected. Release delivery requires successful main push verification, exact artifact provenance, packaged component versions, commit-backed fixed-issue references and checksums. Unknown comparisons, failed checks, changed artifacts or existing releases stop delivery.
 
+Browser correctness comparison keeps independently owned mock sessions concurrent
+and shared daemon scenarios ordered. Repeated serial and bounded-worker samples
+retain outcomes and resource evidence without retrying failed assertions. A failed
+sample stops comparison and retains partial evidence; comparison never replaces
+full verification, isolated launch-performance acceptance or release provenance.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -120,6 +126,7 @@ flowchart TD
 - [.github/workflows/release.yml](../../.github/workflows/release.yml) — Version-tag and manual dry-run package promotion; scoped publisher permission, no live-machine deployment. (`name: Release`)
 - [release/fixed-issues.json](../../release/fixed-issues.json) — Explicit fixed issues backed by ancestor source commits and exact promoted package versions.
 - [docs/ci.md](../../docs/ci.md) — Contributor completion procedure linking existing reconciliation, fixture verification and authorized PR workflow gates. (`## Final verification and PR handoff`)
+- [.github/workflows/browser-benchmark.yml](../../.github/workflows/browser-benchmark.yml) — Read-only fixture-only hosted serial/two-worker correctness comparison with repeated zero-retry samples and retained timing/resource evidence. (`name: Browser correctness benchmark`)
 
 ## Test references
 
@@ -345,6 +352,7 @@ flowchart TD
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_ci_requires_comparison_before_preparation(`; S4. Missing local CI comparison fails before executing any preparation or verification tool.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_hosted_dispatch_passes_exact_comparison_through_real_graph(`; S4, S5. Hosted dispatcher passes exact base/head SHAs unchanged through the real Make graph while sharing preparation once.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_workflow_does_not_prepare_npm_outside_graph(`; S4, S5. Hosted workflow delegates verification to ci.py without a separate npm or browser installation.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_browser_benchmark_retains_samples_and_stops_on_failure(`; S4, S5. Execute the hosted benchmark shell with stub tests: preserve four independent zero-retry samples and resource records; stop immediately with the failed sample exit code and retain partial output.
 
 ## Verification and gaps
 

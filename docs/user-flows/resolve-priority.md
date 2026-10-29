@@ -83,8 +83,8 @@ flowchart TD
 
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestInboxRevisionStatesPriorityAndLinks(`; S1. Override/label/inference precedence.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestAssessmentCacheAndInvalidation(`; S2. Reuse and policy invalidation.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S1. Stored overrides initialize including P0; all priorities and automatic submit immediately for the selected item.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("failed immediate priority saves restore the saved value with an inline error"`; S1. Rejected saves restore the previous picker and show exact local feedback.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S1. Stored overrides initialize including P0; all priorities and automatic submit immediately for the selected item.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("failed immediate priority saves restore the saved value with an inline error"`; S1. Rejected saves restore the previous picker and show exact local feedback.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginMaintenanceDefersInferenceAndRejectsUnavailableSkills(`; S2. Background inference defers while plugin state is changing; unavailable selected skills cannot be prepared.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestStructuredWorkflowRejectsInvalidOutputWithoutRepair(`; S3. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.

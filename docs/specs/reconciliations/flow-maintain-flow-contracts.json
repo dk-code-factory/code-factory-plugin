@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "1b033eaa3e37a632bd0676cc99463b4ff884033f",
-  "fingerprint": "788bbe0298cabd93bf066c1c467981c03910d95f308074dc70df4e7187587334",
+  "base": "470ada037d99b22d31ae6e289b5683f35e062e18",
+  "fingerprint": "3ddc94e38fdd17518d810e8f7fa53fb49394eb4fe45a85d28f061ff27ae4f55f",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S4/S5 require shared phony preparation inside each verification invocation, fresh standalone and independent preparation, ordered phases and stop on failure. Explicit MAKEFLAGS replacement preserves variable flavor and literal dollars; normal standalone keep-going behavior remains. Exact comparison/bootstrap, fixture-only execution, package provenance and uncached race testing remain required.",
-    "implementation": "Reviewed real Make dependency edges and strict wrapper commands, ci.py exact-plan dispatch and direct verify.sh fixture override against current main. The target catalog gains exactly the original PR assertion/purpose delta while retaining every PR14 mapping; source-correspondence and catalog-merge-proof artifacts document unchanged executable bytes and preserved target additions. Reconciliation and make ci remain separate invocations.",
-    "tests": "Read actual VerificationGraphTests recorder and assertions: all six entrypoints count each preparation once, reject stale/deleted output, serialize phases under -j8, fail every phase without later commands under keep-going, preserve exact FLOW_ARGS plus raw MAKEFLAGS caller flavor/dollars/TMPDIR, and execute no tools under -n. Hosted dispatch uses timeout=30 and asserts unchanged exact SHAs. Existing CI tests retain restricted root bootstrap and artifact identity checks; fixture overrides and Go -race -count=1 are asserted separately. Fresh focused tests, full CLI reconciliation and separate local CI provide current execution evidence; historical review success is not reused."
+    "description": "Contributor comparison now explicitly separates independently owned mocked browser sessions from ordered shared-daemon scenarios, and retains repeated zero-retry timing samples without replacing full verification or release provenance. S4/S5 cover these fixture-only boundaries.",
+    "implementation": "Reviewed playwright.config.ts project match/ignore partition, two-worker global cap and one-worker assembled cap. Browser benchmark checks exact PR source with read-only permissions, starts fresh servers per sample and stores separate JSON/time output. Existing performance configuration remains one worker with zero retries. Follow-up CI repair explicitly declares PyYAML 6.0.3 in hosted Python prerequisites and bounds each deterministic workflow-script subprocess with timeout=30; no browser scheduling, permissions or production behavior changes.",
+    "tests": "test_browser_benchmark_retains_samples_and_stops_on_failure executes the workflow shell with deterministic subprocesses: asserts 1,2,1,2 worker sequence, no retries, distinct retained outputs and immediate exit 19 with partial evidence on failure. Full 158-title inventory and byte-identical 129 test statement comparison preserve original assertions. Reinspected subprocess argv, mocked npx, both exit-code subtests, exact worker/retry argv, retained JSON counts/content and GNU-time output assertion. The 30-second timeout applies to the whole deterministic shell invocation; clean Python 3.12 virtualenv verification installs only declared requirements before running the complete test_ci.py suite."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 24.798
+      "seconds": 25.341
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 52.066
+      "seconds": 52.701
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "edb87ff3885ef9d3e68baa2d01f3a8d203fcc188d1d131addec4bcc122b7b7e7",
-    "term:coverage-gap": "032818063d493f0454a66d274604ee0fc3d347ee58ef45439061def48b26c103",
-    "term:entity": "46f4fd79deb497ccee5652c58cba7df853d1098e5d7c9ebe479ea0fc2aec954d",
-    "term:glossary": "3dd21af08fd9d72f4228e1b8319e146ed504afccb73b001d8839e7ae4def8fdf",
-    "term:known-limitation": "49622f53f97431e447b1c48bcbc96e53e2fe7bcd5c5d0087e004e3df4a5640ac",
-    "term:reconciliation": "4580f03865c3810098a3efefe903a9ab6fc752abd5979f267eaba4bb246e45bb",
-    "term:unverified-behavior": "6e67e77216aaea4d1c82a35cf706e768b216fed33750752d4edafb59f115a8c0",
-    "term:verification": "0f26f379c032a9cd5a94f941154c0c63d02877e06cb4be9c296ae933db60775b"
+    "flow:maintain-flow-contracts": "a20114f646abde1e729200af52abe8805dd4c7d8d953fc86890ed3f6ce719d4f",
+    "term:coverage-gap": "b2a3e94648d17593561d913cbead453b1495b52ad957daff711823b45277c079",
+    "term:entity": "be331255aebc6c4d89e56627f6da96cf6a364ca819c7ff4622262299cf3a9223",
+    "term:glossary": "c01d15ef288c7a0b0c3a7b9103a1af15a612cb6344933db9a443f14bd2049425",
+    "term:known-limitation": "5a58d910d7da7a17b70cd116437ba99f592d7094dd9a125de3190d6de47a0692",
+    "term:reconciliation": "e72f8e8de1626534c8d93a848f8f91d5e727728e7f274544c145d727ded2231b",
+    "term:unverified-behavior": "c7b630ef89828262479c24ce4a86881d2d1b7e455f5994aba090ece86092c399",
+    "term:verification": "23683576388b4ce204024f05a45a387ebbf0c951801553500a463e6ef75fcba2"
   }
 }

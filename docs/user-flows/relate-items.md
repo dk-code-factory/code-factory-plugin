@@ -80,15 +80,15 @@ flowchart TD
 ## Test references
 
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestInboxRevisionStatesPriorityAndLinks(`; S1, S2. Discovered references survive local unlink.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("unlink removes the visible relationship without clearing unrelated detail drafts"`; S2. Add displays a manual relationship; Remove removes its row once and retains priority/target drafts.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("a delayed relationship refresh cannot replace a later selection or its drafts"`; S2. A held earlier relationship detail response cannot replace a later selected item or its independent drafts.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S2. Unsubmitted relationship drafts are isolated by item and retained across tabs.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `single-page navigation preserves list context and drafts at`; S1. Both themes and 1280px/390px widths assert exclusive list/item/agent pages, Back focus/scroll/query restoration and per-record draft preservation.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("unlink removes the visible relationship without clearing unrelated detail drafts"`; S2. Add displays a manual relationship; Remove removes its row once and retains priority/target drafts.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("a delayed relationship refresh cannot replace a later selection or its drafts"`; S2. A held earlier relationship detail response cannot replace a later selected item or its independent drafts.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S2. Unsubmitted relationship drafts are isolated by item and retained across tabs.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `single-page navigation preserves list context and drafts at`; S1. Both themes and 1280px/390px widths assert exclusive list/item/agent pages, Back focus/scroll/query restoration and per-record draft preservation.
 - [internal/app/work_tracking_test.go](../../internal/app/work_tracking_test.go) — `func TestWorkingTracksSessionsUntilGitHubCompletion(`; S4. Working completion follows explicit implementation links; references do not complete an issue.
 - [internal/providers/pull_requests_test.go](../../internal/providers/pull_requests_test.go) — `func TestPullRequestMetadataPaginationCurrentHeadAndRevision(`; S4. Metadata pagination, status reruns, current head and stable semantic revisions.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `Working and linked PR monitoring follow server projections`; S4. Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `Working and linked PR monitoring follow server projections`; S4. Both narrow themes consume server membership and linked summaries, preserve source links and remove merged work without launch.
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestIncidentalReferencesDoNotScanUntilSelectedAndErrorsBackOff(`; S4, S5. Incidental cross-references cause no scan until the source is selected; inaccessible targets back off without adding repository monitoring.
-- [web/tests/factory.spec.ts](../../web/tests/factory.spec.ts) — `linked PR changes refresh full selected details without consuming another read or launch`; S4, S5. Changed linked metadata refreshes full selected CI details without a duplicate displayed read or agent launch.
+- [web/tests/launch.spec.ts](../../web/tests/launch.spec.ts) — `linked PR changes refresh full selected details without consuming another read or launch`; S4, S5. Changed linked metadata refreshes full selected CI details without a duplicate displayed read or agent launch.
 
 ## Verification and gaps
 
