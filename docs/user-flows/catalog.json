@@ -16122,6 +16122,39 @@
           "purpose": "Real SIGINT/SIGTERM while source or comparison metadata blocks preserve fresh/preselected partial journals, status130/143, unknown or completed source fields, unstarted null-duration phases and no worker start; bounded harness cleanup remains registered."
         },
         {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_reserved_phase_executes_at_capacity_without_allocating_rows(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "At the 256-row limit, a reserved build records real command status and exact monotonic duration without allocating a row; additional rows and closed-run starts remain rejected."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_staged_comparison_identifies_index_independently_of_worktree(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Real Git index A and B yield distinct private comparison digests with identical HEAD and worktree identity; unstaged-only edits preserve the index digest, collection leaves the index unchanged and journals export no private names or contents."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_initial_push_setup_failure_preserves_root_policy(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "A zero-before push records only the approved main root bootstrap; unapproved roots and feature refs remain unavailable, and setup failure preserves this truthful initial identity with unstarted verification phases."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_initial_nonroot_push_uses_existing_merge_base_policy(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "A supported zero-before non-root main push records the existing origin/main merge-base policy instead of the zero sentinel; a mismatched checkout head remains unavailable."
+        },
+        {
           "path": "scripts/test_browser_benchmark.py",
           "anchor": "def test_file_move_preserves_inventory_and_duplicates_count(",
           "scenarios": [

@@ -19,8 +19,13 @@ The contributor has the source checkout, an available comparison base and the lo
 7. Package delivery promotes unchanged checksummed artifacts only from successful main-branch push verification for the exact tagged source; dry-run delivery verifies without publishing or installing. Component versions come from those exact package bytes; explicit fixed-issue references require ancestor fix commits with matching fixing or closing references.
 
 The callable phase-journal helper records bounded, allowlisted command outcomes,
-monotonic intervals and immutable input/comparison identities. Missing work has
-no invented duration; failures and cancellation retain partial evidence. Its
+monotonic intervals and immutable input/comparison identities. Staged selections
+identify the selected index independently of working changes without exposing
+private names or content. Initial pushes follow the existing reviewed-root or
+merge-base policy; unavailable comparisons stay explicit even when setup fails.
+Reserved phases can still record execution at the journal capacity limit, while
+additional rows remain bounded. Missing work has no invented duration; failures
+and cancellation retain partial evidence. Its
 owned runner passes only explicit descriptor capabilities. Automatic local and
 hosted entry-point integration is delivered separately.
 
@@ -48,7 +53,6 @@ sample stops comparison and retains partial evidence; comparison never replaces
 full verification, isolated launch-performance acceptance or release provenance.
 Qualification validates the complete discovered inventory, requires each scenario
 to pass once without skips or retries, and retains discovery failure diagnostics.
-
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -390,6 +394,10 @@ flowchart TD
 - [scripts/test_specs_runner.py](../../scripts/test_specs_runner.py) — `def test_descriptor_passthrough_is_explicit_and_preserves_default_calls(`; S4, S5. Real child probes preserve only explicit descriptors, close other inheritable pipes, force fixture mode, retain nonzero command status and restored signal handlers, and keep the legacy default Popen call unchanged.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_startup_metadata_exceptions_keep_truthful_partial_journals(`; S4, S5. Injected KeyboardInterrupt/SystemExit143 at source and comparison collection require already-persisted fresh/preselected journals, truthful null/unavailable fields, finalized interrupted wall time and no worker or private argument export.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_startup_metadata_real_signals_finalize_persisted_unknown_fields(`; S4, S5. Real SIGINT/SIGTERM while source or comparison metadata blocks preserve fresh/preselected partial journals, status130/143, unknown or completed source fields, unstarted null-duration phases and no worker start; bounded harness cleanup remains registered.
+- [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_reserved_phase_executes_at_capacity_without_allocating_rows(`; S4, S5. At the 256-row limit, a reserved build records real command status and exact monotonic duration without allocating a row; additional rows and closed-run starts remain rejected.
+- [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_staged_comparison_identifies_index_independently_of_worktree(`; S4. Real Git index A and B yield distinct private comparison digests with identical HEAD and worktree identity; unstaged-only edits preserve the index digest, collection leaves the index unchanged and journals export no private names or contents.
+- [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_initial_push_setup_failure_preserves_root_policy(`; S5. A zero-before push records only the approved main root bootstrap; unapproved roots and feature refs remain unavailable, and setup failure preserves this truthful initial identity with unstarted verification phases.
+- [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_initial_nonroot_push_uses_existing_merge_base_policy(`; S5. A supported zero-before non-root main push records the existing origin/main merge-base policy instead of the zero sentinel; a mismatched checkout head remains unavailable.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_file_move_preserves_inventory_and_duplicates_count(`; S3. File movement preserves scenario identity while missing or duplicated scenarios fail qualification.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_failure_skip_retry_and_missing_test_cannot_pass(`; S3. Failure, skip, interruption, retry and incomplete discovery cannot be accepted as equivalent passing execution.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_nonzero_discovery_retains_both_diagnostics(`; S3. Nonzero discovery retains both diagnostic streams and reports their paths.

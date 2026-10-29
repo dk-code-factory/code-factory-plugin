@@ -306,6 +306,29 @@ finally:
         self.assertEqual(len(self.data(journal)['phases']), 256)
         self.assertLess(journal.path.stat().st_size, 128 * 1024)
 
+    def test_reserved_phase_executes_at_capacity_without_allocating_rows(self):
+        journal = self.journal()
+        while len(self.data(journal)['phases']) < 256:
+            journal.stop(journal.start('frontend'), 0)
+        reserved = next(row for row in self.data(journal)['phases'] if row['phase'] == 'build')
+        ticks = iter([101.0, 104.0])
+        journal.clock = lambda: next(ticks)
+        result = timing.execute('build', [sys.executable, '-c', 'raise SystemExit(7)'], journal=journal)
+        self.assertEqual(result, 7)
+        data = self.data(journal)
+        self.assertEqual(len(data['phases']), 256)
+        completed = next(row for row in data['phases'] if row['id'] == reserved['id'])
+        self.assertEqual((completed['outcome'], completed['exit_code']), ('failure', 7))
+        self.assertEqual((completed['start_seconds'], completed['end_seconds'], completed['seconds']),
+                         (1.0, 4.0, 3.0))
+        with self.assertRaises(ValueError):
+            journal.start('frontend')
+        journal.clock = lambda: 105.0
+        journal.finish('failure')
+        with self.assertRaises(ValueError):
+            journal.start('correctness')
+        self.assertEqual(len(self.data(journal)['phases']), 256)
+
     def test_working_identity_tracks_inputs_and_ignores_journal_outputs(self):
         def git(*arguments):
             return subprocess.check_output(['git', *arguments], cwd=self.root,
@@ -441,6 +464,30 @@ finally:
                 result = COMPARISON('--base ' + base + ' --head ' + head + suffix)
                 self.assertEqual(result, {'status': 'resolved', 'base': base, 'head': head,
                                          'selection': 'commit', 'merge_base': merge_base})
+
+    def test_staged_comparison_identifies_index_independently_of_worktree(self):
+        self.git_history()
+        source = self.root / ' private-index-name\n'
+        comparisons, sources = [], []
+        for content in ('private staged A', 'private staged B'):
+            source.write_text(content)
+            timing.git('add', '--', source.name)
+            source.write_text('same worktree content')
+            index = (self.root / '.git/index').read_bytes()
+            comparisons.append(COMPARISON('--base HEAD --staged'))
+            self.assertEqual((self.root / '.git/index').read_bytes(), index)
+            sources.append(WORKING_IDENTITY())
+        self.assertEqual(sources[0], sources[1])
+        self.assertNotEqual(comparisons[0]['index_sha256'], comparisons[1]['index_sha256'])
+        self.assertEqual(comparisons[1]['selection'], 'index')
+        self.assertRegex(comparisons[1]['index_sha256'], r'^[0-9a-f]{64}$')
+        source.write_text('unstaged-only change')
+        self.assertEqual(COMPARISON('--base HEAD --staged'), comparisons[1])
+        with patch.object(timing, 'comparison', side_effect=COMPARISON):
+            journal = timing.Journal.create(arguments='--base HEAD --staged')
+        self.assertEqual(self.data(journal)['comparison'], comparisons[1])
+        for private in ('private-index-name', 'private staged A', 'private staged B', str(self.root)):
+            self.assertNotIn(private, journal.path.read_text())
 
     def test_instrumentation_failure_preserves_owned_runner_status_and_privacy(self):
         journal = Mock()
@@ -581,6 +628,57 @@ finally:
                 self.assertEqual(result, {'status': 'resolved', 'base': None, 'head': head,
                     'bootstrap': True, 'selection': 'commit'} if accepted else {'status': 'unavailable'})
                 self.assertNotIn(unittest.mock.call('rev-parse', 'HEAD^'), git.call_args_list)
+
+    def test_initial_push_setup_failure_preserves_root_policy(self):
+        _, head = self.git_history(root_only=True)
+        event = self.root / 'event.json'
+        event.write_text(json.dumps({'before': '0' * 40, 'after': head}))
+        exported = self.root / 'github-env'
+        for pin, ref, accepted in (('', 'refs/heads/main', False),
+                                   (head, 'refs/heads/main', True),
+                                   (head, 'refs/heads/feature', False)):
+            with self.subTest(pin=pin, ref=ref), patch.dict(os.environ, {
+                    'GITHUB_EVENT_PATH': str(event), 'GITHUB_ENV': str(exported),
+                    'GITHUB_EVENT_NAME': 'push', 'GITHUB_REF': ref, 'CI_BOOTSTRAP_SHA': pin}), \
+                    patch.object(ci, 'ROOT', self.root), \
+                    patch.object(timing, 'toolchains', return_value={}):
+                timing.hosted_action('hosted-start')
+                additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+                with patch.dict(os.environ, additions):
+                    journal = timing.selected()
+                    expected = ({'status': 'resolved', 'base': None, 'head': head,
+                        'bootstrap': True, 'selection': 'commit'} if accepted else {'status': 'unavailable'})
+                    self.assertEqual(self.data(journal)['comparison'], expected)
+                    timing.hosted_action('setup-finish', 'failure')
+                    timing.hosted_action('hosted-finish', 'failure')
+                data = self.data(journal)
+                self.assertEqual(data['comparison'], expected)
+                self.assertEqual(data['outcome'], 'failure')
+                self.assertEqual(data['phases'][0]['outcome'], 'failure')
+                self.assertTrue(all(row['outcome'] == 'unstarted' for row in data['phases'][1:]))
+
+    def test_initial_nonroot_push_uses_existing_merge_base_policy(self):
+        base, head = self.git_history()
+        timing.git('update-ref', 'refs/remotes/origin/main', base)
+        event = self.root / 'event.json'
+        payload = {'before': '0' * 40, 'after': head}
+        event.write_text(json.dumps(payload))
+        with patch.dict(os.environ, {'GITHUB_EVENT_PATH': str(event),
+                'GITHUB_EVENT_NAME': 'push', 'GITHUB_REF': 'refs/heads/main'}), \
+                patch.object(ci, 'ROOT', self.root):
+            expected = {'status': 'resolved', 'base': base, 'head': head,
+                        'bootstrap': False, 'selection': 'commit'}
+            self.assertEqual(timing.hosted_comparison(), expected)
+            self.assertEqual(timing.hosted_comparison(), {'status': 'resolved',
+                **ci.comparison(payload, 'push', '', 'refs/heads/main'), 'selection': 'commit'})
+            payload['after'] = base
+            event.write_text(json.dumps(payload))
+            self.assertEqual(timing.hosted_comparison(), {'status': 'unavailable'})
+            event.write_text(json.dumps({'before': base, 'after': head}))
+            with patch.object(ci, 'comparison') as select:
+                self.assertEqual(timing.hosted_comparison(), {'status': 'event-pinned',
+                    'base': base, 'head': head, 'selection': 'commit'})
+                select.assert_not_called()
 
     def test_hosted_manual_metadata_errors_are_private_and_unavailable(self):
         event = self.root / 'private-event.json'

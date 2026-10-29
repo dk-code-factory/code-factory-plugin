@@ -105,7 +105,7 @@ def identity():
 
 
 def comparison(arguments):
-    """Export only resolved SHAs and selection mode, never caller argument text."""
+    """Export resolved SHAs, private input digests and selection mode only."""
     parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
     parser.add_argument("--base", default="HEAD")
     parser.add_argument("--head")
@@ -119,9 +119,12 @@ def comparison(arguments):
         head = git("rev-parse", "--verify", (args.head or "HEAD") + "^{commit}").decode().strip()
         if args.merge_base:
             base = git("merge-base", base, head).decode().strip()
-        return {"status": "resolved", "base": base, "head": head,
-                "selection": "index" if args.staged else "commit" if args.head else "worktree",
-                "merge_base": args.merge_base}
+        result = {"status": "resolved", "base": base, "head": head,
+                  "selection": "index" if args.staged else "commit" if args.head else "worktree",
+                  "merge_base": args.merge_base}
+        if args.staged:
+            result["index_sha256"] = hashlib.sha256(git("ls-files", "--stage", "-z")).hexdigest()
+        return result
     except (argparse.ArgumentError, ValueError, OSError, subprocess.CalledProcessError):
         return {"status": "unavailable"}
 
@@ -143,10 +146,11 @@ def toolchains():
 def hosted_comparison():
     try:
         event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
-        if os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
-            # Reuse the verifier's main/root policy; a reviewed root has no parent.
+        name = os.environ.get("GITHUB_EVENT_NAME")
+        if name == "workflow_dispatch" or (name == "push" and event.get("before") == "0" * 40):
+            # Reuse the verifier's main/root and initial-push merge-base policy.
             from ci import comparison as ci_comparison
-            plan = ci_comparison(event, "workflow_dispatch", os.environ.get("CI_BOOTSTRAP_SHA", ""),
+            plan = ci_comparison(event, name, os.environ.get("CI_BOOTSTRAP_SHA", ""),
                                  os.environ.get("GITHUB_REF", ""))
             return {"status": "resolved", **plan, "selection": "commit"}
         if "pull_request" in event:
@@ -216,13 +220,15 @@ class Journal:
         if phase not in PHASES:
             raise ValueError("Unknown timing phase")
         with self.update() as data:
-            if len(data["phases"]) >= 256 or data["outcome"] != "running":
-                raise ValueError("Timing run is closed or phase limit reached")
+            if data["outcome"] != "running":
+                raise ValueError("Timing run is closed")
             if parent is not None and parent not in {p["id"] for p in data["phases"]}:
                 raise ValueError("Unknown timing parent")
             item = next((p for p in data["phases"] if p["phase"] == phase and
                          p["outcome"] == "unstarted" and parent is None), None)
             if item is None:
+                if len(data["phases"]) >= 256:
+                    raise ValueError("Timing phase limit reached")
                 item = row(phase, max((int(p["id"]) for p in data["phases"]), default=-1) + 1, parent)
                 data["phases"].append(item)
             item.update(outcome="running", start_seconds=self.clock() - data["clock_origin"])
