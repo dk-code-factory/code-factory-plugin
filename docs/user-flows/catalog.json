@@ -166,6 +166,10 @@
         [
           "python3",
           "scripts/test_ci.py"
+        ],
+        [
+          "python3",
+          "scripts/test_browser_benchmark.py"
         ]
       ],
       "inputs": [
@@ -175,7 +179,8 @@
         "scripts/specs_lib",
         "scripts/ci.py",
         "scripts/release.py",
-        ".github/workflows"
+        ".github/workflows",
+        "scripts/benchmark_browser.py"
       ]
     },
     "inbox-performance": {
@@ -14027,6 +14032,10 @@
           "path": ".github/workflows/browser-benchmark.yml",
           "anchor": "name: Browser correctness benchmark",
           "purpose": "Read-only fixture-only hosted serial/two-worker correctness comparison with repeated zero-retry samples and retained timing/resource evidence."
+        },
+        {
+          "path": "scripts/benchmark_browser.py",
+          "purpose": "Compare complete correctness inventories and successful single executions across serial and bounded-parallel qualification runs."
         }
       ],
       "tests": [
@@ -15873,6 +15882,30 @@
             "S5"
           ],
           "purpose": "Execute the hosted benchmark shell with stub tests: preserve four independent zero-retry samples and resource records; stop immediately with the failed sample exit code and retain partial output."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_file_move_preserves_inventory_and_duplicates_count(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "File movement preserves scenario identity while missing or duplicated scenarios fail qualification."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_failure_skip_retry_and_missing_test_cannot_pass(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Failure, skip, interruption, retry and incomplete discovery cannot be accepted as equivalent passing execution."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_nonzero_discovery_retains_both_diagnostics(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Nonzero discovery retains both diagnostic streams and reports their paths."
         }
       ],
       "suites": [

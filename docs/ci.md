@@ -98,6 +98,35 @@ alternating worker counts makes warm-cache ordering visible. The benchmark runs
 on its own runner and never replaces the complete CI verification job or the
 isolated one-worker, zero-retry launch-performance gate.
 
+
+To qualify a fixture or concurrency change, prepare current inputs, then run:
+
+```sh
+make ui plugin-embed fake-provider browser-deps
+python3 scripts/benchmark_browser.py --output web/benchmark-results
+```
+
+The output directory must be new. The command runs the entire discovered
+correctness inventory with worker counts 1, 2, 2, 1, with retries disabled and a
+fresh testhost per invocation. It rejects missing, duplicated, skipped, failed or
+retried scenario executions. For a file move, save the original discovery with
+`cd web && npx playwright test --list --reporter=json`, then pass that JSON as
+`--baseline-inventory FILE` to compare complete title multisets across the move.
+Stable specification IDs remain in the registries; update their assertion paths
+and regenerate references with `scripts/specs.py render`.
+
+The versioned summary records source identity, tracked-change status, Node and
+Playwright versions, elapsed seconds and GNU time's maximum individual-process
+RSS in KiB. This metric does not measure aggregate browser/worker memory.
+
+Discovery stdout and stderr are retained even when discovery exits nonzero;
+failure messages identify both artifact paths. Dependencies and generated
+inputs are prepared; browser contexts and daemon state are fresh, while operating
+system and toolchain caches remain available. Compare equivalent conditions,
+retain raw reports and avoid extrapolating these measurements to real hosts.
+This is an explicit correctness qualification, not part of ordinary local CI.
+
+
 ## Final verification and PR handoff
 
 Use this sequence when a change is ready for final review. The
