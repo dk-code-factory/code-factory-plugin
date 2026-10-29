@@ -13949,7 +13949,7 @@
         },
         {
           "path": "scripts/specs_lib/processes.py",
-          "purpose": "Owned verifier execution and receipt-writing lifecycle",
+          "purpose": "Owned verifier execution and receipt-writing lifecycle Optional explicit descriptor pass-through preserves native pipe jobservers; default callers retain closed unrelated descriptors and unchanged owned cleanup.",
           "anchor": "def run_verification("
         },
         {
@@ -14032,6 +14032,10 @@
           "path": ".github/workflows/browser-benchmark.yml",
           "anchor": "name: Browser correctness benchmark",
           "purpose": "Read-only fixture-only hosted serial/two-worker correctness comparison with repeated zero-retry samples and retained timing/resource evidence."
+        },
+        {
+          "path": "scripts/verification_timing.py",
+          "purpose": "Callable allowlisted monotonic verification phase journals, immutable source/comparison identities, owned command execution and partial local/hosted evidence. Entry-point wiring is delivered separately."
         },
         {
           "path": "scripts/benchmark_browser.py",
@@ -15882,6 +15886,240 @@
             "S5"
           ],
           "purpose": "Execute the hosted benchmark shell with stub tests: preserve four independent zero-retry samples and resource records; stop immediately with the failed sample exit code and retain partial output."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_success_and_failure_leave_distinct_unstarted_phases(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Success and nonzero command status retain distinct unstarted phases with null durations."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_injected_clock_records_overlap_parentage_and_wall_time(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Injected monotonic clock verifies overlapping child intervals, parent identity and separate wall duration."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_processes_do_not_lose_concurrent_updates(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Concurrent processes retain every nested phase update without lost records or reused identities."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_partial_evidence_precedes_owned_runner_cancellation(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "SIGTERM preserves partial timing evidence and cancellation status while cleaning up the owned child."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_owned_runner_normalizes_child_signal_without_losing_raw_status(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Signal termination preserves raw signal status in evidence and shell-compatible exit status."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_artifact_contains_allowlisted_metadata_and_is_bounded(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Allowlisted metadata excludes private paths, command arguments and environment secrets and bounds artifact size."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_instrumentation_failure_preserves_owned_runner_status_and_privacy(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Instrumentation failure retains command status, process ownership and fixed nonsensitive warnings."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_local_orchestration_keeps_order_and_stops_at_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The timing boundary delegates one worker graph unchanged, enforces fixture mode and preserves successful or failed owned-runner status; real recorder assertions establish ordering."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_setup_failure_keeps_initial_event_identity(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Hosted toolchain setup failure retains initial source/comparison identity and unstarted verification phases; real graph assertions cover locked prerequisite failures."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_working_identity_tracks_inputs_and_ignores_journal_outputs(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Tracked and untracked input content changes affect source digest while ignored timing outputs do not; captured source identity stays immutable."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_malformed_comparison_metadata_cannot_stop_bootstrap_worker(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Malformed optional comparison metadata remains unavailable without exposing its private argument or terminating a valid bootstrap worker; the actual worker status remains authoritative."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_failed_cancellation_probe_assertion_and_stopped_wrapper_are_cleaned(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A forced assertion failure and a deliberately stopped timing wrapper exercise graceful cancellation and bounded fallback against pinned owned descendants, with interrupted journal evidence and no surviving command."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_writer_cleanup_reaps_after_an_early_assertion_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "An early writer-probe assertion failure still terminates, communicates with and reaps the owned Popen process; concurrent writers register cleanup immediately after creation."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_manual_setup_failure_retains_existing_parent_comparison(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A supported manual main dispatch records the exact existing HEAD-parent comparison before setup; failed setup retains this identity with unstarted verification phases."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_manual_root_metadata_preserves_existing_bootstrap_guard(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Initial manual metadata reuses the verifier main/root policy: only the pinned reviewed main root omits a parent, and neither an unreviewed root nor a feature ref gains a fabricated comparison."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_manual_metadata_errors_are_private_and_unavailable(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Malformed manual event metadata yields unavailable comparison without logging its private content."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_rejected_manual_feature_retains_only_partial_timing_evidence(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual manual feature rejection invokes neither source verification nor package-manifest creation, while the startup/finalization path retains a failed partial timing journal."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_local_metadata_signals_finalize_before_worker_starts(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real SIGINT/SIGTERM during toolchain metadata retain the actual argv-selected comparison on diverged main for fresh and preselected journals and last assignments, with status130/143, interrupted wall time, null unstarted phases and no worker."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_identity_hashes_exact_whitespace_prefixed_tracked_and_untracked_names(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Space-, tab- and newline-prefixed first Git filenames retain exact NUL-delimited bytes. Tracked and untracked content edits change the digest at unchanged HEAD and dirty state; ignored journals preserve identity and export no filenames, private paths or contents."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_git_text_identities_and_comparisons_remain_normalized(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Returning raw Git bytes preserves normalized head/comparison SHAs, clean status and exact committed or merge-base comparison metadata for text callers."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_identity_frames_binary_contents_and_record_boundaries(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Two different real-Git states at identical HEAD and dirty status cannot share the former ambiguous digest when binary file content imitates another path/mode/content record; journal source identity stays immutable."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_identity_distinguishes_file_link_absence_and_executable_mode(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Identity keeps regular-file content, symbolic-link target, tracked absence and executable-mode distinctions while the same inputs hash identically before or after staging."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_jobserver_selection_keeps_only_valid_advertised_pipe_descriptors(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Only open matching pipe read/write descriptors advertised as jobserver capabilities are selected; closed, invalid, non-pipe, mismatched, stdio, duplicate and overflow values are rejected, FIFO needs no numeric pass-through and variable payloads cannot substitute unrelated descriptors."
+        },
+        {
+          "path": "scripts/test_specs_runner.py",
+          "anchor": "def test_descriptor_passthrough_is_explicit_and_preserves_default_calls(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real child probes preserve only explicit descriptors, close other inheritable pipes, force fixture mode, retain nonzero command status and restored signal handlers, and keep the legacy default Popen call unchanged."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_startup_metadata_exceptions_keep_truthful_partial_journals(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Injected KeyboardInterrupt/SystemExit143 at source and comparison collection require already-persisted fresh/preselected journals, truthful null/unavailable fields, finalized interrupted wall time and no worker or private argument export."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_startup_metadata_real_signals_finalize_persisted_unknown_fields(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real SIGINT/SIGTERM while source or comparison metadata blocks preserve fresh/preselected partial journals, status130/143, unknown or completed source fields, unstarted null-duration phases and no worker start; bounded harness cleanup remains registered."
         },
         {
           "path": "scripts/test_browser_benchmark.py",
