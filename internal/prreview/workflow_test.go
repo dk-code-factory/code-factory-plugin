@@ -258,12 +258,18 @@ func workflowFixture(t *testing.T) (*Workflow, *Session, *fixtureWorkers, *fixtu
 	for _, id := range []string{"one", "two"} {
 		bindings = append(bindings, PinBinding(Binding{Reviewer: Reviewer{ID: id, Kind: "skill", SkillID: id}, Resources: map[string]string{"SKILL.md": base64.StdEncoding.EncodeToString([]byte("Review pinned evidence"))}, Modes: map[string]uint32{"SKILL.md": 0600}, Entrypoint: "SKILL.md"}))
 	}
-	w := &Workflow{Adapter: FixtureAdapter{}, Collector: c, Workers: workers, Artifacts: Artifacts{Root: filepath.Join(dir, "artifacts")}, Bindings: bindings, Save: func(context.Context, *Session) error { return nil }}
+	w := &Workflow{Adapter: NativeAdapter{}, Collector: c, Workers: workers, Artifacts: Artifacts{Root: filepath.Join(dir, "artifacts")}, Bindings: bindings, Save: func(context.Context, *Session) error { return nil }}
 	return w, &Session{ID: "session", Target: e.Metadata.URL}, workers, c
+}
+
+type unavailableAdapter struct{ FixtureAdapter }
+
+func (unavailableAdapter) Check(context.Context) error {
+	return requireCapabilities([]string{GoActions})
 }
 func TestMissingDependencyAndConfigurationBeforeCollection(t *testing.T) {
 	w, s, workers, c := workflowFixture(t)
-	w.Adapter = NativeAdapter{}
+	w.Adapter = unavailableAdapter{}
 	if _, err := w.Run(context.Background(), s); err == nil || !strings.Contains(err.Error(), OrderedIteration) {
 		t.Fatal(err)
 	}
@@ -1032,23 +1038,113 @@ func TestEngineCapabilitiesRecognizeUpstreamGoActionsAndReportOnlyMissingContrac
 	if err := requireCapabilities([]string{GoActions, OrderedIteration, ExternalWaits}); err != nil {
 		t.Fatal(err)
 	}
-	err := (NativeAdapter{}).Check(context.Background())
-	if err == nil {
-		t.Fatal("production must remain gated until all required engine contracts exist")
+	if err := (NativeAdapter{}).Check(context.Background()); err != nil {
+		t.Fatal(err)
 	}
+	err := requireCapabilities([]string{GoActions})
 	for _, expected := range []string{OrderedIteration, ExternalWaits, "#26", "#27"} {
 		if !strings.Contains(err.Error(), expected) {
-			t.Fatalf("missing dependency omitted from diagnostic: %s", err)
+			t.Fatal(err)
 		}
 	}
 	for _, available := range []string{GoActions, "#25"} {
 		if strings.Contains(err.Error(), available) {
-			t.Fatalf("available capability still reported missing: %s", err)
+			t.Fatal(err)
 		}
 	}
 	canceled, cancel := context.WithCancel(context.Background())
 	cancel()
 	if err := (NativeAdapter{}).Check(canceled); !errors.Is(err, context.Canceled) {
 		t.Fatal("capability check lost cancellation", err)
+	}
+}
+
+func TestCompletedPublicationRecoveryNeverRetriesExhaustedReviewers(t *testing.T) {
+	w, s, workers, _ := workflowFixture(t)
+	workers.results["one"] = [][]byte{[]byte(`{"findings":[],"status":"tokens_exhausted","message":"limit"}`)}
+	posts := 0
+	w.OnComplete = func(context.Context, Reference) error {
+		posts++
+		if posts == 1 {
+			return errors.New("publication response uncertain")
+		}
+		return nil
+	}
+	result, err := w.Run(context.Background(), s)
+	if err == nil || !result.Complete || len(result.Skipped) != 1 {
+		t.Fatal(result, err)
+	}
+	result, err = w.Run(context.Background(), s)
+	if err != nil || !result.Complete || posts != 2 || workers.calls["one"] != 1 || workers.calls["two"] != 1 || workers.completionCalls != 1 || len(s.Results) != 1 {
+		t.Fatal("publication recovery repeated engineering work", result, workers.calls, posts, err)
+	}
+}
+
+func TestWaitingPreparationIntegrityPrecedesEngineAnswerConsumption(t *testing.T) {
+	w, s, workers, _ := workflowFixture(t)
+	workers.materialRequired = true
+	workers.materialCorrection = true
+	if _, err := w.Run(context.Background(), s); !errors.Is(err, ErrWaiting) {
+		t.Fatal(err)
+	}
+	gate := *s.Gate
+	if err := AcceptAnswer(s, gate.ID, gate.EvidenceID, rawJSON(map[string]string{"independent": "Narrow"})); err != nil {
+		t.Fatal(err)
+	}
+	var p Preparation
+	if err := w.Artifacts.Load(*s.Preparation, &p); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(p.Sources["patch"].Snapshot, []byte("corrupted waiting capture"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Run(context.Background(), s); err == nil {
+		t.Fatal("corrupt preparation accepted")
+	}
+	journal, err := w.engineStore(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer journal.Close()
+	gates, err := journal.Inputs(context.Background(), s.EngineRunID)
+	if err != nil || len(gates) != 1 || gates[0].State != "pending" || workers.prepareCalls != 2 || len(workers.calls) != 0 {
+		t.Fatal("answer consumed before waiting-capture validation", gates, err, workers.prepareCalls)
+	}
+}
+
+func TestEngineGateProjectionWriteLossReconcilesAcceptedAnswer(t *testing.T) {
+	w, s, workers, _ := workflowFixture(t)
+	workers.materialRequired = true
+	workers.materialCorrection = true
+	var durable Session
+	lost := false
+	w.Save = func(_ context.Context, state *Session) error {
+		if !lost && state.Gate != nil && state.Gate.EngineGateID != "" {
+			lost = true
+			return errors.New("lost app gate projection write")
+		}
+		durable = cloneJSON(*state)
+		return nil
+	}
+	if _, err := w.Run(context.Background(), s); err == nil || !lost || durable.Gate == nil || durable.Gate.EngineGateID != "" {
+		t.Fatal("failed to create the journal/app projection window", durable, err)
+	}
+	gate := durable.Gate
+	if err := AcceptAnswer(&durable, gate.ID, gate.EvidenceID, rawJSON(map[string]string{"independent": "Narrow"})); err != nil {
+		t.Fatal(err)
+	}
+	w.Save = func(context.Context, *Session) error { return nil }
+	result, err := w.Run(context.Background(), &durable)
+	if err != nil || !result.Complete || len(durable.Answers) != 1 || durable.Answers[0].EngineGateID == "" || workers.calls["one"] != 1 || workers.calls["two"] != 1 {
+		t.Fatal("gate projection loss replayed or lost the accepted decision", result, err, durable.Answers)
+	}
+}
+
+func TestUnverifiedWorkerCleanupStopsOrderedDispatch(t *testing.T) {
+	w, s, workers, _ := workflowFixture(t)
+	workers.fail["one"] = fmt.Errorf("%w: lost command response", ErrWorkerCleanup)
+	result, err := w.Run(context.Background(), s)
+	if !errors.Is(err, ErrWorkerCleanup) || !result.GuardFailure || workers.calls["one"] != 1 || workers.calls["two"] != 0 || result.Complete {
+		t.Fatal("cleanup uncertainty became a skippable provider failure", result, err, workers.calls)
 	}
 }

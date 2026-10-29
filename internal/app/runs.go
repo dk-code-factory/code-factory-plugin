@@ -45,7 +45,7 @@ type Manager struct {
 	cancel               context.CancelFunc
 }
 type session struct {
-	reviewDone          chan struct{}
+	reviewResult        *reviewExecutionResult
 	mu                  sync.Mutex
 	ctx                 context.Context
 	cancelMu            sync.Mutex // Protects the replaceable lifetime handle independently of mu.

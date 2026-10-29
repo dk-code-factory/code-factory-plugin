@@ -1,0 +1,10 @@
+on:
+  workflow_call:
+    inputs:
+      reviewer: {type: string, required: true}
+jobs:
+  review:
+    steps:
+      - uses: action/reviewer
+        with:
+          reviewer: ${{ inputs.reviewer }}

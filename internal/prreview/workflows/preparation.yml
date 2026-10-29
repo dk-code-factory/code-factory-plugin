@@ -1,0 +1,19 @@
+on:
+  workflow_call:
+    outputs:
+      ready: {value: '${{ jobs.prepare.outputs.ready }}'}
+jobs:
+  prepare:
+    outputs:
+      ready: ${{ steps.prepare.outputs.ready }}
+    steps:
+      - id: prepare
+        uses: action/prepare
+      - id: decision
+        if: ${{ steps.prepare.outputs.waiting }}
+        uses: input/wait
+        with:
+          prompt: Resolve the retained material review decisions.
+          evidence-id: ${{ steps.prepare.outputs.evidence }}
+          payload:
+            attention: ${{ steps.prepare.outputs.gate }}

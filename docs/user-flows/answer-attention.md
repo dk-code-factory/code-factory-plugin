@@ -92,6 +92,8 @@ Cancelling automatic recovery does not establish that a genuine pending async qu
 
 - **S6** Material review questions suspend their retained workflow. The pending gate survives restart, accepts its correlated answer once and rejects stale or duplicate answers before dependent review resumes.
 
+Accepted material-review answers and their continuation intent survive an interruption between acknowledgement and resumed work. Restart resumes that accepted intent once after revalidating the governing evidence; unanswered, stale, duplicate, cancelled or explicitly interrupted questions cannot advance work.
+
 <!-- flow-references -->
 ## Terminology and UI references
 
@@ -211,6 +213,8 @@ flowchart TD
 - [internal/aiworkflows/workflows/attention-check.yml](../../internal/aiworkflows/workflows/attention-check.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/question-check.yml](../../internal/aiworkflows/workflows/question-check.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/question-repair.yml](../../internal/aiworkflows/workflows/question-repair.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
+- [internal/prreview/native.go](../../internal/prreview/native.go) — Production SDK actions, durable origin/gate journaling, ordered child reviews and app-answer reconciliation. (`func (a NativeAdapter) Execute(`)
+- [internal/app/review_workers.go](../../internal/app/review_workers.go) — Default independent Codex model workers and sandboxed command reviewers retain selected profile, model, effort and package resources. (`func (m *Manager) productionReviewWorkers(`)
 
 ## Test references
 
@@ -308,6 +312,10 @@ flowchart TD
 - [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestDurableMaterialWaitAnswersAndRestart(`; S6. Stale/duplicate answers and suspended execution.
 - [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewAnswerRejectsChangedRemoteEvidenceBeforeClaim(`; S6. Changed remote evidence rejects a material answer as stale while leaving its retained attention pending and unclaimed.
 - [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestReviewAnswerDoesNotClaimAcrossConcurrentRuleChange(`; S6. A governing rule change during remote answer validation rejects the answer before claiming its pending attention.
+- [internal/app/review_workers_test.go](../../internal/app/review_workers_test.go) — `func TestAcceptedReviewAnswerRecoversAppIntentBeforeEngineJournal(`; S6. A durable application answer/continuation committed before SDK acceptance recovers once after manager restart; waiting occupies no execution capacity and repeated recovery cannot replay child work.
+- [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestWaitingPreparationIntegrityPrecedesEngineAnswerConsumption(`; S6. Corrupting a waiting preparation capture rejects continuation before SDK answer acceptance or consumption; the durable gate remains pending and no reviewers start.
+- [internal/app/review_workers_test.go](../../internal/app/review_workers_test.go) — `func TestReviewAnswerContinuationCannotUndoInterrupt(`; S6. A later explicit interrupt wins the exact app-answer-commit/automatic-admission race; accepted answer remains retained for an explicit Resume.
+- [internal/prreview/workflow_test.go](../../internal/prreview/workflow_test.go) — `func TestEngineGateProjectionWriteLossReconcilesAcceptedAnswer(`; S6. An interrupted app projection after SDK gate commit is recovered using exact accepted answer identity; the resumed review completes with each reviewer called once.
 
 ## Verification and gaps
 

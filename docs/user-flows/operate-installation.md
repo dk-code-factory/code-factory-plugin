@@ -162,7 +162,7 @@ flowchart TD
 - [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRotationConcurrencyAndFailurePreserveAPI(`; S4. Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response.
 - [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogBoundsMalformedBodiesAndPreservesPanic(`; S4. Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records.
 - [internal/app/dependencies_test.go](../../internal/app/dependencies_test.go) — `func TestGitHubSkillUpgradeRejectsNestedNativePackages(`; S5. Repository-root and nested native-package manifests reject a skill-leaf update before backup/provenance mutation; a deep standalone source with unrelated sibling manifest still updates and retains original backup.
-- [internal/app/review_maintenance_test.go](../../internal/app/review_maintenance_test.go) — `func TestRetainedReviewContinuationHonorsPluginMaintenance(`; S5. Continue/resume with fixture and production adapters refuses the held exclusive maintenance gate without changing runs, sessions, messages or work counters; after release capability and stale-turn checks remain and valid continuation reuses its completed checkpoint.
+- [internal/app/review_maintenance_test.go](../../internal/app/review_maintenance_test.go) — `func TestRetainedReviewContinuationHonorsPluginMaintenance(`; S5. Maintenance refuses retained continuation without accepting a message; an injected unavailable runtime remains blocked after maintenance, while a valid runtime resumes only the remaining reviewer.
 
 ## Verification and gaps
 

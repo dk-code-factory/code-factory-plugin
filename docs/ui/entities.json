@@ -2148,6 +2148,21 @@
           "path": "internal/prreview/git.go",
           "anchor": "func (g GitCollector) ValidateCurrentAfterPublication(",
           "purpose": "Allow only the exact own publication proven by the retained approved intent during completed/uncertain review recovery, without accepting unrelated scope changes."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (m *Manager) recoverReviewWorkflow(",
+          "purpose": "Restore accepted material-answer continuation once; unanswered and explicitly interrupted reviews remain stopped."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (m *Manager) startReviewWorkflowIntent(",
+          "purpose": "Persist cleanup uncertainty as retained admission state; explicit Resume and operational continuation cannot clear it or dispatch replacement reviewers after orchestrator exit or manager restart."
+        },
+        {
+          "path": "internal/app/review_worker_admission.go",
+          "anchor": "func admittedReviewCall[",
+          "purpose": "Commit execution-bound protection before actual worker dispatch; release only matching verified return proof and retain uncertainty on failed persistence or unjoined child work."
         }
       ],
       "assertions": [
@@ -2171,7 +2186,28 @@
         "UI-REVIEW-WORKFLOW",
         "API-REVIEW-FINISHED-RECOVERY",
         "API-REVIEW-OWN-PUBLICATION-RECOVERY",
-        "API-REVIEW-COMPLETION-BOUNDARY"
+        "API-REVIEW-COMPLETION-BOUNDARY",
+        "API-REVIEW-ANSWER-INTENT",
+        "API-REVIEW-ANSWER-INTERRUPT",
+        "API-REVIEW-PROVIDER-JOIN",
+        "API-REVIEW-COMMAND-STOP",
+        "API-REVIEW-MODEL-STOP",
+        "API-REVIEW-CLEANUP-UNCERTAIN",
+        "API-REVIEW-MODEL-TOOL-JOIN",
+        "API-REVIEW-CLEANUP-VERIFIED-RESUME",
+        "API-REVIEW-WORKER-PROTECTION",
+        "API-REVIEW-ADMISSION-WRITE",
+        "API-REVIEW-PROOF-WRITE",
+        "API-REVIEW-FINALIZER-ROLLBACK",
+        "API-REVIEW-CRASH-ADMISSION",
+        "API-REVIEW-SESSION-MERGE",
+        "API-REVIEW-PROOF-PREPARATION",
+        "API-REVIEW-ADMISSION-STALE",
+        "API-REVIEW-COMMAND-ADMISSION",
+        "API-REVIEW-ADMISSION-COMPATIBILITY",
+        "API-REVIEW-ORCHESTRATOR-EXIT",
+        "API-REVIEW-BLOCKED-SEND",
+        "API-REVIEW-INTERRUPT-RESULT-OWNERSHIP"
       ],
       "gaps": [
         {
@@ -2199,7 +2235,7 @@
         "go"
       ],
       "element_description": "**task-title** and visible **run-error**; **details** holds **profile-name**, **interrupt**, technical activity, **workspace**, **cleanup-effect** and **cleanup**. Activity appears only in the work item status widget. The selected or listed session lifecycle is displayed separately from aggregate item activity.",
-      "state_description": "Interrupted or failed retained review workflows expose Resume review workflow in Details. Other sessions resume through messages and have no Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable. Deferred pre-agent launches expose Cancel retry; interruption or cleanup cancels their retained retry even when no agent session is attached.",
+      "state_description": "Interrupted or failed retained review workflows expose Resume review workflow in Details. Other sessions resume through messages and have no Resume control or standalone agent activity header. Interrupt is secondary while a turn is active; cleanup is secondary for idle/interrupted/failed sessions. Terminated source work retains its reason and clean-workspace cleanup; dirty refusal does not make that session resumable. Deferred pre-agent launches expose Cancel retry; interruption or cleanup cancels their retained retry even when no agent session is attached. Possible child work without durable shutdown proof remains stopped, including after failed cleanup-state writes or abrupt restart. Resume and continuation are rejected while proof is missing; orchestrator exit alone cannot authorize replacement reviewers. Verified shutdown, questions with no active child and saved finished reviews retain their recovery paths.",
       "interactions": "Explicit interrupt and cleanup refresh the snapshot on success or failure. Dirty cleanup preserves files and history; a later message restores the same session. Action errors and drafts remain visible. Retained review gates survive restart and accept only the correlated pending answer; explicit interruption/resume preserves completed checkpoints."
     },
     {
@@ -2304,7 +2340,7 @@
         "go"
       ],
       "element_description": "Whole-notice **answer** button; **blocking-label** or **continuing-label**.",
-      "state_description": "Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question \u00b7 agent continues; unconfirmed completion and unresolved clarification create no notice.",
+      "state_description": "Repeated for pending requests belonging to the selected run. Explicitly nonblocking recovered text retains Question · agent continues; unconfirmed completion and unresolved clarification create no notice.",
       "interactions": "Opens `D-ATTENTION` for that request. Nonblocking requests do not imply a stopped agent. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them."
     },
     {
@@ -2560,7 +2596,7 @@
         "tooling",
         "browser"
       ],
-      "element_description": "**text** \u201cMessage agent\u201d textarea; **send** button.",
+      "element_description": "**text** “Message agent” textarea; **send** button.",
       "state_description": "Send is disabled while submitting, for blank text, or in prepared/queued/starting/deferred/cleaned states. Idle/running/waiting/interrupted/failed sessions accept messages. Terminated sessions cannot accept messages or resume even if the source later reopens. Active question classification, clarification or form repair disables Send even with a filled draft. Unresolved classification permits explicit owner messaging. A cancelled pre-agent launch without a retained thread also keeps the composer disabled.",
       "interactions": "Active messages require the displayed expected turn. A successful send records the message durably and clears only unchanged submitted text before agent delivery; failed acceptance preserves the draft. Background delivery restores the retained session using this submitted message as its first new turn and makes no GitHub preflight. The UI never calls Resume separately or automatically replays a mutation. Later delivery status remains visible in the conversation."
     },
@@ -3044,6 +3080,11 @@
           "path": "internal/app/review_workflows.go",
           "anchor": "func (m *Manager) answerReviewWorkflow(",
           "purpose": "Claim correlated review decision answers once and resume the parent workflow."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (m *Manager) recoverReviewWorkflow(",
+          "purpose": "Restore accepted material-answer continuation once; unanswered and explicitly interrupted reviews remain stopped."
         }
       ],
       "assertions": [
@@ -3060,7 +3101,11 @@
         "API-QUESTION-ACTIVE-TURN",
         "API-REVIEW-GATE",
         "API-REVIEW-WORKFLOW",
-        "API-REVIEW-MATERIAL"
+        "API-REVIEW-MATERIAL",
+        "API-REVIEW-ANSWER-INTENT",
+        "API-REVIEW-WAIT-INTEGRITY",
+        "API-REVIEW-ANSWER-INTERRUPT",
+        "API-REVIEW-GATE-WRITE-LOSS"
       ],
       "gaps": [
         {
@@ -3079,7 +3124,7 @@
         "go"
       ],
       "element_description": "Repeated **question** legend; **options** radio labels/descriptions; conditional **answer-text** or **secret-answer** input; **submit-answer**.",
-      "state_description": "Text input appears for no options or an Other-enabled question; secret text uses a password field. No radio choice is automatically selected. Submit disabled while busy or any question lacks a value.",
+      "state_description": "Text input appears for no options or an Other-enabled question; secret text uses a password field. No radio choice is automatically selected. Submit disabled while busy or any question lacks a value. Retained review questions survive restart; accepted answers preserve one continuation even when the process stops between acknowledgement and resumed work.",
       "interactions": "Sends one response containing all questions. Success refreshes and closes the dialog; stale/invalid responses remain an inline error. Textual fallback questions offer No reply needed, which clears local attention without advancing the session or answering any native approval. Retained review gates survive restart and accept only the correlated pending answer; explicit interruption/resume preserves completed checkpoints."
     },
     {
@@ -4187,7 +4232,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -4210,7 +4255,7 @@
         "tooling",
         "go"
       ],
-      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** \u201cConnect Code Factory\u201d, **deny** \u201cCancel\u201d.",
+      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”.",
       "state_description": "Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages.",
       "interactions": "Allow or Deny consumes the request and redirects to its registered host callback. No credential field."
     },
@@ -4922,7 +4967,7 @@
         "go"
       ],
       "composition": "`W-RUN-ROW` repeated by run ID, or `W-RUN-EMPTY`",
-      "context": "Collapsed Work history inside the selected item\u2019s Item details, containing only that item\u2019s retained conversations and nested Draft launches."
+      "context": "Collapsed Work history inside the selected item’s Item details, containing only that item’s retained conversations and nested Draft launches."
     },
     {
       "id": "P-RUN-DETAIL",
@@ -6004,7 +6049,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6709,7 +6754,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -6897,7 +6942,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-NAVIGATION` \u2192 one embedded `PAGE-*`",
+      "endpoint_description": "`W-NAVIGATION` → one embedded `PAGE-*`",
       "trigger": "Working, Issues, My PRs, Review PRs, Messages or Reported issues tab.",
       "interactions": "Navigates between four task queues with independent query state; configuration remains a separate document.",
       "from": [
@@ -7032,7 +7077,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-INBOX-QUERY` \u2192 `P-INBOX-LIST`",
+      "endpoint_description": "`W-INBOX-QUERY` → `P-INBOX-LIST`",
       "trigger": "Search text and filter value.",
       "interactions": "Search and filter the complete saved focused queue before pagination; default pages contain 50 rows. Changing the query resets its page, and older responses cannot replace later queries.",
       "from": [
@@ -7122,7 +7167,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Work row \u2192 item conversation",
+      "endpoint_description": "Work row → item conversation",
       "trigger": "Click a row; item ID.",
       "interactions": "Loads and marks the displayed item revision read, continues the newest retained conversation or shows a prefilled first message. Never starts or prepares on selection.",
       "from": [
@@ -7219,7 +7264,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS` \u2192 persisted item state \u2192 shared snapshot indicators; detail history is a separately retained read.",
+      "endpoint_description": "`W-ITEM-ACTIONS` → persisted item state → shared snapshot indicators; detail history is a separately retained read.",
       "trigger": "Unread, acknowledge New or record action; item ID.",
       "interactions": "Submits item state changes, refreshes snapshot indicators and rereads selected detail/history on success. Independent read/New/action indicators and unrelated drafts remain unchanged. A deferred provider refresh leaves the displayed saved information unread until a successful retry.",
       "from": [
@@ -7302,7 +7347,7 @@
         "go",
         "browser"
       ],
-      "endpoint_description": "`W-PRIORITY.override` \u2192 local priority state and displayed item",
+      "endpoint_description": "`W-PRIORITY.override` → local priority state and displayed item",
       "trigger": "Picker change; automatic clears the override.",
       "interactions": "Saves immediately, disables during submission and restores the saved value with inline error on failure.",
       "from": [
@@ -7394,7 +7439,7 @@
         "go",
         "browser"
       ],
-      "endpoint_description": "`W-RELATIONSHIPS` \u2192 selected item's relationships/context",
+      "endpoint_description": "`W-RELATIONSHIPS` → selected item's relationships/context",
       "trigger": "Add submits `source` and `target`; Remove submits `source`, `target` and `remove: true`.",
       "interactions": "Submits local Add/Remove, then refreshes selected relationships without clearing unrelated drafts. A late earlier response cannot replace later selected detail.",
       "from": [
@@ -7476,7 +7521,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-ITEM-ACTIONS.launch` \u2192 `D-LAUNCH`",
+      "endpoint_description": "`W-ITEM-ACTIONS.launch` → `D-LAUNCH`",
       "trigger": "Selected item entry.",
       "interactions": "New run under Item details prepares an optional proposal and opens its durable review. No workspace/process starts until Start.",
       "from": [
@@ -7556,7 +7601,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-EDITOR.profile` \u2192 its editable fields",
+      "endpoint_description": "`W-LAUNCH-EDITOR.profile` → its editable fields",
       "trigger": "Select a profile.",
       "interactions": "Replaces prompt/model/effort/skill drafts; keeps the current base draft.",
       "from": [
@@ -7648,9 +7693,9 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Default launch or editor Review \u2192 prepared review",
+      "endpoint_description": "Default launch or editor Review → prepared review",
       "trigger": "Default launch, or explicit Review after customization.",
-      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account\u2019s own PR and missing author/identity without creating a proposal.",
+      "interactions": "Default launch prepares immediately; optional edits reprepare explicitly. Preparation errors keep retry and Edit available without Start. PR review preparation rejects the signed-in account’s own PR and missing author/identity without creating a proposal.",
       "from": [
         "W-LAUNCH-EDITOR.review",
         "W-ITEM-ACTIONS.launch"
@@ -7732,7 +7777,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.edit` \u2192 `P-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.edit` → `P-LAUNCH-EDITOR`",
       "trigger": "Edit launch click.",
       "interactions": "Returns to the editor. The preceding prepared record is retained, not modified/deleted.",
       "from": [
@@ -7837,7 +7882,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-LAUNCH-REVIEW.start` \u2192 `PAGE-AGENTS`/`P-RUN-DETAIL`",
+      "endpoint_description": "`W-LAUNCH-REVIEW.start` → `PAGE-AGENTS`/`P-RUN-DETAIL`",
       "trigger": "Prepared run ID.",
       "interactions": "Explicit Start only. Error/lost response reads the same run; accepted work opens, still-prepared work permits retry, unknown status disables Start/Edit and offers Check start status. PR review Start rechecks the current author and identity and rejects self review without queuing work; the retained proposal remains available.",
       "from": [
@@ -7925,8 +7970,8 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Retained run or draft row \u2192 conversation or review",
-      "trigger": "Retained conversation or draft row inside the owning item\u2019s Work history.",
+      "endpoint_description": "Retained run or draft row → conversation or review",
+      "trigger": "Retained conversation or draft row inside the owning item’s Work history.",
       "interactions": "Opens the selected retained conversation within the owning item, preserving the originating work queue Back context. Prepared rows reopen their existing immutable review without preparing or starting again.",
       "from": [
         "W-RUN-ROW.select"
@@ -8030,7 +8075,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-RUN-CONTROLS` \u2192 selected run \u2192 Agents widgets",
+      "endpoint_description": "`W-RUN-CONTROLS` → selected run → Agents widgets",
       "trigger": "Explicit Interrupt, question-recovery Take over session, or Cleanup for the selected retained run.",
       "interactions": "Takeover cancels further form repair and opens the same session console. Cleanup preserves the existing clean-worktree boundary. Source closure or merge permanently terminates the session while retaining its history and workspace.",
       "from": [
@@ -8136,7 +8181,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-MESSAGE` \u2192 selected run \u2192 `W-TRANSCRIPT`",
+      "endpoint_description": "`W-MESSAGE` → selected run → `W-TRANSCRIPT`",
       "trigger": "Message text and displayed current-turn context.",
       "interactions": "Send with current-turn identity while active. Acknowledge durable local queue acceptance before contacting the agent; background delivery restores the same retained session when needed. Saved source context is explicitly unverified; task-required GitHub reads belong to the agent. Accepted sends clear unchanged submitted drafts; rejected acceptance preserves them. Delivery uncertainty remains visible and is never automatically replayed. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
@@ -8220,7 +8265,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` \u2192 `D-ATTENTION`",
+      "endpoint_description": "`W-ATTENTION-NOTICE[requestId]` → `D-ATTENTION`",
       "trigger": "Notice click; request ID belonging to the selected run.",
       "interactions": "Opens that request without answering.",
       "from": [
@@ -8312,7 +8357,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Messages request \u2192 owning run and attention dialog",
+      "endpoint_description": "Messages request → owning run and attention dialog",
       "trigger": "Select one pending request.",
       "interactions": "Selects that exact owning run and request; identifies item/profile and returns to that conversation after answering. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them.",
       "from": [
@@ -8397,7 +8442,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Attention dialog \u2192 owning conversation",
+      "endpoint_description": "Attention dialog → owning conversation",
       "trigger": "Current attention's owning run ID.",
       "interactions": "Closes attention and opens the owning conversation without submitting an answer.",
       "from": [
@@ -8465,6 +8510,11 @@
           "path": "internal/app/runs.go",
           "anchor": "func (m *Manager) Answer(",
           "purpose": "Reject native answers after durable interruption intent before answer validation, private reply persistence or provider delivery."
+        },
+        {
+          "path": "internal/app/review_workflows.go",
+          "anchor": "func (m *Manager) recoverReviewWorkflow(",
+          "purpose": "Restore accepted material-answer continuation once; unanswered and explicitly interrupted reviews remain stopped."
         }
       ],
       "assertions": [
@@ -8479,7 +8529,11 @@
         "UI-READABLE-APPROVALS",
         "API-ATTENTION-RECONCILIATION",
         "API-INACTIVE-QUESTION-FOLLOWUP",
-        "API-NATIVE-ANSWER-INTERRUPT"
+        "API-NATIVE-ANSWER-INTERRUPT",
+        "API-REVIEW-ANSWER-INTENT",
+        "API-REVIEW-WAIT-INTEGRITY",
+        "API-REVIEW-ANSWER-INTERRUPT",
+        "API-REVIEW-GATE-WRITE-LOSS"
       ],
       "gaps": [
         {
@@ -8497,7 +8551,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` \u2192 request/run state",
+      "endpoint_description": "`W-QUESTIONS` / `W-APPROVAL` / `W-ELICITATION` → request/run state",
       "trigger": "Response matched to current request ID.",
       "interactions": "Submits to the matching request. Success selects the owning run, refreshes and closes; a refresh failure is reported in the shell without replaying the answer. Answer failures stay in attention. Original approval payloads are preserved behind readable labels. Retained message/text questions leave actionable attention individually after explicit same-run decision acknowledgement; partial and unverified questions remain available. Other-run publication does not retire them. Once interruption is requested, native questions reject new responses while the agent is stopping.",
       "from": [
@@ -8587,7 +8641,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "Launch/attention close control \u2192 underlying page",
+      "endpoint_description": "Launch/attention close control → underlying page",
       "trigger": "Close click or Escape inside the active dialog.",
       "interactions": "Dismisses only that dialog and restores its connected opener when permitted. No attention answer or interrupt is sent.",
       "from": [
@@ -8672,7 +8726,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` \u2192 repository summary / sync inputs",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.save` → repository summary / sync inputs",
       "trigger": "Repository ID, checkout and default base.",
       "interactions": "Shows saving/success/error within the independent settings view. Successful saves remain there; other open task views receive refreshed shared data without navigation or draft reset.",
       "from": [
@@ -8760,7 +8814,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` \u2192 profile and launch skill choices",
+      "endpoint_description": "`W-REPOSITORY-SETTINGS.discover-skills` → profile and launch skill choices",
       "trigger": "Explicit skill discovery directory, initially the filesystem root.",
       "interactions": "Loads/discovers skills and refreshes shared choices without saving the repository first.",
       "from": [
@@ -8847,7 +8901,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-POLICY-SETTINGS` \u2192 config / priority assessment inputs",
+      "endpoint_description": "`W-POLICY-SETTINGS` → config / priority assessment inputs",
       "trigger": "Label/priority rows, assessment prompt and notification setting; disabled Jira values are not editable here.",
       "interactions": "Submits configuration; later background assessment can update priority displays. Does not create a host subscription.",
       "from": [
@@ -8936,7 +8990,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-PROFILE-SETTINGS` \u2192 future `W-LAUNCH-EDITOR`",
+      "endpoint_description": "`W-PROFILE-SETTINGS` → future `W-LAUNCH-EDITOR`",
       "trigger": "Saved profile draft.",
       "interactions": "Refreshes available/default launch settings; existing prepared snapshots stay unchanged.",
       "from": [
@@ -9026,7 +9080,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-SKILL-SETTINGS` \u2192 profile/launch skill choices",
+      "endpoint_description": "`W-SKILL-SETTINGS` → profile/launch skill choices",
       "trigger": "Managed skill name/instructions.",
       "interactions": "Refreshes shared skills; immutable prepared skill snapshots stay unchanged.",
       "from": [
@@ -9112,7 +9166,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "`W-DIAGNOSTICS` \u2192 its result display",
+      "endpoint_description": "`W-DIAGNOSTICS` → its result display",
       "trigger": "Check connection click.",
       "interactions": "Shows local Checking feedback and then health results or an exact local error. No repair or page transition.",
       "from": [
@@ -9303,7 +9357,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Shared updated state \u2192 Inbox/Agents/Settings summaries, shell counts",
+      "endpoint_description": "Shared updated state → Inbox/Agents/Settings summaries, shell counts",
       "trigger": "A committed saved-state publication advances the shared UI change cursor.",
       "interactions": "One authenticated host subscription waits up to 25 seconds for metadata-only invalidations. A background worker publishes immutable saved projections and their cursor atomically. Reads perform no provider requests, dependency probes or external refreshes. Affected views reread saved state; hidden views catch up on visibility, bursts coalesce and older responses cannot replace newer queries or selections. Rollbacks emit no invalidation; commits from other processes are reconciled. Missing cursors require full resync. Known reads retry bounded transport failures. Mutations never replay automatically, and acceptance is separate from later completion. Drafts, focus, selection and uncertain-action errors survive updates. Older snapshot/change contracts remain available. Full resync advances local subscription identity even when the server cursor decreases; incremental transcript state is then reloaded from its beginning. Local successful Start acknowledgement remains visible while a published run is missing or still prepared. A published non-prepared run replaces that overlay; full resync clears it. Saved reads clear only invalidations whose captured cursor and requested views they cover. A failed current-view read retains separate feedback and retries transient transport failure without requiring another publication. Queue rows remain bound to the applied queue/query/page identity.",
       "from": [
@@ -9397,7 +9451,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "History pages \u2192 `W-TRANSCRIPT`",
+      "endpoint_description": "History pages → `W-TRANSCRIPT`",
       "trigger": "Selected run and current history cursor; optional reset to beginning.",
       "interactions": "Refreshes display only. Resetting history does not resume/replay agent work.",
       "from": [
@@ -9448,7 +9502,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "Package page links \u2192 artifacts / external host setup",
+      "endpoint_description": "Package page links → artifacts / external host setup",
       "trigger": "Download or follow documented setup instructions.",
       "interactions": "External package downloads and OAuth connection guidance. Only a valid observed registration enables the primary browser package. Portable downloads stay advanced; no connection is fabricated.",
       "from": [
@@ -9476,7 +9530,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -9499,7 +9553,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "External host \u2192 `PAGE-OWNER-CONSENT` \u2192 registered host callback",
+      "endpoint_description": "External host → `PAGE-OWNER-CONSENT` → registered host callback",
       "trigger": "Valid private request; Allow or Deny.",
       "interactions": "External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL.",
       "from": [
@@ -9583,7 +9637,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "`W-ELICITATION.open-authorization` \u2192 external authorization page",
+      "endpoint_description": "`W-ELICITATION.open-authorization` → external authorization page",
       "trigger": "Request-supplied URL opened through host.",
       "interactions": "External. Continue reports the user's completion decision; it does not independently prove external success.",
       "from": [
@@ -9631,7 +9685,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` \u2192 alternate local transport session",
+      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` → alternate local transport session",
       "trigger": "Single-use private setup input.",
       "interactions": "Submits and removes form on success; does not navigate into Settings or activate Jira.",
       "from": [
@@ -9684,7 +9738,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-BROWSER-LAB` controls \u2192 isolated browser \u2192 screenshot/location",
+      "endpoint_description": "`W-BROWSER-LAB` controls → isolated browser → screenshot/location",
       "trigger": "Explicit lab navigation/click/key/scroll operations.",
       "interactions": "Developer utility feedback loop; never an Inbox/Agents page transition.",
       "from": [
@@ -9965,7 +10019,7 @@
         "browser",
         "go"
       ],
-      "element_description": "**heading**, **subtitle**, **refresh** \u201cRefresh issues and releases\u201d; shared **error** alert; **search** \u201cSearch reports\u201d, **processing-filter**, **component-filter**, **version-filter**; **empty** result message; repeated **select** report button, **row-processing**, **row-component**, **row-id**; conditional **load-more** \u201cLoad more reports\u201d.",
+      "element_description": "**heading**, **subtitle**, **refresh** “Refresh issues and releases”; shared **error** alert; **search** “Search reports”, **processing-filter**, **component-filter**, **version-filter**; **empty** result message; repeated **select** report button, **row-processing**, **row-component**, **row-id**; conditional **load-more** “Load more reports”.",
       "state_description": "Rows show independent processing and component identity, with an Unknown component fallback and aria-pressed selection. Zero results show the empty message, including while an initial query is pending. Load more is present only with a next cursor and disabled only while its requested additional page is pending; background refresh keeps it usable; refresh is disabled during a mutation. The shared error alert also reports detail, mutation and external-link failures.",
       "interactions": "Query changes reset pagination through C-REPORT-QUERY. C-REPORT-MORE extends the loaded range; journal updates preserve and refresh it, including a pending Load more request. C-REPORT-SELECT reads the selected report. C-REPORT-REFRESH reads issue and release evidence without starting an agent. Continuing slow background refreshes do not prevent an additional page request; repeated clicks while that request is pending do not add extra pages."
     },
@@ -10208,7 +10262,7 @@
       ],
       "connection_type": "connection-selects",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.select` \u2192 `W-REPORT-DETAIL`",
+      "endpoint_description": "`W-REPORT-LIST.select` → `W-REPORT-DETAIL`",
       "trigger": "Report row selection",
       "interactions": "Reads selected report without starting an agent. Selection and mutation ordering discard superseded details; journal updates queue a refresh behind a pending read so details can progress during ongoing changes."
     },
@@ -10256,7 +10310,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-DETAIL.add-evidence` \u2192 `W-REPORT-DETAIL`, `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-DETAIL.add-evidence` → `W-REPORT-DETAIL`, `W-REPORT-LIST`",
       "trigger": "Add evidence; selected report ID, draft text and retained idempotency key.",
       "interactions": "Append idempotent host observations and queue reports waiting for information. After an uncertain response, an unchanged draft can be retried without duplicate additions; editing the retained draft permits another observation."
     },
@@ -10304,7 +10358,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-DETAIL.resume` \u2192 `W-REPORT-DETAIL`, `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-DETAIL.resume` → `W-REPORT-DETAIL`, `W-REPORT-LIST`",
       "trigger": "Resume or reconcile report; selected report ID, recovery note and effects acknowledgement.",
       "interactions": "Validate recovery prerequisites and acknowledgement before resuming retained work."
     },
@@ -10351,7 +10405,7 @@
       ],
       "connection_type": "connection-refreshes",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.refresh` \u2192 `W-REPORT-LIST`, `W-REPORT-DETAIL`",
+      "endpoint_description": "`W-REPORT-LIST.refresh` → `W-REPORT-LIST`, `W-REPORT-DETAIL`",
       "trigger": "Refresh issues and releases",
       "interactions": "Read external issue and verified delivery evidence, retaining successful state on failure; never starts an agent."
     },
@@ -10374,7 +10428,7 @@
       ],
       "connection_type": "connection-selects",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.search/processing-filter/component-filter/version-filter` \u2192 `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-LIST.search/processing-filter/component-filter/version-filter` → `W-REPORT-LIST`",
       "trigger": "Search or processing/component/version filter changes; current query values.",
       "interactions": "Loads the matching report subset and resets the loaded range to its first page. Existing selected detail remains independently selected.",
       "assertions": [
@@ -10417,7 +10471,7 @@
       ],
       "connection_type": "connection-refreshes",
       "external_boundary": false,
-      "endpoint_description": "`W-REPORT-LIST.load-more` \u2192 `W-REPORT-LIST`",
+      "endpoint_description": "`W-REPORT-LIST.load-more` → `W-REPORT-LIST`",
       "trigger": "Load more reports; current query, next cursor and loaded range.",
       "interactions": "Extends the displayed range with bounded pages and unique report IDs. Journal updates retain pending pagination and refresh the loaded range. Background refresh leaves pagination available; an already pending page request suppresses duplicate clicks.",
       "assertions": [
@@ -10462,7 +10516,7 @@
       ],
       "connection_type": "connection-external",
       "external_boundary": true,
-      "endpoint_description": "`W-REPORT-DETAIL.open-issue/open-fix/open-release` \u2192 external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL`",
+      "endpoint_description": "`W-REPORT-DETAIL.open-issue/open-fix/open-release` → external GitHub issue, fix PR/commit or release page; owned endpoint `W-REPORT-DETAIL`",
       "trigger": "Open a retained issue, fix or release URL through the host.",
       "interactions": "Sends the stored URL to the host open-link boundary; a fix without a PR uses its repository/commit URL. Failures use the shared report error alert. Opening a link does not verify issue, fix or release state.",
       "assertions": [
@@ -10632,7 +10686,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Conversation Back \u2192 originating work or Messages tab",
+      "endpoint_description": "Conversation Back → originating work or Messages tab",
       "trigger": "Back action on the record page.",
       "interactions": "Restores list query, scroll and row focus when the row exists; missing rows leave a usable focus fallback. Ordinary drafts remain keyed to their records.",
       "from": [
@@ -10846,7 +10900,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Host open_settings invocation \u2192 independent settings document",
+      "endpoint_description": "Host open_settings invocation → independent settings document",
       "trigger": "The settings entry tool advertises its own content-specific resource and output template.",
       "interactions": "Opens configuration in its own view. The inbox entry and legacy resource remain inbox-only. Both surfaces reuse authenticated bridged tools without owner credentials or direct iframe localhost access.",
       "from": [
@@ -11147,7 +11201,7 @@
         "tooling",
         "browser"
       ],
-      "endpoint_description": "First-message Start \u2192 retained run conversation",
+      "endpoint_description": "First-message Start → retained run conversation",
       "trigger": "Explicit Start with the visible message and authority.",
       "interactions": "Prepares then starts once; verifies the same run after an uncertain response. Preserves per-item draft and recovery state.",
       "from": [
@@ -12055,7 +12109,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Owner usage settings \u2192 persisted request limits and cached accounting",
+      "endpoint_description": "Owner usage settings → persisted request limits and cached accounting",
       "trigger": "Save system defaults or read cached Settings.",
       "interactions": "Validates and persists bounded request budget/reserve/poll interval; omitted fields from older clients retain their saved values. Budget-only changes preserve assessment policy identity.",
       "from": [
@@ -12104,7 +12158,7 @@
         "browser",
         "go"
       ],
-      "endpoint_description": "Saved managed skill selection \u2192 selected authoring fields",
+      "endpoint_description": "Saved managed skill selection → selected authoring fields",
       "trigger": "Select or reload one managed skill.",
       "interactions": "Loads saved content for the selected managed editor, retains other drafts on failure and rejects stale selection responses.",
       "from": [
@@ -12260,13 +12314,38 @@
         },
         {
           "path": "internal/prreview/workflow.go",
-          "anchor": "func (w *Workflow) execute(",
+          "anchor": "func (r *reviewExecution) complete(",
           "purpose": "Report completion only after engineering assessment and durable result binding; retain incomplete state on earlier faults and preserve completion on later notification/publication failures."
         },
         {
           "path": "internal/store/store.go",
           "anchor": "func ListWithout[T any](",
           "purpose": "Remove legacy finding bodies before SQL-to-Go transfer on the actual initial-inbox and queue-tracking run-summary facade."
+        },
+        {
+          "path": "internal/prreview/native.go",
+          "anchor": "func (a NativeAdapter) Execute(",
+          "purpose": "Production SDK actions, durable origin/gate journaling, ordered child reviews and app-answer reconciliation."
+        },
+        {
+          "path": "internal/app/review_workers.go",
+          "anchor": "func (m *Manager) productionReviewWorkers(",
+          "purpose": "Default independent Codex model workers and sandboxed command reviewers retain selected profile, model, effort and package resources."
+        },
+        {
+          "path": "internal/app/review_workers.go",
+          "anchor": "func (w reviewModelWorkers) command(",
+          "purpose": "Command execution explicitly selects full access only for the retained full-access profile; bounded profiles retain native named permissions and private environment filtering."
+        },
+        {
+          "path": "internal/app/review_worker_admission.go",
+          "anchor": "func admittedReviewCall[",
+          "purpose": "Commit execution-bound protection before actual worker dispatch; release only matching verified return proof and retain uncertainty on failed persistence or unjoined child work."
+        },
+        {
+          "path": "internal/app/sandbox.go",
+          "anchor": "func (m *Manager) taskSandboxWithNativeChild(",
+          "purpose": "Explicit command reviewers reuse existing native child auth/inventory/shim context independently of selected profile skills, preserving bounded roots and native read-only handling."
         }
       ],
       "assertions": [
@@ -12281,7 +12360,37 @@
         "API-REVIEW-COMPACT-SQL",
         "API-REVIEW-COMPACT-UI",
         "API-REVIEW-OWN-PUBLICATION-RECOVERY",
-        "API-REVIEW-COMPLETION-BOUNDARY"
+        "API-REVIEW-COMPLETION-BOUNDARY",
+        "API-REVIEW-PRODUCTION",
+        "API-REVIEW-ANSWER-INTENT",
+        "API-REVIEW-PUBLICATION-ONLY",
+        "API-REVIEW-WAIT-INTEGRITY",
+        "API-REVIEW-ANSWER-INTERRUPT",
+        "API-REVIEW-PROVIDER-JOIN",
+        "API-REVIEW-COMMAND-STOP",
+        "API-REVIEW-MODEL-STOP",
+        "API-REVIEW-CLEANUP-UNCERTAIN",
+        "API-REVIEW-GATE-WRITE-LOSS",
+        "API-REVIEW-CLEANUP-GUARD",
+        "API-REVIEW-MODEL-TOOL-JOIN",
+        "API-REVIEW-PACKAGE-BOUNDARY",
+        "API-REVIEW-COMMAND-PROFILE",
+        "API-REVIEW-WORKER-PROTECTION",
+        "API-REVIEW-ADMISSION-WRITE",
+        "API-REVIEW-PROOF-WRITE",
+        "API-REVIEW-FINALIZER-ROLLBACK",
+        "API-REVIEW-CRASH-ADMISSION",
+        "API-REVIEW-SESSION-MERGE",
+        "API-REVIEW-PROOF-PREPARATION",
+        "API-REVIEW-ADMISSION-STALE",
+        "API-REVIEW-COMMAND-ADMISSION",
+        "API-REVIEW-ADMISSION-COMPATIBILITY",
+        "API-REVIEW-ORCHESTRATOR-EXIT",
+        "API-REVIEW-COMMAND-NATIVE-CONTEXT",
+        "API-REVIEW-NATIVE-EXHAUSTION",
+        "API-REVIEW-NATIVE-STAGE-FAILURE",
+        "API-REVIEW-BLOCKED-SEND",
+        "API-REVIEW-INTERRUPT-RESULT-OWNERSHIP"
       ],
       "gaps": [],
       "suites": [
@@ -12290,7 +12399,7 @@
         "tooling"
       ],
       "element_description": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting.",
-      "state_description": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting. Broad status uses compact review accounting; a missing finding count stays unknown, and No actionable findings requires an explicitly known zero. Completion requires successful engineering assessment and a durably saved result; an older incomplete artifact cannot be promoted by an earlier failure.",
+      "state_description": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting. Broad status uses compact review accounting; a missing finding count stays unknown, and No actionable findings requires an explicitly known zero. Completion requires successful engineering assessment and a durably saved result; an older incomplete artifact cannot be promoted by an earlier failure. Fresh reviews execute the retained ordered workflow when runtime prerequisites are available. Completed children leave parent progress active until assessment and result retention succeed.",
       "interactions": "Retained review stage, completeness, provider failures/skips, posting state, omissions and verified receipt. Complete retained results allow explicit posting; uncertain operations allow reconciliation without reposting. Opening broad saved status does not load historical finding bodies; complete publication evidence remains in its retained artifact."
     },
     {
@@ -13084,7 +13193,7 @@
       "id": "UI-ATTENTION-CONTEXT",
       "path": "web/tests/factory.spec.ts",
       "anchor": "global attention selects its owning run and returns to its conversation after answering",
-      "assertion": "Global dialog identifies title/profile; answer leaves owning conversation selected and next message targets its run. After answering the removed global shortcut, keyboard focus moves to the owning task heading. Cross-run attention entered from another item\u2019s agent resets Back to the Agents list, avoiding the unrelated item."
+      "assertion": "Global dialog identifies title/profile; answer leaves owning conversation selected and next message targets its run. After answering the removed global shortcut, keyboard focus moves to the owning task heading. Cross-run attention entered from another item’s agent resets Back to the Agents list, avoiding the unrelated item."
     },
     {
       "id": "UI-START-UNKNOWN",
@@ -13132,7 +13241,7 @@
       "id": "UI-SINGLE-PAGE",
       "path": "web/tests/factory.spec.ts",
       "anchor": "single-page navigation preserves list context and drafts at",
-      "assertion": "1280px and 390px in both themes: no brand/header/footer/split/adjacent detail; full-width list; item replaces list; Back restores query/scroll/row focus; agent Back origins and per-record drafts remain without implicit work. Priority is inside the row selection button to the left of the title\u2019s first line, with no duplicate metadata badge or narrow overflow; checked geometrically in both themes at 390/1280px with a long title."
+      "assertion": "1280px and 390px in both themes: no brand/header/footer/split/adjacent detail; full-width list; item replaces list; Back restores query/scroll/row focus; agent Back origins and per-record drafts remain without implicit work. Priority is inside the row selection button to the left of the title’s first line, with no duplicate metadata badge or narrow overflow; checked geometrically in both themes at 390/1280px with a long title."
     },
     {
       "id": "UI-PAGE-FALLBACK",
@@ -13954,7 +14063,7 @@
       "id": "API-REVIEW-POLICY",
       "path": "internal/transport/review_workflow_test.go",
       "anchor": "func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(",
-      "assertion": "MCP omissions preserve new settings, null restores inheritance, launch false is retained and missing engine capabilities reject Start before model execution."
+      "assertion": "MCP omissions preserve new settings, null restores inheritance, launch false is retained and a missing retained reviewer skill rejects Start before evidence or model execution."
     },
     {
       "id": "API-REVIEW-POSTING",
@@ -14038,7 +14147,7 @@
       "id": "API-REVIEW-FINISHED-RECOVERY",
       "path": "internal/app/retained_review_test.go",
       "anchor": "func TestReviewRestartFinalizesSavedFinishedSessionWithoutReplay(",
-      "assertion": "Lost parent finalization after a saved finished review recovers the same complete artifact through restart/Resume without reviewer or automatic publication replay; explicit posting still accepts that recovered artifact."
+      "assertion": "Lost parent finalization after a saved finished review recovers the same complete artifact through restart/Resume without reviewer or automatic publication replay; explicit posting still accepts that recovered artifact. Verified worker-return proof is already committed before the parent-finalization write fails; the live owner retains that persistence error."
     },
     {
       "id": "UI-PR-POLICY-SAVE-ORDER",
@@ -14105,6 +14214,192 @@
       "path": "internal/app/single_codex_test.go",
       "anchor": "func TestSingleCodexExplicitSkillsRemainSelectedAndUnmodified(",
       "assertion": "Explicit empty or already-selected skills remain the retained profile selection while the iteration bundle is attached once without modifying the caller backing slice."
+    },
+    {
+      "id": "API-REVIEW-PRODUCTION",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestProductionReviewWorkersUseSelectedModelRetainedSkillAndSandboxedCommand(",
+      "assertion": "Production SDK and default model workers with fake Codex execute preparation, independent material check, retained skill, command correction and completion in exact order, retaining model/effort and sandbox/environment configuration."
+    },
+    {
+      "id": "API-REVIEW-ANSWER-INTENT",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestAcceptedReviewAnswerRecoversAppIntentBeforeEngineJournal(",
+      "assertion": "A durable application answer/continuation committed before SDK acceptance recovers once after manager restart; waiting occupies no execution capacity and repeated recovery cannot replay child work."
+    },
+    {
+      "id": "API-REVIEW-PUBLICATION-ONLY",
+      "path": "internal/prreview/workflow_test.go",
+      "anchor": "func TestCompletedPublicationRecoveryNeverRetriesExhaustedReviewers(",
+      "assertion": "A completed review with an exhausted skip and uncertain publication resumes only publication; each reviewer and assessment remains called once with one retained artifact."
+    },
+    {
+      "id": "API-REVIEW-WAIT-INTEGRITY",
+      "path": "internal/prreview/workflow_test.go",
+      "anchor": "func TestWaitingPreparationIntegrityPrecedesEngineAnswerConsumption(",
+      "assertion": "Corrupting a waiting preparation capture rejects continuation before SDK answer acceptance or consumption; the durable gate remains pending and no reviewers start."
+    },
+    {
+      "id": "API-REVIEW-ANSWER-INTERRUPT",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestReviewAnswerContinuationCannotUndoInterrupt(",
+      "assertion": "A later explicit interrupt wins the exact app-answer-commit/automatic-admission race; accepted answer remains retained for an explicit Resume."
+    },
+    {
+      "id": "API-REVIEW-PROVIDER-JOIN",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestProductionReviewInterruptJoinsProviderProcess(",
+      "assertion": "The production provider blocked before native turn acknowledgement is reaped; interruption reports missing admission/shutdown proof instead of claiming verified child shutdown."
+    },
+    {
+      "id": "API-REVIEW-COMMAND-STOP",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestProductionCommandInterruptTerminatesSeparateReviewerSession(",
+      "assertion": "Production native command termination kills and joins a separate TERM-ignoring reviewer session before Interrupt returns, preserving native process identity and environment controls."
+    },
+    {
+      "id": "API-REVIEW-MODEL-STOP",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestProductionModelInterruptTerminatesSeparateToolSession(",
+      "assertion": "Production native turn interruption joins a model tool in a separate TERM-ignoring session before reaping the provider and acknowledging Interrupt."
+    },
+    {
+      "id": "API-REVIEW-CLEANUP-UNCERTAIN",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestReviewInterruptReportsUnverifiedChildCleanup(",
+      "assertion": "Unverified child cleanup durably blocks repeated Resume, continue/resume messages and automatic continuation before and after manager restart, preserving the same execution, error, stop intent and checkpoints without additional child work."
+    },
+    {
+      "id": "API-REVIEW-GATE-WRITE-LOSS",
+      "path": "internal/prreview/workflow_test.go",
+      "anchor": "func TestEngineGateProjectionWriteLossReconcilesAcceptedAnswer(",
+      "assertion": "An interrupted app projection after SDK gate commit is recovered using exact accepted answer identity; the resumed review completes with each reviewer called once."
+    },
+    {
+      "id": "API-REVIEW-CLEANUP-GUARD",
+      "path": "internal/prreview/workflow_test.go",
+      "anchor": "func TestUnverifiedWorkerCleanupStopsOrderedDispatch(",
+      "assertion": "Cleanup uncertainty is a guard failure rather than a classified provider skip; later configured reviewers never execute and completion remains false."
+    },
+    {
+      "id": "API-REVIEW-MODEL-TOOL-JOIN",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestProductionModelInterruptTerminatesSeparateToolSession(",
+      "assertion": "Native model turn interruption joins its separate TERM-ignoring tool session before acknowledging parent interruption."
+    },
+    {
+      "id": "API-REVIEW-PACKAGE-BOUNDARY",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestCommandPackageRootIgnoresInvalidGitAncestor(",
+      "assertion": "A stray ancestor Git marker cannot establish a reviewer package or retain unrelated owner files."
+    },
+    {
+      "id": "API-REVIEW-CLEANUP-VERIFIED-RESUME",
+      "path": "internal/app/review_workers_test.go",
+      "anchor": "func TestReviewVerifiedChildCleanupAllowsResume(",
+      "assertion": "Verified reviewer shutdown permits explicit Resume before and after manager restart, reusing the completed reviewer checkpoint and completing exactly one assessment without a cleanup barrier."
+    },
+    {
+      "id": "API-REVIEW-COMMAND-PROFILE",
+      "path": "internal/app/review_command_profile_test.go",
+      "anchor": "func TestProductionReviewCommandUsesSelectedSandboxProfile(",
+      "assertion": "Production command requests explicitly preserve selected full access against conflicting ambient read-only policy. Read-only and workspace-write selections retain named bounded permissions without a per-command override. The three cases execute with retained stdin, private XDG/TMPDIR, filtered attempt environment and no request PATH override; protocol fixtures do not establish native OS sandbox enforcement."
+    },
+    {
+      "id": "API-REVIEW-WORKER-PROTECTION",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewWorkerAdmissionAndVerifiedReturn(",
+      "assertion": "All four worker operations enter only after an execution/attempt/stage-bound admission is committed. Success, joined provider failure and verified cancellation clear it before return; ErrWorkerCleanup retains it."
+    },
+    {
+      "id": "API-REVIEW-ADMISSION-WRITE",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewWorkerAdmissionWriteFailureStartsNoWorkers(",
+      "assertion": "A failed pre-dispatch admission transaction invokes no worker. Later operations in that execution remain stopped; rollback leaves no invented admission."
+    },
+    {
+      "id": "API-REVIEW-PROOF-WRITE",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewWorkerProofWriteFailureStopsLaterDispatch(",
+      "assertion": "A failed shutdown-proof write for each worker operation retains the matching admission and prevents every later worker operation even after storage becomes writable."
+    },
+    {
+      "id": "API-REVIEW-FINALIZER-ROLLBACK",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewCleanupFinalizationFailureBlocksRestart(",
+      "assertion": "Cleanup retention failure before the finalizer callback, at retained-state/event/UI-change writes or at deferred-constraint commit returns a typed cleanup/persistence error from Interrupt. Earlier admission survives rollback, disk reopen and restart; repeated replacement routes preserve state and dispatch no workers."
+    },
+    {
+      "id": "API-REVIEW-CRASH-ADMISSION",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewAbruptWorkerLossRetainsAdmission(",
+      "assertion": "A real helper process enters a wrapped fake worker only after its admission commits, then is killed without a worker return. Disk reopen/recovery preserves that exact unmatched admission and refuses Resume, operational messages and automatic answer continuation with zero replacement worker calls. This fixture does not exercise real-provider crash survival."
+    },
+    {
+      "id": "API-REVIEW-SESSION-MERGE",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewSessionSavePreservesWorkerAdmission(",
+      "assertion": "A Session save during admitted work updates its checkpoint while preserving the current stored worker admission and cleanup diagnostic; later finalization cannot erase that protection."
+    },
+    {
+      "id": "API-REVIEW-PROOF-PREPARATION",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewVerifiedReturnWriteFailureStopsPreparation(",
+      "assertion": "Preparation whose verified-return proof cannot be persisted retains its admission and incomplete Session. No material check, reviewer or completion worker starts, and Interrupt/continuation report the missing proof."
+    },
+    {
+      "id": "API-REVIEW-ADMISSION-STALE",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewWorkerProofCannotClearAnotherAdmission(",
+      "assertion": "A worker return whose attempt identity no longer matches cannot clear a different retained admission."
+    },
+    {
+      "id": "API-REVIEW-COMMAND-ADMISSION",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewCommandDelegationRetainsWorkerAdmission(",
+      "assertion": "CommandWorkers delegates a command reviewer while its single outer execution-bound worker admission is present."
+    },
+    {
+      "id": "API-REVIEW-ADMISSION-COMPATIBILITY",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewHistoricalWorkerIdentityRequiresFreshPreparation(",
+      "assertion": "An old unwrapped worker identity cannot accept an answer or dispatch resumed workers. Historical gate/checkpoint/artifact metadata remains unchanged and fresh preparation is required."
+    },
+    {
+      "id": "API-REVIEW-ORCHESTRATOR-EXIT",
+      "path": "internal/app/review_worker_admission_test.go",
+      "anchor": "func TestReviewOrchestratorExitCannotAcknowledgeAdmittedWorker(",
+      "assertion": "An adapter that exits without waiting for an admitted worker cannot acknowledge verified shutdown: the finalizer checks the durable pending admission, Interrupt returns cleanup uncertainty, and replacement routes preserve the barrier."
+    },
+    {
+      "id": "API-REVIEW-COMMAND-NATIVE-CONTEXT",
+      "path": "internal/app/review_command_context_test.go",
+      "anchor": "func TestProductionCommandWithoutSkillsRetainsNativeContext(",
+      "assertion": "An explicit bounded command reviewer with empty profile skills receives the existing task-private native launcher, retained plugin inventory, dummy authentication references and native overrides. Read-only supported invocation uses its private native context with only state directories writable; workspace-write keeps its selected policy. Root deny, private-sibling exclusion, filtered environment and retained stdin remain intact. Protocol fixtures use dummy stores and synthetic kernel flags, not native OS sandbox enforcement."
+    },
+    {
+      "id": "API-REVIEW-NATIVE-EXHAUSTION",
+      "path": "internal/app/review_worker_edges_test.go",
+      "anchor": "func TestProductionReviewerPreservesNativeUsageExhaustion(",
+      "assertion": "Native failed turns with exact usageLimitExceeded info become exhausted reviewer skips. A later configured reviewer still succeeds and one assessment completes the review; all-exhausted remains incomplete, while generic failed and incomplete outcomes remain distinct failures without extra correction attempts."
+    },
+    {
+      "id": "API-REVIEW-NATIVE-STAGE-FAILURE",
+      "path": "internal/app/review_worker_edges_test.go",
+      "anchor": "func TestProductionUsageExhaustionOutsideReviewRemainsFailure(",
+      "assertion": "Native usage-limit failure during preparation, material choice or completion stays a stage failure and never becomes reviewer success or an exhaustion response."
+    },
+    {
+      "id": "API-REVIEW-BLOCKED-SEND",
+      "path": "internal/app/review_worker_edges_test.go",
+      "anchor": "func TestProductionCommandBlockedSendHasBoundedCleanup(",
+      "assertion": "A fake provider stops reading after initialization while a valid 64 KiB command argument blocks request transmission. Interrupt returns within the bounded cleanup margin with ErrWorkerCleanup, reaps the provider and joins local RPC goroutines; durable admission/stop intent blocks Resume, continuation and all later worker dispatch without claiming native shutdown proof."
+    },
+    {
+      "id": "API-REVIEW-INTERRUPT-RESULT-OWNERSHIP",
+      "path": "internal/app/review_interrupt_result_test.go",
+      "anchor": "func TestReviewInterruptRetainsJoinedExecutionOutcome(",
+      "assertion": "After verified worker return, a failed parent-finalization write remains bound to its original execution. The shared interrupt wait pauses before consuming that result while explicit Resume completes a replacement; the old waiter still returns the same typed persistence error and cannot alter replacement state or replay work."
     }
   ],
   "source_map": [
@@ -14334,7 +14629,7 @@
       "path": "internal/gateway/gateway.go",
       "anchor": "func (g *Gateway) Private(",
       "entities": "`PAGE-OWNER-CONSENT`, `P-OWNER-CONSENT`, `W-OWNER-CONSENT`, `C-CONSENT`.",
-      "detail": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
+      "detail": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence.",
       "anchors": [
         "func (g *Gateway) Private("
       ],
@@ -15138,7 +15433,8 @@
         "API-REVIEW-COMPACT-SQL",
         "API-REVIEW-COMPACT-UI",
         "API-REVIEW-OWN-PUBLICATION-RECOVERY",
-        "API-REVIEW-COMPLETION-BOUNDARY"
+        "API-REVIEW-COMPLETION-BOUNDARY",
+        "API-REVIEW-COMMAND-PROFILE"
       ],
       "gap": {
         "version": 1,
@@ -15146,8 +15442,8 @@
         "kind": "known-limitation",
         "severity": "P1",
         "owner": "ui-specification-maintainer",
-        "reason": "The production adapter recognizes available registered Go actions, but the pinned upstream engine still lacks ordered dynamic iteration and durable external waits. Only deterministic fixtures verify the complete review path.",
-        "next_verification": "Integrate remaining upstream engine issues 26 and 27 using the available registered Go action contract, then explicitly validate installed-host progress, material questions and verified receipts."
+        "reason": "Registered Go actions, ordered dynamic iteration and durable external-input waits are integrated in the pinned production engine and verified through deterministic fixtures. Real-provider execution, installed-host progress and material-question handling, and real GitHub publication acceptance remain unverified.",
+        "next_verification": "Run explicitly authorized real-provider and installed-host acceptance for review progress, material questions, checkpoint recovery and verified publication receipts; preserve these gaps until the actual boundaries are observed."
       }
     }
   ],
@@ -15618,7 +15914,7 @@
           ],
           "headers": [
             "ID",
-            "From \u2192 to",
+            "From → to",
             "Trigger and carried context",
             "Result/type"
           ]

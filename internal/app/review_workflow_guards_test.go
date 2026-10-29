@@ -81,7 +81,7 @@ func TestReviewCaptureRejectsRemoteHeadDriftWithUnchangedSavedItem(t *testing.T)
 		if err != nil {
 			t.Fatal(err)
 		}
-		done := owner.reviewDone
+		done := owner.reviewResult.done
 		unlock()
 		select {
 		case <-done:
@@ -294,7 +294,7 @@ func waitGuardReviewDone(t *testing.T, a *App, id string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	done := owner.reviewDone
+	done := owner.reviewResult.done
 	unlock()
 	select {
 	case <-done:

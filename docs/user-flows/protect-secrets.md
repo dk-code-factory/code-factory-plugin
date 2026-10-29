@@ -139,6 +139,8 @@ flowchart TD
 - [internal/aiworkflows/workflows/review.yml](../../internal/aiworkflows/workflows/review.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/aiworkflows/workflows/task.yml](../../internal/aiworkflows/workflows/task.yml) — Embedded model-turn workflow definition and native structured-output contract where applicable. (`name:`)
 - [internal/transport/ui_state.go](../../internal/transport/ui_state.go) — Requested public projections exclude credential and private retained-source buckets. (`func (s *Server) readUIState(`)
+- [internal/app/review_workers.go](../../internal/app/review_workers.go) — Command execution explicitly selects full access only for the retained full-access profile; bounded profiles retain native named permissions and private environment filtering. (`func (w reviewModelWorkers) command(`)
+- [internal/app/sandbox.go](../../internal/app/sandbox.go) — Explicit command reviewers reuse existing native child auth/inventory/shim context independently of selected profile skills, preserving bounded roots and native read-only handling. (`func (m *Manager) taskSandboxWithNativeChild(`)
 
 ## Test references
 
@@ -196,6 +198,8 @@ flowchart TD
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestAssessmentWorkflowEnforcesYAMLSchemaBoundsWithoutReplay(`; S2. Actual YAML assessment rejects independent upper/lower priority and confidence violations with failed caller/workflow status, accepts exact boundaries, retains native schema and one turn, and excludes private response canaries from status/diagnostics.
 - [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIProjectionExcludesPrivateSourceSkillFilesAndCredentials`; S1. Messages/settings public projections contain no source snapshot, skill files/content or saved owner credential markers.
 - [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIManagedSkillEditorReadsOnlySelectedContent`; S1. Only the selected authorized managed content is returned; broad lists and all editor reads omit private files/unrelated bodies.
+- [internal/app/review_command_profile_test.go](../../internal/app/review_command_profile_test.go) — `func TestProductionReviewCommandUsesSelectedSandboxProfile(`; S5. Production command requests explicitly preserve selected full access against conflicting ambient read-only policy. Read-only and workspace-write selections retain named bounded permissions without a per-command override. The three cases execute with retained stdin, private XDG/TMPDIR, filtered attempt environment and no request PATH override; protocol fixtures do not establish native OS sandbox enforcement.
+- [internal/app/review_command_context_test.go](../../internal/app/review_command_context_test.go) — `func TestProductionCommandWithoutSkillsRetainsNativeContext(`; S5. An explicit bounded command reviewer with empty profile skills receives the existing task-private native launcher, retained plugin inventory, dummy authentication references and native overrides. Read-only supported invocation uses its private native context with only state directories writable; workspace-write keeps its selected policy. Root deny, private-sibling exclusion, filtered environment and retained stdin remain intact. Protocol fixtures use dummy stores and synthetic kernel flags, not native OS sandbox enforcement.
 
 ## Verification and gaps
 

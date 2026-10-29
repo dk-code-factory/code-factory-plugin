@@ -30,32 +30,45 @@ Pinned parity fixtures retain source hashes, reviewer responses, Decisions,
 preparation analysis, JSON hashes and inline locations; their generator takes a
 separate local checkout and never downloads source or invokes providers in CI.
 
-## Engine dependency
+## Production engine integration
 
-The production adapter inspects the pinned SDK's `workflows.Capabilities()`
-contract and rejects execution before evidence capture or model work when required
-contracts are unavailable. Code Factory now pins agent-workflow merge commit
-`b90c72a38b86462730257fac48d2db093f1f8194` (PR #33), which supplies
-[registered application Go actions #25](https://github.com/dk-code-factory/agent-workflow/issues/25):
-validated action names, typed schemas, implementation identity, durable journaling
-and recovery validation. Go action support is available and is no longer reported
-as a missing dependency.
+Code Factory pins agent-workflow merge commit
+`0606a1b9d16e8741bab684233ab49b96f34ea02e` (PR #36). The SDK exposes registered
+Go actions, ordered dynamic iteration and durable external-input waits. The
+production adapter verifies all three capabilities before evidence capture or
+model work. Missing runtime dependencies fail before capture; fresh reviews never
+fall back to a legacy parent model turn.
 
-The remaining required contracts are still unavailable:
+Embedded workflows register typed application actions for capture, preparation,
+review, assessment and publication. Reusable preparation workflows suspend with
+SDK `input/wait`; reusable reviewer children run through ordered `for-each` with
+stable configured IDs. Provider failures and usage exhaustion remain classified,
+so later reviewers execute while guard failures stop dispatch. Application
+artifacts preserve partial findings even when the engine stops a dependent job.
 
-- [Ordered dynamic iteration #26](https://github.com/dk-code-factory/agent-workflow/issues/26):
-  reusable reviewer workflows, pinned ordered items, stable IDs, individual
-  checkpoints, deterministic aggregation and classified failure handling.
-- [Durable external-input waits #27](https://github.com/dk-code-factory/agent-workflow/issues/27):
-  correlated once-only answers, stale-answer rejection, restart persistence and
-  suspension without occupying a worker.
+Default production workers use independent Codex threads through the existing
+YAML model-turn transport, retaining selected model, effort and profile controls.
+Skill workers use captured package resources. Command workers receive pinned
+`git-diff-v1` handoffs and bounded correction instructions through private stdin,
+executing through the existing native permissions and environment controls.
+Captured package bytes remain in private snapshots rather than being copied into
+every model prompt. Command cancellation uses the native process identity to
+terminate and join its separate process group. Model cancellation sends a native
+turn interrupt and joins terminal delivery before reaping the provider; missing
+admission or shutdown proof stops dispatch with an explicit retained error.
+Native reviewer usage-limit failures retain exhausted-skip accounting; the same
+failure in preparation, material checks or completion remains a stage failure.
+Command cancellation also bounds termination requests waiting behind blocked
+request writes; provider teardown joins local calls while missing child shutdown
+proof keeps the durable admission barrier in place.
+Individual session captures are readable; shared engine journals are not granted
+to bounded workers. Child notifications cannot change parent run status.
 
-`prreview.EngineAdapter` isolates these contracts. `FixtureAdapter` is selected
-explicitly by deterministic tests and is never enabled by an environment variable
-or production configuration. The production execution bridge stays gated until
-all required contracts can be integrated; a supported library capability alone
-does not establish application action readiness. Missing-capability diagnostics
-name only the absent contracts and their upstream issues. There is no automatic fallback for a workflow-mode review. Single Codex mode is
+`FixtureAdapter` remains an explicit deterministic test option. The regression
+fixtures also run the production SDK adapter with fake workers, GitHub fixtures
+and a fake Codex transport; they exercise the production default worker wiring.
+Installed-host and real-provider acceptance remain separate opt-ins.
+There is no automatic fallback for a workflow-mode review. Single Codex mode is
 selected explicitly before preparing a new run.
 
 ## Execution and retained state
@@ -69,7 +82,8 @@ cannot finish the parent run.
 Evidence contains remote base/head, full inventory, normalized final merge-base
 diff, isolated checkout/tree, linked scope, published Decisions, private rules and
 owner constraints. Retained skill/command bindings freeze their package resources
-and execution arguments. Commands receive the flat pinned `git-diff-v1` handoff,
+and execution arguments. Invalid ancestor Git markers cannot expand a standalone
+command into an unrelated directory capture. Commands receive the flat pinned `git-diff-v1` handoff,
 with output/correction instructions on stdin and bounded native attempt metadata.
 Preparation captures are revalidated around each reviewer and final assessment.
 Guard failures stop the workflow; provider failures
@@ -92,17 +106,36 @@ hashes and a pristine runtime tree, including no ignored bytecode or untracked
 modules, before isolated Python execution. Ordinary CI checks this identity guard
 with offline fixtures and never fetches the optional source checkout. Old runtime
 files are not silently upgraded.
-Action implementation identity, exact head, engineering inputs and ordered bindings
+Action and model-worker implementation identities, exact head, engineering inputs and ordered bindings
 must match before reuse. Only completed reviewer checkpoints can be reused.
 
 Material questions appear through the existing attention controls. Waiting releases
 execution; answers are correlated with the gate and its engineering identity and
-claimed together with attention resolution. Interrupted reviews resume explicitly after the previous execution stops. A
+claimed together with attention resolution. Each actual preparation, material check,
+reviewer and completion-worker call first commits an execution-bound admission.
+Command delegation stays inside that same worker boundary. Failed admission writes
+start no worker. A matching verified worker return clears its admission before
+checkpoint, gate, result or parent-finalization saves; uncertain cleanup and failed
+proof persistence retain it and stop later workers. Session saves preserve this
+protection. All replacement paths reject unmatched admissions, including after an
+abrupt daemon crash or a failed cleanup-state write. Orchestrator exit supplies no
+shutdown proof. Finalization failures remain bound to the execution joined by each interrupt
+waiter, even when a later verified Resume has already replaced the live execution. No automatic clearance or recovery
+override is provided. Verified shutdown, no-child waits/answers and saved finished
+reviews retain their recovery paths. A
 completed review with unfinished publication resumes only its remaining policy
 and publication stages. Execution identities fence stale saves and finalizers.
 `send_message` accepts an operational `continue` or `resume`; changed engineering
 instructions require a fresh prepared review. Restart preserves unanswered gates
-and immutable artifacts without replaying answers or publication.
+and immutable artifacts without replaying answers or publication. Each review
+retains its SDK origin/generation and gate references beside the application
+session. Its private per-session SQLite journal reopens under the session lock;
+immutable admission identity recovers an interrupted origin-ID write. Accepted
+answer identity and continuation intent first commit with attention resolution in
+the app transaction, then reconcile into the SDK journal. A restart between these
+writes preserves exactly one continuation. Evidence is revalidated before answer
+consumption. Explicit interruption joins active children and prevents automatic
+continuation; ordinary interrupted work requires explicit Resume.
 
 ## Settings and authority
 
@@ -139,6 +172,7 @@ placement cannot create a second submission for that review. Unsubmitted stale
 snapshots can be refreshed after the complete previous intent is archived.
 Neither posting again nor reconciliation repeats an uncertain mutation. Unrelated pending drafts remain untouched.
 
-Fixture verification covers these contracts only. Production engine integration,
-real providers, installed-host acceptance and real GitHub publication remain
-unverified until the upstream dependencies and explicit opt-in acceptance exist.
+Fixture verification exercises production integration only through fake external
+boundaries. Real providers, installed-host acceptance and real GitHub publication
+remain unverified until explicit opt-in acceptance. This change does not install
+or update the running service.

@@ -12,7 +12,7 @@ import (
 
 func TestRetainedReviewContinuationHonorsPluginMaintenance(t *testing.T) {
 	for _, operation := range []string{"continue", "resume"} {
-		for _, adapter := range []string{"fixture", "production"} {
+		for _, adapter := range []string{"fixture", "unavailable"} {
 			t.Run(operation+"/"+adapter, func(t *testing.T) {
 				a, item, workers, collector := retainedFixture(t)
 				ctx := a.Runs.ctx
@@ -43,8 +43,8 @@ func TestRetainedReviewContinuationHonorsPluginMaintenance(t *testing.T) {
 					t.Fatal(err)
 				}
 				prepareCalls, reviewCalls, captures := workers.prepareCalls, workers.reviewCalls, collector.captures
-				if adapter == "production" {
-					a.ReviewEngine = nil
+				if adapter == "unavailable" {
+					a.ReviewEngine = unavailableReviewEngine{}
 				}
 				assertUnchanged := func() {
 					t.Helper()
@@ -75,12 +75,12 @@ func TestRetainedReviewContinuationHonorsPluginMaintenance(t *testing.T) {
 				}
 				assertUnchanged()
 				unlock()
-				if adapter == "production" {
+				if adapter == "unavailable" {
 					if _, err = a.Runs.QueueMessage(ctx, run.ID, operation, ""); err == nil || !strings.Contains(err.Error(), prreview.OrderedIteration) {
 						t.Fatal("released maintenance lost production capability rejection", err)
 					}
 					assertUnchanged()
-					a.ReviewEngine = prreview.FixtureAdapter{}
+					a.ReviewEngine = nil
 				}
 				if _, err = a.Runs.QueueMessage(ctx, run.ID, operation, "stale-turn"); err == nil {
 					t.Fatal("retained continuation accepted stale turn authority")

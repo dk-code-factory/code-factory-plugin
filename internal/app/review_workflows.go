@@ -184,13 +184,28 @@ func (m *Manager) reviewBindings(ctx context.Context, reviewers []prreview.Revie
 }
 
 type retainedReview struct {
-	Session       prreview.Session   `json:"session"`
-	Bindings      []prreview.Binding `json:"bindings"`
-	Rules         string             `json:"rules"`
-	Configuration string             `json:"configuration"`
+	Session       prreview.Session       `json:"session"`
+	Bindings      []prreview.Binding     `json:"bindings"`
+	Rules         string                 `json:"rules"`
+	Configuration string                 `json:"configuration"`
+	CleanupError  string                 `json:"cleanupError,omitempty"`
+	PendingWorker *reviewWorkerAdmission `json:"pendingWorker,omitempty"`
+}
+
+// A waiter keeps its execution's result even after the session starts another.
+// err is written before done closes and remains immutable afterwards.
+type reviewExecutionResult struct {
+	done chan struct{}
+	err  error
 }
 
 func (m *Manager) startReviewWorkflow(ctx context.Context, launch domain.Run, resume bool) (domain.Run, error) {
+	return m.startReviewWorkflowIntent(ctx, launch, resume, "")
+}
+
+// expectedAnswer fences automatic continuation against a later explicit interrupt.
+// An explicit user Resume has no answer fence and may clear interruption intent.
+func (m *Manager) startReviewWorkflowIntent(ctx context.Context, launch domain.Run, resume bool, expectedAnswer string) (domain.Run, error) {
 	if launch.ReviewWorkflow != prreview.Contract {
 		return launch, errors.New("unknown retained review workflow contract")
 	}
@@ -222,14 +237,17 @@ func (m *Manager) startReviewWorkflow(ctx context.Context, launch domain.Run, re
 	if err = m.app.reviewAdapter().Check(ctx); err != nil {
 		return launch, err
 	}
+	if err = m.reviewWorkerDependencies(launch); err != nil {
+		return launch, err
+	}
 	owner, unlock, err := m.lockRun(ctx, launch.ID, false)
 	if err != nil {
 		return launch, err
 	}
 	defer unlock()
-	if owner.reviewDone != nil {
+	if owner.reviewResult != nil {
 		select {
-		case <-owner.reviewDone:
+		case <-owner.reviewResult.done:
 		default:
 			return launch, errors.New("previous review execution is still stopping; resume after its retained status settles")
 		}
@@ -258,6 +276,25 @@ func (m *Manager) startReviewWorkflow(ctx context.Context, launch domain.Run, re
 	err = m.app.Store.Write(ctx, func(t *store.Tx) error {
 		if err := t.Get("run", launch.ID, &launch); err != nil {
 			return err
+		}
+		// Closing the execution result proves the orchestrator exited, not that every
+		// native child stopped. Keep that uncertainty across explicit resumes
+		// and daemon restarts; no admission path can clear it implicitly.
+		var current retainedReview
+		if err := t.Get("review-workflow", launch.ID, &current); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+		if err := reviewCleanupError(current); err != nil {
+			return err
+		}
+		if expectedAnswer != "" {
+			var accepted retainedReview
+			if err := t.Get("review-workflow", launch.ID, &accepted); err != nil {
+				return err
+			}
+			if launch.InterruptRequested || !launch.ResumePending || accepted.Session.Gate == nil || accepted.Session.Gate.AnswerID != expectedAnswer {
+				return errors.New("review answer remains accepted; explicit interruption stopped its continuation")
+			}
 		}
 		if launch.Status != "prepared" && !(resume && (launch.Status == "interrupted" || launch.Status == "failed")) {
 			return fmt.Errorf("review cannot start from %s", launch.Status)
@@ -298,12 +335,16 @@ func (m *Manager) startReviewWorkflow(ctx context.Context, launch domain.Run, re
 	owner.pending = map[string]domain.Attention{}
 	// All provider calls are children of this retained workflow. Native completion
 	// callbacks cannot reach the parent run's one-turn lifecycle.
-	done := make(chan struct{})
-	owner.reviewDone = done
-	if !m.background(func() { defer close(done); m.executeReviewWorkflow(lifetime, owner, retained, launch) }) {
+	execution := &reviewExecutionResult{done: make(chan struct{})}
+	owner.reviewResult = execution
+	if !m.background(func() {
+		defer close(execution.done)
+		m.executeReviewWorkflow(lifetime, owner, retained, launch, execution)
+	}) {
 		cancel()
-		close(done)
-		return launch, errors.New("daemon is stopping")
+		execution.err = errors.New("daemon is stopping")
+		close(execution.done)
+		return launch, execution.err
 	}
 	return launch, nil
 }
@@ -332,7 +373,7 @@ func (c launchReviewCollector) ValidateCurrent(ctx context.Context, e prreview.E
 	return c.Collector.ValidateCurrent(ctx, e)
 }
 
-func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, retained retainedReview, launch domain.Run) {
+func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, retained retainedReview, launch domain.Run, execution *reviewExecutionResult) {
 	id := retained.Session.ID
 	collector := m.app.ReviewCollector
 	if collector == nil {
@@ -342,7 +383,8 @@ func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, ret
 			collector = prreview.GitCollector{Remote: providers.ReviewGitHub{Client: providers.LiveGitHub(m.app.GitHub)}, Repository: repo.Checkout}
 		}
 	}
-	w := prreview.Workflow{Adapter: m.app.reviewAdapter(), Collector: collector, Workers: m.app.ReviewWorkers, Artifacts: m.app.reviewArtifacts(), Bindings: retained.Bindings, Rules: retained.Rules, Constraints: launch.Prompt}
+	workers := m.reviewWorkflowWorkers(launch, owner)
+	w := prreview.Workflow{Adapter: m.app.reviewAdapter(), Collector: collector, Workers: workers, Artifacts: m.app.reviewArtifacts(), Bindings: retained.Bindings, Rules: retained.Rules, Constraints: launch.Prompt}
 	head := launch.Base
 	if launch.SourceSnapshot != nil && launch.SourceSnapshot.Head != "" {
 		head = launch.SourceSnapshot.Head
@@ -365,7 +407,8 @@ func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, ret
 		owner.mu.Lock()
 		defer owner.mu.Unlock()
 		retained.Session = *state
-		return m.app.Store.Write(ctx, func(t *store.Tx) error {
+		var savedRun domain.Run
+		err := m.app.Store.Write(ctx, func(t *store.Tx) error {
 			var run domain.Run
 			if err := t.Get("run", id, &run); err != nil {
 				return err
@@ -400,15 +443,24 @@ func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, ret
 				summary := artifact.Result.Summary()
 				run.ReviewResult = &summary
 			}
-			if err := t.Put("review-workflow", id, retained); err != nil {
+			var current retainedReview
+			if err := t.Get("review-workflow", id, &current); err != nil {
+				return err
+			}
+			current.Session = *state
+			if err := t.Put("review-workflow", id, current); err != nil {
 				return err
 			}
 			if err := t.Put("run", id, run); err != nil {
 				return err
 			}
-			owner.run = run
+			savedRun = run
 			return t.Event("run.state", id, map[string]string{"id": id, "status": run.Status, "reviewStage": run.ReviewStage})
 		})
+		if err == nil {
+			owner.run = savedRun
+		}
+		return err
 	}
 	w.OnComplete = func(ctx context.Context, ref prreview.Reference) error {
 		var current domain.Run
@@ -458,10 +510,13 @@ func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, ret
 	}
 	owner.mu.Lock()
 	defer owner.mu.Unlock()
-	if owner.run.ReviewExecution == launch.ReviewExecution {
-		owner.retired = true
+	if owner.run.ReviewExecution != launch.ReviewExecution {
+		return
 	}
-	_ = m.app.Store.Write(context.WithoutCancel(ctx), func(t *store.Tx) error {
+	owner.retired = true
+	runErr = errors.Join(runErr, workers.failure)
+	var settled domain.Run
+	finalErr := m.app.Store.Write(context.WithoutCancel(ctx), func(t *store.Tx) error {
 		var run domain.Run
 		if err := t.Get("run", id, &run); err != nil {
 			return err
@@ -469,7 +524,14 @@ func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, ret
 		if run.ReviewExecution != launch.ReviewExecution || run.Status == "terminated" || run.Status == "cleaned" {
 			return nil
 		}
-		if errors.Is(runErr, prreview.ErrWaiting) {
+		var current retainedReview
+		if err := t.Get("review-workflow", id, &current); err != nil {
+			return err
+		}
+		// An adapter's return cannot certify a worker whose matching durable
+		// return proof is still missing, even if it returned no cleanup error.
+		runErr = errors.Join(runErr, reviewCleanupError(current))
+		if errors.Is(runErr, prreview.ErrWaiting) || (errors.Is(runErr, context.Canceled) && !run.InterruptRequested && retained.Session.Gate != nil && len(retained.Session.Gate.Answer) == 0) {
 			run.Status = "waiting"
 		} else if run.InterruptRequested || errors.Is(runErr, context.Canceled) {
 			run.Status = "interrupted"
@@ -482,21 +544,37 @@ func (m *Manager) executeReviewWorkflow(ctx context.Context, owner *session, ret
 		} else {
 			run.Status = "idle"
 		}
+		if errors.Is(runErr, prreview.ErrWorkerCleanup) {
+			run.Error = runErr.Error()
+			run.InterruptRequested = true
+			current.CleanupError = run.Error
+			if err := t.Put("review-workflow", id, current); err != nil {
+				return err
+			}
+		}
 		run.ReviewComplete = result.Complete
 		run.ResumePending = run.Status == "interrupted" && !run.InterruptRequested
-		owner.run = run
 		if err := t.Put("run", id, run); err != nil {
 			return err
 		}
+		settled = run
 		return t.Event("run.state", id, map[string]string{"id": id, "status": run.Status})
 	})
+	if errors.Is(runErr, prreview.ErrWorkerCleanup) {
+		execution.err = runErr
+	}
+	if finalErr != nil {
+		execution.err = errors.Join(execution.err, fmt.Errorf("review final state could not be retained: %w", finalErr))
+		owner.run.Error = errors.Join(runErr, execution.err).Error()
+	} else if settled.ID != "" {
+		owner.run = settled
+	}
 }
 func (m *Manager) interruptReviewWorkflow(ctx context.Context, id string) error {
 	owner, unlock, err := m.lockRun(ctx, id, false)
 	if err != nil {
 		return err
 	}
-	defer unlock()
 	if err = m.app.Store.Write(ctx, func(t *store.Tx) error {
 		var run domain.Run
 		if err := t.Get("run", id, &run); err != nil {
@@ -514,12 +592,57 @@ func (m *Manager) interruptReviewWorkflow(ctx context.Context, id string) error 
 		}
 		return t.Event("run.state", id, map[string]string{"id": id, "status": run.Status})
 	}); err != nil {
+		unlock()
 		return err
 	}
 	owner.cancelLifetime()
+	execution := owner.reviewResult
+	stopReason := owner.run.Error
+	unlock()
+	return waitReviewInterrupt(ctx, execution, stopReason)
+}
+
+func waitReviewInterrupt(ctx context.Context, execution *reviewExecutionResult, stopReason string) error {
+	if execution != nil {
+		select {
+		case <-execution.done:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+		if execution.err != nil {
+			return execution.err
+		}
+	}
+	if strings.Contains(stopReason, prreview.ErrWorkerCleanup.Error()) {
+		return fmt.Errorf("%w: %s", prreview.ErrWorkerCleanup, stopReason)
+	}
 	return nil
 }
 func (m *Manager) recoverReviewWorkflow(ctx context.Context, run domain.Run) error {
+	var saved retainedReview
+	if err := m.app.Store.Get(ctx, "review-workflow", run.ID, &saved); err != nil && !errors.Is(err, store.ErrNotFound) {
+		return err
+	}
+	if err := reviewCleanupError(saved); err != nil && run.Status != "cleaned" && run.Status != "terminated" {
+		run.Status = "interrupted"
+		run.ResumePending = false
+		run.InterruptRequested = true
+		if run.Error == "" {
+			run.Error = err.Error()
+		}
+		return m.app.Store.Put(ctx, "run", run.ID, run, "run.state")
+	}
+	if run.ResumePending && !run.InterruptRequested {
+		if saved.Session.Gate != nil && saved.Session.Gate.AnswerID != "" && len(saved.Session.Gate.Answer) > 0 {
+			run.Status = "interrupted"
+			if err := m.app.Store.Put(ctx, "run", run.ID, run, "run.state"); err != nil {
+				return err
+			}
+			_, err := m.startReviewWorkflowIntent(ctx, run, true, saved.Session.Gate.AnswerID)
+			return err
+		}
+	}
+
 	if run.Status != "running" && run.Status != "queued" && run.Status != "starting" {
 		return nil
 	}
@@ -539,7 +662,8 @@ func (m *Manager) answerReviewWorkflow(ctx context.Context, at domain.Attention,
 	if err := m.app.Store.Get(ctx, "run", at.RunID, &run); err != nil {
 		return err
 	}
-	if saved.Session.Implementation != prreview.ImplementationIdentity() {
+	workers := m.reviewWorkflowWorkers(run, nil)
+	if saved.Session.Implementation != prreview.ImplementationIdentity() || saved.Session.WorkerImplementation != prreview.WorkerIdentity(workers) {
 		return errors.New("review implementation changed; prepare a fresh review")
 	}
 	var evidence prreview.Evidence
@@ -574,6 +698,16 @@ func (m *Manager) answerReviewWorkflow(ctx context.Context, at domain.Attention,
 	if err = collector.ValidateCurrent(bounded, evidence); err != nil {
 		return fmt.Errorf("review question evidence is stale: %w", err)
 	}
+	if saved.Session.Preparation == nil {
+		return errors.New("review question has no retained preparation")
+	}
+	var preparation prreview.Preparation
+	if err = m.app.reviewArtifacts().Load(*saved.Session.Preparation, &preparation); err != nil {
+		return err
+	}
+	if err = preparation.Validate(evidence, saved.Bindings); err != nil {
+		return err
+	}
 	if err = evidence.ValidateCheckout(bounded); err != nil {
 		return err
 	}
@@ -581,8 +715,8 @@ func (m *Manager) answerReviewWorkflow(ctx context.Context, at domain.Attention,
 	if err != nil {
 		return err
 	}
-	if owner.reviewDone != nil {
-		done := owner.reviewDone
+	if owner.reviewResult != nil {
+		done := owner.reviewResult.done
 		unlock()
 		select {
 		case <-done:
@@ -595,6 +729,7 @@ func (m *Manager) answerReviewWorkflow(ctx context.Context, at domain.Attention,
 		}
 	}
 
+	acceptedAnswerID := ""
 	err = m.app.Store.Write(ctx, func(t *store.Tx) error {
 		var current domain.Attention
 		if err := t.Get("attention", at.ID, &current); err != nil {
@@ -664,6 +799,7 @@ func (m *Manager) answerReviewWorkflow(ctx context.Context, at domain.Attention,
 		if err := prreview.AcceptAnswer(&retained.Session, at.ID, retained.Session.Gate.EvidenceID, raw(values)); err != nil {
 			return err
 		}
+		acceptedAnswerID = retained.Session.Gate.AnswerID
 		current.Status = "answered"
 		run.Status = "interrupted"
 		run.ResumePending = true
@@ -683,7 +819,7 @@ func (m *Manager) answerReviewWorkflow(ctx context.Context, at domain.Attention,
 	if err = m.app.Store.Get(ctx, "run", at.RunID, &run); err != nil {
 		return err
 	}
-	_, err = m.startReviewWorkflow(ctx, run, true)
+	_, err = m.startReviewWorkflowIntent(ctx, run, true, acceptedAnswerID)
 	return err
 }
 
@@ -715,6 +851,14 @@ func commandPackageRoot(path string) (string, error) {
 	for root := leaf; filepath.Dir(root) != root; root = filepath.Dir(root) {
 		for _, marker := range []string{".codex-plugin/plugin.json", "pyproject.toml", "package.json", "go.mod", ".git"} {
 			if _, err := os.Stat(filepath.Join(root, marker)); err == nil {
+				if marker == ".git" {
+					// A stray or incomplete ancestor marker is not a package boundary. In
+					// particular, never sweep an unrelated shared temporary directory.
+					gitRoot, gitErr := command(context.Background(), root, "rev-parse", "--show-toplevel")
+					if gitErr != nil || filepath.Clean(gitRoot) != root {
+						continue
+					}
+				}
 				return root, nil
 			}
 		}

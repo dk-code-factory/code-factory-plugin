@@ -97,8 +97,8 @@ func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(t *testing.T)
 		t.Fatal("launch policy not retained", run)
 	}
 	result, bad := f.call(t, "start_run", map[string]any{"id": run["id"]})
-	if !bad || !strings.Contains(result["content"].([]any)[0].(map[string]any)["text"].(string), prreview.OrderedIteration) {
-		t.Fatal("unsupported engine did not fail before execution", result)
+	if !bad || !strings.Contains(result["content"].([]any)[0].(map[string]any)["text"].(string), "skill unavailable") {
+		t.Fatal("missing retained reviewer skill did not fail before execution", result)
 	}
 	policy, bad = f.call(t, "read_review_policy", map[string]any{"id": pr.ID})
 	if bad || policy["effective"].(map[string]any)["source"] != "global" {

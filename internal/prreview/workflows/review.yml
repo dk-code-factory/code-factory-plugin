@@ -1,0 +1,30 @@
+jobs:
+  capture:
+    steps:
+      - uses: action/capture
+  preparation:
+    needs: capture
+    uses: workflows/preparation.yml
+    repeat:
+      max-attempts: 16
+      until: ${{ iteration.outputs.ready }}
+  reviewers:
+    needs: preparation
+    uses: workflows/reviewer.yml
+    for-each:
+      items: ${{ inputs.reviewers }}
+      key: item.id
+    with:
+      reviewer: ${{ item.id }}
+  assessment:
+    needs: reviewers
+    outputs:
+      ready: ${{ steps.assess.outputs.ready }}
+    steps:
+      - id: assess
+        uses: action/assess
+  publication:
+    needs: assessment
+    if: ${{ needs.assessment.outputs.ready }}
+    steps:
+      - uses: action/publish

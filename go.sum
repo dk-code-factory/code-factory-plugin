@@ -1,5 +1,5 @@
-github.com/dk-code-factory/agent-workflow v0.0.0-20261027194713-b90c72a38b86 h1:qorOaqtlPdodzAqeFUkZYo2uvsZMsasp9yJxfoHC31U=
-github.com/dk-code-factory/agent-workflow v0.0.0-20261027194713-b90c72a38b86/go.mod h1:wH2rbOCjkBam24YV2ZzgyZdCl+30QwGsKfTPJFQG8hY=
+github.com/dk-code-factory/agent-workflow v0.0.0-20261028112503-0606a1b9d16e h1:NUldZng9hOjxPs7+mQMVxVhmCHqRPbIKIozw6RMg/qI=
+github.com/dk-code-factory/agent-workflow v0.0.0-20261028112503-0606a1b9d16e/go.mod h1:wH2rbOCjkBam24YV2ZzgyZdCl+30QwGsKfTPJFQG8hY=
 github.com/dustin/go-humanize v1.1.0 h1:dbKTrvD0klcbBV/h4AWJdMuZogJACoMlvWIWZ5b2xWg=
 github.com/dustin/go-humanize v1.1.0/go.mod h1:hc1CvRkJMsgxqjmjMQF3QNRAZBwY8AXBAzKYoSX9sFI=
 github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=

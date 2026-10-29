@@ -3,7 +3,7 @@ module codefactory
 go 1.26.0
 
 require (
-	github.com/dk-code-factory/agent-workflow v0.0.0-20261027194713-b90c72a38b86
+	github.com/dk-code-factory/agent-workflow v0.0.0-20261028112503-0606a1b9d16e
 	github.com/google/jsonschema-go v0.4.3
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	golang.org/x/sys v0.49.0
