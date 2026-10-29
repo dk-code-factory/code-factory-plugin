@@ -130,8 +130,8 @@ class FixtureCIEnvironmentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
             (root / 'Makefile').write_text((ROOT / 'Makefile').read_text().replace(
-                'verify-steps: specs-check build check test test-performance package test-installer smoke',
-                'verify-steps:\n\t@printf \"%s\\n\" \"$$CODE_FACTORY_REAL_CODEX\"'))
+                'verify-steps: verification-context specs-check build check test test-performance package test-installer smoke',
+                'verify-steps: verification-context\n\t@printf \"%s\\n\" \"$$CODE_FACTORY_REAL_CODEX\"'))
             shutil.copytree(ROOT / 'scripts', root / 'scripts', ignore=shutil.ignore_patterns('__pycache__'))
             environment = {key: value for key, value in os.environ.items()
                            if not key.startswith('CODE_FACTORY_TIMING_') and key != 'GITHUB_ACTIONS'}

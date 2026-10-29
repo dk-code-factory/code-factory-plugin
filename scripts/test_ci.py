@@ -368,6 +368,11 @@ args = sys.argv[1:]
 if command == 'python3' and args and args[0].endswith('/verification_timing.py'):
     os.execv('/usr/bin/python3', ['/usr/bin/python3', *args])
 if args in (['--version'], ['version']):
+    if os.environ.get('EXPECTED_COMPARISON_HEAD'):
+        summary=json.loads(pathlib.Path(os.environ['CODE_FACTORY_TIMING_FILE']).read_text())
+        assert summary['comparison']['head'] == os.environ['EXPECTED_COMPARISON_HEAD']
+        assert summary['comparison']['status'] == 'resolved'
+        assert not (root / 'commands.jsonl').exists(), 'work preceded metadata initialization'
     print('1.24.2')
     sys.exit(0)
 key = command + ' ' + ' '.join(args)
@@ -594,6 +599,40 @@ record('end')
                     else:
                         selected = '--base fixture-main --merge-base' if goal == 'ci' else comparison
                         self.assertIn('python3 scripts/specs.py check ' + selected, commands)
+
+    def test_native_expanded_comparison_matches_the_worker_under_variable_overrides(self):
+        def git(*arguments):
+            return subprocess.check_output(['git', *arguments], cwd=self.root,
+                                           stderr=subprocess.DEVNULL).decode().strip()
+        git('init', '-b', 'main')
+        git('config', 'user.name', 'Fixture')
+        git('config', 'user.email', 'fixture@example.invalid')
+        (self.root / '.gitignore').write_text('/verification-results/\n/commands.jsonl\n')
+        with (self.root / 'Makefile').open('a') as output:
+            output.write('\nverify-steps: WORKER_COMPARE_BASE = main\n')
+        git('add', '.')
+        git('commit', '-m', 'Comparison fixture')
+        head = git('rev-parse', 'HEAD')
+        self.env['EXPECTED_COMPARISON_HEAD'] = head
+        for goal, direct, variables, expected in (
+                ('verify', False, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base $(COMPARE_BASE)', 'COMPARE_BASE=main'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'COMPARE_BASE=main', 'FLOW_ARGS:=--base $(COMPARE_BASE)'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base missing', 'FLOW_ARGS=--base "main"'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', "FLOW_ARGS=--base 'main'"], '--base main'),
+                ('verify', True, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base $(COMPARE_BASE)', 'COMPARE_BASE=main'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base $(if $(filter 1,$(MAKELEVEL)),$(WORKER_COMPARE_BASE),missing)'], '--base main'),
+                ('ci', False, ['MAKEFLAGS=-k', 'FLOW_BASE=main', 'FLOW_ARGS=--base missing'], '--base main --merge-base')):
+            with self.subTest(goal=goal, direct=direct, variables=variables):
+                events = self.successful(*([] if direct else [goal]), *variables, direct=direct)
+                self.assert_shared_once(events)
+                commands = [e['key'] for e in events if e['event'] == 'start']
+                self.assertIn('python3 scripts/specs.py check ' + expected, commands)
+                self.assertEqual(self.last_timing['comparison'], {'status': 'resolved', 'base': head,
+                    'head': head, 'selection': 'worktree', 'merge_base': goal == 'ci'})
+                self.assertEqual(self.last_timing['outcome'], 'success')
+                serialized = json.dumps(self.last_timing)
+                for private in ('COMPARE_BASE', 'FLOW_ARGS', 'MAKELEVEL', str(self.root), 'missing', '$(COMPARE_BASE)'):
+                    self.assertNotIn(private, serialized)
 
     def test_assigned_makeflags_preserve_variable_flavor_and_literal_dollars(self):
         temporary = self.root / 'ci$run'

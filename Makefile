@@ -1,5 +1,5 @@
 .PHONY: build test test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci npm-deps plugin-embed fake-provider hosted-prerequisites python-deps browser-deps hosted-verify hosted-verify-bootstrap verify-bootstrap test-installer smoke
-.PHONY: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps
+.PHONY: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps verification-context
 .DEFAULT_GOAL := ui
 # Ordinary verification is deterministic even with inherited or command-line opt-ins.
 override export CODE_FACTORY_REAL_CODEX := 0
@@ -10,7 +10,8 @@ export FLOW_ARGS
 # GNU Make serializes no-argument short flags first, followed by argument options.
 # Include paths and output modes may contain n without requesting a dry run.
 verification-short-options = $(filter-out --% -C% -f% -I% -j% -l% -O% -W% -o%,$(firstword $(MFLAGS)))
-verification-runner = $(if $(findstring n,$(verification-short-options)),,python3 scripts/verification_timing.py verify --)
+# The worker observes its own expanded comparison before any verification work.
+verification-runner = $(if $(findstring n,$(verification-short-options)),,CODE_FACTORY_TIMING_WORKER_CONTEXT=1 python3 scripts/verification_timing.py verify --)
 # Share preparation only inside this Make graph. Independent invocations always
 # prepare current inputs, including changed tooling and missing outputs.
 # Serialize phases even when the caller supplies -j or inherited MAKEFLAGS.
@@ -59,10 +60,13 @@ verification-overrides = $(if $(filter command,$(origin MAKEFLAGS)),\
 verify verify-bootstrap hosted-verify hosted-verify-bootstrap:
 	+@$(verification-runner) $(MAKE) $(verification-options) --no-keep-going $@-steps $(verification-overrides)
 
-verify-steps: specs-check build check test test-performance package test-installer smoke
+verification-context:
+	python3 scripts/verification_timing.py worker-start
+
+verify-steps: verification-context specs-check build check test test-performance package test-installer smoke
 
 # Only scripts/ci.py selects this path for the pinned reviewed public root.
-verify-bootstrap-steps: specs-validate build check test test-performance package test-installer smoke
+verify-bootstrap-steps: verification-context specs-validate build check test test-performance package test-installer smoke
 
 test-installer:
 	python3 scripts/verification_timing.py command installer -- python3 scripts/test_installer.py
@@ -78,9 +82,9 @@ browser-deps: npm-deps
 
 hosted-prerequisites: python-deps browser-deps
 
-hosted-verify-steps: hosted-prerequisites verify-steps
+hosted-verify-steps: verification-context hosted-prerequisites verify-steps
 
-hosted-verify-bootstrap-steps: hosted-prerequisites verify-bootstrap-steps
+hosted-verify-bootstrap-steps: verification-context hosted-prerequisites verify-bootstrap-steps
 
 flows-validate: specs-validate
 

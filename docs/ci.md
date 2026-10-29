@@ -89,7 +89,11 @@ fixed warning and preserves the actual command or cancellation status.
 Each phase has a stable command identity, outcome, optional parent ID, monotonic
 start/end offsets and `seconds`, using the same duration unit as reconciliation's
 existing per-command receipt evidence. Missing durations and exit codes are JSON
-null; planned phases that did not execute remain `unstarted`. Failed commands stop
+null; planned phases that did not execute remain `unstarted`. Local startup persists
+a partial journal before resolving source and comparison metadata; interruption
+retains unknown fields as null or unavailable and finalizes the interrupted run.
+Native Make supplies the expanded comparison, including recursive variables and
+the `ci` override. Failed commands stop
 the pipeline, and SIGINT/SIGTERM preserve partial results and clean up the owned
 process group. Intervals may overlap or nest, especially under caller-supplied
 Make parallelism: use `wall_seconds` for elapsed time, never a sum of phase

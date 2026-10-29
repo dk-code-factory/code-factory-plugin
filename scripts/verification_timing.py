@@ -182,20 +182,22 @@ class Journal:
         self.clock = clock
 
     @classmethod
-    def create(cls, *, hosted=False, prerequisites=False, bootstrap=False, arguments=None, clock=time.monotonic):
+    def create(cls, *, hosted=False, prerequisites=False, bootstrap=False, arguments=None, metadata=True, clock=time.monotonic):
         directory = ROOT / "verification-results"
         directory.mkdir(exist_ok=True)
         journal = cls(directory / (uuid.uuid4().hex + ".json"), clock)
         data = {"version": 1, "run_id": journal.path.stem, "origin": "hosted" if hosted else "local",
                 "clock_origin": clock(), "wall_seconds": None, "outcome": "running",
                 "aggregation": "Intervals may overlap or nest; do not sum phase durations as wall time.",
-                "source": identity(), "comparison": hosted_comparison() if hosted else comparison(
-                    os.environ.get("FLOW_ARGS", "") if arguments is None else arguments),
+                "source": {"head": None, "inputs_sha256": None, "dirty": None},
+                "comparison": {"status": "unavailable"},
                 "cache_condition": os.environ.get("CODE_FACTORY_TIMING_CACHE", "unspecified")
                     if os.environ.get("CODE_FACTORY_TIMING_CACHE") in ("cold", "prepared") else "unspecified",
                 "toolchains": {}, "phases": [row(p, i) for i, p in enumerate(
                     (["setup"] if hosted else []) + (["python-install", "browser-install"] if hosted or prerequisites else []) + [p for p in PLAN if p != "specifications" or not bootstrap] + (["manifest"] if hosted else []))]}
         journal.path.write_text(json.dumps(data, indent=2) + "\n")
+        if metadata:
+            journal.collect_metadata(arguments=arguments, hosted=hosted)
         return journal
 
     @contextmanager
@@ -247,9 +249,22 @@ class Journal:
                 outcome = "incomplete"
             data.update(outcome=outcome, wall_seconds=end)
 
-    def refresh(self, plan=None):
+    def collect_metadata(self, *, arguments=None, hosted=False):
+        # Invalidate prior identities before resolving this invocation's inputs.
+        # Each completed field survives interruption of subsequent metadata.
         with self.update() as data:
-            data["comparison"] = plan if plan is not None else comparison(os.environ.get("FLOW_ARGS", ""))
+            data["source"] = {"head": None, "inputs_sha256": None, "dirty": None}
+            data["comparison"] = {"status": "unavailable"}
+        source = identity()
+        with self.update() as data:
+            data["source"] = source
+        plan = hosted_comparison() if hosted else comparison(
+            os.environ.get("FLOW_ARGS", "") if arguments is None else arguments)
+        with self.update() as data:
+            data["comparison"] = plan
+
+    def refresh(self, arguments=None):
+        self.collect_metadata(arguments=arguments)
         # Commit the selected identity before any interruptible version queries.
         versions = toolchains()
         with self.update() as data:
@@ -335,12 +350,12 @@ def verify(argv=None):
                          os.environ.get("FLOW_ARGS", ""))
         journal = selected() or observe(Journal.create,
             prerequisites=any(a.startswith("hosted-verify") for a in argv),
-            bootstrap=any("bootstrap-steps" in a for a in argv), arguments=arguments)
+            bootstrap=any("bootstrap-steps" in a for a in argv), metadata=False)
         if journal:
             os.environ["CODE_FACTORY_TIMING_FILE"] = str(journal.path)
             print("Verification timing: " + journal.path.name, flush=True)
-            if not os.environ.get("GITHUB_ACTIONS"):
-                observe(journal.refresh, comparison(arguments))
+            if not os.environ.get("GITHUB_ACTIONS") and not os.environ.get("CODE_FACTORY_TIMING_WORKER_CONTEXT"):
+                observe(journal.refresh, arguments)
         from specs_lib.processes import run_verification
         descriptors = jobserver_fds(argv)
         options = {"pass_fds": descriptors} if descriptors else {}
@@ -379,6 +394,7 @@ def main():
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("verify").add_argument("argv", nargs=argparse.REMAINDER)
     sub.add_parser("hosted-start")
+    sub.add_parser("worker-start")
     end = sub.add_parser("hosted-finish")
     end.add_argument("--outcome", choices=["success", "failure", "cancelled"], required=True)
     setup = sub.add_parser("setup-finish")
@@ -389,6 +405,12 @@ def main():
     args = parser.parse_args()
     if args.action in ("hosted-start", "setup-finish", "hosted-finish"):
         observe(hosted_action, args.action, getattr(args, "outcome", None))
+    elif args.action == "worker-start":
+        def refresh_worker():
+            journal = selected()
+            if journal and not os.environ.get("GITHUB_ACTIONS"):
+                journal.refresh()
+        observe(refresh_worker)
     elif args.action == "verify":
         return verify(args.argv[1:] if args.argv[:1] == ["--"] else args.argv)
     else:

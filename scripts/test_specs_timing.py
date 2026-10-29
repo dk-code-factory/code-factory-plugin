@@ -478,6 +478,13 @@ finally:
             self.assertEqual(timing.verify(), 31)
         self.assertNotIn('/private', errors.getvalue())
 
+        # The private native-worker metadata hook is equally non-authoritative.
+        with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': '/private/missing/journal.json'}), \
+                patch.object(sys, 'argv', ['timing', 'worker-start']), \
+                contextlib.redirect_stderr(errors):
+            self.assertEqual(timing.main(), 0)
+        self.assertNotIn('/private', errors.getvalue())
+
     def test_local_orchestration_keeps_order_and_stops_at_failure(self):
         # The timing boundary delegates the whole graph once; Make owns ordering.
         argv = ['make', '--no-keep-going', 'verify-steps', 'FLOW_ARGS=--base fixture']
@@ -615,6 +622,101 @@ finally:
         self.assertEqual(data['phases'][0]['outcome'], 'success')
         self.assertTrue(all(row['outcome'] == 'unstarted' for row in data['phases'][1:]))
         self.assertFalse((self.root / 'dist').exists())
+
+    def test_startup_metadata_exceptions_keep_truthful_partial_journals(self):
+        for selected in (False, True):
+            for stage in ('identity', 'comparison'):
+                for exception in (KeyboardInterrupt, lambda: SystemExit(143)):
+                    with self.subTest(selected=selected, stage=stage, exception=exception):
+                        os.environ.pop('CODE_FACTORY_TIMING_FILE', None)
+                        journal = self.journal() if selected else None
+                        before = set((self.root / 'verification-results').glob('*.json'))
+                        if selected:
+                            os.environ['CODE_FACTORY_TIMING_FILE'] = str(journal.path)
+                        def interrupted():
+                            current = timing.selected()
+                            self.assertIsNotNone(current)
+                            partial = self.data(current)
+                            self.assertEqual(partial['outcome'], 'running')
+                            self.assertEqual(partial['comparison'], {'status': 'unavailable'})
+                            self.assertEqual(partial['source']['head'], None if stage == 'identity' else 'a' * 40)
+                            raise exception()
+                        with patch.object(timing, stage, side_effect=lambda *args: interrupted()), \
+                                patch('specs_lib.processes.run_verification') as worker, \
+                                contextlib.redirect_stdout(io.StringIO()):
+                            with self.assertRaises((KeyboardInterrupt, SystemExit)) as caught:
+                                timing.verify(['make', 'verify-steps', 'FLOW_ARGS=--base private-ref'])
+                        worker.assert_not_called()
+                        if isinstance(caught.exception, SystemExit):
+                            self.assertEqual(caught.exception.code, 143)
+                        if not selected:
+                            path, = set((self.root / 'verification-results').glob('*.json')) - before
+                            journal = timing.Journal(path)
+                        data = self.data(journal)
+                        self.assertEqual(data['outcome'], 'interrupted')
+                        self.assertIsNotNone(data['wall_seconds'])
+                        self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None
+                                            for row in data['phases']))
+                        self.assertNotIn('private-ref', journal.path.read_text())
+
+    def test_startup_metadata_real_signals_finalize_persisted_unknown_fields(self):
+        for selected in (False, True):
+            for stage in ('identity', 'comparison'):
+                for number, status in ((signal.SIGINT, 130), (signal.SIGTERM, 143)):
+                    with self.subTest(selected=selected, stage=stage, signal=number):
+                        root = self.root / (str(selected) + stage + str(number))
+                        root.mkdir()
+                        listener = socket.socket()
+                        self.addCleanup(listener.close)
+                        listener.bind(('127.0.0.1', 0))
+                        listener.listen(1)
+                        source = '''import os,pathlib,signal,socket,sys,time
+import verification_timing as timing
+timing.ROOT = pathlib.Path(sys.argv[1])
+timing.identity = lambda: {'head': 'a' * 40, 'inputs_sha256': 'b' * 64, 'dirty': False}
+timing.comparison = lambda args: {'status': 'unavailable'}
+if sys.argv[2] == 'True':
+    os.environ['CODE_FACTORY_TIMING_FILE'] = str(timing.Journal.create().path)
+def block(*args):
+    connection=socket.create_connection(('127.0.0.1', int(sys.argv[4])))
+    connection.sendall(b'ready'); connection.close()
+    time.sleep(60)
+setattr(timing, sys.argv[3], block)
+import specs_lib.processes
+def worker(*args, **kwargs):
+    timing.ROOT.joinpath('worker-started').touch()
+    raise AssertionError('metadata cancellation started the worker')
+specs_lib.processes.run_verification = worker
+signal.signal(signal.SIGTERM, lambda number, frame: sys.exit(128 + number))
+try:
+    sys.exit(timing.verify(['make', 'verify-steps']))
+except KeyboardInterrupt:
+    sys.exit(130)
+'''
+                        process = subprocess.Popen([sys.executable, '-c', source, str(root), str(selected),
+                            stage, str(listener.getsockname()[1])], cwd=MODULE_DIRECTORY,
+                            env=os.environ.copy(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        self.addCleanup(cleanup_process, process)
+                        ready, _, _ = select.select([listener], [], [], 10)
+                        self.assertTrue(ready, 'startup metadata did not report readiness')
+                        connection, _ = listener.accept()
+                        with connection:
+                            connection.settimeout(2)
+                            self.assertEqual(connection.recv(16), b'ready')
+                        path, = (root / 'verification-results').glob('*.json')
+                        running = json.loads(path.read_text())
+                        self.assertEqual(running['outcome'], 'running')
+                        self.assertEqual(running['comparison'], {'status': 'unavailable'})
+                        self.assertEqual(running['source']['head'], None if stage == 'identity' else 'a' * 40)
+                        process.send_signal(number)
+                        _, errors = process.communicate(timeout=8)
+                        self.assertEqual(process.returncode, status, errors.decode())
+                        completed = json.loads(path.read_text())
+                        self.assertEqual(completed['outcome'], 'interrupted')
+                        self.assertIsNotNone(completed['wall_seconds'])
+                        self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None
+                                            for row in completed['phases']))
+                        self.assertFalse((root / 'worker-started').exists())
 
     def test_local_metadata_signals_finalize_before_worker_starts(self):
         for number, expected, selected in ((number, status, selected)

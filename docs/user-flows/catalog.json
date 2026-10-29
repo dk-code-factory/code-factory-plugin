@@ -14030,7 +14030,7 @@
         },
         {
           "path": "scripts/verification_timing.py",
-          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence"
+          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence Safe startup journals precede source/comparison collection; local finalization retains interrupted unknown fields. The one worker graph resolves its own comparison through a shared metadata prerequisite before toolchains and verification work, without evaluating Make variables in Python."
         }
       ],
       "tests": [
@@ -16074,7 +16074,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Real SIGINT/SIGTERM during metadata collection retain the actual argv-selected comparison on diverged main, including fresh and preselected journals and last-assignment precedence; status130/143, interrupted wall time and no worker start remain truthful."
+          "purpose": "Real SIGINT/SIGTERM during toolchain metadata retain the actual argv-selected comparison on diverged main for fresh and preselected journals and last assignments, with status130/143, interrupted wall time, null unstarted phases and no worker."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -16138,6 +16138,33 @@
             "S5"
           ],
           "purpose": "Real child probes preserve only explicit descriptors, close other inheritable pipes, force fixture mode, retain nonzero command status and restored signal handlers, and keep the legacy default Popen call unchanged."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_startup_metadata_exceptions_keep_truthful_partial_journals(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Injected KeyboardInterrupt/SystemExit143 at source and comparison collection require already-persisted fresh/preselected journals, truthful null/unavailable fields, finalized interrupted wall time and no worker or private argument export."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_startup_metadata_real_signals_finalize_persisted_unknown_fields(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real SIGINT/SIGTERM while source or comparison metadata blocks preserve fresh/preselected partial journals, status130/143, unknown or completed source fields, unstarted null-duration phases and no worker start; bounded harness cleanup remains registered."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_native_expanded_comparison_matches_the_worker_under_variable_overrides(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual native worker recursive/simple FLOW_ARGS, assigned flags, quoted refs, last assignment, direct shell entry and ci override match the journal comparison. MAKELEVEL and a worker target-specific variable prove child context; comparison is persisted before version queries and all verification work, with no raw arguments or paths exported."
         }
       ],
       "suites": [
