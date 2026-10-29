@@ -152,6 +152,43 @@ def probe(mode):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_descriptor_passthrough_is_explicit_and_preserves_default_calls(self):
+        from specs_lib import processes
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            read, write = os.pipe()
+            unrelated_read, unrelated_write = os.pipe()
+            descriptors = (read, write, unrelated_read, unrelated_write)
+            for fd in descriptors:
+                self.addCleanup(os.close, fd)
+                os.set_inheritable(fd, True)
+            output = root / 'descriptor-state.json'
+            source = '''import json,os,pathlib,sys
+states=[]
+for fd in map(int,sys.argv[2:]):
+    try:os.fstat(fd);states.append(True)
+    except OSError:states.append(False)
+pathlib.Path(sys.argv[1]).write_text(json.dumps({'open':states,'fixture':os.environ['CODE_FACTORY_REAL_CODEX']}))
+sys.exit(37)
+'''
+            command = [sys.executable, '-c', source, str(output), *map(str, descriptors)]
+            handlers = {s: signal.getsignal(s) for s in (signal.SIGINT, signal.SIGTERM)}
+            for passed in ((), (read, write)):
+                with self.subTest(pass_fds=passed), \
+                        patch.dict(os.environ, {'CODE_FACTORY_REAL_CODEX': '1'}), \
+                        patch.object(processes.subprocess, 'Popen', wraps=subprocess.Popen) as spawn:
+                    options = {'pass_fds': passed} if passed else {}
+                    result = uf.run_verification(command, cwd=root, timeout=5, **options)
+                    self.assertEqual(result.returncode, 37)
+                    data = json.loads(output.read_text())
+                    self.assertEqual(data['fixture'], '0')
+                    self.assertEqual(data['open'], [bool(passed), bool(passed), False, False])
+                    if passed:
+                        self.assertEqual(spawn.call_args.kwargs['pass_fds'], passed)
+                    else:
+                        self.assertNotIn('pass_fds', spawn.call_args.kwargs)
+                    self.assertEqual({s: signal.getsignal(s) for s in handlers}, handlers)
+
     def run_probe(self, mode, expected):
         result = subprocess.run([sys.executable, __file__, '--probe', mode],
                                 capture_output=True, text=True, timeout=10)

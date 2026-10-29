@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "0ff1fb7f0dba570ea2b0647ee1b3ca725f5f273d",
-  "fingerprint": "3c96c54508ceffcdc31e4bed65c0bac2e59575ce9560c3dfdd511a397037e0ca",
+  "base": "34d52954ee41755097b3508d3481c29a545cfb49",
+  "fingerprint": "0c72da91d1b899cf250831f35146fa7fd9eb1ac7c04753bdcf05e3b45d7f64b8",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "Contributor S3 qualifier now measures sampled concurrent workload RSS separately from individual-process metrics, requires positive root/child coverage and retains interruption/failure outcomes with safe cleanup. All merged strict inventory, result cardinality, timing and failure-stopping behavior remains; hosted integration is excluded.",
-    "implementation": "Inspected integrated process_stat/WorkloadMemory session and observed-descendant identities, WNOWAIT direct-leader lifetime through final killpg, identity-revalidated pidfds for other targets, recording signal handlers, 200ms TERM grace and bounded post-KILL waits. Main restores merged math finite/nonnegative guard and handles failed/interrupted samples before later runs. All main web/backend/hosted/foundational source stays unchanged. New ancestry edges now require a held parent pidfd to remain live across fresh child PPID/identity capture and parent start-time revalidation; a stale numeric parent row cannot contaminate known ownership. Same-session selection still depends on the direct root remaining unreaped through final capture/signaling.",
-    "tests": "Read all nine baseline assertions retained through measure-boundary stubs: complete order, zero individualmetrics, earlydiscovery/baseline rejection, exactinventory/project/result/status/retry and invalidmetric stopping. Real four-allocation hierarchy establishes concurrentRSS. Missingcoverage/readfailure tests reject partialmemory. Six signal/phase combinations exercise real SIGINT/SIGTERM during launch(Popen active), measurement andcleanup with owned separate-session children, stale identity and unrelatedsentinel, restoredhandlers/reaping/interruptedsummary. Independentstalledprobe fallback remains. Deterministicdeadline tests propagate descendant/directchild timeouts into mainfailure, closepidfds and retain bounded TERM/KILL. Targetingdenial beforelaunch and duringcleanup remain covered. Added eight deterministic scan interleavings across session/remembered parents, replacement/exit before acquisition or during child reread, asserting exclusion, no known contamination and no unrelated TERM/KILL in cleanup. Stable cross-session reparenting remains accepted. Three ancestry guard mutants detected. Read-failure child lifetime now uses a pipe released by the injected second-sample failure, not wall-clock sleep. Read-failure assertion now executes in an isolated subprocess controlled by a subreaper with an independent timeout and finally cleanup. The callback-suppressed regression proves timeout recovery, probe/pipe-child termination and reaping, and unrelated sibling survival. Production sampler and prior ancestry proofs remain unchanged."
+    "description": "S4/S5 retain the callable journal contract: private stable input/comparison identity, truthful partial phase outcomes and authoritative worker status. This repair restores non-authoritative optional diagnostics through failed fd writes and interpreter shutdown. Available diagnostics remain fixed/nonsensitive; automatic Make/hosted wiring remains separate. All 21 target browser benchmark mappings and sampled-memory/cancellation prose remain preserved. Normal fd output preserves the destination text stream encoding and error policy. Repeated messages retain incremental encoding state for their destination lifetime; failed optional writes do not consume it.",
+    "implementation": "Reviewed journal identity framing and read-only Git status, valid/unmerged/intent-to-add comparison selection, locked atomic updates and allocation-only row bound. Audited all stream writes: the warning and filename are the only optional stream diagnostics; both now call the same small best-effort helper. Real descriptors use os.write without adding Python buffered bytes; no-fd captures retain write/flush behavior, and diagnostic failures are swallowed without recursive warnings. GITHUB_ENV writes remain functional hosted exports inside existing observation handling. Worker argv, inherited stdout/stderr, owned session cleanup and authoritative cancellation/status routing are unchanged. The production delta is 40 added/2 deleted lines at the existing helper owner. The raw byte path reads stream.encoding and stream.errors, falling back to UTF-8/strict only when unavailable; encoding failures remain optional and cannot leave Python buffered bytes for shutdown. A standard-library incremental encoder is cached directly on each text destination object with its encoding/errors key, without global fd routing state. New encoder initialization respects existing seekable output bytes. Success commits encoder progress; failed encoding, short writes, OS errors and actual cancellation restore the saved state, and BaseException is re-raised so cancellation remains authoritative. Closing/replacing a destination cannot carry its private cache into a new object even if the fd number is reused.",
+    "tests": "Read retained assertions for overlap/parent/wall clocks, 48 concurrent updates, privacy, 256-row reserved execution, raw143/-15 outcomes, exact1/4/3 capacity timestamps, framing, source/index byte invariance and hosted policy. Both real execution probes retain their independent8s outer deadlines and immediate cleanup registration. New actual-process matrix first reproduced18 failures before the fix, then passed27 cases across stdout filename failure, metadata failure before worker and finish failure afterward; /dev/full, closed pipes and readable captures each retain process0/19/143 after interpreter shutdown. Each case requires real worker execution, exact argv and identical fd destinations, normal worker stdout/stderr, readable normal filename/fixed warning and no private arguments/exception/root text. Existing StringIO warning and filename paths now explicitly assert normal diagnostic text. Focused timing37, runner6 and benchmark21 pass. Full selected fixture reconciliation refreshes shared source/assertion inputs without claiming live-host or speed evidence. The actual-process encoding regression reproduced the UTF-8 compatibility mismatch before correction. Latin-1 strict now retains byteE9, ASCII backslashreplace retains literal\\xe9 and ASCII strict skips an unencodable optional filename while the real worker still executes and exits19. The refreshed process proof covers all30 concrete child exits and exact encoding-policy bytes. Prior UTF-8-only reconciliation/check/CI succeeded but is superseded for this adjusted source, with unchanged records/logs retained privately. Six additional actual-process cases now verify one BOM across two real pre/post-worker warnings, recovery after /dev/full and strict encoding failure, encoding/error-policy changes, append position and object lifetime despite fd-number reuse. Actual SIGTERM at the write boundary restores state and exits143 before worker start; the same stream can still emit its initial BOM during inspected cleanup. The refreshed external proof records36 actual process outcomes and exact bytes. Both earlier successful diagnostic verification versions are retained as superseded; this run refreshes the complete selected tree."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.183
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.672
+      "seconds": 32.877
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 56.613
+      "seconds": 54.394
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.837
+      "seconds": 4.717
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "33e9c7a9c3dcb8602cbeeda94a22f2a13b046cbcee204981b228c23c25055016",
-    "term:coverage-gap": "5e19f103952fdf8435d62339cf390863f678ce24114806b5c0cd5944da7cd495",
-    "term:entity": "bcbdf762c7301fc3ab48d2ef7402888a4c1ccfc13c4a974a0e5a4bf35be817ce",
-    "term:glossary": "3dfb1ea3b9e2c2bcf8be34e91581f3fda10d7bc9a87364f7d8e8e57a0ac4a3e0",
-    "term:known-limitation": "eec9ed4cb1727d1fd3031c98f592302a133a20b443ae1732b7225c1ad4e96eae",
-    "term:reconciliation": "afce8f759ca0583553cb64b5b9312ed6be1783c0d76f03fe32ba18d43ab5c391",
-    "term:unverified-behavior": "77d6713269bc5ead1774b492c6dd18fdff9e2a88cc04c2c78480cfca1ead826e",
-    "term:verification": "ae504f5b26462e7ae1dbeff60797b726f21e4fb02e5b5612230332132837d9ce"
+    "flow:maintain-flow-contracts": "e8ec1441a3e5be91b070b79e66cb5018d3b41242860dccae80eec67d5f6d9731",
+    "term:coverage-gap": "a1debcb4eaf2113e1701dc79dce7184eb47cfdcc9b3c14be3bb27bbceed95aed",
+    "term:entity": "d41eb966799f4be81bf63ad3d4e7bb2e11de6b091b809bf3631ce2a83140e4c6",
+    "term:glossary": "b55a2ab3f78397e4a4f060d2de04da8c8bcea9b6dff66b2ffa7bc3292bd33189",
+    "term:known-limitation": "d1ee33f075436fad521939290d7dbac0a75b14f04b6944cd7929bea651752a0b",
+    "term:reconciliation": "d3f5c193671cc081a8a5806141a39bc1b23f3b541886832f09e72f467dd3bcb1",
+    "term:unverified-behavior": "6167fef2c1da5a2fb45de458533add196057788b99a1da21f3787c742e03ebe3",
+    "term:verification": "845dcac0a34ac8e4a13d2e0b755da564c56513289504b98a37106b4c52c64eca"
   }
 }

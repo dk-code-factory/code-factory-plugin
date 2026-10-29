@@ -9,6 +9,7 @@
 __pycache__/
 
 /dist/
+/verification-results/
 
 # Personal installation and browser state never belongs in public source.
 **/runtime.json
