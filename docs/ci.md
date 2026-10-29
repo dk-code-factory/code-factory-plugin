@@ -73,6 +73,38 @@ Defaults remain 4173 and 4174. Both listeners stay on loopback; strict port
 ownership, fresh servers, health checks and direct-connection assertions use the
 selected ports. Installed service routes are unchanged.
 
+Local `make ci`, `make verify` and direct `scripts/verify.sh` runs retain a
+version-1 JSON phase summary in ignored `verification-results/<run-id>.json`.
+The journal holds at most 256 phase records and fixed, allowlisted metadata; it includes no raw command arguments,
+environment dumps, command output or local paths. A timing-write failure emits a
+fixed warning and preserves the actual command or cancellation status.
+
+Each phase has a stable command identity, outcome, optional parent ID, monotonic
+start/end offsets and `seconds`, using the same duration unit as reconciliation's
+existing per-command receipt evidence. Missing durations and exit codes are JSON
+null; planned phases that did not execute remain `unstarted`. Local startup persists
+a partial journal before resolving source and comparison metadata; interruption
+retains unknown fields as null or unavailable and finalizes the interrupted run.
+Native Make supplies the expanded comparison, including recursive variables and
+the `ci` override. Failed commands stop
+the pipeline, and SIGINT/SIGTERM preserve partial results and clean up the owned
+process group. Intervals may overlap or nest, especially under caller-supplied
+Make parallelism: use `wall_seconds` for elapsed time, never a sum of phase
+durations. The timed browser samples and their authoritative performance evidence
+are unchanged; instrumentation runs around their command, outside those samples.
+Reconciliation receipts retain their existing timings and freshness rules;
+these summaries describe each separate verification invocation.
+
+For a repeatable baseline, retain the summary with its source commit, working-input
+SHA-256, exact comparison, toolchain versions and declared cache condition. Set
+`CODE_FACTORY_TIMING_CACHE=cold` only after removing generated frontend, dependency
+and helper outputs in an isolated workspace; keep the package-manager and compiler
+cache policy explicit in the measurement notes. Immediately repeat with
+`CODE_FACTORY_TIMING_CACHE=prepared` against identical source and toolchains.
+These labels describe the operator's declared conditions, not measured cache hits.
+Use multiple samples on the same environment before comparing optimization results;
+this instrumentation itself establishes no speed improvement.
+
 ## Browser correctness isolation and comparison
 
 Browser correctness tests are partitioned by feature under `web/tests/`.

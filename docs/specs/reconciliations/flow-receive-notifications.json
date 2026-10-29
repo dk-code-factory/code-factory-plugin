@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
-  "fingerprint": "5da262c8e27a4d7b7778484df7f4917b57c01edf7a88d37d700f9047c979040e",
+  "base": "a4f473d3d5c7ad59691c7202e79a19a898df4f30",
+  "fingerprint": "b20bf25b95fcd01a9fa0b7b02a1054debf6abb53c657254ff070ebe33c2307cb",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Event delivery, callback validation and webhook signing are unchanged by local phase reporting.. This slice changes operational verification inputs only, with no product contract changes.",
-    "implementation": "Compared this subject and mapped product implementations against c5eab656516393f8673e86a15b3f8bb5e161f9eb: product files, glossary meanings, UI ownership and browser assertion bodies are unchanged. Only the new callable journal and optional runner descriptor keyword alter shared operational fingerprints; no automatic entrypoint integration or adoption policy change is present.",
-    "tests": "Existing subject-owned product assertions remain byte-identical to the target, including its partitioned browser fixtures. The unchanged mapped suites are retained for fresh fixture reconciliation; new journal and explicit-descriptor tests establish tooling behavior without claiming additional product, installed-host or provider acceptance."
+    "implementation": "Compared this subject and its mapped product files against intended preceding stack tip a4f473d3d5c7ad59691c7202e79a19a898df4f30: product implementations, glossary meanings, UI ownership and browser assertion bodies are unchanged. Only shared operational verification inputs change in this slice. No foundational backlinks, new product behavior or historical-adoption exception is introduced. Native Make verification now automatically retains the bounded local journal. Hosted source selection and workflow upload remain in the next slice. Existing product behavior and pinned adoption remain unchanged.",
+    "tests": "Subject-owned product assertions and fixture suite commands remain identical to the preceding stack tip. The same required suites run afresh for this exact comparison; meaningful tooling regressions exercise this slice without claiming product, provider or installed-host acceptance. Read the real Make recorder assertions for single shared preparation, command order, failure/unstarted states, actual expanded comparison before work, dry-run no-journal and actual pipe/FIFO jobservers. Real SIGTERM and forced probe-assertion regressions require partial evidence and removed owned commands. Existing runner/cancellation and privacy assertions remain; actual hosted dispatcher and workflow upload assertions follow in the next slice."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 135.728
+      "seconds": 135.547
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.244
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 29.478
+      "seconds": 29.907
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 56.795
+      "seconds": 245.214
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "e09483d9bbcbe229fb934389528d5ab94af4d75483091388ff1518c33ec7428e",
-    "term:attention-request": "c949c2ebd9cfddf6bbaa18a8138ad152569eaf776e674792076bcfce529c7c82",
-    "term:coverage-gap": "2afb1c4bc0f88f27edc9f276c99e13459977270de7e45b0df8d402d76f57fde9",
-    "term:host": "6daa28743e62f8cb961a28c8bc5913f62d68e25cc787baadc759f7ae976490ab",
-    "term:known-limitation": "ef5a2f3d83d72f15b73413930dc93fa780ea5dafc0df251739b36cdcbcd2a1fa",
-    "term:subscription": "d9f1665d4eb4c8923af825a6351efcf8f7ecb1e9bbb46321493bfcafa24c35fc",
-    "term:unverified-behavior": "2691f6b7cb656f88bb31787b3ffd8da0bc340df5118e6a49155849ba237831c1"
+    "flow:receive-notifications": "83ef7c619450db140622261b64115be2e82ffcfed7e2279ed2c6398e335e8ef8",
+    "term:attention-request": "75c010c7f333932272db78b9108d4996dc3a361c47a7d5aec63f94205f618259",
+    "term:coverage-gap": "56c3cb27372dc52bd96f15167fb5906a8f143d857e1b00c03caf4689754d8757",
+    "term:host": "37496f11f8ae1fb5fa7cc54b9918de9a80d2ab010e88177bed6d77776198e81e",
+    "term:known-limitation": "7f1b78e5da7a3d7ff24a2d85e7aff0b95f597b6dead3c7a14eff5a0b7adcf34f",
+    "term:subscription": "2bcbe06531b875dff669e530510992d5cd2a848187dbd60b5e33c89116a21320",
+    "term:unverified-behavior": "b84e97045418f125830922cd3d0aae87e4306db17b6536f17034b06d4b5ce188"
   }
 }
