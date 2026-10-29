@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "21244bcd48687bc4f0657998c05556df28a3fd83",
-  "fingerprint": "e291f74c70ae1f1dc2ebdf6ac325360b5ce55d0888dd56f7e6ea99909548fbec",
+  "base": "1b033eaa3e37a632bd0676cc99463b4ff884033f",
+  "fingerprint": "788bbe0298cabd93bf066c1c467981c03910d95f308074dc70df4e7187587334",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "The layered registries map new production actions, YAML definitions, worker sources and actual new assertions while preserving stable flow/entity IDs and the pinned historical adoption policy.",
-    "implementation": "Reviewed generated-section ownership and behavior-to-UI-to-glossary direction. Reconciliation records are produced only by the CLI after declared suites pass; no receipts are edited by hand and no adoption entries are extended. Preserved PR22 contributor guidance and its final coordinator handoff; selected main and merge base are the exact actual target, and final committed freshness is checked with --head HEAD after receipt integration.",
-    "tests": "Render and validate accept the complete candidate registries. The mandatory tooling suite checks schema, source/assertion mappings, fixture execution, receipt fingerprints and immutable historical adoption policy for this full branch comparison."
+    "kind": "behavior",
+    "description": "S4/S5 require shared phony preparation inside each verification invocation, fresh standalone and independent preparation, ordered phases and stop on failure. Explicit MAKEFLAGS replacement preserves variable flavor and literal dollars; normal standalone keep-going behavior remains. Exact comparison/bootstrap, fixture-only execution, package provenance and uncached race testing remain required.",
+    "implementation": "Reviewed real Make dependency edges and strict wrapper commands, ci.py exact-plan dispatch and direct verify.sh fixture override against current main. The target catalog gains exactly the original PR assertion/purpose delta while retaining every PR14 mapping; source-correspondence and catalog-merge-proof artifacts document unchanged executable bytes and preserved target additions. Reconciliation and make ci remain separate invocations.",
+    "tests": "Read actual VerificationGraphTests recorder and assertions: all six entrypoints count each preparation once, reject stale/deleted output, serialize phases under -j8, fail every phase without later commands under keep-going, preserve exact FLOW_ARGS plus raw MAKEFLAGS caller flavor/dollars/TMPDIR, and execute no tools under -n. Hosted dispatch uses timeout=30 and asserts unchanged exact SHAs. Existing CI tests retain restricted root bootstrap and artifact identity checks; fixture overrides and Go -race -count=1 are asserted separately. Fresh focused tests, full CLI reconciliation and separate local CI provide current execution evidence; historical review success is not reused."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.164
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.713
+      "seconds": 24.798
     },
     {
       "command": [
@@ -41,17 +41,17 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.883
+      "seconds": 52.066
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "cd354fa254caa018ea3a7b1f661fceb0438ec05f5c1b741e91d0737bb2ff7d2a",
-    "term:coverage-gap": "cfae8ea4d15283ea2b2ff526933ede9f3938b4baa3d00cc9b63c7a8785db70bc",
-    "term:entity": "1b557f49e967893a637baeb17393e1ff864c052341def612b13c02617bd22c9b",
-    "term:glossary": "1f0b8b9d13e5bf4d5571ca78f7fe976e6186ec94fb61e184f782a7d19c7727d6",
-    "term:known-limitation": "24090f11922046e255dc2c130a0a2f55bf365862c83d56428e35c0d64d92cea3",
-    "term:reconciliation": "478e2aa9734386d16bba49661b2ef8cf4fe219167ada6b3e344f32bf0dcd90df",
-    "term:unverified-behavior": "ff19a0d3d7cd33da61381af86851bde7a80c04591ff9718b1e0b8a66c4a68198",
-    "term:verification": "de07b88aaee0e29a02a0c7e29453e910e659dbc38f44d5d97b4450c04420cd55"
+    "flow:maintain-flow-contracts": "edb87ff3885ef9d3e68baa2d01f3a8d203fcc188d1d131addec4bcc122b7b7e7",
+    "term:coverage-gap": "032818063d493f0454a66d274604ee0fc3d347ee58ef45439061def48b26c103",
+    "term:entity": "46f4fd79deb497ccee5652c58cba7df853d1098e5d7c9ebe479ea0fc2aec954d",
+    "term:glossary": "3dd21af08fd9d72f4228e1b8319e146ed504afccb73b001d8839e7ae4def8fdf",
+    "term:known-limitation": "49622f53f97431e447b1c48bcbc96e53e2fe7bcd5c5d0087e004e3df4a5640ac",
+    "term:reconciliation": "4580f03865c3810098a3efefe903a9ab6fc752abd5979f267eaba4bb246e45bb",
+    "term:unverified-behavior": "6e67e77216aaea4d1c82a35cf706e768b216fed33750752d4edafb59f115a8c0",
+    "term:verification": "0f26f379c032a9cd5a94f941154c0c63d02877e06cb4be9c296ae933db60775b"
   }
 }

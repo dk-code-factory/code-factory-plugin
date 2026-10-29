@@ -197,6 +197,16 @@ earlier verification even if its argv is unchanged.
 The ordinary Go race suite and Make test target use `-count=1` so each run
 executes assertions against current subprocess-built fake-provider helpers; Go
 cached successes do not reliably track those helper sources.
+One Make worker invocation owns shared preparation for local and hosted
+verification. Public entrypoints select its failure policy. Locked npm
+dependencies, frontend compilation, plugin embedding and the shared browser fake
+provider are explicit phony prerequisites. Each runs once per graph
+and runs again in a separate invocation, so changed inputs and deleted outputs
+cannot hide behind a preparation stamp. Standalone build and test commands also
+prepare their prerequisites. Verification phases remain ordered under parallel
+Make flags, with performance after heavy suites. Hosted Python/browser setup
+belongs to that graph after exact comparison selection. Reconciliation and the
+subsequent local CI invocation remain separate required verification runs.
 The tooling suite declares the provider/helper packages and module file copied by
 its cache regression as indirect inputs.
 

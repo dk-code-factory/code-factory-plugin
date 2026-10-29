@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "21244bcd48687bc4f0657998c05556df28a3fd83",
-  "fingerprint": "46b198dee9af4ba4ba65af00f68ef8d86024a7d4f0880e64ca42a912114b9c79",
+  "base": "1b033eaa3e37a632bd0676cc99463b4ff884033f",
+  "fingerprint": "c65516d136f39574b230f67f8003674c0a9bf63fc11043dc0df4b519db2afb03",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Subscription signing, entity filtering, retry and expiry are unchanged. Review gates continue to publish the existing attention events and do not change the host notification boundary.",
-    "implementation": "App-owned attention projection is reused by SDK waits; no subscription, gateway or event-delivery code changed. Shared Go dependency inputs require refreshed verification only.",
-    "tests": "Read signature validation, same subscription ID, entity filtering and stable event ID across failed-delivery retry assertions. Existing lack of installed-host subscription acceptance remains explicitly open."
+    "kind": "structure",
+    "description": "Subscribe to host notifications and manage delivery retains its authored scenarios and recovery boundaries: The owner can receive host alerts for inbox, run state and attention changes when the host supports subscriptions. Impact is indirect from shared verification prerequisites; no product behavior changed. Fresh comparison uses main 1b033eaa, including merged PR14 retained-review behavior. This flow and its mapping equal the target exactly; catalog merge proof retains every target mapping and the pinned adoption policy.",
+    "implementation": "The mapped application implementation beginning with internal/events/events.go is unchanged. Make preparation supplies current embedded artifacts to existing fixture commands and preserves -race -count=1, fixture mode and separate reconciliation/CI execution. Compared mapped implementation against current target: this PR changes no application, transport, provider, workflow, installer or report implementation. PR14 production retained workers, immutable checkpoint identities, admission/shutdown and publication reconciliation remain target-owned.",
+    "tests": "TestSubscriptionVerificationRetryDedupRefreshAndExpiry asserts signature validation, same event ID on retry, no repeated acknowledged delivery and no expired delivery. Existing open gaps are retained; preparation sharing adds no real-host, accessibility or provider acceptance claim. Re-inspected current assertions and new target retained-worker coverage; no previous fixture outcome is reused. Full required suites are selected from the merged catalog for fresh CLI execution."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 128.631
+      "seconds": 131.311
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.164
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 25.713
+      "seconds": 24.798
     },
     {
       "command": [
@@ -52,16 +52,16 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 0.883
+      "seconds": 52.066
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "46a9191738af5f180801ca3ded60becf9c41a6c7993bdacf654402287ea7bd9f",
-    "term:attention-request": "b84556624a33724c5ae39a13a16c010ce6074c70952b960f82f4390ef79e9216",
-    "term:coverage-gap": "cfae8ea4d15283ea2b2ff526933ede9f3938b4baa3d00cc9b63c7a8785db70bc",
-    "term:host": "4758a449572a9d57187683e7499efa463764ca19d0fb7ae6a871b4d2d1060799",
-    "term:known-limitation": "24090f11922046e255dc2c130a0a2f55bf365862c83d56428e35c0d64d92cea3",
-    "term:subscription": "c45cc8bbddc9e0d7b8968e6db38fdd142e261825c314b3f98311207f4c8943c1",
-    "term:unverified-behavior": "ff19a0d3d7cd33da61381af86851bde7a80c04591ff9718b1e0b8a66c4a68198"
+    "flow:receive-notifications": "16c7e241e4e9f385493d90a756f20b689deee582d01eb7f4fa4e191ff31addf9",
+    "term:attention-request": "62e0d6fa16d9dd4a2ead28516f7239115b5cf7fd47c29b1bbb7df0114032db5e",
+    "term:coverage-gap": "032818063d493f0454a66d274604ee0fc3d347ee58ef45439061def48b26c103",
+    "term:host": "1e405560cc5d912ef80e5410a8ddef9d453239c59ee1feeb7db542d74131d9d3",
+    "term:known-limitation": "49622f53f97431e447b1c48bcbc96e53e2fe7bcd5c5d0087e004e3df4a5640ac",
+    "term:subscription": "0852c49f613bb79c565a662d13a597692efa093eab1dd54aff2a0de18027d6bb",
+    "term:unverified-behavior": "6e67e77216aaea4d1c82a35cf706e768b216fed33750752d4edafb59f115a8c0"
   }
 }
