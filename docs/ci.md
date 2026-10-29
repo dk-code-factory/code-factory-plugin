@@ -116,8 +116,34 @@ Stable specification IDs remain in the registries; update their assertion paths
 and regenerate references with `scripts/specs.py render`.
 
 The versioned summary records source identity, tracked-change status, Node and
-Playwright versions, elapsed seconds and GNU time's maximum individual-process
-RSS in KiB. This metric does not measure aggregate browser/worker memory.
+Playwright versions, elapsed seconds, GNU time's maximum individual-process RSS
+in KiB, and peak sampled concurrent workload RSS in KiB. The individual-process
+metric does not measure aggregate browser/worker memory. On Linux, the latter
+sums `/proc` resident pages for the command's new session (GNU time, npm,
+Playwright, browsers, workers and fixture servers) and descendants observed via
+parent links, including children that start new sessions. Observed descendants
+remain tracked by PID and start time after reparenting. The sampler waits 50 ms
+between scans; scan time and scheduling can lengthen intervals, and the summary
+records the maximum observed gap and sample/process counts. This is sampled RSS,
+not an exact peak or unique physical memory: shared pages count once per process,
+and short-lived processes or children that escape the session and reparent before
+observation can be missed. No unrelated host processes are intentionally included.
+Collection requires readable Linux `/proc`, observed root and concurrent child
+processes, and positive RSS; unreadable/malformed process data or missing coverage
+fails qualification instead of accepting zero or partial results.
+
+The benchmark also requires Linux pidfd support for safe workload cleanup.
+SIGINT and SIGTERM are recorded while launching, measuring and cleaning up the
+owned workload. Cleanup keeps the direct command unreaped until the final signal
+to its original process group, preventing reuse of that group ID. Other observed
+members, including descendants in new sessions, are targeted by pidfds after
+checking their PID/start-time identities. Cleanup allows 200 ms after TERM, then
+sends KILL and waits at most two more seconds for observed targets and the command.
+A final scan includes newly visible owned descendants; the same unobservable
+escape limitation stated above still applies. Missing safe targeting or incomplete
+cleanup fails qualification and retains diagnostics. Cancellation restores prior
+signal handlers and retains an interrupted, nonzero summary entry. This only
+cleans up the benchmark-owned workload; it does not change daemon teardown.
 
 Discovery stdout and stderr are retained even when discovery exits nonzero;
 failure messages identify both artifact paths. Dependencies and generated

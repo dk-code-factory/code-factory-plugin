@@ -15906,6 +15906,62 @@
             "S3"
           ],
           "purpose": "Nonzero discovery retains both diagnostic streams and reports their paths."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_concurrent_process_hierarchy_memory_includes_new_sessions(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A real short-lived process hierarchy with simultaneous allocations and an escaping session establishes sampled concurrent workload memory."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_memory_requires_root_children_and_positive_rss(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Missing root/child coverage, zero RSS and empty or malformed process data cannot supply accepted memory evidence."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_memory_read_failure_rejects_partial_measurement(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A process read failure after an initial sample rejects partial memory evidence."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_real_signals_clean_owned_hierarchy_and_retain_interruption(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Real SIGINT/SIGTERM during measurement and cleanup terminate TERM-ignoring owned groups and new-session children, preserve unrelated and stale-PID sentinel ownership, restore handlers and retain an interrupted summary."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_cleanup_targeting_failure_is_not_accepted(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Unavailable safe descendant targeting fails qualification while still terminating and boundedly reaping the pinned original group."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_unavailable_safe_targeting_fails_before_launch(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Unavailable pidfd support fails before launching a workload that could not be safely cleaned up."
+        },
+        {
+          "path": "scripts/test_browser_benchmark.py",
+          "anchor": "def test_stalled_probe_fallback_kills_and_reaps_only_owned_children(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A forced noncooperative cancellation probe survives both cooperative waits, then an independent subreaper controller boundedly kills and reaps its owned hierarchy across sessions while preserving an unrelated sibling."
         }
       ],
       "suites": [

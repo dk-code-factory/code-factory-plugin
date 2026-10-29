@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "c5eab656516393f8673e86a15b3f8bb5e161f9eb",
-  "fingerprint": "2259149b8c7c1fb8ea087365cb4ec642ebf072697d0577985a4c2b8a8adaf15a",
+  "base": "3daec1d5f382f0f3af74128fb515365cc33233ab",
+  "fingerprint": "95f3f34af936c78035febdbe29d646bf8a0930d54c2b1650151ecd8e2d641d72",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "receive-notifications contract and its existing scenarios retain main behavior; shared verification tooling causes conservative review impact.",
-    "implementation": "Compared receive-notifications registry entry and authored flow document against main: no implementation, UI reference, scenario or behavior changes. Main browser layout and per-test state ownership are retained exactly.",
-    "tests": "Existing receive-notifications assertion mappings and bodies are unchanged from main; mandatory tooling gains local inventory, status and retained-discovery regressions. Fixture verification does not close real-host acceptance gaps."
+    "description": "receive-notifications contract and its existing scenarios retain preceding local-qualifier branch behavior; shared verification tooling causes conservative review impact.",
+    "implementation": "Compared receive-notifications registry entry and authored flow document against the preceding local-qualifier branch: no implementation, UI reference, scenario or behavior changes. Main browser layout and per-test state ownership are retained exactly.",
+    "tests": "Existing receive-notifications assertion mappings and bodies are unchanged from main; mandatory tooling gains sampled-memory and safe-cancellation regressions. Fixture verification does not close real-host acceptance gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 147.269
+      "seconds": 149.268
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 26.748
+      "seconds": 26.498
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 58.853
+      "seconds": 56.598
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 0.141
+      "seconds": 3.731
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "70ac2f74cab343a27aa609722fbde27dfb3005a803ab6b8b505ba6ca460108d5",
-    "term:attention-request": "3bc933b3a065d69fac6a4bbd8018e26d2329f344d6377708d62a7df1e61ba04c",
-    "term:coverage-gap": "f73727e81f8b98b547d7f885739b58d796b449aaf4c496aef66fc08671898e4a",
-    "term:host": "89f60781041ae7c9de0479b78a62b54f7f99a854a21e225227ba68f99b561dbb",
-    "term:known-limitation": "131bd642cd5ec0c78acbc5fd796e6ea1eda9168129e940cdf34d26e96d19aa04",
-    "term:subscription": "4698ae907d3fe1079ce4ec1fc2ac9cf4dc4f9c46a7d60006ffd6ef9831876b24",
-    "term:unverified-behavior": "43043f067130bd44378c0a063a5d46cc33ee5cefceb3fc2b49937bcd2094bc64"
+    "flow:receive-notifications": "294a1417ab3197df4561cccf4a4a0af03b9a34c5e38df7f10e915dceb060c0a0",
+    "term:attention-request": "d54c4c75d8a474471dcee8e009f195659577698fb8321790c299224257e4792b",
+    "term:coverage-gap": "dde82b845c0c080ab6d51ecae50ea97c471d30ae4376cf79aa4e1cb3366ab8ab",
+    "term:host": "e0c1568ae53e1df414ace2d06fd1b4bfbe3cc818fea231ff6c4d874b3ab71b37",
+    "term:known-limitation": "b900f252c0cee4ce629dea33dacf46034d8a5baaca13416a22e3947fb216c96a",
+    "term:subscription": "145785a604f5b6d20dcd4092f569ab5c32418b5711dfca002bd089775c76ef82",
+    "term:unverified-behavior": "cd8d54e3ad31b362d7f06e91ed4088944714ff20a28567fda6e2d30443aada91"
   }
 }

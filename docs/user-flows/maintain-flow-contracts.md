@@ -42,7 +42,10 @@ sample stops comparison and retains partial evidence; comparison never replaces
 full verification, isolated launch-performance acceptance or release provenance.
 Qualification validates the complete discovered inventory, requires each scenario
 to pass once without skips or retries, and retains discovery failure diagnostics.
-
+Sampled concurrent workload memory is reported separately from the largest
+process with its measurement limits. Missing memory coverage or safe cleanup
+targeting fails qualification. Cancellation bounds owned-workload cleanup,
+preserves unrelated processes and retains an interrupted nonzero result.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -360,6 +363,13 @@ flowchart TD
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_file_move_preserves_inventory_and_duplicates_count(`; S3. File movement preserves scenario identity while missing or duplicated scenarios fail qualification.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_failure_skip_retry_and_missing_test_cannot_pass(`; S3. Failure, skip, interruption, retry and incomplete discovery cannot be accepted as equivalent passing execution.
 - [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_nonzero_discovery_retains_both_diagnostics(`; S3. Nonzero discovery retains both diagnostic streams and reports their paths.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_concurrent_process_hierarchy_memory_includes_new_sessions(`; S3. A real short-lived process hierarchy with simultaneous allocations and an escaping session establishes sampled concurrent workload memory.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_memory_requires_root_children_and_positive_rss(`; S3. Missing root/child coverage, zero RSS and empty or malformed process data cannot supply accepted memory evidence.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_memory_read_failure_rejects_partial_measurement(`; S3. A process read failure after an initial sample rejects partial memory evidence.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_real_signals_clean_owned_hierarchy_and_retain_interruption(`; S3. Real SIGINT/SIGTERM during measurement and cleanup terminate TERM-ignoring owned groups and new-session children, preserve unrelated and stale-PID sentinel ownership, restore handlers and retain an interrupted summary.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_cleanup_targeting_failure_is_not_accepted(`; S3. Unavailable safe descendant targeting fails qualification while still terminating and boundedly reaping the pinned original group.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_unavailable_safe_targeting_fails_before_launch(`; S3. Unavailable pidfd support fails before launching a workload that could not be safely cleaned up.
+- [scripts/test_browser_benchmark.py](../../scripts/test_browser_benchmark.py) — `def test_stalled_probe_fallback_kills_and_reaps_only_owned_children(`; S3. A forced noncooperative cancellation probe survives both cooperative waits, then an independent subreaper controller boundedly kills and reaps its owned hierarchy across sessions while preserving an unrelated sibling.
 
 ## Verification and gaps
 
