@@ -508,6 +508,9 @@ print(result)
         self.assertRegex(comparisons[1]['index_sha256'], r'^[0-9a-f]{64}$')
         source.write_text('unstaged-only change')
         self.assertEqual(COMPARISON('--base HEAD --staged'), comparisons[1])
+        self.assertEqual(COMPARISON(['--base', 'HEAD', '--staged', '--json']), comparisons[1])
+        self.assertEqual(COMPARISON(['--base', 'HEAD', '--staged', '--root', '.',
+                                     '--review', '/private/ignored-review.json']), comparisons[1])
         with patch.object(timing, 'comparison', side_effect=COMPARISON):
             journal = timing.Journal.create(arguments='--base HEAD --staged')
         self.assertEqual(self.data(journal)['comparison'], comparisons[1])
@@ -615,6 +618,49 @@ print(result)
         self.assertEqual((self.root / '.git/index').read_bytes(), index)
         self.assertNotIn('private', json.dumps(baseline))
 
+    def test_specification_phase_observes_literal_argv_and_preserves_hosted_identity(self):
+        base, head = self.git_history()
+        ref = "literal'quote$ref#hash"
+        subprocess.run(['git', 'branch', ref, base], cwd=self.root, check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        command = ['python3', 'scripts/specs.py', 'check', '--base', ref, '--head', head]
+        pinned = {'status': 'event-pinned', 'base': base, 'head': head, 'selection': 'commit'}
+        for argv, hosted, expected in (
+                (command, False, {'status': 'resolved', 'base': base, 'head': head,
+                                  'selection': 'commit', 'merge_base': False}),
+                ([*command, '--json'], False, {'status': 'resolved', 'base': base, 'head': head,
+                                              'selection': 'commit', 'merge_base': False}),
+                ([*command, '--root', '.', '--review', '/private/ignored-review.json'], False,
+                 {'status': 'resolved', 'base': base, 'head': head,
+                  'selection': 'commit', 'merge_base': False}),
+                ([*command, '--root', str(self.root)], False,
+                 {'status': 'resolved', 'base': base, 'head': head,
+                  'selection': 'commit', 'merge_base': False}),
+                ([*command, '--root', str(self.root / 'other')], False, {'status': 'unavailable'}),
+                ([*command, '--help'], False, {'status': 'unavailable'}),
+                ([*command, '--root'], False, {'status': 'unavailable'}),
+                ([*command, '--r', '/private/ambiguous-review'], False, {'status': 'unavailable'}),
+                ([*command, '--unknown'], False, {'status': 'unavailable'}),
+                (['other-command', *command[1:]], False, {'status': 'unavailable'}),
+                (command, True, pinned)):
+            with self.subTest(argv=argv, hosted=hosted):
+                journal = self.journal()
+                with journal.update() as data:
+                    data['comparison'] = pinned
+                def runner(*args, **kwargs):
+                    self.assertEqual(self.data(journal)['comparison'], expected)
+                    return subprocess.CompletedProcess(argv, 29)
+                output, errors = io.StringIO(), io.StringIO()
+                with patch.object(timing, 'comparison', side_effect=COMPARISON), \
+                        patch.dict(os.environ, {'GITHUB_ACTIONS': 'true' if hosted else ''}), \
+                        contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+                    self.assertEqual(timing.execute('specifications', argv, journal=journal,
+                                                  owned=True, runner=runner), 29)
+                self.assertEqual(output.getvalue(), '')
+                self.assertEqual(errors.getvalue(), '')
+                for private in (ref, '/private', str(self.root)):
+                    self.assertNotIn(private, journal.path.read_text())
+
     def test_instrumentation_failure_preserves_owned_runner_status_and_privacy(self):
         journal = Mock()
         journal.start.side_effect = OSError('/private/home/secret argv=credential')
@@ -634,6 +680,10 @@ print(result)
         with contextlib.redirect_stderr(errors):
             self.assertEqual(timing.execute('build', ['irrelevant'], journal=journal,
                                            owned=True, runner=runner), 29)
+        journal.record_specification.side_effect = OSError('/private/home/secret argv=credential')
+        with contextlib.redirect_stderr(errors):
+            self.assertEqual(timing.execute('specifications', ['python3', 'scripts/specs.py', 'check'],
+                                           journal=journal, owned=True, runner=runner), 29)
         self.assertNotIn('/private', errors.getvalue())
         self.assertNotIn('credential', errors.getvalue())
         with patch.object(timing, 'Journal') as journals, \
@@ -650,6 +700,15 @@ print(result)
                 patch('specs_lib.processes.run_verification', return_value=subprocess.CompletedProcess([], 31)), \
                 contextlib.redirect_stderr(errors), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(timing.verify(), 31)
+        self.assertNotIn('/private', errors.getvalue())
+
+        os.environ.pop('CODE_FACTORY_TIMING_FILE', None)
+        with patch.dict(os.environ, {'CODE_FACTORY_TIMING_WORKER_CONTEXT': '1'}), \
+                patch.object(timing.Journal, 'create', side_effect=OSError('/private/failed-fallback')) as fallback, \
+                patch('specs_lib.processes.run_verification', return_value=subprocess.CompletedProcess([], 23)), \
+                contextlib.redirect_stderr(errors), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(timing.verify(), 23)
+        fallback.assert_called_once()
         self.assertNotIn('/private', errors.getvalue())
 
         # The private native-worker metadata hook is equally non-authoritative.
@@ -1033,6 +1092,85 @@ sys.exit(timing.verify([sys.executable, '-c', worker, str(root / 'worker')]))
         self.assertTrue(all(row['outcome'] == 'unstarted' for row in data['phases'][1:]))
         self.assertFalse((self.root / 'dist').exists())
 
+    def test_reserved_journal_preserves_origin_without_creating_files(self):
+        reservation = timing.Journal.reserve(clock=lambda: 10.0)
+        path = Path(reservation['path'])
+        self.assertFalse(path.parent.exists())
+        journal = timing.Journal.create(**reservation, metadata=False, clock=lambda: 13.0)
+        self.assertEqual(self.data(journal)['clock_origin'], 10.0)
+        self.assertEqual(self.data(journal)['run_id'], path.stem)
+        journal.finish('failure')
+        self.assertEqual(self.data(journal)['wall_seconds'], 3.0)
+
+    def test_automatic_journal_materializes_only_at_context_or_early_failure(self):
+        for mode in ('dry-success', 'worker', 'nonzero', 'missing', 'interrupt'):
+            with self.subTest(mode=mode):
+                os.environ.pop('CODE_FACTORY_TIMING_FILE', None)
+                reserved = {}
+                def identity():
+                    partial = self.data(timing.selected())
+                    self.assertEqual(partial['clock_origin'], reserved['clock_origin'])
+                    self.assertEqual(partial['source']['head'], None)
+                    self.assertEqual(partial['comparison'], {'status': 'unavailable'})
+                    return {'head': 'a' * 40, 'inputs_sha256': 'b' * 64, 'dirty': False}
+                def worker(*args, **kwargs):
+                    reserved.update(json.loads(os.environ['CODE_FACTORY_TIMING_RESERVATION']))
+                    self.assertFalse(Path(reserved['path']).exists())
+                    if mode == 'worker':
+                        with patch.object(sys, 'argv', ['timing', 'worker-start']):
+                            self.assertEqual(timing.main(), 0)
+                    if mode == 'missing':
+                        raise FileNotFoundError('private missing executable')
+                    if mode == 'interrupt':
+                        raise KeyboardInterrupt()
+                    return subprocess.CompletedProcess([], 23 if mode == 'nonzero' else 0)
+                with patch.dict(os.environ, {'CODE_FACTORY_TIMING_WORKER_CONTEXT': '1'}), \
+                        patch.object(timing, 'identity', side_effect=identity), \
+                        patch.object(timing, 'toolchains', return_value={}), \
+                        patch('specs_lib.processes.run_verification', side_effect=worker), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    if mode in ('missing', 'interrupt'):
+                        with self.assertRaises(FileNotFoundError if mode == 'missing' else KeyboardInterrupt):
+                            timing.verify(['make', 'verify-steps', 'FLOW_ARGS=private-canary'])
+                    else:
+                        self.assertEqual(timing.verify(['make', 'verify-steps']), 23 if mode == 'nonzero' else 0)
+                self.assertNotIn('CODE_FACTORY_TIMING_RESERVATION', os.environ)
+                path = Path(reserved['path'])
+                if mode == 'dry-success':
+                    self.assertFalse(path.exists())
+                    self.assertNotIn('CODE_FACTORY_TIMING_FILE', os.environ)
+                    continue
+                data = json.loads(path.read_text())
+                self.assertEqual(data['clock_origin'], reserved['clock_origin'])
+                self.assertEqual(data['run_id'], path.stem)
+                self.assertGreaterEqual(data['wall_seconds'], 0)
+                self.assertEqual(data['outcome'], 'incomplete' if mode == 'worker' else
+                                 'interrupted' if mode == 'interrupt' else 'failure')
+                self.assertEqual(data['source']['head'], 'a' * 40 if mode == 'worker' else None)
+                self.assertEqual(data['comparison'], {'status': 'unavailable'})
+                self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None and
+                                    row['exit_code'] is None for row in data['phases']))
+                self.assertNotIn('private', path.read_text())
+
+    def test_automatic_context_preserves_supplied_and_hosted_journals(self):
+        for hosted in (False, True):
+            with self.subTest(hosted=hosted):
+                journal = self.journal(hosted=hosted)
+                with journal.update() as data:
+                    data['comparison'] = {'status': 'event-pinned', 'base': 'a' * 40, 'head': 'b' * 40}
+                before = self.data(journal)
+                with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(journal.path),
+                        'CODE_FACTORY_TIMING_WORKER_CONTEXT': '1', 'GITHUB_ACTIONS': 'true' if hosted else ''}), \
+                        patch.object(timing.Journal, 'reserve') as reserve, \
+                        patch('specs_lib.processes.run_verification', return_value=subprocess.CompletedProcess([], 29)), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(timing.verify(['make', 'verify-steps']), 29)
+                reserve.assert_not_called()
+                after = self.data(journal)
+                for key in ('run_id', 'clock_origin', 'source', 'comparison', 'phases'):
+                    self.assertEqual(after[key], before[key])
+                self.assertEqual(after['outcome'], 'running' if hosted else 'failure')
+
     def test_startup_metadata_exceptions_keep_truthful_partial_journals(self):
         for selected in (False, True):
             for stage in ('identity', 'comparison'):
@@ -1068,6 +1206,41 @@ sys.exit(timing.verify([sys.executable, '-c', worker, str(root / 'worker')]))
                         self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None
                                             for row in data['phases']))
                         self.assertNotIn('private-ref', journal.path.read_text())
+
+    def test_actual_comparison_metadata_systemexit_stops_before_owned_runner(self):
+        for selected in (False, True):
+            for status in (0, 2, 130, 143):
+                with self.subTest(selected=selected, status=status):
+                    os.environ.pop('CODE_FACTORY_TIMING_FILE', None)
+                    journal = self.journal() if selected else None
+                    before = set((self.root / 'verification-results').glob('*.json'))
+                    if journal:
+                        os.environ['CODE_FACTORY_TIMING_FILE'] = str(journal.path)
+                    def interrupted_git(*args):
+                        partial = self.data(timing.selected())
+                        self.assertEqual(partial['outcome'], 'running')
+                        self.assertEqual(partial['source']['head'], 'a' * 40)
+                        self.assertEqual(partial['comparison'], {'status': 'unavailable'})
+                        raise SystemExit(status)
+                    with patch.object(timing, 'comparison', COMPARISON), \
+                            patch.object(timing, 'git', side_effect=interrupted_git) as git, \
+                            patch('specs_lib.processes.run_verification') as worker, \
+                            contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                        with self.assertRaises(SystemExit) as caught:
+                            timing.verify(['make', 'verify-steps', 'FLOW_ARGS=--base /private/metadata-ref'])
+                    self.assertEqual(caught.exception.code, status)
+                    git.assert_called_once_with('rev-parse', '--verify', '/private/metadata-ref^{commit}')
+                    worker.assert_not_called()
+                    if journal is None:
+                        path, = set((self.root / 'verification-results').glob('*.json')) - before
+                        journal = timing.Journal(path)
+                    data = self.data(journal)
+                    self.assertEqual(data['outcome'], 'interrupted')
+                    self.assertEqual(data['comparison'], {'status': 'unavailable'})
+                    self.assertIsNotNone(data['wall_seconds'])
+                    self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None and
+                                        row['exit_code'] is None for row in data['phases']))
+                    self.assertNotIn('/private', journal.path.read_text())
 
     def test_startup_metadata_real_signals_finalize_persisted_unknown_fields(self):
         for selected in (False, True):

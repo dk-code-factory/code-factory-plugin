@@ -122,5 +122,9 @@ class CLIIntegrationTests(unittest.TestCase):
         self.assertTrue(self.command(root, 'impact', '--base', base).startswith('Affected: '))
         selected = json.loads(self.command(root, 'report', '--base', base, '--head', base, '--json'))
         self.assertFalse(selected['reviews'])
+        checked = self.command(root, 'check', '--base', base, '--head', base, '--json')
+        reviewed = self.command(root, 'check', '--base', base, '--head', base, '--json',
+                                '--review', '/private/ignored-review.json')
+        self.assertEqual(json.loads(reviewed), json.loads(checked))
         self.assertTrue(all(row['action'] not in ('render', 'reconcile') for row in selected['next_commands']))
         self.assertEqual(uf.snapshot(root), before)

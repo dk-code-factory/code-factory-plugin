@@ -6,6 +6,10 @@ import tarfile
 import zipfile
 import os
 import re
+import select
+import signal
+import socket
+import shlex
 from pathlib import Path
 import subprocess
 import shutil
@@ -18,6 +22,7 @@ from unittest.mock import patch
 
 import ci
 import release
+from test_specs_timing import cleanup_process
 
 
 class HostedCITests(unittest.TestCase):
@@ -330,10 +335,12 @@ class VerificationGraphTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         source = Path(__file__).resolve().parents[1]
-        for name in ('Makefile', 'scripts/verify.sh'):
+        for name in ('Makefile', 'scripts/verify.sh', 'scripts/verification_timing.py',
+                     'scripts/specs_lib/processes.py', 'scripts/user_flows.py'):
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source / name, target)
+        shutil.copytree(source / 'scripts/specs_lib', self.root / 'scripts/specs_lib', dirs_exist_ok=True)
         # A file default must not replace a caller's command-line variable in
         # recursive verification; inheriting only an environment value loses it.
         with (self.root / 'Makefile').open('a') as makefile:
@@ -355,14 +362,34 @@ import hashlib, json, os, pathlib, sys, time
 root = pathlib.Path(os.environ['RECORD_ROOT'])
 command = pathlib.Path(sys.argv[0]).name
 args = sys.argv[1:]
+if command == 'python3' and args and args[0].endswith('/verification_timing.py'):
+    os.execv('/usr/bin/python3', ['/usr/bin/python3', *args])
+if args in (['--version'], ['version']):
+    if os.environ.get('EXPECTED_COMPARISON_HEAD'):
+        def observe_startup(event):
+            with (root / 'startup-observations.jsonl').open('a') as output:
+                output.write(json.dumps({'command': command, 'event': event}) + '\\n')
+        observe_startup('started')
+        summary=json.loads(pathlib.Path(os.environ['CODE_FACTORY_TIMING_FILE']).read_text())
+        assert summary['source']['head'] == os.environ['EXPECTED_COMPARISON_HEAD']
+        assert summary['comparison'] == {'status': 'unavailable'}
+        assert not (root / 'commands.jsonl').exists(), 'work preceded metadata initialization'
+        observe_startup('passed')
+    print('1.24.2')
+    sys.exit(0)
 key = command + ' ' + ' '.join(args)
+if command == 'python3' and args[:2] == ['scripts/specs.py', 'check'] and os.environ.get('EXPECTED_COMPARISON_BASE'):
+    summary=json.loads(pathlib.Path(os.environ['CODE_FACTORY_TIMING_FILE']).read_text())
+    assert summary['comparison']['base'] == os.environ['EXPECTED_COMPARISON_BASE']
+    assert summary['comparison']['head'] == os.environ['EXPECTED_COMPARISON_HEAD']
+    assert summary['comparison']['status'] == 'resolved'
 inputs = ['web/package.json', 'web/package-lock.json', 'web/vite.config.ts',
           'web/defer-ui.mjs', 'web/src/app.tsx', 'plugin/plugin.json',
           'internal/testutil/fakecodex/main.go', 'go.mod']
 digest = hashlib.sha256(b''.join((root / p).read_bytes() for p in inputs)).hexdigest()
 def record(event):
     with (root / 'commands.jsonl').open('a') as output:
-        output.write(json.dumps(dict(event=event, key=key, fixture=os.environ.get('CODE_FACTORY_REAL_CODEX'), marker=os.environ.get('VERIFICATION_COMMAND_MARKER'), marker_flavor=os.environ.get('VERIFICATION_COMMAND_FLAVOR'), tmpdir=os.environ.get('TMPDIR'), tmpdir_exists=pathlib.Path(os.environ.get('TMPDIR', '/tmp')).is_dir(), digest=digest)) + '\\n')
+        output.write(json.dumps(dict(event=event, key=key, fixture=os.environ.get('CODE_FACTORY_REAL_CODEX'), marker=os.environ.get('VERIFICATION_COMMAND_MARKER'), marker_flavor=os.environ.get('VERIFICATION_COMMAND_FLAVOR'), native_scope=os.environ.get('NATIVE_SCOPE'), mflags=os.environ.get('MFLAGS'), mflags_flavor=os.environ.get('VERIFICATION_MFLAGS_FLAVOR'), mflags_origin=os.environ.get('VERIFICATION_MFLAGS_ORIGIN'), tmpdir=os.environ.get('TMPDIR'), tmpdir_exists=pathlib.Path(os.environ.get('TMPDIR', '/tmp')).is_dir(), digest=digest)) + '\\n')
 def require(*paths):
     for path in paths:
         assert (root / path).read_text() == digest, 'stale or missing ' + path
@@ -371,6 +398,12 @@ def produce(path):
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(digest)
 record('start')
+if key == os.environ.get('WAIT_COMMAND'):
+    import socket
+    ready = socket.create_connection(('127.0.0.1', int(os.environ['READY_PORT'])))
+    ready.sendall(str(os.getpid()).encode())
+    ready.close()
+    time.sleep(60)
 time.sleep(0.005)
 if key == os.environ.get('FAIL_COMMAND'):
     sys.exit(23)
@@ -407,10 +440,16 @@ record('end')
         self.env.pop('MAKELEVEL', None)
         self.env.pop('FLOW_BASE', None)
         self.env.pop('FLOW_ARGS', None)
+        for key in list(self.env):
+            if key.startswith('CODE_FACTORY_TIMING_') or key == 'GITHUB_ACTIONS':
+                self.env.pop(key)
 
     def run_make(self, *goals, flags=(), fail=None, inherited_flags=None, direct=False):
+        before = set((self.root / 'verification-results').glob('*.json'))
         log = self.root / 'commands.jsonl'
         log.unlink(missing_ok=True)
+        observations = self.root / 'startup-observations.jsonl'
+        observations.unlink(missing_ok=True)
         env = {**self.env}
         if fail:
             env['FAIL_COMMAND'] = fail
@@ -419,8 +458,16 @@ record('end')
         argv = ['sh', 'scripts/verify.sh'] if direct else ['make', '--no-print-directory']
         result = subprocess.run([*argv, *flags, *goals], cwd=self.root, env=env,
                                 capture_output=True, text=True, timeout=30)
+        self.last_result = result
+        created = set((self.root / 'verification-results').glob('*.json')) - before
+        self.last_timing = json.loads(created.pop().read_text()) if created else None
         events = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
         self.assertTrue(all(e['fixture'] == '0' for e in events), events)
+        if env.get('EXPECTED_COMPARISON_HEAD'):
+            observed = [json.loads(line) for line in observations.read_text().splitlines()] if observations.exists() else []
+            expected = [{'command': command, 'event': event} for command in ('go', 'node', 'npm')
+                        for event in ('started', 'passed')]
+            self.assertCountEqual(observed, expected, 'required startup observations did not pass')
         return result, events
 
     def successful(self, *goals, **kwargs):
@@ -443,6 +490,8 @@ record('end')
                 self.assertEqual(active, event['key'])
                 active = None
         self.assertIsNone(active)
+        self.assertEqual(starts.count('python3 scripts/test_browser_benchmark.py'), 1, starts)
+        self.assertLess(starts.index('python3 scripts/test_browser_benchmark.py'), starts.index('npm run test:performance'))
         self.assertLess(starts.index('npm test'), starts.index('npm run test:performance'))
         self.assertLess(starts.index('go test -race -count=1 ./...'), starts.index('npm run test:performance'))
         self.assertLess(starts.index('npm run test:performance'), starts.index('python3 scripts/package.py'))
@@ -459,6 +508,8 @@ record('end')
                     goals = ['FLOW_BASE=main', 'CODE_FACTORY_REAL_CODEX=1']
                     events = self.successful(*([] if goal == 'direct' else [goal]), *goals, direct=goal == 'direct')
                     self.assert_shared_once(events)
+                    self.assertEqual(self.last_timing['outcome'], 'success')
+                    self.assertTrue(all(row['outcome'] == 'success' for row in self.last_timing['phases']), self.last_timing)
                     starts = [e['key'] for e in events if e['event'] == 'start']
                     if goal.startswith('hosted'):
                         self.assertEqual(starts.count('python3 -m pip install -r scripts/requirements-dev.txt'), 1)
@@ -507,6 +558,11 @@ record('end')
                 result, failed = self.run_make('hosted-verify', flags=('-k', '-j8'), fail=command)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn('Error 23', result.stderr)
+                rows = self.last_timing['phases']
+                self.assertEqual(self.last_timing['outcome'], 'failure')
+                self.assertTrue(any(row['outcome'] == 'failure' and row['exit_code'] == 23 for row in rows), rows)
+                self.assertFalse(any(row['outcome'] == 'running' for row in rows), rows)
+                self.assertTrue(all(row['seconds'] is None and row['exit_code'] is None for row in rows if row['outcome'] == 'unstarted'))
                 self.assertEqual([e['key'] for e in failed if e['event'] == 'start'], commands[:commands.index(command) + 1])
         result, events = self.run_make(fail='npm ci', direct=True)
         self.assertNotEqual(result.returncode, 0)
@@ -560,6 +616,111 @@ record('end')
                     else:
                         selected = '--base fixture-main --merge-base' if goal == 'ci' else comparison
                         self.assertIn('python3 scripts/specs.py check ' + selected, commands)
+
+    def test_native_expanded_comparison_matches_the_worker_under_variable_overrides(self):
+        def git(*arguments):
+            return subprocess.check_output(['git', *arguments], cwd=self.root,
+                                           stderr=subprocess.DEVNULL).decode().strip()
+        git('init', '-b', 'main')
+        git('config', 'user.name', 'Fixture')
+        git('config', 'user.email', 'fixture@example.invalid')
+        (self.root / '.gitignore').write_text('/verification-results/\n/commands.jsonl\n/startup-observations.jsonl\n')
+        with (self.root / 'Makefile').open('a') as output:
+            output.write('\nverify-steps: WORKER_COMPARE_BASE = main\n')
+            output.write('specs-check: SPEC_COMPARE_BASE = main\n')
+        git('add', '.')
+        git('commit', '-m', 'Comparison fixture')
+        base = git('rev-parse', 'HEAD')
+        git('checkout', '-b', 'feature')
+        (self.root / 'source').write_text('Distinct comparison head')
+        git('add', '.')
+        git('commit', '-m', 'Comparison head')
+        head = git('rev-parse', 'HEAD')
+        self.assertNotEqual(base, head)
+        self.env['EXPECTED_COMPARISON_HEAD'] = head
+        self.env['EXPECTED_COMPARISON_BASE'] = base
+        git('branch', 'ref$literal#value', base)
+        for goal, direct, variables, expected in (
+                ('verify', False, ['FLOW_BASE=$(if $(filter 1,$(MAKELEVEL)),main,HEAD)'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'FLOW_BASE=$(if $(filter 1,$(MAKELEVEL)),main,HEAD)'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base $(COMPARE_BASE)', 'COMPARE_BASE=main'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'COMPARE_BASE=main', 'FLOW_ARGS:=--base $(COMPARE_BASE)'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base missing', 'FLOW_ARGS=--base "main"'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', "FLOW_ARGS=--base 'main'"], '--base main'),
+                ('verify', True, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base $(COMPARE_BASE)', 'COMPARE_BASE=main'], '--base main'),
+                ('verify', False, ['MAKEFLAGS=-k', 'FLOW_ARGS=--base $(if $(filter 1,$(MAKELEVEL)),$(WORKER_COMPARE_BASE),missing)'], '--base main'),
+                ('verify', False, ['FLOW_ARGS=--base $(if $(filter specs-check,$@),main,HEAD)'], '--base main'),
+                ('verify', False, ['FLOW_ARGS=--base $(SPEC_COMPARE_BASE)'], '--base main'),
+                ('verify', False, ['FLOW_ARGS=--base $(SPEC_COMPARE_BASE) --json'], '--base main --json'),
+                ('verify', False, ['FLOW_ARGS=--base $(SPEC_COMPARE_BASE) --root . --review /private/ignored-review.json'],
+                 '--base main --root . --review /private/ignored-review.json'),
+                ('verify', False, ['MAKEFLAGS=-k', "FLOW_ARGS=--base 'ref$$literal#value'"], '--base ref$literal#value'),
+                ('verify', False, ['MAKEFLAGS=-k', "FLOW_ARGS:=--base 'ref$$literal#value'"], '--base ref$literal#value'),
+                ('ci', False, ['MAKEFLAGS=-k', 'FLOW_BASE=main', 'FLOW_ARGS=--base missing'], '--base main --merge-base')):
+            with self.subTest(goal=goal, direct=direct, variables=variables):
+                events = self.successful(*([] if direct else [goal]), *variables, direct=direct)
+                self.assert_shared_once(events)
+                commands = [e['key'] for e in events if e['event'] == 'start']
+                self.assertIn('python3 scripts/specs.py check ' + expected, commands)
+                self.assertEqual(self.last_timing['comparison'], {'status': 'resolved', 'base': base,
+                    'head': head, 'selection': 'worktree', 'merge_base': goal == 'ci'})
+                self.assertEqual(self.last_timing['outcome'], 'success')
+                serialized = json.dumps(self.last_timing)
+                for private in ('COMPARE_BASE', 'FLOW_ARGS', 'MAKELEVEL', str(self.root), 'missing', '$(COMPARE_BASE)'):
+                    self.assertNotIn(private, serialized)
+
+        # Target-specific defaults remain in specs-check's native scope, while
+        # hosted setup continues to inherit from its original parent target.
+        with (self.root / 'Makefile').open('a') as output:
+            output.write('\nspecs-check: FLOW_BASE = main\n')
+            output.write('hosted-verify-steps: export NATIVE_SCOPE = hosted\n')
+            output.write('specs-check: export NATIVE_SCOPE = specifications\n')
+        events = self.successful('hosted-verify')
+        self.assert_shared_once(events)
+        for event in events:
+            if event['key'] in ('python3 -m pip install -r scripts/requirements-dev.txt',
+                                'npm ci', 'npx playwright install --with-deps chromium'):
+                self.assertEqual(event['native_scope'], 'hosted', event)
+            if event['key'].startswith('python3 scripts/specs.py check '):
+                self.assertEqual(event['key'], 'python3 scripts/specs.py check --base main')
+                self.assertEqual(event['native_scope'], 'specifications')
+        self.assertEqual(self.last_timing['comparison']['base'], base)
+
+        with (self.root / 'Makefile').open('a') as output:
+            output.write('specs-check: FLOW_ARGS = --base $(if $(filter specs-check,$@),$(SPEC_COMPARE_BASE),HEAD)\n')
+        self.assert_shared_once(self.successful('verify'))
+        self.assertEqual(self.last_timing['comparison']['base'], base)
+        for goal in ('verify-bootstrap', 'hosted-verify-bootstrap'):
+            with self.subTest(goal=goal):
+                self.assert_shared_once(self.successful(goal, 'FLOW_ARGS=--base main'))
+                self.assertEqual(self.last_timing['comparison'], {'status': 'unavailable'})
+        result, _ = self.run_make('hosted-verify', fail='npm ci')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.last_timing['source']['head'], head)
+        self.assertEqual(self.last_timing['comparison'], {'status': 'unavailable'})
+
+        # Optional version-query failures must not hide a failed startup oracle.
+        helper = self.root / 'scripts/verification_timing.py'
+        original = helper.read_text()
+        premature = 'journal.refresh(comparison_pending=True)'
+        self.assertEqual(original.count(premature), 1)
+        try:
+            helper.write_text(original.replace(premature, 'journal.refresh()'))
+            with self.assertRaisesRegex(AssertionError, 'required startup observations'):
+                self.run_make('verify', 'FLOW_ARGS=--base main')
+            self.assertEqual(self.last_result.returncode, 0, self.last_result.stdout + self.last_result.stderr)
+            observations = [json.loads(line) for line in
+                            (self.root / 'startup-observations.jsonl').read_text().splitlines()]
+            self.assertCountEqual(observations, [{'command': command, 'event': 'started'}
+                                                for command in ('go', 'node', 'npm')])
+            completed = [json.loads(line) for line in (self.root / 'commands.jsonl').read_text().splitlines()]
+            self.assert_shared_once(completed)
+            self.assertEqual(self.last_timing['outcome'], 'success')
+            self.assertEqual(self.last_timing['comparison'], {'status': 'resolved', 'base': base,
+                'head': head, 'selection': 'worktree', 'merge_base': False})
+        finally:
+            helper.write_text(original)
+        self.assertEqual(helper.read_text(), original)
 
     def test_assigned_makeflags_preserve_variable_flavor_and_literal_dollars(self):
         temporary = self.root / 'ci$run'
@@ -627,8 +788,64 @@ record('end')
                         direct=goal == 'direct', flags=flags, inherited_flags=inherited)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertEqual(events, [], 'Dry-run must not execute verification tools')
+                    self.assertIsNone(self.last_timing, 'Dry-run must not create timing evidence')
                     self.assertIn('npm ci', result.stdout)
                     self.assertIn('go vet ./...', result.stdout)
+
+    def test_recursive_make_dry_forms_leave_no_automatic_journal(self):
+        for option in ('-n', '--just-print', '--dry-run', '--recon', '-kn', '--just-p'):
+            for goal in ('verify', 'hosted-verify'):
+                with self.subTest(option=option, goal=goal):
+                    result, events = self.run_make(goal, flags=('MAKE=make ' + option,))
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(events, [])
+                    self.assertIsNone(self.last_timing)
+                    self.assertIn('worker-start', result.stdout)
+
+    def test_before_context_failure_retains_unknown_automatic_journal(self):
+        for command in ('make -n -f missing-makefile', 'make --unknown-option', 'missing-make'):
+            with self.subTest(command=command):
+                result, events = self.run_make('verify', flags=('MAKE=' + command,))
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(events, [])
+                data = self.last_timing
+                self.assertEqual(data['outcome'], 'failure')
+                self.assertEqual(data['source'], {'head': None, 'inputs_sha256': None, 'dirty': None})
+                self.assertEqual(data['comparison'], {'status': 'unavailable'})
+                self.assertGreaterEqual(data['wall_seconds'], 0)
+                self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None and
+                                    row['exit_code'] is None for row in data['phases']))
+                self.assertNotIn(command, json.dumps(data))
+
+    def test_mflags_override_does_not_replace_native_dry_run_state(self):
+        with (self.root / 'Makefile').open('a') as output:
+            output.write('\nexport VERIFICATION_MFLAGS_FLAVOR = $(flavor MFLAGS)\n')
+            output.write('export VERIFICATION_MFLAGS_ORIGIN = $(origin MFLAGS)\n')
+        for goal in ('verify', 'verify-bootstrap', 'ci', 'hosted-verify',
+                     'hosted-verify-bootstrap', 'direct'):
+            with self.subTest(goal=goal, dry_run=True):
+                result, events = self.run_make(
+                    *([] if goal == 'direct' else [goal]), 'FLOW_BASE=fixture-main',
+                    flags=('-n', 'MFLAGS='), direct=goal == 'direct')
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(events, [])
+                self.assertIsNone(self.last_timing)
+                self.assertIn('npm ci', result.stdout)
+                self.assertIn('go vet ./...', result.stdout)
+            with self.subTest(goal=goal, dry_run=False):
+                events = self.successful(
+                    *([] if goal == 'direct' else [goal]), 'FLOW_BASE=fixture-main',
+                    flags=('MFLAGS=-n',), direct=goal == 'direct')
+                self.assert_shared_once(events)
+                self.assertTrue(all(e['mflags'] == '-n' and e['mflags_flavor'] == 'recursive'
+                                    and e['mflags_origin'] == 'command line'
+                                    for e in events), events)
+                self.assertEqual(self.last_timing['outcome'], 'success')
+        events = self.successful('verify', flags=('MFLAGS:=-n',))
+        self.assert_shared_once(events)
+        self.assertTrue(all(e['mflags'] == '-n' and e['mflags_flavor'] == 'simple'
+                            and e['mflags_origin'] == 'command line' for e in events), events)
+        self.assertEqual(self.last_timing['outcome'], 'success')
 
     def test_ci_requires_comparison_before_preparation(self):
         result, events = self.run_make('ci')
@@ -636,13 +853,176 @@ record('end')
         self.assertEqual(events, [])
 
     def test_hosted_dispatch_passes_exact_comparison_through_real_graph(self):
-        with patch.object(ci, 'ROOT', self.root), patch.dict(os.environ, self.env):
+        with patch.object(ci, 'ROOT', self.root), patch.dict(os.environ, self.env, clear=True):
             ci.run_verification({'base': 'a' * 40, 'head': 'b' * 40, 'bootstrap': False},
                                 runner=lambda *args, **kwargs: subprocess.run(*args, timeout=30, **kwargs))
         events = [json.loads(line) for line in (self.root / 'commands.jsonl').read_text().splitlines()]
         self.assert_shared_once(events)
         self.assertIn('python3 scripts/specs.py check --base ' + 'a' * 40 + ' --head ' + 'b' * 40,
                       [e['key'] for e in events])
+
+    def test_native_pipe_and_fifo_jobservers_survive_the_timing_boundary(self):
+        probe = self.root / 'jobserver_probe.py'
+        probe.write_text('''import fcntl,json,os,pathlib,re,stat
+flags=os.environ.get('MAKEFLAGS','')
+match=re.search(r'(?:^|\\s)--jobserver-(?:auth|fds)=([^\\s]+)',flags)
+assert match, 'native recursive jobserver authentication was lost'
+auth=match.group(1)
+if auth.startswith('fifo:'):
+    assert stat.S_ISFIFO(pathlib.Path(auth[5:]).stat().st_mode)
+    kind='fifo'
+else:
+    read,write=map(int,auth.split(','))
+    states=[os.fstat(read),os.fstat(write)]
+    assert all(stat.S_ISFIFO(s.st_mode) for s in states)
+    assert (states[0].st_dev,states[0].st_ino)==(states[1].st_dev,states[1].st_ino)
+    assert [fcntl.fcntl(fd,fcntl.F_GETFL)&os.O_ACCMODE for fd in (read,write)]==[os.O_RDONLY,os.O_WRONLY]
+    kind='pipe'
+assert re.search(r'(?:^|\\s)-j2(?:\\s|$)',flags), 'parallel option changed'
+pathlib.Path('jobserver.json').write_text(json.dumps({'kind':kind,'fixture':os.environ['CODE_FACTORY_REAL_CODEX']}))
+''')
+        with (self.root / 'Makefile').open('a') as makefile:
+            makefile.write('\n.PHONY: jobserver-probe\nverify-steps: jobserver-probe\n')
+            makefile.write('jobserver-probe:\n\t+@' + shlex.quote(sys.executable) +
+                           ' ' + shlex.quote(str(probe)) + '\n')
+        help_text = subprocess.check_output(['make', '--help'], env=self.env, text=True)
+        cases = [(('-j2',), None, None), ((), '-j2', None),
+                 (('MAKEFLAGS=-j2',), None, None)]
+        if '--jobserver-style' in help_text:
+            cases.extend(((('--jobserver-style=pipe', '-j2'), None, 'pipe'),
+                          (('--jobserver-style=fifo', '-j2'), None, 'fifo')))
+        for flags, inherited, expected in cases:
+            with self.subTest(flags=flags, inherited=inherited):
+                result, events = self.run_make('verify', flags=flags, inherited_flags=inherited)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertNotIn('jobserver unavailable', result.stderr)
+                self.assert_shared_once(events)
+                state = json.loads((self.root / 'jobserver.json').read_text())
+                self.assertEqual(state['fixture'], '0')
+                self.assertIn(state['kind'], ('pipe', 'fifo'))
+                if expected:
+                    self.assertEqual(state['kind'], expected)
+                self.assertEqual(self.last_timing['outcome'], 'success')
+
+    def test_option_arguments_do_not_disable_timing_or_execute_dry_runs(self):
+        directory = str(self.root / 'nothing')
+        for flags, inherited in ((('-I', directory), None),
+                                 (('--include-dir=' + directory,), None),
+                                 (('-Oline',), None), (('--output-sync=line',), None),
+                                 ((), '-I' + directory), (('MAKEFLAGS=-I' + directory,), None),
+                                 ((), '--output-sync=line'),
+                                 (('MAKEFLAGS=--output-sync=line',), None),
+                                 (('MAKE=make -I -n',), None),
+                                 (('MAKE=make --include-dir=-n',), None)):
+            with self.subTest(flags=flags, inherited=inherited):
+                events = self.successful('verify', flags=flags, inherited_flags=inherited)
+                self.assert_shared_once(events)
+                self.assertEqual(self.last_timing['outcome'], 'success')
+                result, events = self.run_make('verify', flags=('-n', *flags), inherited_flags=inherited)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(events, [])
+                self.assertIsNone(self.last_timing)
+
+    def graph_cancellation_probe(self, *, hosted=False, before_context=False, dry=False):
+        before = set((self.root / 'verification-results').glob('*.json'))
+        listener = socket.socket()
+        self.addCleanup(listener.close)
+        listener.bind(('127.0.0.1', 0))
+        listener.listen(1)
+        environment = {**self.env, 'WAIT_COMMAND': 'npm ci',
+                       'READY_PORT': str(listener.getsockname()[1])}
+        # Exercise the exact boundary CLI used by Make around its worker graph.
+        argv = ['make', '--no-keep-going', 'hosted-verify-steps' if hosted else 'verify-steps']
+        if before_context:
+            environment['CODE_FACTORY_TIMING_WORKER_CONTEXT'] = '1'
+            probe = self.root / 'tools/before-context.py'
+            probe.write_text("""import json,os,pathlib,socket,time
+reservation=json.loads(os.environ['CODE_FACTORY_TIMING_RESERVATION'])
+reservation['owned_group']=os.getpgrp()
+pathlib.Path('reserved.json').write_text(json.dumps(reservation))
+connection=socket.create_connection(('127.0.0.1',int(os.environ['READY_PORT'])))
+connection.sendall(str(os.getpid()).encode());connection.close()
+time.sleep(60)
+""")
+            (self.root / 'before-context.mk').write_text(
+                '$(shell ' + shlex.quote(sys.executable) + ' tools/before-context.py)\ninclude Makefile\n')
+            argv = ['make', *(['-n'] if dry else []), '-f', 'before-context.mk', *argv[1:]]
+        process = subprocess.Popen([sys.executable, 'scripts/verification_timing.py',
+            'verify', '--', *argv],
+            cwd=self.root, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.addCleanup(cleanup_process, process)
+        ready, _, _ = select.select([listener], [], [], 10)
+        self.assertTrue(ready, 'graph command did not start')
+        connection, _ = listener.accept()
+        with connection:
+            connection.settimeout(2)
+            child_pid = int(connection.recv(32))
+        if before_context:
+            self.assertEqual(set((self.root / 'verification-results').glob('*.json')), before)
+            journal = Path(json.loads((self.root / 'reserved.json').read_text())['path'])
+        else:
+            journal, = set((self.root / 'verification-results').glob('*.json')) - before
+        return process, child_pid, journal
+
+    def test_real_graph_cancellation_keeps_partial_journal_and_cleans_owned_command(self):
+        for hosted in (False, True):
+            with self.subTest(hosted=hosted):
+                process, child_pid, journal = self.graph_cancellation_probe(hosted=hosted)
+                running = json.loads(journal.read_text())
+                self.assertEqual(running['comparison'], {'status': 'unavailable'})
+                self.assertEqual(next(row for row in running['phases'] if row['phase'] == 'npm-install')['outcome'], 'running')
+                process.send_signal(signal.SIGTERM)
+                _, errors = process.communicate(timeout=10)
+                self.assertEqual(process.returncode, 143, errors.decode())
+                with self.assertRaises(ProcessLookupError):
+                    os.kill(child_pid, 0)
+                data = json.loads(journal.read_text())
+                self.assertEqual(data['comparison'], {'status': 'unavailable'})
+                self.assertEqual(data['outcome'], 'interrupted')
+                rows = {row['phase']: row for row in data['phases']}
+                self.assertEqual(rows['specifications']['outcome'], 'unstarted' if hosted else 'success')
+                self.assertEqual(rows['npm-install']['outcome'], 'interrupted')
+                self.assertEqual(rows['performance']['outcome'], 'unstarted')
+                self.assertIsNone(rows['performance']['seconds'])
+                self.assertFalse(any(row['outcome'] == 'running' for row in data['phases']))
+
+    def test_before_context_signals_retain_unknown_partial_even_for_dry_attempts(self):
+        for dry in (False, True):
+            for number, status in ((signal.SIGINT, 130), (signal.SIGTERM, 143)):
+                with self.subTest(dry=dry, signal=number):
+                    process, child_pid, journal = self.graph_cancellation_probe(before_context=True, dry=dry)
+                    reserved = json.loads((self.root / 'reserved.json').read_text())
+                    process.send_signal(number)
+                    _, errors = process.communicate(timeout=10)
+                    self.assertEqual(process.returncode, status, errors.decode())
+                    for pid in (child_pid, reserved['owned_group']):
+                        with self.assertRaises(ProcessLookupError):
+                            os.kill(pid, 0)
+                    data = json.loads(journal.read_text())
+                    self.assertEqual(data['run_id'], journal.stem)
+                    self.assertEqual(data['clock_origin'], reserved['clock_origin'])
+                    self.assertGreaterEqual(data['wall_seconds'], 0)
+                    self.assertEqual(data['outcome'], 'interrupted')
+                    self.assertEqual(data['source'], {'head': None, 'inputs_sha256': None, 'dirty': None})
+                    self.assertEqual(data['comparison'], {'status': 'unavailable'})
+                    self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None and
+                                        row['exit_code'] is None for row in data['phases']))
+                    self.assertNotIn(str(self.root), journal.read_text())
+
+    def test_graph_probe_assertion_failure_cleans_its_owned_worker_group(self):
+        process, child_pid, journal = self.graph_cancellation_probe()
+        leader = os.getpgid(child_pid)
+        with self.assertRaisesRegex(AssertionError, 'forced graph readiness assertion'):
+            try:
+                self.fail('forced graph readiness assertion')
+            finally:
+                cleanup_process(process)
+        self.assertEqual(process.returncode, 143)
+        for pid in (child_pid, leader):
+            with self.assertRaises(ProcessLookupError):
+                os.kill(pid, 0)
+        self.assertEqual(json.loads(journal.read_text())['outcome'], 'interrupted')
+
 
     def test_workflow_does_not_prepare_npm_outside_graph(self):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()

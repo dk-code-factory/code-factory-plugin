@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "34d52954ee41755097b3508d3481c29a545cfb49",
-  "fingerprint": "0c72da91d1b899cf250831f35146fa7fd9eb1ac7c04753bdcf05e3b45d7f64b8",
+  "base": "846a5d4df962e0391006580a9ac7910722622471",
+  "fingerprint": "0f3fe1bd91a67972ad742f38754fbcb9e61d0837140ea9c84179dadd40a23159",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S4/S5 retain the callable journal contract: private stable input/comparison identity, truthful partial phase outcomes and authoritative worker status. This repair restores non-authoritative optional diagnostics through failed fd writes and interpreter shutdown. Available diagnostics remain fixed/nonsensitive; automatic Make/hosted wiring remains separate. All 21 target browser benchmark mappings and sampled-memory/cancellation prose remain preserved. Normal fd output preserves the destination text stream encoding and error policy. Repeated messages retain incremental encoding state for their destination lifetime; failed optional writes do not consume it.",
-    "implementation": "Reviewed journal identity framing and read-only Git status, valid/unmerged/intent-to-add comparison selection, locked atomic updates and allocation-only row bound. Audited all stream writes: the warning and filename are the only optional stream diagnostics; both now call the same small best-effort helper. Real descriptors use os.write without adding Python buffered bytes; no-fd captures retain write/flush behavior, and diagnostic failures are swallowed without recursive warnings. GITHUB_ENV writes remain functional hosted exports inside existing observation handling. Worker argv, inherited stdout/stderr, owned session cleanup and authoritative cancellation/status routing are unchanged. The production delta is 40 added/2 deleted lines at the existing helper owner. The raw byte path reads stream.encoding and stream.errors, falling back to UTF-8/strict only when unavailable; encoding failures remain optional and cannot leave Python buffered bytes for shutdown. A standard-library incremental encoder is cached directly on each text destination object with its encoding/errors key, without global fd routing state. New encoder initialization respects existing seekable output bytes. Success commits encoder progress; failed encoding, short writes, OS errors and actual cancellation restore the saved state, and BaseException is re-raised so cancellation remains authoritative. Closing/replacing a destination cannot carry its private cache into a new object even if the fd number is reused.",
-    "tests": "Read retained assertions for overlap/parent/wall clocks, 48 concurrent updates, privacy, 256-row reserved execution, raw143/-15 outcomes, exact1/4/3 capacity timestamps, framing, source/index byte invariance and hosted policy. Both real execution probes retain their independent8s outer deadlines and immediate cleanup registration. New actual-process matrix first reproduced18 failures before the fix, then passed27 cases across stdout filename failure, metadata failure before worker and finish failure afterward; /dev/full, closed pipes and readable captures each retain process0/19/143 after interpreter shutdown. Each case requires real worker execution, exact argv and identical fd destinations, normal worker stdout/stderr, readable normal filename/fixed warning and no private arguments/exception/root text. Existing StringIO warning and filename paths now explicitly assert normal diagnostic text. Focused timing37, runner6 and benchmark21 pass. Full selected fixture reconciliation refreshes shared source/assertion inputs without claiming live-host or speed evidence. The actual-process encoding regression reproduced the UTF-8 compatibility mismatch before correction. Latin-1 strict now retains byteE9, ASCII backslashreplace retains literal\\xe9 and ASCII strict skips an unencodable optional filename while the real worker still executes and exits19. The refreshed process proof covers all30 concrete child exits and exact encoding-policy bytes. Prior UTF-8-only reconciliation/check/CI succeeded but is superseded for this adjusted source, with unchanged records/logs retained privately. Six additional actual-process cases now verify one BOM across two real pre/post-worker warnings, recovery after /dev/full and strict encoding failure, encoding/error-policy changes, append position and object lifetime despite fd-number reuse. Actual SIGTERM at the write boundary restores state and exits143 before worker start; the same stream can still emit its initial BOM during inspected cleanup. The refreshed external proof records36 actual process outcomes and exact bytes. Both earlier successful diagnostic verification versions are retained as superseded; this run refreshes the complete selected tree."
+    "description": "S4/S5 observe the native Make graph with early source identity and comparison derived from actual specification argv. Successful automatic native dry runs create no timing file. Under user Decision be3c7803c63ed028c622, failure or interruption before native context is observed retains an unknown partial even when the attempt was dry. Direct helper calls and supplied/hosted journals retain immediate startup behavior. Stable IDs, pinned adoption and existing open gaps remain unchanged.",
+    "implementation": "Inspected automatic reservation, ordinary worker-start materialization before metadata and parent fallback: one UUID/path/monotonic origin is preserved; unobserved successful children create no file. Make remains the sole graph and is unchanged by this repair. Shared specs_lib.arguments holds the former authoritative public CLI definitions; the facade and observer reuse it, preserving --json, ignored --review and equivalent --root while different-root, unknown, malformed and help argv remain unavailable without parser diagnostics. Existing actual-argv, staged read-only digest, conflicting/unmerged/intent-to-add selection, initial-push, reserved-capacity and diagnostic isolation code is preserved. Supplied and hosted state, variable flavors/origins/values, jobservers, phase ordering, prerequisite inheritance, fixture mode and owned cleanup remain intact. Benchmark implementation/assertions retain inventory, sampled RSS, ancestry/PID and cancellation behavior; no GNU argv detector, preflight or second scheduler is added. The follow-up correction limits SystemExit conversion to integer0/2 raised inside argument parsing. Later metadata exits and other parser exit statuses propagate through existing direct-helper interruption finalization; chosen automatic startup policy and public CLI grammar are unchanged. Final comment-only clarification replaces the unconditional Makefile dry-run sentence with the exact selected successful-dry versus early-failure/interruption qualification. No executable recipe, runtime, test, assertion mapping or described behavior changes; full-branch classifications and the substantive reviews above remain applicable. The follow-up repair changes only the native test fixture oracle: optional version subprocess assertions emit started/passed observations to a cleared private trace and controlling run_make requires all expected passes. Production version-query failure tolerance, runtime, Make and parser behavior are unchanged. Trace data is ignored in fixture Git identity.",
+    "tests": "Read actual helper assertions for no-file/no-directory reservation, exact injected origin and wall time, worker creation before source metadata, unknown nonzero/missing/interrupted fallback, supplied/hosted identity preservation and optional fallback-write failure isolation. Native tests cover recursive dry short/group/long/abbreviated forms, actual -I -n operands, missing executable and dry Makefile failure. Before-context SIGINT/SIGTERM probes use real Make parsing with and without -n, finite readiness/communication waits and immediately registered cleanup; they assert reserved ID/origin, unknown source/comparison, null unstarted fields, interrupted outcome and owned helper/group disappearance. Actual-argv/index/native matrix and public CLI tests cover supported review/root/json options, unknown/malformed/help/different-root privacy, unchanged committed JSON and byte-identical help/error probes. Existing direct metadata-interruption, runner descriptors, Go cache, fixture and benchmark assertions remain mapped and rerun. No real-host, provider, login, accessibility, soak or speedup acceptance is claimed. Read the new direct fresh/supplied startup assertion using the actual comparison function and an injected first Git metadata callback: statuses0/2/130/143 propagate, owned runner remains uncalled, early source and unknown comparison persist, phases retain null durations/status and the journal finalizes interrupted. Existing actual-argv help and ambiguous-option cases retain quiet unavailable parsing. Read the existing comparison matrix with parent-required startup observations and its private copied-helper negative mutation. Premature comparison leaves ordinary commands and final comparison successful/exit0, but the parent rejects the three started-without-passed observations. The copied helper restores in finally; positive invocations clear the trace each time, preventing stale passes from supplying evidence. No nullable version-string assertion or mandatory production query is introduced."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.183
+      "seconds": 1.204
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 32.877
+      "seconds": 34.821
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 54.394
+      "seconds": 299.2
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.717
+      "seconds": 4.775
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "e8ec1441a3e5be91b070b79e66cb5018d3b41242860dccae80eec67d5f6d9731",
-    "term:coverage-gap": "a1debcb4eaf2113e1701dc79dce7184eb47cfdcc9b3c14be3bb27bbceed95aed",
-    "term:entity": "d41eb966799f4be81bf63ad3d4e7bb2e11de6b091b809bf3631ce2a83140e4c6",
-    "term:glossary": "b55a2ab3f78397e4a4f060d2de04da8c8bcea9b6dff66b2ffa7bc3292bd33189",
-    "term:known-limitation": "d1ee33f075436fad521939290d7dbac0a75b14f04b6944cd7929bea651752a0b",
-    "term:reconciliation": "d3f5c193671cc081a8a5806141a39bc1b23f3b541886832f09e72f467dd3bcb1",
-    "term:unverified-behavior": "6167fef2c1da5a2fb45de458533add196057788b99a1da21f3787c742e03ebe3",
-    "term:verification": "845dcac0a34ac8e4a13d2e0b755da564c56513289504b98a37106b4c52c64eca"
+    "flow:maintain-flow-contracts": "fb4b96a7935e6558e39df6bf7064522f763c1117a10b24729a03ff9632843b5b",
+    "term:coverage-gap": "a8ca25e8ee384097c948679ba3c9102611a1c212d16b8df3bb7b61295d7c7c57",
+    "term:entity": "78438427e050870c4712fd8e03e762c55b68b321aab2f406211f5637ec28c20c",
+    "term:glossary": "6316201680ca00032d4f4f5457bccfc9e6a1334cb4e9d9ec11ac0980e5cfd113",
+    "term:known-limitation": "819d98b36c6ca1783a5122a07606ad0447f86b519b2bed27610ef191414e692c",
+    "term:reconciliation": "1459262b52e731eafb0102bc35c82a8dda10bd2e551d05cc0b51f6bed8b5df53",
+    "term:unverified-behavior": "dc5007b31e108dfda6caa2c64121441c85a3060be86039bf8c9fa84f2e1d9004",
+    "term:verification": "2ef493109f90d16ba36b2887c33527912f0bce05cedb22f8ba0ab678d7562f46"
   }
 }

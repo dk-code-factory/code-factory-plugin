@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "34d52954ee41755097b3508d3481c29a545cfb49",
-  "fingerprint": "43c4aef5086c9629cdbe8e667e8811cd4766b0519b75fdc6d83deacba451c4a9",
+  "base": "846a5d4df962e0391006580a9ac7910722622471",
+  "fingerprint": "17972fe6dbf41e096f1594adf845736f5517ac5fe93c618cd068ac9c20652de5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Signed subscription verification, stable retry identities, expiry and explicit real-host gap retain their contracts.",
-    "implementation": "Inspected registerEvents subscription/unsubscription and error mapping; no notification delivery implementation changed. Shared verification runner/input changes require fresh evidence for this otherwise unchanged subject.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: computed signature, same subscription ID, entity filtering, failed-attempt count and stable event identity on retry remain asserted."
+    "description": "S1-S4 retain verified callbacks, authenticated event delivery, stable retry identity and explicit disabling/expiry behavior. This review refreshes operational verification dependencies only; stable scenario IDs and typed open gaps are retained.",
+    "implementation": "Compared docs/user-flows/receive-notifications.md and its mapped implementation/assertion paths with main 846a5d4df962e0391006580a9ac7910722622471; product paths and authored behavior are byte-identical. The shared scripts/test_ci.py verification harness adds native Make observation assertions. Native Make instrumentation wraps existing commands and preserves phase order, fixture mode and failure/cancellation ownership. No product or host behavior is adopted or changed. The combined repair changes operational argument-parser and startup dependencies only: shared authoritative CLI grammar, automatic reservation/native materialization and the agreed unknown early-failure/interruption fallback. Product meanings and transitions remain unchanged. The additional correction only narrows observer exception handling at the parse boundary; product/glossary/UI semantics and selected lifecycle qualification remain unchanged. Final comment-only clarification replaces the unconditional Makefile dry-run sentence with the exact selected successful-dry versus early-failure/interruption qualification. No executable recipe, runtime, test, assertion mapping or described behavior changes; full-branch classifications and the substantive reviews above remain applicable. Current correction changes a test-fixture oracle and its assertion description only; production behavior, interfaces, shared parser, selected dry-run policy and this subject meaning remain unchanged.",
+    "tests": "Event subscription fixtures verify signatures and challenge, reject unsafe callbacks and failed challenges, and retain stable identity across a 503 retry; no broader failure-class acceptance is claimed. Reviewed real assertion bodies; required fixture suites execute afresh. No real-provider, installed-host, login, accessibility or soak gap is closed. Read combined helper/native assertions for supported root/review/json selections, quiet unavailable errors, reserved origin, worker metadata ordering, successful no-file native dry modes, bounded pre-context SIGINT/SIGTERM and supplied/hosted preservation. Required fixture suites rerun; no acceptance gap is closed. Actual-comparison metadata interruption is now exercised without replacing comparison with a return-value mock. The subject-owned product assertions remain unchanged and declared fixture suites rerun for fresh receipts. Startup observation assertions are now enforced by the native parent fixture instead of relying on optional subprocess success. Existing subject-owned product assertions are unchanged; declared fixture suites rerun for fresh receipts."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 130.011
+      "seconds": 140.436
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.183
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 32.877
+      "seconds": 34.821
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 54.394
+      "seconds": 299.2
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.717
+      "seconds": 4.775
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "9889bc68dd299d882d45663c58128bda8470a8e79c3968a13755455f7340f6dd",
-    "term:attention-request": "bb5cbeb99757e2bbbf6a57727127ec8cbc1e61a3fe0fc3b0ff7a13d9616e58b1",
-    "term:coverage-gap": "a1debcb4eaf2113e1701dc79dce7184eb47cfdcc9b3c14be3bb27bbceed95aed",
-    "term:host": "8cff4f76044382560ce11f7aa40b46928a033d8aba50bfc781e6a99c4f674210",
-    "term:known-limitation": "d1ee33f075436fad521939290d7dbac0a75b14f04b6944cd7929bea651752a0b",
-    "term:subscription": "910520e160b3b05aef97b1cb6638d86ba63447902dad5b2cc71ceb49cd4adbc8",
-    "term:unverified-behavior": "6167fef2c1da5a2fb45de458533add196057788b99a1da21f3787c742e03ebe3"
+    "flow:receive-notifications": "aad25cff9050b369fb39074831216ad9386289f74b7db75d874d775f96bc1875",
+    "term:attention-request": "02f8747dfc2e254a6d9d2df1b785a0a55996e7bd8b7df06c9b82b86a575746f8",
+    "term:coverage-gap": "a8ca25e8ee384097c948679ba3c9102611a1c212d16b8df3bb7b61295d7c7c57",
+    "term:host": "0b44fc4e23e080085a75318a938be434379ec1943741cbd47e5fdd40156ac915",
+    "term:known-limitation": "819d98b36c6ca1783a5122a07606ad0447f86b519b2bed27610ef191414e692c",
+    "term:subscription": "48fd412eefdb187edaa9f028f91f4eb03db918a7e961d94c93c73142ae5122cd",
+    "term:unverified-behavior": "dc5007b31e108dfda6caa2c64121441c85a3060be86039bf8c9fa84f2e1d9004"
   }
 }
