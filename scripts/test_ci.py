@@ -84,38 +84,56 @@ class HostedCITests(unittest.TestCase):
         workflow = yaml.safe_load((Path(__file__).resolve().parents[1] /
             ".github/workflows/browser-benchmark.yml").read_text())
         job = workflow["jobs"]["compare-workers"]
-        script = next(step["run"] for step in job["steps"]
+        step = next(step for step in job["steps"]
             if step.get("name") == "Compare serial and bounded parallel correctness")
-        tools = self.root / "tools"
-        tools.mkdir()
-        npx = tools / "npx"
-        npx.write_text("#!" + sys.executable + "\n" + '''import json, os, sys
-from pathlib import Path
-if "test" in sys.argv:
-    with Path("calls.jsonl").open("a") as output:
-        output.write(json.dumps(sys.argv[1:]) + "\\n")
-    print('{"fixture": true}')
-    sys.exit(int(os.environ.get("SAMPLE_EXIT", "0")))
-print("fixture-version")
-''')
-        npx.chmod(0o755)
+        self.assertNotIn("working-directory", step)
+        retention = next(step for step in job["steps"] if step.get("name") == "Retain correctness comparison")
+        self.assertEqual(retention["if"], "always()")
+        self.assertEqual(retention["with"]["name"], "browser-correctness-benchmark")
+        self.assertEqual(retention["with"]["retention-days"], 7)
+        self.assertEqual(set(retention["with"]["path"].splitlines()),
+                         {"web/benchmark-results/", "web/test-results/"})
+        self.assertEqual(job["env"]["CODE_FACTORY_REAL_CODEX"], "0")
+        self.assertEqual(workflow["permissions"], {"contents": "read"})
+        self.assertEqual(job["runs-on"], "ubuntu-24.04")
+        self.assertEqual(job["timeout-minutes"], 30)
+        checkout = next(step for step in job["steps"] if step.get("uses", "").startswith("actions/checkout@"))
+        self.assertEqual(checkout["with"]["ref"], "${{ github.event.pull_request.head.sha || github.sha }}")
+        self.assertEqual(checkout["with"]["fetch-depth"], 0)
+        self.assertFalse(checkout["with"]["persist-credentials"])
+        preparation = next(step for step in job["steps"] if step.get("name") == "Prepare fixture browser suite")
+        self.assertEqual(preparation["run"], "make ui plugin-embed fake-provider browser-deps")
+        self.assertNotIn("working-directory", preparation)
+        self.assertLess(job["steps"].index(preparation), job["steps"].index(step))
+        self.assertLess(job["steps"].index(step), job["steps"].index(retention))
+        # PyYAML's YAML 1.1 loader treats the unquoted workflow key 'on' as True.
+        self.assertIn("workflow_dispatch", workflow[True])
+        paths = workflow[True]["pull_request"]["paths"]
+        for path in ("web/**", "internal/**", "cmd/**", "go.mod", "go.sum", "Makefile", "plugin/**",
+                     "scripts/package_plugin.py", "scripts/verification_timing.py", "scripts/specs_lib/arguments.py",
+                     "scripts/specs_lib/__init__.py", "scripts/benchmark_browser.py", "scripts/test_browser_benchmark.py",
+                     "scripts/test_ci.py", ".github/workflows/browser-benchmark.yml"):
+            self.assertIn(path, paths)
         for code in (0, 19):
             with self.subTest(exit_code=code):
                 sample = self.root / str(code)
-                sample.mkdir()
-                result = subprocess.run(["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", script],
-                    cwd=sample, env={**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"],
-                        "SAMPLE_EXIT": str(code)}, capture_output=True, text=True, timeout=30)
+                (sample / "scripts").mkdir(parents=True)
+                (sample / "scripts/benchmark_browser.py").write_text('''import json, os, sys
+from pathlib import Path
+assert sys.argv[1:] == ["--output", "web/benchmark-results"]
+output = Path(sys.argv[2])
+output.mkdir(parents=True, exist_ok=False)
+(output / "discovery.stderr.log").write_text("retained fixture diagnostic")
+(output / "summary.json").write_text(json.dumps({"exit_code": int(os.environ["SAMPLE_EXIT"])}))
+sys.exit(int(os.environ["SAMPLE_EXIT"]))
+''')
+                result = subprocess.run(["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
+                    cwd=sample, env={**os.environ, "SAMPLE_EXIT": str(code)},
+                    capture_output=True, text=True, timeout=30)
                 self.assertEqual(result.returncode, code, result.stderr)
-                calls = [json.loads(line) for line in (sample / "calls.jsonl").read_text().splitlines()]
-                workers = [1, 2, 1, 2] if code == 0 else [1]
-                self.assertEqual(calls, [["playwright", "test", "--workers=" + str(w),
-                    "--retries=0", "--reporter=json"] for w in workers])
-                outputs = list((sample / "benchmark-results").glob("*.json"))
-                self.assertEqual(len(outputs), len(workers))
-                for output in outputs:
-                    self.assertEqual(json.loads(output.read_text()), {"fixture": True})
-                    self.assertIn("max_process_rss_kib=", output.with_suffix(".txt").read_text())
+                output = sample / "web/benchmark-results"
+                self.assertEqual(json.loads((output / "summary.json").read_text()), {"exit_code": code})
+                self.assertEqual((output / "discovery.stderr.log").read_text(), "retained fixture diagnostic")
 
     def test_feature_push_and_dispatch_reject_before_verification(self):
         event = self.root / "event.json"
