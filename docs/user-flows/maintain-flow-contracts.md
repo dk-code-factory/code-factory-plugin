@@ -22,7 +22,10 @@ Verification owns one checkout before preparing mutable artifacts, while separat
 worktrees can run concurrently. Each invocation propagates private temporary state
 and confines fixture repository discovery to that state. Nested verification
 shares authenticated ownership; a competing invocation fails before preparation.
-Completion and cooperative cancellation
+Fresh browser listeners retain kernel-assigned loopback ports and communicate
+their actual origins before assertions. An explicit adjacent port pair remains
+supported; an occupied requested listener fails at startup without assertion
+retries or reuse of an unknown server. Completion and cooperative cancellation
 remove owned work only. Stale ownership fails, while an abandoned lock file alone
 does not block a fresh invocation.
 
@@ -64,8 +67,8 @@ may receive separate explicit contract decisions without waiving behavior tests.
 
   Concurrent worktrees keep fixture connections, temporary state and mutable
   outputs separate. A second invocation in one checkout rejects before preparing
-  artifacts. Nested ownership, stale state, unrelated ancestor repositories and
-  cancellation retain these boundaries.
+  artifacts. Nested ownership, stale state, occupied explicit ports, unrelated
+  ancestor repositories and cancellation retain these boundaries.
 - **S5** Remote verification covers PRs to main or sync/local-development and main pushes or manual checks, preserving exact comparisons and a single reviewed public-root bootstrap. Feature branches without a PR receive no automatic checks or artifacts; feature-branch manual verification is rejected. Release delivery requires successful main push verification, exact artifact provenance, packaged component versions, commit-backed fixed-issue references and checksums. Unknown comparisons, failed checks, changed artifacts or existing releases stop delivery.
 
 Browser correctness comparison keeps independently owned mock sessions concurrent
@@ -172,6 +175,9 @@ flowchart TD
 - [scripts/benchmark_browser.py](../../scripts/benchmark_browser.py) — Compare complete correctness inventories and successful single executions across serial and bounded-parallel qualification runs.
 - [scripts/specs_lib/isolation.py](../../scripts/specs_lib/isolation.py) — Per-checkout advisory ownership, authenticated nested-run state, private temporary roots and Git discovery ceilings (`def isolated(`)
 - [scripts/verification_run.py](../../scripts/verification_run.py) — Shared isolated command boundary preserving fixture-only process and Make jobserver ownership (`def main(`)
+- [web/fixture-runner.mjs](../../web/fixture-runner.mjs) — Kernel-allocated owned loopback fixtures publish actual origins before Playwright; explicit ports fail strictly (`async function ready(`)
+- [internal/testhost/listener.go](../../internal/testhost/listener.go) — Retain the real loopback listener before atomically publishing its actual address (`func serveFixture(`)
+- [web/fixture-listener.mjs](../../web/fixture-listener.mjs) — Bind the actual Vite HTTP listener on loopback, bypassing Vite default-port substitution for port zero (`export async function listenFixture(`)
 
 ## Test references
 
@@ -472,6 +478,10 @@ flowchart TD
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_before_context_signals_retain_unknown_partial_even_for_dry_attempts(`; S4, S5. Actual SIGINT/SIGTERM during native Make parsing before worker context, including dry attempts, finalize unknown partials at reserved identity/origin and remove the owned helper and Make group under finite waits with immediately registered cleanup.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_actual_comparison_metadata_systemexit_stops_before_owned_runner(`; S4, S5. Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable.
 - [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `class IsolationTests(`; S4. Nested ownership, checkout contention, stale state, unrelated Git ancestors, concurrent linked worktrees and owned cancellation
+- [internal/testhost/listener_test.go](../../internal/testhost/listener_test.go) — `func TestFixtureListenerOwnsEphemeralLoopbackBeforePublishing(`; S4. Published loopback port stays owned by the actual HTTP fixture
+- [internal/testhost/listener_test.go](../../internal/testhost/listener_test.go) — `func TestFixtureListenerCollisionDoesNotPublishOrReuseUnknownServer(`; S4. Occupied requested ports fail without readiness or unknown-server reuse
+- [internal/testhost/listener_test.go](../../internal/testhost/listener_test.go) — `func TestFixtureDaemonPortValidation(`; S4. Daemon dynamic port validation and explicit adjacent base-port compatibility
+- [scripts/test_fixture_listener.mjs](../../scripts/test_fixture_listener.mjs) — `test("concurrent Vite fixtures retain distinct kernel allocations"`; S4. Two actual Vite instances own distinct live loopback origins; occupied explicit ports reject while the first owned server remains reachable
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_checkout_contention_stops_every_mutating_entrypoint_before_preparation(`; S4, S5. Real Make entrypoints reject a competing checkout owner before recording commands, allocating timing journals or changing retained timing/build outputs.
 - [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_owner_death_rejects_stale_inheritance_and_fresh_run_reclaims_lock(`; S4. A killed owner releases the kernel lock; stale inherited state fails, a fresh invocation gets a distinct private root and the abandoned directory remains untouched.
 - [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_unreaped_dead_owner_cannot_join_replacement_checkout_owner(`; S4. An unreaped dead predecessor cannot authenticate into the replacement live checkout owner; stale state cannot execute the mutation sentinel.
@@ -479,6 +489,7 @@ flowchart TD
 - [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_absent_and_partial_readiness_are_bounded_and_failure_reaps_child(`; S4. Absent and partial readiness have finite local deadlines; failed readiness terminates and reaps the owned child.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_missing_or_mismatched_inherited_make_root_fails_before_preparation(`; S4. The real Make boundary rejects malformed root metadata before preparation or wrapper recursion, while the existing cross-checkout test preserves explicit temporary parents.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_standard_outer_owner_cancellation_finalizes_running_and_reserved_timing(`; S4, S5. Standard Make/outer ownership cancellation lets the nested writer finalize running or reserved partial timing before owned cleanup completes.
+- [scripts/test_fixture_listener.mjs](../../scripts/test_fixture_listener.mjs) — `test("performance configuration spellings select the owned performance fixture"`; S4. Actual fixture startup with bare, relative, absolute, separate and supported equals/attached config arguments selects the performance daemon before Playwright discovery; all invocations remain fixture-only.
 
 ## Verification and gaps
 

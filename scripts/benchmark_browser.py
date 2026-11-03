@@ -316,6 +316,9 @@ def main():
     env = dict(os.environ, CODE_FACTORY_REAL_CODEX="0")
     command = ["npx", "playwright", "test", "--retries=0", "--reporter=json"]
     report = discover(command + ["--list"], output, cwd=ROOT / "web", env=env)
+    # Discovery has no listeners. Actual runs allocate and retain owned fixtures
+    # before loading Playwright, sharing its real bound origins with every worker.
+    command = ["node", "fixture-runner.mjs", "--retries=0", "--reporter=json"]
     expected = inventory(report)
     if not expected or report.get("errors"):
         raise ValueError("Empty or invalid correctness inventory")

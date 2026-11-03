@@ -81,12 +81,14 @@ Normal completion, failure and cooperative cancellation remove only owned state;
 an uncatchable kill can leave a private directory, which future runs never reuse.
 Do not delete another run's directories or persistent lock inode.
 
-Concurrent local checkouts can set `CODE_FACTORY_TEST_BASE_PORT` for fixture
-listeners, for example `CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`.
-The daemon uses the following port, 43174 in this example.
-Defaults remain 4173 and 4174. Both listeners stay on loopback; strict port
-ownership, fresh servers, health checks and direct-connection assertions use the
-selected ports. Installed service routes are unchanged.
+Browser npm scripts and correctness qualification start fresh loopback listeners
+on kernel-assigned ports, retain them and communicate their actual origins before
+Playwright starts. No free-port probe or unknown existing server is used. For a
+fixed adjacent pair, set `CODE_FACTORY_TEST_BASE_PORT`, for example
+`CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`; the daemon then uses
+43174. An occupied requested listener fails before assertions, without retries.
+Direct low-level Playwright commands retain 4173/4174 defaults; use the npm
+entrypoints for automatic isolation. Installed service routes are unchanged.
 
 Executing local `make ci`, `make verify` and direct `scripts/verify.sh` runs retain a
 version-1 JSON phase summary in ignored `verification-results/<run-id>.json`.
