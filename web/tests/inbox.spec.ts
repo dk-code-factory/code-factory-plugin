@@ -1285,6 +1285,8 @@ for (const delay of ["import", "snapshot"] as const) {
       await ui.getByRole("button", { name: "Import DK review settings once", exact: true }).first().click();
       await expect.poll(() => loading).toBe(true);
       await ui.getByRole("button", { name: "Edit repository owner/second", exact: true }).click();
+      await expect(configuration.getByLabel("Ordered reviewers")).toHaveValue(
+        JSON.stringify(repo("owner/second").reviewers, null, 2));
       const secondReviewers = [{ id: "second-draft", kind: "skill", skillId: "fixture" }];
       await configuration.getByLabel("Ordered reviewers").fill(JSON.stringify(secondReviewers));
       await configuration.getByLabel("Private review rules", { exact: true }).fill("Second repository unsaved rules");
