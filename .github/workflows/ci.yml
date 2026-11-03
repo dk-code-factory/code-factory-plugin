@@ -17,7 +17,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       CODE_FACTORY_REAL_CODEX: '0'
       CI_BOOTSTRAP_SHA: ${{ vars.CI_BOOTSTRAP_SHA }}

@@ -438,7 +438,7 @@ def execute(phase, argv, *, journal=None, owned=False, runner=None):
         if runner is None and owned:
             from specs_lib.processes import run_verification
             runner = run_verification
-        result = (runner(argv, cwd=ROOT, timeout=float("inf")) if owned else
+        result = (runner(argv, cwd=Path.cwd(), timeout=float("inf")) if owned else
                   subprocess.run(argv, check=False))
         code = result.returncode
         interrupted = code < 0
@@ -487,7 +487,7 @@ def verify(argv=None):
         from specs_lib.processes import run_verification
         descriptors = jobserver_fds(argv)
         options = {"pass_fds": descriptors} if descriptors else {}
-        result = run_verification(argv, cwd=ROOT, timeout=float("inf"), **options)
+        result = run_verification(argv, cwd=ROOT, timeout=float("inf"), termination_grace=10, **options)
         code = result.returncode
         interrupted = code < 0
         return 128 - code if code < 0 else code
@@ -546,6 +546,12 @@ def hosted_action(action, outcome=None):
 
 
 def main():
+    from specs_lib.isolation import managed
+    with managed(ROOT):
+        return dispatch()
+
+
+def dispatch():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("verify").add_argument("argv", nargs=argparse.REMAINDER)
@@ -573,7 +579,8 @@ def main():
         argv = args.argv[1:] if args.argv[:1] == ["--"] else args.argv
         if not argv:
             parser.error("A command is required")
-        return execute(args.phase, argv)
+        from specs_lib.isolation import enclosing_managed_group
+        return execute(args.phase, argv, owned=not enclosing_managed_group())
     return 0
 
 

@@ -67,8 +67,88 @@ decisions. Every later revision uses the ordinary fail-closed specification gate
 The original fourteen-flow historical adoption pin remains unchanged and is not a
 public CI bypass; its private historical commit is not published.
 
-Concurrent local checkouts can set `CODE_FACTORY_TEST_BASE_PORT` for fixture
-listeners, for example `CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`.
+Verification and standalone Make build/test entrypoints own an advisory lock in
+the checkout's Git directory before preparing mutable outputs. A competing invocation
+fails with a separate-worktree instruction while the initiating process is live.
+If native Make has exited while its guardian still drains managed helpers, a new
+Make invocation can wait up to 35 seconds before attempting fresh ownership; it
+may succeed after cleanup releases the lock. Kernel ownership automatically expires
+if the lock owner dies. Linked worktrees have independent locks and build, browser
+and package outputs. Keep arbitrary direct build commands out
+of an active verification checkout. Reconciliation, browser npm scripts and the
+correctness qualifier share this ownership, including authenticated nested calls.
+The actual caller Make graph keeps its recipes, prerequisites, goal order and
+file-defined default. A pidfd-bound guardian retains ownership for that Make
+process, including native re-execution. Authenticated nested calls reuse it.
+Repository-managed helpers register lifetime leases, including across exec;
+the guardian drains their cleanup and timing before releasing checkout ownership.
+The owner holds a non-inheritable directory descriptor through that drain.
+Make reads framed private field files through its safe `/proc` alias, preserving
+literal whitespace, newlines and Unicode without shell-output normalization.
+Managed phases reuse an enclosing worker session only when the live runner's
+identity and its pinned direct-child group/session belong to the current
+ownership lifetime. Private owner-bound grants stay active through group cleanup,
+so admitted cleanup can retain sharing after Make exits. An unproved group marker
+selects a separate owned session. Admission commits at a final live-Make pidfd
+observation after the identity handshake, before acknowledgement. An exit observed
+there rejects pending admission; committed leases still drain when Make exits
+after that observation, including before acknowledgement arrives.
+The phase lease lasts through command and timing finalization; normal shared
+phases incur no additional session-cleanup wait. Direct hosted verification retains
+ownership through cancellation and manifest timing. Caller-authored supplemental
+recipes retain native Make shell and cancellation semantics. This does not claim
+control of arbitrary background descendants launched by those recipes.
+Cleanup uses a 10-second timing-worker budget inside a 15-second enclosing
+command budget, beneath the guardian's 30-second escalation deadline. Normal
+completion, including an ordinary nonzero Make exit, retains the short group
+cleanup: native Make waits for foreground managed helpers to finish. Signal death,
+timeout, wait errors and cancellation retain the full enclosing cleanup budget
+even if the direct leader has already exited.
+
+Each invocation creates a private temporary root, propagates it through `TMPDIR`
+and bounds fixture Git discovery there, so an unrelated ancestor `.git` cannot
+become a fixture repository. A caller's `TMPDIR` selects the parent of this root.
+For a colon-containing path, Git resolves the live owner's directory-descriptor
+alias to the exact private boundary before discovery; the colon is never inserted
+as a list separator. Ordinary source and nested fixture repositories still resolve
+normally. GNU Make 4.3 and 4.4 retain the parsed temporary-parent value through
+escaped input and framed output, including literal dollars and CR/LF data. Timed
+phase commands keep their recipe working directory when owning a new session.
+Managed verification entrypoints compose the private Git ceiling with the
+environment actually exported by their caller. Authenticated borrowed entries
+also compose it, retain an already-first private boundary, and restore the
+previous missing, empty or literal value when they leave. Native Make keeps
+caller Git values, expansion flavors and export decisions. Raw supplemental
+recipes use `python3 scripts/verification_run.py -- COMMAND` or the managed Python
+context when they need automatic fixture Git bounds; raw recipes otherwise keep
+their native Git environment, as they keep native shell and cancellation rules.
+The explicit real-provider target enters the same helper and sets its opt-in
+only for its child command. The connection probes retain native execution:
+their installed-service requests create no temporary Git fixture work.
+The hidden `.code-factory-verify-*` directory names are reserved for private
+verifier state and ignored at every temporary parent, including inside the
+checkout. Other untracked source remains visible to specification checks.
+Explicitly selected Makefiles retain their order, includes and ordinary
+command-line overrides in the native caller graph. Supplemental recipes and
+shared prerequisites execute once there, including with parallel/keep-going flags.
+Standalone stdin uses GNU Make's native source. The existing timed verification
+worker and `specs-ci` still recurse. Stdin is retained before native removal so
+caller-defined aliases can reach those boundaries; only those managed boundaries
+replay selected files under the same owner. Capture prefers the caller parent outside the
+checkout, using a private external fallback otherwise, and a live Make
+process identity; a pidfd-bound helper removes it when Make exits. No source bytes
+enter command output or environment variables. The returned pathname is encoded
+across Make evaluation so caller dollar/hash characters remain literal.
+Ambiguous source identity fails
+before verification. Copy/startup cancellation removes owned capture state before
+guardian handoff; allocation and cleanup defer signal propagation until their
+owned directory is bound or removed. Native dry runs retain no timing journal.
+Normal completion, failure and cooperative cancellation remove only owned state;
+an uncatchable kill can leave a private directory, which future runs never reuse.
+Do not delete another run's directories or persistent lock inode.
+
+Concurrent local checkouts must select distinct fixture listener ports with
+`CODE_FACTORY_TEST_BASE_PORT`, for example `CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`.
 The daemon uses the following port, 43174 in this example.
 Defaults remain 4173 and 4174. Both listeners stay on loopback; strict port
 ownership, fresh servers, health checks and direct-connection assertions use the
@@ -148,8 +228,8 @@ share only the read-only Vite server; mocked tests never mutate the daemon.
 
 Compare the same source with `npm --prefix web test -- --workers=1` and
 `npm --prefix web test -- --workers=2`. Each invocation starts fresh fixture
-servers. Run invocations sequentially in a checkout, with the documented port
-override when other checkouts are active. Correctness uses a bounded default of
+servers. Use separate worktrees for concurrent invocations; one checkout accepts
+one invocation at a time. Correctness uses a bounded default of
 two workers, independent of CPU count; `--workers=1` selects serial execution.
 
 The separate Browser correctness benchmark workflow runs the same qualifier on

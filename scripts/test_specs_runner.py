@@ -47,6 +47,94 @@ time.sleep(30)
 '''
 
 
+GRACE_VERIFIER = '''import os,pathlib,signal,subprocess,sys,time
+state=pathlib.Path(sys.argv[1]);mode=sys.argv[2]
+child=subprocess.Popen([sys.executable,'-c',"""import pathlib,signal,sys,time
+state=pathlib.Path(sys.argv[1]);stopped=[False]
+signal.signal(signal.SIGTERM,lambda *args:stopped.__setitem__(0,True))
+(state/'child-ready').touch()
+deadline=time.monotonic()+5
+while not stopped[0]:
+    if time.monotonic()>=deadline:raise RuntimeError('cleanup did not receive TERM')
+    time.sleep(.001)
+(state/'cleanup-started').touch()
+time.sleep(.3)
+(state/'cleanup-finished').touch()
+""",str(state)])
+deadline=time.monotonic()+5
+while not (state/'child-ready').exists():
+    if child.poll() is not None or time.monotonic()>=deadline:raise RuntimeError('child not ready')
+    time.sleep(.001)
+(state/'leader-ready').touch()
+if mode=='signal':os.kill(os.getpid(),signal.SIGKILL)
+if mode.startswith('cleanup-'):raise SystemExit(0)
+time.sleep(5)
+'''
+
+
+def grace_probe(mode):
+    # Adopt only this isolated probe's descendants, including a cleanup child
+    # whose direct leader has exited. The unittest process never becomes subreaper.
+    if ctypes.CDLL(None, use_errno=True).prctl(36, 1, 0, 0, 0):
+        raise OSError(ctypes.get_errno(), 'test subreaper setup failed')
+    from specs_lib import processes
+    check = unittest.TestCase()
+    with tempfile.TemporaryDirectory() as directory:
+        state = pathlib.Path(directory)
+        real_waitid, real_killpg = os.waitid, os.killpg
+        injected = False
+        handlers = {s: signal.getsignal(s) for s in (signal.SIGINT, signal.SIGTERM)}
+        def waitid(*args):
+            nonlocal injected
+            if mode == 'wait-error' and not injected and (state / 'leader-ready').exists():
+                injected = True
+                raise OSError('controlled wait observation failure')
+            return real_waitid(*args)
+        def killpg(pid, signum):
+            nonlocal injected
+            real_killpg(pid, signum)
+            if mode.startswith('cleanup-') and signum == signal.SIGTERM and not injected:
+                injected = True
+                os.kill(os.getpid(), signal.SIGINT if mode == 'cleanup-int' else signal.SIGTERM)
+        try:
+            error, result = None, None
+            with patch.object(processes.os, 'waitid', side_effect=waitid), \
+                    patch.object(processes.os, 'killpg', side_effect=killpg):
+                try:
+                    result = processes.run_verification(
+                        [sys.executable, '-c', GRACE_VERIFIER, str(state), mode],
+                        cwd=state, timeout=2, termination_grace=.8)
+                except (KeyboardInterrupt, SystemExit, OSError, subprocess.TimeoutExpired) as caught:
+                    error = caught
+            if mode == 'signal':
+                check.assertIsNone(error)
+                check.assertEqual(result.returncode, -signal.SIGKILL)
+            elif mode == 'timeout':
+                check.assertIsInstance(error, subprocess.TimeoutExpired)
+            elif mode == 'wait-error':
+                check.assertIsInstance(error, OSError)
+                check.assertIn('controlled wait', str(error))
+            elif mode == 'cleanup-int':
+                check.assertIsInstance(error, KeyboardInterrupt)
+            else:
+                check.assertIsInstance(error, SystemExit)
+                check.assertEqual(error.code, 143)
+            check.assertTrue((state / 'cleanup-started').exists())
+            check.assertTrue((state / 'cleanup-finished').exists(), mode + ' truncated cleanup')
+            check.assertEqual({s: signal.getsignal(s) for s in handlers}, handlers)
+            print(mode + ': delayed cleanup finished; outcome and handlers preserved', flush=True)
+        finally:
+            deadline = time.monotonic() + 3
+            children = pathlib.Path(f'/proc/{os.getpid()}/task/{os.getpid()}/children')
+            while children.read_text().strip():
+                check.assertLess(time.monotonic(), deadline, 'probe could not reap owned children')
+                for pid in map(int, children.read_text().split()):
+                    os.kill(pid, signal.SIGKILL)
+                    while os.waitpid(pid, os.WNOHANG) == (0, 0):
+                        check.assertLess(time.monotonic(), deadline, 'probe child survived KILL')
+                        time.sleep(.001)
+
+
 def probe(mode):
     # This short-lived harness alone adopts orphaned verifier children. The
     # production runner does not change process-wide subreaper state, and this
@@ -152,6 +240,23 @@ def probe(mode):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_failure_and_cleanup_cancellation_retain_grace_after_leader_exit(self):
+        for mode in ('signal', 'timeout', 'wait-error', 'cleanup-int', 'cleanup-term'):
+            with self.subTest(mode=mode):
+                result = subprocess.run([sys.executable, __file__, '--grace-probe', mode],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('delayed cleanup finished; outcome and handlers preserved', result.stdout)
+
+    def test_normal_exit_does_not_wait_for_cancellation_grace(self):
+        for status in (0, 7):
+            with self.subTest(status=status):
+                started = time.monotonic()
+                result = uf.run_verification([sys.executable, '-c', f'raise SystemExit({status})'],
+                                             cwd=pathlib.Path.cwd(), termination_grace=2)
+                self.assertEqual(result.returncode, status)
+                self.assertLess(time.monotonic() - started, 1.5)
+
     def test_descriptor_passthrough_is_explicit_and_preserves_default_calls(self):
         from specs_lib import processes
         with tempfile.TemporaryDirectory() as directory:
@@ -214,7 +319,9 @@ sys.exit(37)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 3 and sys.argv[1] == '--probe':
+    if len(sys.argv) == 3 and sys.argv[1] == '--grace-probe':
+        grace_probe(sys.argv[2])
+    elif len(sys.argv) == 3 and sys.argv[1] == '--probe':
         probe(sys.argv[2])
     else:
         unittest.main()

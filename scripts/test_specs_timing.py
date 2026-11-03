@@ -768,7 +768,7 @@ sys.exit(timing.verify(argv))
                             stdout=target if stage == 'filename' else subprocess.PIPE,
                             stderr=subprocess.PIPE if stage == 'filename' else target)
                         self.addCleanup(cleanup_process, process)
-                        output, errors = process.communicate(timeout=8)
+                        output, errors = process.communicate(timeout=15 if status == 'signal' else 8)
                         self.assertEqual(process.returncode, expected, (output, errors))
                         worker = json.loads((root / 'worker.json').read_text())
                         self.assertEqual(worker['argv'], [status, 'private worker argv', str(sink == 'readable')])
@@ -916,7 +916,7 @@ sys.exit(timing.verify([sys.executable, '-c', worker, str(root / 'worker')]))
                     self.assertEqual(timing.verify(argv), status)
                     self.assertEqual(os.environ['CODE_FACTORY_REAL_CODEX'], '0')
                 self.assertEqual(output.getvalue(), 'Verification timing: journal.json\n')
-                runner.assert_called_once_with(argv, cwd=self.root, timeout=float('inf'))
+                runner.assert_called_once_with(argv, cwd=self.root, timeout=float('inf'), termination_grace=10)
                 journal.finish.assert_called_once_with('success' if status == 0 else 'failure')
 
     def test_malformed_comparison_metadata_cannot_stop_bootstrap_worker(self):
@@ -928,7 +928,7 @@ sys.exit(timing.verify([sys.executable, '-c', worker, str(root / 'worker')]))
                       return_value=subprocess.CompletedProcess(arguments, 19)) as runner, \
                 contextlib.redirect_stderr(errors), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(timing.verify(arguments), 19)
-        runner.assert_called_once_with(arguments, cwd=self.root, timeout=float('inf'))
+        runner.assert_called_once_with(arguments, cwd=self.root, timeout=float('inf'), termination_grace=10)
         journal, = (self.root / 'verification-results').glob('*.json')
         data = json.loads(journal.read_text())
         self.assertEqual(data['comparison'], {'status': 'unavailable'})
@@ -1528,6 +1528,73 @@ except KeyboardInterrupt:
                     self.assertIsNotNone(completed['wall_seconds'])
                     self.assertEqual(errors.getvalue(), '')
 
+    def test_hosted_cli_owns_writes_and_reuses_authenticated_parent(self):
+        from specs_lib.isolation import isolated
+        probe = '''import json,os,sys
+from pathlib import Path
+import verification_timing as timing
+root=Path(sys.argv[1]);expected=sys.argv[2];action=sys.argv[3]
+timing.ROOT=root
+timing.identity=lambda:{'head':None,'inputs_sha256':None,'dirty':None}
+timing.comparison=lambda arguments=None,hosted=False:{'status':'unavailable'}
+timing.toolchains=lambda:{}
+seen=[];original=timing.hosted_action
+def observed(*args):
+    run=os.environ.get('CODE_FACTORY_VERIFY_RUN')
+    state=json.loads((Path(run)/'owner.json').read_text()) if run else {}
+    seen.append({'run':run,'tmp':os.environ.get('TMPDIR'),'owner':state.get('pid'),
+        'fd_live':bool(state) and Path(f"/proc/{state['pid']}/fd/{state['directory_fd']}").is_dir()})
+    return original(*args)
+timing.hosted_action=observed
+sys.argv=['timing',action]+([] if action=='hosted-start' else ['--outcome','failure'])
+assert timing.main()==0
+assert len(seen)==1 and seen[0]['run'] and seen[0]['fd_live'],seen
+assert seen[0]['tmp']==str(Path(seen[0]['run'])/'tmp'),seen
+assert (seen[0]['run']==expected if expected!='fresh' else seen[0]['owner']==os.getpid()),seen
+'''
+        for inherited in (False, True):
+            with self.subTest(inherited=inherited):
+                context = isolated(self.root) if inherited else contextlib.nullcontext()
+                with context:
+                    exported = self.root / ('inherited-env' if inherited else 'fresh-env')
+                    environment = {key: value for key, value in os.environ.items()
+                                   if inherited or not key.startswith('CODE_FACTORY_VERIFY_')}
+                    environment.update(GITHUB_ACTIONS='true', GITHUB_ENV=str(exported))
+                    expected = os.environ['CODE_FACTORY_VERIFY_RUN'] if inherited else 'fresh'
+                    for action in ('hosted-start', 'setup-finish', 'hosted-finish'):
+                        result = subprocess.run([sys.executable, '-c', probe, str(self.root), expected, action],
+                            cwd=MODULE_DIRECTORY, env=environment, capture_output=True, text=True, timeout=10)
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        environment.update(dict(line.split('=', 1) for line in exported.read_text().splitlines()))
+                    data = json.loads(Path(environment['CODE_FACTORY_TIMING_FILE']).read_text())
+                    self.assertEqual(data['outcome'], 'failure')
+
+    def test_hosted_cli_contention_precedes_selection_or_journal_mutation(self):
+        from specs_lib.isolation import isolated
+        reservation = {**timing.Journal.reserve(), 'hosted': True}
+        path = Path(reservation['path'])
+        exported = self.root / 'contended-env'
+        probe = '''import sys
+from pathlib import Path
+import verification_timing as timing
+timing.ROOT=Path(sys.argv[1])
+sys.argv=['timing',sys.argv[2]]+([] if sys.argv[2]=='hosted-start' else ['--outcome','cancelled'])
+sys.exit(timing.main())
+'''
+        with isolated(self.root):
+            environment = {key: value for key, value in os.environ.items()
+                           if not key.startswith('CODE_FACTORY_VERIFY_')}
+            environment.update(GITHUB_ACTIONS='true', GITHUB_ENV=str(exported),
+                CODE_FACTORY_TIMING_FILE=str(path), CODE_FACTORY_TIMING_RESERVATION=json.dumps(reservation))
+            for action in ('hosted-start', 'setup-finish', 'hosted-finish'):
+                with self.subTest(action=action):
+                    result = subprocess.run([sys.executable, '-c', probe, str(self.root), action],
+                        cwd=MODULE_DIRECTORY, env=environment, capture_output=True, text=True, timeout=10)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn('already owns this checkout', result.stderr)
+                    self.assertFalse(exported.exists())
+                    self.assertFalse(path.exists())
+
     def test_hosted_startup_signals_keep_exported_partial_for_finalization(self):
         probe = '''import os, signal, sys
 from pathlib import Path
@@ -1587,7 +1654,7 @@ import verification_timing as timing
 timing.ROOT = Path(os.environ['TIMING_FIXTURE_ROOT'])
 original_write = Path.write_text
 def interrupted_write(path, data, *args, **kwargs):
-    if path.suffix == '.json':
+    if path.suffix == '.json' and path.is_relative_to(timing.ROOT / 'verification-results'):
         with path.open('w') as output:
             output.write(data[:20])
             output.flush()
@@ -1693,7 +1760,7 @@ except KeyboardInterrupt:
         exported = self.root / 'github-env'
         original_write = Path.write_text
         def failed_write(path, data, *args, **kwargs):
-            if path.suffix == '.json':
+            if path.suffix == '.json' and path.is_relative_to(timing.ROOT / 'verification-results'):
                 with path.open('w') as output:
                     output.write(data[:20])
                 raise OSError('private write failure')

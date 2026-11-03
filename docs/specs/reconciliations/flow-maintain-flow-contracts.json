@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "19219f177651357eb3505bcedecc8cf17a8c4e4b",
-  "fingerprint": "5e939fd80314454484249c47e835928a89c814862c8be1ca5a82d600e4ac8605",
+  "base": "7f4cfbbd485376c5a0c4b91fbc3feee14a4320b7",
+  "fingerprint": "3837987d408f75e62f77f8334f76c9e95071cfdc207a56a48f0dc0f0d025d85c",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "The contributor contract and pinned adoption policy remain unchanged; packaging assertion edits conservatively require review of every maintained layer.",
-    "implementation": "Inspected the unified facade and existing receipt checks and will write new evidence only with specs.py reconcile against main's merge base; no receipt JSON is edited manually.",
-    "tests": "Read test_reconcile_keeps_bound_callbacks_and_public_verifier_patch_point and ReceiptScalarTests: verification commands, fixture environment and integer success statuses remain required. Packaging test changes strengthen real payload checks."
+    "kind": "behavior",
+    "description": "Verification now owns its checkout before mutable preparation and shares authenticated private temporary state through native Make, reconciliation, npm, hosted timing and qualification. Caller graph/defaults, selected sources, exported values and explicit opt-ins remain native; abrupt caller death drains admitted managed work before release. Fixed browser ports remain outside this part.",
+    "implementation": "Inspected isolation.py held flock, process identity and lock-record admission; make_owner.py binds a pidfd guardian and helper leases; verification_run.py preserves selected Makefiles/stdin and creates or proves command sessions; processes.py retains leaders through cleanup and ci.py keeps ownership through manifest timing. Git ceilings compose actual exported caller values; borrowed state restores on exit. The Makefile-only startup .EXTRA_PREREQS is now a private override, so command-line empty/nonempty caller extras still apply to ordinary targets but cannot remove admission. Checker invocations share independent subreaper supervision; they stop exact Make on timeout, allow guardian drain, reap remaining owned descendants and require acknowledgement before deleting their fixture. Checker TestCase method dispatch now runs in a child beneath the independent subreaper while the parent retains fixture ownership. This covers direct Make and interactive stdin calls as well as the ordinary helper; parent deletion follows the whole-method drain acknowledgement. Child-side early capture-directory deletion is removed.",
+    "tests": "Inspected the actual native graph, process identity, cancellation, owner-token and Git-ceiling assertions. Extended caller extra-prerequisite controls cover command-line empty/nonempty values under serial, parallel and keep-going flags. The contended fake-provider control checks bin never appears; its old-hook negative control creates bin before rejection. The real checker timeout control observes cooperative helper cleanup, guardian/worker disappearance, removed private state and an unrelated surviving child before fixture deletion. Existing supervisor interruption, nonzero and missing-ack controls still apply. Complete declared fixture suites are required for these refreshed inputs; no real-host coverage is inferred. A real direct Make timeout inside a checker-method worker exercises the formerly bypassing route: the test failure reaches its parent only after cooperative helper cleanup and guardian/worker reaping; the fixture still exists for inspection and an unrelated child survives. Focused native Git-ceiling and interactive stdin cases also pass through that method boundary."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 35.637
+      "seconds": 451.837
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 293.651
+      "seconds": 482.58
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.735
+      "seconds": 4.736
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "b2fae364b36f1010479e091fc6c42b6ab4f1cdaa91855937421b74606d14c9e6",
-    "term:coverage-gap": "ec8f913a915e6b0c527088669b5a33d72de90690e8d5d2c42432ba2d832a5963",
-    "term:entity": "7842d5227e8b8e77b3f887ab2646cf995f369fce85f93b34f7c193a9089d0947",
-    "term:glossary": "e2520701f5583e0f868738324033616e5fa6a13f4b6f89fdf5000278df4adf60",
-    "term:known-limitation": "64b9935be2a29039d1b90ed693a34aef5369ffe4c895f48f7afb06b5995c444b",
-    "term:reconciliation": "4ae375f6984ac6daa1cbc4c3f051696293a61c1caf41aa9109bf82ae88f97424",
-    "term:unverified-behavior": "22e71acb4997c17d5295cfbb724fa339757df58c67c407b55ea487ca38bda7e3",
-    "term:verification": "5075d848ff3db39f03de887427217c09c359c9ece0bbb823976e4a6823190d92"
+    "flow:maintain-flow-contracts": "8672afa197943bc298b3a35433870aabe656e400f98387331e1945add609a17e",
+    "term:coverage-gap": "96dffce17a3093b311e1df3695af6979443a4efc1b395aa201384f749d2c0b4f",
+    "term:entity": "2bf19ca544097be823a1082fc6ae4f0eebf27f0d7350494130e8de06b5892acb",
+    "term:glossary": "2e06d62ab9f0a17e1402fdabc367f76239615f1e50af6f2e4459418ca4dac7ba",
+    "term:known-limitation": "34045aad6228d660d78dbbd8332e8518b6d51dbce38f6ec1c1a1e5455678e9d4",
+    "term:reconciliation": "7e85377d24df7082817dcb52fe1a11c120334441e7cce81c9978f36b519ce5a8",
+    "term:unverified-behavior": "104990e4e89f0b26b9c963243641749a211a436292ba16dba389b6ec2061acc7",
+    "term:verification": "6f6e5c2a86567e639bf4df5deca6b51d4b7f50816b3da503c88acbd3de7a71b8"
   }
 }

@@ -383,7 +383,9 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        from specs_lib.isolation import managed
+        with managed(ROOT):
+            main()
     except (ValueError, RuntimeError, subprocess.CalledProcessError) as error:
         print(str(error), file=sys.stderr)
         sys.exit(1)

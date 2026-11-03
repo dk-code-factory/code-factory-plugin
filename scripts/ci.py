@@ -9,6 +9,8 @@ import re
 import subprocess
 import tarfile
 import zipfile
+from specs_lib.isolation import managed
+from specs_lib.processes import run_verification as run_owned_verification
 
 import verification_timing as timing
 
@@ -68,7 +70,7 @@ def comparison(event, name, bootstrap_sha, ref):
     return {"base": commit(base), "head": head, "bootstrap": False}
 
 
-def run_verification(plan, runner=subprocess.run):
+def run_verification(plan, runner=None):
     env = {**os.environ, "CODE_FACTORY_REAL_CODEX": "0"}
     journal = timing.selected()
     if journal:
@@ -83,7 +85,12 @@ def run_verification(plan, runner=subprocess.run):
     else:
         commands = [["make", "hosted-verify", "FLOW_ARGS=--base " + plan["base"] + " --head " + plan["head"]]]
     for argv in commands:
-        runner(argv, cwd=ROOT, env=env, check=True)
+        if runner is None:
+            # Keep the owner alive for nested timing cleanup and final evidence.
+            run_owned_verification(argv, cwd=ROOT, timeout=7200,
+                                   termination_grace=15).check_returncode()
+        else:
+            runner(argv, cwd=ROOT, env=env, check=True)
 
 
 def package_components(directory, records, head):
@@ -194,28 +201,30 @@ def main():
     args = p.parse_args()
     try:
         if args.command == "verify":
-            event = json.loads((args.event or Path(os.environ["GITHUB_EVENT_PATH"])).read_text())
-            plan = comparison(event, os.environ["GITHUB_EVENT_NAME"], os.environ.get("CI_BOOTSTRAP_SHA", ""), os.environ["GITHUB_REF"])
-            print(json.dumps(plan), flush=True)
-            run_verification(plan)
-            journal = timing.selected()
-            identifier = timing.observe(journal.start, "manifest") if journal else None
-            code, interrupted = 1, False
-            try:
-                artifact_manifest(args.directory, plan["head"])
-                code = 0
-            except (KeyboardInterrupt, SystemExit) as error:
-                interrupted = True
-                code = 130 if isinstance(error, KeyboardInterrupt) else int(error.code)
-                raise
-            finally:
-                if identifier is not None:
-                    timing.observe(journal.stop, identifier, code, interrupted=interrupted)
+            # Retain checkout ownership through timed manifest publication.
+            with managed(ROOT):
+                event = json.loads((args.event or Path(os.environ["GITHUB_EVENT_PATH"])).read_text())
+                plan = comparison(event, os.environ["GITHUB_EVENT_NAME"], os.environ.get("CI_BOOTSTRAP_SHA", ""), os.environ["GITHUB_REF"])
+                print(json.dumps(plan), flush=True)
+                run_verification(plan)
+                journal = timing.selected()
+                identifier = timing.observe(journal.start, "manifest") if journal else None
+                code, interrupted = 1, False
+                try:
+                    artifact_manifest(args.directory, plan["head"])
+                    code = 0
+                except (KeyboardInterrupt, SystemExit) as error:
+                    interrupted = True
+                    code = 130 if isinstance(error, KeyboardInterrupt) else int(error.code)
+                    raise
+                finally:
+                    if identifier is not None:
+                        timing.observe(journal.stop, identifier, code, interrupted=interrupted)
         elif args.command == "manifest":
             artifact_manifest(args.directory, commit(args.head or git("rev-parse", "HEAD")))
         else:
             print(json.dumps(verify_artifacts(args.directory, commit(args.head))))
-    except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as error:
+    except (ValueError, KeyError, OSError, RuntimeError, subprocess.CalledProcessError) as error:
         p.exit(1, "CI failed: " + str(error) + "\n")
 
 

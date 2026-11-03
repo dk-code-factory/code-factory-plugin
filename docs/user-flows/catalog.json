@@ -180,7 +180,10 @@
         "scripts/ci.py",
         "scripts/release.py",
         ".github/workflows",
-        "scripts/benchmark_browser.py"
+        "scripts/benchmark_browser.py",
+        "scripts/verification_run.py",
+        "web/package.json",
+        "web/package-lock.json"
       ]
     },
     "inbox-performance": {
@@ -4967,7 +4970,7 @@
         },
         {
           "path": "Makefile",
-          "purpose": "One worker dependency graph shares phony preparation per invocation, prepares standalone prerequisites and orders phases under parallel flags; public verification wrappers enforce stopping after failure. Allowlisted timing wrappers observe actual commands and the graph boundary without recreating scheduling."
+          "purpose": "One worker dependency graph shares phony preparation per invocation, prepares standalone prerequisites and orders phases under parallel flags; public verification wrappers enforce stopping after failure. Allowlisted timing wrappers observe actual commands and the graph boundary without recreating scheduling. Native caller Git values and export decisions remain untouched; fixture-bearing provided entrypoints compose private bounds, including the named explicit real-provider child opt-in."
         },
         {
           "path": "scripts/verify.sh",
@@ -5174,6 +5177,21 @@
         {
           "path": "scripts/benchmark_browser.py",
           "purpose": "Compare complete correctness inventories and successful single executions across serial and bounded-parallel qualification runs."
+        },
+        {
+          "path": "scripts/specs_lib/isolation.py",
+          "anchor": "def isolated(",
+          "purpose": "Per-checkout advisory ownership, authenticated nested-run state, private temporary roots and exact Git discovery boundaries, using the live directory-descriptor alias for colon-containing parents; authenticated borrowed entries idempotently compose the caller-exported Git ceiling and restore missing, empty or literal caller state on exit"
+        },
+        {
+          "path": "scripts/verification_run.py",
+          "anchor": "def main(",
+          "purpose": "Shared isolated command boundary preserving fixture-only process and Make jobserver ownership"
+        },
+        {
+          "path": "scripts/specs_lib/make_owner.py",
+          "anchor": "def retain(",
+          "purpose": "Bind ownership to native Make PID lifetime, reuse its guardian across re-exec, and drain authenticated managed-helper leases before private-state removal and lock release. Independent contention rejects while the initiating process is live; after native Make exits, a new Make can wait up to 35 seconds for its draining guardian before attempting fresh ownership and may succeed after release. Framed value files through the live owner directory descriptor preserve literal exported pathname bytes without Make-source parsing or shell newline normalization. Admission commits at the final live-Make pidfd observation after identity verification; committed leases drain even when Make exits before acknowledgement."
         }
       ],
       "tests": [
@@ -7575,7 +7593,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "The real timing CLI and local/hosted Make graphs retain running/partial/unstarted phase evidence, preserve SIGTERM status and remove the owned blocked command. Cancellation during hosted setup leaves specification unstarted and comparison unavailable; source/phase truth remains explicit."
+          "purpose": "The real timing CLI and local/hosted Make graphs retain running/partial/unstarted phase evidence, preserve SIGTERM status and remove the owned blocked command. Cancellation during hosted setup leaves specification unstarted and comparison unavailable; source/phase truth remains explicit. This recording-tools graph fixture scales only copied inner/outer cleanup budgets to 0.5/1.5 seconds; permanent native and direct-hosted death controls retain production budgets."
         },
         {
           "path": "scripts/test_ci.py",
@@ -7593,7 +7611,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "A forced graph readiness assertion failure still terminates and reaps the timing wrapper through its runner, removes the owned Make and blocked command, and finalizes interrupted evidence."
+          "purpose": "A forced graph readiness assertion failure still terminates and reaps the timing wrapper through its runner, removes the owned Make and blocked command, and finalizes interrupted evidence. This recording-tools graph fixture scales only copied inner/outer cleanup budgets to 0.5/1.5 seconds; permanent native and direct-hosted death controls retain production budgets."
         },
         {
           "path": "scripts/test_ci.py",
@@ -7683,7 +7701,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Actual SIGINT/SIGTERM during native Make parsing before worker context, including dry attempts, finalize unknown partials at reserved identity/origin and remove the owned helper and Make group under finite waits with immediately registered cleanup."
+          "purpose": "Actual SIGINT/SIGTERM during native Make parsing before worker context, including dry attempts, finalize unknown partials at reserved identity/origin and remove the owned helper and Make group under finite waits with immediately registered cleanup. This recording-tools graph fixture scales only copied inner/outer cleanup budgets to 0.5/1.5 seconds; permanent native and direct-hosted death controls retain production budgets."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -7693,6 +7711,174 @@
             "S5"
           ],
           "purpose": "Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "class IsolationTests(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Nested ownership, checkout contention, stale state, unrelated Git ancestors, concurrent linked worktrees and owned cancellation"
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_malformed_owner_roots_cannot_enter_another_checkout(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Missing, null, empty, relative and collection-valued owner roots reject cross-checkout work before its mutation sentinel; valid cross-checkout nesting remains covered separately."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_probe_timeout_reaps_detached_workers_before_fixture_removal(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "S4. Fault-injected probe timeouts under reconciliation, Make and hosted ownership reap detached TERM-ignoring workers before fixture removal and preserve an unrelated child."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_probe_supervisor_preserves_normal_and_nonzero_status(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "S4. Independent supervision retains normal zero and ordinary nonzero probe statuses after exact-owned descendants drain."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_probe_supervisor_drains_after_parent_interrupt_and_wait_timeout(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "S4. Parent SIGINT, SIGTERM and wait timeout request supervisor cleanup, reap a detached TERM-ignoring child and restore handlers before propagating cancellation."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_probe_supervisor_missing_acknowledgement_retains_fixture(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "S4. Missing drain acknowledgement reports the exact supervisor PID and retains the fixture rather than killing the cleanup owner or claiming cleanup."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_reconciliation_npm_wrapper_cancellation_reaps_term_ignoring_group(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "The reconciliation process helper runs the real npm wrapper under authenticated ownership; cancellation removes TERM-ignoring workload members and private state within local deadlines."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_make_npm_wrapper_cancellation_reaps_group_and_finalizes_timing(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real Make ownership and timing dispatch reaches the real npm wrapper; cancellation reaps TERM-ignoring group members, removes private state and finalizes interrupted timing."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_direct_hosted_owner_cancellation_reaps_group_and_finalizes_timing(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "SIGTERM delivered only to the real ci.py verify owner propagates through Make/timing/npm cleanup before private-state removal and checkout-lock release; TERM-ignoring members are reaped and timing finalized."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_direct_hosted_make_death_retains_owner_through_worker_cleanup(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "SIGKILL targets only direct hosted Make while ci.py remains the checkout owner; a distinct-session TERM-ignoring worker stays owned during cleanup, a real contender is rejected, private state and directory descriptor remain live, then workers disappear and timing finalizes before fresh ownership."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_normal_make_failure_waits_for_foreground_cleanup_and_timing(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual GNU Make waits its foreground managed helper through separate-worker reaping and a controlled timing-finalization barrier after sibling failure or fatal expansion. Serial cases preserve the production directive; concurrent fixture stress removes its serialization and covers default, explicit, alias and keep-going variants."
+        },
+        {
+          "path": "scripts/test_specs_runner.py",
+          "anchor": "def test_failure_and_cleanup_cancellation_retain_grace_after_leader_exit(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real killed-leader, timeout, controlled wait-error and cleanup-time SIGINT/SIGTERM probes preserve delayed cleanup completion, original command or cancellation outcomes and restored signal handlers."
+        },
+        {
+          "path": "scripts/test_specs_runner.py",
+          "anchor": "def test_normal_exit_does_not_wait_for_cancellation_grace(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real status-zero and ordinary status-seven no-work commands complete before the two-second cancellation grace instead of paying that full window."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_checkout_contention_stops_every_mutating_entrypoint_before_preparation(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real Make entrypoints reject a competing checkout owner before recording commands, allocating timing journals or changing retained timing/build outputs."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_owner_death_rejects_stale_inheritance_and_fresh_run_reclaims_lock(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A killed owner releases the kernel lock; stale inherited state fails, a fresh invocation gets a distinct private root and the abandoned directory remains untouched."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_unreaped_dead_owner_cannot_join_replacement_checkout_owner(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An unreaped dead predecessor cannot authenticate into the replacement live checkout owner; stale state cannot execute the mutation sentinel."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_inherited_root_is_required_and_must_match_its_owner(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Missing and mismatched inherited checkout roots fail before nested work."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_absent_and_partial_readiness_are_bounded_and_failure_reaps_child(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Absent and partial readiness have finite local deadlines; failed readiness terminates and reaps the owned child."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_missing_or_mismatched_inherited_make_root_fails_before_preparation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "The real Make boundary rejects malformed root metadata before preparation or wrapper recursion, while the existing cross-checkout test preserves explicit temporary parents."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_standard_outer_owner_cancellation_finalizes_running_and_reserved_timing(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Standard Make/outer ownership cancellation lets the nested writer finalize running or reserved partial timing before owned cleanup completes. This recording-tools graph fixture scales only copied inner/outer cleanup budgets to 0.5/1.5 seconds; permanent native and direct-hosted death controls retain production budgets."
         },
         {
           "path": "scripts/test_ci.py",
@@ -7738,6 +7924,404 @@
             "S5"
           ],
           "purpose": "Ordinary and reviewed-root hosted comparisons are already durable when version collection raises KeyboardInterrupt/SystemExit143. The normal phase inventory omits specifications only for the root before version collection and after finalization; the real dispatcher starts no worker, propagates the same cancellation and retains source identity. The fixture explicitly finalizes the interrupted partial journal."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_selected_makefiles_preserve_comparison_order_includes_and_overrides(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "S4, S5. The real checker rejects a committed source change against main through ordered supplemental Makefiles and a single included file; explicit command-line comparison overrides still apply."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_stdin_makefile_and_relative_directory_preserve_real_comparison(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "S4, S5. Real GNU Make stdin in both file-order positions, relative directory selection and an included file preserve main comparison; command-line overrides remain authoritative."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_inside_checkout_parent_runs_real_gate_and_preserves_untracked_inputs(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "S4, S5. Actual ownership/timing/specification CI gate accepts checkout-local temporary parents while unrelated untracked source remains visible and survives failure cleanup."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_external_temporary_parent_runs_real_gate(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "S4, S5. Actual CI specification gate accepts an external temporary parent and removes only its owned runtime directory."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_standalone_stdin_uses_native_source_without_capture(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Even when optional replay capture is ambiguous, standalone stdin reaches the actual checker through native Make without a retained copy; unrelated candidate files remain untouched."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_stdin_dry_run_exposes_no_source_and_creates_no_journal(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "S4, S5. A real native dry run with stdin-selected configuration exposes no source sentinel, creates no timing journal and removes owned runtime state."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_large_stdin_has_no_new_size_cap_and_retained_source_is_private(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "S4, S5. A stdin Makefile with 256 KiB of comment payload (262,147 bytes total) passes the actual CI specification gate without putting source bytes into command output or adding a transport size cap."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_stdin_capture_is_private_and_owner_exit_removes_it(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "S4. Active captured source uses the exact caller-selected external temporary parent, with directory mode0700 and file mode0600; Make owner cancellation removes retained state within a local deadline and preserves the observation file."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_stdin_survives_native_makefile_remake(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A missing included file forces native GNU Make re-exec; the same live owner is reused and the actual checker still rejects the committed main-comparison change."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_checkout_contained_stdin_parent_uses_private_external_fallback(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "S4. A caller temporary parent inside the checkout uses private external stdin storage with mode0700/0600 and owned cleanup after Make exit."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_cancellation_during_stdin_copy_removes_pre_guardian_state(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "S4. A controlled partial-copy barrier proves SIGTERM reaches the actual Make/capture group before guardian readiness; the private source directory disappears within a local deadline while the observation file remains."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_literal_external_temporary_parent_preserves_stdin_path(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Native-legal external temporary parents with spaces, dollars, hashes, backslashes, leading/trailing whitespace, tabs, newlines and Unicode pass the actual stdin-selected CI checker; owned state is removed and unrelated caller state remains."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_supplemental_recipes_and_prerequisites_execute_once_under_ownership(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Native supplemental recipes and shared prerequisites execute once across five selected source identities and serial, parallel and keep-going modes. Raw caller Git values remain native, explicitly borrowed contexts compose exact private bounds and restore caller values, and real ancestor-discovery controls distinguish both scopes."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_supplemental_default_goal_preserves_real_checker_comparison(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A file-defined default specs-check goal reaches the real checker without explicit goals, rejects a main-comparison source change, and accepts a command-line HEAD override."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_native_make_death_drains_managed_cleanup_and_timing(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Killing only native Make drains managed TERM-ignoring workloads, preserves the lock/private root during delayed journal finalization, and then permits ownership reacquisition; actual authenticated exec retains a lease socket. The owner directory descriptor stays live through delayed finalization. Bounded cleanup observation distinguishes worker PID reaping from the remaining managed lease and private-state/lock release."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_native_make_direct_managed_helper_owns_its_command_group(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A managed wrapper launched by native Make creates its own command session rather than assuming ownership of the caller process group; cancellation reaps TERM-ignoring members before private-state removal."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_native_make_completion_drains_background_managed_helper(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Normal native Make completion drains a registered background managed command, reaps its TERM-ignoring workload within the owned deadline, then removes private state and permits checkout reacquisition."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_stdin_alias_reaches_existing_timed_worker_with_real_comparison(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A file-defined default alias reaches ci and its existing timed worker using stdin configuration; the real checker rejects a committed main-comparison change without losing replay state."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_partial_make_owner_readiness_fails_before_work_and_cleans_state(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A partial actual guardian startup response reaches a local readiness deadline, reaps the failed owner, removes private state and releases the lock before checker work."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_make_death_and_pending_admission_in_same_ready_batch_still_drain(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A real pending lease connection and Make exit are delivered in one ready batch; stale listener readiness cannot abort draining, accepted timing cleanup retains lock/private state/directory descriptor, and the pending helper performs no work."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_make_death_drains_imported_owned_runner_lease(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A directly imported managed process runner retains its lease; killing only native Make still drains TERM-ignoring npm workload and private state before fresh ownership."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_phase_sharing_requires_live_group_and_matching_ownership_origin(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual child commands reuse a proved live worker group, while detached, forged-marker and different-owner contexts create owned sessions; marker text alone grants no sharing."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_term_ignoring_worker_finishes_before_enclosing_cleanup_deadline(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A real TERM-ignoring replacement worker is killed and reaped under the inner budget, then the delayed reserved-journal fallback finishes before enclosing cleanup can kill its writer; private state and process groups are removed."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_admitted_cleanup_keeps_group_after_make_death_without_new_admission(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "An already-admitted helper retains its owner-bound group grant after Make death, executes actual cleanup in that group while the directory FD remains live, and rejects a new helper before its mutation sentinel."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_cli_owns_writes_and_reuses_authenticated_parent(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual hosted-start/setup-finish/hosted-finish entrypoints run with a live owner directory FD and the expected private TMPDIR; fresh owners and authenticated parent reuse both preserve the selected hosted journal and final outcome."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_cli_contention_precedes_selection_or_journal_mutation(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A competing checkout owner rejects all hosted timing entrypoints before GITHUB_ENV selection or absent reserved-journal materialization; ownership admission remains authoritative while owned journal I/O stays optional."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_make_death_listener_first_rejects_pending_admission_and_still_drains(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Listener readiness delivered before Make-death readiness rejects pending helper work while accepted cleanup retains ownership and finishes."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_make_death_during_identity_handshake_rejects_pending_admission(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Make exits while the guardian is waiting for a connecting helper identity; the delayed identity cannot enter its body or mutate, and existing cleanup still drains."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_make_death_after_admission_before_acknowledgement_still_drains(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A final live-owner observation commits a helper lease before Make exits; delayed acknowledgement permits that admitted body and the guardian still drains existing cleanup and releases state."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_unrelated_ancestor_git_marker_is_not_discovered(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real Git can discover the unrelated ancestor without the boundary, rejects it under ordinary, colon and Unicode/LF caller parents, and still discovers initialized fixture repositories from nested directories and the ordinary source repository."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_interruption_releases_checkout_and_removes_only_owned_state(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "A completed PID file is atomically published before actual SIGTERM; cancellation reaps the real verifier, removes only private temporary state, preserves source and permits fresh checkout ownership."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_colon_temporary_parent_preserves_native_git_discovery_boundary(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The actual native Make invocation selects the provided managed command wrapper, which confines real Git under a colon/Unicode parent, preserves the exact caller parent, and retains valid nested fixture and ordinary source discovery through the real checker."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_standalone_dependency_install_keeps_recipe_working_directory(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual standalone npm-deps runs real npm ci and a dependency-free Node preinstall assertion in web. The preinstall retains fixture mode and the managed private Git ceiling, rejects a real unrelated ancestor and proves that ancestor discoverable without the bound; no registry access occurs."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_malformed_temporary_parent_transport_fails_before_ownership(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual allocation-helper CLI rejects invalid and incomplete backslash escapes before creating a checkout owner lock."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_temporary_parent_origins_preserve_literal_values_and_real_checker(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Environment, file and command-line temporary-parent origins retain exact whitespace, dollar, hash, backslash, CR/LF, Unicode, colon and apostrophe values; the explicitly selected managed helper exports the exact private boundary and the real checker executes."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_standalone_benchmark_preparation_keeps_recipe_working_directories(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The actual hosted benchmark preparation Make goals run each npm/Vite/Playwright command in web and Go/embed commands at the checkout root, with exact dependency execution counts and fixture mode."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_authenticated_borrowed_context_bounds_git_and_restores_native_choice(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Authenticated borrowed contexts restore missing, empty and literal caller Git values after success and failure, compose the private boundary before real fixture discovery, and keep repeated nesting idempotent."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_git_ceiling_origins_preserve_native_exports_and_real_discovery(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual native command, environment, exported recursive/simple file, unexported file and explicit-unexport choices retain exact Git list bytes and caller discovery outcomes. Provided managed entrypoints add the private boundary while preserving empty components, symlink semantics, CR/LF and a valid large list; current caller source/output recipes are not forced."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_git_ceiling_reexec_and_nested_clients_keep_separate_native_boundaries(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Same-PID native remake retains checkout ownership; two simultaneous authenticated child clients retain distinct actual Git boundaries and managed fixture rejection, and a subsequent parent recipe retains its original choice."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_included_make_source_alias_keeps_native_shell_and_git_boundary(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Native default audit retains Bash semantics for absolute, relative and external symlink-with-space included source aliases; the explicitly selected managed helper bounds actual fixture Git and preserves the exported caller boundary."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_caller_extra_prerequisites_keep_native_order_and_managed_entry_bounds(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Caller global extras before or after the selected source, target-specific extras and command-line nonempty/empty extras retain native order under serial, parallel and keep-going flags while the Makefile ownership hook stays active."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_command_line_extra_prerequisites_cannot_prepare_a_contended_checkout(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "An empty command-line .EXTRA_PREREQS cannot bypass native startup admission: a contended fake-provider target fails before creating its bin preparation directory."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_checker_timeout_drains_guardian_and_helper_before_fixture_removal(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A real checker Make timeout allows admitted helper cleanup and guardian drain before acknowledgement and fixture deletion; owned processes disappear, private state is removed and an unrelated child survives."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_checker_case_failure_drains_direct_make_before_fixture_removal(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Whole checker-test supervision protects direct and interactive subprocess paths: a direct Make timeout is reported only after admitted helper cleanup, guardian/worker reaping and drain acknowledgement; fixture removal waits and unrelated children survive."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_opt_in_targets_preserve_provider_policy_without_services(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Recording-only Go, Python and Node stand-ins retain exact opt-in argv and cwd without contacting providers or services. The named real-provider target preserves child opt-in1 and managed Git bounds; ordinary direct helper forces0. Service-only connection probes retain their native caller Git choice."
         }
       ],
       "suites": [

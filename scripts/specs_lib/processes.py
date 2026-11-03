@@ -4,9 +4,27 @@ import os
 import signal
 import subprocess
 import time
+from contextlib import nullcontext, ExitStack
+from pathlib import Path
+from specs_lib.isolation import owned
 
 
-def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=()):
+def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=(), termination_grace=0.1):
+    """Run a verifier in an owned session, retaining the checkout cleanup lease.
+
+    Keep its direct leader unreaped until final group cleanup. Only explicitly
+    supplied non-stdio descriptors survive exec. This runner targets Linux.
+    """
+    from specs_lib.isolation import managed
+    context = (managed(Path(os.environ.get('CODE_FACTORY_VERIFY_ROOT') or cwd))
+               if os.environ.get('CODE_FACTORY_VERIFY_RUN') or os.environ.get('CODE_FACTORY_VERIFY_ROOT')
+               else nullcontext())
+    with context:
+        return _run_verification(command, cwd=cwd, log_stream=log_stream, timeout=timeout,
+                                 pass_fds=pass_fds, termination_grace=termination_grace)
+
+
+def _run_verification(command, *, cwd, log_stream, timeout, pass_fds, termination_grace):
     """Run one verifier in an owned session, including descendant cleanup.
 
     Observe completion without reaping the leader until the last group signal.
@@ -25,20 +43,27 @@ def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=())
         if interrupted is not None:
             raise SystemExit(128 + interrupted)
     handlers = {}
+    grants = ExitStack()
     try:
         # Record cancellation during process creation as well as waiting. Raising
         # directly inside Popen could interrupt it before we own its returned PID.
         for signum in (signal.SIGINT, signal.SIGTERM):
             handlers[signum] = signal.signal(signum, interrupt)
         descriptor_options = {"pass_fds": pass_fds} if pass_fds else {}
-        process = subprocess.Popen(command, cwd=cwd, env={**os.environ, **uf.FIXTURE_ENV},
+        from specs_lib.isolation import managed_group_grant
+        group_owner = grants.enter_context(managed_group_grant())
+        process = subprocess.Popen(command, cwd=cwd, env={**os.environ, **uf.FIXTURE_ENV,
+                                   'CODE_FACTORY_VERIFY_GROUP_OWNER': group_owner},
                                    stdout=log_stream, stderr=log_stream, start_new_session=True,
                                    **descriptor_options)
+        normal_completion = False
         try:
             deadline = time.monotonic() + timeout
             while True:
                 check_interruption()
-                if os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is not None:
+                completed = os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                if completed is not None:
+                    normal_completion = completed.si_code == os.CLD_EXITED
                     break
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
@@ -51,7 +76,19 @@ def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=())
             # owns the session's original group, not children that detach from it.
             try:
                 os.killpg(process.pid, signal.SIGTERM)
-                time.sleep(0.1)
+                deadline = time.monotonic() + termination_grace
+                time.sleep(min(.1, termination_grace))
+                # Normal Make exit waits for foreground managed helpers, including
+                # their cleanup and timing. Signal death, timeout, wait failure or
+                # cancellation can interrupt that wait; preserve the whole budget
+                # even after the leader exits. Caller background recipes keep
+                # native Make semantics and are outside managed cleanup.
+                while not normal_completion or interrupted is not None or os.waitid(
+                        os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        break
+                    time.sleep(min(.02, remaining))
             finally:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
@@ -59,14 +96,17 @@ def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=())
                     process.wait()
         return subprocess.CompletedProcess(command, process.returncode)
     finally:
-        for signum, handler in handlers.items():
-            signal.signal(signum, handler)
-        # A cancellation received during cleanup must also supersede a pending
-        # timeout or other failure, after the owned group is reaped and previous
-        # handlers are restored. An ordinary exception skips code after cleanup.
-        check_interruption()
+        try:
+            grants.close()
+        finally:
+            for signum, handler in handlers.items():
+                signal.signal(signum, handler)
+            # Cancellation supersedes pending failures after group cleanup and
+            # restoration, including failures removing the private group grant.
+            check_interruption()
 
 
+@owned
 def reconcile(root, files, affected, base, review_path, *, records, analyzer, constraints, log_stream=None):
     import user_flows as uf
     try:
