@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
   "base": "c347d49b3921dd3fc514369211e7d76c6023f9c4",
-  "fingerprint": "4f883b42923d04ef7f082054785d960ec67cb4ba1e76ee041e8f58a742367814",
+  "fingerprint": "271846f1e9aaa2bde95112826a86ca63c374134f9fb213dfde9f0c087eecc0fa",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S4/S5 hosted correctness qualification now prepares fixture inputs and delegates the shared strict qualifier instead of a shell sample loop. Other reconciliation/adoption scenarios and stable IDs are preserved. The trigger set now also includes the direct Make preparation executor scripts/verification_timing.py so executor-only edits request qualification.",
-    "implementation": "Inspected both workflow snapshots: broadened browser/fixture/build/qualifier triggers, root working directory, prepared ui/plugin/fake-provider/browser inputs, direct qualifier output path, read-only permission, pinned checkout without persisted credentials and seven-day always-upload remain coherent. Against c347d49, the native Make timing graph, shared argument parser and explicit descriptor passing are retained byte-identically; only the hosted benchmark method changes inside test_ci.py. Confirmed Makefile npm-deps/ui/plugin-embed/fake-provider/browser-deps recipes directly execute verification_timing.py; its exact path is now a pull_request trigger without modifying executor or qualifier code. The timing executor unconditionally imports argument_parser and initializes specs_lib; exact arguments.py and __init__.py paths are therefore also triggers. Preparation command mode uses subprocess.run, so process-runner-only imports do not broaden the selected input set. Rebased only hosted integration onto c347d49. Verified ci.py and complete test_specs_timing.py byte-identical to that target; preserved selected hosted journal handling, bootstrap phase adjustment before refresh and durable resolved comparison before version collection. test_ci.py retains target setUp journal isolation; catalog/rendered references retain both dispatcher assertions.",
-    "tests": "Read both test_ci workflow tests: the current stub asserts exact --output path, retains summary/discovery diagnostics for success and exit 19, and verifies propagated status, artifact name/paths/retention, fixture mode, checkout ref, preparation/order and triggers. Unchanged qualifier tests independently retain strict metric, ancestry and cancellation assertions. Inspected inherited test_keep_going_preserves_shared_preparation_and_comparison_arguments, test_native_expanded_comparison_matches_the_worker_under_variable_overrides and test_native_pipe_and_fifo_jobservers_survive_the_timing_boundary: shared-once preparation, exact actual comparison and pipe/FIFO capability preservation remain asserted and unchanged. The same existing hosted method now asserts verification_timing.py membership in pull_request paths; its configured-command success/exit-19 and retained diagnostics assertions are preserved and the focused method passed. The existing trigger loop also asserts exact shared parser and package-initializer paths; no new helper or qualifier test was added. Read and ran both inherited dispatcher tests: bounded real worker cases cover push/PR/manual/pinned-root success and exit 23 with exact comparison/source identity, fixture0, finalization and authoritative status; injected KeyboardInterrupt/SystemExit143 persist comparison and correct root phase inventory before versions, start no worker and finalize interrupted evidence. Focused inherited tests passed; the mandatory tooling suite will include both."
+    "description": "S4/S5 retain the shared fixture qualification contract while hosted checkout now provides complete history before measuring Playwright. Contributor documentation describes local PR-base Git metadata collection; stable IDs, initial-adoption policy and all existing limitations remain unchanged.",
+    "implementation": "Compared c347d49 and candidate workflow: existing Make preparation, repository-root qualifier, fifteen exact triggers, dispatch, fixture0, exact-head ref, disabled persisted credentials, job identity and always-upload seven-day diagnostics remain. Added only fetch-depth0 to checkout; pinned actions/checkout action.yml defines this as all history, and installed locked Playwright1.64.1 gitDiff fetches the event base only when cat-file cannot find it. The current event base c347d49 is an ancestor of the selected PR head, so complete history removes the observed optional fetch during measurement. Strict raw stdout/JSON, metrics, Git metadata capture, topology and retries are unchanged.",
+    "tests": "Read and ran HostedCITests.test_browser_benchmark_retains_samples_and_stops_on_failure: new assertion requires checkout fetch-depth0 alongside exact ref and persist-credentials false; existing configured-command fixture still executes exits0/19, verifies exact output arguments and retains summary/discovery diagnostics. Read unchanged qualifier main failure/inventory tests and direct strict json.loads path; malformed raw output remains rejected. Reviewed both inherited dispatcher tests: bounded push/PR/manual/bootstrap success/exit23 preserve comparison/source/fixture0, interrupted version collection preserves selected plan/root phases and starts no worker. Read native keep-going/shared-once and pipe/FIFO assertions; their implementations and mappings remain unchanged. Mandatory reconciliation and make ci will execute the retained full suites."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 33.889
+      "seconds": 34.22
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 281.978
+      "seconds": 292.345
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.675
+      "seconds": 4.694
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "adb6bdc6ad9206d5f65cb127a3125389f8c7e858cc1df8aae0bdbe9bb9e8e884",
-    "term:coverage-gap": "163e8f4ab748f9f0969af0e0a06482ccaa8d973118baf97083773ae9389c1daf",
-    "term:entity": "890e192e47204225eed93271a67d219817e4de63a59eeaa31df57e33a88174fe",
-    "term:glossary": "095934210dc703246eb3e94e30ece81bf164356890c8f49a9ef6384b58a6ae7d",
-    "term:known-limitation": "53918426e73a88ba6e2237f763e38a7d1e25b7334d95c10c2fd287923d01c221",
-    "term:reconciliation": "26bb811db2f2230e90493b81b35f58e8ad11d10b67664bad9f26da331b495648",
-    "term:unverified-behavior": "2858f0b73c6d0446de484344bfdc6fb4b5f678f1ccfc5080818798fbe5e71cef",
-    "term:verification": "45bd4b26c3a53b14382b0416391b7c6296c122c2be8cb2a15235ff845d66e929"
+    "flow:maintain-flow-contracts": "830f043c76391e694e90e2e710c725ae38b1303f977c5521eb5b9493c6223dec",
+    "term:coverage-gap": "9186eb603d0b857237854d3dc0411be7d651fcb59b68324a4de5a036f9acbf66",
+    "term:entity": "66b5b64f5f84edba15edb0e1c1df5dc7119c5656fd727292bab4edc5ee9dc3ac",
+    "term:glossary": "2e6de5d94825cc492d3dee3d5a02fd528f1717accf66b93eb064d0c369845ca6",
+    "term:known-limitation": "bf2ff31df1f04c90c8f42282a951e97796ae2fddc0a90c65aa8abbeb5a44269e",
+    "term:reconciliation": "c3c6b8291416f75b6f528b8b68c17c41813b2c2be56143253704ee96b0a6c4d2",
+    "term:unverified-behavior": "8580bcf26c9857699ec27e5759205aa5ff6ad04ceaadc833c8dc692eb097b791",
+    "term:verification": "495c9f43ba088a3ebb1c7598c48f45d99873dc2c24ffbc722abb2f4754d66956"
   }
 }

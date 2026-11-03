@@ -15890,7 +15890,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Execute the hosted qualifier command with a stub: preserve the configured evidence path and partial diagnostics, propagate nonzero exit status, retain unconditional artifact upload and cover relevant input triggers."
+          "purpose": "Execute the hosted qualifier command with a stub: preserve the configured evidence path and partial diagnostics, propagate nonzero exit status, retain unconditional artifact upload and cover relevant input triggers. Require full-history checkout for local PR-base metadata collection."
         },
         {
           "path": "scripts/test_specs_timing.py",

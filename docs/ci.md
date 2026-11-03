@@ -135,7 +135,9 @@ two workers, independent of CPU count; `--workers=1` selects serial execution.
 
 The separate Browser correctness benchmark workflow runs the same qualifier on
 Ubuntu when browser, fixture, build or qualification inputs change, and can also
-be dispatched explicitly. Its existing artifact retains summaries, inventories,
+be dispatched explicitly. Checkout fetches full history before qualification so
+Playwright can resolve the PR base locally when collecting Git metadata.
+Its existing artifact retains summaries, inventories,
 reports and failure diagnostics for seven days. It runs on its own runner and
 never replaces complete CI verification or the isolated one-worker, zero-retry
 launch-performance gate.

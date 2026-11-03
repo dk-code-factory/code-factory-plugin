@@ -99,6 +99,7 @@ class HostedCITests(unittest.TestCase):
         self.assertEqual(job["timeout-minutes"], 30)
         checkout = next(step for step in job["steps"] if step.get("uses", "").startswith("actions/checkout@"))
         self.assertEqual(checkout["with"]["ref"], "${{ github.event.pull_request.head.sha || github.sha }}")
+        self.assertEqual(checkout["with"]["fetch-depth"], 0)
         self.assertFalse(checkout["with"]["persist-credentials"])
         preparation = next(step for step in job["steps"] if step.get("name") == "Prepare fixture browser suite")
         self.assertEqual(preparation["run"], "make ui plugin-embed fake-provider browser-deps")
