@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
   "base": "fd74c2080254b022217cca776e4073e9bc7745f4",
-  "fingerprint": "48662554d77e1d820e9539588bd03a529b45000c470cca6c5a4cff6b312d1581",
+  "fingerprint": "5db62ec4776b7385f5de9f35286755eed38c3876a4b05ad742d95a20f86506d4",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
     "description": "S4/S5 retain exact hosted comparison and truthful ordinary/root phase inventory before interrupted version collection. The assertion mappings now distinguish dispatcher refresh/dispatch from explicit fixture-owned hosted finalization; no additional workflow delivery or product behavior is introduced.",
-    "implementation": "Inspected ci.run_verification and existing journal helpers: bootstrap phase removal precedes refresh/version queries, and the dispatcher does not call hosted-finish. The wording-only follow-up changes no implementation; both fixtures explicitly invoke timing.hosted_action after dispatcher return or cancellation.",
-    "tests": "Read the push/PR/manual/root success/failure assertion and expanded ordinary/root interruption assertion. Both explicitly finalize through hosted_action and then check retained comparison/source, outcome and phase inventory. The corrected purposes/generated references accurately name fixture finalization, retain stable anchors/S4/S5, and require no new test for unchanged behavior. Original meaningful root regression remains intact."
+    "implementation": "Dispatcher root phase removal and exact comparison persistence remain unchanged. The existing interaction fixture now scopes a delegating deadline wrapper around real subprocess.run, preserving ci.git/ci.comparison/identity and actual returned data while enclosing indirect helper waits as well as explicit worker/Git waits. No production API, runtime behavior or source ownership changes.",
+    "tests": "Read exact route/status and ordinary/root interruption assertions, true fixture-owned finalization and source/comparison/phase preservation. Focused outside-Git guard observed the same76 real subprocesses (68Git/8Python): unbounded66 before,0 after; every output remains real. Scoped patch restoration passed on success and deliberate assertion failures; five existing dispatcher/cancellation/owned-runner/privacy checks passed. Stable anchors/S4/S5 and all expected statuses remain unchanged. Original finder independently verifies only the identified T1 fix within cycle5; no new full review cycle is claimed."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 33.857
+      "seconds": 34.071
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 282.942
+      "seconds": 281.941
     },
     {
       "command": [
@@ -53,13 +53,13 @@
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "f0b06331a2d6cdb1a7d41d47499be8c301e8e5833cf1228d27a6784531d62589",
-    "term:coverage-gap": "a54a96e803719f5df3ad47bc1dd524621edd056ab2d8d23dd25cef182e4a0602",
-    "term:entity": "46d524b30f1c230869d5dfd797537af12c2950e9a453fafc0f7b06047a2d9597",
-    "term:glossary": "6e4fb3a7d27e4bc6b51f715be2584e60cfe29f5f466487c3581babfad8db7630",
-    "term:known-limitation": "7f285bb7d8f018ff6fb3501569c6f63ae779ccb9a7f12d0a94acec3e87217247",
-    "term:reconciliation": "092d149fe4062a01525dc4d532b9f1e6b91a3c7a1a45563eae45fe601fa8756e",
-    "term:unverified-behavior": "75d980d80d726a73451a8b5ba92a6f4de9f1db0cc67e76596ffb2155489ee117",
-    "term:verification": "5666dc232311bde152fbb22dc661886317886727e4db450ec569d8d8e5db9981"
+    "flow:maintain-flow-contracts": "4470fcab72279ea9df619877fcc002fa001d29566c54f9fb9b758be0cad82538",
+    "term:coverage-gap": "dd28b60b57307ab3a42ca073432af483f463ec84dfe08943495a53bc1aac3034",
+    "term:entity": "88db92c0956f8c7ee2f4e894b8d7c716829d1d918e52be296aa5be5c157d8fd6",
+    "term:glossary": "c805558f2ef748cdbf96a2a5436f4527d4adaeab223a3157ea76c315703394ae",
+    "term:known-limitation": "a973deb3df857bb7ba19119ce0160d66ad5eca3e32f667dd9e990ff1b28f4429",
+    "term:reconciliation": "133d7492ad5a1fa3d4edc0a741243598fc62676fad3c9ccc47ba92f07b20c83f",
+    "term:unverified-behavior": "d261df6d77a5f63bf79eab4089162365892b1069957688409522586712d042e1",
+    "term:verification": "7ad5383dd576780db4c01c4737765088731aefbc138ad39289e6874368659efc"
   }
 }

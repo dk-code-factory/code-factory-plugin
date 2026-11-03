@@ -1402,16 +1402,22 @@ except KeyboardInterrupt:
                 self.assertFalse(marker.exists())
 
     def test_hosted_dispatch_retains_resolved_identity_through_success_and_failure(self):
-        root, _ = self.git_history(root_only=True)
-        with patch.object(ci, 'ROOT', self.root), \
+        real_run = subprocess.run
+        def bounded_run(*args, **kwargs):
+            timeout = kwargs.get('timeout')
+            kwargs['timeout'] = 8 if timeout is None else min(timeout, 8)
+            return real_run(*args, **kwargs)
+        with patch.object(subprocess, 'run', side_effect=bounded_run), \
+                patch.object(ci, 'ROOT', self.root), \
                 patch.object(timing, 'identity', side_effect=WORKING_IDENTITY):
+            root, _ = self.git_history(root_only=True)
             cases = [('bootstrap', {'before': '0' * 40, 'after': root}, 'push', root)]
             for group in ('root', 'ordinary'):
                 if group == 'ordinary':
                     (self.root / 'source').write_text('Ordinary source snapshot')
                     for argv in (['add', '.'], ['commit', '-m', 'Ordinary source']):
                         subprocess.run(['git', *argv], cwd=self.root, check=True,
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=8)
                     head = ci.git('rev-parse', 'HEAD')
                     cases = [
                         ('push', {'before': root, 'after': head}, 'push', ''),
@@ -1443,6 +1449,9 @@ except KeyboardInterrupt:
                                     self.assertEqual(current['comparison'], expected)
                                     self.assertEqual(current['source'], source)
                                     return {'python': '3.12.0'}
+                                def run_command(argv, *, cwd, timeout):
+                                    return subprocess.run(argv, cwd=cwd, check=False,
+                                                          timeout=min(timeout, 8))
                                 def worker(argv, **kwargs):
                                     calls.append(argv)
                                     self.assertTrue(kwargs['check'])
@@ -1451,7 +1460,8 @@ except KeyboardInterrupt:
                                         "import os; assert os.environ['CODE_FACTORY_REAL_CODEX']=='0'; " +
                                         'raise SystemExit(' + str(status) + ')']
                                     with patch.dict(os.environ, kwargs['env'], clear=True):
-                                        code = timing.execute('build', command, journal=journal)
+                                        code = timing.execute('build', command, journal=journal,
+                                                              owned=True, runner=run_command)
                                     if code:
                                         raise subprocess.CalledProcessError(code, argv)
                                 with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(journal.path)}), \
