@@ -544,7 +544,9 @@ def main():
                 journal.refresh(comparison_pending=True)
         observe(refresh_worker)
     elif args.action == "verify":
-        return verify(args.argv[1:] if args.argv[:1] == ["--"] else args.argv)
+        from specs_lib.isolation import isolated
+        with isolated(ROOT):
+            return verify(args.argv[1:] if args.argv[:1] == ["--"] else args.argv)
     else:
         argv = args.argv[1:] if args.argv[:1] == ["--"] else args.argv
         if not argv:

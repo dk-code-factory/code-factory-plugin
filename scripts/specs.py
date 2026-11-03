@@ -98,7 +98,7 @@ def main(argv=None):
         else:
             print(json.dumps(result))
         return int(bool(result.get("errors")))
-    except (uf.FlowError, KeyError, TypeError, ValueError, AttributeError, OSError) as error:
+    except (uf.FlowError, KeyError, TypeError, ValueError, AttributeError, OSError, RuntimeError) as error:
         if args.json:
             print(json.dumps({"errors": [str(error)]}))
         else:

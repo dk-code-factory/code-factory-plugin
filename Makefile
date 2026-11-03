@@ -1,10 +1,16 @@
-.PHONY: build test test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci npm-deps plugin-embed fake-provider hosted-prerequisites python-deps browser-deps hosted-verify hosted-verify-bootstrap verify-bootstrap test-installer smoke
-.PHONY: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps verification-context
 .DEFAULT_GOAL := ui
-# Ordinary verification is deterministic even with inherited or command-line opt-ins.
-override export CODE_FACTORY_REAL_CODEX := 0
-FLOW_BASE ?=
-FLOW_ARGS ?= --base $(if $(FLOW_BASE),$(FLOW_BASE),HEAD)
+# Own the checkout before any mutable preparation, including standalone goals.
+# One child receives all requested goals, preserving native Make ordering/modes.
+# Normalize inherited/explicit -k at the verification boundary. All preparation
+# and phases stay in one child graph. When a caller replaces MAKEFLAGS, retain
+# GNU Make's parsed options (including -n) and safely quote command-line overrides.
+# Escape stored dollars before reassigning an already-expanded simple variable.
+verification-options = $(if $(filter command,$(origin MAKEFLAGS)),$(MFLAGS))
+verification-overrides = $(if $(filter command,$(origin MAKEFLAGS)),\
+  $(foreach _verification_arg,$(filter-out MAKEFLAGS,$(.VARIABLES)),\
+    $(if $(filter command,$(origin $(_verification_arg))),\
+      '$(subst ','"'"',$(_verification_arg)$(if $(filter simple,$(flavor $(_verification_arg))),:=$(subst $$,$$$$,$(value $(_verification_arg))),=$(value $(_verification_arg))))')))
+
 # Successful native dry runs create no automatic timing file. Early failure or
 # interruption before native mode is known retains an unknown partial, even
 # for a dry attempt.
@@ -14,7 +20,40 @@ FLOW_ARGS ?= --base $(if $(FLOW_BASE),$(FLOW_BASE),HEAD)
 verification-native-options = $(if $(filter command,$(origin MAKEFLAGS)),$(MFLAGS),$(MAKEFLAGS))
 verification-short-options = $(filter-out --% -C% -f% -I% -j% -l% -O% -W% -o%,$(firstword $(verification-native-options)))
 # Source identity starts in the worker; comparison comes from the actual check.
-verification-runner = $(if $(findstring n,$(verification-short-options)),,CODE_FACTORY_TIMING_WORKER_CONTEXT=1 python3 scripts/verification_timing.py verify --)
+verification-runner = $(if $(findstring n,$(verification-short-options)),,env CODE_FACTORY_TIMING_WORKER_CONTEXT=1 python3 scripts/verification_timing.py verify --)
+
+ifeq ($(value CODE_FACTORY_VERIFY_ROOT),$(CURDIR))
+ifneq ($(value CODE_FACTORY_VERIFY_TMPDIR),)
+override export TMPDIR := $(value CODE_FACTORY_VERIFY_TMPDIR)
+override export CODE_FACTORY_VERIFY_RUN := $(value CODE_FACTORY_VERIFY_RUN)
+override export CODE_FACTORY_VERIFY_ROOT := $(value CODE_FACTORY_VERIFY_ROOT)
+override export CODE_FACTORY_VERIFY_TMPDIR := $(value CODE_FACTORY_VERIFY_TMPDIR)
+endif
+isolation-owner := $(shell python3 scripts/verification_run.py --validate-owner)
+endif
+ifneq ($(isolation-owner),owned)
+isolation-goals := $(if $(MAKECMDGOALS),$(MAKECMDGOALS),ui)
+isolation-verifiers := verify verify-bootstrap hosted-verify hosted-verify-bootstrap ci
+isolation-selected = $(foreach goal,$(isolation-goals),$(if $(filter ci,$(goal)),verify-steps,$(if $(filter $(isolation-verifiers),$(goal)),$(goal)-steps,$(goal))))
+isolation-writers := build test test-performance check ui package plugin npm-deps plugin-embed fake-provider python-deps browser-deps hosted-prerequisites test-installer smoke verify verify-bootstrap hosted-verify hosted-verify-bootstrap ci specs-ci specs-check flows-check verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps
+ifneq ($(filter $(isolation-writers),$(isolation-goals)),)
+.PHONY: $(isolation-goals) verification-owned
+$(isolation-goals): verification-owned
+verification-owned:
+	$(if $(filter ci,$(isolation-goals)),@test -n "$(FLOW_BASE)" || { echo 'Set FLOW_BASE to the branch or commit being compared'; exit 1; },@:)
+	+@python3 scripts/verification_run.py -- $(if $(filter $(isolation-verifiers),$(isolation-goals)),$(verification-runner)) $(MAKE) $(verification-options) $(if $(filter $(isolation-verifiers),$(isolation-goals)),--no-keep-going) $(isolation-selected) $(verification-overrides) $(if $(filter ci,$(isolation-goals)),FLOW_ARGS='--base $(FLOW_BASE) --merge-base')
+isolation-dispatched := 1
+endif
+endif
+
+ifneq ($(isolation-dispatched),1)
+.PHONY: build test test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci npm-deps plugin-embed fake-provider hosted-prerequisites python-deps browser-deps hosted-verify hosted-verify-bootstrap verify-bootstrap test-installer smoke
+.PHONY: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps verification-context
+.DEFAULT_GOAL := ui
+# Ordinary verification is deterministic even with inherited or command-line opt-ins.
+override export CODE_FACTORY_REAL_CODEX := 0
+FLOW_BASE ?=
+FLOW_ARGS ?= --base $(if $(FLOW_BASE),$(FLOW_BASE),HEAD)
 # Share preparation only inside this Make graph. Independent invocations always
 # prepare current inputs, including changed tooling and missing outputs.
 # Serialize phases even when the caller supplies -j or inherited MAKEFLAGS.
@@ -51,16 +90,6 @@ test-performance: ui plugin-embed fake-provider
 	cd web && python3 ../scripts/verification_timing.py command performance -- npm run test:performance
 package: build
 	python3 scripts/verification_timing.py command packaging -- python3 scripts/package.py
-# Normalize inherited/explicit -k at the verification boundary. All preparation
-# and phases stay in one child graph. When a caller replaces MAKEFLAGS, retain
-# GNU Make's parsed options (including -n) and safely quote command-line overrides.
-# Escape stored dollars before reassigning an already-expanded simple variable.
-verification-options = $(if $(filter command,$(origin MAKEFLAGS)),$(MFLAGS))
-verification-overrides = $(if $(filter command,$(origin MAKEFLAGS)),\
-  $(foreach _verification_arg,$(filter-out MAKEFLAGS,$(.VARIABLES)),\
-    $(if $(filter command,$(origin $(_verification_arg))),\
-      '$(subst ','"'"',$(_verification_arg)$(if $(filter simple,$(flavor $(_verification_arg))),:=$(subst $$,$$$$,$(value $(_verification_arg))),=$(value $(_verification_arg))))')))
-
 verify verify-bootstrap hosted-verify hosted-verify-bootstrap:
 	+@$(verification-runner) $(MAKE) $(verification-options) --no-keep-going $@-steps $(verification-overrides)
 
@@ -130,3 +159,5 @@ connection-test:
 
 connection-sdk-test:
 	node scripts/test_mcp_sdk.mjs
+
+endif

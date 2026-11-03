@@ -66,6 +66,21 @@ decisions. Every later revision uses the ordinary fail-closed specification gate
 The original fourteen-flow historical adoption pin remains unchanged and is not a
 public CI bypass; its private historical commit is not published.
 
+Verification and standalone Make build/test entrypoints own an advisory lock in
+the checkout's Git directory before preparing mutable outputs. A second invocation
+in that checkout fails with a separate-worktree instruction; kernel ownership
+automatically expires if the owner dies. Linked worktrees have independent locks
+and build, browser and package outputs. Keep arbitrary direct build commands out
+of an active verification checkout. Reconciliation, browser npm scripts and the
+correctness qualifier share this ownership, including authenticated nested calls.
+
+Each invocation creates a private temporary root, propagates it through `TMPDIR`
+and bounds fixture Git discovery there, so an unrelated ancestor `.git` cannot
+become a fixture repository. A caller's `TMPDIR` selects the parent of this root.
+Normal completion, failure and cooperative cancellation remove only owned state;
+an uncatchable kill can leave a private directory, which future runs never reuse.
+Do not delete another run's directories or persistent lock inode.
+
 Concurrent local checkouts can set `CODE_FACTORY_TEST_BASE_PORT` for fixture
 listeners, for example `CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`.
 The daemon uses the following port, 43174 in this example.
@@ -129,8 +144,8 @@ share only the read-only Vite server; mocked tests never mutate the daemon.
 
 Compare the same source with `npm --prefix web test -- --workers=1` and
 `npm --prefix web test -- --workers=2`. Each invocation starts fresh fixture
-servers. Run invocations sequentially in a checkout, with the documented port
-override when other checkouts are active. Correctness uses a bounded default of
+servers. Use separate worktrees for concurrent invocations; one checkout accepts
+one invocation at a time. Correctness uses a bounded default of
 two workers, independent of CPU count; `--workers=1` selects serial execution.
 
 The separate Browser correctness benchmark workflow compares both counts twice

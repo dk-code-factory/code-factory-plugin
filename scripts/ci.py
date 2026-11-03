@@ -9,6 +9,7 @@ import re
 import subprocess
 import tarfile
 import zipfile
+from specs_lib.isolation import isolated
 
 ROOT = Path(__file__).resolve().parents[1]
 SHA = re.compile(r"[0-9a-f]{40}")
@@ -187,16 +188,19 @@ def main():
     args = p.parse_args()
     try:
         if args.command == "verify":
-            event = json.loads((args.event or Path(os.environ["GITHUB_EVENT_PATH"])).read_text())
-            plan = comparison(event, os.environ["GITHUB_EVENT_NAME"], os.environ.get("CI_BOOTSTRAP_SHA", ""), os.environ["GITHUB_REF"])
-            print(json.dumps(plan), flush=True)
-            run_verification(plan)
-            artifact_manifest(args.directory, plan["head"])
+            # Retain checkout ownership through manifest/checksum publication,
+            # after the nested Make worker has completed its verification.
+            with isolated(ROOT):
+                event = json.loads((args.event or Path(os.environ["GITHUB_EVENT_PATH"])).read_text())
+                plan = comparison(event, os.environ["GITHUB_EVENT_NAME"], os.environ.get("CI_BOOTSTRAP_SHA", ""), os.environ["GITHUB_REF"])
+                print(json.dumps(plan), flush=True)
+                run_verification(plan)
+                artifact_manifest(args.directory, plan["head"])
         elif args.command == "manifest":
             artifact_manifest(args.directory, commit(args.head or git("rev-parse", "HEAD")))
         else:
             print(json.dumps(verify_artifacts(args.directory, commit(args.head))))
-    except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as error:
+    except (ValueError, KeyError, OSError, RuntimeError, subprocess.CalledProcessError) as error:
         p.exit(1, "CI failed: " + str(error) + "\n")
 
 

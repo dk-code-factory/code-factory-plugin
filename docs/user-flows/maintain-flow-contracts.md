@@ -18,6 +18,14 @@ The contributor has the source checkout, an available comparison base and the lo
 6. A pull request to main or sync/local-development, a push to main or a manual check on main selects exact comparison commits, installs locked prerequisites and runs the same fixture suites without model credentials. The production embedded UI launch gate runs after heavy suites with one worker, zero retries and all timing samples retained. Feature branches receive remote verification through a PR to main or sync/local-development; without one they receive no automatic checks or package artifacts. Manual verification on a feature branch fails before checks or artifact creation. A narrowly pinned, reviewed first public root has no predecessor; it receives full source checks without a fabricated Git comparison.
 7. Package delivery promotes unchanged checksummed artifacts only from successful main-branch push verification for the exact tagged source; dry-run delivery verifies without publishing or installing. Component versions come from those exact package bytes; explicit fixed-issue references require ancestor fix commits with matching fixing or closing references.
 
+Verification owns one checkout before preparing mutable artifacts, while separate
+worktrees can run concurrently. Each invocation propagates private temporary state
+and confines fixture repository discovery to that state. Nested verification
+shares authenticated ownership; a competing invocation fails before preparation.
+Completion and cooperative cancellation
+remove owned work only. Stale ownership fails, while an abandoned lock file alone
+does not block a fresh invocation.
+
 The callable phase-journal helper records bounded, allowlisted command outcomes,
 monotonic intervals and immutable input/comparison identities. Staged selections
 identify the selected index independently of working changes without exposing
@@ -53,6 +61,11 @@ may receive separate explicit contract decisions without waiving behavior tests.
 - **S2** Behavior changes, including flow addition/removal, require changed implementation and tests; reviewed corrections preserve accurate outcomes.
 - **S3** Broken references, unmapped files, unknown comparisons and stale or failed verification fail closed.
 - **S4** The same checker evaluates working changes, the staged index, and explicit committed branch/PR comparisons. Each verification invocation shares preparation once, while independent verification and standalone build/test invocations prepare their required current inputs and deleted outputs. Failed verification phases stop downstream work even when keep-going flags are requested; standalone goals retain their requested keep-going behavior. Explicit MAKEFLAGS assignment forwards caller variables with their existing expansion flavor and literal dollars. Parallel execution flags preserve phase order and isolated performance checks. Default verification uses fixtures; provider execution requires a separate explicit opt-in.
+
+  Concurrent worktrees keep fixture connections, temporary state and mutable
+  outputs separate. A second invocation in one checkout rejects before preparing
+  artifacts. Nested ownership, stale state, unrelated ancestor repositories and
+  cancellation retain these boundaries.
 - **S5** Remote verification covers PRs to main or sync/local-development and main pushes or manual checks, preserving exact comparisons and a single reviewed public-root bootstrap. Feature branches without a PR receive no automatic checks or artifacts; feature-branch manual verification is rejected. Release delivery requires successful main push verification, exact artifact provenance, packaged component versions, commit-backed fixed-issue references and checksums. Unknown comparisons, failed checks, changed artifacts or existing releases stop delivery.
 
 Browser correctness comparison keeps independently owned mock sessions concurrent
@@ -157,6 +170,8 @@ flowchart TD
 - [.github/workflows/browser-benchmark.yml](../../.github/workflows/browser-benchmark.yml) — Read-only fixture-only hosted serial/two-worker correctness comparison with repeated zero-retry samples and retained timing/resource evidence. (`name: Browser correctness benchmark`)
 - [scripts/verification_timing.py](../../scripts/verification_timing.py) — Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence. Startup journals precede metadata collection; local source identity is collected early and comparison remains unavailable until the actual specification command argv is known. Capture at that command boundary preserves target-specific expansion and shell quoting without evaluating Make variables in Python or changing prerequisite inheritance. Hosted event-pinned plans retain their setup source/comparison identity; comparison-free bootstrap remains unavailable. Newly automatic local runs reserve identity and monotonic origin, materialize at native worker initialization, and retain unknown early-failure/interruption fallback even for dry attempts; successful native dry runs create no file. Direct/supplied/hosted startup remains unchanged.
 - [scripts/benchmark_browser.py](../../scripts/benchmark_browser.py) — Compare complete correctness inventories and successful single executions across serial and bounded-parallel qualification runs.
+- [scripts/specs_lib/isolation.py](../../scripts/specs_lib/isolation.py) — Per-checkout advisory ownership, authenticated nested-run state, private temporary roots and Git discovery ceilings (`def isolated(`)
+- [scripts/verification_run.py](../../scripts/verification_run.py) — Shared isolated command boundary preserving fixture-only process and Make jobserver ownership (`def main(`)
 
 ## Test references
 
@@ -456,6 +471,14 @@ flowchart TD
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_before_context_failure_retains_unknown_automatic_journal(`; S4, S5. Native early nonzero, missing Makefile under dry mode and missing executable retain failed unknown partials with null unstarted durations, no command arguments and truthful wall time.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_before_context_signals_retain_unknown_partial_even_for_dry_attempts(`; S4, S5. Actual SIGINT/SIGTERM during native Make parsing before worker context, including dry attempts, finalize unknown partials at reserved identity/origin and remove the owned helper and Make group under finite waits with immediately registered cleanup.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_actual_comparison_metadata_systemexit_stops_before_owned_runner(`; S4, S5. Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable.
+- [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `class IsolationTests(`; S4. Nested ownership, checkout contention, stale state, unrelated Git ancestors, concurrent linked worktrees and owned cancellation
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_checkout_contention_stops_every_mutating_entrypoint_before_preparation(`; S4, S5. Real Make entrypoints reject a competing checkout owner before recording commands, allocating timing journals or changing retained timing/build outputs.
+- [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_owner_death_rejects_stale_inheritance_and_fresh_run_reclaims_lock(`; S4. A killed owner releases the kernel lock; stale inherited state fails, a fresh invocation gets a distinct private root and the abandoned directory remains untouched.
+- [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_unreaped_dead_owner_cannot_join_replacement_checkout_owner(`; S4. An unreaped dead predecessor cannot authenticate into the replacement live checkout owner; stale state cannot execute the mutation sentinel.
+- [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_inherited_root_is_required_and_must_match_its_owner(`; S4. Missing and mismatched inherited checkout roots fail before nested work.
+- [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_absent_and_partial_readiness_are_bounded_and_failure_reaps_child(`; S4. Absent and partial readiness have finite local deadlines; failed readiness terminates and reaps the owned child.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_missing_or_mismatched_inherited_make_root_fails_before_preparation(`; S4. The real Make boundary rejects malformed root metadata before preparation or wrapper recursion, while the existing cross-checkout test preserves explicit temporary parents.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_standard_outer_owner_cancellation_finalizes_running_and_reserved_timing(`; S4, S5. Standard Make/outer ownership cancellation lets the nested writer finalize running or reserved partial timing before owned cleanup completes.
 
 ## Verification and gaps
 

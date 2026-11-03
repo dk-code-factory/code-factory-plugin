@@ -129,6 +129,7 @@ class FixtureCIEnvironmentTests(unittest.TestCase):
     def test_ci_overrides_environment_and_command_line_real_provider_opt_ins(self):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
+            import shutil
             (root / 'Makefile').write_text((ROOT / 'Makefile').read_text().replace(
                 'verify-steps: verification-context specs-check build check test test-performance package test-installer smoke',
                 'verify-steps: verification-context\n\t@printf \"%s\\n\" \"$$CODE_FACTORY_REAL_CODEX\"'))

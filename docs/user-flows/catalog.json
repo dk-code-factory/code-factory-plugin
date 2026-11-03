@@ -180,7 +180,10 @@
         "scripts/ci.py",
         "scripts/release.py",
         ".github/workflows",
-        "scripts/benchmark_browser.py"
+        "scripts/benchmark_browser.py",
+        "scripts/verification_run.py",
+        "web/package.json",
+        "web/package-lock.json"
       ]
     },
     "inbox-performance": {
@@ -14045,6 +14048,16 @@
         {
           "path": "scripts/benchmark_browser.py",
           "purpose": "Compare complete correctness inventories and successful single executions across serial and bounded-parallel qualification runs."
+        },
+        {
+          "path": "scripts/specs_lib/isolation.py",
+          "anchor": "def isolated(",
+          "purpose": "Per-checkout advisory ownership, authenticated nested-run state, private temporary roots and Git discovery ceilings"
+        },
+        {
+          "path": "scripts/verification_run.py",
+          "anchor": "def main(",
+          "purpose": "Shared isolated command boundary preserving fixture-only process and Make jobserver ownership"
         }
       ],
       "tests": [
@@ -16519,6 +16532,72 @@
             "S5"
           ],
           "purpose": "Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "class IsolationTests(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Nested ownership, checkout contention, stale state, unrelated Git ancestors, concurrent linked worktrees and owned cancellation"
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_checkout_contention_stops_every_mutating_entrypoint_before_preparation(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Real Make entrypoints reject a competing checkout owner before recording commands, allocating timing journals or changing retained timing/build outputs."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_owner_death_rejects_stale_inheritance_and_fresh_run_reclaims_lock(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A killed owner releases the kernel lock; stale inherited state fails, a fresh invocation gets a distinct private root and the abandoned directory remains untouched."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_unreaped_dead_owner_cannot_join_replacement_checkout_owner(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An unreaped dead predecessor cannot authenticate into the replacement live checkout owner; stale state cannot execute the mutation sentinel."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_inherited_root_is_required_and_must_match_its_owner(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Missing and mismatched inherited checkout roots fail before nested work."
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_absent_and_partial_readiness_are_bounded_and_failure_reaps_child(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Absent and partial readiness have finite local deadlines; failed readiness terminates and reaps the owned child."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_missing_or_mismatched_inherited_make_root_fails_before_preparation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "The real Make boundary rejects malformed root metadata before preparation or wrapper recursion, while the existing cross-checkout test preserves explicit temporary parents."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_standard_outer_owner_cancellation_finalizes_running_and_reserved_timing(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Standard Make/outer ownership cancellation lets the nested writer finalize running or reserved partial timing before owned cleanup completes."
         }
       ],
       "suites": [

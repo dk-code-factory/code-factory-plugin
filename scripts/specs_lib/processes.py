@@ -4,9 +4,10 @@ import os
 import signal
 import subprocess
 import time
+from specs_lib.isolation import owned
 
 
-def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=()):
+def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=(), termination_grace=0.1):
     """Run one verifier in an owned session, including descendant cleanup.
 
     Observe completion without reaping the leader until the last group signal.
@@ -51,7 +52,13 @@ def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=())
             # owns the session's original group, not children that detach from it.
             try:
                 os.killpg(process.pid, signal.SIGTERM)
-                time.sleep(0.1)
+                deadline = time.monotonic() + termination_grace
+                time.sleep(min(.1, termination_grace))
+                while os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        break
+                    time.sleep(min(.02, remaining))
             finally:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
@@ -67,6 +74,7 @@ def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=())
         check_interruption()
 
 
+@owned
 def reconcile(root, files, affected, base, review_path, *, records, analyzer, constraints, log_stream=None):
     import user_flows as uf
     try:
