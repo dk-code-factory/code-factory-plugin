@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "846a5d4df962e0391006580a9ac7910722622471",
-  "fingerprint": "1e4669ecf9d2e336d7563637248493d0e1b9678b333c6582dce19b1d2aefe662",
+  "base": "28b922f16227236a166e71c98d791870e1758daa",
+  "fingerprint": "c56c0afa2d046d76be608f4bbc5e4e10ea2323116e6d6ee7efde7713c6f08476",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S5 retain health qualification, compatible upgrade/rollback, uninstall data retention and dependency updates. This review refreshes operational verification dependencies only; stable scenario IDs and typed open gaps are retained.",
-    "implementation": "Compared docs/user-flows/operate-installation.md and its mapped implementation/assertion paths with main 846a5d4df962e0391006580a9ac7910722622471; product paths and authored behavior are byte-identical. The shared scripts/test_ci.py verification harness adds native Make observation assertions. Native Make instrumentation wraps existing commands and preserves phase order, fixture mode and failure/cancellation ownership. No product or host behavior is adopted or changed. The combined repair changes operational argument-parser and startup dependencies only: shared authoritative CLI grammar, automatic reservation/native materialization and the agreed unknown early-failure/interruption fallback. Product meanings and transitions remain unchanged. The additional correction only narrows observer exception handling at the parse boundary; product/glossary/UI semantics and selected lifecycle qualification remain unchanged. Final comment-only clarification replaces the unconditional Makefile dry-run sentence with the exact selected successful-dry versus early-failure/interruption qualification. No executable recipe, runtime, test, assertion mapping or described behavior changes; full-branch classifications and the substantive reviews above remain applicable. Current correction changes a test-fixture oracle and its assertion description only; production behavior, interfaces, shared parser, selected dry-run policy and this subject meaning remain unchanged.",
-    "tests": "Installer fixtures preserve owner-token bytes across failed/successful upgrades and rollback. The interrupted-upgrade probe preserves pending snapshot recovery at its documented single interruption boundary. Reviewed real assertion bodies; required fixture suites execute afresh. No real-provider, installed-host, login, accessibility or soak gap is closed. Read combined helper/native assertions for supported root/review/json selections, quiet unavailable errors, reserved origin, worker metadata ordering, successful no-file native dry modes, bounded pre-context SIGINT/SIGTERM and supplied/hosted preservation. Required fixture suites rerun; no acceptance gap is closed. Actual-comparison metadata interruption is now exercised without replacing comparison with a return-value mock. The subject-owned product assertions remain unchanged and declared fixture suites rerun for fresh receipts. Startup observation assertions are now enforced by the native parent fixture instead of relying on optional subprocess success. Existing subject-owned product assertions are unchanged; declared fixture suites rerun for fresh receipts."
+    "description": "Inspect health, upgrade, roll back and uninstall retains its documented scenarios and existing acceptance gaps. The only source change is the existing repository-import test's editor-readiness prerequisite; no product behavior or adoption policy changes.",
+    "implementation": "Compared main and this partition: mapped product implementation for flow-operate-installation and all specification registries/prose are unchanged. The two-line prerequisite waits for repository B's saved reviewer value before entering its draft, keeping delayed repository A import and snapshot responses pending.",
+    "tests": "Inspected scripts/test_installer.py at def test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall(: Packaged process-backed install/rerun, returned upgrade failure with deferred automatic recovery, explicit rollback, successful upgrade and uninstall/reinstall. It does not interrupt the installer process or establish recovery from a durable pending operation left by interruption. Existing assertions remain present. In UI-REVIEW-IMPORT-TARGET both delay cases still assert exact B reviewers, rules and base after response release, one Save with B draft values, A imported state and no stale status or start/post mutations."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 88.82
+      "seconds": 90.462
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 140.436
+      "seconds": 161.613
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.209
+      "seconds": 3.611
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.869
+      "seconds": 3.089
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.605
+      "seconds": 21.788
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.203
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.821
+      "seconds": 36.39
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 299.2
+      "seconds": 316.154
     },
     {
       "command": [
@@ -147,11 +147,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.775
+      "seconds": 4.913
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "03b91223327b8417b685a7b73b42523c79ce07d58870cb0826a0ea1109434409",
+    "flow:operate-installation": "f88700db93be3f9aa66966a841940f1a3984747cf01188f70ab6d8327716aeb1",
     "term:connection-refreshes": "5c4fa8fe4244e2e3f598d77c59e427473e98e3a96bd061b8a520147dee7f32d5",
     "term:connection-submits": "6d0ca1e670b5928040c1b67517b4c4229b5956eb49812c0ea42c11f6ad991099",
     "term:coverage-gap": "a8ca25e8ee384097c948679ba3c9102611a1c212d16b8df3bb7b61295d7c7c57",
@@ -189,11 +189,11 @@
     "term:unverified-behavior": "dc5007b31e108dfda6caa2c64121441c85a3060be86039bf8c9fa84f2e1d9004",
     "term:verification": "2ef493109f90d16ba36b2887c33527912f0bce05cedb22f8ba0ab678d7562f46",
     "ui:C-BROWSER-LAB": "a05489c96b2ff227ec06ab33f378a8bb8fc2b88a6bcb9b767e2f3d15a8e956ff",
-    "ui:C-DIAGNOSE": "c77e6221b18e11b983f1f57c3248b54dbf621b3e5826dc22722b5ba96dfa2111",
+    "ui:C-DIAGNOSE": "74d68c19235a87c3a5e36ecbd2f78fb24f8eae359a596bd9a0d3f984f16ea630",
     "ui:P-BROWSER-LAB": "d1f7e96ce6e06c0023f4acf5a5a4f0a25514227804d631ff870531b8c25b896a",
-    "ui:P-DIAGNOSTICS": "9f8f03ef6d0cb299b6a7484fd336d0b884ee60a8502bf6451794618d1d00033f",
+    "ui:P-DIAGNOSTICS": "d070dd75a67add785ccdb4fca8fe676aa5fd70c7082da30203d48c9635291e7f",
     "ui:PAGE-BROWSER-LAB": "852fc9eca8bbd4d3c61afc407d1505d7b3c7c1fd70a7b283a648b0d62fbf6416",
     "ui:W-BROWSER-LAB": "be76fd144ad23f33338381493e80221941ebf37d6ce8c163169f77ab1d6744c7",
-    "ui:W-DIAGNOSTICS": "3a57598a08e1712b4b0710a753de36d4f92211e64c82584f102499c83be0a649"
+    "ui:W-DIAGNOSTICS": "20eec029cf7499b274370ab3987df917f39260f81048c5b62bc14b9fb40b7815"
   }
 }
