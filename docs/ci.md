@@ -154,12 +154,24 @@ Normal completion, failure and cooperative cancellation remove only owned state;
 an uncatchable kill can leave a private directory, which future runs never reuse.
 Do not delete another run's directories or persistent lock inode.
 
-Concurrent local checkouts must select distinct fixture listener ports with
-`CODE_FACTORY_TEST_BASE_PORT`, for example `CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`.
-The daemon uses the following port, 43174 in this example.
-Defaults remain 4173 and 4174. Both listeners stay on loopback; strict port
-ownership, fresh servers, health checks and direct-connection assertions use the
-selected ports. Installed service routes are unchanged.
+Browser npm scripts and correctness qualification start fresh loopback listeners
+on kernel-assigned ports, retain them and communicate their actual origins before
+Playwright starts. No free-port probe or unknown existing server is used. For a
+fixed adjacent pair, set `CODE_FACTORY_TEST_BASE_PORT`, for example
+`CODE_FACTORY_TEST_BASE_PORT=43173 make ci FLOW_BASE=main`; the daemon then uses
+43174. An occupied requested listener fails before assertions, without retries.
+Direct low-level Playwright commands retain 4173/4174 defaults; use the npm
+entrypoints for automatic isolation. Installed service routes are unchanged.
+Fixture-mode selection uses the installed Playwright test command's option
+parser, including consumed option values and the `--` positional boundary.
+Browser fixtures preserve caller signal listeners. Cancellation keeps a nonzero
+status while owned children, HTTP listeners and private state are cleaned up;
+an unresponsive owned child is killed after a bounded cooperative shutdown.
+Go compilation and daemon readiness share the former Playwright startup budget:
+60 seconds for correctness and 120 seconds for performance. Correctness then
+starts the owned UI child under its separate 60-second readiness guard; performance
+has no UI child. UI startup errors and unexpected exit fail verification. Expiry
+reports failure and drains owned children before removing private fixture state.
 
 Executing local `make ci`, `make verify` and direct `scripts/verify.sh` runs retain a
 version-1 JSON phase summary in ignored `verification-results/<run-id>.json`.
@@ -521,9 +533,13 @@ PATH carriers with a spelling other than `PATH` reject
 before ownership or discovery, since npm merges those variables into its search.
 Empty alternate carriers are admitted. The maintained graph's selected
 launchers, fixed compiler/shell lookup names and discovered helper filenames have
-lookup watches, including earlier unselected candidates. Its npm scripts use npx;
-that launcher is inventoried under npm's ancestor node_modules/.bin prefixes,
-node-gyp prefix and inherited PATH, with candidate lookups watched even when absent.
+lookup watches, including earlier unselected candidates. Browser npm scripts enter
+Python ownership, start the Node fixture runner and compile the Go fixture host.
+Their helper lookups include npm's ancestor node_modules/.bin prefixes, node-gyp
+prefix and inherited PATH, with candidates watched even when absent. Aliases to
+the inventoried tools require matching Python import roots; adjacent virtual
+environment configuration remains watched. A different selected launcher rejects
+before work so resource discovery cannot describe another executable.
 Discovery and watches derive each working directory's npm prefixes from the same
 inventory, preserving selection order without maintaining a second safety rule.
 This inventory supports the maintained scripts and admitted tool contexts; it does

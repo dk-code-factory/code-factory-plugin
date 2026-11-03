@@ -217,7 +217,7 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 		defer cancel()
 		_ = server.Shutdown(shutdown)
 	}()
-	err := server.ListenAndServe()
+	err := serveFixture(server)
 	if err == http.ErrServerClosed {
 		return nil
 	}

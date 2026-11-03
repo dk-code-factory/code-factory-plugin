@@ -800,6 +800,29 @@ while not (root/'release-worker').exists():
 child.kill();child.wait(timeout=2)
 '''))
         npx.chmod(0o755)
+        # Keep the production npm ownership entrypoint, substituting only its
+        # browser workload. Retain the authenticated fixture sockets in both
+        # launcher and worker, with their original group/session identity.
+        (self.root / 'web/fixture-runner.mjs').write_text(
+            '''import { spawn } from "node:child_process";
+import { readdirSync, fstatSync } from "node:fs";
+process.chdir(import.meta.dirname);
+const stdio = ["inherit", "inherit", "inherit"];
+for (const name of readdirSync("/proc/self/fd")) {
+  const fd = Number(name);
+  try {
+    if (fd > 2 && fstatSync(fd).isSocket()) {
+      while (stdio.length <= fd) stdio.push("ignore");
+      stdio[fd] = fd;
+    }
+  } catch (error) { if (error.code !== "EBADF") throw error; }
+}
+const worker = spawn(''' + json.dumps(str(npx)) + ''',
+  ["playwright", "test", ...process.argv.slice(2)], { stdio });
+for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => worker.kill(signal));
+worker.on("error", (error) => { console.error(error); process.exitCode = 1; });
+worker.on("exit", (code, signal) => { process.exitCode = code ?? (signal === "SIGINT" ? 130 : 143); });
+''')
         subprocess.run(['git', 'add', '.'], cwd=self.root, check=True)
         subprocess.run(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
                         'commit', '-qm', 'Fixture'], cwd=self.root, check=True)

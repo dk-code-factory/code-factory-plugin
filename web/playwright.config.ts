@@ -26,7 +26,7 @@ export default defineConfig({
     },
   ],
   use: { baseURL: fixtureUIOrigin, headless: true },
-  webServer: [
+  webServer: process.env.CODE_FACTORY_TEST_FIXTURES_OWNED === "1" ? [] : [
     {
       command: `npx vite --host 127.0.0.1 --port ${fixtureUIPort} --strictPort`,
       url: fixtureUIOrigin,

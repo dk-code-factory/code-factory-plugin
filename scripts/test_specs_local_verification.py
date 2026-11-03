@@ -3880,6 +3880,32 @@ class LocalVerificationTests(unittest.TestCase):
                 with contextlib.suppress(uf.FlowError):
                     session.close()
 
+    def test_npm_fixture_python_content_changes_reject_results(self):
+        early = self.directory / 'npm-fixture-helpers'
+        early.mkdir()
+        python = early / 'python3'
+        python.write_text('#!/bin/sh\nexec ' + shlex.quote(shutil.which('python3')) + ' "$@"\n')
+        python.chmod(0o755)
+        step = local.Step('frontend-tests', self.root, ('npm', 'test'))
+        consumed = []
+        def run(command, **options):
+            result = uf.run_verification(['python3', '-c', 'print("owned npm fixture ran")'], **options)
+            consumed.append(result.returncode)
+            python.write_text(python.read_text() + '# changed fixture interpreter\n')
+            return result
+        with patch.dict(os.environ, {'PATH': str(early) + ':' + os.environ['PATH']}), \
+                patch.object(local, 'helper_inputs', return_value=({self.python_runtime}, set())):
+            session = local.Session(self.root, self.base, [step], runner=run)
+            try:
+                session.freeze()
+                with self.assertRaisesRegex(uf.FlowError, 'inputs changed'):
+                    session.execute(step)
+                self.assertEqual(consumed, [0])
+                self.assertEqual(session.completed, {})
+            finally:
+                with contextlib.suppress(uf.FlowError):
+                    session.close()
+
     def test_indirect_setpriv_shadow_rejects_successful_go_fixture_results(self):
         early = self.directory / 'earlier-path'
         early.mkdir()
@@ -3953,16 +3979,101 @@ class LocalVerificationTests(unittest.TestCase):
                                 env={**os.environ, 'PYTHONPATH': str(ROOT / 'scripts')}, timeout=5)
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_indirect_npx_inherited_and_npm_ancestor_shadows_reject_zero_results(self):
+    def test_npm_helper_inventory_admits_aliases_and_rejects_different_launchers(self):
+        web = self.root / 'web'
+        web.mkdir()
+        ancestor = self.directory / 'node_modules/.bin'
+        ancestor.mkdir(parents=True)
+        marker = self.directory / 'npm-helper-selected'
+        node, npm = shutil.which('node'), str(Path(shutil.which('npm')).resolve())
+        for helper in ('python3', 'node', 'go'):
+            with self.subTest(helper=helper):
+                real = shutil.which(helper)
+                selected = ancestor / helper
+                selected.symlink_to(real)
+                try:
+                    with self.subTest(selection='canonical alias'):
+                        self.assertIn(selected, local.npm_inputs(self.root))
+                    selected.unlink()
+                    selected.write_text('#!/bin/sh\nprintf selected > ' + shlex.quote(str(marker)) +
+                                        '\nexec ' + shlex.quote(real) + ' "$@"\n')
+                    selected.chmod(0o755)
+                    command = helper + (' version' if helper == 'go' else ' --version')
+                    (web / 'package.json').write_text(json.dumps({'scripts': {'test': command}}))
+                    actual = subprocess.run([node, npm, 'test'], cwd=web, capture_output=True,
+                                            text=True, timeout=15)
+                    self.assertEqual(actual.returncode, 0, actual.stdout + actual.stderr)
+                    self.assertEqual(marker.read_text(), 'selected')
+                    with self.subTest(selection='different launcher'), \
+                            self.assertRaisesRegex(uf.FlowError, 'Npm helper selection differs'):
+                        local.npm_inputs(self.root)
+                finally:
+                    selected.unlink(missing_ok=True)
+                    marker.unlink(missing_ok=True)
+
+    def test_npm_python_alias_virtualenv_selection_and_config_mutations_reject(self):
+        web = self.root / 'web'
+        web.mkdir()
+        ancestor = self.directory / 'node_modules/.bin'
+        ancestor.mkdir(parents=True)
+        alias = ancestor / 'python3'
+        alias.symlink_to(shutil.which('python3'))
+        config = ancestor.parent / 'pyvenv.cfg'
+        marker = self.directory / 'selected-prefix'
+        code = 'from pathlib import Path;import sys;Path(' + repr(str(marker)) + ').write_text(sys.prefix)'
+        (web / 'package.json').write_text(json.dumps({'scripts': {'test': 'python3 -c ' + shlex.quote(code)}}))
+        configuration = 'home = ' + str(Path(shutil.which('python3')).parent) + '\ninclude-system-site-packages = false\n'
+        with patch.dict(os.environ, {'PYTHONPATH': str(ROOT / 'scripts')}), \
+                patch.object(local, 'python_inputs', self.discover_python):
+            config.write_text(configuration)
+            try:
+                with self.assertRaisesRegex(uf.FlowError, 'Npm Python import selection differs'):
+                    local.npm_inputs(self.root)
+            finally:
+                config.unlink()
+            files = local.npm_inputs(self.root)
+        step = local.Step('frontend-tests', web, ('npm', 'test'))
+        def run(command, **options):
+            config.write_text(configuration)
+            try:
+                result = uf.run_verification(command, **options)
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(Path(marker.read_text()), ancestor.parent)
+                return result
+            finally:
+                config.unlink()
+        with patch.object(local, 'helper_inputs', return_value=({self.python_runtime}, files)):
+            session = local.Session(self.root, self.base, [step], runner=run)
+            try:
+                session.freeze()
+                with self.assertRaisesRegex(uf.FlowError, 'inputs changed'):
+                    session.execute(step)
+                self.assertEqual(session.completed, {})
+            finally:
+                with contextlib.suppress(uf.FlowError):
+                    session.close()
+
+    def test_indirect_npm_helpers_inherited_and_ancestor_shadows_reject_zero_results(self):
         web = self.root / 'web'
         web.mkdir()
         shutil.copyfile(ROOT / 'scripts/verification_run.py', self.root / 'scripts/verification_run.py')
         shutil.copytree(ROOT / 'scripts/specs_lib', self.root / 'scripts/specs_lib',
                         ignore=shutil.ignore_patterns('__pycache__'))
-        for name in ('user_flows.py', 'specs.py'):
+        for name in ('user_flows.py', 'specs.py', 'verification_timing.py'):
             shutil.copyfile(ROOT / 'scripts' / name, self.root / 'scripts' / name)
         scripts = json.loads((ROOT / 'web/package.json').read_text())['scripts']
         (web / 'package.json').write_text(json.dumps({'scripts': {key: scripts[key] for key in ('test', 'test:performance')}}))
+        # Keep the maintained Python ownership entrypoint and Node/Go lookup chain,
+        # substituting only the browser workload with a dependency-free Go query.
+        (web / 'fixture-runner.mjs').write_text('''import { spawn } from "node:child_process";
+const child = spawn("go", ["version"], { stdio: "inherit" });
+child.on("error", (error) => { console.error(error); process.exitCode = 1; });
+child.on("exit", (code, signal) => { process.exitCode = code ?? 143; });
+''')
+        node, npm = shutil.which('node'), str(Path(shutil.which('npm')).resolve())
+        def actual_npm(command, **options):
+            # Bypass npm's env-node shebang to observe its child Node lookup itself.
+            return uf.run_verification([node, npm, *command[1:]], **options)
         early = self.directory / 'earlier-path'
         ancestor = self.directory / 'node_modules/.bin'
         early.mkdir()
@@ -3970,35 +4081,36 @@ class LocalVerificationTests(unittest.TestCase):
         checkout_bins = (self.root / 'node_modules/.bin', web / 'node_modules/.bin')
         for directory in checkout_bins:
             directory.mkdir(parents=True)
-        marker = self.directory / 'indirect-npx-ran'
-        for location in (early, ancestor, *checkout_bins):
-            for command in (('npm', 'test'), ('npm', 'run', 'test:performance')):
-                shadow = location / 'npx'
-                def run(command, **options):
-                    shadow.write_text('#!/bin/sh\nprintf guarded > ' + shlex.quote(str(marker)) +
-                                      '\nrm -- "$0"\nexit 0\n')
-                    shadow.chmod(0o755)
-                    result = uf.run_verification(command, **options)
-                    self.assertEqual(result.returncode, 0)
-                    self.assertFalse(shadow.exists())
-                    return result
-                with self.subTest(location=str(location), command=command), \
-                        patch.dict(os.environ, {'PATH': str(early) + ':' + os.environ['PATH'],
-                                              'PYTHONPATH': str(ROOT / 'scripts')}), \
-                        patch.object(local, 'helper_inputs', return_value=({self.python_runtime}, set())):
-                    step = local.Step('performance', web, command)
-                    session = local.Session(self.root, self.base, [step], runner=run)
-                    try:
-                        session.freeze()
-                        with self.assertRaisesRegex(uf.FlowError, 'inputs changed'):
-                            session.execute(step)
-                        self.assertEqual(marker.read_text(), 'guarded')
-                        self.assertEqual(session.completed, {})
-                    finally:
-                        with contextlib.suppress(uf.FlowError):
-                            session.close()
-                marker.unlink(missing_ok=True)
-        shadow = early / 'npx'
+        marker = self.directory / 'indirect-npm-helper-ran'
+        for helper in ('python3', 'node', 'go'):
+            for location in (early, ancestor, *checkout_bins):
+                for command in (('npm', 'test'), ('npm', 'run', 'test:performance')):
+                    shadow = location / helper
+                    def run(command, **options):
+                        shadow.write_text('#!/bin/sh\nprintf guarded > ' + shlex.quote(str(marker)) +
+                                          '\nrm -- "$0"\nexit 0\n')
+                        shadow.chmod(0o755)
+                        result = actual_npm(command, **options)
+                        self.assertEqual(result.returncode, 0)
+                        self.assertFalse(shadow.exists())
+                        return result
+                    with self.subTest(helper=helper, location=str(location), command=command), \
+                            patch.dict(os.environ, {'PATH': str(early) + ':' + os.environ['PATH'],
+                                                  'PYTHONPATH': str(ROOT / 'scripts')}), \
+                            patch.object(local, 'helper_inputs', return_value=({self.python_runtime}, set())):
+                        step = local.Step('performance', web, command)
+                        session = local.Session(self.root, self.base, [step], runner=run)
+                        try:
+                            session.freeze()
+                            with self.assertRaisesRegex(uf.FlowError, 'inputs changed'):
+                                session.execute(step)
+                            self.assertEqual(marker.read_text(), 'guarded')
+                            self.assertEqual(session.completed, {})
+                        finally:
+                            with contextlib.suppress(uf.FlowError):
+                                session.close()
+                    marker.unlink(missing_ok=True)
+        shadow = early / 'python3'
         shadow.write_text('#!/bin/sh\nprintf merged > ' + shlex.quote(str(marker)) + '\nexit 0\n')
         shadow.chmod(0o755)
         for carrier in ('Path', 'path', 'pAtH'):
@@ -4010,7 +4122,7 @@ class LocalVerificationTests(unittest.TestCase):
                 os.environ[carrier] = str(early)
                 os.environ['PATH'] = canonical
                 os.environ['PYTHONPATH'] = str(ROOT / 'scripts')
-                subprocess.run(['npm', 'test'], cwd=web, check=True, capture_output=True, timeout=15)
+                subprocess.run([node, npm, 'test'], cwd=web, check=True, capture_output=True, timeout=15)
                 self.assertEqual(marker.read_text(), 'merged')
                 marker.unlink()
                 with patch.object(local, 'managed', side_effect=AssertionError('ownership must not start')), \
@@ -4020,15 +4132,17 @@ class LocalVerificationTests(unittest.TestCase):
                 self.assertTrue(all(not path.exists() for path in self.receipts))
         shadow.unlink()
         (web / 'package.json').write_text(json.dumps({'name': 'fixture', 'version': '1.0.0',
-                                                    'scripts': {'test': 'npx --version'}}))
+                                                    'scripts': {key: scripts[key] for key in ('test', 'test:performance')}}))
         (web / 'package-lock.json').write_text(json.dumps({'name': 'fixture', 'version': '1.0.0',
             'lockfileVersion': 3, 'packages': {'': {'name': 'fixture', 'version': '1.0.0'}}}))
         (self.root / '.git/info/exclude').write_text('bin/\nweb/node_modules/\n')
         internal = web / 'node_modules/.bin'
         internal.mkdir(parents=True, exist_ok=True)
         (internal / 'obsolete').write_text('old generated entry\n')
+        for helper in ('python3', 'node', 'go'):
+            (ancestor / helper).symlink_to(shutil.which(helper))
         files = local.npm_inputs(self.root)
-        self.assertTrue(any(path.name in ('npx', 'npx-cli.js') for path in files))
+        self.assertTrue({ancestor / helper for helper in ('python3', 'node', 'go')} <= files)
         step = local.Step('correctness', web, ('npm', 'test'))
         prepare = local.Step('npm-install', web, ('npm', 'ci'))
         with patch.dict(os.environ, {'Path': '', 'path': '', 'pAtH': ''}):
