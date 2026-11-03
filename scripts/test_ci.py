@@ -235,6 +235,85 @@ sys.exit(int(os.environ["SAMPLE_EXIT"]))
         with self.assertRaisesRegex(ValueError, "provenance"):
             ci.verify_artifacts(directory, self.first)
 
+    def test_verify_closes_manifest_timing_on_success_and_validation_failure(self):
+        second = self.change("two")
+        directory = self.assets(second)
+        # Require the verify dispatcher itself to produce the provenance files.
+        (directory / "CI-MANIFEST.json").unlink()
+        (directory / "SHA256SUMS").unlink()
+        event = self.root / "event.json"
+        event.write_text(json.dumps({"before": self.first, "after": second}))
+        for invalid in (False, True):
+            with self.subTest(invalid=invalid):
+                journal = ci.timing.Journal.create(hosted=True, metadata=False,
+                    path=self.root / ("failure.json" if invalid else "success.json"))
+                if invalid:
+                    (directory / "unexpected.txt").write_text("reject this extra asset")
+                errors = io.StringIO()
+                with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "push", "GITHUB_REF": "refs/heads/main"}), \
+                        patch.object(sys, "argv", ["ci.py", "verify", "--event", str(event), "--directory", str(directory)]), \
+                        patch.object(ci.timing, "selected", return_value=journal), \
+                        patch.object(ci, "run_verification") as verify, redirect_stderr(errors):
+                    if invalid:
+                        with self.assertRaises(SystemExit) as stopped:
+                            ci.main()
+                        self.assertEqual(stopped.exception.code, 1)
+                        self.assertIn("Unexpected artifact files", errors.getvalue())
+                    else:
+                        self.assertIsNone(ci.main())
+                        self.assertEqual(errors.getvalue(), "")
+                        ci.verify_artifacts(directory, second)
+                        manifest = json.loads((directory / "CI-MANIFEST.json").read_text())
+                        self.assertEqual(manifest["commit"], second)
+                        self.assertEqual(manifest["components"]["plugin"]["version"], "test-plugin")
+                        self.assertEqual(manifest["components"]["code-factory"]["version"], "test-daemon")
+                    verify.assert_called_once_with({"base": self.first, "head": second, "bootstrap": False})
+                phases = [p for p in json.loads(journal.path.read_text())["phases"] if p["phase"] == "manifest"]
+                self.assertEqual(len(phases), 1)
+                phase = phases[0]
+                self.assertEqual(phase["outcome"], "failure" if invalid else "success")
+                self.assertEqual(phase["exit_code"], 1 if invalid else 0)
+                self.assertIsNotNone(phase["start_seconds"])
+                self.assertIsNotNone(phase["end_seconds"])
+                self.assertIsNotNone(phase["seconds"])
+                self.assertGreaterEqual(phase["end_seconds"], phase["start_seconds"])
+                self.assertGreaterEqual(phase["seconds"], 0)
+
+
+    def test_verify_preserves_manifest_cancellation_status(self):
+        second = self.change("two")
+        directory = self.assets(second)
+        event = self.root / "event.json"
+        event.write_text(json.dumps({"before": self.first, "after": second}))
+        for cancellation, code in ((KeyboardInterrupt(), 130), (SystemExit(143), 143)):
+            with self.subTest(code=code):
+                journal = ci.timing.Journal.create(hosted=True, metadata=False,
+                    path=self.root / (str(code) + ".json"))
+                manifest = ci.artifact_manifest
+                def interrupt_manifest(*args):
+                    manifest(*args)
+                    running = next(p for p in json.loads(journal.path.read_text())["phases"]
+                        if p["phase"] == "manifest")
+                    self.assertEqual(running["outcome"], "running")
+                    raise cancellation
+                with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "push", "GITHUB_REF": "refs/heads/main"}), \
+                        patch.object(sys, "argv", ["ci.py", "verify", "--event", str(event), "--directory", str(directory)]), \
+                        patch.object(ci.timing, "selected", return_value=journal), \
+                        patch.object(ci, "run_verification"), \
+                        patch.object(ci, "artifact_manifest", side_effect=interrupt_manifest):
+                    with self.assertRaises(type(cancellation)) as stopped:
+                        ci.main()
+                self.assertIs(stopped.exception, cancellation)
+                phase = next(p for p in json.loads(journal.path.read_text())["phases"] if p["phase"] == "manifest")
+                self.assertEqual(phase["outcome"], "interrupted")
+                self.assertEqual(phase["exit_code"], code)
+                self.assertIsNotNone(phase["start_seconds"])
+                self.assertIsNotNone(phase["end_seconds"])
+                self.assertIsNotNone(phase["seconds"])
+                self.assertGreaterEqual(phase["end_seconds"], phase["start_seconds"])
+                self.assertGreaterEqual(phase["seconds"], 0)
+
+
     def test_fixed_issue_requires_ancestor_commit_and_explicit_issue_reference(self):
         registry = self.root / "release/fixed-issues.json"
         registry.parent.mkdir()

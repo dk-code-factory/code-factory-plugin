@@ -198,7 +198,19 @@ def main():
             plan = comparison(event, os.environ["GITHUB_EVENT_NAME"], os.environ.get("CI_BOOTSTRAP_SHA", ""), os.environ["GITHUB_REF"])
             print(json.dumps(plan), flush=True)
             run_verification(plan)
-            artifact_manifest(args.directory, plan["head"])
+            journal = timing.selected()
+            identifier = timing.observe(journal.start, "manifest") if journal else None
+            code, interrupted = 1, False
+            try:
+                artifact_manifest(args.directory, plan["head"])
+                code = 0
+            except (KeyboardInterrupt, SystemExit) as error:
+                interrupted = True
+                code = 130 if isinstance(error, KeyboardInterrupt) else int(error.code)
+                raise
+            finally:
+                if identifier is not None:
+                    timing.observe(journal.stop, identifier, code, interrupted=interrupted)
         elif args.command == "manifest":
             artifact_manifest(args.directory, commit(args.head or git("rev-parse", "HEAD")))
         else:

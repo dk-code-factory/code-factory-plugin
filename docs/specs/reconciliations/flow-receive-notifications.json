@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "c347d49b3921dd3fc514369211e7d76c6023f9c4",
-  "fingerprint": "be2cbe5acd898179b57c0c1c562b815554d9db937b2ba29af3f7118c7952b11c",
+  "base": "96714fd6e484b940e2979d1645d6998b35ca7afd",
+  "fingerprint": "974a571937867257fa3de00fdae0b67a437caac4206b48a810b77e8574970946",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S4 event subscription, signed delivery and notification control are unchanged; untested failure classes and real-host subscription gap remain open.",
-    "implementation": "registerEvents continues dispatching subscribe/list through the event service; no delivery/cursor or event registry implementation changed.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signatures are validated, duplicate Subscribe preserves identity, run entity filtering yields one delivery and a 503 increments Attempts. Other retry classes are not newly claimed."
+    "description": "Subscription verification, retry event identity, acknowledgement deduplication and expiry remain unchanged. Manifest phase evidence is not a notification acknowledgement or delivery capability.",
+    "implementation": "Event, subscription and callback implementations match main; the new ci.main block has no event-store or notification calls. It retains numeric command outcomes only and leaves all callback safety ownership with events. Rebased comparison is current main 96714fd; the only authored differences remain ci.py, its two manifest tests and their flow mappings.",
+    "tests": "Inspected TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signatures match, identical subscription IDs deduplicate, retry uses the same eventId, acknowledged deliveries do not repeat and expired subscriptions deliver nothing. Fixture success does not prove installed host notifications. Manifest tests assert exact phase count/outcome/code and exception identity; product assertions and existing acceptance gaps are unchanged by this operational selection."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 152.236
+      "seconds": 161.52
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.22
+      "seconds": 35.148
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 292.345
+      "seconds": 297.747
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.694
+      "seconds": 4.96
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "383cb7b6a810b4a62e28226e067900bf3674797cc30eba7237ba846dc6c63097",
-    "term:attention-request": "1e1988053ad7b00ae8a02a0c51e0502eb171fd16c5d0ebfbe22522a8b5ff22d7",
-    "term:coverage-gap": "9186eb603d0b857237854d3dc0411be7d651fcb59b68324a4de5a036f9acbf66",
-    "term:host": "26e2102be20aab888fa9b9be1061e9f24c5cebabf39f496b678a9f0a65123b19",
-    "term:known-limitation": "bf2ff31df1f04c90c8f42282a951e97796ae2fddc0a90c65aa8abbeb5a44269e",
-    "term:subscription": "c87c32457353f95f4cdb61c0f43b6069ba8608f4947bd781f0a6154741eeb425",
-    "term:unverified-behavior": "8580bcf26c9857699ec27e5759205aa5ff6ad04ceaadc833c8dc692eb097b791"
+    "flow:receive-notifications": "c29b4e4b120c54dcde57aa618952d12dfc226b7c83e0d39cb4ef0e15c4b7e158",
+    "term:attention-request": "1ca9117275553dbf978eb50759b23d89e6e0a561f5ac914cca59ace0fc19b75c",
+    "term:coverage-gap": "bf41328d923a8c60911fec8466170ca4252ed394c87b0f8e8ac1646b1593d0cc",
+    "term:host": "306d32cbe620a1e8c80781c3ffaa9cb27fd554fa241636c807ef2acd015b577f",
+    "term:known-limitation": "25635d40bf8229cee3e765c8535042d9af72c11c92e877c206952e3605db8296",
+    "term:subscription": "c39856642f1288dce951b7dc85dfaa62367e38a57329efabc09098836f99a30c",
+    "term:unverified-behavior": "c74a8f303dba37decf6a844c647673cf530030dd22f5592c4a04b6e8dd7b9801"
   }
 }
