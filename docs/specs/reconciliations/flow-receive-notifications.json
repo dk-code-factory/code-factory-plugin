@@ -1,8 +1,8 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "28b922f16227236a166e71c98d791870e1758daa",
-  "fingerprint": "545a043f3c7bc85620d34c6a36cbb214b52651f1b56e3d9dc3974bf8d14f1532",
+  "base": "fd74c2080254b022217cca776e4073e9bc7745f4",
+  "fingerprint": "b9a76b695602470e7365df6387e363d77a8c7c84eec1e97710c0dcb24ca514ca",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 152.26
+      "seconds": 148.978
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.066
+      "seconds": 33.857
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 286.363
+      "seconds": 282.942
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.855
+      "seconds": 4.654
     }
   ],
   "dependencies": {

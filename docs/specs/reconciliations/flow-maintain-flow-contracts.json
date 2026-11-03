@@ -1,8 +1,8 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "28b922f16227236a166e71c98d791870e1758daa",
-  "fingerprint": "1a501e37c9c68d8d34117e488efa33ac2c1b10aeba632eb0219ece4709245dd6",
+  "base": "fd74c2080254b022217cca776e4073e9bc7745f4",
+  "fingerprint": "48662554d77e1d820e9539588bd03a529b45000c470cca6c5a4cff6b312d1581",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.066
+      "seconds": 33.857
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 286.363
+      "seconds": 282.942
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.855
+      "seconds": 4.654
     }
   ],
   "dependencies": {

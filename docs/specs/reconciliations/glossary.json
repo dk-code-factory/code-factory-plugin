@@ -1,8 +1,8 @@
 {
   "version": 1,
   "flow": "glossary",
-  "base": "28b922f16227236a166e71c98d791870e1758daa",
-  "fingerprint": "4152a9392d3116cc01ee3eca612876cde390e3678f15b2ea2857199a697f7f3a",
+  "base": "fd74c2080254b022217cca776e4073e9bc7745f4",
+  "fingerprint": "bd781c149c48756f77e92b4c1bd7ebf32a7800f7c6dfe91657d740099d498c06",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.066
+      "seconds": 33.857
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 286.363
+      "seconds": 282.942
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.855
+      "seconds": 4.654
     }
   ],
   "dependencies": {
