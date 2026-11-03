@@ -16527,7 +16527,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Actual ci.run_verification invokes real selected-journal refresh and hosted finalization for push, PR, manual main and pinned root on worker success/failure. Exact comparison and initial source survive, source/text parsing are not repeated, fixture0 and actual nonzero status remain authoritative, and no timing warning is emitted."
+          "purpose": "Actual ci.run_verification invokes real selected-journal refresh for push, PR, manual main and pinned root on worker success/failure. The fixture explicitly invokes hosted finalization after dispatch. Exact comparison and initial source survive, source/text parsing are not repeated, fixture0 and actual nonzero status remain authoritative, and no timing warning is emitted."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -16536,7 +16536,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Ordinary and reviewed-root hosted comparisons are already durable when version collection raises KeyboardInterrupt/SystemExit143. The normal phase inventory omits specifications only for the root before version collection and after finalization; the real dispatcher starts no worker, propagates the same cancellation, retains source identity and finalizes an interrupted partial journal."
+          "purpose": "Ordinary and reviewed-root hosted comparisons are already durable when version collection raises KeyboardInterrupt/SystemExit143. The normal phase inventory omits specifications only for the root before version collection and after finalization; the real dispatcher starts no worker, propagates the same cancellation and retains source identity. The fixture explicitly finalizes the interrupted partial journal."
         }
       ],
       "suites": [

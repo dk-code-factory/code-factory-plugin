@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
   "base": "28b922f16227236a166e71c98d791870e1758daa",
-  "fingerprint": "2b810580d9643b2c3302d37fbbd29f57f4e1b0c6605762465227a057309c424d",
+  "fingerprint": "1a501e37c9c68d8d34117e488efa33ac2c1b10aeba632eb0219ece4709245dd6",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S4/S5 preserve the exact validated hosted comparison, source and truthful root phase inventory before interruptible version collection. Reviewed-root interruption omits the nonexistent specifications phase; ordinary interruption keeps it unstarted. The dispatcher-only split, fixture mode and authoritative outcomes remain intact.",
-    "implementation": "Inspected ci.run_verification moving existing bootstrap phase adjustment before Journal.refresh. The resolved plan still commits before version queries. Existing helper ownership, worker argv, fixture0 and exception propagation are unchanged; no manifest observer or workflow delivery is added.",
-    "tests": "Read the expanded stable cancellation assertion over bootstrap true/false and KeyboardInterrupt/SystemExit143. It begins with the normal phase inventory, observes exact comparison/source and root-specific phase absence inside the version hook, preserves the original exception, starts no worker and retains the correct interrupted inventory after finalization. Both root cases failed before the fix; 17 focused assertions and a native Make-graph test passed afterward. The success/failure route assertions and ambient-journal isolation remain intact."
+    "description": "S4/S5 retain exact hosted comparison and truthful ordinary/root phase inventory before interrupted version collection. The assertion mappings now distinguish dispatcher refresh/dispatch from explicit fixture-owned hosted finalization; no additional workflow delivery or product behavior is introduced.",
+    "implementation": "Inspected ci.run_verification and existing journal helpers: bootstrap phase removal precedes refresh/version queries, and the dispatcher does not call hosted-finish. The wording-only follow-up changes no implementation; both fixtures explicitly invoke timing.hosted_action after dispatcher return or cancellation.",
+    "tests": "Read the push/PR/manual/root success/failure assertion and expanded ordinary/root interruption assertion. Both explicitly finalize through hosted_action and then check retained comparison/source, outcome and phase inventory. The corrected purposes/generated references accurately name fixture finalization, retain stable anchors/S4/S5, and require no new test for unchanged behavior. Original meaningful root regression remains intact."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 33.686
+      "seconds": 34.066
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 281.218
+      "seconds": 286.363
     },
     {
       "command": [
@@ -49,11 +49,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.674
+      "seconds": 4.855
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "741d0f0754400cb13f35313e8d8c5e58989fcd36ed0c10f5b63d0446efa0c957",
+    "flow:maintain-flow-contracts": "f0b06331a2d6cdb1a7d41d47499be8c301e8e5833cf1228d27a6784531d62589",
     "term:coverage-gap": "a54a96e803719f5df3ad47bc1dd524621edd056ab2d8d23dd25cef182e4a0602",
     "term:entity": "46d524b30f1c230869d5dfd797537af12c2950e9a453fafc0f7b06047a2d9597",
     "term:glossary": "6e4fb3a7d27e4bc6b51f715be2584e60cfe29f5f466487c3581babfad8db7630",
