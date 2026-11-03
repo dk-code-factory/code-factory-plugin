@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "846a5d4df962e0391006580a9ac7910722622471",
-  "fingerprint": "17972fe6dbf41e096f1594adf845736f5517ac5fe93c618cd068ac9c20652de5",
+  "base": "28b922f16227236a166e71c98d791870e1758daa",
+  "fingerprint": "fd541dedafbcbffab15ba05d7ab21e18d1d222b3b43e0aacfa06eef245eab438",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1-S4 retain verified callbacks, authenticated event delivery, stable retry identity and explicit disabling/expiry behavior. This review refreshes operational verification dependencies only; stable scenario IDs and typed open gaps are retained.",
-    "implementation": "Compared docs/user-flows/receive-notifications.md and its mapped implementation/assertion paths with main 846a5d4df962e0391006580a9ac7910722622471; product paths and authored behavior are byte-identical. The shared scripts/test_ci.py verification harness adds native Make observation assertions. Native Make instrumentation wraps existing commands and preserves phase order, fixture mode and failure/cancellation ownership. No product or host behavior is adopted or changed. The combined repair changes operational argument-parser and startup dependencies only: shared authoritative CLI grammar, automatic reservation/native materialization and the agreed unknown early-failure/interruption fallback. Product meanings and transitions remain unchanged. The additional correction only narrows observer exception handling at the parse boundary; product/glossary/UI semantics and selected lifecycle qualification remain unchanged. Final comment-only clarification replaces the unconditional Makefile dry-run sentence with the exact selected successful-dry versus early-failure/interruption qualification. No executable recipe, runtime, test, assertion mapping or described behavior changes; full-branch classifications and the substantive reviews above remain applicable. Current correction changes a test-fixture oracle and its assertion description only; production behavior, interfaces, shared parser, selected dry-run policy and this subject meaning remain unchanged.",
-    "tests": "Event subscription fixtures verify signatures and challenge, reject unsafe callbacks and failed challenges, and retain stable identity across a 503 retry; no broader failure-class acceptance is claimed. Reviewed real assertion bodies; required fixture suites execute afresh. No real-provider, installed-host, login, accessibility or soak gap is closed. Read combined helper/native assertions for supported root/review/json selections, quiet unavailable errors, reserved origin, worker metadata ordering, successful no-file native dry modes, bounded pre-context SIGINT/SIGTERM and supplied/hosted preservation. Required fixture suites rerun; no acceptance gap is closed. Actual-comparison metadata interruption is now exercised without replacing comparison with a return-value mock. The subject-owned product assertions remain unchanged and declared fixture suites rerun for fresh receipts. Startup observation assertions are now enforced by the native parent fixture instead of relying on optional subprocess success. Existing subject-owned product assertions are unchanged; declared fixture suites rerun for fresh receipts."
+    "description": "Verification, filtering, retry identity, acknowledgement deduplication and expiry retain their current behavior.",
+    "implementation": "Event and subscription sources match the comparison snapshot. Engineering timing and its optional artifact delivery do not route notifications, change retry identity or acknowledge events.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signatures validate, equal subscriptions are idempotent, retry preserves event ID, acknowledgement prevents replay and expiry suppresses delivery."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 140.436
+      "seconds": 157.459
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.224
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.821
+      "seconds": 35.961
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 299.2
+      "seconds": 307.029
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.775
+      "seconds": 4.897
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "aad25cff9050b369fb39074831216ad9386289f74b7db75d874d775f96bc1875",
-    "term:attention-request": "02f8747dfc2e254a6d9d2df1b785a0a55996e7bd8b7df06c9b82b86a575746f8",
-    "term:coverage-gap": "a8ca25e8ee384097c948679ba3c9102611a1c212d16b8df3bb7b61295d7c7c57",
-    "term:host": "0b44fc4e23e080085a75318a938be434379ec1943741cbd47e5fdd40156ac915",
-    "term:known-limitation": "819d98b36c6ca1783a5122a07606ad0447f86b519b2bed27610ef191414e692c",
-    "term:subscription": "48fd412eefdb187edaa9f028f91f4eb03db918a7e961d94c93c73142ae5122cd",
-    "term:unverified-behavior": "dc5007b31e108dfda6caa2c64121441c85a3060be86039bf8c9fa84f2e1d9004"
+    "flow:receive-notifications": "c070aaf1294caf90c25cd4cad2c547eaa98076df9194f983ccf02a3d782a1607",
+    "term:attention-request": "8122a15ce65123185df46a7afbe36390e4386f0f72c590f452451c83402ad3ee",
+    "term:coverage-gap": "7f5fcac685b1c207e5bfeabe1309b0993b347889dd732c27ed5202038ee95388",
+    "term:host": "e02c369ad9743389119dbdca415727c5e3c062ae95269fd0e3920304002f7788",
+    "term:known-limitation": "cc13f30d42f79fca7bb636978cee2be4a1195f4c9b7bf47414576ffd319b9b3c",
+    "term:subscription": "c63fd7b4e8a4d1cfb8a2b9bf44674dea6ca09697404690840188e93471d5b768",
+    "term:unverified-behavior": "ff7b4f90d12822a4b364f16e43ac0485f28f5f3f36c4370b1ec4823a3f4bd48f"
   }
 }
