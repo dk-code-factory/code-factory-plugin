@@ -170,6 +170,11 @@
         [
           "python3",
           "scripts/test_browser_benchmark.py"
+        ],
+        [
+          "node",
+          "--test",
+          "scripts/test_fixture_listener.mjs"
         ]
       ],
       "inputs": [
@@ -182,6 +187,8 @@
         ".github/workflows",
         "scripts/benchmark_browser.py",
         "scripts/verification_run.py",
+        "web/fixture-runner.mjs",
+        "web/fixture-listener.mjs",
         "web/package.json",
         "web/package-lock.json"
       ]
@@ -14058,6 +14065,21 @@
           "path": "scripts/verification_run.py",
           "anchor": "def main(",
           "purpose": "Shared isolated command boundary preserving fixture-only process and Make jobserver ownership"
+        },
+        {
+          "path": "web/fixture-runner.mjs",
+          "anchor": "async function ready(",
+          "purpose": "Kernel-allocated owned loopback fixtures publish actual origins before Playwright; explicit ports fail strictly"
+        },
+        {
+          "path": "internal/testhost/listener.go",
+          "anchor": "func serveFixture(",
+          "purpose": "Retain the real loopback listener before atomically publishing its actual address"
+        },
+        {
+          "path": "web/fixture-listener.mjs",
+          "anchor": "export async function listenFixture(",
+          "purpose": "Bind the actual Vite HTTP listener on loopback, bypassing Vite default-port substitution for port zero"
         }
       ],
       "tests": [
@@ -16542,6 +16564,38 @@
           "purpose": "Nested ownership, checkout contention, stale state, unrelated Git ancestors, concurrent linked worktrees and owned cancellation"
         },
         {
+          "path": "internal/testhost/listener_test.go",
+          "anchor": "func TestFixtureListenerOwnsEphemeralLoopbackBeforePublishing(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Published loopback port stays owned by the actual HTTP fixture"
+        },
+        {
+          "path": "internal/testhost/listener_test.go",
+          "anchor": "func TestFixtureListenerCollisionDoesNotPublishOrReuseUnknownServer(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Occupied requested ports fail without readiness or unknown-server reuse"
+        },
+        {
+          "path": "internal/testhost/listener_test.go",
+          "anchor": "func TestFixtureDaemonPortValidation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Daemon dynamic port validation and explicit adjacent base-port compatibility"
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"concurrent Vite fixtures retain distinct kernel allocations\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Two actual Vite instances own distinct live loopback origins; occupied explicit ports reject while the first owned server remains reachable"
+        },
+        {
           "path": "scripts/test_ci.py",
           "anchor": "def test_checkout_contention_stops_every_mutating_entrypoint_before_preparation(",
           "scenarios": [
@@ -16598,6 +16652,14 @@
             "S5"
           ],
           "purpose": "Standard Make/outer ownership cancellation lets the nested writer finalize running or reserved partial timing before owned cleanup completes."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"performance configuration spellings select the owned performance fixture\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Actual fixture startup with bare, relative, absolute, separate and supported equals/attached config arguments selects the performance daemon before Playwright discovery; all invocations remain fixture-only."
         }
       ],
       "suites": [

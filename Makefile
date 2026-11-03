@@ -82,6 +82,7 @@ test: ui plugin-embed fake-provider
 	python3 scripts/verification_timing.py command tooling-connection-probe -- python3 scripts/test_connection_probe.py
 	python3 scripts/verification_timing.py command browser-lab -- node --test scripts/test_browser_lab.mjs
 	python3 scripts/verification_timing.py command browser-control -- node --test scripts/test_browser_control.mjs
+	python3 scripts/verification_timing.py command fixture-listener -- node --test scripts/test_fixture_listener.mjs
 	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/test_ci.py
 	python3 scripts/verification_timing.py command tooling-browser-benchmark -- python3 scripts/test_browser_benchmark.py
 	python3 scripts/verification_timing.py command tooling-user-flows -- python3 scripts/test_user_flows.py
