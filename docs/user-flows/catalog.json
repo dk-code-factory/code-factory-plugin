@@ -16536,7 +16536,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Resolved hosted comparison is already durable when version collection raises KeyboardInterrupt/SystemExit143; the real dispatcher starts no worker, propagates the same cancellation, retains source identity and finalizes an interrupted partial journal."
+          "purpose": "Ordinary and reviewed-root hosted comparisons are already durable when version collection raises KeyboardInterrupt/SystemExit143. The normal phase inventory omits specifications only for the root before version collection and after finalization; the real dispatcher starts no worker, propagates the same cancellation, retains source identity and finalizes an interrupted partial journal."
         }
       ],
       "suites": [

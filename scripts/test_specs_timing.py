@@ -1483,30 +1483,40 @@ except KeyboardInterrupt:
                                 self.assertEqual(completed['comparison']['base'], None if group == 'root' else root)
 
     def test_hosted_dispatch_persists_plan_before_interrupted_version_collection(self):
-        plan = {'base': 'c' * 40, 'head': 'a' * 40, 'bootstrap': False}
-        for error in (KeyboardInterrupt(), SystemExit(143)):
-            with self.subTest(error=type(error).__name__):
-                journal = self.journal(hosted=True)
-                source = self.data(journal)['source']
-                expected = {'status': 'resolved', **plan, 'selection': 'commit'}
-                def versions():
-                    self.assertEqual(self.data(journal)['comparison'], expected)
-                    self.assertEqual(self.data(journal)['source'], source)
-                    raise error
-                worker = Mock()
-                with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(journal.path), 'GITHUB_ACTIONS': 'true'}), \
-                        patch.object(timing, 'toolchains', side_effect=versions), \
-                        contextlib.redirect_stderr(io.StringIO()) as errors:
-                    with self.assertRaises(type(error)) as caught:
-                        ci.run_verification(plan, worker)
-                    self.assertIs(caught.exception, error)
-                    timing.hosted_action('hosted-finish', 'cancelled')
-                worker.assert_not_called()
-                self.assertEqual(self.data(journal)['comparison'], expected)
-                self.assertEqual(self.data(journal)['source'], source)
-                self.assertEqual(self.data(journal)['outcome'], 'interrupted')
-                self.assertIsNotNone(self.data(journal)['wall_seconds'])
-                self.assertEqual(errors.getvalue(), '')
+        for bootstrap in (False, True):
+            plan = {'base': None if bootstrap else 'c' * 40, 'head': 'a' * 40,
+                    'bootstrap': bootstrap}
+            for error in (KeyboardInterrupt(), SystemExit(143)):
+                with self.subTest(bootstrap=bootstrap, error=type(error).__name__):
+                    journal = self.journal(hosted=True)
+                    initial = self.data(journal)
+                    source = initial['source']
+                    self.assertIn('specifications', [p['phase'] for p in initial['phases']])
+                    phases = [p for p in initial['phases']
+                              if not bootstrap or p['phase'] != 'specifications']
+                    expected = {'status': 'resolved', **plan, 'selection': 'commit'}
+                    def versions():
+                        current = self.data(journal)
+                        self.assertEqual(current['comparison'], expected)
+                        self.assertEqual(current['source'], source)
+                        self.assertEqual(current['phases'], phases)
+                        raise error
+                    worker = Mock()
+                    with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(journal.path), 'GITHUB_ACTIONS': 'true'}), \
+                            patch.object(timing, 'toolchains', side_effect=versions), \
+                            contextlib.redirect_stderr(io.StringIO()) as errors:
+                        with self.assertRaises(type(error)) as caught:
+                            ci.run_verification(plan, worker)
+                        self.assertIs(caught.exception, error)
+                        timing.hosted_action('hosted-finish', 'cancelled')
+                    worker.assert_not_called()
+                    completed = self.data(journal)
+                    self.assertEqual(completed['comparison'], expected)
+                    self.assertEqual(completed['source'], source)
+                    self.assertEqual(completed['phases'], phases)
+                    self.assertEqual(completed['outcome'], 'interrupted')
+                    self.assertIsNotNone(completed['wall_seconds'])
+                    self.assertEqual(errors.getvalue(), '')
 
     def test_hosted_setup_failure_keeps_initial_event_identity(self):
         event = self.root / 'event.json'

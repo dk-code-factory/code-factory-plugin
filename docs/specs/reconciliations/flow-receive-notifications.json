@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-receive-notifications",
   "base": "28b922f16227236a166e71c98d791870e1758daa",
-  "fingerprint": "fd541dedafbcbffab15ba05d7ab21e18d1d222b3b43e0aacfa06eef245eab438",
+  "fingerprint": "545a043f3c7bc85620d34c6a36cbb214b52651f1b56e3d9dc3974bf8d14f1532",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 169.444
+      "seconds": 146.563
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.203
+      "seconds": 1.164
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 35.18
+      "seconds": 33.686
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 305.534
+      "seconds": 281.218
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.756
+      "seconds": 4.674
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "c070aaf1294caf90c25cd4cad2c547eaa98076df9194f983ccf02a3d782a1607",
-    "term:attention-request": "8122a15ce65123185df46a7afbe36390e4386f0f72c590f452451c83402ad3ee",
-    "term:coverage-gap": "7f5fcac685b1c207e5bfeabe1309b0993b347889dd732c27ed5202038ee95388",
-    "term:host": "e02c369ad9743389119dbdca415727c5e3c062ae95269fd0e3920304002f7788",
-    "term:known-limitation": "cc13f30d42f79fca7bb636978cee2be4a1195f4c9b7bf47414576ffd319b9b3c",
-    "term:subscription": "c63fd7b4e8a4d1cfb8a2b9bf44674dea6ca09697404690840188e93471d5b768",
-    "term:unverified-behavior": "ff7b4f90d12822a4b364f16e43ac0485f28f5f3f36c4370b1ec4823a3f4bd48f"
+    "flow:receive-notifications": "b0227e2612cc4c93eb660fcaffd762ff041b69275824c5e9fafdd205a886a1a2",
+    "term:attention-request": "2688881014e98b4ac5dd557728ba604b27444a254fe3da90d69544d02d5f91c9",
+    "term:coverage-gap": "a54a96e803719f5df3ad47bc1dd524621edd056ab2d8d23dd25cef182e4a0602",
+    "term:host": "4d5e79d92d569abeb58eabe4a32efe98a1c983fbec4868063d74de09313fbd48",
+    "term:known-limitation": "7f285bb7d8f018ff6fb3501569c6f63ae779ccb9a7f12d0a94acec3e87217247",
+    "term:subscription": "e62111516ae1e87327e63dfc7cd524ed55bcae4850dd05449fee9cdca0c59b8d",
+    "term:unverified-behavior": "75d980d80d726a73451a8b5ba92a6f4de9f1db0cc67e76596ffb2155489ee117"
   }
 }
