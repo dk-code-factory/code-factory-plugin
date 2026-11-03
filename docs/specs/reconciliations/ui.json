@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 92.212
+      "seconds": 97.538
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 157.459
+      "seconds": 169.444
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.224
+      "seconds": 1.203
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 35.961
+      "seconds": 35.18
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 307.029
+      "seconds": 305.534
     },
     {
       "command": [
@@ -81,7 +81,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.897
+      "seconds": 4.756
     },
     {
       "command": [
@@ -89,7 +89,7 @@
         "test-performance"
       ],
       "exit_code": 0,
-      "seconds": 9.955
+      "seconds": 9.814
     }
   ],
   "dependencies": {

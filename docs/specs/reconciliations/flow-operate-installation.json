@@ -9,7 +9,7 @@
   "review": {
     "kind": "structure",
     "description": "Installation and exact verified-artifact promotion retain their contract. The split separates engineering timing observation from product installation and release authority.",
-    "implementation": "Installation and package/provenance validation sources are unchanged; manifest observation, when present, wraps rather than replaces validation. Part1 changes only dispatcher comparison persistence and its assertions; manifest observation and hosted workflow delivery remain for subsequent parts.",
+    "implementation": "Installation and package/provenance validation sources are unchanged; Part1 changes only dispatcher comparison persistence and its assertions; manifest observation and hosted workflow delivery remain for subsequent parts.",
     "tests": "Read TestRollbackRestoresGatewayProfileAndArchivesCurrent: rollback preserves/restores the appropriate profile, archives current bytes with0600 and clears consumed snapshot state. Existing package fixtures reject tampered bytes and wrong provenance."
   },
   "verification": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 92.212
+      "seconds": 97.538
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 157.459
+      "seconds": 169.444
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.37
+      "seconds": 10.258
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.828
+      "seconds": 8.647
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.62
+      "seconds": 21.329
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.161
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.663
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.224
+      "seconds": 1.203
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 35.961
+      "seconds": 35.18
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 307.029
+      "seconds": 305.534
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.897
+      "seconds": 4.756
     }
   ],
   "dependencies": {
