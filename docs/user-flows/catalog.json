@@ -16519,6 +16519,24 @@
             "S5"
           ],
           "purpose": "Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_dispatch_retains_resolved_identity_through_success_and_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual ci.run_verification invokes real selected-journal refresh for push, PR, manual main and pinned root on worker success/failure. The fixture explicitly invokes hosted finalization after dispatch. Exact comparison and initial source survive, source/text parsing are not repeated, fixture0 and actual nonzero status remain authoritative, and no timing warning is emitted."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_dispatch_persists_plan_before_interrupted_version_collection(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Ordinary and reviewed-root hosted comparisons are already durable when version collection raises KeyboardInterrupt/SystemExit143. The normal phase inventory omits specifications only for the root before version collection and after finalization; the real dispatcher starts no worker, propagates the same cancellation and retains source identity. The fixture explicitly finalizes the interrupted partial journal."
         }
       ],
       "suites": [

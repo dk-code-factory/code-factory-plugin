@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "846a5d4df962e0391006580a9ac7910722622471",
-  "fingerprint": "0f3fe1bd91a67972ad742f38754fbcb9e61d0837140ea9c84179dadd40a23159",
+  "base": "fd74c2080254b022217cca776e4073e9bc7745f4",
+  "fingerprint": "5db62ec4776b7385f5de9f35286755eed38c3876a4b05ad742d95a20f86506d4",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S4/S5 observe the native Make graph with early source identity and comparison derived from actual specification argv. Successful automatic native dry runs create no timing file. Under user Decision be3c7803c63ed028c622, failure or interruption before native context is observed retains an unknown partial even when the attempt was dry. Direct helper calls and supplied/hosted journals retain immediate startup behavior. Stable IDs, pinned adoption and existing open gaps remain unchanged.",
-    "implementation": "Inspected automatic reservation, ordinary worker-start materialization before metadata and parent fallback: one UUID/path/monotonic origin is preserved; unobserved successful children create no file. Make remains the sole graph and is unchanged by this repair. Shared specs_lib.arguments holds the former authoritative public CLI definitions; the facade and observer reuse it, preserving --json, ignored --review and equivalent --root while different-root, unknown, malformed and help argv remain unavailable without parser diagnostics. Existing actual-argv, staged read-only digest, conflicting/unmerged/intent-to-add selection, initial-push, reserved-capacity and diagnostic isolation code is preserved. Supplied and hosted state, variable flavors/origins/values, jobservers, phase ordering, prerequisite inheritance, fixture mode and owned cleanup remain intact. Benchmark implementation/assertions retain inventory, sampled RSS, ancestry/PID and cancellation behavior; no GNU argv detector, preflight or second scheduler is added. The follow-up correction limits SystemExit conversion to integer0/2 raised inside argument parsing. Later metadata exits and other parser exit statuses propagate through existing direct-helper interruption finalization; chosen automatic startup policy and public CLI grammar are unchanged. Final comment-only clarification replaces the unconditional Makefile dry-run sentence with the exact selected successful-dry versus early-failure/interruption qualification. No executable recipe, runtime, test, assertion mapping or described behavior changes; full-branch classifications and the substantive reviews above remain applicable. The follow-up repair changes only the native test fixture oracle: optional version subprocess assertions emit started/passed observations to a cleared private trace and controlling run_make requires all expected passes. Production version-query failure tolerance, runtime, Make and parser behavior are unchanged. Trace data is ignored in fixture Git identity.",
-    "tests": "Read actual helper assertions for no-file/no-directory reservation, exact injected origin and wall time, worker creation before source metadata, unknown nonzero/missing/interrupted fallback, supplied/hosted identity preservation and optional fallback-write failure isolation. Native tests cover recursive dry short/group/long/abbreviated forms, actual -I -n operands, missing executable and dry Makefile failure. Before-context SIGINT/SIGTERM probes use real Make parsing with and without -n, finite readiness/communication waits and immediately registered cleanup; they assert reserved ID/origin, unknown source/comparison, null unstarted fields, interrupted outcome and owned helper/group disappearance. Actual-argv/index/native matrix and public CLI tests cover supported review/root/json options, unknown/malformed/help/different-root privacy, unchanged committed JSON and byte-identical help/error probes. Existing direct metadata-interruption, runner descriptors, Go cache, fixture and benchmark assertions remain mapped and rerun. No real-host, provider, login, accessibility, soak or speedup acceptance is claimed. Read the new direct fresh/supplied startup assertion using the actual comparison function and an injected first Git metadata callback: statuses0/2/130/143 propagate, owned runner remains uncalled, early source and unknown comparison persist, phases retain null durations/status and the journal finalizes interrupted. Existing actual-argv help and ambiguous-option cases retain quiet unavailable parsing. Read the existing comparison matrix with parent-required startup observations and its private copied-helper negative mutation. Premature comparison leaves ordinary commands and final comparison successful/exit0, but the parent rejects the three started-without-passed observations. The copied helper restores in finally; positive invocations clear the trace each time, preventing stale passes from supplying evidence. No nullable version-string assertion or mandatory production query is introduced."
+    "description": "S4/S5 retain exact hosted comparison and truthful ordinary/root phase inventory before interrupted version collection. The assertion mappings now distinguish dispatcher refresh/dispatch from explicit fixture-owned hosted finalization; no additional workflow delivery or product behavior is introduced.",
+    "implementation": "Dispatcher root phase removal and exact comparison persistence remain unchanged. The existing interaction fixture now scopes a delegating deadline wrapper around real subprocess.run, preserving ci.git/ci.comparison/identity and actual returned data while enclosing indirect helper waits as well as explicit worker/Git waits. No production API, runtime behavior or source ownership changes.",
+    "tests": "Read exact route/status and ordinary/root interruption assertions, true fixture-owned finalization and source/comparison/phase preservation. Focused outside-Git guard observed the same76 real subprocesses (68Git/8Python): unbounded66 before,0 after; every output remains real. Scoped patch restoration passed on success and deliberate assertion failures; five existing dispatcher/cancellation/owned-runner/privacy checks passed. Stable anchors/S4/S5 and all expected statuses remain unchanged. Original finder independently verifies only the identified T1 fix within cycle5; no new full review cycle is claimed."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.821
+      "seconds": 34.071
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 299.2
+      "seconds": 281.941
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.775
+      "seconds": 4.654
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "fb4b96a7935e6558e39df6bf7064522f763c1117a10b24729a03ff9632843b5b",
-    "term:coverage-gap": "a8ca25e8ee384097c948679ba3c9102611a1c212d16b8df3bb7b61295d7c7c57",
-    "term:entity": "78438427e050870c4712fd8e03e762c55b68b321aab2f406211f5637ec28c20c",
-    "term:glossary": "6316201680ca00032d4f4f5457bccfc9e6a1334cb4e9d9ec11ac0980e5cfd113",
-    "term:known-limitation": "819d98b36c6ca1783a5122a07606ad0447f86b519b2bed27610ef191414e692c",
-    "term:reconciliation": "1459262b52e731eafb0102bc35c82a8dda10bd2e551d05cc0b51f6bed8b5df53",
-    "term:unverified-behavior": "dc5007b31e108dfda6caa2c64121441c85a3060be86039bf8c9fa84f2e1d9004",
-    "term:verification": "2ef493109f90d16ba36b2887c33527912f0bce05cedb22f8ba0ab678d7562f46"
+    "flow:maintain-flow-contracts": "4470fcab72279ea9df619877fcc002fa001d29566c54f9fb9b758be0cad82538",
+    "term:coverage-gap": "dd28b60b57307ab3a42ca073432af483f463ec84dfe08943495a53bc1aac3034",
+    "term:entity": "88db92c0956f8c7ee2f4e894b8d7c716829d1d918e52be296aa5be5c157d8fd6",
+    "term:glossary": "c805558f2ef748cdbf96a2a5436f4527d4adaeab223a3157ea76c315703394ae",
+    "term:known-limitation": "a973deb3df857bb7ba19119ce0160d66ad5eca3e32f667dd9e990ff1b28f4429",
+    "term:reconciliation": "133d7492ad5a1fa3d4edc0a741243598fc62676fad3c9ccc47ba92f07b20c83f",
+    "term:unverified-behavior": "d261df6d77a5f63bf79eab4089162365892b1069957688409522586712d042e1",
+    "term:verification": "7ad5383dd576780db4c01c4737765088731aefbc138ad39289e6874368659efc"
   }
 }

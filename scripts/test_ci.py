@@ -27,6 +27,9 @@ from test_specs_timing import cleanup_process
 
 class HostedCITests(unittest.TestCase):
     def setUp(self):
+        isolated = patch.object(ci.timing, "selected", return_value=None)
+        isolated.start()
+        self.addCleanup(isolated.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
