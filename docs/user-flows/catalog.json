@@ -16521,6 +16521,24 @@
           "purpose": "Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable."
         },
         {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_verify_closes_manifest_timing_on_success_and_validation_failure(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual ci.main verify dispatch uses real Git comparison, package provenance and a selected journal while only heavy verification is replaced. Manifest success writes valid provenance; an unexpected artifact fails with unchanged nonzero status. Both paths close exactly one manifest phase with truthful outcome, exit code and non-null monotonic interval."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_verify_preserves_manifest_cancellation_status(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "KeyboardInterrupt and SystemExit143 during actual ci.main manifest observation propagate the same exception, close the selected journal phase as interrupted with status130/143 and retain a completed monotonic interval. Real package validation executes before cancellation at the manifest boundary."
+        },
+        {
           "path": "scripts/test_specs_timing.py",
           "anchor": "def test_hosted_dispatch_retains_resolved_identity_through_success_and_failure(",
           "scenarios": [

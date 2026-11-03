@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "c347d49b3921dd3fc514369211e7d76c6023f9c4",
-  "fingerprint": "271846f1e9aaa2bde95112826a86ca63c374134f9fb213dfde9f0c087eecc0fa",
+  "base": "96714fd6e484b940e2979d1645d6998b35ca7afd",
+  "fingerprint": "4b063384b6caa10bd6a7c1ef229d308683ae31e9f77e0fe097f65454f2c6e724",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S4/S5 retain the shared fixture qualification contract while hosted checkout now provides complete history before measuring Playwright. Contributor documentation describes local PR-base Git metadata collection; stable IDs, initial-adoption policy and all existing limitations remain unchanged.",
-    "implementation": "Compared c347d49 and candidate workflow: existing Make preparation, repository-root qualifier, fifteen exact triggers, dispatch, fixture0, exact-head ref, disabled persisted credentials, job identity and always-upload seven-day diagnostics remain. Added only fetch-depth0 to checkout; pinned actions/checkout action.yml defines this as all history, and installed locked Playwright1.64.1 gitDiff fetches the event base only when cat-file cannot find it. The current event base c347d49 is an ancestor of the selected PR head, so complete history removes the observed optional fetch during measurement. Strict raw stdout/JSON, metrics, Git metadata capture, topology and retries are unchanged.",
-    "tests": "Read and ran HostedCITests.test_browser_benchmark_retains_samples_and_stops_on_failure: new assertion requires checkout fetch-depth0 alongside exact ref and persist-credentials false; existing configured-command fixture still executes exits0/19, verifies exact output arguments and retains summary/discovery diagnostics. Read unchanged qualifier main failure/inventory tests and direct strict json.loads path; malformed raw output remains rejected. Reviewed both inherited dispatcher tests: bounded push/PR/manual/bootstrap success/exit23 preserve comparison/source/fixture0, interrupted version collection preserves selected plan/root phases and starts no worker. Read native keep-going/shared-once and pipe/FIFO assertions; their implementations and mappings remain unchanged. Mandatory reconciliation and make ci will execute the retained full suites."
+    "description": "S4/S5 gain manifest-phase observation with truthful success/0, validation failure/1 and interruption/130 or numeric SystemExit status. Dispatcher identity is inherited from merged PR32; hosted setup/finalization/upload remain PR30 scope.",
+    "implementation": "Inspected ci.main selecting the existing journal, calling observe(start), running the unchanged complete artifact_manifest operation and stopping in finally. A missing journal bypasses only observation; observe catches ordinary start/stop exceptions so the validator and its result remain authoritative. The target bootstrap filtering before interruptible version collection and bounded test wrappers are retained unchanged. Rebased comparison is current main 96714fd; the only authored differences remain ci.py, its two manifest tests and their flow mappings.",
+    "tests": "Inspected both added integration tests: real Git comparison, package provenance and Journal exercise success and unexpected-artifact failure; exactly one phase has ordered non-null timing fields and correct status. Cancellation executes real package validation then asserts the identical KeyboardInterrupt/SystemExit143 and completed interrupted interval. Existing helper tests cover ordinary observation failure/privacy, injected-clock durations and bounded records; target dispatcher tests cover comparison preservation and root inventory. Mappings and rendered references retain their actual fixture-owned finalization descriptions; no hard-termination or hosted upload claim is made."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.22
+      "seconds": 35.148
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 292.345
+      "seconds": 297.747
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.694
+      "seconds": 4.96
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "830f043c76391e694e90e2e710c725ae38b1303f977c5521eb5b9493c6223dec",
-    "term:coverage-gap": "9186eb603d0b857237854d3dc0411be7d651fcb59b68324a4de5a036f9acbf66",
-    "term:entity": "66b5b64f5f84edba15edb0e1c1df5dc7119c5656fd727292bab4edc5ee9dc3ac",
-    "term:glossary": "2e6de5d94825cc492d3dee3d5a02fd528f1717accf66b93eb064d0c369845ca6",
-    "term:known-limitation": "bf2ff31df1f04c90c8f42282a951e97796ae2fddc0a90c65aa8abbeb5a44269e",
-    "term:reconciliation": "c3c6b8291416f75b6f528b8b68c17c41813b2c2be56143253704ee96b0a6c4d2",
-    "term:unverified-behavior": "8580bcf26c9857699ec27e5759205aa5ff6ad04ceaadc833c8dc692eb097b791",
-    "term:verification": "495c9f43ba088a3ebb1c7598c48f45d99873dc2c24ffbc722abb2f4754d66956"
+    "flow:maintain-flow-contracts": "5428bec4e808f73fa65b1fbe05ca8c9927004795d1bca70d8ae848e374785fbb",
+    "term:coverage-gap": "bf41328d923a8c60911fec8466170ca4252ed394c87b0f8e8ac1646b1593d0cc",
+    "term:entity": "89586b6646b783f2660cffa669247653d09be5b4a73b8f39af1ecd03b4825c51",
+    "term:glossary": "5cc76fa282a2e3615f30aa9fb11cf0e9e2e449a403ea2caf8883b0dd0f0a6514",
+    "term:known-limitation": "25635d40bf8229cee3e765c8535042d9af72c11c92e877c206952e3605db8296",
+    "term:reconciliation": "ce2dfa2e33c6c65665c2cbf0ffb0dc561f4f94669134892fb8e5f93256539e20",
+    "term:unverified-behavior": "c74a8f303dba37decf6a844c647673cf530030dd22f5592c4a04b6e8dd7b9801",
+    "term:verification": "c82d0ac0c494f4e5f6f217ebf98adf7844f2ff68c1d9d60dbf6e2d2fbf125fd2"
   }
 }
