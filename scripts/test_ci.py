@@ -279,7 +279,6 @@ sys.exit(int(os.environ["SAMPLE_EXIT"]))
                 self.assertGreaterEqual(phase["end_seconds"], phase["start_seconds"])
                 self.assertGreaterEqual(phase["seconds"], 0)
 
-
     def test_verify_preserves_manifest_cancellation_status(self):
         second = self.change("two")
         directory = self.assets(second)
@@ -312,7 +311,6 @@ sys.exit(int(os.environ["SAMPLE_EXIT"]))
                 self.assertIsNotNone(phase["seconds"])
                 self.assertGreaterEqual(phase["end_seconds"], phase["start_seconds"])
                 self.assertGreaterEqual(phase["seconds"], 0)
-
 
     def test_fixed_issue_requires_ancestor_commit_and_explicit_issue_reference(self):
         registry = self.root / "release/fixed-issues.json"
@@ -1123,6 +1121,19 @@ time.sleep(60)
                 os.kill(pid, 0)
         self.assertEqual(json.loads(journal.read_text())['outcome'], 'interrupted')
 
+    def test_workflow_finalizes_timing_before_every_artifact_transfer(self):
+        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()
+        steps = workflow.split('      - ')[1:]
+        verify = next(i for i, step in enumerate(steps) if step.startswith('name: Verify exact source'))
+        self.assertTrue(steps[verify + 1].startswith('name: Finish verification timing'))
+        self.assertIn('if: always()', steps[verify + 1])
+        self.assertIn('hosted-finish --outcome', steps[verify + 1])
+        uploads = [i for i, step in enumerate(steps) if 'uses: actions/upload-artifact@' in step]
+        self.assertTrue(all(i > verify + 1 for i in uploads))
+        self.assertEqual(uploads[-1], len(steps) - 1)
+        self.assertIn('name: verification-phase-timings', steps[-1])
+        self.assertIn('continue-on-error: true', steps[-1])
+        self.assertIn('retention-days: 7', steps[-1])
 
     def test_workflow_does_not_prepare_npm_outside_graph(self):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()

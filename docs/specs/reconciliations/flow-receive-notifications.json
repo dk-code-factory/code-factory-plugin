@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "96714fd6e484b940e2979d1645d6998b35ca7afd",
-  "fingerprint": "974a571937867257fa3de00fdae0b67a437caac4206b48a810b77e8574970946",
+  "base": "90d5b3656cd59629fa73997533513a7fc380b2f2",
+  "fingerprint": "3b16c3d1f5f4490a02380215fdc28d10604c191419945556be1cc3f3fe6e4ee4",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Subscription verification, retry event identity, acknowledgement deduplication and expiry remain unchanged. Manifest phase evidence is not a notification acknowledgement or delivery capability.",
-    "implementation": "Event, subscription and callback implementations match main; the new ci.main block has no event-store or notification calls. It retains numeric command outcomes only and leaves all callback safety ownership with events. Rebased comparison is current main 96714fd; the only authored differences remain ci.py, its two manifest tests and their flow mappings.",
-    "tests": "Inspected TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signatures match, identical subscription IDs deduplicate, retry uses the same eventId, acknowledged deliveries do not repeat and expired subscriptions deliver nothing. Fixture success does not prove installed host notifications. Manifest tests assert exact phase count/outcome/code and exception identity; product assertions and existing acceptance gaps are unchanged by this operational selection."
+    "description": "S1 verified subscriptions and S2 stable retry identities remain unchanged; CI artifact upload is not host event delivery. Cycle4 narrows only contributor documentation about absent-file reconstruction; this subject gains no behavior.",
+    "implementation": "Read events service declarations and confirmed internal/events/events.go unchanged from main; webhook signing/retry implementation is unaffected. Cycle3 confirms these mapped product/foundation sources remain identical to the same main comparison; atomic timing initialization and guarded reservation recovery add no product transition or foundational dependency. Cycle4 identity proof confirms all runtime, test, workflow, glossary and UI sources are byte-identical to published270e84a; only three documentation files and CLI receipts may change.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signing, filtered entity, stable503 retry eventId, no duplicate acknowledged delivery, expiry and idempotent unsubscribe remain asserted. Prior subject-specific assertion inspection is retained at identical source identity; the current correction adds no product assertion claim and preserves all existing host/UI gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 161.52
+      "seconds": 170.333
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 35.148
+      "seconds": 34.99
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 297.747
+      "seconds": 290.31
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.96
+      "seconds": 4.693
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "c29b4e4b120c54dcde57aa618952d12dfc226b7c83e0d39cb4ef0e15c4b7e158",
-    "term:attention-request": "1ca9117275553dbf978eb50759b23d89e6e0a561f5ac914cca59ace0fc19b75c",
-    "term:coverage-gap": "bf41328d923a8c60911fec8466170ca4252ed394c87b0f8e8ac1646b1593d0cc",
-    "term:host": "306d32cbe620a1e8c80781c3ffaa9cb27fd554fa241636c807ef2acd015b577f",
-    "term:known-limitation": "25635d40bf8229cee3e765c8535042d9af72c11c92e877c206952e3605db8296",
-    "term:subscription": "c39856642f1288dce951b7dc85dfaa62367e38a57329efabc09098836f99a30c",
-    "term:unverified-behavior": "c74a8f303dba37decf6a844c647673cf530030dd22f5592c4a04b6e8dd7b9801"
+    "flow:receive-notifications": "70ed11d3c1a0cfffbdb8baaf4fb5e94145022ac6cacba6529b1ff6dc981fed43",
+    "term:attention-request": "b0615d57238e603c3c76a17f9271369c0b4777995063008da1a1f3d8fe7711aa",
+    "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
+    "term:host": "a13c4dee7b2a58a1bbc37d82e54a8b8a175f419b07ca5b54cd55b0f4c9c01875",
+    "term:known-limitation": "2bed8d13431f74114b78d1f14270c6c4bcca514f523b6caafad1aaab8c5d2246",
+    "term:subscription": "989394a9a35cf7d9f0dfb05c4d7c3792dac0f53c045d36162a24fd6add1cde40",
+    "term:unverified-behavior": "a0984cd19de83b7bce49252e48b279a636dc594030980e1b237bf7b613d60a77"
   }
 }
