@@ -81,10 +81,16 @@ func (a *App) Init(ctx context.Context) error {
 func (a *App) Config(ctx context.Context) (domain.Config, error) {
 	var c domain.Config
 	e := a.Store.Get(ctx, "config", "settings", &c)
+	if c.ExecutionMode == "" {
+		c.ExecutionMode = "single-codex"
+	}
 	return c, e
 }
 func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
-	if c.ExecutionMode != "" && c.ExecutionMode != "workflow" && c.ExecutionMode != "single-codex" {
+	if c.ExecutionMode == "" {
+		c.ExecutionMode = "single-codex"
+	}
+	if c.ExecutionMode != "workflow" && c.ExecutionMode != "single-codex" {
 		return fmt.Errorf("execution mode must be workflow or single-codex")
 	}
 	if c.ExecutionMode == "single-codex" && c.PRReviewSkillID != "" {
@@ -93,11 +99,8 @@ func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
 			return fmt.Errorf("PR iteration skill is unavailable; discover installed skills in Settings")
 		}
 		if skill.Name != "dk-pr-iter" && skill.Name != "dk-workflows:dk-pr-iter" {
-			return fmt.Errorf("single Codex PR reviews require dk-pr-iter")
+			return fmt.Errorf("PR iteration skill must be dk-pr-iter")
 		}
-	}
-	if c.ExecutionMode == "single-codex" && c.PRReviewSkillID == "" {
-		return fmt.Errorf("select the installed dk-pr-iter skill for single Codex mode")
 	}
 	if err := prreview.ValidateReviewers(c.Reviewers); err != nil {
 		return err

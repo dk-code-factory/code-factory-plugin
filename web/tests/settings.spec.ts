@@ -749,14 +749,33 @@ test("global DK review import preserves unrelated edits made while settings are 
  }finally{release()}
 });
 
+test("single Codex execution defaults to the review prompt without an iteration skill", async ({page}) => {
+  const {ui,calls,state}=await host(page,{surface:"settings"});
+  await ui.getByText("System defaults",{exact:true}).click();
+  await expect(ui.getByLabel("Session execution",{exact:true})).toHaveValue("single-codex");
+  await expect(ui.getByLabel("PR iteration skill (optional)",{exact:true})).toHaveValue("");
+  await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
+  await expect.poll(()=>calls.filter(c=>c.name==="save_settings").length).toBe(1);
+  expect(state.config.prReviewSkillId || "").toBe("");
+  await ui.getByLabel("Session execution",{exact:true}).selectOption("workflow");
+  await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
+  await expect.poll(()=>state.config.executionMode).toBe("workflow");
+  await ui.getByText("System defaults",{exact:true}).click();
+  await ui.getByText("System defaults",{exact:true}).click();
+  await expect(ui.getByLabel("Session execution",{exact:true})).toHaveValue("workflow");
+  expect(calls.filter(c=>["start_run","post_retained_review"].includes(c.name))).toHaveLength(0);
+});
+
 test("single Codex execution settings retain the selected iteration skill without launching", async ({page}) => {
   const snapshot=initial();
   snapshot.skills.push({id:"iteration",name:"dk-workflows:dk-pr-iter",path:"/fixture/SKILL.md",content:"",managed:false});
+  snapshot.config.executionMode="workflow";
   const {ui,calls,state}=await host(page,{snapshot,surface:"settings"});
   await ui.getByText("System defaults",{exact:true}).click();
   await expect(ui.getByLabel("Session execution",{exact:true})).toHaveValue("workflow");
   await ui.getByLabel("Session execution",{exact:true}).selectOption("single-codex");
-  await ui.getByLabel("PR iteration skill",{exact:true}).selectOption("iteration");
+  await expect(ui.getByLabel("PR iteration skill (optional)",{exact:true})).toHaveValue("");
+  await ui.getByLabel("PR iteration skill (optional)",{exact:true}).selectOption("iteration");
   await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
   await expect.poll(()=>state.config.executionMode).toBe("single-codex");
   expect(state.config.prReviewSkillId).toBe("iteration");
@@ -766,7 +785,7 @@ test("single Codex execution settings retain the selected iteration skill withou
   expect(state.config.executionMode).toBe("single-codex");
   expect(state.config.prReviewSkillId).toBe("iteration");
   await ui.getByLabel("Session execution",{exact:true}).selectOption("workflow");
-  await expect(ui.getByLabel("PR iteration skill",{exact:true})).toHaveCount(0);
+  await expect(ui.getByLabel("PR iteration skill (optional)",{exact:true})).toHaveCount(0);
   await ui.getByRole("button",{name:"Save system defaults",exact:true}).click();
   await expect.poll(()=>state.config.executionMode).toBe("workflow");
   expect(calls.filter(c=>["start_run","prepare_pr_review","post_retained_review"].includes(c.name))).toHaveLength(0);

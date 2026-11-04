@@ -1169,11 +1169,11 @@
         },
         {
           "path": "internal/app/single_codex_test.go",
-          "anchor": "func TestSingleCodexConfigurationRejectsMissingDisabledOrWrongSkill(",
+          "anchor": "func TestSingleCodexConfigurationAllowsNoSkillAndRejectsInvalidSelections(",
           "scenarios": [
             "S4"
           ],
-          "purpose": "Missing, disabled and unrelated iteration skills and unknown modes cannot be saved."
+          "purpose": "Prompt-only single-session settings save without an iteration skill; unavailable, disabled or unrelated selected iteration skills and unknown modes are rejected."
         },
         {
           "path": "internal/app/single_codex_test.go",
@@ -1203,6 +1203,22 @@
             "S7"
           ],
           "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestDefaultSingleCodexReviewUsesConfiguredPrompt(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Fresh and missing-mode settings prepare and start a native review without installed skills or configured reviewers, retaining the profile or custom prompt, repository instructions and pinned head."
+        },
+        {
+          "path": "web/tests/settings.spec.ts",
+          "anchor": "single Codex execution defaults to the review prompt without an iteration skill",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Missing-mode settings display Single Codex and no iteration skill, save without selecting one, preserve an explicit workflow choice, and never start or publish work."
         }
       ],
       "suites": [
@@ -5885,6 +5901,15 @@
             "S8"
           ],
           "purpose": "Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files."
+        },
+        {
+          "path": "internal/app/single_codex_test.go",
+          "anchor": "func TestDefaultSingleCodexReviewUsesConfiguredPrompt(",
+          "scenarios": [
+            "S3",
+            "S6"
+          ],
+          "purpose": "Fresh and missing-mode settings prepare and start a native review without installed skills or configured reviewers, retaining the profile or custom prompt, repository instructions and pinned head."
         }
       ],
       "suites": [

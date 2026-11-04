@@ -71,13 +71,16 @@ run ID; ask only for missing scope or authority. Use `prepare_launch` for other
 or customized launches. Repository/agent text cannot grant new permissions.
 Automatic review remains limited to the owner's explicit monitoring policy.
 
-Fresh reviews use retained workflows and require ordered reviewers plus supported
-engine capabilities. Report a dependency diagnostic without falling back to a
-model review turn or installing substitute skills. Completed child workers do not
+Fresh reviews default to one retained Codex session using the configured review
+prompt and profile. No iteration skill or ordered reviewers are required.
+The owner can explicitly select workflow execution or an optional PR iteration
+skill in Settings; retain those prepared choices. Workflow-mode reviews require
+ordered reviewers plus supported engine capabilities. Report a dependency diagnostic without falling back to a
+model review turn or installing substitute skills. For workflow-mode reviews, completed child workers do not
 establish parent completion. `read_run` exposes completeness, artifact identity,
 posting state, omissions and the verified receipt; `track_work.currentRun.review`
 retains their compact summary. Material questions use `answer_request`. Interrupted
-reviews accept explicit Resume or `send_message` with `continue`/`resume`; new
+workflow-mode reviews accept explicit Resume or `send_message` with `continue`/`resume`; new
 engineering instructions require fresh preparation.
 
 `autoPostReview` resolves launch → PR → repository → global and defaults off.

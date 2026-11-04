@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "90d5b3656cd59629fa73997533513a7fc380b2f2",
-  "fingerprint": "3b16c3d1f5f4490a02380215fdc28d10604c191419945556be1cc3f3fe6e4ee4",
+  "base": "eda4f6ba66ecf44b622605608cd55a866d13770b",
+  "fingerprint": "11bfc1e3f6e149342e33222fec7f2ca55252333decdd265a86f8325b231c2d07",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1 verified subscriptions and S2 stable retry identities remain unchanged; CI artifact upload is not host event delivery. Cycle4 narrows only contributor documentation about absent-file reconstruction; this subject gains no behavior.",
-    "implementation": "Read events service declarations and confirmed internal/events/events.go unchanged from main; webhook signing/retry implementation is unaffected. Cycle3 confirms these mapped product/foundation sources remain identical to the same main comparison; atomic timing initialization and guarded reservation recovery add no product transition or foundational dependency. Cycle4 identity proof confirms all runtime, test, workflow, glossary and UI sources are byte-identical to published270e84a; only three documentation files and CLI receipts may change.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: signing, filtered entity, stable503 retry eventId, no duplicate acknowledged delivery, expiry and idempotent unsubscribe remain asserted. Prior subject-specific assertion inspection is retained at identical source identity; the current correction adds no product assertion claim and preserves all existing host/UI gaps."
+    "description": "S1/S2 notification subscription identity, signatures, deduplication and retry policy remain unchanged. Default run execution does not enable automatic review requests or change the notification setting.",
+    "implementation": "The events implementation is unchanged. domain.Defaults changes ExecutionMode only and retains Notifications=true; source-dependent verification is refreshed for the shared domain input.",
+    "tests": "Reviewed TestSubscriptionVerificationRetryDedupRefreshAndExpiry signature verification and stable webhook retry identity. The mapped Go suite reruns; existing unverified failure classes and installed-host acceptance remain unchanged."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 170.333
+      "seconds": 316.242
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.164
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.99
+      "seconds": 34.548
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 290.31
+      "seconds": 286.943
     },
     {
       "command": [
@@ -60,11 +60,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.693
+      "seconds": 4.674
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "70ed11d3c1a0cfffbdb8baaf4fb5e94145022ac6cacba6529b1ff6dc981fed43",
+    "flow:receive-notifications": "ebe0f67a7be565e2c12a5467b8f2fc4f549855d20ff5596614d6d7c0c9cdde1a",
     "term:attention-request": "b0615d57238e603c3c76a17f9271369c0b4777995063008da1a1f3d8fe7711aa",
     "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
     "term:host": "a13c4dee7b2a58a1bbc37d82e54a8b8a175f419b07ca5b54cd55b0f4c9c01875",

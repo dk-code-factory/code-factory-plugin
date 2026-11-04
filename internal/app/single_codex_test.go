@@ -25,12 +25,73 @@ func configureSingleCodex(t *testing.T, a *App, ctx context.Context) {
 	}
 }
 
+func TestDefaultSingleCodexReviewUsesConfiguredPrompt(t *testing.T) {
+	for _, mode := range []string{"new", "missing"} {
+		t.Run(mode, func(t *testing.T) {
+			a, pr := reviewFixture(t)
+			ctx := a.Runs.ctx
+			if mode == "missing" {
+				c, _ := a.Config(ctx)
+				c.ExecutionMode = ""
+				if err := a.Store.Put(ctx, "config", "settings", c, ""); err != nil {
+					t.Fatal(err)
+				}
+			}
+			c, err := a.Config(ctx)
+			if err != nil || c.ExecutionMode != "single-codex" || c.PRReviewSkillID != "" {
+				t.Fatal("default requires execution configuration or an iteration skill", c, err)
+			}
+			var profile domain.Profile
+			if err := a.Store.Get(ctx, "profile", "review", &profile); err != nil {
+				t.Fatal(err)
+			}
+			profile.Prompt = "Inspect {{title}} for data loss."
+			if err := a.SaveProfile(ctx, profile); err != nil {
+				t.Fatal(err)
+			}
+			for _, custom := range []string{"", "Check only cancellation races."} {
+				var run domain.Run
+				if custom == "" {
+					run, err = a.Runs.PreparePRReview(ctx, pr.ID)
+				} else {
+					run, err = a.Runs.Prepare(ctx, LaunchInput{ItemID: pr.ID, ProfileID: "review", Prompt: custom})
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
+				want := custom
+				if want == "" {
+					want = "Inspect " + pr.Title + " for data loss."
+				}
+				if run.ExecutionMode != "single-codex" || run.ReviewWorkflow != "" || len(run.Skills) != 0 || !strings.HasPrefix(run.Prompt, want) || !strings.Contains(run.Prompt, "Pinned PR head: "+pr.Head) || !strings.Contains(run.Prompt, "Check repository-specific correctness") || strings.Contains(run.Prompt, "dk-pr-iter") {
+					t.Fatal("default review did not retain the prompt and target without orchestration", run)
+				}
+				if custom == "" {
+					continue
+				}
+				if _, err := a.Runs.Start(ctx, run.ID, false); err != nil {
+					t.Fatal(err)
+				}
+				waitFor(t, func() bool {
+					_ = a.Store.Get(ctx, "run", run.ID, &run)
+					return run.Status == "idle" || run.Status == "failed"
+				})
+				if run.Status != "idle" || run.ThreadID == "" {
+					t.Fatal("prompt-only review could not start without installed skills", run.Status, run.Error)
+				}
+			}
+		})
+	}
+}
+
 func TestAutomaticReviewPreservesProfileSkills(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
 		workflow bool
+		plain    bool
 		skills   []string
 	}{
+		{name: "default-prompt", plain: true},
 		{name: "native-nil"},
 		{name: "native-empty", skills: []string{}},
 		{name: "native-other", skills: []string{"managed:review-check"}},
@@ -44,7 +105,9 @@ func TestAutomaticReviewPreservesProfileSkills(t *testing.T) {
 				a, pr, _, _ = retainedFixture(t)
 			} else {
 				a, pr = reviewFixture(t)
-				configureSingleCodex(t, a, a.Runs.ctx)
+				if !tc.plain {
+					configureSingleCodex(t, a, a.Runs.ctx)
+				}
 			}
 			ctx := a.Runs.ctx
 			if err := a.Runs.SaveSkill(ctx, domain.Skill{Name: "review-check", Content: "---\nname: review-check\ndescription: Review evidence.\n---\nCheck correctness.\n"}); err != nil {
@@ -84,7 +147,7 @@ func TestAutomaticReviewPreservesProfileSkills(t *testing.T) {
 				}
 			} else {
 				want := slices.Clone(tc.skills)
-				if !slices.Contains(want, c.PRReviewSkillID) {
+				if c.PRReviewSkillID != "" && !slices.Contains(want, c.PRReviewSkillID) {
 					want = append(want, c.PRReviewSkillID)
 				}
 				var got []string
@@ -191,13 +254,17 @@ func TestSingleCodexReviewRetainsSkillModeAndNativeSession(t *testing.T) {
 	}
 }
 
-func TestSingleCodexConfigurationRejectsMissingDisabledOrWrongSkill(t *testing.T) {
+func TestSingleCodexConfigurationAllowsNoSkillAndRejectsInvalidSelections(t *testing.T) {
 	a, _ := reviewFixture(t)
 	ctx := a.Runs.ctx
 	c, _ := a.Config(ctx)
 	c.ExecutionMode = "single-codex"
+	if err := a.SaveConfig(ctx, c); err != nil {
+		t.Fatal("prompt-only single session rejected", err)
+	}
+	c.PRReviewSkillID = "missing"
 	if a.SaveConfig(ctx, c) == nil {
-		t.Fatal("missing iteration skill accepted")
+		t.Fatal("unavailable iteration skill accepted")
 	}
 	configureSingleCodex(t, a, ctx)
 	c, _ = a.Config(ctx)

@@ -1,22 +1,28 @@
 # Retained PR review workflows
 
-Settings → System defaults → Session execution selects `workflow` or
-`single-codex` for newly prepared work. Existing installations without this field
-retain workflow behavior until the owner selects a mode. The selected mode is
-saved with each run; changing it never reroutes existing proposals or sessions.
+Settings → System defaults → Session execution selects `single-codex` or
+`workflow` for newly prepared work. Single Codex is the default, including when
+older settings omit the field. An explicitly saved workflow choice is preserved.
+The selected mode is saved with each run; changing it never reroutes existing
+proposals or sessions, including older runs without an execution-mode field.
 
 Single Codex mode starts one retained native app-server session directly for
-tasks and PR reviews. Select the installed `dk-workflows:dk-pr-iter` skill in
-PR iteration skill; unavailable, disabled or unrelated skills are rejected.
-Review preparation adds this skill and snapshots its complete package resources.
-The session follows dk-pr-iter's review/CI loop, lifecycle and native child-agent
-contracts, subject to the selected profile's sandbox and publishing authority.
-Its messages, questions, interrupt and resume use the existing session controls.
-This mode does not use Factory's retained review artifacts or automatic posting
-policy; dk-pr-iter owns its private evidence and publication procedure. It is an
-explicit selection and does not activate after an engine failure. Read-only
-profiles can inspect but cannot perform dk-pr-iter fixes; choose an appropriate
-writable profile explicitly when iteration is intended.
+tasks and PR reviews. Reviews use the selected profile's prompt, model, effort,
+skills, sandbox and publishing authority, together with the pinned PR target and
+repository review instructions. A custom launch prompt replaces the profile's
+prompt. No iteration skill or ordered reviewer configuration is required.
+Messages, questions, interrupt and resume use the existing session controls.
+Question recovery may invoke the existing helper model; this mode selects one
+main session rather than imposing a limit on all model calls or skill delegation.
+
+The optional PR iteration skill selects the installed `dk-workflows:dk-pr-iter`
+skill and snapshots its complete package resources. When explicitly selected,
+the session follows its review/CI loop, lifecycle and native child-agent contracts.
+Unavailable, disabled or unrelated selections are rejected. Leave it unset for
+prompt-driven review. Single Codex mode does not use Factory's retained review
+artifacts or automatic posting policy; publication follows the selected profile's
+authority. Read-only profiles can inspect; select a writable profile explicitly
+when iteration requires fixes. Execution modes never activate as failure fallbacks.
 
 Workflow-mode PR reviews use `code-factory-pr-review-v1`. Existing retained runs
 without that marker keep the original native-turn execution and recovery path.

@@ -546,10 +546,7 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	// Preserve the selected profile for automatic policy revalidation. Derived
 	// skills belong only to the effective retained bundles.
 	skills := slices.Clone(p.Skills)
-	if prReview && config.ExecutionMode == "single-codex" {
-		if config.PRReviewSkillID == "" {
-			return domain.Run{}, fmt.Errorf("select the installed dk-pr-iter skill in Settings")
-		}
+	if prReview && config.ExecutionMode == "single-codex" && config.PRReviewSkillID != "" {
 		found := false
 		for _, id := range skills {
 			found = found || id == config.PRReviewSkillID
@@ -565,7 +562,7 @@ func (m *Manager) prepare(ctx context.Context, in LaunchInput, review bool) (dom
 	if prReview {
 		prompt = appendPRReviewPrompt(prompt, item, repo.ReviewPrompt)
 	}
-	if prReview && config.ExecutionMode == "single-codex" {
+	if prReview && config.ExecutionMode == "single-codex" && config.PRReviewSkillID != "" {
 		prompt += "\nUse the selected $dk-pr-iter skill to iterate this pull request through review and CI. Follow its lifecycle, review budgets and completion gates. Keep this retained Codex session as coordinator; use native subagents only as required by the skill. Never merge without an explicit user request."
 	}
 	prompt = appendLaunchAuthority(prompt, p)
