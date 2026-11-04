@@ -1528,6 +1528,224 @@ except KeyboardInterrupt:
                     self.assertIsNotNone(completed['wall_seconds'])
                     self.assertEqual(errors.getvalue(), '')
 
+    def test_hosted_startup_signals_keep_exported_partial_for_finalization(self):
+        probe = '''import os, signal, sys
+from pathlib import Path
+import verification_timing as timing
+timing.ROOT = Path(os.environ['TIMING_FIXTURE_ROOT'])
+def interrupted_identity():
+    os.kill(os.getpid(), int(os.environ['TIMING_FIXTURE_SIGNAL']))
+    raise AssertionError('startup signal returned')
+timing.identity = interrupted_identity
+signal.signal(signal.SIGTERM, lambda number, frame: sys.exit(128 + number))
+try:
+    sys.argv = ['timing', 'hosted-start']
+    sys.exit(timing.main())
+except KeyboardInterrupt:
+    sys.exit(130)
+'''
+        for number, status in ((signal.SIGINT, 130), (signal.SIGTERM, 143)):
+            with self.subTest(signal=number):
+                root = self.root / str(number)
+                root.mkdir()
+                exported = root / 'github-env'
+                result = subprocess.run([sys.executable, '-c', probe], cwd=MODULE_DIRECTORY,
+                    env={**os.environ, 'GITHUB_ACTIONS': 'true', 'GITHUB_ENV': str(exported),
+                         'TIMING_FIXTURE_ROOT': str(root), 'TIMING_FIXTURE_SIGNAL': str(number)},
+                    capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, status, result.stderr)
+                additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+                with patch.dict(os.environ, additions), \
+                        patch.object(timing, 'toolchains', return_value={'python': '3.12.0'}):
+                    journal = timing.selected()
+                    self.assertEqual(list((root / 'verification-results').glob('*.json')), [journal.path])
+                    initial = self.data(journal)
+                    self.assertEqual(initial['outcome'], 'running')
+                    self.assertEqual(initial['source'], {'head': None, 'inputs_sha256': None, 'dirty': None})
+                    self.assertEqual(initial['comparison'], {'status': 'unavailable'})
+                    self.assertEqual(initial['phases'][0]['outcome'], 'running')
+                    self.assertIsNotNone(initial['phases'][0]['start_seconds'])
+                    self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None
+                                        for row in initial['phases'][1:]))
+                    self.assertNotIn('CODE_FACTORY_TIMING_SETUP', additions)
+                    timing.hosted_action('setup-finish', 'cancelled')
+                    timing.hosted_action('hosted-finish', 'cancelled')
+                data = self.data(journal)
+                self.assertEqual(data['outcome'], 'interrupted')
+                self.assertEqual(data['clock_origin'], initial['clock_origin'])
+                self.assertIsNotNone(data['wall_seconds'])
+                self.assertEqual(data['phases'][0]['outcome'], 'interrupted')
+                self.assertEqual(data['phases'][0]['exit_code'], 1)
+                self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None
+                                    for row in data['phases'][1:]))
+                self.assertNotIn(str(root), journal.path.read_text())
+
+    def test_hosted_initial_write_signals_recover_reserved_snapshot(self):
+        probe = '''import os, signal, sys
+from pathlib import Path
+import verification_timing as timing
+timing.ROOT = Path(os.environ['TIMING_FIXTURE_ROOT'])
+original_write = Path.write_text
+def interrupted_write(path, data, *args, **kwargs):
+    if path.suffix == '.json':
+        with path.open('w') as output:
+            output.write(data[:20])
+            output.flush()
+            os.kill(os.getpid(), int(os.environ['TIMING_FIXTURE_SIGNAL']))
+            raise AssertionError('initial write signal returned')
+    return original_write(path, data, *args, **kwargs)
+def interrupted_create(*args, **kwargs):
+    os.kill(os.getpid(), int(os.environ['TIMING_FIXTURE_SIGNAL']))
+    raise AssertionError('before creation signal returned')
+if os.environ['TIMING_FIXTURE_BOUNDARY'] == 'write':
+    Path.write_text = interrupted_write
+else:
+    timing.Journal.create = interrupted_create
+signal.signal(signal.SIGTERM, lambda number, frame: sys.exit(128 + number))
+try:
+    sys.argv = ['timing', 'hosted-start']
+    sys.exit(timing.main())
+except KeyboardInterrupt:
+    sys.exit(130)
+'''
+        for boundary in ('write', 'before-create'):
+            for number, status in ((signal.SIGINT, 130), (signal.SIGTERM, 143)):
+                for first in ('setup-finish', 'hosted-finish'):
+                    with self.subTest(boundary=boundary, signal=number, first=first):
+                        root = self.root / (boundary + '-' + str(number) + '-' + first)
+                        root.mkdir()
+                        exported = root / 'github-env'
+                        result = subprocess.run([sys.executable, '-c', probe], cwd=MODULE_DIRECTORY,
+                            env={**os.environ, 'GITHUB_ACTIONS': 'true', 'GITHUB_ENV': str(exported),
+                                 'TIMING_FIXTURE_ROOT': str(root), 'TIMING_FIXTURE_SIGNAL': str(number),
+                                 'TIMING_FIXTURE_BOUNDARY': boundary},
+                            capture_output=True, text=True, timeout=10)
+                        self.assertEqual(result.returncode, status, result.stderr)
+                        additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+                        path = Path(additions['CODE_FACTORY_TIMING_FILE'])
+                        self.assertFalse(path.exists(), 'Interrupted initial write exposed the final path')
+                        reservation = json.loads(additions['CODE_FACTORY_TIMING_RESERVATION'])
+                        self.assertEqual(reservation['path'], str(path))
+                        self.assertTrue(reservation['hosted'])
+                        if path.parent.exists():
+                            self.assertEqual(list(path.parent.iterdir()), [])
+                        errors = io.StringIO()
+                        with patch.dict(os.environ, additions), patch.object(timing, 'ROOT', root), \
+                                patch.object(timing, 'toolchains', return_value={}), \
+                                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(errors):
+                            timing.observe(timing.hosted_action, first, 'cancelled')
+                            timing.observe(timing.hosted_action, 'hosted-finish', 'cancelled')
+                        self.assertEqual(errors.getvalue(), '')
+                        data = json.loads(path.read_text())
+                        self.assertEqual(data['origin'], 'hosted')
+                        self.assertEqual(data['run_id'], path.stem)
+                        self.assertEqual(data['clock_origin'], reservation['clock_origin'])
+                        self.assertEqual(data['outcome'], 'interrupted')
+                        self.assertGreaterEqual(data['wall_seconds'], 0)
+                        self.assertEqual(data['source'], {'head': None, 'inputs_sha256': None, 'dirty': None})
+                        self.assertEqual(data['comparison'], {'status': 'unavailable'})
+                        self.assertEqual(data['phases'][0]['phase'], 'setup')
+                        self.assertEqual(data['phases'][-1]['phase'], 'manifest')
+                        self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None and
+                            row['start_seconds'] is None and row['end_seconds'] is None and
+                            row['exit_code'] is None for row in data['phases']))
+                        self.assertEqual(set(path.parent.iterdir()), {path, path.with_suffix('.lock')})
+                        self.assertNotIn(str(root), path.read_text())
+
+    def test_hosted_recovery_rejects_unknown_reservations_and_preserves_existing_files(self):
+        reservation = {**timing.Journal.reserve(clock=lambda: 10.0), 'hosted': True}
+        path = Path(reservation['path'])
+        cases = [None, 'invalid JSON', '[]']
+        for overrides in ({'path': str(path.with_name('other.json'))}, {'clock_origin': None},
+                          {'clock_origin': True}, {'clock_origin': float('nan')},
+                          {'hosted': False}, {'hosted': 1}, {'prerequisites': 'true'},
+                          {'unexpected': 'private-state'}):
+            cases.append(json.dumps({**reservation, **overrides}))
+        for encoded in cases:
+            with self.subTest(reservation=encoded):
+                environment = {'CODE_FACTORY_TIMING_FILE': str(path)}
+                if encoded is not None:
+                    environment['CODE_FACTORY_TIMING_RESERVATION'] = encoded
+                errors = io.StringIO()
+                with patch.dict(os.environ, environment), contextlib.redirect_stderr(errors):
+                    timing.observe(timing.hosted_action, 'hosted-finish', 'cancelled')
+                self.assertFalse(path.exists())
+                self.assertIn('Verification timing unavailable', errors.getvalue())
+        path.parent.mkdir(exist_ok=True)
+        for content in ('', '{"incomplete":'):
+            path.write_text(content)
+            with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(path),
+                    'CODE_FACTORY_TIMING_RESERVATION': json.dumps(reservation)}), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                timing.observe(timing.hosted_action, 'setup-finish', 'cancelled')
+                timing.observe(timing.hosted_action, 'hosted-finish', 'cancelled')
+            self.assertEqual(path.read_text(), content)
+        path.unlink()
+        path.symlink_to(self.root / 'missing-foreign-file')
+        with patch.dict(os.environ, {'CODE_FACTORY_TIMING_FILE': str(path),
+                'CODE_FACTORY_TIMING_RESERVATION': json.dumps(reservation)}), \
+                contextlib.redirect_stderr(io.StringIO()):
+            timing.observe(timing.hosted_action, 'hosted-finish', 'cancelled')
+        self.assertTrue(path.is_symlink())
+        self.assertFalse(path.exists())
+
+    def test_initial_publication_failure_cleans_staging_and_remains_optional(self):
+        exported = self.root / 'github-env'
+        original_write = Path.write_text
+        def failed_write(path, data, *args, **kwargs):
+            if path.suffix == '.json':
+                with path.open('w') as output:
+                    output.write(data[:20])
+                raise OSError('private write failure')
+            return original_write(path, data, *args, **kwargs)
+        errors = io.StringIO()
+        with patch.dict(os.environ, {'GITHUB_ENV': str(exported)}), \
+                patch.object(Path, 'write_text', failed_write), \
+                patch.object(sys, 'argv', ['timing', 'hosted-start']), contextlib.redirect_stderr(errors):
+            self.assertEqual(timing.main(), 0)
+        self.assertIn('Verification timing unavailable', errors.getvalue())
+        self.assertNotIn('private write failure', errors.getvalue())
+        self.assertEqual(list((self.root / 'verification-results').iterdir()), [])
+        additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+        with patch.dict(os.environ, additions), patch.object(timing, 'toolchains', return_value={}), \
+                contextlib.redirect_stdout(io.StringIO()):
+            timing.hosted_action('setup-finish', 'failure')
+            timing.hosted_action('hosted-finish', 'failure')
+            data = self.data(timing.selected())
+        self.assertEqual(data['outcome'], 'failure')
+        self.assertEqual(data['clock_origin'], json.loads(additions['CODE_FACTORY_TIMING_RESERVATION'])['clock_origin'])
+        self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None for row in data['phases']))
+
+    def test_hosted_selection_precedes_creation_and_missing_setup_is_finalizable(self):
+        exported = self.root / 'github-env'
+        create = timing.Journal.create
+        def materialize(**options):
+            additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+            self.assertEqual(additions['CODE_FACTORY_TIMING_FILE'], options['path'])
+            self.assertFalse(Path(options['path']).exists())
+            self.assertFalse(options['metadata'])
+            return create(**options)
+        with patch.dict(os.environ, {'GITHUB_ENV': str(exported)}), \
+                patch.object(timing.Journal, 'create', side_effect=materialize) as created, \
+                patch.object(timing.Journal, 'start', side_effect=KeyboardInterrupt()):
+            with self.assertRaises(KeyboardInterrupt):
+                timing.hosted_action('hosted-start')
+        created.assert_called_once()
+        additions = dict(line.split('=', 1) for line in exported.read_text().splitlines())
+        with patch.dict(os.environ, additions), patch.object(timing, 'toolchains', return_value={}):
+            journal = timing.selected()
+            self.assertTrue(journal.path.is_file())
+            initial = self.data(journal)
+            self.assertTrue(all(row['outcome'] == 'unstarted' for row in initial['phases']))
+            timing.hosted_action('setup-finish', 'cancelled')
+            timing.hosted_action('hosted-finish', 'cancelled')
+        data = self.data(journal)
+        self.assertEqual(data['clock_origin'], initial['clock_origin'])
+        self.assertEqual(data['outcome'], 'interrupted')
+        self.assertIsNotNone(data['wall_seconds'])
+        self.assertTrue(all(row['outcome'] == 'unstarted' and row['seconds'] is None and
+                            row['exit_code'] is None for row in data['phases']))
+
     def test_hosted_setup_failure_keeps_initial_event_identity(self):
         event = self.root / 'event.json'
         event.write_text(json.dumps({'pull_request': {

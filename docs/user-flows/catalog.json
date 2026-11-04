@@ -14040,7 +14040,7 @@
         },
         {
           "path": "scripts/verification_timing.py",
-          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence. Startup journals precede metadata collection; local source identity is collected early and comparison remains unavailable until the actual specification command argv is known. Capture at that command boundary preserves target-specific expansion and shell quoting without evaluating Make variables in Python or changing prerequisite inheritance. Hosted event-pinned plans retain their setup source/comparison identity; comparison-free bootstrap remains unavailable. Newly automatic local runs reserve identity and monotonic origin, materialize at native worker initialization, and retain unknown early-failure/interruption fallback even for dry attempts; successful native dry runs create no file. Direct/supplied/hosted startup remains unchanged."
+          "purpose": "Allowlisted monotonic verification phase journals, owned command execution and partial local/hosted evidence. Startup journals precede metadata collection; local source identity is collected early and comparison remains unavailable until the actual specification command argv is known. Capture at that command boundary preserves target-specific expansion and shell quoting without evaluating Make variables in Python or changing prerequisite inheritance. Hosted event-pinned plans retain their setup source/comparison identity; comparison-free bootstrap remains unavailable. Newly automatic local runs reserve identity and monotonic origin, materialize at native worker initialization, and retain unknown early-failure/interruption fallback even for dry attempts; successful native dry runs create no file. Direct/supplied startup remains unchanged. Hosted startup exports reserved file selection before materialization, starts setup before metadata collection, and resolves setup completion from running journal records so startup interruption preserves selectable partial evidence without a separately exported phase ID. Initial snapshots publish by atomic replacement from owned staging. Hosted reservation export lets either surviving finalizer materialize a missing selected journal with its original clock, hosted origin and unstarted phases; reconstruction requires a valid matching reservation and does not replace an existing path, including a broken symlink."
         },
         {
           "path": "scripts/benchmark_browser.py",
@@ -15745,7 +15745,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before verification or artifact creation; fixture mode, artifact identities and main-push-only release proof fail closed."
+          "purpose": "Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before source verification or package-manifest creation; rejected jobs may retain partial timing summaries; fixture mode, artifact identities and main-push-only release proof fail closed."
         },
         {
           "path": "scripts/test_ci.py",
@@ -15990,6 +15990,51 @@
             "S5"
           ],
           "purpose": "The timing boundary delegates one worker graph unchanged, enforces fixture mode and preserves successful or failed owned-runner status; real recorder assertions establish ordering."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_initial_write_signals_recover_reserved_snapshot(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Bounded actual partial-file writes and pre-creation startup deliver SIGINT/SIGTERM, preserve exit130/143, expose no malformed final file or staging remnants, and let setup or overall finalization recover the exact hosted reservation, clock and unknown unstarted/null phases."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_recovery_rejects_unknown_reservations_and_preserves_existing_files(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Missing, malformed, mismatched or invalid reservations cannot materialize absent evidence; the tested empty and invalid-JSON files and broken symlink remain untouched by surviving finalizers."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_initial_publication_failure_cleans_staging_and_remains_optional(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "An actual partial write followed by ordinary I/O failure cleans owned staging, emits only a fixed optional warning and preserves helper success; surviving finalization recovers truthful failed unstarted evidence at the reserved origin."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_startup_signals_keep_exported_partial_for_finalization(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Bounded real hosted-start probes deliver SIGINT/SIGTERM during source metadata collection, preserve exit130/143 and an exported existing partial file with running setup, then select and finalize it as interrupted while later phases remain unstarted."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_hosted_selection_precedes_creation_and_missing_setup_is_finalizable(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Hosted creation observes an already exported reserved path; interruption before setup starts still leaves a selectable partial file, and surviving finalization preserves its clock origin and unstarted phases without a separate setup ID."
         },
         {
           "path": "scripts/test_specs_timing.py",
@@ -16519,6 +16564,15 @@
             "S5"
           ],
           "purpose": "Direct fresh/supplied journals execute the actual comparison parser and inject SystemExit0/2/130/143 from subsequent Git metadata. All propagate without starting owned work, retain early source/unknown comparison and finalize interrupted null-phase partials without private paths. Only ordinary parser exits are treated as unavailable."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_workflow_finalizes_timing_before_every_artifact_transfer(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "The production workflow always attempts timing finalization immediately after exact verification/provenance and before every artifact transfer; timing upload remains last with bounded retention and fail-open publication."
         },
         {
           "path": "scripts/test_ci.py",

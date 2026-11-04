@@ -7,6 +7,7 @@ import fcntl
 import hashlib
 import io
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -15,6 +16,7 @@ import signal
 import stat
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 
@@ -261,7 +263,11 @@ class Journal:
                     if os.environ.get("CODE_FACTORY_TIMING_CACHE") in ("cold", "prepared") else "unspecified",
                 "toolchains": {}, "phases": [row(p, i) for i, p in enumerate(
                     (["setup"] if hosted else []) + (["python-install", "browser-install"] if hosted or prerequisites else []) + [p for p in PLAN if p != "specifications" or not bootstrap] + (["manifest"] if hosted else []))]}
-        journal.path.write_text(json.dumps(data, indent=2) + "\n")
+        # Publish only complete initial snapshots; staging belongs to this call.
+        with tempfile.TemporaryDirectory(dir=journal.path.parent, suffix=".initial") as staging:
+            temporary = Path(staging) / "journal.json"
+            temporary.write_text(json.dumps(data, indent=2) + "\n")
+            temporary.replace(journal.path)
         if metadata:
             journal.collect_metadata(arguments=arguments, hosted=hosted)
         return journal
@@ -368,13 +374,22 @@ def selected():
 
 
 
-def materialize_reserved():
+def materialize_reserved(*, hosted=False):
     journal = selected()
     reservation = os.environ.get("CODE_FACTORY_TIMING_RESERVATION")
-    if journal and reservation and not journal.path.exists():
+    if journal and reservation and not journal.path.exists() and not journal.path.is_symlink():
         options = json.loads(reservation)
-        if Path(options["path"]) != journal.path:
-            raise ValueError("Mismatched timing reservation")
+        required = {"path", "clock_origin", "prerequisites", "bootstrap"}
+        if (not isinstance(options, dict) or set(options) not in (required, required | {"hosted"}) or
+                not isinstance(options["path"], str) or Path(options["path"]) != journal.path or
+                journal.path.parent != ROOT / "verification-results" or
+                not re.fullmatch(r"[0-9a-f]{32}\.json", journal.path.name) or
+                type(options["clock_origin"]) not in (int, float) or
+                not math.isfinite(options["clock_origin"]) or
+                any(type(options[key]) is not bool for key in ("prerequisites", "bootstrap")) or
+                type(options.get("hosted", False)) is not bool or
+                options.get("hosted", False) != hosted):
+            raise ValueError("Invalid timing reservation")
         journal = Journal.create(**options, metadata=False)
         diagnostic("Verification timing: " + journal.path.name, sys.stdout)
     return journal
@@ -505,20 +520,29 @@ def verify(argv=None):
 
 def hosted_action(action, outcome=None):
     if action == "hosted-start":
-        journal = Journal.create(hosted=True)
-        identifier = journal.start("setup")
+        reservation = {**Journal.reserve(), "hosted": True}
+        # Publish selection before creating evidence, including interruptible metadata.
         with Path(os.environ["GITHUB_ENV"]).open("a") as output:
-            output.write("CODE_FACTORY_TIMING_FILE=" + str(journal.path) + "\n")
-            output.write("CODE_FACTORY_TIMING_SETUP=" + identifier + "\n")
+            output.write("CODE_FACTORY_TIMING_RESERVATION=" + json.dumps(reservation) + "\n")
+            output.write("CODE_FACTORY_TIMING_FILE=" + reservation["path"] + "\n")
+        journal = Journal.create(metadata=False, **reservation)
+        journal.start("setup")
+        journal.collect_metadata(hosted=True)
     elif action == "setup-finish":
-        journal = selected()
+        journal = materialize_reserved(hosted=True)
         if journal:
-            journal.stop(os.environ["CODE_FACTORY_TIMING_SETUP"], 0 if outcome == "success" else 1,
-                         interrupted=outcome == "cancelled")
+            # Startup may stop before setup starts; no separately exported ID is needed.
+            data = json.loads(journal.path.read_text())
+            for item in data["phases"]:
+                if item["phase"] == "setup" and item["outcome"] == "running":
+                    journal.stop(item["id"], 0 if outcome == "success" else 1,
+                                 interrupted=outcome == "cancelled")
             with journal.update() as data:
                 data["toolchains"] = toolchains()
-    elif selected():
-        selected().finish("interrupted" if outcome == "cancelled" else outcome)
+    else:
+        journal = materialize_reserved(hosted=True)
+        if journal:
+            journal.finish("interrupted" if outcome == "cancelled" else outcome)
 
 
 def main():

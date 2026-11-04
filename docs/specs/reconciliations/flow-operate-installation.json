@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "96714fd6e484b940e2979d1645d6998b35ca7afd",
-  "fingerprint": "494e332fd8e21f0d7c0de855dd92010111bc9a07607b58a825a71fab1a09ec1d",
+  "base": "90d5b3656cd59629fa73997533513a7fc380b2f2",
+  "fingerprint": "a8865c38265b568ade63dff4f43acd2335d57d79c83c047b9f0eaa8ea7d76718",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Install/upgrade/rollback and exact verified-artifact promotion retain their behavior. Manifest timing supplies engineering evidence without changing release authority or product lifecycle.",
-    "implementation": "Installation and rollback sources match target. Compared artifact_manifest/verify_artifacts bodies with main: they remain the sole unchanged provenance/checksum validation path; ci.main wraps that operation only after successful verification. Rebased comparison is current main 96714fd; the only authored differences remain ci.py, its two manifest tests and their flow mappings.",
-    "tests": "Inspected TestRollbackRestoresGatewayProfileAndArchivesCurrent: recorded snapshots restore the old profile, legacy behavior preserves the new profile, archived bytes remain 0600 and consumed snapshot state clears. Manifest success still checks versions and failure rejects unexpected files. No real service operation was performed. Manifest tests assert exact phase count/outcome/code and exception identity; product assertions and existing acceptance gaps are unchanged by this operational selection."
+    "description": "S1 diagnosis and S2/S3 upgrade/rollback retain version-bound installation semantics; timing artifacts do not establish delivery or installed-host acceptance. Cycle4 narrows only contributor documentation about absent-file reconstruction; this subject gains no behavior.",
+    "implementation": "Read lifecycle package and unchanged upgrade/rollback implementation; verified package upload remains prior-existing while optional timing upload uses its own seven-day artifact. Hosted startup selection and setup finalization affect only optional operational timing evidence; package manifests, installer state and release delivery sources remain identical to main. Cycle3 confirms these mapped product/foundation sources remain identical to the same main comparison; atomic timing initialization and guarded reservation recovery add no product transition or foundational dependency. Cycle4 identity proof confirms all runtime, test, workflow, glossary and UI sources are byte-identical to published270e84a; only three documentation files and CLI receipts may change.",
+    "tests": "Read test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall: owner token retention, failed-upgrade backup/current rollback, upgrade/rollback and uninstall preserving state; fixture evidence remains separate from real hosts. Prior subject-specific assertion inspection is retained at identical source identity; the current correction adds no product assertion claim and preserves all existing host/UI gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.182
+      "seconds": 0.12
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 95.789
+      "seconds": 88.102
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 161.52
+      "seconds": 170.333
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.848
+      "seconds": 3.089
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 3.169
+      "seconds": 2.668
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.71
+      "seconds": 21.746
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.161
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 35.148
+      "seconds": 34.99
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 297.747
+      "seconds": 290.31
     },
     {
       "command": [
@@ -147,53 +147,53 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.96
+      "seconds": 4.693
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "de6f37c2d8436d1dbbeba05931ddb98f4ee089e931e8f9f3ca7c9cba19f8286a",
-    "term:connection-refreshes": "91e6abb87b10189a0ee526933d2ff10cad4cf7e2fe7cdd5ea719189c5e9c25dc",
-    "term:connection-submits": "8df8bde0ee95cd1ef4d2eb6cd417b31a491c8a5c7b2a39bb75ba9c6295584aac",
-    "term:coverage-gap": "bf41328d923a8c60911fec8466170ca4252ed394c87b0f8e8ac1646b1593d0cc",
-    "term:dependency-operation": "bf420d1bd238371c86291858af8ed47fdea7095a64dd7fc3dd00217c7068a1e1",
-    "term:element-w-browser-lab-key-controls": "2847e353ac998ef07193a45132636a3458431a7976f91eda8d95ff0fe137e765",
-    "term:element-w-browser-lab-location": "78daf864961b433c22bc43dc6e5f3f101e0070b88df9281c1f940b5b84e18bd9",
-    "term:element-w-browser-lab-message": "f4473004b00f027b5c60783df74b3ed15f3c58098c25e41ea422e582e6adefa9",
-    "term:element-w-browser-lab-navigate": "ba7c380f92ba513fa1f121e97f44ed395df1d336213091783ebae3c09c2a3a60",
-    "term:element-w-browser-lab-refresh": "2f1d31046c2d297f5420975f654b10c8085421efc88d027fcbad3751a650ee32",
-    "term:element-w-browser-lab-screenshot": "6d1a73b5f2676afef3320b0eb923cb11f1713bf3284255e25ed40ed989222556",
-    "term:element-w-browser-lab-scroll-up-down": "5025238a8a2f667f80e9893a036cc8a42a6b018e7784ca60155e0e0ff2cd1074",
-    "term:element-w-browser-lab-send-text": "81fbd1da32a8d8ff854ebc8466ae3a30e1876dac289b562845ba9bfdcb965b5e",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "24cb288f2fd21b01dcb9a4533d6c133b779623d859130edccf0b3265f8f0edff",
-    "term:element-w-browser-lab-text-to-send": "e2ee4bcb2d56929bb782dd532398b435ad45167e50c29b1f37a81d55e28e6c13",
-    "term:element-w-browser-lab-url": "9605a64705f03cbc7816a7d4c1bc93cae14376f16a54fc37a3e2cbfe8e1fe12f",
-    "term:element-w-diagnostics-check-connection": "847e9a2af55e039b0050539c912fc643ca930aa5ab3c40589318a1dafab61010",
-    "term:element-w-diagnostics-check-id": "5d6dbc80e2c25f9ad4ddac7bfe0cd9705e4cb83295a8a1818c362cfcd255717b",
-    "term:element-w-diagnostics-check-state": "965cfa03edaf63712977457c6b83ea7dbd405107d9a79d9beb7fe8c4c1704b0c",
-    "term:element-w-diagnostics-detail": "125dfb735bcec6e5c160d9350ddcb34122b0c7041412038046419fcfdf96b34d",
-    "term:element-w-diagnostics-provider-sign-in-help": "0b5308cb9e1fcc6d40bc7a7342b59b82bf95978e30fd2015ff38273014fc4310",
-    "term:element-w-diagnostics-timestamp": "e2250fb85ef57c81d717ede8fe4fae9788c2875a23022712fa4cd2fe5823a430",
-    "term:element-w-diagnostics-version": "afaf9ca5a12336ee18a95036e1ae7cae1c626fb2b04c67024f5a4501a5e07034",
-    "term:github-skill-source": "4c9c2d04a340b997e9b62d0a3b84a824488b597da169f940ce13ba9c4c1fc0c2",
-    "term:owner": "84f49309c7838cec6e89923b81a1e6782f29f1caaaa5591bfbd065adee74684a",
-    "term:state-failed": "b8ff4dcfee29092096c79c9f037d07097666ff6241428755219ae1cbcc37259b",
-    "term:state-unverified": "e7596e084c3b76f63138c16753dfa87d871f3564008cec2bf73ea1edff9e26b8",
-    "term:state-verified": "122eeeb0b48e7c19905cd58dbe45f95185b6ff7dec0942d77deda1673dbb033b",
-    "term:ui-c-browser-lab": "e730067dff5ea4dde2287b9c424f5414e2791c2ccf65e0e6886c0b3357b5cec9",
-    "term:ui-c-diagnose": "0e846f5a66155e8939d673b111a735360e58724eb9471ad64d4a7efb9b669c62",
-    "term:ui-p-browser-lab": "2c0ed8e4c379ac96c0dc5d3fccfa353d11910a8c5f889ce6abab8c0eb738c5f1",
-    "term:ui-p-diagnostics": "367606dafbe4a65720303608e610c97101f7721d568cd1b7681e02d21d5f36d2",
-    "term:ui-page-browser-lab": "721bbb7027c804a537e3dc500d06dd6dc24a5b989ed980bd2a99cf9b53ae689f",
-    "term:ui-w-browser-lab": "ac9538697f3d46d57d1797febcdac188b2fc94d5dc03b36f525db52d4ff8a0fc",
-    "term:ui-w-diagnostics": "0bc6fd6ec1a0463df77739a72d0b509d92cc66e1c3e8ce28da6351565509607b",
-    "term:unverified-behavior": "c74a8f303dba37decf6a844c647673cf530030dd22f5592c4a04b6e8dd7b9801",
-    "term:verification": "c82d0ac0c494f4e5f6f217ebf98adf7844f2ff68c1d9d60dbf6e2d2fbf125fd2",
-    "ui:C-BROWSER-LAB": "c567b861becad63c8fd2c7abd0f3b6868b751f3302135fede18a77cb63413153",
-    "ui:C-DIAGNOSE": "fa306d0a930247a868f05c8f68001fc6ed7d86a08a4745095c7515980b12aac6",
-    "ui:P-BROWSER-LAB": "a104811c6368eb4a94aee673f805ef06efaef096b65961bdc409045224d236f3",
-    "ui:P-DIAGNOSTICS": "e2734a8f613dbe283ac301d2d7a17b95587fe035601e867378f573f5e9e31478",
-    "ui:PAGE-BROWSER-LAB": "8cff84ea9b7679cfd92cf22089721e151e06380d22a8733f8f7204fbeb7e1f83",
-    "ui:W-BROWSER-LAB": "9ce2bc42a96b071058a50d47f5d92e30565c788b8b3b92f9c2ed1eade1e2a2c5",
-    "ui:W-DIAGNOSTICS": "ff5277e06495153f62135aa17e0e9304486568e0bddc1fa06a8be28038f8ec90"
+    "flow:operate-installation": "0d3c30a93064c48cf4c68175e63539c58fddabfb692d6dd646387f7cf3fb9ea6",
+    "term:connection-refreshes": "503dfb5a59673092037465990a08fa4fc5661df161898507ac4c647cb249ebd1",
+    "term:connection-submits": "a3fd235169826d73a2dfecf554f19e82b68535b0ef78ab9b1fb577ce9e2e01b0",
+    "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
+    "term:dependency-operation": "ec73a06279972577ed4944a82fdebbd85e2ff7304f95a2dd5ec49e598042cdac",
+    "term:element-w-browser-lab-key-controls": "12d6ac0a4cbbc0795592d460b6e3316af2e286d58e6e5f3fb3c4069c3cafa816",
+    "term:element-w-browser-lab-location": "c2a834d65c232151832d882716eab056464f1ec61760cb574773e81ad6843c00",
+    "term:element-w-browser-lab-message": "73c08f4e3cec9540ecd0398032df9e48e0a71f7015355b009a11df550a7d8648",
+    "term:element-w-browser-lab-navigate": "1e693cfd923198a312373124f5772412bb42ac31166fa5ef37af901352433c6c",
+    "term:element-w-browser-lab-refresh": "7c9f390ce57d571c734a27f2c5e870d9341cabf5b0a47da8a6deacbd866c203d",
+    "term:element-w-browser-lab-screenshot": "df8d0d6bdbe89857dfd769986e9f0b9e6abbff23c396c55a271cf192d32f38e4",
+    "term:element-w-browser-lab-scroll-up-down": "875add39bf568aeb8d74a97a9d9e136003cbe9a962477e499c93ec645c4ecca2",
+    "term:element-w-browser-lab-send-text": "1e3c35fe5230cca50f0d95c8726a1505b33f3cedf364950891b878bc085db473",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "4a9fc52a04dc23ad3504e22f1928b1e06f4eeb59997bf9e4e2d3aaecbe629d04",
+    "term:element-w-browser-lab-text-to-send": "83200ab02b65e4da3a60789260e9b91677ec2cb0699651cbff64098a78be4222",
+    "term:element-w-browser-lab-url": "aa303abe65a96d10a2ef5016a0bb862d28dbd4e241298a82159aa797e4e95109",
+    "term:element-w-diagnostics-check-connection": "0725a30defe561c7385562237aec552db4127788eda7dbf8f4a7020518b21d7d",
+    "term:element-w-diagnostics-check-id": "bed5f7002efa9ee6b0bbd5928d0423348da75dc4c45ed2791f1d893f8939c498",
+    "term:element-w-diagnostics-check-state": "3bd8338fbe2a403abcf0acfd46f03bfc463c64ded72bd5b299266ee9f9fc21e5",
+    "term:element-w-diagnostics-detail": "ef6655484ab9eb4c07dcc836c3c055c802edc23e402a7954f4beeaa3f43831e9",
+    "term:element-w-diagnostics-provider-sign-in-help": "1ceb302d63d538a177d488057101bdbc08bc877c3bd195ec8b490cfa4b462bd8",
+    "term:element-w-diagnostics-timestamp": "327690641ab9f4d030ebaaaa345306b5a1c94203d1a9aa5e8f987745c8cb8f95",
+    "term:element-w-diagnostics-version": "a61cd8844b8cd17dfc578e97543bc7bffdc354762fd2b07c109fefef08aaabea",
+    "term:github-skill-source": "d5f4a9ef7414ac523319cf9e6ec51226a04b87ff0e8005cd101c612e724033d0",
+    "term:owner": "c42833aed534a2b89f705ca366ed9c0cc4316899b2ff55bb76e23e05be3ee676",
+    "term:state-failed": "e9ab1b9983a646c412ac7d1eeefb8cd75dc211b70cc5edadf0821f6c6afbdee2",
+    "term:state-unverified": "31309544c100200cd2cddcd9220a5b055e623d58f6fded78a89f6ffc5bd087dc",
+    "term:state-verified": "0c0cb183962f39bd944896fcc1b4ebd4fdcec78703e272cd1b826881eaefbb9a",
+    "term:ui-c-browser-lab": "c4310ad8381c11bee440e033f3ce8210940ab866074a73350d3c0b52fe6eb0e1",
+    "term:ui-c-diagnose": "5fc04178f70b0ee67a3185b4b422ce294aaa17a7b74e0def37aed81c2863f77d",
+    "term:ui-p-browser-lab": "c43840bbd3c2c54fbd32adf38eddfcec32de042011f032c92d0bbe9d9a91ce6e",
+    "term:ui-p-diagnostics": "1f1b3a062c31df7e081d2aa23b49108af5e5ab42edb349746861b4c14457266b",
+    "term:ui-page-browser-lab": "27e1f4fd122cd6f9251f26afa40b8133113d0acf67df156d53e3838106c4ec05",
+    "term:ui-w-browser-lab": "51df9b8054c883697de7b7dbfa09dd61559cfb1d98b0c6edb3bf44c3c4c96d06",
+    "term:ui-w-diagnostics": "302e6b9d957fdd568c546dddd39c678e7229c3e8c912de4811c6a1da7d63a7c7",
+    "term:unverified-behavior": "a0984cd19de83b7bce49252e48b279a636dc594030980e1b237bf7b613d60a77",
+    "term:verification": "603876b6663551969457f654ac19f55fe36d99757f5171de6d5538bde0665fee",
+    "ui:C-BROWSER-LAB": "0de351372bc87529a6056d82d746c4e7ab476755a2cca1d446e03c31e967d5d9",
+    "ui:C-DIAGNOSE": "b4df4762458c944c6d8c5300f497ac58c2d02ca18296a715d34f27b4d60b3d2b",
+    "ui:P-BROWSER-LAB": "f4ffc72858613cd43b27d33867271dde99190544945c61a6712fd8eb43cd1dd9",
+    "ui:P-DIAGNOSTICS": "0e691ed3802126a226284c62b84f2df14497455783354ba06e6303ed09475797",
+    "ui:PAGE-BROWSER-LAB": "befe67133af0fc28a410f871b0d0d824f39fe89a3271c10db9842c7437d7a435",
+    "ui:W-BROWSER-LAB": "990a95bc8bd5cc4415358a6f479ca1562e68624f808162c7632b5d617e2fd51d",
+    "ui:W-DIAGNOSTICS": "0f476d03bf355a0c1dc33e07dc27448c9f32433779d2af03f8367d0dd34a9f57"
   }
 }
