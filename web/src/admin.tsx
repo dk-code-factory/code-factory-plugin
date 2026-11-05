@@ -692,7 +692,7 @@ export function SystemReviewSettings({
         Session execution
         <select
           aria-label="Session execution"
-          value={config.executionMode || "workflow"}
+          value={config.executionMode || "single-codex"}
           onChange={(e) =>
             change({
               ...config,
@@ -702,21 +702,21 @@ export function SystemReviewSettings({
         >
           <option value="workflow">Workflow engine</option>
           <option value="single-codex">
-            Single Codex session with dk-pr-iter
+            Single Codex session
           </option>
         </select>
       </label>
-      {config.executionMode === "single-codex" && (
+      {config.executionMode !== "workflow" && (
         <label>
-          PR iteration skill
+          PR iteration skill (optional)
           <select
-            aria-label="PR iteration skill"
+            aria-label="PR iteration skill (optional)"
             value={config.prReviewSkillId || ""}
             onChange={(e) =>
               change({ ...config, prReviewSkillId: e.target.value })
             }
           >
-            <option value="">Select installed dk-pr-iter</option>
+            <option value="">None — use the review prompt</option>
             {skills
               .filter(
                 (s) =>
@@ -733,8 +733,9 @@ export function SystemReviewSettings({
       )}
       <p>
         Changes apply to newly prepared runs. Existing sessions keep their saved
-        execution mode and skills. Single Codex reviews use dk-pr-iter and the
-        selected profile's authority. Automatic review posting below applies to
+        execution mode and skills. Single Codex reviews use the configured review
+        prompt and selected profile's authority. Optionally select dk-pr-iter for
+        its review and CI loop. Automatic review posting below applies to
         the workflow engine.
       </p>
       <label>

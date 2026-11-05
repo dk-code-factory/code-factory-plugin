@@ -86,7 +86,9 @@ under development and are not used for installation.
 
 ## Repository monitoring and plugin administration
 
-For a manual review, ask Code Factory to run the configured review pipeline for
+PR reviews default to one retained Codex session using the configured review
+prompt and profile. Workflow execution and the PR iteration skill are explicit
+choices in System defaults. For a manual review, ask Code Factory to review
 the PR. The model-visible `prepare_pr_review` tool accepts the synchronized PR's
 `itemId` from `list_inbox`. It resolves repository, system and built-in review
 defaults in that order and returns the prepared run, including its selected

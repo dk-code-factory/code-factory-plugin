@@ -150,6 +150,7 @@ func retainedFixture(t *testing.T) (*App, domain.Item, *retainedWorkers, *retain
 		t.Fatal(err)
 	}
 	config, _ := a.Config(ctx)
+	config.ExecutionMode = "workflow"
 	config.Reviewers = []prreview.Reviewer{{ID: "one", Kind: "skill", SkillID: "fixture"}, {ID: "two", Kind: "skill", SkillID: "fixture"}}
 	if err = a.SaveConfig(ctx, config); err != nil {
 		t.Fatal(err)

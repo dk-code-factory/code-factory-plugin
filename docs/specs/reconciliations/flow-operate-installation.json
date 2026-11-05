@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "90d5b3656cd59629fa73997533513a7fc380b2f2",
-  "fingerprint": "a8865c38265b568ade63dff4f43acd2335d57d79c83c047b9f0eaa8ea7d76718",
+  "base": "eda4f6ba66ecf44b622605608cd55a866d13770b",
+  "fingerprint": "cea5af59df0fc4ed731eb16a41f7626c6d7b5a92bf864eeaf1927cc91858243d",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1 diagnosis and S2/S3 upgrade/rollback retain version-bound installation semantics; timing artifacts do not establish delivery or installed-host acceptance. Cycle4 narrows only contributor documentation about absent-file reconstruction; this subject gains no behavior.",
-    "implementation": "Read lifecycle package and unchanged upgrade/rollback implementation; verified package upload remains prior-existing while optional timing upload uses its own seven-day artifact. Hosted startup selection and setup finalization affect only optional operational timing evidence; package manifests, installer state and release delivery sources remain identical to main. Cycle3 confirms these mapped product/foundation sources remain identical to the same main comparison; atomic timing initialization and guarded reservation recovery add no product transition or foundational dependency. Cycle4 identity proof confirms all runtime, test, workflow, glossary and UI sources are byte-identical to published270e84a; only three documentation files and CLI receipts may change.",
-    "tests": "Read test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall: owner token retention, failed-upgrade backup/current rollback, upgrade/rollback and uninstall preserving state; fixture evidence remains separate from real hosts. Prior subject-specific assertion inspection is retained at identical source identity; the current correction adds no product assertion claim and preserves all existing host/UI gaps."
+    "description": "S1/S2/S3 installation, upgrade and rollback contracts remain unchanged. Source changes affect the next built package and future preparations; this work neither installs a service nor migrates a retained run.",
+    "implementation": "Installer and service lifecycle code are unchanged. App.Config supplies a default only for configuration reads, while saved run.ExecutionMode continues to control retained execution and recovery.",
+    "tests": "Reviewed the process-backed installer assertions retaining the owner token, release rollback, installed plugin app mapping and durable state through uninstall. Release/installer/smoke fixture commands rerun; no live installation evidence is added."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.12
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 88.102
+      "seconds": 89.324
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 170.333
+      "seconds": 316.242
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.089
+      "seconds": 3.088
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.668
+      "seconds": 2.687
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.746
+      "seconds": 21.783
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.181
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.164
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.99
+      "seconds": 34.548
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 290.31
+      "seconds": 286.943
     },
     {
       "command": [
@@ -147,11 +147,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.693
+      "seconds": 4.674
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "0d3c30a93064c48cf4c68175e63539c58fddabfb692d6dd646387f7cf3fb9ea6",
+    "flow:operate-installation": "10410f238f2c0330b48023271180ae04065d2b215acf4f4bec8aadc9390e880c",
     "term:connection-refreshes": "503dfb5a59673092037465990a08fa4fc5661df161898507ac4c647cb249ebd1",
     "term:connection-submits": "a3fd235169826d73a2dfecf554f19e82b68535b0ef78ab9b1fb577ce9e2e01b0",
     "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
@@ -188,12 +188,12 @@
     "term:ui-w-diagnostics": "302e6b9d957fdd568c546dddd39c678e7229c3e8c912de4811c6a1da7d63a7c7",
     "term:unverified-behavior": "a0984cd19de83b7bce49252e48b279a636dc594030980e1b237bf7b613d60a77",
     "term:verification": "603876b6663551969457f654ac19f55fe36d99757f5171de6d5538bde0665fee",
-    "ui:C-BROWSER-LAB": "0de351372bc87529a6056d82d746c4e7ab476755a2cca1d446e03c31e967d5d9",
-    "ui:C-DIAGNOSE": "b4df4762458c944c6d8c5300f497ac58c2d02ca18296a715d34f27b4d60b3d2b",
-    "ui:P-BROWSER-LAB": "f4ffc72858613cd43b27d33867271dde99190544945c61a6712fd8eb43cd1dd9",
-    "ui:P-DIAGNOSTICS": "0e691ed3802126a226284c62b84f2df14497455783354ba06e6303ed09475797",
-    "ui:PAGE-BROWSER-LAB": "befe67133af0fc28a410f871b0d0d824f39fe89a3271c10db9842c7437d7a435",
-    "ui:W-BROWSER-LAB": "990a95bc8bd5cc4415358a6f479ca1562e68624f808162c7632b5d617e2fd51d",
-    "ui:W-DIAGNOSTICS": "0f476d03bf355a0c1dc33e07dc27448c9f32433779d2af03f8367d0dd34a9f57"
+    "ui:C-BROWSER-LAB": "7cafce0069e504762cec46d2660949ac24a94d3ae69557d60d9425b720881036",
+    "ui:C-DIAGNOSE": "5010edbf5ebc4921f4180924ad0558d867162843e47384ebb22719c93a97bd56",
+    "ui:P-BROWSER-LAB": "e46e246a93b80933a9b3f6ea4dff938cc370b8c3561f61b16b8cd12aa2315372",
+    "ui:P-DIAGNOSTICS": "42cdd22b58ee34cd885bac4251496bcf21d566cc78ec9c8a4d49cb2293e74b9c",
+    "ui:PAGE-BROWSER-LAB": "0555f75c2744826315846284ba2a73554af6eb755e2721ea9370e12a6456bb34",
+    "ui:W-BROWSER-LAB": "2b7c2e34b48d9b2312e6c58089df2e377dff71a58bd89fffa4e1ff7ecc917dca",
+    "ui:W-DIAGNOSTICS": "d6ebb588667e12b4118599be3880bbdde87c91e3db2271bfd46401e187d990f9"
   }
 }

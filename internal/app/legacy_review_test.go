@@ -12,6 +12,7 @@ import (
 // fresh workflow behavior has its own fixture suite.
 func legacyReviewSnapshot(t *testing.T, a *App, ctx context.Context, run domain.Run) (domain.Run, error) {
 	t.Helper()
+	run.ExecutionMode = ""
 	run.ReviewWorkflow = ""
 	run.ReviewStage = ""
 	return run, a.Store.Put(ctx, "run", run.ID, run, "")
