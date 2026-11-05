@@ -1809,8 +1809,9 @@ function ItemDetail({
               }}
             >
               <option value="">
-                Auto ·{" "}
-                {entry.priority === null ? "Pending" : `P${entry.priority}`}
+                Auto
+                {entry.user.override === null &&
+                  ` · ${entry.priority === null ? "Pending" : `P${entry.priority}`}`}
               </option>
               {[0, 1, 2, 3].map((p) => (
                 <option key={p} value={p}>

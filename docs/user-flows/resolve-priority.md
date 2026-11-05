@@ -17,11 +17,11 @@ The inbox contains synchronized items and a priority policy is configured.
 
 ## Alternatives and recovery
 
-The picker starts from the saved override for the selected item. Choosing a priority saves immediately; choosing automatic clears the override and returns to label or assessment priority. Saving disables the picker. Failure restores the previous value and shows an inline error; choosing another value reverses a successful change. Item, policy or linked-context changes invalidate old assessments. Manual agent work takes precedence over background assessment. Assessment must not publish provider labels.
+The picker starts from the saved override for the selected item. Choosing a priority saves immediately; choosing automatic clears the override and returns to label or assessment priority. While an override is selected, the automatic choice does not present that override as an automatic result. Once automatic is selected, its label shows the resolved priority or pending state. Saving disables the picker. Failure restores the previous value and shows an inline error; choosing another value reverses a successful change. Item, policy or linked-context changes invalidate old assessments. Manual agent work takes precedence over background assessment. Assessment must not publish provider labels.
 
 ## Scenarios
 
-- **S1** Override takes precedence over label, and label over valid assessment.
+- **S1** Override takes precedence over label, and label over valid assessment. The automatic choice never labels an active override as its automatic result.
 - **S2** An unchanged assessment is reused; changing policy invalidates it.
 - **S3** Context changes invalidate assessments; assessment failure and retry remain visible and background work yields to manual work.
 
@@ -84,6 +84,7 @@ flowchart TD
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestInboxRevisionStatesPriorityAndLinks(`; S1. Override/label/inference precedence.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestAssessmentCacheAndInvalidation(`; S2. Reuse and policy invalidation.
 - [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("item switching restores saved priorities and keeps relationship drafts by item"`; S1. Stored overrides initialize including P0; all priorities and automatic submit immediately for the selected item.
+- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("automatic priority labels do not present an active override as automatic"`; S1. Active P0/P3 overrides are not labelled as automatic results; clearing each override restores the resolved label priority and sends null without starting work.
 - [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `test("failed immediate priority saves restore the saved value with an inline error"`; S1. Rejected saves restore the previous picker and show exact local feedback.
 - [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginMaintenanceDefersInferenceAndRejectsUnavailableSkills(`; S2. Background inference defers while plugin state is changing; unavailable selected skills cannot be prepared.
 - [internal/aiworkflows/client_test.go](../../internal/aiworkflows/client_test.go) — `func TestEveryAIWorkflowUsesYAMLAndWaitsForProviderCompletion(`; S1. YAML execution regression; assertions preserve provider completion, admission, authority or private checkpoint boundaries.

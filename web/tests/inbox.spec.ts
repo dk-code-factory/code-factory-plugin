@@ -149,6 +149,37 @@ test("failed reviews keep failure status and alert instead of GitHub retry contr
   await expect(ui.getByLabel("Message agent")).toBeEnabled();
 });
 
+test("automatic priority labels do not present an active override as automatic", async ({
+  page,
+}) => {
+  const { ui, state, calls } = await host(page);
+  await openItem(ui, /Fix reconnect regression/);
+  const picker = ui.getByLabel("Priority override");
+  const automatic = picker.locator('option[value=""]');
+  await expect(automatic).toHaveText("Auto · P1");
+
+  for (const priority of ["0", "3"]) {
+    await picker.selectOption(priority);
+    await expect(picker).toBeEnabled();
+    await expect(automatic).toHaveText("Auto");
+    expect(state.inbox[0].user.override).toBe(Number(priority));
+
+    await picker.selectOption("");
+    await expect(picker).toBeEnabled();
+    await expect(automatic).toHaveText("Auto · P1");
+    expect(state.inbox[0].user.override).toBeNull();
+  }
+  expect(
+    calls
+      .filter(
+        (call) =>
+          call.name === "item_action" && call.arguments.action === "priority",
+      )
+      .map((call) => call.arguments.priority),
+  ).toEqual([0, null, 3, null]);
+  expect(calls.filter((call) => call.name === "start_run")).toHaveLength(0);
+});
+
 test("item switching restores saved priorities and keeps relationship drafts by item", async ({
   page,
 }) => {

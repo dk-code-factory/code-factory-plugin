@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "eda4f6ba66ecf44b622605608cd55a866d13770b",
-  "fingerprint": "cea5af59df0fc4ed731eb16a41f7626c6d7b5a92bf864eeaf1927cc91858243d",
+  "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
+  "fingerprint": "b414d36d56e569eacc7cead9b46fca3dd06e22589f26a7508485c3364d8cb716",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1/S2/S3 installation, upgrade and rollback contracts remain unchanged. Source changes affect the next built package and future preparations; this work neither installs a service nor migrates a retained run.",
-    "implementation": "Installer and service lifecycle code are unchanged. App.Config supplies a default only for configuration reads, while saved run.ExecutionMode continues to control retained execution and recovery.",
-    "tests": "Reviewed the process-backed installer assertions retaining the owner token, release rollback, installed plugin app mapping and durable state through uninstall. Release/installer/smoke fixture commands rerun; no live installation evidence is added."
+    "description": "S1-S5 validated upgrade/rollback and version-bound diagnostics remain accurate. New embedded UI content changes its resource identity without changing lifecycle authority.",
+    "implementation": "No SQLite migration, service control, gateway backup, provider-selection or installer implementation changes. Content-addressed release assembly includes the updated HTML.",
+    "tests": "Reviewed packaged installer assertions: token/app mapping persist across rerun/upgrade/rollback, backups exist, and uninstall retains private data. Source/fixture verification does not establish a real session cycle."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.141
+      "seconds": 0.121
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 89.324
+      "seconds": 89.301
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 316.242
+      "seconds": 178.586
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.088
+      "seconds": 3.835
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.687
+      "seconds": 3.273
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.783
+      "seconds": 21.852
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.161
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.548
+      "seconds": 34.624
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 286.943
+      "seconds": 290.724
     },
     {
       "command": [
@@ -147,11 +147,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.674
+      "seconds": 4.715
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "10410f238f2c0330b48023271180ae04065d2b215acf4f4bec8aadc9390e880c",
+    "flow:operate-installation": "52fbb0602c09d890550c3ea6469c5824693bc69ecf4bd48a103ca1a2a65e0e2c",
     "term:connection-refreshes": "503dfb5a59673092037465990a08fa4fc5661df161898507ac4c647cb249ebd1",
     "term:connection-submits": "a3fd235169826d73a2dfecf554f19e82b68535b0ef78ab9b1fb577ce9e2e01b0",
     "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
@@ -188,12 +188,12 @@
     "term:ui-w-diagnostics": "302e6b9d957fdd568c546dddd39c678e7229c3e8c912de4811c6a1da7d63a7c7",
     "term:unverified-behavior": "a0984cd19de83b7bce49252e48b279a636dc594030980e1b237bf7b613d60a77",
     "term:verification": "603876b6663551969457f654ac19f55fe36d99757f5171de6d5538bde0665fee",
-    "ui:C-BROWSER-LAB": "7cafce0069e504762cec46d2660949ac24a94d3ae69557d60d9425b720881036",
-    "ui:C-DIAGNOSE": "5010edbf5ebc4921f4180924ad0558d867162843e47384ebb22719c93a97bd56",
-    "ui:P-BROWSER-LAB": "e46e246a93b80933a9b3f6ea4dff938cc370b8c3561f61b16b8cd12aa2315372",
-    "ui:P-DIAGNOSTICS": "42cdd22b58ee34cd885bac4251496bcf21d566cc78ec9c8a4d49cb2293e74b9c",
-    "ui:PAGE-BROWSER-LAB": "0555f75c2744826315846284ba2a73554af6eb755e2721ea9370e12a6456bb34",
-    "ui:W-BROWSER-LAB": "2b7c2e34b48d9b2312e6c58089df2e377dff71a58bd89fffa4e1ff7ecc917dca",
-    "ui:W-DIAGNOSTICS": "d6ebb588667e12b4118599be3880bbdde87c91e3db2271bfd46401e187d990f9"
+    "ui:C-BROWSER-LAB": "747d2afd6bef2002c2f513e5ec39c81db4fcdffa33d8c03c0c736004394f17eb",
+    "ui:C-DIAGNOSE": "7a3f19286cba78a9d0cfd0c7a96147cfae2096d327e63df8ba4b8eaeb27b20c4",
+    "ui:P-BROWSER-LAB": "c0c9263245d3607dc2047a02fc88ce8f7a400493057b42f94a057e5a7e7c1263",
+    "ui:P-DIAGNOSTICS": "cd5ad4932f3d18ce7fd0481b4142611ab411a9e6521db42b36ffb950cfa4e453",
+    "ui:PAGE-BROWSER-LAB": "b3a762b401f7948724d9912c86013073b771fd8e94b537057cd6956fc8e921d5",
+    "ui:W-BROWSER-LAB": "d772cbc14fb6dab526c6251752f8e2ee9b2e1eb583920758ef18a9362eab3a62",
+    "ui:W-DIAGNOSTICS": "083eabdd3655a1d257fcde5ad3db27f67f0af8d2c4504af4d9108098d7662f44"
   }
 }

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "eda4f6ba66ecf44b622605608cd55a866d13770b",
-  "fingerprint": "11bfc1e3f6e149342e33222fec7f2ca55252333decdd265a86f8325b231c2d07",
+  "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
+  "fingerprint": "d6fb33629a468f8ea5432815c8b2f4d97ffc951be377668cea27116eae66c37c",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1/S2 notification subscription identity, signatures, deduplication and retry policy remain unchanged. Default run execution does not enable automatic review requests or change the notification setting.",
-    "implementation": "The events implementation is unchanged. domain.Defaults changes ExecutionMode only and retains Notifications=true; source-dependent verification is refreshed for the shared domain input.",
-    "tests": "Reviewed TestSubscriptionVerificationRetryDedupRefreshAndExpiry signature verification and stable webhook retry identity. The mapped Go suite reruns; existing unverified failure classes and installed-host acceptance remain unchanged."
+    "description": "S1-S3 event discovery, signed callbacks, filters and subscription lifecycle remain unchanged by item priority text.",
+    "implementation": "events/list, events/subscribe, events/unsubscribe and delivery code have no edits; no new notification or webhook authority is added.",
+    "tests": "Reviewed event fixture signature validation from ID/timestamp/body, verification challenge echo and failed-first-delivery path. Actual host discovery/callback gaps remain open independently of passing Go/tooling suites."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 316.242
+      "seconds": 178.586
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.548
+      "seconds": 34.624
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 286.943
+      "seconds": 290.724
     },
     {
       "command": [
@@ -60,11 +60,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.674
+      "seconds": 4.715
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "ebe0f67a7be565e2c12a5467b8f2fc4f549855d20ff5596614d6d7c0c9cdde1a",
+    "flow:receive-notifications": "611d24728e83f60a3355fdcc3c3e9b34c06022f41c9111fd8a622980a6476a05",
     "term:attention-request": "b0615d57238e603c3c76a17f9271369c0b4777995063008da1a1f3d8fe7711aa",
     "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
     "term:host": "a13c4dee7b2a58a1bbc37d82e54a8b8a175f419b07ca5b54cd55b0f4c9c01875",

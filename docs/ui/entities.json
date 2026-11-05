@@ -1363,7 +1363,8 @@
         "ITEM-STATE",
         "API-UI-CONTENT",
         "UI-ITEM-DRAFTS",
-        "UI-PRIORITY-ERROR"
+        "UI-PRIORITY-ERROR",
+        "UI-PRIORITY-AUTO-LABEL"
       ],
       "gaps": [
         {
@@ -1372,7 +1373,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Fixtures now assert item-specific saved override initialization, every priority/clear payload and failed-save rollback. Real host timing and concurrent-client changes remain unverified.",
+          "reason": "Fixtures assert item-specific saved override initialization, every priority/clear payload, failed-save rollback and automatic labels that do not describe active P0/P3 overrides as automatic results. Real host timing and concurrent-client changes remain unverified.",
           "next_verification": "Observe immediate priority saving, rejection feedback and concurrent changes in the installed host without consuming New/read state."
         }
       ],
@@ -1382,7 +1383,7 @@
         "browser"
       ],
       "element_description": "**override** picker and **save-status** beside the work action; **priority**, **source**, **rationale-or-error** under Priority details.",
-      "state_description": "Automatic displays the effective priority. Saved overrides initialize the picker, including P0. Changes save immediately and failure restores the previous value. Assessment failures remain visible; routine rationale is disclosed.",
+      "state_description": "When automatic is selected, its label displays the effective priority or pending state. While a saved override is selected, the automatic choice omits the overridden priority. Saved overrides initialize the picker, including P0. Changes save immediately and failure restores the previous value. Assessment failures remain visible; routine rationale is disclosed.",
       "interactions": "Each selection changes only the local override. Automatic clears it, restoring label/inference precedence. Provider labels are untouched."
     },
     {
@@ -7329,7 +7330,8 @@
         "ITEM-STATE",
         "API-UI-CONTENT",
         "UI-ITEM-DRAFTS",
-        "UI-PRIORITY-ERROR"
+        "UI-PRIORITY-ERROR",
+        "UI-PRIORITY-AUTO-LABEL"
       ],
       "gaps": [
         {
@@ -7338,7 +7340,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Fixtures now assert item-specific saved override initialization, every priority/clear payload and failed-save rollback. Real host timing and concurrent-client changes remain unverified.",
+          "reason": "Fixtures assert item-specific saved override initialization, every priority/clear payload, failed-save rollback and automatic labels that do not describe active P0/P3 overrides as automatic results. Real host timing and concurrent-client changes remain unverified.",
           "next_verification": "Observe immediate priority saving, rejection feedback and concurrent changes in the installed host without consuming New/read state."
         }
       ],
@@ -14414,6 +14416,12 @@
       "path": "web/tests/settings.spec.ts",
       "anchor": "single Codex execution defaults to the review prompt without an iteration skill",
       "assertion": "Missing-mode settings display Single Codex and no iteration skill, save without selecting one, preserve an explicit workflow choice, and never start or publish work."
+    },
+    {
+      "id": "UI-PRIORITY-AUTO-LABEL",
+      "path": "web/tests/inbox.spec.ts",
+      "anchor": "automatic priority labels do not present an active override as automatic",
+      "assertion": "Automatic shows label priority P1, active P0/P3 overrides leave the automatic choice without a numeric priority, and clearing restores P1. Exact payload sequence is 0/null/3/null and no run is started."
     }
   ],
   "source_map": [
@@ -14998,7 +15006,8 @@
         "ITEM-STATE",
         "UI-AXE-CORE",
         "UI-ITEM-DRAFTS",
-        "UI-PRIORITY-ERROR"
+        "UI-PRIORITY-ERROR",
+        "UI-PRIORITY-AUTO-LABEL"
       ],
       "gap": {
         "version": 1,
@@ -15006,8 +15015,8 @@
         "kind": "unverified-behavior",
         "severity": "P2",
         "owner": "ui-specification-maintainer",
-        "reason": "`ITEM-STATE` verifies backend precedence; input initialization, saving/clearing through UI and validation/error display need UI assertions.",
-        "next_verification": "For Priority editor: Assert the override draft on opening and item changes, save each priority and clear it, and verify both the payload and visible priority/error state."
+        "reason": "Fixtures assert saved override initialization, all priority/clear payloads, failed-save rollback and automatic labels that do not present active P0/P3 overrides as automatic results. Installed-host timing and independent-client races remain unverified.",
+        "next_verification": "Observe immediate priority saving and rejection feedback in the installed host, then exercise independent-client changes while preserving New/read state."
       }
     },
     {

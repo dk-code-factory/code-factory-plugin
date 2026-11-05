@@ -3456,6 +3456,14 @@
         },
         {
           "path": "web/tests/inbox.spec.ts",
+          "anchor": "test(\"automatic priority labels do not present an active override as automatic\"",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Active P0/P3 overrides are not labelled as automatic results; clearing each override restores the resolved label priority and sends null without starting work."
+        },
+        {
+          "path": "web/tests/inbox.spec.ts",
           "anchor": "test(\"failed immediate priority saves restore the saved value with an inline error\"",
           "scenarios": [
             "S1"
