@@ -63,7 +63,9 @@ class CompletePluginTests(unittest.TestCase):
                 names = set(bundle.namelist())
                 self.assertTrue({'plugin.json', 'mcp.json', '.mcp.json', '.codex-plugin/plugin.json', 'SHA256SUMS'}.issubset(names))
                 self.assertFalse({'.app.json', 'owner.token', 'runtime.json'} & names)
-                self.assertIn('skills/code-factory-report-issue/SKILL.md', names)
+                for name in ('code-factory', 'code-factory-setup', 'code-factory-admin', 'code-factory-report-issue', 'code-factory-status'):
+                    self.assertEqual(bundle.read('skills/' + name + '/SKILL.md'), (source / 'skills' / name / 'SKILL.md').read_bytes())
+                self.assertEqual(json.loads(bundle.read('plugin.json'))['version'], json.loads(bundle.read('.codex-plugin/plugin.json'))['version'])
                 self.assertEqual(json.loads(bundle.read('.codex-plugin/plugin.json'))['skills'], './skills/')
                 self.assertNotIn('apps', json.loads(bundle.read('plugin.json'))['extensions']['com.openai'])
                 self.assertEqual(json.loads(bundle.read('mcp.json'))['mcpServers']['code-factory']['url'], endpoint)
@@ -97,6 +99,8 @@ class BrowserPackageTests(unittest.TestCase):
                 self.assertIn('skills/code-factory-setup/SKILL.md', bundle.namelist())
                 self.assertIn('skills/code-factory-report-issue/SKILL.md', bundle.namelist())
                 self.assertIn('skills/code-factory-admin/SKILL.md', bundle.namelist())
+                self.assertEqual(bundle.read('skills/code-factory-status/SKILL.md'), (ROOT / 'plugin/skills/code-factory-status/SKILL.md').read_bytes())
+                self.assertEqual(manifest['version'], compatibility['version'])
 
     def test_package_id_cannot_be_used_as_registered_server_id(self):
         from package_plugin import build

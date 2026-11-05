@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
-  "fingerprint": "cfae0832f59c1ca8d8e79f208ecd2713fd288f0d2f97cd326a72ecfd4feeae00",
+  "base": "19219f177651357eb3505bcedecc8cf17a8c4e4b",
+  "fingerprint": "5e939fd80314454484249c47e835928a89c814862c8be1ca5a82d600e4ac8605",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Contributor S1\u2013S5 and pinned historical adoption base/list remain unchanged. Registry ownership and generated references now point to current native wrapper contracts and retired feature deletions instead of missing pipeline files. Corrected identical real-provider opt-in wording in this guide without changing reconciliation rules: the retained target checks installed handshake/account/skills and makes no model turn. Current incremental review: Incremental flow-maintain-flow-contracts review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract. Follow-up correction review: The previously reviewed flow-maintain-flow-contracts behavior and stable scenario IDs are retained. This correction does not add or retire its product behavior.",
-    "implementation": "Reviewed original/current mappings and exact schema/render/runner behavior. No reconciliation runner logic was weakened or receipt edited. New native code/tests have their own behavior mappings and retired contracts select related current fixture suites. Foundation dependency ownership remains glossary then UI then flows. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection. Follow-up correction review: Reviewed the incremental diff for discussion ordering, independent baseline/detail discovery, cache freshness and installer recovery. Its shared implementation changes preserve this contract; only operate-installation authored behavior is refined, while mapped consumers receive fresh verification.",
-    "tests": "Ran the existing 251 specification tests, including offline copied-client Go-cache regression and dependency/receipt freshness assertions. Updated native sources remain standard-library-only at that copied boundary. Full reviewed reconciliation executes the current mapped fixture suites before writing any success record. Current incremental review: Retain the subject-specific assertions documented above for flow-maintain-flow-contracts. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance. Follow-up correction review: Retain the subject-specific assertion review already recorded for flow-maintain-flow-contracts. Required suites will rerun after the current source freeze; the new targeted assertions establish only their precise fixture scope and do not waive existing host/provider gaps."
+    "description": "The contributor contract and pinned adoption policy remain unchanged; packaging assertion edits conservatively require review of every maintained layer.",
+    "implementation": "Inspected the unified facade and existing receipt checks and will write new evidence only with specs.py reconcile against main's merge base; no receipt JSON is edited manually.",
+    "tests": "Read test_reconcile_keeps_bound_callbacks_and_public_verifier_patch_point and ReceiptScalarTests: verification commands, fixture environment and integer success statuses remain required. Packaging test changes strengthen real payload checks."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.669
+      "seconds": 35.637
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 285.907
+      "seconds": 293.651
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.655
+      "seconds": 4.735
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "1efcb4401bd56a2bb80c946f7088f79c4633acd4b504bd759a5ec994a1c9a85f",
-    "term:coverage-gap": "b6c01eac139642dd99d8128c27f13fd063467bacc3274d14a81b02894c133ef8",
-    "term:entity": "00377826f7063508630b6b9fc7e4e53f80cb0de4127959880c392668ae9260cc",
-    "term:glossary": "e68654f9c552c769508e5ac36f7dd2dec548b30a64a643de4423a3b8ff74e107",
-    "term:known-limitation": "a16fab2da63b2bbf9e7228ebb071488c5a5d335b2f6c18c80ad5e2e75ab70bc2",
-    "term:reconciliation": "f08bff9d01fc813bae3080b0a06913cf0e2e5202da75ae9532bbb608ea957f46",
-    "term:unverified-behavior": "ec6641a731d850f258008ff45df7610fefa3ac025f730cb411bb03d73765635f",
-    "term:verification": "9dedaca81797f97a0421edf5debc4ac86846d284768c33e3ed0b44984645f336"
+    "flow:maintain-flow-contracts": "b2fae364b36f1010479e091fc6c42b6ab4f1cdaa91855937421b74606d14c9e6",
+    "term:coverage-gap": "ec8f913a915e6b0c527088669b5a33d72de90690e8d5d2c42432ba2d832a5963",
+    "term:entity": "7842d5227e8b8e77b3f887ab2646cf995f369fce85f93b34f7c193a9089d0947",
+    "term:glossary": "e2520701f5583e0f868738324033616e5fa6a13f4b6f89fdf5000278df4adf60",
+    "term:known-limitation": "64b9935be2a29039d1b90ed693a34aef5369ffe4c895f48f7afb06b5995c444b",
+    "term:reconciliation": "4ae375f6984ac6daa1cbc4c3f051696293a61c1caf41aa9109bf82ae88f97424",
+    "term:unverified-behavior": "22e71acb4997c17d5295cfbb724fa339757df58c67c407b55ea487ca38bda7e3",
+    "term:verification": "5075d848ff3db39f03de887427217c09c359c9ece0bbb823976e4a6823190d92"
   }
 }

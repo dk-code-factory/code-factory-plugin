@@ -1,10 +1,16 @@
 # Code Factory plugin
 
-The complete private plugin is `dist/code-factory-plugin-0.2.8.zip`. Its root
+The complete private plugin is `dist/code-factory-plugin-0.3.0.zip`. Its root
 contains a portable `plugin.json`, portable `mcp.json`, Codex compatibility
 manifests, SVG branding, onboarding, daily-work, administration, issue-drafting and status-reporting skills.
 It bundles the Tailscale HTTPS endpoint and discovers OAuth from the server's
 protected-resource metadata. No client secret or local owner token ships.
+
+When bundled plugin content changes, advance the version in both `plugin.json`
+and `.codex-plugin/plugin.json` before replacing the browser package. Work's
+**Upload new version** action rejects an archive that reuses the installed version.
+Version 0.3.0 packages the native conversation wrapper and all five current skills;
+earlier upload observations do not establish acceptance of this version.
 
 The installed source lives at `~/.local/lib/code-factory/plugin`. Running
 `code-factory install-plugin` adds it to `~/.agents/plugins/marketplace.json`.
