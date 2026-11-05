@@ -294,8 +294,9 @@ Do not hand-edit records. Stage records with all their inputs for index checks.
 
 The default Make targets and `scripts/verify.sh` also force
 `CODE_FACTORY_REAL_CODEX=0`, overriding inherited and command-line opt-ins. Run
-`make test-real-provider` explicitly for authenticated real-model lifecycle checks;
-it is outside default CI. The tooling suite runs legacy flow tests plus all
+`make test-real-provider` explicitly for the installed Codex handshake, account read
+and skill discovery; it starts no model turn and establishes no real model lifecycle
+acceptance. It is outside default CI. The tooling suite runs legacy flow tests plus all
 specification modules:
 
 ```sh

@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"codefactory/internal/store"
 	"context"
 	"crypto/sha256"
 	"database/sql"
@@ -184,7 +185,7 @@ func restoreDatabase(dir, backup string) error {
 		return e
 	}
 	for _, suffix := range []string{"-wal", "-shm"} {
-		if e := os.Remove(filepath.Join(dir, "state.db") + suffix); e != nil && !os.IsNotExist(e) {
+		if e := os.Remove(filepath.Join(dir, store.ApplicationFile) + suffix); e != nil && !os.IsNotExist(e) {
 			return e
 		}
 	}
@@ -192,7 +193,7 @@ func restoreDatabase(dir, backup string) error {
 	if e != nil {
 		return e
 	}
-	return atomicFile(filepath.Join(dir, "state.db"), b, 0600)
+	return atomicFile(filepath.Join(dir, store.ApplicationFile), b, 0600)
 }
 
 // Only transport configuration follows the binary/database version. OAuth
@@ -465,7 +466,7 @@ func InstallRelease(ctx context.Context, dir, source, listen string) (err error)
 	if e != nil {
 		return e
 	}
-	e = BackupDatabase(ctx, filepath.Join(dir, "state.db"), backup)
+	e = BackupDatabase(ctx, filepath.Join(dir, store.ApplicationFile), backup)
 	guard.Close()
 	if e != nil {
 		return e
@@ -568,7 +569,7 @@ func Rollback(ctx context.Context) error {
 	}
 	// Retain the current database before restoring the compatible pre-upgrade snapshot.
 	archive := filepath.Join(root, "backups", fmt.Sprintf("pre-rollback-%d.db", time.Now().UnixNano()))
-	if e = BackupDatabase(ctx, filepath.Join(r.DataDir, "state.db"), archive); e != nil {
+	if e = BackupDatabase(ctx, filepath.Join(r.DataDir, store.ApplicationFile), archive); e != nil {
 		guard.Close()
 		return e
 	}

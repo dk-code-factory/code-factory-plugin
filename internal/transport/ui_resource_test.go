@@ -13,7 +13,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func TestUIResourceContentIdentityAndCompatibility(t *testing.T) {
+func TestUIResourceContentIdentityAndUnknownURI(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	previousURI := ""
@@ -25,7 +25,7 @@ func TestUIResourceContentIdentityAndCompatibility(t *testing.T) {
 		uri := registerUIResource(server, html)
 		repeated := registerUIResource(mcp.NewServer(&mcp.Implementation{Name: "repeated-resource-test", Version: "1"}, nil), html)
 		want := fmt.Sprintf("ui://code-factory/inbox-%x.html", sha256.Sum256([]byte(html)))
-		if uri != want || repeated != uri || resourceURI(html) != uri || uri == legacyResourceURI || uri == previousURI {
+		if uri != want || repeated != uri || resourceURI(html) != uri || uri == previousURI {
 			t.Fatalf("UI content did not receive its deterministic identity: %q", uri)
 		}
 		bind(server, uri, "open_factory", "Open the UI fixture.", false, true, func(context.Context, Empty) (any, error) { return nil, nil })
@@ -63,7 +63,7 @@ func TestUIResourceContentIdentityAndCompatibility(t *testing.T) {
 		if metadata["ui"].(map[string]any)["resourceUri"] != uri || metadata["openai/outputTemplate"] != uri {
 			t.Fatalf("tool metadata does not use current content identity: %v", metadata)
 		}
-		for _, requestedURI := range []string{uri, legacyResourceURI} {
+		for _, requestedURI := range []string{uri} {
 			resource, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: requestedURI})
 			if err != nil {
 				t.Fatal(err)
@@ -76,7 +76,7 @@ func TestUIResourceContentIdentityAndCompatibility(t *testing.T) {
 				t.Fatalf("UI resource gained external access: %v", csp)
 			}
 		}
-		unknown := []string{"ui://code-factory/inbox-" + strings.Repeat("0", 64) + ".html", legacyResourceURI + "?revision=unknown", uri + "?revision=unknown"}
+		unknown := []string{"ui://code-factory/inbox-" + strings.Repeat("0", 64) + ".html", "ui://code-factory/inbox.html", uri + "?revision=unknown"}
 		if previousURI != "" {
 			unknown = append(unknown, previousURI)
 		}
@@ -91,7 +91,7 @@ func TestUIResourceContentIdentityAndCompatibility(t *testing.T) {
 	}
 }
 
-func TestSettingsResourceIsIndependentFromInboxAndLegacyAlias(t *testing.T) {
+func TestSettingsResourceIsIndependentFromInbox(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	previousSettings := ""
@@ -133,7 +133,7 @@ func TestSettingsResourceIsIndependentFromInboxAndLegacyAlias(t *testing.T) {
 				t.Fatal("entry tool points at the wrong surface", tool.Name)
 			}
 		}
-		for uri, body := range map[string]string{inboxURI: main, settingsURI: settings, legacyResourceURI: main} {
+		for uri, body := range map[string]string{inboxURI: main, settingsURI: settings} {
 			result, err := session.ReadResource(ctx, &mcp.ReadResourceParams{URI: uri})
 			if err != nil {
 				t.Fatal(err)

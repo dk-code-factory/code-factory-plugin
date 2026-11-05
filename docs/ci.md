@@ -39,7 +39,7 @@ CI uploads that JSON, environment details and failure traces on every run.
 The fixture serves both the launch host and the exact embedded resource directly
 over HTTP; timed requests do not pass through Playwright routing, which
 [disables HTTP caching](https://playwright.dev/docs/api/class-page#page-route).
-These measurements do not establish real ChatGPT sidebar latency. The launch endpoint uses [text ElementTiming](https://w3c.github.io/element-timing/#report-text-element-timing) for all six visible navigation labels, corroborated by [first contentful paint](https://www.w3.org/TR/paint-timing/#sec-PerformancePaintTiming). Action handlers must be usable before those paint entries. Browser [shared monotonic timestamps](https://www.w3.org/TR/hr-time-3/#examples) translate the entries to the parent click origin. FCP, every navigation paint/intersection, animation-frame callbacks, parent notification elapsed and raw message-delivery lag remain in the evidence; callbacks are diagnostics rather than presentation proof. It forces fixture mode and needs no model credentials or installed service.
+These measurements do not establish real ChatGPT sidebar latency. The launch endpoint uses [text ElementTiming](https://w3c.github.io/element-timing/#report-text-element-timing) for all seven visible navigation labels, corroborated by [first contentful paint](https://www.w3.org/TR/paint-timing/#sec-PerformancePaintTiming). Action handlers must be usable before those paint entries. Browser [shared monotonic timestamps](https://www.w3.org/TR/hr-time-3/#examples) translate the entries to the parent click origin. FCP, every navigation paint/intersection, animation-frame callbacks, parent notification elapsed and raw message-delivery lag remain in the evidence; callbacks are diagnostics rather than presentation proof. It forces fixture mode and needs no model credentials or installed service.
 Successful builds upload Linux x86-64 and portable plugin packages, SHA256SUMS and
 a CI manifest bound to the exact source commit. Failed browser evidence is kept
 separately. Verification has read-only repository permissions.
@@ -140,7 +140,7 @@ retain event-pinned comparison identity even when verification cannot begin.
 
 Browser correctness tests are partitioned by feature under `web/tests/`.
 The mocked project creates a fresh browser context and host state for each test;
-it can run tests concurrently. The assembled project keeps its three scenarios
+it can run tests concurrently. The assembled project keeps its native session scenario
 in their original file order with one worker because they share a daemon,
 database and repository fixture. Neither project retries failed assertions.
 Accessibility evidence uses Playwright's per-test output paths. Both projects
@@ -304,6 +304,14 @@ process for each published head; resume that process after tool yields. Do not
 start parallel check polling or a second waiter while it runs. A terminal failure
 permits diagnosis and the workflow's bounded repair/rerun path. Stop dependent
 work on changed-head or incomplete evidence; never turn a timeout into success.
+
+Use the installed workflow's actual CLI surface. Some workflow versions retain
+run/cycle IDs, task fingerprints and claims instead of preparation/engineering
+IDs or a `prepare` command. In that case retain those native identities and
+explicit review/cleanup/completion evidence, mark unavailable older fields as
+unavailable, and refresh the current task bindings after input changes. Do not
+invent a compatibility command or omit an independent role because terminology
+has changed.
 
 ### Completion handoff template
 

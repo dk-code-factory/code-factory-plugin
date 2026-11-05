@@ -36,14 +36,14 @@ An issue or pull request tracked in the private workspace.
 
 `agent-run` · domain
 
-Retained agent work with a task, workspace, conversation and lifecycle status.
+A turn of agent execution within a retained conversation.
 
 <a id="profile"></a>
 ## Work profile
 
 `profile` · domain
 
-Reusable task defaults, execution permissions and publishing authority.
+A named set of native Codex configuration overrides selected for a conversation.
 
 <a id="skill"></a>
 ## Skill
@@ -4483,4 +4483,130 @@ The observation action for an uncertain publication outcome.
 `ui-c-pr-posting-policy` · ui-connection
 
 The persistent publication override update for a pull request.
+
+<a id="retained-session"></a>
+## Retained session
+
+`retained-session` · domain
+
+The canonical conversation for a work item, bound to its selected agent and workspace.
+
+<a id="event-rule"></a>
+## Event rule
+
+`event-rule` · domain
+
+A configured selection of repository events, optional filters and ordered instructions or installed skills.
+
+<a id="normalized-event"></a>
+## Normalized event
+
+`normalized-event` · domain
+
+A durable observation of a source change with stable identity and current item context.
+
+<a id="event-batch"></a>
+## Event batch
+
+`event-batch` · domain
+
+An ordered delivery of queued events and all matching actions to one retained conversation.
+
+<a id="quiet-period"></a>
+## Quiet period
+
+`quiet-period` · domain
+
+The inactivity interval after the latest matching event before automatic delivery becomes eligible.
+
+<a id="configuration-proposal"></a>
+## Configuration proposal
+
+`configuration-proposal` · domain
+
+A concrete settings diff awaiting explicit human confirmation against its inspected versions.
+
+<a id="reported-work-status"></a>
+## Reported work status
+
+`reported-work-status` · domain
+
+An explicit agent declaration of working, done or blocked, independent of execution state.
+
+<a id="execution-state"></a>
+## Execution state
+
+`execution-state` · domain
+
+The runtime condition of a conversation turn, separate from reported work completion.
+
+<a id="ui-w-configuration-chat"></a>
+## W Configuration Chat
+
+`ui-w-configuration-chat` · ui-widget
+
+A widget representing w configuration chat.
+
+<a id="ui-w-effective-settings"></a>
+## W Effective Settings
+
+`ui-w-effective-settings` · ui-widget
+
+A widget representing w effective settings.
+
+<a id="ui-w-configuration-proposal"></a>
+## W Configuration Proposal
+
+`ui-w-configuration-proposal` · ui-widget
+
+A widget representing w configuration proposal.
+
+<a id="ui-w-event-batches"></a>
+## W Event Batches
+
+`ui-w-event-batches` · ui-widget
+
+A widget representing w event batches.
+
+<a id="ui-p-configuration"></a>
+## P Configuration
+
+`ui-p-configuration` · ui-pane
+
+A pane representing p configuration.
+
+<a id="ui-p-events"></a>
+## P Events
+
+`ui-p-events` · ui-pane
+
+A pane representing p events.
+
+<a id="ui-page-events"></a>
+## Page Events
+
+`ui-page-events` · ui-page
+
+A page representing page events.
+
+<a id="ui-c-configuration-propose"></a>
+## C Configuration Propose
+
+`ui-c-configuration-propose` · ui-connection
+
+A connection representing c configuration propose.
+
+<a id="ui-c-configuration-confirm"></a>
+## C Configuration Confirm
+
+`ui-c-configuration-confirm` · ui-connection
+
+A connection representing c configuration confirm.
+
+<a id="ui-c-event-inspect"></a>
+## C Event Inspect
+
+`ui-c-event-inspect` · ui-connection
+
+A connection representing c event inspect.
 <!-- /specs:terms -->

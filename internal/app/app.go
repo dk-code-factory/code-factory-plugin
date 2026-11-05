@@ -3,8 +3,6 @@ package app
 import (
 	"codefactory/internal/domain"
 	"codefactory/internal/providers"
-	"codefactory/internal/prreview"
-	"codefactory/internal/reports"
 	"codefactory/internal/store"
 	"context"
 	"crypto/rand"
@@ -21,26 +19,12 @@ import (
 )
 
 type App struct {
-	ReviewEngine    prreview.EngineAdapter
-	ReviewCollector prreview.Collector
-	ReviewWorkers   prreview.Workers
-	ReviewRemote    prreview.PublicationRemote
-	// SavedOnly disables observation scheduling and provider status probes for
-	// projection builders and UI reads. Background workers use the live App.
-	SavedOnly        bool
-	refreshMu        sync.Mutex
-	refreshing       map[string]bool
-	refreshAgain     map[string]bool
-	autoReviewMu     sync.Mutex
-	providerMu       sync.Mutex
-	prRefreshAfter   string
-	observationAfter string
-	Store            *store.Store
-	Vault            *store.Vault
-	GitHub           providers.GitHubSource
-	Runs             *Manager
-	DataDir          string
-	Reports          *reports.Service
+	providerMu     sync.Mutex
+	prRefreshAfter string
+	Store          *store.Store
+	Vault          *store.Vault
+	GitHub         providers.GitHubSource
+	DataDir        string
 }
 
 func ID() string {
@@ -51,164 +35,21 @@ func ID() string {
 	}
 	return hex.EncodeToString(b[:])
 }
-func (a *App) Init(ctx context.Context) error {
-	if a.Reports == nil {
-		a.Reports = &reports.Service{Store: a.Store, Vault: a.Vault, Dir: a.DataDir, Engine: &reports.NativeEngine{Dir: a.DataDir}, GitHub: &reports.GitHubAdapter{Client: providers.LiveGitHub(a.GitHub), Store: a.Store}}
-		if a.Runs != nil {
-			a.Reports.Engine = &reports.NativeEngine{Dir: a.DataDir, Codex: a.Runs.Binary}
-		}
-	}
+
+// InitCore initializes triage only. The session wrapper owns configuration and
+// native agents; it does not create application profiles or review/report engines.
+func (a *App) InitCore(ctx context.Context) error {
 	var c domain.Config
-	if e := a.Store.Get(ctx, "config", "settings", &c); errors.Is(e, store.ErrNotFound) {
-		if e = a.Store.Put(ctx, "config", "settings", domain.Defaults(), ""); e != nil {
-			return e
-		}
-	} else if e != nil {
-		return e
+	if err := a.Store.Get(ctx, "config", "settings", &c); errors.Is(err, store.ErrNotFound) {
+		return a.Store.Put(ctx, "config", "settings", domain.Defaults(), "")
+	} else {
+		return err
 	}
-	for _, p := range domain.Profiles() {
-		var old domain.Profile
-		if e := a.Store.Get(ctx, "profile", p.ID, &old); errors.Is(e, store.ErrNotFound) {
-			if e = a.Store.Put(ctx, "profile", p.ID, p, ""); e != nil {
-				return e
-			}
-		} else if e != nil {
-			return e
-		}
-	}
-	return nil
 }
 func (a *App) Config(ctx context.Context) (domain.Config, error) {
 	var c domain.Config
 	e := a.Store.Get(ctx, "config", "settings", &c)
-	if c.ExecutionMode == "" {
-		c.ExecutionMode = "single-codex"
-	}
 	return c, e
-}
-func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
-	if c.ExecutionMode == "" {
-		c.ExecutionMode = "single-codex"
-	}
-	if c.ExecutionMode != "workflow" && c.ExecutionMode != "single-codex" {
-		return fmt.Errorf("execution mode must be workflow or single-codex")
-	}
-	if c.ExecutionMode == "single-codex" && c.PRReviewSkillID != "" {
-		var skill domain.Skill
-		if err := a.Store.Get(ctx, "skill", c.PRReviewSkillID, &skill); err != nil || skill.Disabled {
-			return fmt.Errorf("PR iteration skill is unavailable; discover installed skills in Settings")
-		}
-		if skill.Name != "dk-pr-iter" && skill.Name != "dk-workflows:dk-pr-iter" {
-			return fmt.Errorf("PR iteration skill must be dk-pr-iter")
-		}
-	}
-	if err := prreview.ValidateReviewers(c.Reviewers); err != nil {
-		return err
-	}
-	if c.GitHubRequestsPerHour != 0 && (c.GitHubRequestsPerHour < 60 || c.GitHubRequestsPerHour > 5000) {
-		return fmt.Errorf("GitHub budget must be 60–5000 requests per hour")
-	}
-	if c.GitHubReserve != nil && (*c.GitHubReserve < 0 || *c.GitHubReserve > 5000) {
-		return fmt.Errorf("GitHub reserve must be 0–5000")
-	}
-	if c.GitHubPollSeconds != 0 && (c.GitHubPollSeconds < 60 || c.GitHubPollSeconds > 3600) {
-		return fmt.Errorf("GitHub polling must be 60–3600 seconds")
-	}
-
-	for _, id := range []string{c.ReviewProfileID, c.ImplementationProfileID} {
-		if id != "" {
-			var p domain.Profile
-			if err := a.Store.Get(ctx, "profile", id, &p); err != nil {
-				return fmt.Errorf("default pipeline is unavailable")
-			}
-		}
-	}
-	if c.PluginCheckMinutes < 0 || c.PluginCheckMinutes > 10080 || c.PluginCheckMinutes > 0 && c.PluginCheckMinutes < 15 {
-		return fmt.Errorf("plugin update checks must be manual (0) or 15–10080 minutes")
-	}
-	if c.JiraURL != "" && !providers.ValidJiraURL(c.JiraURL) {
-		return fmt.Errorf("Jira URL must be an HTTPS atlassian.net tenant")
-	}
-	for _, p := range c.PriorityLabels {
-		if p < 0 || p > 3 {
-			return fmt.Errorf("priority must be P0–P3")
-		}
-	}
-	if c.AssessmentPrompt == "" {
-		return fmt.Errorf("assessment prompt required")
-	}
-	c.ID = "settings"
-	old, err := a.Config(ctx)
-	if err != nil {
-		return err
-	}
-	c.ReviewersConfigured = c.ReviewersConfigured || old.ReviewersConfigured || c.Reviewers != nil
-	c.ReviewRulesConfigured = c.ReviewRulesConfigured || old.ReviewRulesConfigured || c.ReviewRules != ""
-	c.PolicyVersion = old.PolicyVersion
-	if old.AssessmentPrompt != c.AssessmentPrompt || string(raw(old.PriorityLabels)) != string(raw(c.PriorityLabels)) {
-		c.PolicyVersion = ID()
-	}
-	return a.Store.Put(ctx, "config", c.ID, c, "config.changed")
-}
-
-var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
-
-func (a *App) SaveRepository(ctx context.Context, r domain.Repository) error {
-	if r.Reviewers != nil {
-		if err := prreview.ValidateReviewers(*r.Reviewers); err != nil {
-			return err
-		}
-	}
-	if !repoPattern.MatchString(r.ID) || strings.Contains(r.ID, "..") || strings.HasPrefix(r.Base, "-") {
-		return fmt.Errorf("invalid repository or base")
-	}
-	for _, id := range []string{r.ReviewProfileID, r.ImplementationProfileID} {
-		if id != "" {
-			var p domain.Profile
-			if err := a.Store.Get(ctx, "profile", id, &p); err != nil {
-				return fmt.Errorf("repository pipeline is unavailable")
-			}
-		}
-	}
-	var old domain.Repository
-	if e := a.Store.Get(ctx, "repository", r.ID, &old); e == nil {
-		old.Checkout = r.Checkout
-		old.Base = r.Base
-		old.Paused = r.Paused
-		old.AutoReview = r.AutoReview
-		old.AutoPostReview = r.AutoPostReview
-		old.Reviewers = r.Reviewers
-		old.ReviewRules = r.ReviewRules
-		old.ReviewPrompt = r.ReviewPrompt
-		old.ReviewError = ""
-		old.ReviewProfileID = r.ReviewProfileID
-		old.ImplementationProfileID = r.ImplementationProfileID
-		r = old
-	} else if !errors.Is(e, store.ErrNotFound) {
-		return e
-	}
-	return a.Store.Put(ctx, "repository", r.ID, r, "repository.changed")
-}
-func (a *App) SaveProfile(ctx context.Context, p domain.Profile) error {
-	if p.ID == "" {
-		p.ID = ID()
-	}
-	if p.Name == "" || p.Prompt == "" {
-		return fmt.Errorf("name and prompt required")
-	}
-	if p.Mode != "" && p.Mode != "default" && p.Mode != "plan" {
-		return fmt.Errorf("invalid collaboration mode")
-	}
-	if p.Sandbox != "read-only" && p.Sandbox != "workspace-write" && p.Sandbox != "danger-full-access" {
-		return fmt.Errorf("invalid sandbox")
-	}
-	if p.Approval != "on-request" && p.Approval != "untrusted" && p.Approval != "never" {
-		return fmt.Errorf("invalid approval policy")
-	}
-	if p.Publishing != "ask" && p.Publishing != "authorized" {
-		return fmt.Errorf("invalid publishing authority")
-	}
-	return a.Store.Put(ctx, "profile", p.ID, p, "profile.changed")
 }
 func (a *App) Inbox(ctx context.Context, state string) ([]domain.InboxEntry, error) {
 	return a.inbox(ctx, state, false)
@@ -224,7 +65,7 @@ func (a *App) inbox(ctx context.Context, state string, compact bool) ([]domain.I
 	var items []domain.Item
 	var e error
 	if compact {
-		items, e = store.ListWithout[domain.Item](ctx, a.Store, "item", "$.activity", "$.checks", "$.pr.checks")
+		items, e = store.ListWithout[domain.Item](ctx, a.Store, "item", "$.activity", "$.body", "$.checks", "$.pr.checks")
 	} else {
 		items, e = store.List[domain.Item](ctx, a.Store, "item")
 	}
@@ -255,9 +96,12 @@ func (a *App) inbox(ctx context.Context, state string, compact bool) ([]domain.I
 	if e != nil {
 		return nil, e
 	}
-	outgoing := map[string][]domain.Relationship{}
+	related := map[string][]domain.Relationship{}
 	for _, l := range links {
-		outgoing[l.Source] = append(outgoing[l.Source], l)
+		related[l.Source] = append(related[l.Source], l)
+		if l.Target != l.Source {
+			related[l.Target] = append(related[l.Target], l)
+		}
 	}
 	kinds := map[string]string{}
 	for _, item := range items {
@@ -299,7 +143,7 @@ func (a *App) inbox(ctx context.Context, state string, compact bool) ([]domain.I
 					}
 				}
 			}
-			if entry.Priority == nil && assess.Status == "complete" && assess.Revision == i.Revision && assess.Policy == c.PolicyVersion && assess.Context == assessmentContext(i, outgoing[i.ID], func(id string) (domain.Item, error) {
+			if entry.Priority == nil && assess.Status == "complete" && assess.Revision == i.Revision && assess.Policy == c.PolicyVersion && assess.Context == assessmentContext(i, related[i.ID], func(id string) (domain.Item, error) {
 				v, ok := byID[id]
 				if !ok {
 					return v, store.ErrNotFound
@@ -382,6 +226,12 @@ func (a *App) UserAction(ctx context.Context, id, kind, revision string, priorit
 func (a *App) Import(ctx context.Context, r domain.Repository, items []domain.Item, user string, checkpoint time.Time, full bool) error {
 	return a.importItems(ctx, r, items, user, &checkpoint, full)
 }
+
+// ImportObservations retains item enrichment without advancing the repository
+// index checkpoint. Session routing uses it independently of legacy run workers.
+func (a *App) ImportObservations(ctx context.Context, r domain.Repository, items []domain.Item) error {
+	return a.importItems(ctx, r, items, "", nil, false)
+}
 func (a *App) importItems(ctx context.Context, r domain.Repository, items []domain.Item, user string, checkpoint *time.Time, full bool) error {
 	previousLinks, err := store.List[domain.Relationship](ctx, a.Store, "relationship")
 	if err != nil {
@@ -395,13 +245,17 @@ func (a *App) importItems(ctx context.Context, r domain.Repository, items []doma
 				return e
 			}
 			created := errors.Is(e, store.ErrNotFound)
+			// Full cached details carry their original observation time too.
+			// Neither a shallow index nor an older full snapshot may reverse a
+			// newer webhook/detail observation already retained atomically.
+			if i.Kind == "pr" && old.ReviewObservedAt.After(i.ReviewObservedAt) {
+				continue
+			}
 			if i.SummaryOnly {
-				if i.Kind == "pr" && old.ReviewObservedAt.After(i.ReviewObservedAt) {
-					continue
-				}
 				i.SummaryOnly = false
 				if !created {
 					i.Activity = old.Activity
+					i.ReviewThreads = old.ReviewThreads
 					i.DetailSyncedAt = old.DetailSyncedAt
 					if i.Head != old.Head || i.Updated.After(old.Updated) || i.State != old.State {
 						i.DetailSyncedAt = time.Time{}
@@ -510,19 +364,7 @@ func (a *App) importItems(ctx context.Context, r domain.Repository, items []doma
 	if err != nil {
 		return err
 	}
-	if a.Runs != nil {
-		for _, item := range items {
-			if closedWork(item) {
-				var saved domain.Item
-				if err := a.Store.Get(ctx, "item", item.ID, &saved); err != nil {
-					return err
-				}
-				if err := a.Runs.stopClosedItem(ctx, saved); err != nil {
-					return err
-				}
-			}
-		}
-	}
+
 	return nil
 }
 func (a *App) Sync(ctx context.Context) error { return a.sync(ctx, false) }
@@ -658,9 +500,7 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 	if firstErr != nil {
 		return firstErr
 	}
-	if a.Runs != nil {
-		return a.ProcessReviewRequests(ctx)
-	}
+
 	return nil
 }
 
@@ -677,19 +517,14 @@ func (a *App) syncLoop(ctx context.Context, ticks <-chan time.Time) {
 			return
 		}
 		_ = a.sync(ctx, true)
-		if a.Runs != nil {
-			_ = a.Runs.RetryDeferredLaunches(ctx)
-		}
+
 		// Reference backfill yields to the next repository poll and resumes from
 		// its last attempted PR, rather than restarting a large reference list.
 		references, cancel := context.WithTimeout(ctx, 10*time.Second)
 		_ = a.RefreshPullRequests(references)
 		cancel()
 		_ = a.RefreshJira(ctx)
-		a.RefreshSavedObservations(ctx)
-		if a.Runs != nil {
-			a.Runs.maybeCheckPlugins(ctx)
-		}
+
 		select {
 		case <-ctx.Done():
 			return
@@ -756,9 +591,14 @@ func (a *App) AssessmentContext(ctx context.Context, item domain.Item) string {
 		return "unavailable"
 	}
 	return assessmentContext(item, links, func(id string) (domain.Item, error) {
-		var v domain.Item
-		err := a.Store.Get(ctx, "item", id, &v)
-		return v, err
+		items, err := store.Select[domain.Item](ctx, a.Store, "item", "id", id, "$.body", "$.activity", "$.checks", "$.pr.checks")
+		if err != nil {
+			return domain.Item{}, err
+		}
+		if len(items) == 0 {
+			return domain.Item{}, store.ErrNotFound
+		}
+		return items[0], nil
 	}, func(id string) (domain.Ticket, error) {
 		var v domain.Ticket
 		err := a.Store.Get(ctx, "ticket", id, &v)
@@ -768,15 +608,20 @@ func (a *App) AssessmentContext(ctx context.Context, item domain.Item) string {
 
 func assessmentContext(item domain.Item, links []domain.Relationship, getItem func(string) (domain.Item, error), getTicket func(string) (domain.Ticket, error)) string {
 	data := []any{item.Revision}
+	links = append([]domain.Relationship(nil), links...)
+	sort.Slice(links, func(i, j int) bool { return links[i].ID < links[j].ID })
 	for _, l := range links {
-		if l.Source != item.ID {
+		target := l.Target
+		if l.Target == item.ID {
+			target = l.Source
+		} else if l.Source != item.ID {
 			continue
 		}
 		data = append(data, l)
-		if linked, err := getItem(l.Target); err == nil {
+		if linked, err := getItem(target); err == nil {
 			data = append(data, linked.Revision)
 		}
-		if ticket, err := getTicket(l.Target); err == nil {
+		if ticket, err := getTicket(target); err == nil {
 			data = append(data, ticket)
 		}
 	}
@@ -819,4 +664,35 @@ func (a *App) RefreshJira(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
+	if c.GitHubRequestsPerHour != 0 && (c.GitHubRequestsPerHour < 60 || c.GitHubRequestsPerHour > 5000) {
+		return fmt.Errorf("invalid GitHub budget")
+	}
+	if c.GitHubReserve != nil && (*c.GitHubReserve < 0 || *c.GitHubReserve > 5000) {
+		return fmt.Errorf("invalid GitHub reserve")
+	}
+	if c.GitHubPollSeconds != 0 && (c.GitHubPollSeconds < 60 || c.GitHubPollSeconds > 3600) {
+		return fmt.Errorf("invalid GitHub poll interval")
+	}
+	old, err := a.Config(ctx)
+	if err != nil {
+		return err
+	}
+	c.ID = "settings"
+	c.PolicyVersion = old.PolicyVersion
+	if old.AssessmentPrompt != c.AssessmentPrompt || string(raw(old.PriorityLabels)) != string(raw(c.PriorityLabels)) {
+		c.PolicyVersion = ID()
+	}
+	return a.Store.Put(ctx, "config", "settings", c, "config.changed")
+}
+
+var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
+
+func (a *App) SaveRepository(ctx context.Context, r domain.Repository) error {
+	if !repoPattern.MatchString(r.ID) || strings.Contains(r.ID, "..") || strings.HasPrefix(r.Base, "-") {
+		return fmt.Errorf("invalid repository or base")
+	}
+	return a.Store.Put(ctx, "repository", r.ID, r, "config.changed")
 }

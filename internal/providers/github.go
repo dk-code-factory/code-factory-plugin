@@ -666,7 +666,7 @@ func (g *GitHub) activities(ctx context.Context, path, kind string) ([]domain.Ac
 		if v.Updated == "" {
 			v.Updated = v.Submitted
 		}
-		out = append(out, domain.Activity{ID: kind + ":" + id, Kind: kind, Author: author, Body: body + v.State, Updated: v.Updated, URL: v.HTMLURL})
+		out = append(out, domain.Activity{ID: kind + ":" + id, Kind: kind, Author: author, Body: body + strings.ToLower(v.State), Updated: v.Updated, URL: v.HTMLURL})
 	}
 	return out, nil
 }

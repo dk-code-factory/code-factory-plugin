@@ -53,14 +53,14 @@ func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(t *testing.T
 			t.Fatal(err)
 		}
 	}
-	call("list_inbox", map[string]any{"state": "open", "queue": "review"})
-	call("list_inbox", map[string]any{"queue": "invalid"})
-	call("set_jira_credential", map[string]any{"token": "fixture-private-jira-value"})
-	call("answer_request", map[string]any{"id": "missing-request", "answer": map[string]any{"answers": map[string]any{"q1": map[string]any{"answers": []string{"fixture-private-answer"}}}}})
-	call("send_message", map[string]any{"id": "missing-run", "text": "fixture-private-message"})
+	call("factory_state", map[string]any{"state": "open", "queue": "review"})
+	call("factory_state", map[string]any{"queue": "invalid"})
+	call("answer_session_question", map[string]any{"token": "fixture-private-jira-value"})
+	call("answer_session_question", map[string]any{"id": "missing-request", "answer": map[string]any{"answers": map[string]any{"q1": map[string]any{"answers": []string{"fixture-private-answer"}}}}})
+	call("session_chat", map[string]any{"id": "missing-run", "text": "fixture-private-message"})
 	// A URL parameter is useful, but its userinfo, query and fragment are not.
-	call("track_work", map[string]any{"target": "https://user:password@github.com/owner/repo/pull/1?access_token=fixture-query-secret#fixture-fragment"})
-	call("list_inbox", map[string]any{"API Key": "spaced-key-secret", "metadata": map[string]any{"custom": "metadata-secret"}})
+	call("factory_item", map[string]any{"target": "https://user:password@github.com/owner/repo/pull/1?access_token=fixture-query-secret#fixture-fragment"})
+	call("factory_state", map[string]any{"API Key": "spaced-key-secret", "metadata": map[string]any{"custom": "metadata-secret"}})
 	resource := map[string]any{"jsonrpc": "2.0", "id": 7, "method": "resources/read", "params": map[string]any{"uri": ResourceURI}}
 	body, _ := json.Marshal(resource)
 	req, _ := http.NewRequest("POST", f.http.URL+"/mcp", bytes.NewReader(body))
@@ -86,7 +86,7 @@ func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(t *testing.T
 	if len(records) != 9 {
 		t.Fatal("request logging duplicated or omitted calls", len(records))
 	}
-	if records[0].API != "list_inbox" || records[0].RPCMethod != "tools/call" || records[0].Parameters.(map[string]any)["queue"] != "review" || records[0].StartedAt.IsZero() || records[0].DurationMS < 0 {
+	if records[0].API != "factory_state" || records[0].RPCMethod != "tools/call" || records[0].Parameters.(map[string]any)["queue"] != "review" || records[0].StartedAt.IsZero() || records[0].DurationMS < 0 {
 		t.Fatal("missing API parameters/timing", records[0])
 	}
 	if records[7].API != "resources/read" || records[8].HTTPStatus != 401 {
@@ -126,22 +126,6 @@ func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(t *testing.T) {
 	}
 	if w.Code != 202 {
 		t.Fatal("logging changed the owner response")
-	}
-}
-
-func TestAPILogActualOwnerHandlerRecordsRejectedInput(t *testing.T) {
-	f := newTrackingFixture(t)
-	request := httptest.NewRequest("POST", "/admin/dependencies/operations", strings.NewReader(`{"id":"invalid","action":"check","targets":["unknown"]}`))
-	request.Header.Set("Authorization", "Bearer "+f.token)
-	request.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	f.server.DependencyHandler(f.token).ServeHTTP(w, request)
-	if w.Code != 400 {
-		t.Fatal("owner validation changed", w.Code)
-	}
-	record := apiLogRecords(t, filepath.Join(f.a.DataDir, "logs", "api-calls.jsonl"), 1)[0]
-	if record.API != "dependency_operations" || record.HTTPStatus != 400 || record.Parameters.(map[string]any)["arguments"].(map[string]any)["id"] != "invalid" {
-		t.Fatal("owner rejection was not logged", record)
 	}
 }
 

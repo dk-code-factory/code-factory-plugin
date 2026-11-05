@@ -164,16 +164,28 @@ func (g *GitHub) EnrichPullRequest(ctx context.Context, item *domain.Item) {
 						EndCursor   string
 					}
 				}
+				ReviewThreads struct {
+					Nodes []struct {
+						ID         string
+						IsResolved bool
+					}
+					PageInfo struct {
+						HasNextPage bool
+						EndCursor   string
+					}
+				}
 			}
 		}
 	}
-	query := `query($owner:String!,$name:String!,$number:Int!,$after:String,$reviewAfter:String){repository(owner:$owner,name:$name){pullRequest(number:$number){headRefOid reviewDecision statusCheckRollup{state} latestOpinionatedReviews(first:100,after:$reviewAfter){nodes{state} pageInfo{hasNextPage endCursor}} closingIssuesReferences(first:100,after:$after){nodes{number repository{nameWithOwner}} pageInfo{hasNextPage endCursor}}}}}`
-	var after, reviewAfter any
+	query := `query($owner:String!,$name:String!,$number:Int!,$after:String,$reviewAfter:String,$threadAfter:String){repository(owner:$owner,name:$name){pullRequest(number:$number){headRefOid reviewDecision statusCheckRollup{state} latestOpinionatedReviews(first:100,after:$reviewAfter){nodes{state} pageInfo{hasNextPage endCursor}} closingIssuesReferences(first:100,after:$after){nodes{number repository{nameWithOwner}} pageInfo{hasNextPage endCursor}} reviewThreads(first:100,after:$threadAfter){nodes{id isResolved} pageInfo{hasNextPage endCursor}}}}}`
+	var after, reviewAfter, threadAfter any
+	threadsDone := false
+	threads := []domain.ReviewThread{}
 	closingDone, reviewsDone, approved, changesRequested := false, false, false, false
 	closings := []string{}
 	for page := 0; page < 10000; page++ {
 		response.Repository = nil
-		err := g.graph(ctx, query, map[string]any{"owner": parts[0], "name": parts[1], "number": item.Number, "after": after, "reviewAfter": reviewAfter}, &response)
+		err := g.graph(ctx, query, map[string]any{"owner": parts[0], "name": parts[1], "number": item.Number, "after": after, "reviewAfter": reviewAfter, "threadAfter": threadAfter}, &response)
 		if err != nil || response.Repository == nil || response.Repository.PullRequest == nil {
 			var rate *RateLimitError
 			if errors.As(err, &rate) {
@@ -210,10 +222,17 @@ func (g *GitHub) EnrichPullRequest(ctx context.Context, item *domain.Item) {
 			}
 		}
 		info := pr.ClosingIssuesReferences.PageInfo
+		if !threadsDone {
+			for _, thread := range pr.ReviewThreads.Nodes {
+				threads = append(threads, domain.ReviewThread{ID: thread.ID, Resolved: thread.IsResolved})
+			}
+		}
+		threadInfo := pr.ReviewThreads.PageInfo
+		threadsDone = threadsDone || !threadInfo.HasNextPage
 		reviewInfo := pr.LatestOpinionatedReviews.PageInfo
 		closingDone = closingDone || !info.HasNextPage
 		reviewsDone = reviewsDone || !reviewInfo.HasNextPage
-		if closingDone && reviewsDone {
+		if closingDone && reviewsDone && threadsDone {
 			if pr.ReviewDecision == nil {
 				if changesRequested {
 					p.ReviewDecision = "changes_requested"
@@ -222,6 +241,7 @@ func (g *GitHub) EnrichPullRequest(ctx context.Context, item *domain.Item) {
 				}
 			}
 			item.ClosingIssues = closings
+			item.ReviewThreads = threads
 			p.SyncedAt = *observed
 			item.PR = &p
 			return
@@ -237,6 +257,12 @@ func (g *GitHub) EnrichPullRequest(ctx context.Context, item *domain.Item) {
 				break
 			}
 			reviewAfter = reviewInfo.EndCursor
+		}
+		if !threadsDone {
+			if threadInfo.EndCursor == "" || threadInfo.EndCursor == threadAfter {
+				break
+			}
+			threadAfter = threadInfo.EndCursor
 		}
 	}
 	p.Error = "Incomplete PR development links"

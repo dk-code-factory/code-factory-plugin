@@ -48,7 +48,8 @@ async function prepare(context: BrowserContext, scenario: string) {
       "My PRs",
       "Review PRs",
       "Messages",
-      "Reported issues",
+      "Configuration",
+      "Events",
     ];
     const paints = new Map<
       string,
@@ -281,8 +282,7 @@ test("production embedded direct launch: every fresh and warm sample is at most 
               }),
             ).toBeVisible();
           });
-          await ui.getByText("Item details", { exact: true }).click();
-          await ui.getByText("Actions", { exact: true }).click();
+
           await measure("action acknowledgement", page, async () => {
             await ui
               .getByRole("button", { name: "Acknowledge new", exact: true })
@@ -291,7 +291,7 @@ test("production embedded direct launch: every fresh and warm sample is at most 
               .poll(() =>
                 requests.some(
                   (r) =>
-                    r.name === "item_action" &&
+                    r.name === "user_action" &&
                     r.arguments.action === "acknowledge",
                 ),
               )
@@ -302,15 +302,15 @@ test("production embedded direct launch: every fresh and warm sample is at most 
               .getByRole("button", { name: "Messages", exact: true })
               .click();
             await expect(
-              ui.getByRole("region", { name: "Waiting for you" }),
+              ui.getByRole("region", { name: "Questions" }),
             ).toBeVisible();
           });
-          await measure("reports", page, async () => {
+          await measure("events", page, async () => {
             await ui
-              .getByRole("button", { name: "Reported issues", exact: true })
+              .getByRole("button", { name: "Events", exact: true })
               .click();
             await expect(
-              ui.getByRole("region", { name: "Reported issues" }),
+              ui.getByRole("region", { name: "Event routing" }),
             ).toBeVisible();
           });
           await measure("settings", page, async () => {
@@ -323,7 +323,7 @@ test("production embedded direct launch: every fresh and warm sample is at most 
             await expect(
               page
                 .frameLocator('iframe[title="Settings"]')
-                .getByLabel("GitHub repository"),
+                .getByRole("heading", { name: "Configuration chat" }),
             ).toBeVisible();
           });
         }
@@ -382,7 +382,7 @@ test("production embedded direct launch: every fresh and warm sample is at most 
           s.ms >= s.readyMs &&
           Number.isFinite(s.fcpMs) &&
           s.ms >= s.fcpMs &&
-          s.navigationPaints.length === 6 &&
+          s.navigationPaints.length === 7 &&
           s.navigationPaints.every(
             (p) =>
               Number.isFinite(p.atMs) &&

@@ -1,91 +1,108 @@
-# Design
+# Native session wrapper architecture
 
-The daemon is the single owner of mutable local state and agent processes. Transports invoke application methods; domain types contain no Work/Claude-specific behavior. Linux packaging, provider HTTP, app-server JSON-lines, SQLite, MCP and webhook networking are separate adapters.
+The production daemon combines a retained triage/provider layer with the small
+`internal/factory` coordinator. It uses Codex app-server directly. Native agents
+and installed skills own execution policy and review/implementation/publication
+work; the daemon routes authorized work and retains human interaction.
 
-## State and events
+## Durable records and source observations
 
-SQLite runs in WAL mode with schema version 1. `entities(kind,id,data)` stores typed JSON; `events(seq,kind,entity,data,at)` is an append-only journal. Every application state transition with a corresponding observable event is committed in one transaction. Events have monotonically increasing cursors. Failed syncs never advance import checkpoints. Snapshots obtain their cursor before loading records so a concurrent change can be delivered again but cannot be skipped.
+`factory-v1.db` is fresh application state. It stores canonical sessions,
+normalized events and facet observations, configured rules, queued actions, delivery
+batches, attention requests and configuration proposals. There is no import from
+the retired application's database. The existing encrypted vault key and external
+connection files remain outside Git and are reused for their existing purposes.
+Native Codex configuration, authentication and thread history remain native.
 
-Inbox revisions cover full provider content/activity, head and check state. `readRevision` belongs to plugin activity and is independent of New and action history. A stale displayed revision can be marked read without consuming a newer revision. Local overrides never write provider labels. Inference is valid only for its item revision, linked-context fingerprint and policy version.
+GitHub's gateway route forwards exact webhook bytes to the daemon. The daemon
+verifies SHA256 HMAC signatures and records delivery identity, digest and payload
+before acknowledgement. Durable pending deliveries are processed with retry
+state. Redeliveries with the same identity and bytes do not create work; identity
+collisions fail. Current PR facets deduplicate webhook/poll overlap.
 
-Credential values are AES-GCM encrypted with per-record authenticated names. The key and owner token are mode 0600 outside model-visible state. Subscription secrets use the vault. Credential writes have no value-bearing journal entry. Secret answers are never journaled; redaction values alone are encrypted in the vault per run so recovery can still redact echoes. Known service and secret-answer values are redacted from incoming Codex messages before journaling.
+The existing GitHub provider supplies authenticated, budgeted, conditionally cached
+HTTP/GraphQL reads. Initial synchronization fetches detailed activity before
+establishing a baseline. Polling detects observable changes, with explicit generic
+observed actions where source history is unavailable. It never invents missed
+historical events. CI deliveries resolve every associated current-head PR. Review
+threads are paginated and retained only after complete observations.
 
-## Runs
+## Sessions, rules and delivery
 
-`prepared → queued → starting → running` is the normal launch sequence. Blocking attention sets `waiting`; nonblocking attention leaves the run running. Completion sets `idle`, permitting another turn. Cancellation sets `interrupted`; errors set `failed`. Process loss sets interrupted and invalidates pending requests. Startup recovery interrupts every nonterminal live state and stales every outstanding request. Prepared snapshots remain startable. Cleanup sets `cleaned` only after Git removes a stopped clean worktree.
+The work item ID is the canonical session key. Rules match repositories, event
+types, actions and optional labels, author and draft filters. All matches contribute
+actions in stored order. Repository defaults select native profile/agent settings;
+an explicit first-message or confirmed per-item override can select another agent.
+A repository default edit does not silently rebind existing item conversations.
 
-A prepared launch is immutable. The Start transaction requires prepared state; a repeated Start cannot create another process. Explicit Resume requires interrupted/failed state. Old process callbacks are retired before replacement. Each live run has a mutex serializing send, answer, interrupt and process-state handling; the client reader routes RPC responses separately from the notification dispatcher to avoid response/notification deadlocks.
+Each matching event atomically appends its actions and resets the quiet deadline.
+The default is 120 seconds, with per-repository overrides. Automatic batches wait
+for the active turn to finish and stop behind pending attention, a reported blocker
+or an explicit interruption hold. Human chat, answers and explicit run/resume bypass
+the timer; ordinary reads do not. Unblocked active turns receive `turn/steer`.
 
-Question IDs are service-generated and map to the original process request ID. Answers require a matching live request and permitted choices/schema. The service durably claims a request before sending its response. A process failure in that window may lose delivery; the response is never replayed. Original worktrees and history remain available for explicit recovery. Notification of a resolved request invalidates it across all views.
+Before a native send the service persists a claimed batch and removes the claimed
+queue entries in the same transaction. Thread creation also has a durable pending
+marker. Lost responses remain uncertain. Resume searches retained native items for
+the batch marker before determining whether it was accepted. Missing evidence does
+not imply failure; retry/discard requires an explicit human decision. Restart
+retains queued actions and expires lost connection-bound requests.
 
-The app-server connection/process belongs to the daemon, not to an MCP request or UI frame. Every run receives its own worktree. The client uses the installed Codex app-server protocol with a stable 0.161.0 minimum, checks the version before launching, and lets Codex enforce managed requirements. Managed upgrades use the owner-selected dkropachev/codex fork and require a compatibility probe before provider activation. Background inference uses a separate ephemeral read-only thread, disables external tools/apps through config overrides, rejects requests, and yields to manual work.
+The session keeps its chosen agent, native thread and Git worktree. `done`, closure
+and merge retain the conversation. Cleanup is explicit and refuses dirty worktrees.
+Unrelated source checkouts and native user settings are preserved.
 
-Publishing settings become developer instructions for the agent. The service cannot independently police every external operation performed by arbitrary tools; sandbox/approval policy and credentials define the execution boundary. A future host adapter must not reinterpret a profile to weaken it.
+## Native protocol and attention
 
-PR review preparation rejects the signed-in account’s own PR and unknown author/identity. Both launch entrypoints share the guard; atomic Start checks retained proposals and fresh source checks repeat it before execution. Prepared runs retain review intent across default-profile changes. Other work on an own PR remains permitted.
+App-server handles thread creation/resumption, turns, steering, streaming and native
+requests. A schema probe checks the experimental dynamic-tool request and response
+surface and versioned configuration writes before native execution. Native TOML
+profiles and agent definitions resolve through actual configuration layers; the
+binary parses agent TOML without a separate runtime interpreter.
 
-## Work projections and question recovery
+The session-bound `code_factory_report_status` tool reports working, done or blocked.
+Blocked requires concrete human questions/actions. Its RPC response stays suspended
+until the human answers. Execution and reported status remain separate: turn
+completion alone leaves work idle. The bundled status skill explains this contract.
 
-Queue membership is a server projection, shared by snapshots and filtered inbox calls. Started runs track an item independently of runtime completion. A closed/merged PR leaves Working; a closed issue or merged explicitly associated implementation PR completes issue work. Reopening restores eligible work. Manual associations and GitHub development links carry implementation intent; source references retain evidence without acquiring that intent. Item activity aggregates all sessions so an older blocker remains visible.
+Native user-input, command/file approvals, permissions and elicitation requests
+share the questions ledger. Options, blocking semantics, turn identity, connection
+epoch and native RPC ID are retained. Answers are durably claimed before response.
+Disconnected identities become stale; answered requests are never replayed. There
+is no AI question classifier, repair turn or built-in review orchestration.
 
-PR lifecycle, review and CI are independent typed values. Read-only GraphQL metadata provides current-head rollups and development links; latest opinionated reviews supply approval information when a repository has no authoritative review decision. Referenced PRs are fetched individually without configuring their repositories. Poll freshness and synchronization errors do not change content revisions. Failed metadata refresh preserves same-head results and development links; a changed head cannot inherit old CI success.
+Secret answers are encrypted for persistent redaction before response delivery.
+Managed secrets are removed from split streaming and completed output. Public
+callback events contain metadata only. The UI reads paginated saved transcripts
+through authenticated MCP rather than contacting localhost.
 
-Questions have RPC, structured-message or textual origins. Only RPC origins carry live process request IDs. Message/text answers durably claim the attention before steering or restoring the original session; uncertain delivery is not automatically replayed. Synthetic answers retain encrypted redaction values before delivery. Lost native questions can become textual continuations, while approvals must regain a native authorization request.
+## Configuration and priorities
 
-Synthetic questions are reconciled individually after delivered messages, turn completion and startup. A read-only helper sees bounded redacted same-run owner/agent conversation, identifies only explicit decisions followed by acknowledgements, and must return exact evidence references and quotes. Validation rejects invented IDs/quotes, wrong event order and concurrent conversation changes. Only settled questions are removed from actionable parameters; their resolution metadata references the retained source journal. Other questions retain their original IDs and fields. Native approvals/RPCs are excluded. Completion, progress, delivery acceptance and other-run publication alone cannot settle a question. Uncertainty preserves the ask; saved-state reads never invoke this helper.
+One retained read/propose configuration session inspects application settings,
+native layers, profiles, agent definitions and installed skills. It can create
+concrete diffs but cannot confirm them. Explicit user confirmation is a separate
+app-only operation. Application proposals use a settings digest; native edits use
+actual layer identity/version and key-scoped `config/batchWrite`. Stale proposals
+fail. Confirmed changes apply only at safe turn boundaries, close idle clients and
+leave active work uninterrupted. An uncertain native write is never blindly replayed.
 
-A recovery episode is keyed by run and source turn, with durable stage and at most two claimed repair attempts. Its helper uses bounded redacted context, an ephemeral read-only thread, disabled external MCP/apps and a supported low reasoning effort. Repair turns use question-only Plan mode in the original thread and retain its sandbox, approval and publishing authority. Successful answers finish that question-only turn before an ordinary continuation explicitly restores the profile mode. User takeover cancels further repair; process loss retains the episode without replay. The console displays the same redacted journal and uses existing message, answer and interrupt operations. Journal metadata identifies daemon-generated repair and continuation input by its turn and exact text, preserving the role of real answers in that same turn.
+Manual priorities override mapped labels, which override AI assessment. Selected
+priority agents/skills run in reusable read-only per-repository bookkeeping
+sessions. A local record tool validates exact item revision, linked context and
+policy before saving assessment. These sessions have no mutating MCP/apps and
+cannot publish labels. Local relationships, discovery/read state and issue tracking
+remain in the triage layer.
 
-## GitHub source and cache
+## Verification boundary
 
-Application code accepts a `GitHubSource` interface. `CachedGitHub` implements
-that same read API around the existing budgeted HTTP/GraphQL adapter. Query
-identity includes endpoint/principal scope, operation and arguments. Normal
-reads reuse successful unexpired values; misses and invalidations fetch fresh
-remote data. Cached summaries retain their summary-only import semantics and
-actual provider observation timestamps. Cached values never share mutable
-storage with callers. Incomplete enrichment and failures are not cached as
-successes. Private persistent entries and in-memory operation use bounded caches.
+Fixture tests cover delivery validation/deduplication, baselining, quiet clocks,
+concurrent creation, retained reuse, native requests and status, stale/uncertain
+recovery, configuration versions, priorities and dirty cleanup. Browser fixtures
+cover session chat, native questions/approvals, configuration confirmation,
+relationships, queues and event inspection. The assembled fixture uses a real MCP
+daemon and fake native subprocess. The production embedded UI keeps its isolated
+100 ms launch gate. Real-provider and installed-host acceptance remain opt-in.
 
-Freshness is an explicit context choice. Execution preflight, notification-driven
-review-target verification, post-turn publication observation and manual polling
-request live reads through the same API. Live reads bypass all TTLs, use the
-existing conditional validators and quota gate, then update the query cache.
-They invalidate related item/repository snapshots so subsequent ordinary reads
-can observe the newly verified source. Failed live validation never falls back
-to a saved success. Scoped invalidation serializes against in-flight fills;
-cache hits do not wait behind network requests. Authentication changes during
-a fetch reject its result instead of caching it under the wrong principal.
-
-## Host boundary
-
-HTTP is loopback-only and bearer-authenticated. The tunnel's stdio proxy reads the token locally and forwards MCP requests and required version-2 HTTP headers. The tunnel and associated Work workspace must be owner-only, since all tunnel callers share the owner's local service identity. Shared workspace deployment requires an additional authenticated principal boundary.
-
-The React UI uses only the standard MCP Apps postMessage bridge. It does not fetch localhost or receive service credentials. App-only polling tools carry incremental cursors; opening detail sends the displayed revision explicitly. Output and diffs are bounded journal chunks, loaded in pages. UI closure has no process lifecycle effect.
-
-Events subscriptions have deterministic identities from owner, callback URL, name and canonical arguments. A signed random challenge must be echoed before activation. HTTPS callback dialing resolves addresses at connection time, rejects non-public destinations, preserves hostname TLS verification and blocks redirects. Each event retains its ID across retries; fresh timestamps/signatures accompany each attempt. Cursor progress and retry state persist. Expiry and unsubscribe stop delivery. Protocol cursors are null: this adapter does not promise webhook replay. Local journal cursors are independent.
-
-Real Work/tunnel acceptance is a release gate. Fixture tests establish local behavior; they cannot establish workspace permissions, MCP Apps availability, callback receipt by Work or host notification timing. Unsupported native user-verification requests remain visible with an explicit host requirement and decline/cancel choices.
-
-
-## Installation and pilot evidence
-
-A checksummed Linux x86-64 archive contains the static daemon, embedded UI, plugin,
-dependency manifest and operator guide. Versioned releases live under the user
-library with a stable launcher. Systemd units persist the selected data path,
-listener and executable search path. The tunnel requires the daemon. No lingering
-policy or provider authentication is changed. Codex Plan mode is an explicit profile
-choice that supplies the supported question path.
-
-Upgrade stops both services and obtains the daemon lock before a SQLite snapshot,
-then changes the active release and requires authenticated version health. Failed
-upgrades restore compatible state. A pending-operation record supports rollback
-following installer loss; pre-rollback snapshots retain newer state. The installed
-plugin app mapping and all application data survive uninstall and reinstall.
-
-CLI and MCP diagnostics share typed verified/failed/unverified checks. Sync and
-callback receipt reflect observed state. Dated operator evidence is bound to the
-installed version and cannot be inferred from fixture results. Browser reachability
-is checked before showing a local credential input; submissions are single-use and
-expiry-bound, and server shutdown drains the response. Ownership verification is
-an explicit operator checkpoint, not a claim of automatic Platform permission audit.
+Protocol references: [Codex app-server](https://learn.chatgpt.com/docs/app-server),
+[native profiles](https://learn.chatgpt.com/docs/config-file/config-advanced#profiles),
+[native agents](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents).

@@ -2,7 +2,7 @@
 
 ## Goal
 
-The owner can receive host alerts for inbox, run state and attention changes when the host supports subscriptions.
+The owner can receive host alerts for inbox, session state and attention changes when the host supports subscriptions.
 
 ## Preconditions
 
@@ -17,7 +17,7 @@ The connected host supports event subscriptions and supplies a reachable verific
 
 ## Alternatives and recovery
 
-Unavailable host subscriptions remain an explicit blocker. Unsafe callbacks and failed verification are rejected. Transport failures, rate-limit responses and server errors retry with the same event identity while fewer than eight failed attempts have accumulated. A gone response disables the subscription; other unsuccessful responses and exhausted retries advance past the undelivered event. While notifications are disabled, processing also advances past events without delivery; enabling notifications later does not replay those events. Restart retains subscription progress; expiry and unsubscribe stop delivery. Host alert timing is controlled by the host.
+Unavailable host subscriptions remain an explicit blocker. Unsafe callbacks and failed verification are rejected. Transport failures, rate-limit responses and server errors retry with the same event identity while fewer than eight failed attempts have accumulated. A gone response disables the subscription; other unsuccessful responses and exhausted retries advance past the undelivered event. While notifications are disabled, processing also advances past events without delivery; enabling notifications later does not replay those events. Restart retains subscription progress; expiry and unsubscribe stop delivery. Host alert timing is controlled by the host. Changed webhook source and its inbox notification commit together even without a matching agent rule. Redelivery and a new delivery containing unchanged source do not repeat that notification; private source bodies remain absent.
 
 ## Scenarios
 
@@ -25,7 +25,7 @@ Unavailable host subscriptions remain an explicit blocker. Unsafe callbacks and 
 - **S2** Eligible retries preserve event identity within the attempt limit; other delivery failures advance or disable the subscription. Disabled notifications skip processed events without later replay. Refresh rotates signing material, and expiry/unsubscribe stop delivery.
 - **S3** The real host receives signed alerts and responds to matching attention after reconnect.
 
-- **S4** PR watcher changes and recovered questions use existing metadata-only notifications, preserving private message content and acknowledged-delivery deduplication.
+- **S4** PR observations, retained session changes and native questions use existing metadata-only notifications, preserving private message content and acknowledged-delivery deduplication.
 
 <!-- flow-references -->
 ## Terminology and UI references
@@ -83,7 +83,8 @@ flowchart TD
 
 - [internal/events/events_test.go](../../internal/events/events_test.go) — `func TestSubscriptionVerificationRetryDedupRefreshAndExpiry(`; S1, S2. Signature verification, duplicate creation, entity filtering, stable identity across a 503 retry, expiry and idempotent unsubscribe fixtures; other failure classes and notification disabling are not asserted.
 - [internal/events/events_test.go](../../internal/events/events_test.go) — `func TestCallbackSafetyAndFailedChallenge(`; S1. Callback destination and challenge safety.
-- [internal/events/events_test.go](../../internal/events/events_test.go) — `func TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications(`; S4. PR watcher changes and recovered question attention use existing signed event names with metadata only and no duplicate acknowledged delivery.
+- [internal/events/events_test.go](../../internal/events/events_test.go) — `func TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications(`; S4. PR watcher changes and recovered question attention use existing signed event names with metadata only and no duplicate acknowledged delivery.
+- [internal/factory/review7_test.go](../../internal/factory/review7_test.go) — `func TestSignedWebhookCommitsInboxNotificationWithoutProviderRead(`; S4. A signed webhook persists changed PR source and emits one metadata-only inbox.changed subscription for matching and absent rules, without private body/native turn. Redelivery and same-source new delivery emit no extra notification.
 
 ## Verification and gaps
 

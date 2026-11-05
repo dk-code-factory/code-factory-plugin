@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"codefactory/internal/testutil"
 	"context"
 	"os"
 	"path/filepath"
@@ -25,5 +26,20 @@ func TestStableCodexVersionBoundary(t *testing.T) {
 	}
 	if CompareVersions("0.164.0", "0.161.0") <= 0 || CompareVersions("0.9.0", "0.10.0") >= 0 {
 		t.Fatal("versions compared lexically")
+	}
+}
+
+func TestExperimentalToolSchemaBoundary(t *testing.T) {
+	ctx := context.Background()
+	binary := testutil.FakeCodex(t)
+	if err := ProbeDynamicTools(ctx, binary); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("CF_FAKE_SCHEMA_MISSING", "dynamicTools")
+	if err := ProbeDynamicTools(ctx, binary); err == nil {
+		t.Fatal("unsupported experimental tool schema accepted")
+	}
+	if status := Inspect(ctx, binary); status.Compatible {
+		t.Fatal("diagnostics accepted missing native tool surface")
 	}
 }

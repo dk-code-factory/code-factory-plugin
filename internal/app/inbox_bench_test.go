@@ -21,7 +21,7 @@ func BenchmarkInboxRetainedHistory(b *testing.B) {
 	}
 	defer db.Close()
 	a := &App{Store: db}
-	if err := a.Init(ctx); err != nil {
+	if err := a.InitCore(ctx); err != nil {
 		b.Fatal(err)
 	}
 	c, err := a.Config(ctx)
@@ -61,8 +61,8 @@ func BenchmarkInboxRetainedHistory(b *testing.B) {
 			}
 		}
 		for n := 0; n < 27; n++ {
-			r := domain.Run{ID: fmt.Sprintf("run:%d", n), ItemID: fmt.Sprintf("pilot/repo#%d", n+1), Status: "idle", Skills: []domain.Skill{{Files: map[string]string{"fixture": strings.Repeat("resource ", 66000)}}}}
-			if err := tx.Put("run", r.ID, r); err != nil {
+			r := savedSession{ID: fmt.Sprintf("session:%d", n), ItemID: fmt.Sprintf("pilot/repo#%d", n+1), Execution: "idle"}
+			if err := tx.Put("factory-session", r.ID, r); err != nil {
 				return err
 			}
 		}
@@ -88,13 +88,4 @@ func BenchmarkInboxRetainedHistory(b *testing.B) {
 			}
 		})
 	}
-	b.Run("dashboard-attention", func(b *testing.B) {
-		b.ReportAllocs()
-		for n := 0; n < b.N; n++ {
-			page, err := a.ListAttention(ctx, AttentionInput{Limit: 1})
-			if err != nil || len(page.Requests) != 0 {
-				b.Fatal("unexpected attention from unrelated retained histories", page, err)
-			}
-		}
-	})
 }

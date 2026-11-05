@@ -1,79 +1,34 @@
 ---
 name: code-factory-admin
-description: Configure Code Factory repository monitoring, automatic review policies, Codex plugins, update checks, and review or implementation skills through its admin tools and settings widget.
+description: Configure Code Factory repositories, GitHub event rules, batching, native agent selection and priority policies through confirmed configuration chat proposals.
 ---
 
-Use the connected Code Factory tools; names may have a host namespace. Open
-`open_settings` for the admin widget. These settings belong to the owner's local
-Code Factory installation and its pinned Codex provider.
+Open `open_settings` when the owner requests the configuration view. Use
+`configuration_chat` to inspect effective settings and actual native Codex layers,
+profiles, agent definitions and installed skills. There is no second agent format.
 
-Read current settings, profiles and repository configuration before editing them.
-Add repositories as `owner/repository` with `save_repository`; preserve unrelated
-fields and checkpoints. The signed-in GitHub account needs repository access.
-Notifications are checked at the configured `githubPollSeconds` interval (120
-seconds by default); repository indexes reconcile every 15 minutes. Manual
-`sync_repositories` also respects the shared GitHub budget and cooldown. Review PRs is for
-requests addressed to that user or their teams; it is not all open PRs.
+Ask the configuration agent to propose concrete edits. Every edit needs a readable
+diff and explicit user confirmation. Confirmed edits wait until active turns finish;
+stale proposals must be regenerated against current settings. Never restart active
+work silently. Native writes use layer versions and preserve unrelated keys.
 
-System `autoReview` defaults to false (queue only). A repository's nullable
-`autoReview` inherits when null, forces queue-only when false, and enables automatic
-review when true. System and repository `reviewProfileId` and
-`implementationProfileId` select default pipelines; empty repository values inherit.
-Repository `reviewPrompt` appends trusted owner instructions to the generic review
-prompt. `paused` stops monitoring. Explain the effective policy before saving an
-automatic-review choice. Automatic reviews support read-only profiles with publishing
-set to `ask`, or explicitly selected `danger-full-access` profiles with approvals
-set to `never` and publishing set to `authorized`. These profile choices retain
-native task authority. Migrated review publication is owned by the server and
-requires the separate posting policy or an explicit post request. Automatic review does not
-enable implementation, and selecting a profile does not enable automatic review. Request/head
-claims prevent duplicate launches across polls and restarts.
+Rules select repositories, event types, optional actions/labels/author/draft filters,
+instructions and installed skills. Rules execute in stored order, all matches
+contribute, and no review skill is special. Automatic rules initially target PRs;
+issues retain manually started conversations and issue-to-PR links.
 
-Global `reviewers` is an ordered array of skill bindings (`id`, `kind: skill`,
-`skillId`) or command bindings (`id`, `kind: command`, `argv` including `{handoff}`).
-Repository null inherits; an explicitly empty list blocks before diff capture.
-`reviewRules` stores private review rules with the same repository inheritance.
-Use `import_dk_review_settings` once per global/repository scope when requested;
-Factory values win and unresolved bindings or rule conflicts are reported.
+The global quiet period defaults to 120 seconds; repository overrides can differ.
+Every new matching event resets its session's deadline. Native questions, human
+approvals and explicit interruption hold automatic work. Chat, answers and explicit
+run/resume bypass quiet time. Viewing a PR never does.
 
-Global `autoPostReview` defaults false. Repository and persistent PR overrides are
-nullable; launch preparation accepts an optional override. Precedence is launch →
-PR → repository → global. `save_review_policy` updates the PR override. Omitted
-fields preserve values; null restores inheritance. Explain effective source before
-saving a posting choice. Automatic posting uses COMMENT, inline findings and an
-empty body, and rechecks policy before submission. Missing engine capabilities
-block fresh reviews explicitly; never switch them to legacy model execution.
+Priority precedence is manual override, mapped labels, then the configured priority
+agent/skill. Assessments use reusable read-only repository bookkeeping sessions and
+record only against the supplied item revision and policy context. They never post
+GitHub labels.
 
-For an explicitly requested manual PR review, use the daily Code Factory skill's
-`prepare_pr_review` → `start_run` sequence. The preparation tool
-resolves these configured review defaults automatically and returns a durable
-snapshot with the PR head, selected skills and repository prompt. Queue-only
-monitoring does not prevent an authorized manual review. Do not enable automatic
-review merely to start one requested review.
-
-Use `read_plugin_admin` for cached installed/available plugins, enabled state,
-installed/available versions, marketplace names, and durable operation status.
-Use its query, available, offset and limit arguments to search the catalog.
-Unknown update or authentication readiness is not a successful check.
-
-`manage_codex_plugins` accepts refresh, check-updates, discover-skills,
-add-marketplace, remove-marketplace, install, update and remove. Targets for plugin
-mutations are exact `name@marketplace` selectors; marketplace sources are absolute
-local paths or supported Git sources, with an optional ref. Honor the user's chosen
-plugin and source. Install, update and remove only when that action is requested;
-checking updates does not authorize installing them. Plugin code, hooks and tools
-run under Codex's actual permissions. Do not replace Codex, sign in on the user's
-behalf, embed credentials in a source URL, or change unrelated plugin choices.
-
-Management returns an operation ID. Poll `read_plugin_admin` until it succeeds,
-fails or becomes uncertain; never automatically replay an uncertain action.
-Maintenance is refused during active agent work. On an uncertain response or daemon
-restart, refresh inventory and inspect observed state before considering a retry.
-Local/Git marketplaces expose manifest version comparisons; when the CLI does not
-expose a remote catalog's available version, retain the explicit unknown status.
-
-After installation or discovery, use the returned skills in `save_profile.skills`
-for a review or implementation profile. Preserve its mode, sandbox, approval and
-publishing authority. Prepared launches retain the selected skill bundle; changing
-an installed plugin does not rewrite an existing launch. `pluginCheckMinutes` is 0
-for manual checks or 15–10080 for periodic metadata checks; updates remain explicit.
+For webhook setup, configure the repository's GitHub webhook to the existing public
+base URL plus `/github/webhook`, with a secret provisioned in the daemon's private
+mode-0600 `github-webhook-secret` file. The owner supplies credentials outside chat.
+Signatures and delivery IDs are verified before durable acknowledgement. Polling
+reconciles observable changes; initial synchronization establishes a baseline.

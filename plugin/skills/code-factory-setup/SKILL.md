@@ -5,7 +5,7 @@ description: Connect and verify the Code Factory plugin and its local Linux serv
 
 Start with the MCP connection bundled in this package. Its endpoint is in root
 `mcp.json`; OAuth is discovered from the server. If tools are available, call
-`diagnostics` and `open_settings` and guide configuration in that dedicated view.
+`open_settings` and use `configuration_chat` and guide configuration in that dedicated view.
 Use `open_factory` separately to verify the inbox.
 Do not make the user reenter a working server URL or recreate existing resources.
 
@@ -17,7 +17,7 @@ Never ask for credentials in chat or disable authentication to bypass a failure.
 If the local service needs installation, use authorized local computer access.
 Install the checksummed Linux release with `./code-factory install`, then run
 `code-factory configure-tailscale` and `code-factory doctor`. Reuse GitHub and Codex
-sign-ins and existing data. Setup preserves other Tailscale services. If a host
+sign-ins and native settings. This release uses fresh application data without importing old runs or settings. Setup preserves other Tailscale services. If a host
 requires a registered MCP app before linking a local package, create/reuse the
 private connection for the bundled endpoint, obtain its real ID from the Work UI,
 and run `code-factory link-plugin --app-id <observed-id>`. Never invent an app ID.

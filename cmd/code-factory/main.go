@@ -6,6 +6,7 @@ import (
 	"codefactory/internal/app"
 	"codefactory/internal/buildinfo"
 	"codefactory/internal/events"
+	"codefactory/internal/factory"
 	"codefactory/internal/gateway"
 	"codefactory/internal/providers"
 	"codefactory/internal/setup"
@@ -103,10 +104,7 @@ func run() error {
 		}
 		return setup.InstallRelease(ctx, *dir, *source, *address)
 	}
-	var providerBin string
-	var providerPaths map[string]string
 	if r, err := setup.ReadRuntime(*dir); err == nil {
-		providerBin, providerPaths = r.ProviderBin, r.Paths
 		if err = os.Setenv("PATH", r.Path); err != nil {
 			return err
 		}
@@ -158,7 +156,11 @@ func run() error {
 		}
 		defer lock.Close()
 	}
-	s, e := store.Open(filepath.Join(*dir, "state.db"))
+	stateFile := "state.db"
+	if command == "serve" {
+		stateFile = store.ApplicationFile
+	}
+	s, e := store.Open(filepath.Join(*dir, stateFile))
 	if e != nil {
 		return e
 	}
@@ -224,16 +226,7 @@ func run() error {
 		}
 		return result
 	}
-	if command == "report-publish" {
-		publisher := &app.App{Store: s, Vault: vault, DataDir: *dir, GitHub: providers.NewGitHub()}
-		if e = publisher.Init(ctx); e != nil {
-			return e
-		}
-		if e = publisher.EnableGitHubUsage(ctx); e != nil {
-			return e
-		}
-		return publisher.Reports.PublishReport(ctx, *tunnelID)
-	}
+
 	if command != "serve" {
 		return fmt.Errorf("unknown command %s", command)
 	}
@@ -241,38 +234,46 @@ func run() error {
 	if e != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
 		return fmt.Errorf("listener must use a loopback IP address")
 	}
-	a := &app.App{Store: s, Vault: vault, GitHub: providers.NewCachedGitHub(providers.NewGitHub()), DataDir: *dir}
-	a.Runs = app.NewManager(ctx, a, *binary)
-	a.Runs.ProviderBin = providerBin
-	a.Runs.ProviderPaths = providerPaths
-	if e = a.Init(ctx); e != nil {
-		return e
-	}
-	executable, e := os.Executable()
+	// Connection commands retain their encrypted credentials in state.db. Make
+	// those credentials available only to redaction, never to application reads.
+	connectionStore, e := store.Open(filepath.Join(*dir, "state.db"))
 	if e != nil {
 		return e
 	}
-	a.Reports.PublishCommand = func(ctx context.Context, id string) error {
-		ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
-		defer cancel()
-		cmd := exec.CommandContext(ctx, executable, "report-publish", "--data-dir", *dir, "--id", id)
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("report publication command interrupted; retained intent will be reconciled")
-		}
-		return nil
+	defer connectionStore.Close()
+	connectionVault, e := store.NewVault(connectionStore, *dir)
+	if e != nil {
+		return e
+	}
+	vault.IncludeRedactionsFrom(connectionVault)
+	a := &app.App{Store: s, Vault: vault, GitHub: providers.NewCachedGitHub(providers.NewGitHub()), DataDir: *dir}
+	if e = a.InitCore(ctx); e != nil {
+		return e
 	}
 	if e = a.EnableGitHubUsage(ctx); e != nil {
 		return e
 	}
-	if e = a.Runs.Recover(ctx); e != nil {
+	factoryService := factory.New(ctx, a, *binary)
+	if e = factoryService.Init(ctx); e != nil {
 		return e
 	}
+	defer factoryService.Close()
 	ev := events.New(s, vault)
-	server := transport.New(a, ev)
+	server := transport.NewFactory(a, factoryService, ev)
 	mux := http.NewServeMux()
 	mux.Handle("/mcp", server.Handler(token))
-	mux.Handle("/admin/dependencies", server.DependencyHandler(token))
-	mux.Handle("/admin/dependencies/", server.DependencyHandler(token))
+	mux.Handle("/github/webhook", factoryService.Webhook(func(context.Context) (string, error) {
+		path := filepath.Join(*dir, "github-webhook-secret")
+		info, err := os.Stat(path)
+		if err != nil {
+			return "", err
+		}
+		if info.Mode().Perm()&0077 != 0 {
+			return "", fmt.Errorf("webhook secret must be owner-only")
+		}
+		b, err := os.ReadFile(path)
+		return strings.TrimSpace(string(b)), err
+	}))
 	mux.Handle("/healthz", server.LogAPI("owner", token, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+token {
 			http.Error(w, "Unauthorized", 401)
@@ -282,7 +283,7 @@ func run() error {
 	})))
 	httpServer := &http.Server{Addr: *address, Handler: mux, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	var wg sync.WaitGroup
-	for _, loop := range []func(context.Context){a.SyncLoop, a.AssessmentLoop, a.Reports.Loop, ev.Loop} {
+	for _, loop := range []func(context.Context){a.SyncLoop, factoryService.Loop, ev.Loop} {
 		wg.Add(1)
 		go func(loop func(context.Context)) { defer wg.Done(); loop(ctx) }(loop)
 	}
@@ -294,7 +295,6 @@ func run() error {
 	}()
 	e = httpServer.ListenAndServe()
 	cancel()
-	a.Runs.Close()
 	wg.Wait()
 	if errors.Is(e, http.ErrServerClosed) {
 		return nil

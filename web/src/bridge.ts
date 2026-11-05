@@ -56,21 +56,15 @@ export function connect() {
 // Only explicitly known reads may be repeated. A lost mutation response can
 // already represent accepted work, so Start/Send/answers/saves are never retried.
 const retryableReads = new Set([
+  "factory_state",
+  "factory_item",
+  "factory_events",
+  "session_questions",
+  "session_transcript",
+  "inspect_configuration",
   "open_factory",
   "open_settings",
-  "read_snapshot",
-  "read_ui_state",
-  "watch_ui_changes",
-  "read_changes",
-  "read_item",
-  "read_pr_reviews",
-  "track_work",
-  "list_attention",
-  "read_run",
-  "read_transcript",
-  "list_runs",
-  "get_settings",
-  "read_plugin_admin",
+  "diagnostics",
 ]);
 export async function call<T>(
   name: string,

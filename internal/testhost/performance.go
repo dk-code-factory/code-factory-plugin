@@ -4,6 +4,7 @@ import (
 	"codefactory/internal/app"
 	"codefactory/internal/domain"
 	"codefactory/internal/events"
+	"codefactory/internal/factory"
 	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"codefactory/internal/transport"
@@ -26,6 +27,7 @@ import (
 func servePerformance(ctx context.Context, dir string, port int) error {
 	type fixture struct {
 		app     *app.App
+		factory *factory.Service
 		once    sync.Once
 		handler http.Handler
 		work    sync.Mutex
@@ -81,9 +83,7 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 		gh.BaseURL = provider.URL
 		gh.Token = func(context.Context) (string, error) { return "fixture", nil }
 		a := &app.App{Store: db, Vault: vault, DataDir: filepath.Join(dir, name), GitHub: gh}
-		a.Runs = app.NewManager(ctx, a, binary)
-		defer a.Runs.Close()
-		if err := a.Init(ctx); err != nil {
+		if err := a.InitCore(ctx); err != nil {
 			return err
 		}
 		if name != "empty" {
@@ -116,11 +116,11 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 						}
 					}
 					for n := 0; n < 100; n++ {
-						run := domain.Run{ID: fmt.Sprintf("run-%03d", n), ItemID: fmt.Sprintf("pilot/fixture#%d", n+1), Status: "idle", Created: time.Now().UTC(), Skills: []domain.Skill{{Files: map[string]string{"large": strings.Repeat("private skill", 8000)}}}, SourceSnapshot: &domain.Item{Body: strings.Repeat("source", 8000)}}
-						if err := tx.Put("run", run.ID, run); err != nil {
+						run := factory.Session{ID: fmt.Sprintf("pilot/fixture#%d", n+1), ItemID: fmt.Sprintf("pilot/fixture#%d", n+1), Kind: "item", Repository: "pilot/fixture", Execution: "idle", Pending: []factory.Pending{}, Created: time.Now().UTC()}
+						if err := tx.Put("factory-session", run.ID, run); err != nil {
 							return err
 						}
-						if err := tx.Event("run.output", run.ID, map[string]any{"method": "item/agentMessage/delta", "params": map[string]string{"delta": strings.Repeat("history", 8000)}}); err != nil {
+						if err := tx.Event("session.output", run.ID, map[string]any{"method": "item/agentMessage/delta", "params": map[string]string{"delta": strings.Repeat("history", 8000)}}); err != nil {
 							return err
 						}
 					}
@@ -130,8 +130,24 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 				return err
 			}
 		}
-		f := &fixture{app: a}
-		init := func() { f.handler = transport.New(a, events.New(db, vault)).Handler(strings.Repeat("a", 64)) }
+		factoryService := factory.New(ctx, a, binary)
+		if err := factoryService.Init(ctx); err != nil {
+			return err
+		}
+		defer factoryService.Close()
+		settings := factory.Defaults()
+		settings.Repositories = []factory.Repository{{ID: "pilot/fixture", Checkout: checkout, Base: "main"}}
+		proposal, err := factoryService.Propose(ctx, &settings, nil)
+		if err != nil {
+			return err
+		}
+		if _, err = factoryService.Confirm(ctx, proposal.ID, true); err != nil {
+			return err
+		}
+		f := &fixture{app: a, factory: factoryService}
+		init := func() {
+			f.handler = transport.NewFactory(a, factoryService, events.New(db, vault)).Handler(strings.Repeat("a", 64))
+		}
 		if name != "cold" {
 			f.once.Do(init)
 		}
@@ -158,7 +174,7 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 			return
 		}
 		f.once.Do(func() {
-			f.handler = transport.New(f.app, events.New(f.app.Store, f.app.Vault)).Handler(strings.Repeat("a", 64))
+			f.handler = transport.NewFactory(f.app, f.factory, events.New(f.app.Store, f.app.Vault)).Handler(strings.Repeat("a", 64))
 		})
 		copy := r.Clone(r.Context())
 		copy.URL.Path = "/mcp"
@@ -173,7 +189,10 @@ func servePerformance(ctx context.Context, dir string, port int) error {
 		f.work.Lock()
 		f.pending += 2
 		f.work.Unlock()
-		for _, job := range []func(context.Context) error{f.app.Sync, f.app.AssessNext} {
+		for _, job := range []func(context.Context) error{f.app.Sync, func(ctx context.Context) error {
+			_, err := f.factory.Chat(ctx, "pilot/fixture#1", "Fixture delayed Codex work", nil)
+			return err
+		}} {
 			go func(job func(context.Context) error) { _ = job(ctx); f.work.Lock(); f.pending--; f.work.Unlock() }(job)
 		}
 		w.WriteHeader(http.StatusAccepted)

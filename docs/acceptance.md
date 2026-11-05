@@ -1,5 +1,9 @@
 # Acceptance and verification
 
+The native-session wrapper requires fresh installed-host acceptance. Historical
+observations below describe earlier implementations; they do not verify the new
+session, event-routing or configuration-confirmation surfaces.
+
 ## Development port fixture verification · 2026-10-25
 
 The development source port adds work queues, direct item conversations, retained

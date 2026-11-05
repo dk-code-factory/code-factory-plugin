@@ -60,6 +60,7 @@ func TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions(t *testing.T) {
 			t.Fatal("bulk context or record key changed priority/read state", want)
 		}
 		want.Item.Activity = nil
+		want.Item.Body = ""
 		want.Item.Checks = nil
 		if want.Item.PR != nil {
 			pr := *want.Item.PR
@@ -71,7 +72,7 @@ func TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions(t *testing.T) {
 		}
 	}
 	var retained domain.Item
-	if err := a.Store.Get(ctx, "item", i.ID, &retained); err != nil || len(retained.Activity) != 1 || len(retained.Checks) == 0 || len(retained.PR.Checks) != 1 {
+	if err := a.Store.Get(ctx, "item", i.ID, &retained); err != nil || retained.Body != "summary body" || len(retained.Activity) != 1 || len(retained.Checks) == 0 || len(retained.PR.Checks) != 1 {
 		t.Fatal("summary destroyed source history", err)
 	}
 	linked.Revision = "linked-v2"

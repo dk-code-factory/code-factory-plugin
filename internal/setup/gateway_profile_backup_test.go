@@ -90,7 +90,7 @@ exit 0
 	if err := AtomicJSON(filepath.Join(f.root, "installation.json"), Installation{Current: "old", Runtime: f.runtime}); err != nil {
 		t.Fatal(err)
 	}
-	db, err := sql.Open("sqlite", filepath.Join(data, "state.db"))
+	db, err := sql.Open("sqlite", filepath.Join(data, "factory-v1.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestRollbackRestoresGatewayProfileAndArchivesCurrent(t *testing.T) {
 		t.Run(fmt.Sprintf("legacy-record-%t", legacy), func(t *testing.T) {
 			f := newProfileBackupFixture(t)
 			backup := filepath.Join(f.root, "backups", "before-upgrade.db")
-			if err := BackupDatabase(context.Background(), filepath.Join(f.runtime.DataDir, "state.db"), backup); err != nil {
+			if err := BackupDatabase(context.Background(), filepath.Join(f.runtime.DataDir, "factory-v1.db"), backup); err != nil {
 				t.Fatal(err)
 			}
 			profile, err := backupGatewayProfile(f.runtime.DataDir, backup)

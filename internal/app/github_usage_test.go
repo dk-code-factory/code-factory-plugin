@@ -90,7 +90,7 @@ func TestNotificationReviewHintsAreScopedReadOnlyAndRestartSafe(t *testing.T) {
 	if !failed.Since.Equal(cursor.Since) {
 		t.Fatal("failed notification advanced cursor")
 	}
-	runs, _ := store.List[domain.Run](ctx, a.Store, "run")
+	runs, _ := store.List[savedSession](ctx, a.Store, "factory-session")
 	if len(runs) != 0 {
 		t.Fatal("queue-only notification started work")
 	}
@@ -188,17 +188,5 @@ func TestInvalidAPIBudgetCannotOverwriteSavedPolicy(t *testing.T) {
 	after, _ := a.Config(ctx)
 	if after.GitHubRequestsPerHour != before.GitHubRequestsPerHour || after.GitHubPollSeconds != before.GitHubPollSeconds || after.PolicyVersion != before.PolicyVersion {
 		t.Fatal("rejected limits changed saved policy")
-	}
-}
-
-func TestCachedPRObservationCannotBorrowFreshRepositoryAuthority(t *testing.T) {
-	repo := domain.Repository{LastSync: time.Now()}
-	i := domain.Item{ReviewObservedAt: time.Now().Add(-2 * time.Minute)}
-	if reviewFresh(domain.Defaults(), repo, i) {
-		t.Fatal("old cached PR borrowed a new repository checkpoint")
-	}
-	i.ReviewObservedAt = time.Now()
-	if !reviewFresh(domain.Defaults(), repo, i) {
-		t.Fatal("fresh PR observation was rejected")
 	}
 }

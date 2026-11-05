@@ -6,6 +6,7 @@ import (
 	"codefactory/internal/app"
 	"codefactory/internal/domain"
 	"codefactory/internal/events"
+	"codefactory/internal/factory"
 	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"codefactory/internal/transport"
@@ -64,9 +65,7 @@ func run() error {
 	if e != nil {
 		return e
 	}
-	a.Runs = app.NewManager(ctx, a, binary)
-	defer a.Runs.Close()
-	if e = a.Init(ctx); e != nil {
+	if e = a.InitCore(ctx); e != nil {
 		return e
 	}
 	checkout := filepath.Join(dir, "checkout")
@@ -102,7 +101,21 @@ func run() error {
 	if e = a.Sync(ctx); e != nil {
 		return e
 	}
-	svc := transport.New(a, events.New(s, v))
+	factoryService := factory.New(ctx, a, binary)
+	if e = factoryService.Init(ctx); e != nil {
+		return e
+	}
+	defer factoryService.Close()
+	settings := factory.Defaults()
+	settings.Repositories = []factory.Repository{{ID: repo.ID, Checkout: checkout, Base: "HEAD"}}
+	proposal, err := factoryService.Propose(ctx, &settings, nil)
+	if err != nil {
+		return err
+	}
+	if _, err = factoryService.Confirm(ctx, proposal.ID, true); err != nil {
+		return err
+	}
+	svc := transport.NewFactory(a, factoryService, events.New(s, v))
 	handler := svc.Handler("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	mux := http.NewServeMux()
 	mux.Handle("/mcp", handler)

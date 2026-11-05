@@ -34,14 +34,14 @@
       "name": "Agent run",
       "aliases": [],
       "category": "domain",
-      "definition": "Retained agent work with a task, workspace, conversation and lifecycle status."
+      "definition": "A turn of agent execution within a retained conversation."
     },
     {
       "id": "profile",
       "name": "Work profile",
       "aliases": [],
       "category": "domain",
-      "definition": "Reusable task defaults, execution permissions and publishing authority."
+      "definition": "A named set of native Codex configuration overrides selected for a conversation."
     },
     {
       "id": "skill",
@@ -4862,6 +4862,132 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "The persistent publication override update for a pull request."
+    },
+    {
+      "id": "retained-session",
+      "name": "Retained session",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The canonical conversation for a work item, bound to its selected agent and workspace."
+    },
+    {
+      "id": "event-rule",
+      "name": "Event rule",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A configured selection of repository events, optional filters and ordered instructions or installed skills."
+    },
+    {
+      "id": "normalized-event",
+      "name": "Normalized event",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A durable observation of a source change with stable identity and current item context."
+    },
+    {
+      "id": "event-batch",
+      "name": "Event batch",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An ordered delivery of queued events and all matching actions to one retained conversation."
+    },
+    {
+      "id": "quiet-period",
+      "name": "Quiet period",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The inactivity interval after the latest matching event before automatic delivery becomes eligible."
+    },
+    {
+      "id": "configuration-proposal",
+      "name": "Configuration proposal",
+      "aliases": [],
+      "category": "domain",
+      "definition": "A concrete settings diff awaiting explicit human confirmation against its inspected versions."
+    },
+    {
+      "id": "reported-work-status",
+      "name": "Reported work status",
+      "aliases": [],
+      "category": "domain",
+      "definition": "An explicit agent declaration of working, done or blocked, independent of execution state."
+    },
+    {
+      "id": "execution-state",
+      "name": "Execution state",
+      "aliases": [],
+      "category": "domain",
+      "definition": "The runtime condition of a conversation turn, separate from reported work completion."
+    },
+    {
+      "id": "ui-w-configuration-chat",
+      "name": "W Configuration Chat",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "A widget representing w configuration chat."
+    },
+    {
+      "id": "ui-w-effective-settings",
+      "name": "W Effective Settings",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "A widget representing w effective settings."
+    },
+    {
+      "id": "ui-w-configuration-proposal",
+      "name": "W Configuration Proposal",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "A widget representing w configuration proposal."
+    },
+    {
+      "id": "ui-w-event-batches",
+      "name": "W Event Batches",
+      "aliases": [],
+      "category": "ui-widget",
+      "definition": "A widget representing w event batches."
+    },
+    {
+      "id": "ui-p-configuration",
+      "name": "P Configuration",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "A pane representing p configuration."
+    },
+    {
+      "id": "ui-p-events",
+      "name": "P Events",
+      "aliases": [],
+      "category": "ui-pane",
+      "definition": "A pane representing p events."
+    },
+    {
+      "id": "ui-page-events",
+      "name": "Page Events",
+      "aliases": [],
+      "category": "ui-page",
+      "definition": "A page representing page events."
+    },
+    {
+      "id": "ui-c-configuration-propose",
+      "name": "C Configuration Propose",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "A connection representing c configuration propose."
+    },
+    {
+      "id": "ui-c-configuration-confirm",
+      "name": "C Configuration Confirm",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "A connection representing c configuration confirm."
+    },
+    {
+      "id": "ui-c-event-inspect",
+      "name": "C Event Inspect",
+      "aliases": [],
+      "category": "ui-connection",
+      "definition": "A connection representing c event inspect."
     }
   ]
 }

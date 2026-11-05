@@ -12,6 +12,13 @@ func (v *Vault) Secrets(ctx context.Context, extra []string) []string {
 			out = append(out, secret)
 		}
 	}
+	if v.redactionSource != nil && v.redactionSource != v {
+		for _, name := range []string{"jira", "tunnel-key"} {
+			if secret, e := v.redactionSource.Get(ctx, name); e == nil && secret != "" {
+				out = append(out, secret)
+			}
+		}
+	}
 	return out
 }
 

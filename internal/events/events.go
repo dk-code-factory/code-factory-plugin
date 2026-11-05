@@ -143,7 +143,7 @@ func identity(in SubscribeInput) string {
 	return "sub_" + hex.EncodeToString(h[:16])
 }
 func validate(in SubscribeInput) error {
-	if in.Name != "inbox.changed" && in.Name != "attention.required" && in.Name != "run.state" {
+	if in.Name != "inbox.changed" && in.Name != "attention.required" && in.Name != "session.changed" {
 		return fmt.Errorf("unknown event")
 	}
 	if in.Delivery.Mode != "webhook" {
@@ -281,8 +281,8 @@ func (s *Service) Unsubscribe(ctx context.Context, in SubscribeInput) error {
 }
 func Definitions() []map[string]any {
 	out := []map[string]any{}
-	for _, v := range []struct{ name, desc string }{{"inbox.changed", "An issue or PR changed in the local inbox."}, {"attention.required", "An agent needs an answer or approval."}, {"run.state", "An agent changed execution state."}} {
-		out = append(out, map[string]any{"name": v.name, "description": v.desc, "delivery": []string{"webhook"}, "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"entity": map[string]string{"type": "string", "description": "Optional exact item or run ID"}}, "additionalProperties": false}, "payloadSchema": map[string]any{"type": "object", "properties": map[string]any{"entity": map[string]string{"type": "string"}, "kind": map[string]string{"type": "string"}}, "required": []string{"entity", "kind"}, "additionalProperties": false}})
+	for _, v := range []struct{ name, desc string }{{"inbox.changed", "An issue or PR changed in the local inbox."}, {"attention.required", "An agent needs an answer or approval."}, {"session.changed", "A retained conversation changed execution, reported status or queued event count."}} {
+		out = append(out, map[string]any{"name": v.name, "description": v.desc, "delivery": []string{"webhook"}, "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"entity": map[string]string{"type": "string", "description": "Optional exact item or session ID"}}, "additionalProperties": false}, "payloadSchema": map[string]any{"type": "object", "properties": map[string]any{"entity": map[string]string{"type": "string"}, "kind": map[string]string{"type": "string"}}, "required": []string{"entity", "kind"}, "additionalProperties": false}})
 	}
 	return out
 }

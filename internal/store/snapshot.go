@@ -72,6 +72,18 @@ func (s *Store) signal() {
 	}
 }
 func (t *Tx) invalidate(kind, id string) {
+	// Expose only metadata invalidations, never private entity contents. Native
+	// output uses the separate transcript journal and does not advance this cursor.
+	switch kind {
+	case "factory-session":
+		kind = "session"
+	case "factory-question":
+		kind = "attention"
+	case "factory-proposal", "factory-settings":
+		kind = "configuration"
+	case "factory-batch":
+		kind = "delivery"
+	}
 	if kind == "observation" {
 		// Observation storage keys include a phase; public invalidations name
 		// the owning item so selected views can match affected IDs.
@@ -79,7 +91,7 @@ func (t *Tx) invalidate(kind, id string) {
 	}
 	// Private buckets are never disclosed through the UI invalidation channel.
 	switch kind {
-	case "item", "user", "assessment", "ticket", "relationship", "linked-pr", "identity", "repository", "profile", "config", "run", "transcript", "attention", "question-recovery", "skill", "pr-reviews", "pr-review-policy", "observation", "issue-report", "plugin-inventory", "plugin-operation", "github-usage", "github-notifications":
+	case "session", "configuration", "delivery", "item", "user", "assessment", "ticket", "relationship", "linked-pr", "identity", "repository", "profile", "config", "run", "transcript", "attention", "question-recovery", "skill", "pr-reviews", "pr-review-policy", "observation", "issue-report", "plugin-inventory", "plugin-operation", "github-usage", "github-notifications":
 	default:
 		return
 	}
