@@ -522,7 +522,6 @@ function Factory() {
                   >
                     <strong>{entry.item.title}</strong>
                     <span>
-                      {entry.item.id} ·{" "}
                       {entry.priority === null
                         ? "Unassessed"
                         : `P${entry.priority}`}{" "}
@@ -540,6 +539,27 @@ function Factory() {
                       </span>
                     )}
                   </button>
+                  {entry.item.url ? (
+                    <a
+                      href={entry.item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Open ${entry.item.id} on GitHub`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void openLink(entry.item.url)
+                          .then((result) => {
+                            if (result.isError)
+                              setError("The host could not open GitHub.");
+                          })
+                          .catch((e) => setError(String(e)));
+                      }}
+                    >
+                      {entry.item.id}
+                    </a>
+                  ) : (
+                    <span>{entry.item.id}</span>
+                  )}
                   {entry.linkedPullRequests?.map((p) => (
                     <p key={p.id}>
                       {p.title || p.id} · {p.state}

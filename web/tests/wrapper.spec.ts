@@ -2,6 +2,36 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { host, initial } from "./wrapper-fixtures";
 
+test("inbox source links open GitHub without selecting or reading an item", async ({
+  page,
+}) => {
+  const { ui, calls, openedLinks, state } = await host(page);
+  await ui.getByRole("link", { name: "Open o/r#1 on GitHub" }).click();
+  await expect
+    .poll(() => openedLinks)
+    .toEqual(["https://github.com/o/r/issues/1"]);
+  await expect(ui.getByRole("button", { name: /Fix reconnect/ })).toBeVisible();
+  expect(state.inbox[0].unread).toBe(true);
+  expect(
+    calls.some((c) =>
+      [
+        "factory_item",
+        "user_action",
+        "session_chat",
+        "session_control",
+      ].includes(c.name),
+    ),
+  ).toBe(false);
+  await ui.getByRole("button", { name: "My PRs", exact: true }).click();
+  await ui.getByRole("link", { name: "Open o/r#2 on GitHub" }).click();
+  await expect.poll(() => openedLinks).toHaveLength(2);
+  expect(openedLinks[1]).toBe("https://github.com/o/r/pull/2");
+  expect(state.inbox[1].unread).toBe(true);
+  expect(
+    calls.some((c) => ["factory_item", "user_action"].includes(c.name)),
+  ).toBe(false);
+});
+
 test("opening an issue or PR does not create or flush a session", async ({
   page,
 }) => {

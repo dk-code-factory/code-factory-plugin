@@ -114,6 +114,67 @@ type pollSnapshots struct {
 	items map[string]domain.Item
 }
 
+func TestBusyWebhookPageDoesNotStarveIndependentDelivery(t *testing.T) {
+	s, rpc, clock := fixture(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	handler := s.Webhook(func(context.Context) (string, error) { return "fixture-secret", nil })
+	for n := 0; n < 66; n++ {
+		number := 1
+		if n >= 64 {
+			number = n - 62
+		}
+		body := bytes(map[string]any{"repository": map[string]string{"full_name": "o/r"}, "action": "synchronize", "pull_request": map[string]any{"number": number, "state": "open", "head": map[string]string{"sha": fmt.Sprintf("new-%d", number)}}})
+		req := httptest.NewRequest("POST", "/github", bytespkg(body))
+		req.Header.Set("X-GitHub-Delivery", fmt.Sprintf("delivery-%03d", n))
+		req.Header.Set("X-GitHub-Event", "pull_request")
+		mac := hmac.New(sha256.New, []byte("fixture-secret"))
+		_, _ = mac.Write(body)
+		req.Header.Set("X-Hub-Signature-256", "sha256="+hex.EncodeToString(mac.Sum(nil)))
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != 202 {
+			t.Fatal("signed delivery rejected", n, w.Code, w.Body.String())
+		}
+		*clock = clock.Add(time.Second)
+	}
+	release, ok := s.tryLockSession("o/r#1")
+	if !ok {
+		t.Fatal("could not hold busy session")
+	}
+	unblock := sync.OnceFunc(release)
+	defer unblock()
+	for poll := 0; poll < 2; poll++ {
+		must(t, s.Poll(ctx))
+		for n := 64; n < 66; n++ {
+			var d delivery
+			must(t, s.Store.Get(ctx, "factory-delivery", fmt.Sprintf("delivery-%03d", n), &d))
+			if d.State != "processed" {
+				t.Fatal("independent delivery starved behind busy page", n, d)
+			}
+			v, e := s.Session(ctx, fmt.Sprintf("o/r#%d", n-62))
+			must(t, e)
+			if len(v.Pending) == 0 || !v.Due.Equal(clock.Add(120*time.Second)) {
+				t.Fatal("independent event/quiet deadline lost", v)
+			}
+		}
+		for n := 0; n < 64; n++ {
+			var d delivery
+			must(t, s.Store.Get(ctx, "factory-delivery", fmt.Sprintf("delivery-%03d", n), &d))
+			if d.State != "pending" || d.Error != "" || !d.RetryAt.IsZero() {
+				t.Fatal("contention changed retained delivery", n, d)
+			}
+		}
+	}
+	unblock()
+	must(t, s.Poll(ctx))
+	var d delivery
+	must(t, s.Store.Get(ctx, "factory-delivery", "delivery-063", &d))
+	if d.State != "processed" || len(rpc.inputs) != 0 {
+		t.Fatal("deferred delivery lost or polling launched work", d, len(rpc.inputs))
+	}
+}
+
 func (g *pollSnapshots) ItemDetail(_ context.Context, i domain.Item) (domain.Item, error) {
 	v, ok := g.items[i.ID]
 	if !ok {

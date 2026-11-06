@@ -21,7 +21,10 @@ func NewFactory(a *app.App, f *factory.Service, ev *events.Service) *Server {
 	s.MCP = m
 	uri := registerUIResource(m, web.HTML)
 	settingsURI := registerSettingsUIResource(m, web.SettingsHTML())
-	state := func(ctx context.Context, in factoryStateInput) (any, error) { return factoryState(ctx, a, f, in) }
+	cache := &factoryInboxCache{}
+	state := func(ctx context.Context, in factoryStateInput) (any, error) {
+		return factoryState(ctx, a, f, in, cache)
+	}
 	bind(m, uri, "open_factory", "Open the GitHub inbox and retained sessions.", false, true, state)
 	bind(m, settingsURI, "open_settings", "Open persistent configuration chat and effective settings.", false, true, func(ctx context.Context, _ Empty) (any, error) {
 		return state(ctx, factoryStateInput{View: "configuration"})

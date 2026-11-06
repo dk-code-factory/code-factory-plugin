@@ -8,9 +8,9 @@
   },
   "review": {
     "kind": "structure",
-    "description": "Contributor S1\u2013S5 and pinned historical adoption base/list remain unchanged. Registry ownership and generated references now point to current native wrapper contracts and retired feature deletions instead of missing pipeline files. Corrected identical real-provider opt-in wording in this guide without changing reconciliation rules: the retained target checks installed handshake/account/skills and makes no model turn.",
-    "implementation": "Reviewed original/current mappings and exact schema/render/runner behavior. No reconciliation runner logic was weakened or receipt edited. New native code/tests have their own behavior mappings and retired contracts select related current fixture suites. Foundation dependency ownership remains glossary then UI then flows.",
-    "tests": "Ran the existing 251 specification tests, including offline copied-client Go-cache regression and dependency/receipt freshness assertions. Updated native sources remain standard-library-only at that copied boundary. Full reviewed reconciliation executes the current mapped fixture suites before writing any success record."
+    "description": "Contributor S1\u2013S5 and pinned historical adoption base/list remain unchanged. Registry ownership and generated references now point to current native wrapper contracts and retired feature deletions instead of missing pipeline files. Corrected identical real-provider opt-in wording in this guide without changing reconciliation rules: the retained target checks installed handshake/account/skills and makes no model turn. Current incremental review: Incremental flow-maintain-flow-contracts review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract.",
+    "implementation": "Reviewed original/current mappings and exact schema/render/runner behavior. No reconciliation runner logic was weakened or receipt edited. New native code/tests have their own behavior mappings and retired contracts select related current fixture suites. Foundation dependency ownership remains glossary then UI then flows. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection.",
+    "tests": "Ran the existing 251 specification tests, including offline copied-client Go-cache regression and dependency/receipt freshness assertions. Updated native sources remain standard-library-only at that copied boundary. Full reviewed reconciliation executes the current mapped fixture suites before writing any success record. Current incremental review: Retain the subject-specific assertions documented above for flow-maintain-flow-contracts. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.71
+      "seconds": 34.791
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 284.622
+      "seconds": 287.062
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.654
+      "seconds": 4.695
     }
   ],
   "dependencies": {

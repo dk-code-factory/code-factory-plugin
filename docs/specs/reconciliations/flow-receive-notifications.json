@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-receive-notifications",
   "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
-  "fingerprint": "1babe3019c781a51d953909bf00e79bc5b12f6022476cffbe732131017fd3929",
+  "fingerprint": "e40ced6571d60e56ec9ee3b71e0ffd4cd7efd9a57a6d7cc08b26348e8784ea0f",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S1\u2013S4 retain verified signed callback subscriptions and metadata-only inbox/attention notifications while replacing retired run.state discovery with session.changed. Existing retry/expiry/rotation semantics remain unchanged. C7 S4 metadata-only source alerts include changed signed webhook observations independent of matching agent rules; duplicate/no-change deliveries do not repeat alert.",
-    "implementation": "Read event Definitions/validate/Tick and new factory session/attention event emission. Public payloads retain only entity/kind; private summaries/questions never enter callback bodies. Native questions replace recovered textual-question notification sources. Read processDelivery source update and inbox.changed in the same transaction; no source body enters the notification payload.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry, TestCallbackSafetyAndFailedChallenge and updated TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications. The latter checks inbox, native attention and session callbacks once each and excludes private text. Real Work callback acceptance stays an open gap. Read actual signed handler\u2192Poll\u2192events.Tick subscriber test with matching and nonmatching rules, committed currenthead/body, one alert then same-ID and new-ID/unchanged-source silence, no privatebody or native turn. This is fixture webhook delivery, not installed-host acceptance."
+    "description": "S1\u2013S4 retain verified signed callback subscriptions and metadata-only inbox/attention notifications while replacing retired run.state discovery with session.changed. Existing retry/expiry/rotation semantics remain unchanged. C7 S4 metadata-only source alerts include changed signed webhook observations independent of matching agent rules; duplicate/no-change deliveries do not repeat alert. Current incremental review: Incremental flow-receive-notifications review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract.",
+    "implementation": "Read event Definitions/validate/Tick and new factory session/attention event emission. Public payloads retain only entity/kind; private summaries/questions never enter callback bodies. Native questions replace recovered textual-question notification sources. Read processDelivery source update and inbox.changed in the same transaction; no source body enters the notification payload. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry, TestCallbackSafetyAndFailedChallenge and updated TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications. The latter checks inbox, native attention and session callbacks once each and excludes private text. Real Work callback acceptance stays an open gap. Read actual signed handler\u2192Poll\u2192events.Tick subscriber test with matching and nonmatching rules, committed currenthead/body, one alert then same-ID and new-ID/unchanged-source silence, no privatebody or native turn. This is fixture webhook delivery, not installed-host acceptance. Current incremental review: Retain the subject-specific assertions documented above for flow-receive-notifications. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 53.048
+      "seconds": 53.399
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.71
+      "seconds": 34.791
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 284.622
+      "seconds": 287.062
     },
     {
       "command": [
@@ -60,11 +60,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.654
+      "seconds": 4.695
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "a7be971835228a1d44b769f6afe5cb6a86dfaafc9d9177a6f844e5d5c48da62b",
+    "flow:receive-notifications": "67ae6b0540b879a8a9d1c2d80645f3646237c3171f7c8284e698b114633d3163",
     "term:attention-request": "44763a71f94d586a37ce694e5417e86a0d19046d9e46dea395d1e4bc142601a0",
     "term:coverage-gap": "b6c01eac139642dd99d8128c27f13fd063467bacc3274d14a81b02894c133ef8",
     "term:host": "51996b5788cbb112feb9f8c0177f8c2fb6a52386d84f37cc868b48080c103c5a",

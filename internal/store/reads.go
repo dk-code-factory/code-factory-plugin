@@ -94,10 +94,16 @@ func (s *Store) ActiveSession(ctx context.Context) (bool, error) {
 // DueRecords excludes retained completed payloads in SQLite. The indexed state
 // predicate and bounded due page keep idle reconciliation independent of history.
 func DueRecords[T any](ctx context.Context, s *Store, kind string, at time.Time, limit int) ([]T, error) {
-	if limit < 1 || limit > 200 {
+	return DueRecordsPage[T](ctx, s, kind, at, limit, 0)
+}
+
+// DueRecordsPage lets an observer pass pending rows held by busy conversations.
+// Its offset counts only rows that remain due after earlier pages are processed.
+func DueRecordsPage[T any](ctx context.Context, s *Store, kind string, at time.Time, limit, offset int) ([]T, error) {
+	if limit < 1 || limit > 200 || offset < 0 {
 		return nil, fmt.Errorf("invalid due-record page size")
 	}
-	rows, err := s.reader().QueryContext(ctx, `SELECT data FROM entities WHERE kind=? AND json_extract(data,'$.state')='pending' AND (COALESCE(json_extract(data,'$.retryAt'),'')='' OR julianday(json_extract(data,'$.retryAt'))<=julianday(?)) ORDER BY julianday(json_extract(data,'$.at')),id LIMIT ?`, kind, at.UTC().Format(time.RFC3339Nano), limit)
+	rows, err := s.reader().QueryContext(ctx, `SELECT data FROM entities WHERE kind=? AND json_extract(data,'$.state')='pending' AND (COALESCE(json_extract(data,'$.retryAt'),'')='' OR julianday(json_extract(data,'$.retryAt'))<=julianday(?)) ORDER BY julianday(json_extract(data,'$.at')),id LIMIT ? OFFSET ?`, kind, at.UTC().Format(time.RFC3339Nano), limit, offset)
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 	"codefactory/internal/factory"
 	"codefactory/internal/store"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -361,6 +362,50 @@ func TestFactoryStateVersionSkipsIdleProjectionAndTracksMetadata(t *testing.T) {
 	idle, failed = f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": version})
 	if failed || idle["unchanged"] != true {
 		t.Fatal("transcript forced full inbox rebuild", idle)
+	}
+}
+
+func TestFactoryStateReusesInboxAcrossQueriesAndRefreshesAfterMutation(t *testing.T) {
+	f := newTrackingFixture(t)
+	i := domain.Item{ID: "o/r#1", Kind: "issue", State: "open", Title: "Original", Revision: "v1"}
+	if err := f.a.Store.Put(f.ctx, "item", i.ID, i, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.a.Store.Put(f.ctx, "user", i.ID, domain.UserState{ID: i.ID}, ""); err != nil {
+		t.Fatal(err)
+	}
+	_, failed := f.call(t, "factory_state", map[string]any{"view": "issues"})
+	if failed {
+		t.Fatal("could not warm projection")
+	}
+	// Bypass invalidation only to install a sentinel: any repeated full inbox
+	// decode now fails, while filtering/paging a retained projection still works.
+	db, err := sql.Open("sqlite", filepath.Join(f.a.DataDir, "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if _, err = db.ExecContext(f.ctx, `UPDATE entities SET data=json_set(data,'$.title',json('{"invalid":"projection reread"}')) WHERE kind='item' AND id=?`, i.ID); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range []map[string]any{
+		{"view": "issues", "filter": "all", "offset": 1},
+		{"view": "issues", "search": "Original"},
+		{"view": "working"},
+		{"view": "conversation", "itemId": i.ID},
+	} {
+		page, failed := f.call(t, "factory_state", args)
+		if failed {
+			t.Fatal("query change rebuilt unchanged inbox", args, page)
+		}
+	}
+	i.Title, i.Revision = "Updated", "v2"
+	if err = f.a.Store.Put(f.ctx, "item", i.ID, i, ""); err != nil {
+		t.Fatal(err)
+	}
+	page, failed := f.call(t, "factory_state", map[string]any{"view": "issues"})
+	if failed || page["inbox"].([]any)[0].(map[string]any)["item"].(map[string]any)["title"] != "Updated" {
+		t.Fatal("source mutation did not refresh projection", page)
 	}
 }
 

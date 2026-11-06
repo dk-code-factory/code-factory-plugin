@@ -138,23 +138,29 @@ func observations(item domain.Item) []Event {
 // Poll reads saved provider observations. Initial import establishes a baseline;
 // later newly discovered PRs produce observable current state, never past events.
 func (s *Service) Poll(ctx context.Context) error {
-	ds, err := store.DueRecords[delivery](ctx, s.Store, "factory-delivery", s.Now(), 64)
-	if err != nil {
-		return err
-	}
-	slices.SortFunc(ds, func(a, b delivery) int { return a.At.Compare(b.At) })
-	for _, d := range ds {
-		if d.State == "pending" && !s.Now().Before(d.RetryAt) {
-			if err = s.processDelivery(ctx, d); err != nil {
-				if errors.Is(err, errObservationBusy) {
-					continue
-				}
-				d.Error = err.Error()
-				d.RetryAt = s.Now().Add(time.Minute)
-				if e := s.Store.Put(ctx, "factory-delivery", d.ID, d, ""); e != nil {
-					return e
+	at, offset := s.Now(), 0
+	for {
+		ds, err := store.DueRecordsPage[delivery](ctx, s.Store, "factory-delivery", at, 64, offset)
+		if err != nil {
+			return err
+		}
+		for _, d := range ds {
+			if d.State == "pending" && !s.Now().Before(d.RetryAt) {
+				if err = s.processDelivery(ctx, d); err != nil {
+					if errors.Is(err, errObservationBusy) {
+						offset++
+						continue
+					}
+					d.Error = err.Error()
+					d.RetryAt = s.Now().Add(time.Minute)
+					if e := s.Store.Put(ctx, "factory-delivery", d.ID, d, ""); e != nil {
+						return e
+					}
 				}
 			}
+		}
+		if len(ds) < 64 {
+			break
 		}
 	}
 	items, err := store.ListWithout[domain.Item](ctx, s.Store, "item", "$.body", "$.activity", "$.checks", "$.pr.checks")

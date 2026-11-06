@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -50,7 +51,29 @@ func factoryDetailVersion(revision string, links []domain.Relationship) string {
 	return fmt.Sprintf("%x", sha256.Sum256(data))
 }
 
-func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factoryStateInput) (any, error) {
+type factoryInboxCache struct {
+	mu      sync.Mutex
+	valid   bool
+	version int64
+	entries []domain.InboxEntry
+}
+
+func (c *factoryInboxCache) read(ctx context.Context, a *app.App, version int64) ([]domain.InboxEntry, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.valid && c.version == version {
+		return c.entries, nil
+	}
+	entries, err := a.InboxSummaries(ctx, "all")
+	if err != nil {
+		return nil, err
+	}
+	// Callers only read these entries and copy rows into their own response page.
+	c.entries, c.version, c.valid = entries, version, true
+	return entries, nil
+}
+
+func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factoryStateInput, cache *factoryInboxCache) (any, error) {
 	if in.View == "" {
 		in.View = "issues"
 	}
@@ -88,7 +111,7 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 		visible["configuration"] = true
 	}
 	if in.View == "issues" || in.View == "working" || in.View == "mine" || in.View == "review" {
-		entries, err := a.InboxSummaries(ctx, "all")
+		entries, err := cache.read(ctx, a, version)
 		if err != nil {
 			return nil, err
 		}
@@ -146,7 +169,7 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 	}
 	result := map[string]any{"version": version, "inbox": inbox, "inboxTotal": total, "offset": in.Offset, "limit": in.Limit, "sessions": selected, "questions": questions}
 	if in.View == "conversation" && in.ItemID != "" {
-		entries, e := a.InboxSummaries(ctx, "all")
+		entries, e := cache.read(ctx, a, version)
 		if e != nil {
 			return nil, e
 		}
