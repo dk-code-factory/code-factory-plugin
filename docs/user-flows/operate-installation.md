@@ -11,7 +11,7 @@ The owner has a local installation and, for a release change, a validated packag
 ## Main flow
 
 1. Inspect health and distinguish verified, failed and unverified checks.
-2. Upgrade to a validated release after preserving the active factory-v1.db snapshot.
+2. Upgrade to a validated release after preserving the active factory-v1.db snapshot or recording its prior absence.
 3. If necessary, explicitly roll back using the retained compatible snapshot.
 4. Uninstall application services and launchers while retaining application data and connection mapping.
 5. Configure native profiles and agents through confirmed configuration proposals; active turns finish before changes apply.
@@ -19,6 +19,8 @@ The owner has a local installation and, for a release change, a validated packag
 ## Alternatives and recovery
 
 Invalid packages or occupied ports fail without replacing a healthy installation. Failed upgrades attempt automatic recovery. If interruption occurs after a release is activated but before the change is finalized, explicit rollback can restore the retained compatible snapshot. Rollback preserves newer state in an archive. Shared network routes and login policy are preserved. Browser inspection uses an explicitly owner-approved attachment mode. A dedicated persistent pilot profile requires its own initial manual sign-in without copying authentication; inspection pauses during that sign-in. Local debugger readiness alone does not establish application or host acceptance. Upgrading changed embedded UI content also changes its advertised resource identity; hosts may still require a metadata refresh or fresh view. Verify the actual rendered revision rather than inferring it from healthy service or local resource reads. Operator evidence is version-bound and never inferred from fixture success.
+
+The first legacy-to-wrapper cutover preserves the legacy database without importing it. Recovery restores the prior absence of wrapper state before starting the previous binary. Explicit rollback archives newly created wrapper state before restoring that absence. A missing recorded database snapshot fails before stopping services.
 
 The owner can inspect private rotating diagnostics for incoming MCP and owner API calls, with UTC start time, API name, bounded safe parameters, transport status and server processing duration. The duration does not measure client latency or background agent completion. Logs survive restart, rotate within fixed bounds and never broaden request authority. Rejected calls are recorded; unsafe paths and write failures produce a generic warning while preserving API behavior. Existing earlier calls are not reconstructed.
 
@@ -54,6 +56,7 @@ flowchart TD
     N11["Record API name, safe parameters, transport status and server processing time #40;S4#41;"]
     N12(["Retain private bounded logs with secret values redacted"])
     N13(["Warn once if logging is unavailable#59; preserve the API result without replay"])
+    N14(["Retain running services and report unavailable recorded snapshot"])
     N0 -->|"upgrade"| N1
     N1 -->|"upgrade returns failure"| N2
     N2 -->|"recovered"| N0
@@ -73,6 +76,7 @@ flowchart TD
     N0 -->|"incoming MCP or private owner API call"| N11
     N11 -->|"safe bounded record appended#59; rotate older entries"| N12
     N11 -->|"unsafe path or log write failure"| N13
+    N3 -->|"recorded database or transport snapshot unavailable"| N14
 ```
 
 ## Implementation references
@@ -141,6 +145,8 @@ flowchart TD
 - [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogRotationConcurrencyAndFailurePreserveAPI(`; S4. Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response.
 - [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogBoundsMalformedBodiesAndPreservesPanic(`; S4. Malformed/oversized data and panic text never enter records; actual body consumption and panic propagation are preserved with bounded log records.
 - [internal/factory/service_test.go](../../internal/factory/service_test.go) — `func TestConfigurationConfirmationStalenessAndSafeBoundary(`; S5. Explicit confirmation rejects stale app proposals and waits until active turns finish.
+- [internal/setup/gateway_profile_backup_test.go](../../internal/setup/gateway_profile_backup_test.go) — `func TestLegacyCutoverRestoresDatabaseAbsenceDuringRecoveryAndRollback(`; S1, S2. An actual failed install from legacy-only state records wrapper-database absence, removes partial new state, restores the old release/profile and preserves legacy database/credentials. Explicit rollback from that persisted record archives new wrapper data, removes wrapper files and clears the consumed absence marker.
+- [internal/setup/gateway_profile_backup_test.go](../../internal/setup/gateway_profile_backup_test.go) — `func TestRollbackMissingDatabaseSnapshotFailsBeforeStoppingServices(`; S2. A missing recorded database snapshot reports its specific error before any systemctl invocation.
 
 ## Verification and gaps
 

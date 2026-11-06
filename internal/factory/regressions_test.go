@@ -860,10 +860,14 @@ func TestCachedDetailCannotReverseNewerWebhookObservation(t *testing.T) {
 	must(t, s.Store.Put(ctx, "factory-delivery", d.ID, d, ""))
 	must(t, s.processDelivery(ctx, d))
 	must(t, s.Store.Put(ctx, "factory-baseline", "o/r", map[string]bool{"ready": true}, ""))
-	s.App.GitHub = &fixtureGitHub{items: map[int]domain.Item{1: stale}}
+	source := &cachedDetailFixture{item: stale}
+	s.App.GitHub = source
 	// This fetch starts after the webhook but returns a cached, earlier observation.
-	*clock = clock.Add(time.Minute)
+	*clock = clock.Add(providers.GitHubDetailTTL)
 	must(t, s.refreshDetails(ctx, c))
+	if source.calls != 1 {
+		t.Fatal("stale snapshot was not actually read", source.calls)
+	}
 	var latest domain.Item
 	must(t, s.Store.Get(ctx, "item", item.ID, &latest))
 	if !latest.ReviewThreads[0].Resolved || !latest.ReviewObservedAt.Equal(d.At) {
@@ -877,11 +881,11 @@ func TestCachedDetailCannotReverseNewerWebhookObservation(t *testing.T) {
 	fresh := stale
 	fresh.ReviewObservedAt = s.Now()
 	fresh.DetailSyncedAt = s.Now()
-	s.App.GitHub = &fixtureGitHub{items: map[int]domain.Item{1: fresh}}
+	source.item = fresh
 	must(t, s.refreshDetails(ctx, c))
 	must(t, s.Store.Get(ctx, "item", item.ID, &latest))
 	v = get(t, s)
-	if latest.ReviewThreads[0].Resolved || len(v.Pending) != 2 || v.Pending[1].Event.Action != "unresolved" {
+	if source.calls != 2 || latest.ReviewThreads[0].Resolved || len(v.Pending) != 2 || v.Pending[1].Event.Action != "unresolved" {
 		t.Fatal("fresh observable transition suppressed")
 	}
 }

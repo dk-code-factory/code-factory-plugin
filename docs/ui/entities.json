@@ -775,7 +775,8 @@
         "POLL-PEER-DISCOVERY",
         "WORKTREE-INTENT-RECOVERY",
         "WORKTREE-RECOVERY-BOUNDARY",
-        "WEBHOOK-BUSY-PAGE"
+        "WEBHOOK-BUSY-PAGE",
+        "BASELINE-PEERS"
       ],
       "gaps": [
         {
@@ -1358,7 +1359,11 @@
         "ARCHIVE-PAGE-BOUND",
         "WEBHOOK-INBOX-NOTIFY",
         "POLL-PEER-DISCOVERY",
-        "WEBHOOK-BUSY-PAGE"
+        "WEBHOOK-BUSY-PAGE",
+        "DISCUSSION-TOMBSTONE",
+        "DISCUSSION-CONTEXT-TIE",
+        "BASELINE-PEERS",
+        "DETAIL-CACHE-FRESH"
       ],
       "gaps": [],
       "suites": [
@@ -5263,7 +5268,7 @@
       "id": "WRAP-ARCHIVE-ORDER",
       "path": "web/tests/wrapper.spec.ts",
       "anchor": "archive refresh preserves accepted data on failure and rejects stale queries",
-      "assertion": "Failed same-query refresh retains its accepted page and selected record; a failed changed kind displays no stale page or detail. A delayed superseded delivery query cannot replace the subsequently refreshed batch page, and reopening Events rereads the default page."
+      "assertion": "Failed same-query refresh retains its accepted page and selected record; a failed changed kind displays no stale page or detail. The exact superseded delivery invocation completes SDK decoding and its React continuation barrier before asserting that the accepted batch page remains intact, without any repairing refresh. Reopening Events rereads the default page."
     },
     {
       "id": "RETAINED-REFRESH-FRESH",
@@ -5360,6 +5365,30 @@
       "path": "internal/transport/factory_test.go",
       "anchor": "func TestFactoryStateReusesInboxAcrossQueriesAndRefreshesAfterMutation(",
       "assertion": "After warming the derived inbox, a raw SQL sentinel makes any repeated full decode fail. Changed filter/page/search/tab and conversation queries still succeed from the retained projection; an ordinary source mutation invalidates the cache and returns the updated title."
+    },
+    {
+      "id": "DISCUSSION-TOMBSTONE",
+      "path": "internal/factory/review7_test.go",
+      "anchor": "func TestDeletedDiscussionCannotBeResurrectedByDelayedDeliveries(",
+      "assertion": "For issue and inline comments, deletion followed by distinct delayed created/edited deliveries retains absent source activity, the deletion observation and one pending action; an independent new comment ID still authorizes once."
+    },
+    {
+      "id": "DISCUSSION-CONTEXT-TIE",
+      "path": "internal/factory/review7_test.go",
+      "anchor": "func TestEqualTimestampDiscussionRetainsCurrentPRContext(",
+      "assertion": "Inline-comment, review and thread webhooks with tied PR timestamps retain the saved current head/title/body/labels and route new discussion with that current context rather than the older enclosing snapshot."
+    },
+    {
+      "id": "BASELINE-PEERS",
+      "path": "internal/factory/review7_test.go",
+      "anchor": "func TestInitialBaselineSkipsBusyItemAndObservesIndependentPeer(",
+      "assertion": "With pending baseline [A,B] and A locked, B establishes a quiet baseline, then routes a saved head change and a later provider-only discussion with exact quiet deadlines before A releases. Release completes A without reconstructing historical work or starting native turns."
+    },
+    {
+      "id": "DETAIL-CACHE-FRESH",
+      "path": "internal/factory/review7_test.go",
+      "anchor": "func TestDetailRefreshRetainsCachedFreshnessWithoutRepeatedImports(",
+      "assertion": "After an actual CachedGitHub detail load, controlled passes at 31 seconds, one minute, just before the provider detail TTL and twice after the service freshness deadline preserve the UI version and one underlying fetch. An identical still-cached observation skips item import while event reconciliation remains available."
     }
   ],
   "source_map": [

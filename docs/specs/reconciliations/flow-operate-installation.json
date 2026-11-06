@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
-  "fingerprint": "4b5eb767783dbae58e723bcbbe23aa3f6eae357a677c633670d20b1b69207ea2",
+  "fingerprint": "f9af13a4c5b9df082157cc69951a7eab1a450f378b1238d9199c01d5ad94a109",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S1\u2013S5 preserve installation, rollback archives, connection consent, shared routes and private diagnostics while cutting application snapshots over to factory-v1.db. S5 replaces retired dependency/migration APIs with explicit confirmed native configuration at safe boundaries. Current incremental review: Incremental flow-operate-installation review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract.",
-    "implementation": "Read daemon fresh-state selection, lifecycle backup/restore and NewFactory diagnostics. Old state.db is not imported into sessions; native settings/authentication and connection infrastructure remain separate. Removed legacy updater/report APIs cannot execute. Extinct skill-baseline updater gap is retired with its code, not claimed verified. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection.",
-    "tests": "Read installer sentinel recovery/rollback assertions updated for the active database, compiled factory_state smoke checks and native configuration safe-boundary test. Existing route/consent/browser-control fixtures remain mapped. Power-loss, real user-systemd, desktop login and installed-host acceptance gaps stay open. The compiled smoke request explicitly selects view=configuration before asserting default quietSeconds; ordinary inbox state intentionally omits settings. Its focused run passed after this projection integration correction. Read Makefile test-real-provider and the sole remaining TestInstalledCodexHandshake consumer: it performs initialization/account-read/skills-list only. README, operations and specification guide now state that precise scope. No real provider test was executed and no model-lifecycle acceptance is inferred. Current incremental review: Retain the subject-specific assertions documented above for flow-operate-installation. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance."
+    "description": "S1\u2013S5 preserve installation, rollback archives, connection consent, shared routes and private diagnostics while cutting application snapshots over to factory-v1.db. S5 replaces retired dependency/migration APIs with explicit confirmed native configuration at safe boundaries. Current incremental review: Incremental flow-operate-installation review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract. Follow-up correction review: S1/S2 now explicitly describe preserving wrapper-database absence during the first legacy cutover. No legacy data is imported, and new wrapper state is archived on explicit rollback. The structured rollback alternative explicitly terminates with running services retained when a recorded database or transport snapshot is unavailable.",
+    "implementation": "Read daemon fresh-state selection, lifecycle backup/restore and NewFactory diagnostics. Old state.db is not imported into sessions; native settings/authentication and connection infrastructure remain separate. Removed legacy updater/report APIs cannot execute. Extinct skill-baseline updater gap is retired with its code, not claimed verified. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection. Follow-up correction review: Read Installation.DatabaseAbsent, the lock-protected snapshot/absence decision, durable pending update, restoreInstallationDatabase, and the pre-stop recorded-snapshot check. The legacy state.db path and connection credentials are never restored over or removed.",
+    "tests": "Read installer sentinel recovery/rollback assertions updated for the active database, compiled factory_state smoke checks and native configuration safe-boundary test. Existing route/consent/browser-control fixtures remain mapped. Power-loss, real user-systemd, desktop login and installed-host acceptance gaps stay open. The compiled smoke request explicitly selects view=configuration before asserting default quietSeconds; ordinary inbox state intentionally omits settings. Its focused run passed after this projection integration correction. Read Makefile test-real-provider and the sole remaining TestInstalledCodexHandshake consumer: it performs initialization/account-read/skills-list only. README, operations and specification guide now state that precise scope. No real provider test was executed and no model-lifecycle acceptance is inferred. Current incremental review: Retain the subject-specific assertions documented above for flow-operate-installation. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance. Follow-up correction review: Read actual InstallRelease failure followed by recovery and explicit Rollback using its persisted record. Assertions inspect untouched legacy database bytes, exact restored binary/profile, retained credentials, absence of wrapper/WAL/SHM files, a queryable new-data archive and consumed marker reset. The missing snapshot test asserts zero service calls."
   },
   "verification": [
     {
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 53.399
+      "seconds": 53.671
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 5.279
+      "seconds": 9.53
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.73
+      "seconds": 7.418
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.51
+      "seconds": 21.524
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.791
+      "seconds": 34.669
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 287.062
+      "seconds": 285.907
     },
     {
       "command": [
@@ -147,11 +147,11 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.695
+      "seconds": 4.655
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "e5a95cf7721394d6065139cd3c202ef9fd86a5e343f2c7fb78e611f9992bac74",
+    "flow:operate-installation": "9029ee9c6d29b2bc1e28e1d6785f1ed0658d38bcd68ef6dbd987fce7a74c3e2b",
     "term:connection-refreshes": "b0e9504dd2e9d7a20127cf33d2aba61e04814615ad5ef207e7a4dd5e1a8b8a88",
     "term:connection-submits": "bdf46e73830da6932868ec1326e67f0efe8d82fd17b6c286a5551d9413b81c06",
     "term:coverage-gap": "b6c01eac139642dd99d8128c27f13fd063467bacc3274d14a81b02894c133ef8",
@@ -188,12 +188,12 @@
     "term:ui-w-diagnostics": "67c434faeab209691aa87e2386ac9a178747fe3e0f950be988d65d98a8c5cf6e",
     "term:unverified-behavior": "ec6641a731d850f258008ff45df7610fefa3ac025f730cb411bb03d73765635f",
     "term:verification": "9dedaca81797f97a0421edf5debc4ac86846d284768c33e3ed0b44984645f336",
-    "ui:C-BROWSER-LAB": "44b6a870cc9f2f1e56b6b1538cf1e548cec90a2afd2201c13aacf0af61aaa6b6",
-    "ui:C-DIAGNOSE": "c76365ba561b3a0629fd685bbe4a25af62d8a557866a3fea9c4ad05480d8660d",
-    "ui:P-BROWSER-LAB": "7c805473a1bb5e30742d382530172199020183ca64d2545ce03d3190ec38a2c2",
-    "ui:P-DIAGNOSTICS": "1f52f96fa7ea71a1db09bb1099407c155084a230fb008417fc99321cdc88c6cf",
-    "ui:PAGE-BROWSER-LAB": "0101c60a66919a65cb2c67afe5f08c04ab501a7266b35d3cf2ec663bfb115e42",
-    "ui:W-BROWSER-LAB": "259b0a80372defce5837bd66d4a1b23a58f66076b0f868e0bc0676e9dff77053",
-    "ui:W-DIAGNOSTICS": "0669cffcf9d846e8c5d442e8a66ae878605e6f3213ebd544e862b76665ddf977"
+    "ui:C-BROWSER-LAB": "1d4fdce5225c0a61a52c91784d40ac2ee81a7c7411d92b1271df4b75d60f5c5c",
+    "ui:C-DIAGNOSE": "a5310eae3b0c7ac3c0b73798f44f623100b025f24437171c99d9eda8d010229d",
+    "ui:P-BROWSER-LAB": "bd7edb040adaf9d43f00e09caff7ca8b36882bdab3bb6bb0d68a99c84906f28c",
+    "ui:P-DIAGNOSTICS": "f571309996928985f4e11c1377144bb4ec399c0d3c5be0457cbcd8b0020f87da",
+    "ui:PAGE-BROWSER-LAB": "c43522b2bd11c04ef8bbc797affa0308ee2e472d96b6e264b0ca9f23b57a3c9c",
+    "ui:W-BROWSER-LAB": "2f195e6aef5ccd3e6f97da86adbd9c84b6c63f5c4f34febae4056ef5c3b53003",
+    "ui:W-DIAGNOSTICS": "f832085ee20a1f72979094ed28c4b32b988090cd0dc5a8ea4f144c290d17fefa"
   }
 }

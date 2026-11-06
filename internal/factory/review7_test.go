@@ -183,6 +183,191 @@ func (g *pollSnapshots) ItemDetail(_ context.Context, i domain.Item) (domain.Ite
 	return v, nil
 }
 
+func TestDeletedDiscussionCannotBeResurrectedByDelayedDeliveries(t *testing.T) {
+	for _, typ := range []string{"issue_comment", "pull_request_review_comment"} {
+		t.Run(typ, func(t *testing.T) {
+			s, _, _ := fixture(t)
+			ctx := context.Background()
+			settings, err := s.Settings(ctx)
+			must(t, err)
+			settings.Rules = []Rule{{ID: "discussion", Repositories: []string{"*"}, Types: []string{typ}, Instructions: "handle changed discussion"}}
+			must(t, s.Store.Put(ctx, "factory-settings", "effective", settings, ""))
+			kind := "comment"
+			if typ == "pull_request_review_comment" {
+				kind = "review-comment"
+			}
+			var item domain.Item
+			must(t, s.Store.Get(ctx, "item", "o/r#1", &item))
+			item.Activity = []domain.Activity{{ID: kind + ":7", Kind: kind, Body: "old comment", Updated: "2026-11-05T11:00:00Z"}}
+			item.Revision = item.ContentRevision()
+			must(t, s.Store.Put(ctx, "item", item.ID, item, ""))
+			must(t, s.Observe(ctx, observations(item), true))
+			send := func(action string, id int) {
+				t.Helper()
+				d := delivery{ID: fmt.Sprintf("%s-%d", action, id), Type: typ, State: "pending", At: s.Now(), Body: bytes(map[string]any{"repository": map[string]string{"full_name": "o/r"}, "action": action, "issue": map[string]any{"number": 1, "pull_request": map[string]any{}}, "pull_request": map[string]any{"number": 1, "state": "open", "head": map[string]string{"sha": item.Head}}, "comment": map[string]any{"id": id, "body": "old comment", "updated_at": "2026-11-05T11:00:00Z"}})}
+				must(t, s.Store.Put(ctx, "factory-delivery", d.ID, d, ""))
+				must(t, s.processDelivery(ctx, d))
+			}
+			send("deleted", 7)
+			for _, action := range []string{"created", "edited"} {
+				send(action, 7)
+				var saved domain.Item
+				must(t, s.Store.Get(ctx, "item", item.ID, &saved))
+				var tombstone struct{ Deleted bool }
+				must(t, s.Store.Get(ctx, "factory-observation", item.ID+":activity:"+kind+":7", &tombstone))
+				if len(saved.Activity) != 0 || !tombstone.Deleted || len(get(t, s).Pending) != 1 {
+					t.Fatal("delayed live delivery resurrected a deleted comment", action, saved.Activity, tombstone)
+				}
+			}
+			send("created", 8)
+			if len(get(t, s).Pending) != 2 {
+				t.Fatal("tombstone suppressed an independent new comment")
+			}
+		})
+	}
+}
+
+func TestEqualTimestampDiscussionRetainsCurrentPRContext(t *testing.T) {
+	for _, typ := range []string{"pull_request_review_comment", "pull_request_review", "pull_request_review_thread"} {
+		t.Run(typ, func(t *testing.T) {
+			s, _, _ := fixture(t)
+			ctx := context.Background()
+			settings, err := s.Settings(ctx)
+			must(t, err)
+			settings.Rules = []Rule{{ID: "discussion", Repositories: []string{"*"}, Types: []string{typ}, Instructions: "handle discussion against current PR"}}
+			must(t, s.Store.Put(ctx, "factory-settings", "effective", settings, ""))
+			var item domain.Item
+			must(t, s.Store.Get(ctx, "item", "o/r#1", &item))
+			item.Head, item.Title, item.Body, item.Labels, item.Updated = "current-B", "current title", "current body", []string{"P1"}, s.Now()
+			item.Revision = item.ContentRevision()
+			must(t, s.Store.Put(ctx, "item", item.ID, item, ""))
+			must(t, s.Observe(ctx, observations(item), true))
+			action := "created"
+			if typ == "pull_request_review" {
+				action = "submitted"
+			} else if typ == "pull_request_review_thread" {
+				action = "resolved"
+			}
+			d := delivery{ID: "equal-timestamp", Type: typ, State: "pending", At: s.Now(), Body: bytes(map[string]any{"repository": map[string]string{"full_name": "o/r"}, "action": action, "pull_request": map[string]any{"number": 1, "state": "open", "title": "old title", "body": "old body", "labels": []map[string]string{{"name": "P3"}}, "updated_at": item.Updated, "head": map[string]string{"sha": "old-A"}}, "comment": map[string]any{"id": 7, "body": "new inline comment", "updated_at": item.Updated}, "review": map[string]any{"id": 7, "body": "new review", "state": "approved", "submitted_at": item.Updated}, "thread": map[string]any{"id": 7, "node_id": "thread-seven"}})}
+			must(t, s.Store.Put(ctx, "factory-delivery", d.ID, d, ""))
+			must(t, s.processDelivery(ctx, d))
+			var saved domain.Item
+			must(t, s.Store.Get(ctx, "item", item.ID, &saved))
+			v := get(t, s)
+			if saved.Head != item.Head || saved.Title != item.Title || saved.Body != item.Body || len(saved.Labels) != 1 || saved.Labels[0] != "P1" || len(v.Pending) != 1 || v.Pending[0].Event.Context.Head != item.Head || v.Pending[0].Event.Context.Title != item.Title {
+				t.Fatal("equal-timestamp discussion rolled back PR context", saved, v.Pending)
+			}
+		})
+	}
+}
+
+func TestInitialBaselineSkipsBusyItemAndObservesIndependentPeer(t *testing.T) {
+	s, rpc, clock := fixture(t)
+	ctx := context.Background()
+	must(t, s.Store.Put(ctx, "repository", "o/r", domain.Repository{ID: "o/r", Imported: true}, ""))
+	items := map[string]domain.Item{}
+	for _, id := range []string{"o/r#1", "o/r#2"} {
+		i := domain.Item{ID: id, Repository: "o/r", Number: 1, Kind: "pr", State: "open", Head: "baseline", DetailSyncedAt: *clock, ReviewObservedAt: *clock}
+		if id == "o/r#2" {
+			i.Number = 2
+		}
+		i.Revision = i.ContentRevision()
+		items[id] = i
+		must(t, s.Store.Put(ctx, "item", id, i, ""))
+		must(t, s.Store.Put(ctx, "user", id, domain.UserState{ID: id}, ""))
+	}
+	must(t, s.Store.Put(ctx, "factory-baseline", "o/r", map[string]any{"ready": false, "items": []string{"o/r#1", "o/r#2"}, "cursor": 0}, ""))
+	s.App.GitHub = &pollSnapshots{items: items}
+	release, ok := s.tryLockSession("o/r#1")
+	if !ok {
+		t.Fatal("could not hold baseline item")
+	}
+	unblock := sync.OnceFunc(release)
+	defer unblock()
+	must(t, s.Poll(ctx))
+	var seen struct{ Revision string }
+	must(t, s.Store.Get(ctx, "factory-item-observed", "o/r#2", &seen))
+	if seen.Revision != items["o/r#2"].Revision {
+		t.Fatal("peer baseline was not established")
+	}
+	if _, err := s.Session(ctx, "o/r#2"); err != store.ErrNotFound {
+		t.Fatal("initial peer history launched work", err)
+	}
+	i := items["o/r#2"]
+	i.Head = "after-baseline"
+	i.Revision = i.ContentRevision()
+	items[i.ID] = i
+	must(t, s.Store.Put(ctx, "item", i.ID, i, ""))
+	must(t, s.Poll(ctx))
+	v, err := s.Session(ctx, i.ID)
+	must(t, err)
+	if len(v.Pending) != 1 || !v.Due.Equal(clock.Add(120*time.Second)) {
+		t.Fatal("busy baseline delayed peer change", v)
+	}
+	// Only the provider sees this later discussion; no saved-source write can
+	// make the compact revision path discover it on the test's behalf.
+	*clock = clock.Add(providers.GitHubDetailTTL)
+	i.Activity = []domain.Activity{{ID: "comment:7", Kind: "comment", Body: "independent peer discussion", Updated: clock.Format(time.RFC3339Nano)}}
+	i.DetailSyncedAt, i.ReviewObservedAt = *clock, *clock
+	i.Revision = i.ContentRevision()
+	items[i.ID] = i
+	must(t, s.Poll(ctx))
+	v, err = s.Session(ctx, i.ID)
+	must(t, err)
+	if len(v.Pending) != 2 || v.Pending[1].Event.Facet != "activity:comment:7" || !v.Due.Equal(clock.Add(120*time.Second)) {
+		t.Fatal("busy baseline blocked independent detail discovery", v)
+	}
+	unblock()
+	must(t, s.Poll(ctx))
+	if _, err = s.Session(ctx, "o/r#1"); err != store.ErrNotFound || len(rpc.inputs) != 0 {
+		t.Fatal("deferred baseline reconstructed historical work", err, len(rpc.inputs))
+	}
+}
+
+type cachedDetailFixture struct {
+	providers.GitHubSource
+	item  domain.Item
+	calls int
+}
+
+func (g *cachedDetailFixture) CacheScope(context.Context) (string, error) { return "fixture", nil }
+func (g *cachedDetailFixture) ItemDetail(context.Context, domain.Item) (domain.Item, error) {
+	g.calls++
+	return g.item, nil
+}
+
+func TestDetailRefreshRetainsCachedFreshnessWithoutRepeatedImports(t *testing.T) {
+	s, _, clock := fixture(t)
+	*clock = time.Now().UTC()
+	ctx := context.Background()
+	settings, err := s.Settings(ctx)
+	must(t, err)
+	must(t, s.Store.Put(ctx, "repository", "o/r", domain.Repository{ID: "o/r", Imported: true}, ""))
+	must(t, s.Store.Put(ctx, "factory-baseline", "o/r", map[string]bool{"ready": true}, ""))
+	var item domain.Item
+	must(t, s.Store.Get(ctx, "item", "o/r#1", &item))
+	item.DetailSyncedAt, item.ReviewObservedAt = *clock, *clock
+	source := &cachedDetailFixture{item: item}
+	s.App.GitHub = providers.NewCachedGitHub(source)
+	must(t, s.refreshDetails(ctx, settings))
+	if source.calls != 1 {
+		t.Fatal("initial detail did not load", source.calls)
+	}
+	version, err := s.Store.UILatest(ctx)
+	must(t, err)
+	// The last two passes deliberately cross the service's freshness deadline
+	// while the real provider cache still returns the same earlier observation.
+	for _, elapsed := range []time.Duration{31 * time.Second, time.Minute, providers.GitHubDetailTTL - time.Second, providers.GitHubDetailTTL + time.Second, providers.GitHubDetailTTL + 4*time.Second} {
+		*clock = item.DetailSyncedAt.Add(elapsed)
+		must(t, s.refreshDetails(ctx, settings))
+		current, err := s.Store.UILatest(ctx)
+		must(t, err)
+		if current != version || source.calls != 1 {
+			t.Fatal("fresh cached detail caused repeated imports", elapsed, version, current, source.calls)
+		}
+	}
+}
+
 func TestPollingDiscoversPeerChangesWhileNativeAttachmentIsHeld(t *testing.T) {
 	for _, mode := range []string{"unchanged-issue", "changed-pr", "detail-refresh", "initial-baseline", "busy-webhook"} {
 		t.Run(mode, func(t *testing.T) {

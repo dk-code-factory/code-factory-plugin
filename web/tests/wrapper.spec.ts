@@ -429,7 +429,8 @@ test("archive refresh preserves accepted data on failure and rejects stale queri
   });
   let failRefresh = false;
   let failBatches = false;
-  const { ui, calls } = await host(page, {
+  const { ui, calls, toolCompletions } = await host(page, {
+    observeToolCompletions: true,
     archive: {
       events: [{ id: "event-current", action: "synchronize" }],
       deliveries: [{ id: "delivery-stale" }],
@@ -452,69 +453,75 @@ test("archive refresh preserves accepted data on failure and rejects stale queri
       }
     },
   });
-  await ui.getByRole("button", { name: "Events", exact: true }).click();
-  await ui
-    .getByRole("button", { name: "event-current synchronize", exact: true })
-    .click();
-  failRefresh = true;
-  await ui.getByRole("button", { name: "Refresh archive" }).click();
-  await expect(ui.getByRole("alert")).toContainText("Archive read failed");
-  await expect(ui.getByLabel("Selected archive record")).toContainText(
-    "event-current",
-  );
-  failBatches = true;
-  await ui.getByLabel("Archive kind").selectOption("batches");
-  await expect(ui.getByRole("alert")).toContainText("Archive read failed");
-  await expect(ui.getByRole("list", { name: "Archive records" })).toHaveCount(
-    0,
-  );
-  await expect(ui.getByLabel("Selected archive record")).toHaveCount(0);
-  failBatches = false;
-  await ui.getByLabel("Archive kind").selectOption("rules");
-  await expect(ui.getByLabel("Event routing")).toContainText("0–0 of 0 rules");
-  await expect(
-    ui.getByRole("button", { name: "Next archive page" }),
-  ).toBeDisabled();
-  await ui.getByLabel("Archive kind").selectOption("deliveries");
-  await reached;
-  await ui.getByLabel("Archive kind").selectOption("batches");
-  await expect(ui.getByRole("list", { name: "Archive records" })).toContainText(
-    "batch-current",
-  );
-  release();
-  // A subsequent completed bridge read provides a round-trip barrier after
-  // releasing the superseded response before checking the accepted projection.
-  await ui.getByRole("button", { name: "Refresh archive" }).click();
-  await expect
-    .poll(
-      () =>
-        calls.filter(
-          (call) =>
-            call.name === "factory_events" && call.arguments.kind === "batches",
-        ).length,
-    )
-    .toBe(3);
-  await expect(
-    ui.getByRole("status").filter({ hasText: "Loading archive page" }),
-  ).toHaveCount(0);
-  await expect(ui.getByRole("list", { name: "Archive records" })).toContainText(
-    "batch-current",
-  );
-  await expect(ui.getByLabel("Event routing")).not.toContainText(
-    "delivery-stale",
-  );
-  await ui.getByRole("button", { name: "Issues", exact: true }).click();
-  failRefresh = false;
-  await ui.getByRole("button", { name: "Events", exact: true }).click();
-  await expect(ui.getByRole("list", { name: "Archive records" })).toContainText(
-    "event-current",
-  );
-  expect(
-    calls.filter(
-      (call) =>
-        call.name === "factory_events" && call.arguments.kind === "events",
-    ),
-  ).toHaveLength(3);
+  try {
+    await ui.getByRole("button", { name: "Events", exact: true }).click();
+    await ui
+      .getByRole("button", { name: "event-current synchronize", exact: true })
+      .click();
+    failRefresh = true;
+    await ui.getByRole("button", { name: "Refresh archive" }).click();
+    await expect(ui.getByRole("alert")).toContainText("Archive read failed");
+    await expect(ui.getByLabel("Selected archive record")).toContainText(
+      "event-current",
+    );
+    failBatches = true;
+    await ui.getByLabel("Archive kind").selectOption("batches");
+    await expect(ui.getByRole("alert")).toContainText("Archive read failed");
+    await expect(ui.getByRole("list", { name: "Archive records" })).toHaveCount(
+      0,
+    );
+    await expect(ui.getByLabel("Selected archive record")).toHaveCount(0);
+    failBatches = false;
+    await ui.getByLabel("Archive kind").selectOption("rules");
+    await expect(ui.getByLabel("Event routing")).toContainText(
+      "0–0 of 0 rules",
+    );
+    await expect(
+      ui.getByRole("button", { name: "Next archive page" }),
+    ).toBeDisabled();
+    await ui.getByLabel("Archive kind").selectOption("deliveries");
+    await reached;
+    await ui.getByLabel("Archive kind").selectOption("batches");
+    await expect(
+      ui.getByRole("list", { name: "Archive records" }),
+    ).toContainText("batch-current");
+    release();
+    // Await this exact superseded invocation after its SDK and React continuation;
+    // refreshing the accepted query could otherwise repair a stale-response bug.
+    await expect
+      .poll(
+        () =>
+          toolCompletions.filter(
+            (call) =>
+              call.name === "factory_events" &&
+              call.arguments.kind === "deliveries",
+          ).length,
+      )
+      .toBe(1);
+    await expect(
+      ui.getByRole("status").filter({ hasText: "Loading archive page" }),
+    ).toHaveCount(0);
+    await expect(
+      ui.getByRole("list", { name: "Archive records" }),
+    ).toContainText("batch-current");
+    await expect(ui.getByLabel("Event routing")).not.toContainText(
+      "delivery-stale",
+    );
+    await ui.getByRole("button", { name: "Issues", exact: true }).click();
+    failRefresh = false;
+    await ui.getByRole("button", { name: "Events", exact: true }).click();
+    await expect(
+      ui.getByRole("list", { name: "Archive records" }),
+    ).toContainText("event-current");
+    expect(
+      calls.filter(
+        (call) =>
+          call.name === "factory_events" && call.arguments.kind === "events",
+      ),
+    ).toHaveLength(3);
+  } finally {
+    release();
+  }
 });
 test("wrapper keyboard navigation and contrast pass fixture accessibility", async ({
   browser,

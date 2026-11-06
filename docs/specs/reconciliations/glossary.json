@@ -8,9 +8,9 @@
   },
   "review": {
     "kind": "terminology",
-    "description": "Added retained-session, normalized-event, event-rule, event-batch, quiet-period, configuration-proposal, execution-state and reported-work-status meanings. Native Work profile now denotes Codex overrides; retained UI IDs keep their canonical vocabulary and dependency direction. Current incremental review: Incremental review retains all 657 existing meanings and aliases; source links, event routing and retained sessions use existing terms.",
-    "implementation": "Compared original glossary meanings with native wrapper types and the consuming UI/flow records. Foundation definitions carry no implementation or consumer backlinks. Retired pipeline vocabulary is historical rather than an active configuration format. Current incremental review: The incremental source/test changes introduce no vocabulary, glossary backlinks or foundational implementation detail. Compared terms.json with the reviewed starting commit: unchanged.",
-    "tests": "Read the current schema and dependency-direction assertions and rendered glossary output. Schema validation confirms unique scoped names and valid references; no native-provider or semantic behavior acceptance is inferred from a terminology review. Current incremental review: Existing glossary validation and fixture scope are retained; the new tests exercise already-defined source, delivery and session concepts without claiming broader terminology coverage."
+    "description": "Added retained-session, normalized-event, event-rule, event-batch, quiet-period, configuration-proposal, execution-state and reported-work-status meanings. Native Work profile now denotes Codex overrides; retained UI IDs keep their canonical vocabulary and dependency direction. Current incremental review: Incremental review retains all 657 existing meanings and aliases; source links, event routing and retained sessions use existing terms. Follow-up correction review: All existing meanings and aliases remain unchanged; deletion observations, source snapshots and retained state use current glossary terms.",
+    "implementation": "Compared original glossary meanings with native wrapper types and the consuming UI/flow records. Foundation definitions carry no implementation or consumer backlinks. Retired pipeline vocabulary is historical rather than an active configuration format. Current incremental review: The incremental source/test changes introduce no vocabulary, glossary backlinks or foundational implementation detail. Compared terms.json with the reviewed starting commit: unchanged. Follow-up correction review: Compared terms.json and foundational authored glossary with 6cbd3c8: no changes or consumer backlinks. New installer metadata is an implementation detail, not a glossary definition.",
+    "tests": "Read the current schema and dependency-direction assertions and rendered glossary output. Schema validation confirms unique scoped names and valid references; no native-provider or semantic behavior acceptance is inferred from a terminology review. Current incremental review: Existing glossary validation and fixture scope are retained; the new tests exercise already-defined source, delivery and session concepts without claiming broader terminology coverage. Follow-up correction review: Retain the prior term-specific review and validator evidence; new regressions make no vocabulary, real-provider or installed-host acceptance claim."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.791
+      "seconds": 34.669
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 287.062
+      "seconds": 285.907
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.695
+      "seconds": 4.655
     }
   ],
   "dependencies": {

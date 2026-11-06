@@ -141,6 +141,10 @@ Installation switches the version link and requires authenticated health for the
 new version. A failed upgrade restores the prior binary and database and attempts
 to restart the previous services. Recovery failures are reported explicitly.
 `pending.json` retains an interrupted operation for explicit rollback.
+The first cutover preserves the legacy `state.db` without importing it and records
+that `factory-v1.db` was absent. Recovery restores that absence before starting
+the old binary. Explicit rollback archives any new wrapper database before
+removing it; a missing recorded database snapshot fails before stopping services.
 The installer also snapshots the existing Tailscale profile beside the database
 backup. Recovery restores that compatible gateway profile before restarting the
 previous binary; OAuth credentials remain in their separate private state file.

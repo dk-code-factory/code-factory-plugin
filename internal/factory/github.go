@@ -206,7 +206,13 @@ func (s *Service) Poll(ctx context.Context) error {
 				id := mark.Items[mark.Cursor]
 				release, ok := s.tryLockSession(id)
 				if !ok {
-					break
+					// Keep this baseline pending while visiting independent peers.
+					copy(mark.Items[mark.Cursor:], mark.Items[mark.Cursor+1:])
+					mark.Items[len(mark.Items)-1] = id
+					if err = s.Store.Put(ctx, "factory-baseline", r.ID, mark, ""); err != nil {
+						return err
+					}
+					continue
 				}
 				err = func() error {
 					defer release()
@@ -297,9 +303,10 @@ func (s *Service) Poll(ctx context.Context) error {
 					if e == nil && seen.Revision == latest.Revision {
 						return nil
 					}
+					baseline := e == store.ErrNotFound && !mark.Ready && contains(mark.Items, item.ID)
 					o := s.observationWriter(t, currentSettings)
 					for _, event := range observations(latest) {
-						if e := o.observe(event, !mark.Ready && contains(mark.Items, item.ID)); e != nil {
+						if e := o.observe(event, baseline); e != nil {
 							return e
 						}
 					}
@@ -363,7 +370,7 @@ func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 			return err
 		}
 		r, ok := repository(c, item.Repository)
-		if !ok || r.Paused || s.Now().Sub(item.DetailSyncedAt) < 30*time.Second {
+		if !ok || r.Paused || s.Now().Sub(item.DetailSyncedAt) < providers.GitHubDetailTTL {
 			continue
 		}
 		var baseline struct{ Ready bool }
@@ -371,7 +378,12 @@ func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 			return e
 		}
 		if !baseline.Ready {
-			continue
+			var observed struct{ Revision string }
+			if e := s.Store.Get(ctx, "factory-item-observed", item.ID, &observed); e == store.ErrNotFound {
+				continue
+			} else if e != nil {
+				return e
+			}
 		}
 		started := s.Now()
 		fresh, e := s.App.GitHub.ItemDetail(ctx, item)
@@ -403,8 +415,18 @@ func (s *Service) importDetail(ctx context.Context, repo Repository, fresh domai
 	if err := s.Store.Get(ctx, "repository", repo.ID, &savedRepo); err != nil {
 		return err
 	}
-	if err := s.App.ImportObservations(ctx, savedRepo, []domain.Item{fresh}); err != nil {
+	var previous domain.Item
+	if err := s.Store.Get(ctx, "item", fresh.ID, &previous); err != nil && err != store.ErrNotFound {
 		return err
+	}
+	// Provider cache expiry can follow the oldest source observation time.
+	// Reuse the saved item for identical snapshots, while still reconciling any
+	// observation work left by an interrupted earlier import.
+	sameSnapshot := previous.ID != "" && previous.DetailSyncedAt.Equal(fresh.DetailSyncedAt) && previous.ReviewObservedAt.Equal(fresh.ReviewObservedAt) && previous.ContentRevision() == fresh.ContentRevision()
+	if !sameSnapshot {
+		if err := s.App.ImportObservations(ctx, savedRepo, []domain.Item{fresh}); err != nil {
+			return err
+		}
 	}
 	var saved domain.Item
 	if err := s.Store.Get(ctx, "item", fresh.ID, &saved); err != nil {
@@ -635,7 +657,8 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 				if i.PR == nil && i.Head == old.Head {
 					i.PR = old.PR
 				}
-				if old.Updated.After(i.Updated) {
+				discussion := d.Type == "issue_comment" || d.Type == "pull_request_review_comment" || d.Type == "pull_request_review" || d.Type == "pull_request_review_thread"
+				if old.Updated.After(i.Updated) || discussion && old.Updated.Equal(i.Updated) {
 					i = old
 				}
 			}
@@ -657,6 +680,13 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 					updated = p.Review.Submitted
 				}
 				aid := kind + ":" + strconv.FormatInt(id, 10)
+				var observation struct{ Deleted bool }
+				if err := t.Get("factory-observation", i.ID+":activity:"+aid, &observation); err != nil && err != store.ErrNotFound {
+					return err
+				}
+				// A deleted GitHub comment ID cannot become live again. Its final
+				// observation also protects against distinct delayed deliveries.
+				staleActivity = observation.Deleted && p.Action != "deleted"
 				kept := []domain.Activity{}
 				for _, a := range i.Activity {
 					if a.ID != aid {
