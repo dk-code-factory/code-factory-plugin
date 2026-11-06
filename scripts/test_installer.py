@@ -129,7 +129,7 @@ class InstallerTests(unittest.TestCase):
         self.run_cli('rollback')
         self.assertEqual((installed/'current').resolve().name,self.release.name.removeprefix('code-factory-'))
         self.assertTrue((installed/'plugin/.app.json').exists())
-        self.run_cli('uninstall');self.assertTrue((self.data/'state.db').exists());self.assertTrue((self.data/'vault.key').exists())
+        self.run_cli('uninstall');self.assertTrue((self.data/'factory-v1.db').exists());self.assertTrue((self.data/'vault.key').exists())
         self.assertFalse((self.home/'.local/bin/code-factory').exists())
         self.install();self.assertTrue((installed/'plugin/.app.json').exists())
     def test_missing_dependency_and_checksum_failure_do_not_install(self):
@@ -157,7 +157,7 @@ class InstallerTests(unittest.TestCase):
         committed=(installed/'installation.json').read_bytes()
         old=json.loads(committed)
         self.assertFalse(old.get('previous'))
-        with sqlite3.connect(self.data/'state.db') as db:
+        with sqlite3.connect(self.data/'factory-v1.db') as db:
             db.execute('CREATE TABLE installer_interrupt_sentinel(value TEXT NOT NULL)')
             db.execute('INSERT INTO installer_interrupt_sentinel VALUES (?)',('before-upgrade',))
         def sentinel(path):
@@ -206,9 +206,9 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual((installed/'current').resolve().name,'test-upgrade')
             self.assertEqual((installed/'installation.json').read_bytes(),committed)
             self.assertFalse((self.home/'code-factory.service.pid').exists())
-            with sqlite3.connect(self.data/'state.db') as db:
+            with sqlite3.connect(self.data/'factory-v1.db') as db:
                 db.execute('UPDATE installer_interrupt_sentinel SET value=?',('after-interruption',))
-            self.assertEqual(sentinel(self.data/'state.db'),'after-interruption')
+            self.assertEqual(sentinel(self.data/'factory-v1.db'),'after-interruption')
             self.assertEqual(list((installed/'backups').glob('pre-rollback-*.db')),[])
 
             self.run_cli('rollback')
@@ -217,7 +217,7 @@ class InstallerTests(unittest.TestCase):
             restored=json.loads((installed/'installation.json').read_text())
             self.assertEqual(restored['current'],old['current'])
             self.assertFalse(restored.get('previous'))
-            self.assertEqual(sentinel(self.data/'state.db'),'before-upgrade')
+            self.assertEqual(sentinel(self.data/'factory-v1.db'),'before-upgrade')
             archives=list((installed/'backups').glob('pre-rollback-*.db'))
             self.assertEqual(len(archives),1)
             self.assertEqual(sentinel(archives[0]),'after-interruption')

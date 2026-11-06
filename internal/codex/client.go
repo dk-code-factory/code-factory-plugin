@@ -4,9 +4,6 @@ package codex
 import (
 	"bufio"
 	"context"
-	"crypto/sha256"
-	"embed"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,20 +16,6 @@ import (
 	"syscall"
 	"time"
 )
-
-//go:embed client.go sandbox.go
-var protocolSources embed.FS
-
-// ImplementationIdentity fences retained model work across transport/policy changes.
-func ImplementationIdentity() string {
-	h := sha256.New()
-	for _, name := range []string{"client.go", "sandbox.go"} {
-		data, _ := protocolSources.ReadFile(name)
-		h.Write([]byte(name))
-		h.Write(data)
-	}
-	return hex.EncodeToString(h.Sum(nil))
-}
 
 type Message struct {
 	ID     json.RawMessage `json:"id,omitempty"`
@@ -116,6 +99,9 @@ func CompareVersions(a, b string) int {
 // the app-server surfaces and native plugin inventory used by Code Factory.
 func Probe(ctx context.Context, binary, cwd string) error {
 	if _, err := Version(ctx, binary); err != nil {
+		return err
+	}
+	if err := ProbeDynamicTools(ctx, binary); err != nil {
 		return err
 	}
 	c, err := Start(ctx, binary, nil, nil)
@@ -318,6 +304,10 @@ func Inspect(ctx context.Context, binary string) Status {
 	v, e := Version(ctx, binary)
 	status.Version = v
 	if e != nil {
+		status.Error = e.Error()
+		return status
+	}
+	if e = ProbeDynamicTools(ctx, binary); e != nil {
 		status.Error = e.Error()
 		return status
 	}

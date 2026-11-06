@@ -83,9 +83,10 @@ flowchart TD
 - [scripts/requirements-dev.txt](../../scripts/requirements-dev.txt) — Supporting install and connect a private workspace
 - [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Shared fake-provider verification input; changes require assertion reconciliation.
 - [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Shared fake-provider verification input; changes require assertion reconciliation.
-- [internal/transport/mcp.go](../../internal/transport/mcp.go) — Advertises the embedded UI under a full-content SHA256 URI and binds all tool/output-template references to it, retaining only an unadvertised exact legacy-read alias. (`func registerUIResource(`)
+- [internal/transport/mcp.go](../../internal/transport/mcp.go) — Advertises the embedded UI under a full-content SHA256 URI and binds all tool/output-template references to it, rejecting unregistered and retired resource URIs. (`func registerUIResource(`)
 - [internal/web/embed.go](../../internal/web/embed.go) — Configuration opens through its own bridged document entry. (`func SettingsHTML(`)
 - [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Third packaged skill ships in portable and browser artifacts. (`name: code-factory-admin`)
+- [internal/gateway/audit.go](../../internal/gateway/audit.go) — Current install-connect implementation or fixture/build dependency.
 
 ## Test references
 
@@ -99,9 +100,10 @@ flowchart TD
 - [internal/setup/setup_test.go](../../internal/setup/setup_test.go) — `func TestDaemonLockAndOwnerToken(`; S2. Daemon owner and lock boundaries.
 - [internal/pluginbundle/hosting_test.go](../../internal/pluginbundle/hosting_test.go) — `func TestHostedPackageIsCompleteBoundToHostAndChecksummed(`; S1. Host-bound complete checksummed archive.
 - [internal/gateway/prefix_test.go](../../internal/gateway/prefix_test.go) — `func TestPrefixedGatewayOAuthAndProxy(`; S2. Prefixed OAuth routes and proxy fixture.
-- [internal/transport/ui_resource_test.go](../../internal/transport/ui_resource_test.go) — `func TestUIResourceContentIdentityAndCompatibility(`; S1, S2. Actual SDK fixture asserts stable same-content and changed-content UI identity, matching current tool/resource metadata and exact HTML; only the original exact URI reads current content unadvertised, while unknown/previous hashes and query variants reject. CSP domains stay empty. This does not prove host refresh or installed UI acceptance.
-- [internal/pluginbundle/hosting_test.go](../../internal/pluginbundle/hosting_test.go) — `func TestLandingPrioritizesOnlyValidRegisteredBrowserPackage(`; S1. Registration-aware primary browser download with portable artifacts collapsed; missing/invalid mappings show connection steps.
+- [internal/pluginbundle/hosting_test.go](../../internal/pluginbundle/hosting_test.go) — `func TestLandingPrioritizesOnlyValidRegisteredBrowserPackage(`; S1. Only a valid observed registration promotes the browser download; absent/invalid mapping shows OAuth steps; portable artifacts are inside collapsed Advanced.
 - [scripts/test_packaging.py](../../scripts/test_packaging.py) — `def test_zip_is_self_contained_deterministic_and_contains_no_host_state(`; S1. Archive includes admin, daily-use and setup skills with checksums while private host state remains excluded.
+- [internal/gateway/audit_test.go](../../internal/gateway/audit_test.go) — `func TestRequestAuditExcludesCredentialsAndPreservesStreaming(`; S1. Current install-connect fixture assertion TestRequestAuditExcludesCredentialsAndPreservesStreaming. Inspect its exact assertion scope.
+- [internal/gateway/audit_test.go](../../internal/gateway/audit_test.go) — `func TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails(`; S1. Current install-connect fixture assertion TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails. Inspect its exact assertion scope.
 
 ## Verification and gaps
 

@@ -17,6 +17,28 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 2 && os.Args[1] == "app-server" && os.Args[2] == "generate-json-schema" {
+		var dir string
+		for i, arg := range os.Args {
+			if arg == "--out" && i+1 < len(os.Args) {
+				dir = os.Args[i+1]
+			}
+		}
+		for name, fields := range map[string][]string{"ThreadStartParams.json": {"dynamicTools"}, "DynamicToolCallParams.json": {"threadId", "turnId", "callId", "tool", "arguments"}, "DynamicToolCallResponse.json": {"contentItems", "success"}, "ConfigBatchWriteParams.json": {"expectedVersion", "edits", "reloadUserConfig"}} {
+			properties := map[string]any{}
+			for _, field := range fields {
+				if field == os.Getenv("CF_FAKE_SCHEMA_MISSING") {
+					continue
+				}
+				properties[field] = map[string]any{}
+			}
+			b, _ := json.Marshal(map[string]any{"properties": properties})
+			if err := os.WriteFile(filepath.Join(dir, name), b, 0600); err != nil {
+				os.Exit(5)
+			}
+		}
+		return
+	}
 	if path := os.Getenv("CF_FAKE_PID_RECORD"); path != "" {
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 		if err != nil {
@@ -228,9 +250,7 @@ func main() {
 			reply(map[string]any{})
 		case "turn/start":
 			turnNumber++
-			if strings.HasPrefix(mode, "recover-") || mode == "text-question" || strings.HasPrefix(mode, "async-question") || os.Getenv("CF_FAKE_COMPLETE_STEER") == "1" {
-				turnID = fmt.Sprintf("turn-%d", turnNumber)
-			}
+			turnID = fmt.Sprintf("turn-%d", turnNumber)
 			var inputs []struct{ Text string }
 			_ = json.Unmarshal(m.Params["input"], &inputs)
 			inputText := ""
@@ -399,9 +419,9 @@ func main() {
 			if mode == "crash" {
 				os.Exit(4)
 			}
-			notify("turn/started", map[string]any{"turn": map[string]string{"id": "turn-1"}})
-			reply(map[string]any{"turn": map[string]string{"id": "turn-1"}})
-			notify("item/agentMessage/delta", map[string]string{"threadId": "thread-1", "turnId": "turn-1", "delta": "Inspecting repository"})
+			notify("turn/started", map[string]any{"turn": map[string]string{"id": turnID}})
+			reply(map[string]any{"turn": map[string]string{"id": turnID}})
+			notify("item/agentMessage/delta", map[string]string{"threadId": "thread-1", "turnId": turnID, "delta": "Inspecting repository"})
 			if mode == "complete" || mode == "inference" {
 				text := "Task complete"
 				if mode == "async-question-multi" {
@@ -423,9 +443,9 @@ func main() {
 				continue
 			}
 			if mode == "approval" {
-				send(map[string]any{"id": 7, "method": "item/commandExecution/requestApproval", "params": map[string]any{"threadId": "thread-1", "turnId": "turn-1", "itemId": "item-1", "command": "git status", "availableDecisions": []string{"accept", "decline"}}})
+				send(map[string]any{"id": 7, "method": "item/commandExecution/requestApproval", "params": map[string]any{"threadId": "thread-1", "turnId": turnID, "itemId": "item-1", "command": "git status", "availableDecisions": []string{"accept", "decline"}}})
 			} else if mode != "hold" {
-				send(map[string]any{"id": 7, "method": "item/tool/requestUserInput", "params": map[string]any{"threadId": "thread-1", "turnId": "turn-1", "itemId": "item-1", "isBlocking": mode != "nonblocking", "questions": []any{map[string]any{"id": "scope", "header": "Scope", "question": "Which scope?", "isOther": true, "options": []any{map[string]string{"label": "Focused", "description": "One fix"}, map[string]string{"label": "Broad", "description": "All fixes"}}}}}})
+				send(map[string]any{"id": 7, "method": "item/tool/requestUserInput", "params": map[string]any{"threadId": "thread-1", "turnId": turnID, "itemId": "item-1", "isBlocking": mode != "nonblocking", "questions": []any{map[string]any{"id": "scope", "header": "Scope", "question": "Which scope?", "isOther": true, "options": []any{map[string]string{"label": "Focused", "description": "One fix"}, map[string]string{"label": "Broad", "description": "All fixes"}}}}}})
 			}
 		case "turn/steer":
 			var expected string

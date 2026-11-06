@@ -3,7 +3,9 @@ package store
 import (
 	"codefactory/internal/domain"
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,9 +17,13 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"unicode/utf8"
 )
 
 var ErrNotFound = errors.New("record not found")
+
+// ApplicationFile isolates the clean session-wrapper state from retired application data.
+const ApplicationFile = "factory-v1.db"
 
 type Store struct {
 	db      *sql.DB
@@ -64,8 +70,12 @@ func Open(path string) (*Store, error) {
 	db.SetMaxOpenConns(4)
 	db.SetMaxIdleConns(4)
 	for _, q := range []string{"PRAGMA journal_mode=WAL", "PRAGMA foreign_keys=ON", "PRAGMA busy_timeout=5000", `CREATE TABLE IF NOT EXISTS migrations(version INTEGER PRIMARY KEY)`, `CREATE TABLE IF NOT EXISTS entities(kind TEXT NOT NULL,id TEXT NOT NULL,data BLOB NOT NULL,PRIMARY KEY(kind,id))`, `CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,kind TEXT NOT NULL,entity TEXT NOT NULL,data BLOB NOT NULL,at TEXT NOT NULL)`, `INSERT OR IGNORE INTO migrations VALUES(1)`,
+		`CREATE INDEX IF NOT EXISTS entities_pr_head ON entities(json_extract(data,'$.repository'),json_extract(data,'$.kind'),json_extract(data,'$.head')) WHERE kind='item'`,
 		`CREATE INDEX IF NOT EXISTS entities_item ON entities(kind,json_extract(data,'$.itemId'))`,
 		`CREATE INDEX IF NOT EXISTS entities_run ON entities(kind,json_extract(data,'$.runId'))`,
+		`CREATE INDEX IF NOT EXISTS entities_state ON entities(kind,json_extract(data,'$.state'))`,
+		`CREATE INDEX IF NOT EXISTS entities_status ON entities(kind,json_extract(data,'$.status'))`,
+		`CREATE INDEX IF NOT EXISTS entities_session ON entities(kind,json_extract(data,'$.sessionId'))`,
 		`CREATE INDEX IF NOT EXISTS entities_source ON entities(kind,json_extract(data,'$.source'))`,
 		`CREATE INDEX IF NOT EXISTS entities_target ON entities(kind,json_extract(data,'$.target'))`,
 		`CREATE INDEX IF NOT EXISTS events_run_output ON events(entity,kind,seq)`,
@@ -229,43 +239,68 @@ func (t *Tx) Put(kind, id string, v any) error {
 		return e
 	}
 	_, e = t.tx.ExecContext(t.ctx, `INSERT INTO entities VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET data=excluded.data`, kind, id, b)
-	return e
+	if e != nil {
+		return e
+	}
+	return t.sessionRuntime(kind, id, b)
+}
+
+// Small derived runtime fields avoid decoding retained queues for streaming,
+// scheduling and safe-boundary checks. They share the canonical transaction.
+func (t *Tx) sessionRuntime(kind, id string, data []byte) error {
+	if kind != "factory-session" {
+		return nil
+	}
+	_, err := t.tx.ExecContext(t.ctx, `INSERT INTO entities(kind,id,data) VALUES('factory-session-runtime',?1,json_object('repository',json_extract(?2,'$.repository'),'kind',json_extract(?2,'$.kind'),'epoch',json_extract(?2,'$.epoch'),'threadId',json_extract(?2,'$.threadId'),'execution',json_extract(?2,'$.execution'),'hold',json(CASE WHEN json_extract(?2,'$.hold') THEN 'true' ELSE 'false' END),'reported',json_extract(?2,'$.reported'),'due',json_extract(?2,'$.due'),'pendingCount',coalesce(json_array_length(?2,'$.pending'),0))) ON CONFLICT(kind,id) DO UPDATE SET data=excluded.data`, id, data)
+	return err
 }
 func (t *Tx) Delete(kind, id string) error {
 	t.invalidate(kind, id)
 	_, e := t.tx.ExecContext(t.ctx, "DELETE FROM entities WHERE kind=? AND id=?", kind, id)
+	if e == nil && kind == "factory-session" {
+		_, e = t.tx.ExecContext(t.ctx, "DELETE FROM entities WHERE kind='factory-session-runtime' AND id=?", id)
+	}
 	return e
 }
 func (t *Tx) Event(kind, id string, v any) error {
-	if kind == "run.output" {
-		t.invalidate("transcript", id)
-	} else if strings.HasPrefix(kind, "run.") {
-		t.invalidate("run", id)
-	}
 	b, e := json.Marshal(v)
 	if e != nil {
 		return e
 	}
+	if kind == "session.output" && len(b) > SessionOutputMaxBytes {
+		var nonce [16]byte
+		if _, e = rand.Read(nonce[:]); e != nil {
+			return e
+		}
+		// Serialized JSON contains no raw control characters. Encoding each
+		// fragment as a JSON string uses at most 2n + 2 bytes, including quotes.
+		ends := []int{0}
+		for start := 0; start < len(b); {
+			end := min(start+15*1024, len(b))
+			for end < len(b) && !utf8.RuneStart(b[end]) {
+				end--
+			}
+			ends = append(ends, end)
+			start = end
+		}
+		for index := 0; index < len(ends)-1; index++ {
+			if e = t.Event(kind, id, map[string]any{"fragmentId": hex.EncodeToString(nonce[:]), "fragmentIndex": index, "fragmentCount": len(ends) - 1, "fragment": string(b[ends[index]:ends[index+1]])}); e != nil {
+				return e
+			}
+		}
+		return nil
+	}
 	at := time.Now().UTC()
-	result, e := t.tx.ExecContext(t.ctx, "INSERT INTO events(kind,entity,data,at) VALUES(?,?,?,?)", kind, id, b, at.Format(time.RFC3339Nano))
+	_, e = t.tx.ExecContext(t.ctx, "INSERT INTO events(kind,entity,data,at) VALUES(?,?,?,?)", kind, id, b, at.Format(time.RFC3339Nano))
 	if e != nil {
 		return e
 	}
-	if kind == "run.output" {
-		var body struct {
-			Method string
-			Params json.RawMessage
-		}
-		if json.Unmarshal(b, &body) == nil {
-			seq, e := result.LastInsertId()
-			if e != nil {
-				return e
-			}
-			return t.ProjectProgress(id, body.Method, body.Params, seq, at)
-		}
-	}
 	return nil
 }
+
+// SessionOutputMaxBytes bounds each retained transcript row before pagination.
+const SessionOutputMaxBytes = 32 * 1024
+
 func (s *Store) Write(ctx context.Context, f func(*Tx) error) error {
 	if s.view != nil {
 		return fmt.Errorf("cannot write through a read view")
@@ -341,13 +376,21 @@ func (s *Store) Latest(ctx context.Context) int64 {
 }
 
 func (s *Store) RunEvents(ctx context.Context, id string, after int64, limit int) (map[string]any, error) {
+	return s.entityEvents(ctx, id, after, limit, "run.output")
+}
+
+func (s *Store) SessionEvents(ctx context.Context, id string, after int64, limit int) (map[string]any, error) {
+	return s.entityEvents(ctx, id, after, limit, "session.output")
+}
+
+func (s *Store) entityEvents(ctx context.Context, id string, after int64, limit int, kind string) (map[string]any, error) {
 	if after < 0 {
 		return nil, fmt.Errorf("invalid cursor")
 	}
 	if limit < 1 || limit > 200 {
 		limit = 100
 	}
-	rows, e := s.reader().QueryContext(ctx, "SELECT seq,kind,entity,data,at FROM events WHERE entity=? AND kind='run.output' AND seq>? ORDER BY seq LIMIT ?", id, after, limit+1)
+	rows, e := s.reader().QueryContext(ctx, "SELECT seq,kind,entity,data,at FROM events WHERE entity=? AND kind=? AND seq>? ORDER BY seq LIMIT ?", id, kind, after, limit+1)
 	if e != nil {
 		return nil, e
 	}
@@ -400,6 +443,9 @@ func (s *Store) CompareAndSwap(ctx context.Context, kind, id string, previous js
 		changed = n == 1
 		if changed {
 			t.invalidate(kind, id)
+			if err == nil {
+				err = t.sessionRuntime(kind, id, b)
+			}
 		}
 		return err
 	})

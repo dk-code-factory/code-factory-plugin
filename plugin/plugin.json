@@ -2,13 +2,13 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "code-factory",
   "version": "0.2.8",
-  "description": "Triage GitHub issues and pull requests, launch isolated Codex tasks, and answer agents in ChatGPT Work.",
+  "description": "Route GitHub events into retained Codex conversations and configure them through confirmed chat proposals.",
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "Code Factory",
         "shortDescription": "GitHub issue and PR triage with local Codex agents",
-        "longDescription": "Review GitHub issues and pull requests, prioritize work, launch Codex in isolated worktrees, and answer questions from the embedded inbox. Repository state, history, and credentials stay on your computer. Connections use Tailscale HTTPS with owner-approved OAuth.",
+        "longDescription": "Chat with one retained Codex agent per pull request, route GitHub events through configurable rules, prioritize issues, and confirm configuration proposals. Conversations and worktrees remain on your computer. Connections use Tailscale HTTPS with owner-approved OAuth.",
         "category": "Productivity",
         "capabilities": [
           "Read",
@@ -18,7 +18,7 @@
         "composerIcon": "./assets/icon.svg",
         "logo": "./assets/logo.svg",
         "defaultPrompt": [
-          "Run the configured review pipeline for a pull request.",
+          "Continue the retained conversation for a pull request.",
           "Open Code Factory\u2019s GitHub issue and pull-request dashboard.",
           "Show my agents that need attention.",
           "Investigate an issue with a read-only Codex agent."

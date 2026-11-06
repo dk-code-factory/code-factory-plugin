@@ -90,7 +90,7 @@ exit 0
 	if err := AtomicJSON(filepath.Join(f.root, "installation.json"), Installation{Current: "old", Runtime: f.runtime}); err != nil {
 		t.Fatal(err)
 	}
-	db, err := sql.Open("sqlite", filepath.Join(data, "state.db"))
+	db, err := sql.Open("sqlite", filepath.Join(data, "factory-v1.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestRollbackRestoresGatewayProfileAndArchivesCurrent(t *testing.T) {
 		t.Run(fmt.Sprintf("legacy-record-%t", legacy), func(t *testing.T) {
 			f := newProfileBackupFixture(t)
 			backup := filepath.Join(f.root, "backups", "before-upgrade.db")
-			if err := BackupDatabase(context.Background(), filepath.Join(f.runtime.DataDir, "state.db"), backup); err != nil {
+			if err := BackupDatabase(context.Background(), filepath.Join(f.runtime.DataDir, "factory-v1.db"), backup); err != nil {
 				t.Fatal(err)
 			}
 			profile, err := backupGatewayProfile(f.runtime.DataDir, backup)
@@ -204,5 +204,109 @@ func TestRollbackMissingRecordedGatewayProfileFailsBeforeStoppingServices(t *tes
 	}
 	if _, err := os.Stat(os.Getenv("CF_PROFILE_CALLS")); !os.IsNotExist(err) {
 		t.Fatal("rollback touched services before checking its compatibility snapshot")
+	}
+}
+
+func TestLegacyCutoverRestoresDatabaseAbsenceDuringRecoveryAndRollback(t *testing.T) {
+	f := newProfileBackupFixture(t)
+	ctx := context.Background()
+	legacy := filepath.Join(f.runtime.DataDir, "state.db")
+	wrapper := filepath.Join(f.runtime.DataDir, "factory-v1.db")
+	if err := os.Rename(wrapper, legacy); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Simulate the new service creating state before its activation fails.
+	systemctl, err := os.ReadFile(f.runtime.Paths["systemctl"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := strings.Replace(string(systemctl), `  /usr/bin/cp "$CF_PROFILE_NEW"`, `  printf 'partial wrapper state' > "$CF_PROFILE_DATA/factory-v1.db"
+  /usr/bin/cp "$CF_PROFILE_NEW"`, 1)
+	if err = os.WriteFile(f.runtime.Paths["systemctl"], []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("CF_PROFILE_FAIL_UPGRADE", "1")
+	if err = InstallRelease(ctx, f.runtime.DataDir, f.source, f.runtime.Listen); err == nil || strings.Contains(err.Error(), "automatic recovery failed") {
+		t.Fatal("legacy cutover failed to recover old release", err)
+	}
+	var pending Installation
+	b, err := os.ReadFile(filepath.Join(f.root, "pending.json"))
+	if err != nil || json.Unmarshal(b, &pending) != nil || !pending.DatabaseAbsent || pending.Backup != "" {
+		t.Fatal("cutover did not record prior database absence", pending, err)
+	}
+	assertOldState := func() {
+		t.Helper()
+		after, err := os.ReadFile(legacy)
+		if err != nil || string(before) != string(after) {
+			t.Fatal("legacy database was changed", err)
+		}
+		for _, suffix := range []string{"", "-wal", "-shm"} {
+			if _, err := os.Stat(wrapper + suffix); !os.IsNotExist(err) {
+				t.Fatal("wrapper state survived restoration of absence", suffix, err)
+			}
+		}
+		link, err := os.Readlink(filepath.Join(f.root, "current"))
+		if err != nil || link != "old" {
+			t.Fatal("old binary was not restored", link, err)
+		}
+		f.assertPreserved(t, f.oldProfile)
+	}
+	assertOldState()
+	// Exercise explicit rollback from the persisted cutover record, retaining
+	// new wrapper state in a separate archive before restoring its prior absence.
+	db, err := sql.Open("sqlite", wrapper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = db.Exec("CREATE TABLE cutover_fixture(value TEXT); INSERT INTO cutover_fixture VALUES('new wrapper data')")
+	closeErr := db.Close()
+	if err != nil || closeErr != nil {
+		t.Fatal(err, closeErr)
+	}
+	for _, suffix := range []string{"-wal", "-shm"} {
+		if err = os.WriteFile(wrapper+suffix, nil, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err = switchLink(filepath.Join(f.root, "current"), f.next); err != nil {
+		t.Fatal(err)
+	}
+	if err = Rollback(ctx); err != nil {
+		t.Fatal(err)
+	}
+	assertOldState()
+	archives, err := filepath.Glob(filepath.Join(f.root, "backups", "pre-rollback-*.db"))
+	if err != nil || len(archives) != 1 {
+		t.Fatal("new wrapper database was not archived", archives, err)
+	}
+	archive, err := sql.Open("sqlite", archives[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer archive.Close()
+	var value string
+	if err = archive.QueryRow("SELECT value FROM cutover_fixture").Scan(&value); err != nil || value != "new wrapper data" {
+		t.Fatal("rollback archive lost new data", value, err)
+	}
+	installed, err := ReadInstallation()
+	if err != nil || installed.DatabaseAbsent {
+		t.Fatal("consumed absence marker was retained", installed, err)
+	}
+}
+
+func TestRollbackMissingDatabaseSnapshotFailsBeforeStoppingServices(t *testing.T) {
+	f := newProfileBackupFixture(t)
+	if err := AtomicJSON(filepath.Join(f.root, "installation.json"), Installation{Current: f.next, Previous: "old", Backup: filepath.Join(f.root, "missing.db"), Runtime: f.runtime}); err != nil {
+		t.Fatal(err)
+	}
+	if err := Rollback(context.Background()); err == nil || !strings.Contains(err.Error(), "recorded database snapshot unavailable") {
+		t.Fatal("missing database snapshot was not reported", err)
+	}
+	if _, err := os.Stat(os.Getenv("CF_PROFILE_CALLS")); !os.IsNotExist(err) {
+		t.Fatal("services stopped before checking recorded database snapshot")
 	}
 }

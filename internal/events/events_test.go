@@ -149,7 +149,7 @@ func TestCallbackSafetyAndFailedChallenge(t *testing.T) {
 	}
 }
 
-func TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications(t *testing.T) {
+func TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications(t *testing.T) {
 	s, ctx := eventFixture(t)
 	secret := "whsec_" + base64.StdEncoding.EncodeToString(make([]byte, 32))
 	names := map[string]int{}
@@ -173,7 +173,7 @@ func TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications(t *testin
 		}
 		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(response)), Header: make(http.Header)}, nil
 	})}
-	for _, name := range []string{"inbox.changed", "attention.required"} {
+	for _, name := range []string{"inbox.changed", "attention.required", "session.changed"} {
 		if _, err := s.Subscribe(ctx, SubscribeInput{Name: name, Delivery: Delivery{Mode: "webhook", URL: "https://callback.example/events", Secret: secret}}); err != nil {
 			t.Fatal(err)
 		}
@@ -182,7 +182,10 @@ func TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications(t *testin
 		if err := tx.Event("pr.changed", "org/repo#1", map[string]string{"context": "private-question-context"}); err != nil {
 			return err
 		}
-		return tx.Event("attention.required", "run-1", map[string]string{"origin": "text", "context": "private-question-context"})
+		if err := tx.Event("attention.required", "session-1", map[string]string{"origin": "native", "context": "private-question-context"}); err != nil {
+			return err
+		}
+		return tx.Event("session.changed", "session-1", map[string]string{"summary": "private-question-context"})
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +195,7 @@ func TestPRMonitoringAndRecoveredQuestionsUseMetadataOnlyNotifications(t *testin
 	if err := s.Tick(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if names["inbox.changed"] != 1 || names["attention.required"] != 1 {
-		t.Fatal("monitoring or recovered question alert was lost or duplicated")
+	if names["inbox.changed"] != 1 || names["attention.required"] != 1 || names["session.changed"] != 1 {
+		t.Fatal("monitoring, native question or session alert was lost or duplicated")
 	}
 }

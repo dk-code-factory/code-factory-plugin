@@ -14,8 +14,9 @@ import (
 )
 
 type Vault struct {
-	s *Store
-	a cipher.AEAD
+	s               *Store
+	a               cipher.AEAD
+	redactionSource *Vault
 }
 
 func NewVault(s *Store, dir string) (*Vault, error) {
@@ -41,6 +42,12 @@ func NewVault(s *Store, dir string) (*Vault, error) {
 	a, e := cipher.NewGCM(c)
 	return &Vault{s: s, a: a}, e
 }
+
+// IncludeRedactionsFrom connects retained infrastructure credentials for masking
+// only. Get and Set still use this vault's fresh application database. Configure
+// it once before starting workers; credentials and legacy application data are not copied.
+func (v *Vault) IncludeRedactionsFrom(source *Vault) { v.redactionSource = source }
+
 func (v *Vault) Set(ctx context.Context, name, secret string) error {
 	return v.s.Write(ctx, func(tx *Tx) error { return v.SetTx(tx, name, secret) })
 }
@@ -69,12 +76,7 @@ func (v *Vault) Get(ctx context.Context, name string) (string, error) {
 
 // RedactJSON removes service-managed credentials from data before journaling or exposing it.
 func (v *Vault) RedactJSON(ctx context.Context, b json.RawMessage, extra []string) json.RawMessage {
-	secrets := append([]string{}, extra...)
-	for _, name := range []string{"jira", "tunnel-key"} {
-		if secret, e := v.Get(ctx, name); e == nil && secret != "" {
-			secrets = append(secrets, secret)
-		}
-	}
+	secrets := v.Secrets(ctx, extra)
 	if len(secrets) == 0 {
 		return b
 	}

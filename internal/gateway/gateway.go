@@ -239,6 +239,9 @@ func (g *Gateway) Public() http.Handler {
 	mux.HandleFunc("POST /token", g.token)
 	mux.HandleFunc("POST /revoke", g.revoke)
 	mux.HandleFunc("/mcp", g.mcp)
+	// GitHub authenticates the raw payload with its own HMAC. OAuth is for
+	// interactive owners; the daemon verifies and durably retains deliveries.
+	mux.Handle("POST /github/webhook", g.proxy)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]string{"status": "verified", "transport": "tailscale"})
 	})

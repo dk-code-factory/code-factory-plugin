@@ -236,9 +236,7 @@ func (a *App) SyncNotifications(ctx context.Context) error {
 	if e := a.Store.Put(ctx, "github-notifications", "cursor", checkpoint, ""); e != nil {
 		return e
 	}
-	if err == nil && a.Runs != nil {
-		return a.ProcessReviewRequests(ctx)
-	}
+
 	return err
 }
 

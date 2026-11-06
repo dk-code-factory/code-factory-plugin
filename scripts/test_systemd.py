@@ -48,12 +48,12 @@ for attempt in range(100):
     except OSError:
         if attempt==99: raise
         time.sleep(.1)
-with sqlite3.connect(root/'state.db') as db: assert db.execute("select count(*) from entities where kind='profile'").fetchone()[0]==3
-print('PASS: authenticated restart health and retained SQLite profiles')
+with sqlite3.connect(root/'factory-v1.db') as db: assert db.execute("select count(*) from entities where kind='factory-settings'").fetchone()[0]==1
+print('PASS: authenticated restart health and fresh wrapper settings')
 PYHEALTH
 code-factory doctor
 code-factory uninstall
-test -e /home/pilot/.local/share/code-factory/state.db
+test -e /home/pilot/.local/share/code-factory/factory-v1.db
 ''')
     print('PASS: isolated Linux user systemd install/rerun/restart/uninstall without Go or Node; provider executables are fixtures')
 finally:

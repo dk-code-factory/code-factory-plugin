@@ -12,8 +12,11 @@ Your browser must be connected to the owner's Tailscale network to approve it.
 Start a new Work conversation and ask **Open Code Factory**.
 
 The matching Linux daemon and Tailscale gateway must be running on the host named
-in `mcp.json`. The embedded app manages repositories, profiles and settings.
-Opening an item never launches work; review and Start are explicit operations.
+in `mcp.json`. The embedded app retains one native Codex conversation per PR. Configuration chat
+proposes repository rules, installed skills and native profiles; every settings
+edit requires explicit confirmation of its concrete diff. Opening an item never
+launches work. Authorized event actions and explicit messages deliver work to the
+retained conversation.
 
 Local plugin sources are documented for the desktop app. For browser-only Work,
 the host may require registering the remote MCP connection once and importing a

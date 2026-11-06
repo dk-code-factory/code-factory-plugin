@@ -1,182 +1,97 @@
-# Configure repositories, policies, profiles and skills
+# Configure through a retained conversation and confirmed diffs
 
 ## Goal
 
-The owner chooses the repositories and reusable work settings the application will use.
+Configure through a retained conversation and confirmed diffs.
 
 ## Preconditions
 
-The owner has opened the separate connected Settings view. Repository access is granted through the existing provider account.
+The private owner connection is established. Application data starts clean in the session-state database; native Codex authentication and configuration remain outside application state. GitHub source text is task data, not new authority.
 
 ## Main flow
 
-1. Load the independent Settings view only when opened; its cached administration data follows the shared saved-state subscription. Open the independent Settings view and its initially expanded Repositories form, focused on the first repository when none is configured. Save its identifier and optional checkout/base; show feedback while remaining in Settings.
-2. Expand Priorities & notifications to edit label/priority rows, the assessment policy and the optional question helper model.
-3. Create or edit work profiles, including prompts, model settings, permissions and publishing authority.
-4. Discover local skills or save managed skill content, then select skills for future launches. Selecting an existing managed skill loads its saved instructions on demand; Save waits for that selected read, and an earlier response cannot overwrite a later selection or editor draft.
-5. In System defaults choose a single retained Codex session, the default, or workflow execution. The single session uses the configured review prompt; an installed PR iteration skill is optional, and saving validates any selected skill. Changes apply to future prepared work and preserve existing proposals and sessions.
-6. Inspect cached GitHub API usage and choose the application request budget, quota reserve and review-notification interval.
+1. Use configuration chat to inspect effective settings and native layers.
+
+2. Choose actual native profiles and agent definitions with arbitrary installed skills.
+
+3. Inspect a concrete application or native configuration proposal.
+
+4. Explicitly confirm or reject against the inspected versions.
+
+5. Apply confirmed changes after active turns finish while preserving unrelated settings.
 
 ## Alternatives and recovery
 
-Settings is independent of the task UI and has no Inbox/Agents navigation. Saving does not replace an already-open task view or reset its drafts. Settings is one compact column. Other relevant sections start collapsed. Each saving form disables its controls and shows saving, success or failure beside its retained values. Unused disabled integration forms are omitted; Jira remains disabled in the pilot backend. Empty or duplicate priority labels are rejected inline. Invalid repository identifiers, unsupported permission choices and incomplete profiles are rejected. Unsupported skill names and a missing required skill header are rejected; saving a skill does not establish that its complete content is valid. Editing settings does not immediately launch work or rewrite a prepared launch. An explicitly enabled automatic-review policy can launch eligible reviews on a later successful repository poll.
+Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
 ## Scenarios
 
-- **S1** Repository settings are accepted and available to subsequent synchronization and launch.
-- **S2** Profiles and skills can be saved and selected, including an explicit full-access/never/authorized choice for autonomous execution and publishing; unsupported profile choices, unsupported skill names and a missing required skill header are rejected.
-- **S3** Changing assessment policy invalidates cached priority assessments.
+- **S1** — Use configuration chat to inspect effective settings and native layers.
+- **S2** — Choose actual native profiles and agent definitions with arbitrary installed skills.
+- **S3** — Inspect a concrete application or native configuration proposal.
+- **S4** — Explicitly confirm or reject against the inspected versions.
+- **S5** — Apply confirmed changes after active turns finish while preserving unrelated settings.
 
-- **S4** Session execution defaults to one retained session using the configured prompt, including older settings without an explicit mode. An explicitly saved workflow choice remains available. No iteration skill is required; an optional selected iteration skill is saved with the mode. Unsupported modes and unavailable, disabled or unrelated selected skills are rejected. Older cached forms preserve omitted mode/skill settings. Switching execution changes only future preparations. System defaults queue review requests. An explicitly configured full-access/never/authorized review pipeline is eligible alongside read-only/ask; selecting permissions does not itself enable automatic review. A repository inherits or overrides queue/automatic behavior and role pipelines, can pause monitoring, and adds owner review instructions to its generic prompt. Last poll, sync errors and review-policy errors remain visible. Older cached forms preserve omitted monitoring/default fields; explicit inheritance or empty extra prompt clears only the chosen value.
-- **S5** Admin widget, plugin tools and bundled admin skill observe installed/available Codex plugins, enabled state, versions, update status and durable operations. The owner adds sources and explicitly installs, updates or removes plugins. Scheduled metadata checks never install updates. Uncertain operations retain observations and never replay. Discovered plugin/standalone skills remain selectable for future review and implementation profiles; unavailable skills cannot be newly prepared. Unknown remote-catalog version or authentication readiness remains explicit.
+## Verification scope
 
-- **S6** The owner saves a bounded application GitHub request budget, reserve and notification interval without triggering a repository poll. Usage displays cached counts and observed quotas. Budget-only edits preserve priority assessments. Omitted fields from older forms retain their values; independent skill/agent GitHub usage is identified separately.
-
-- **S7** Ordered reviewers, private rules and automatic posting can be configured globally or per repository. Posting defaults off; explicit false disables and null restores inheritance. Saved policy changes update the effective choice in an open PR without starting or publishing work. One-time DK import preserves Factory settings and reports conflicts.
+The assertion references below establish their fixture scope. Native installed-host, real-provider and assistive-technology acceptance require separate dated observations. The retired pipeline editor, review artifacts, AI question repair and built-in issue-report ledger have no compatibility path.
 
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [repository](../glossary/README.md#repository), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill), [priority](../glossary/README.md#priority), [coverage-gap](../glossary/README.md#coverage-gap), [known-limitation](../glossary/README.md#known-limitation), [codex-plugin](../glossary/README.md#codex-plugin), [plugin-marketplace](../glossary/README.md#plugin-marketplace), [plugin-inventory](../glossary/README.md#plugin-inventory), [plugin-maintenance](../glossary/README.md#plugin-maintenance), [review-policy](../glossary/README.md#review-policy), [repository-review-prompt](../glossary/README.md#repository-review-prompt), [github-request-budget](../glossary/README.md#github-request-budget), [github-request-reserve](../glossary/README.md#github-request-reserve), [github-review-notification](../glossary/README.md#github-review-notification), [review-workflow](../glossary/README.md#review-workflow), [review-artifact](../glossary/README.md#review-artifact), [review-posting-policy](../glossary/README.md#review-posting-policy), [review-publication-operation](../glossary/README.md#review-publication-operation).
-UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [P-REPOSITORIES](../ui/README.md#P-REPOSITORIES), [P-POLICIES](../ui/README.md#P-POLICIES), [P-PROFILES](../ui/README.md#P-PROFILES), [P-SKILLS](../ui/README.md#P-SKILLS), [W-REPOSITORY-SETTINGS](../ui/README.md#W-REPOSITORY-SETTINGS), [W-POLICY-SETTINGS](../ui/README.md#W-POLICY-SETTINGS), [W-PROFILE-SETTINGS](../ui/README.md#W-PROFILE-SETTINGS), [W-SKILL-SETTINGS](../ui/README.md#W-SKILL-SETTINGS), [C-REPOSITORY-SAVE](../ui/README.md#C-REPOSITORY-SAVE), [C-DISCOVER-SKILLS](../ui/README.md#C-DISCOVER-SKILLS), [C-POLICY-SAVE](../ui/README.md#C-POLICY-SAVE), [C-PROFILE-SAVE](../ui/README.md#C-PROFILE-SAVE), [C-SKILL-SAVE](../ui/README.md#C-SKILL-SAVE), [S-SETTINGS](../ui/README.md#S-SETTINGS), [C-OPEN-SETTINGS](../ui/README.md#C-OPEN-SETTINGS), [W-PLUGIN-ADMIN](../ui/README.md#W-PLUGIN-ADMIN), [P-PLUGIN-ADMIN](../ui/README.md#P-PLUGIN-ADMIN), [W-SYSTEM-DEFAULTS](../ui/README.md#W-SYSTEM-DEFAULTS), [P-SYSTEM-DEFAULTS](../ui/README.md#P-SYSTEM-DEFAULTS), [C-PLUGIN-MAINTENANCE](../ui/README.md#C-PLUGIN-MAINTENANCE), [C-REVIEW-POLICY](../ui/README.md#C-REVIEW-POLICY), [C-REPOSITORY-REVIEW-PROMPT](../ui/README.md#C-REPOSITORY-REVIEW-PROMPT), [W-GITHUB-USAGE](../ui/README.md#W-GITHUB-USAGE), [C-GITHUB-USAGE](../ui/README.md#C-GITHUB-USAGE), [C-SKILL-LOAD](../ui/README.md#C-SKILL-LOAD), [W-PR-REVIEW-POLICY](../ui/README.md#W-PR-REVIEW-POLICY), [W-RETAINED-REVIEW](../ui/README.md#W-RETAINED-REVIEW), [C-PR-POSTING-POLICY](../ui/README.md#C-PR-POSTING-POLICY), [C-REVIEW-PUBLISH](../ui/README.md#C-REVIEW-PUBLISH), [C-REVIEW-RECONCILE](../ui/README.md#C-REVIEW-RECONCILE).
+Glossary: [configuration-proposal](../glossary/README.md#configuration-proposal), [profile](../glossary/README.md#profile), [skill](../glossary/README.md#skill).
+UI entities: [PAGE-SETTINGS](../ui/README.md#PAGE-SETTINGS), [W-CONFIGURATION-CHAT](../ui/README.md#W-CONFIGURATION-CHAT), [W-CONFIGURATION-PROPOSAL](../ui/README.md#W-CONFIGURATION-PROPOSAL), [W-EFFECTIVE-SETTINGS](../ui/README.md#W-EFFECTIVE-SETTINGS).
 
 ## Flow diagram
 
 ```mermaid
 flowchart TD
-    N0["Open independent settings and save repository configuration #40;S1#41;"]
-    N1["Set label priorities and assessment policy #40;S3#41;"]
-    N2["Save profiles and permissions #40;S2#41;"]
-    N3["Discover or save skills for future launches"]
-    N4["Reject invalid settings"]
-    N5["Correct draft without launching work"]
-    N6(["Settings available to future work"])
-    N7["Set system defaults, repository overrides and extra review instructions #40;S4#41;"]
-    N8["Observe plugins or submit one explicit maintenance operation #40;S5#41;"]
-    N9(["Uncertain or failed result retains observed state without replay"])
-    N10["Save API request budget, reserve and review-notification interval#59; inspect cached usage #40;S6#41;"]
-    N11["Save ordered reviewers, private rules and posting inheritance #40;S7#41;"]
-    N12(["Settings retained with explicit conflicts and inheritance"])
-    N0 -->|"accepted"| N1
-    N1 --> N2
-    N2 --> N3
-    N0 -->|"invalid repository"| N4
-    N2 -->|"invalid profile"| N4
-    N3 -->|"unsupported skill name or missing required header"| N4
-    N4 --> N5
-    N5 -->|"retry"| N0
-    N3 -->|"accepted"| N6
-    N0 -->|"review configuration"| N7
-    N7 -->|"saved policy"| N6
-    N0 -->|"plugin management"| N8
-    N8 -->|"observed success"| N6
-    N8 -->|"failed or uncertain"| N9
-    N0 -->|"API usage settings"| N10
-    N10 -->|"valid settings saved"| N6
-    N10 -->|"invalid limits"| N4
-    N0 -->|"retained review workflow"| N11
-    N11 -->|"validate evidence and authority"| N12
+    N0["Configure through a retained conversation and confirmed diffs"]
+    N1["Use configuration chat to inspect effective settings and native layers #40;S1#41;"]
+    N2["Choose actual native profiles and agent definitions with arbitrary installed skills #40;S2#41;"]
+    N3["Inspect a concrete application or native configuration proposal #40;S3#41;"]
+    N4["Explicitly confirm or reject against the inspected versions #40;S4#41;"]
+    N5["Apply confirmed changes after active turns finish while preserving unrelated settings #40;S5#41;"]
+    N6(["Hold saved work and show the failure or human request"])
+    N7(["Retain conversation and saved evidence"])
+    N0 -->|"authorized action"| N1
+    N1 -->|"validated or explicitly resumed"| N2
+    N1 -->|"missing authority, stale identity or unavailable dependency"| N6
+    N2 -->|"validated or explicitly resumed"| N3
+    N2 -->|"missing authority, stale identity or unavailable dependency"| N6
+    N3 -->|"validated or explicitly resumed"| N4
+    N3 -->|"missing authority, stale identity or unavailable dependency"| N6
+    N4 -->|"validated or explicitly resumed"| N5
+    N4 -->|"missing authority, stale identity or unavailable dependency"| N6
+    N5 -->|"validated or explicitly resumed"| N7
+    N5 -->|"missing authority, stale identity or unavailable dependency"| N6
 ```
 
 ## Implementation references
 
-- [internal/app/app.go](../../internal/app/app.go) — Settings and repository/profile validation (`func (a *App) SaveConfig(`)
-- [internal/app/runs.go](../../internal/app/runs.go) — Skill discovery, snapshots and managed persistence; SaveSkill accepts nonempty names of at most 63 lowercase ASCII letters, digits or hyphens and content beginning with `---\n`, without parsing frontmatter or validating the remaining content. (`func (m *Manager) SaveSkill(`)
-- [web/src/settings.tsx](../../web/src/settings.tsx) — Settings editor (`function Settings(`)
-- [internal/domain/types.go](../../internal/domain/types.go) — Defaults and profile choices
-- [internal/store/store.go](../../internal/store/store.go) — Shared domain, persistence, transport or dependency contract
-- [internal/transport/mcp.go](../../internal/transport/mcp.go) — Shared domain, persistence, transport or dependency contract
-- [go.mod](../../go.mod) — Shared domain, persistence, transport or dependency contract
-- [go.sum](../../go.sum) — Shared domain, persistence, transport or dependency contract
-- [web/src/types.ts](../../web/src/types.ts) — Embedded UI build and host-fixture configuration
-- [web/src/style.css](../../web/src/style.css) — Embedded UI build and host-fixture configuration
-- [web/src/bridge.ts](../../web/src/bridge.ts) — Embedded UI build and host-fixture configuration
-- [web/package.json](../../web/package.json) — Embedded UI build and host-fixture configuration
-- [web/package-lock.json](../../web/package-lock.json) — Embedded UI build and host-fixture configuration
-- [web/tsconfig.json](../../web/tsconfig.json) — Embedded UI build and host-fixture configuration
-- [web/vite.config.ts](../../web/vite.config.ts) — Embedded UI build and host-fixture configuration
-- [web/index.html](../../web/index.html) — Embedded UI build and host-fixture configuration
-- [web/playwright.config.ts](../../web/playwright.config.ts) — Embedded UI build and host-fixture configuration
-- [web/fixture-ports.ts](../../web/fixture-ports.ts) — Shared validated loopback fixture origins preserve default ports and allow isolated browser verification alongside another checkout. (`export const fixtureUIOrigin =`)
-- [internal/testhost/main.go](../../internal/testhost/main.go) — Embedded UI build and host-fixture configuration
-- [internal/testutil/fakecodex/main.go](../../internal/testutil/fakecodex/main.go) — Embedded UI build and host-fixture configuration
-- [internal/testutil/testutil.go](../../internal/testutil/testutil.go) — Embedded UI build and host-fixture configuration
-- [internal/web/embed.go](../../internal/web/embed.go) — Embedded UI build and host-fixture configuration
-- [internal/web/embed.go](../../internal/web/embed.go) — Configuration opens through its own bridged document entry. (`func SettingsHTML(`)
-- [internal/app/plugins.go](../../internal/app/plugins.go) — Durable pinned-CLI plugin lifecycle and exclusive runtime/maintenance boundary. (`func (m *Manager) PluginAction(`)
-- [internal/domain/admin.go](../../internal/domain/admin.go) — Typed plugin operation and inventory persistence. (`type PluginOperation struct`)
-- [internal/app/review_requests.go](../../internal/app/review_requests.go) — Resolve inherited review policies, fresh requests, durable claims and pinned automatic launches. (`func (a *App) ProcessReviewRequests(`)
-- [web/src/admin.tsx](../../web/src/admin.tsx) — Repository/global review policy and plugin-admin settings. (`export function RepositoryAdmin(`)
-- [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Bundled administration skill exposes the same owner tool controls. (`name: code-factory-admin`)
-- [internal/app/github_usage.go](../../internal/app/github_usage.go) — Bind system budget settings to private durable accounting and carry over existing cooldowns. (`func (a *App) EnableGitHubUsage(`)
-- [internal/app/skill_snapshots.go](../../internal/app/skill_snapshots.go) — Freeze a selected plugin package and its relative skill entrypoint; materialize bounded retained files with traversal confinement and standalone compatibility. (`func snapshotSkill(`)
-- [web/src/ui-changes.ts](../../web/src/ui-changes.ts) — Plugin administration rereads saved state on shared invalidations; failed reads retry without replaying mutations. (`export function useUIVersion(`)
-- [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — Projection builds quota information from SQLite without provider effects. (`func SavedGitHubUsage(`)
-- [internal/app/review_import.go](../../internal/app/review_import.go) — Ordered reviewer settings, private rules, posting inheritance and one-time conflict-preserving import.
-- [internal/app/review_workflows.go](../../internal/app/review_workflows.go) — Ordered reviewer settings, private rules, posting inheritance and one-time conflict-preserving import.
+- [internal/factory/configuration.go](../../internal/factory/configuration.go) — Concrete application/native proposals, explicit confirmation and safe boundaries. (`func (s *Service) Confirm(`)
+- [internal/factory/native.go](../../internal/factory/native.go) — Direct native app-server retained thread creation and resumption. (`func (s *Service) attach(`)
+- [web/src/wrapper.tsx](../../web/src/wrapper.tsx) — Saved inbox, session conversation, human input and confirmed configuration. (`function Factory(`)
+- [internal/transport/factory.go](../../internal/transport/factory.go) — Session, configuration, event and retained triage APIs. (`func NewFactory(`)
+- [plugin/skills/code-factory-status/SKILL.md](../../plugin/skills/code-factory-status/SKILL.md) — Current configure-work implementation or fixture/build dependency.
+- [plugin/skills/code-factory-report-issue/SKILL.md](../../plugin/skills/code-factory-report-issue/SKILL.md) — Current configure-work implementation or fixture/build dependency.
 
 ## Test references
 
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `test("settings save repository and priority rows without unused integrations"`; S1. Independent settings keeps save feedback and configured summaries visible without task navigation; no unused integration form. Saves the optional question helper model.
-- [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestAssessmentCacheAndInvalidation(`; S3. Policy changes rerun inference.
-- [internal/app/real_codex_test.go](../../internal/app/real_codex_test.go) — `func TestRealCodexInteractiveLifecycle(`; S2. Opt-in real lifecycle saves a profile/skill and observes skill loading; skipped in default fixture verification.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `test("repository form shows saving and errors beside retained inputs"`; S1. Saving disables the form; exact inline failure preserves values.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `test("collapsed settings editors preserve capabilities and show independent save results"`; S1, S2. Profile/mode and skill saves, discovery and diagnostics have independent local results; initial repository focus is asserted.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `settings has a dedicated ${theme} view without inbox or agent navigation`; S1. Repository saves stay within independent configuration, with no task nav.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `separate settings can save while the inbox view retains its item and agent drafts`; S1, S2. Independent documents preserve main task context/drafts while settings save shared data.
-- [internal/transport/ui_resource_test.go](../../internal/transport/ui_resource_test.go) — `func TestSettingsResourceIsIndependentFromInboxAndLegacyAlias(`; S1. Settings/inbox identities, bindings, bodies and legacy aliases remain separate.
-- [internal/web/embed_test.go](../../internal/web/embed_test.go) — `func TestSettingsDocumentHasIndependentEntry(`; S1. Settings document root selects only the configuration surface.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `admin system and repository review policies retain inheritance and extra prompts`; S4. Both themes at 390px assert queue-only defaults, system opt-in, repo queue/inherit overrides, persisted extra review text, manual poll without explicit UI Start and scoped axe scans.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `plugin admin tracks installs, versions and explicit updates`; S5. Both themes use memoized plugin reads with distinct freshness markers to observe check/install/update/remove completion, final inventory and enabled controls without replaying maintenance.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `uncertain plugin mutations preserve drafts and never replay automatically`; S5. An uncertain management response displays feedback, retains the selector and submits only once after polling.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `repository review pipeline overrides system defaults and plugin skills remain selectable`; S2. The requested-PR conversation selects its repository pipeline over the system default without launching; a discovered plugin skill is selectable in a profile and an unavailable skill is disabled.
-- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginInventoryInstallUpdateAndRemoval(`; S5. Pinned-provider fixture asserts discovery, actual installed version, metadata-only newer version detection, explicit update/removal and positional argument separation.
-- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestPluginRestartAndMalformedInventoryRetainObservedState(`; S5. Malformed/null inventory preserves prior installed observations; interrupted operations become uncertain without replay.
-- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestSelectedDiscoveredSkillKeepsItsBundleAndAutomaticChecksDoNotInstall(`; S5. Discovery and launch preserve skill text/support files/executable modes; scheduled checks refresh metadata without an install command.
-- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestReviewPolicyInheritancePromptAndExactlyOnceAutomaticStart(`; S4. System defaults queue; enabled inherited policy starts one pinned read-only review with appended repo text, survives duplicate polls/restart and accepts a new request episode.
-- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestRepositoryQueueOverridePauseDraftAndStaleRequestsDoNotStart(`; S4. Queue override, pause, draft, old sync, absent request, sync error and unsafe review profile cannot launch automatically.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `GitHub usage settings show cached quota and save budget without polling`; S6. Both narrow themes save limits and display cached usage without polling GitHub.
-- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestIndexPreservesHistoryInvalidatesChangedHeadAndBudgetEditsKeepAssessmentPolicy(`; S3, S6. Budget-only edits do not invalidate all priority assessments; cheap index retains history and invalidates old-head metadata.
-- [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestInvalidAPIBudgetCannotOverwriteSavedPolicy(`; S6. Rejected out-of-range limits cannot replace saved API or assessment policy.
-- [internal/app/skill_snapshots_test.go](../../internal/app/skill_snapshots_test.go) — `func TestPluginSkillSnapshotKeepsPackageResourcesAndRetainedEntrypoint(`; S2. Package-level lifecycle/procedure resources and executable helpers retain relative paths and original content after installed source deletion and repeated materialization.
-- [internal/app/skill_snapshots_test.go](../../internal/app/skill_snapshots_test.go) — `func TestSkillSnapshotRejectsEscapesLinksMissingEntryAndOversize(`; S2. Manifest escapes, wrong skills directory, symlinks, missing entrypoints and oversized bundles fail instead of producing incomplete snapshots.
-- [internal/app/skill_snapshots_test.go](../../internal/app/skill_snapshots_test.go) — `func TestRetainedSkillRejectsTraversalAndPreservesStandaloneCompatibility(`; S2. Retained entry/file traversal and outbound symlinks cannot escape snapshot roots; legacy standalone SKILL.md remains usable.
-- [internal/app/review_requests_test.go](../../internal/app/review_requests_test.go) — `func TestPreparePRReviewHonorsExplicitFullAccess(`; S2, S4. Explicit owner full-access/never/authorized authority is retained by manual preparation and accepted once by automatic policy without enabling that policy implicitly.
-- [web/tests/launch.spec.ts](../../web/tests/launch.spec.ts) — `test("explicit full-access launch shows never approvals and authorized publishing"`; S2, S4. UI displays explicit full access, never approvals and authorized publishing; opens without Start, starts once on explicit action, and Settings describes selected authority.
-- [internal/app/plugins_test.go](../../internal/app/plugins_test.go) — `func TestRemovedPluginSkillStaysUnavailableWhileCachedFilesRemain(`; S5. Successful removal/discovery omission disables cached-file skill for new Prepare while frozen Run is unchanged; failed discovery preserves known skill, managed content remains and rediscovery re-enables.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `plugin status polling clears recovered read failures while retaining drafts`; S5. Failed plugin read recovers through a later successful poll, removes only its read alert, retains selector draft/inventory and issues no maintenance mutation.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `system defaults display and retain a supported nonpreset plugin interval`; S5. Saved supported30-minute interval is displayed accurately and retained through an unrelated budget save.
-- [internal/transport/mcp_test.go](../../internal/transport/mcp_test.go) — `func TestAuthenticatedMCPDiscoveryToolsAndUI(`; S5. MCP schema accepts distinct plugin-read freshness markers and sees a newly saved operation without changing the journal; existing auth/settings/selector guards remain.
-- [internal/transport/ui_state_test.go](../../internal/transport/ui_state_test.go) — `TestUIManagedSkillEditorReadsOnlySelectedContent`; S2. Broad settings/launch projections omit skill content/files; the app-only managed editor returns only selected content with a read cursor, rejects unmanaged skills and excludes private files.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `the managed skill editor loads selected saved instructions and saves an existing skill`; S2. Selecting an existing managed skill reads its saved instructions on demand and submits the edited full content.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `a late managed skill read cannot overwrite a later selection or its editor draft`; S2. Save is disabled during the selected read; a late earlier response cannot replace the later skill name or locally edited instructions.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `managed skill read failure blocks saving until an explicit read retry succeeds`; S2. Read failures gate the selected editor save until explicit reload succeeds; no save operation is submitted or replayed.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `notification-only failures refresh saved Settings feedback`; S1. Saved credential-resolution notification feedback updates from its own invalidation bucket.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `review workflow settings preserve ordered bindings and inherited posting overrides`; S7. Ordered binding persistence and inherited posting controls.
-- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestOneTimeDKImportPreservesFactoryValuesAndReportsConflicts(`; S7. Import preservation, conflict feedback and once-only state.
-- [internal/transport/review_workflow_test.go](../../internal/transport/review_workflow_test.go) — `func TestMCPReviewPolicyPresenceInheritanceAndDependencyDiagnostic(`; S7. Omitted and null settings preserve/reset posting overrides and reviewers correctly; a missing retained reviewer skill rejects Start before evidence or model execution.
-- [web/tests/launch.spec.ts](../../web/tests/launch.spec.ts) — `saved review policy changes refresh an open PR without polling or starting work`; S7. A saved global posting-policy change refreshes the effective choice in an open PR through shared invalidations, without starting a run or posting a review.
-- [internal/store/ui_journal_test.go](../../internal/store/ui_journal_test.go) — `TestUIJournalCommitsRollbackCASAndLegacyCursor`; S7. A saved PR posting-policy write publishes the owning item ID without stored policy payloads.
-- [internal/app/retained_review_test.go](../../internal/app/retained_review_test.go) — `func TestOneTimeGlobalDKImportUsesUserRulesAndPreservesConflicts(`; S7. Supported global DK rule location, reviewer defaults, conflict/source preservation, Factory precedence and once-only import after original source removal.
-- [internal/app/review_workflow_guards_test.go](../../internal/app/review_workflow_guards_test.go) — `func TestDirectCommandReviewerRetainsExecutablePackageAfterSourceRemoval(`; S7. Selected executable command bindings retain their supported package layout and sibling resources while excluding unrelated untracked owner files. Exact tracked sibling names with leading/trailing space and tab survive raw NUL inventory and are consumed by the retained command after source removal.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `global DK review import preserves unrelated edits made while settings are loading`; S7. Delayed import replaces reported reviewer/rule fields while preserving concurrent unrelated draft edits through Save, with no start/post side effect.
-- [internal/app/review_workflow_guards_test.go](../../internal/app/review_workflow_guards_test.go) — `func TestCommandCaptureRejectsOversizeSelectedExecutableAndPackage(`; S7. Oversized standalone/selected untracked executables and selected-plus-tracked package totals fail before unbounded retention.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `absent global reviewers retain invalid draft and validity through unrelated settings edits`; S7. Unrelated renders preserve invalid reviewer draft/error/native validity when global reviewers are absent; invalid Save mutates nothing, while real import/inheritance reset still recovers.
-- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `repository DK import discards stale results when switching editors during ${delay}`; S7. Repository A import/snapshot delays cannot modify subsequently selected B draft or stale import status; Save retains B reviewers/rules/base, including320px layout.
-- [web/tests/inbox.spec.ts](../../web/tests/inbox.spec.ts) — `a delayed policy save ${response} preserves a newer committed Off observation`; S7. Delayed success and failure responses from an earlier On save cannot replace a newer committed Off policy observation or restore an obsolete error; exactly one save occurs and no start/post runs.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `single Codex execution settings retain the selected iteration skill without launching`; S4. Saves single Codex mode and the installed iteration skill, preserves both during unrelated budget edits, switches back to workflow and never launches or publishes.
-- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestSingleCodexReviewRetainsSkillModeAndNativeSession(`; S4. Preparation freezes direct execution and a full iteration skill snapshot; changing settings prepares engine reviews without rerouting the existing native session or its follow-up.
-- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestSingleCodexConfigurationAllowsNoSkillAndRejectsInvalidSelections(`; S4. Prompt-only single-session settings save without an iteration skill; unavailable, disabled or unrelated selected iteration skills and unknown modes are rejected.
-- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestSingleCodexStartupRetainsNativeSessionAfterSettingsSwitch(`; S4. After settings switch to workflow and manager restart, the native review preserves mode, thread, workspace, authority, skill snapshot and saved progress; repeated recovery resumes once without original-task replay or YAML execution.
-- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestAutomaticReviewPreservesProfileSkills(`; S4. Automatic native reviews with nil, empty, unrelated or already-selected profile skills and workflow reviews with empty skills start and complete under the unchanged selected profile. Derived skills are retained once; actual profile changes still block automatic validation.
-- [web/tests/fixtures.ts](../../web/tests/fixtures.ts) — `export async function host(`; S1, S2, S4, S5, S6, S7. Shared per-test mocked host and serial assembled-daemon helpers; scenario assertions remain mapped to their feature spec files.
-- [internal/app/single_codex_test.go](../../internal/app/single_codex_test.go) — `func TestDefaultSingleCodexReviewUsesConfiguredPrompt(`; S4. Fresh and missing-mode settings prepare and start a native review without installed skills or configured reviewers, retaining the profile or custom prompt, repository instructions and pinned head.
-- [web/tests/settings.spec.ts](../../web/tests/settings.spec.ts) — `single Codex execution defaults to the review prompt without an iteration skill`; S4. Missing-mode settings display Single Codex and no iteration skill, save without selecting one, preserve an explicit workflow choice, and never start or publish work.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `configuration chat and readable effective settings replace forms`; S1, S3. Configuration message addresses persistent chat; effective settings can be read.
+- [internal/factory/service_test.go](../../internal/factory/service_test.go) — `func TestNativeAgentDefinitionUsesNativeTOMLAndProfile(`; S2. Native profile and agent config_file resolve without a separate agent format; effective native developer instructions remain in the actual thread request before wrapper guidance.
+- [internal/factory/service_test.go](../../internal/factory/service_test.go) — `func TestNativeConfigurationLayerVersionsPreserveUnrelatedSettings(`; S1, S4, S5. Confirmed native edit sends the exact filePath, expectedVersion and one model-key replace edit with reloadUserConfig false; changed native layers reject stale proposals. Actual native editor/file execution remains unverified.
+- [internal/factory/service_test.go](../../internal/factory/service_test.go) — `func TestConfigurationConfirmationStalenessAndSafeBoundary(`; S3, S4, S5. Explicit confirmation rejects stale app proposals and waits until active turns finish.
+- [internal/factory/service_test.go](../../internal/factory/service_test.go) — `func TestMissingSkillsAndProfilesAreVisible(`; S2. Missing arbitrary installed skill or native profile fails visibly before a claimed send.
+- [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestDynamicToolSchemasUseArrayRequired(`; S3. Actual dynamic-tool schemas compile and every required member is an array, including empty proposal schemas.
+- [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestNativeConfigurationStartupFailureRemainsConfirmedAcrossRestart(`; S5. A confirmed native proposal survives known client startup failure before any write and applies once after restart; ambiguous write failure remains uncertain and is not replayed.
+- [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestConfigurationAppliedMarkerAndAllBindingsCommitAtomically(`; S5. Actual SQLite binding-write abort rolls back settings and applied marker without retiring the current client; restart applies item/configuration/priority bindings together.
+- [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestMultipleNativeProposalsNeverRestoreRetiredEpoch(`; S5. Two independent deferred native proposals both apply without restoring a retired epoch; delayed old disconnect leaves execution idle, unheld and detached.
+- [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestSchedulerSkipsHeldQueueDecodeAndBusyConfiguration(`; S5. Thirty intentionally undecodable histories cover 15 held, 14 due but paused, and one running session with runtime rows within 512 bytes; three ticks preserve deferred active configuration and start no native work.
 
 ## Verification and gaps
 
 Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
-- **S2** — `gap-flow-configure-work-s2-01` · Known limitation · P2 · owner: user-flow-maintainer. Full skill frontmatter/content validation and assertions for unsupported names, missing headers and malformed content remain gaps. Profile/skill editing and other invalid-input combinations also lack focused automated coverage. The opt-in real lifecycle exercises a saved profile and skill, but is not run by this gate. Next verification: Assert the existing name/header rejection boundary and malformed-content acceptance; separately decide and verify any stronger validation, then exercise profile/skill editing and invalid inputs in fixtures.
 
 <!-- /flow-references -->

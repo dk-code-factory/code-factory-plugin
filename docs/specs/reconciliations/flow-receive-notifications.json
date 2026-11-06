@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "eda4f6ba66ecf44b622605608cd55a866d13770b",
-  "fingerprint": "11bfc1e3f6e149342e33222fec7f2ca55252333decdd265a86f8325b231c2d07",
+  "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
+  "fingerprint": "63dd77ce0fb019884785ca18df5df420c593143b6a79d2ce79f8a1cc2e186300",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "S1/S2 notification subscription identity, signatures, deduplication and retry policy remain unchanged. Default run execution does not enable automatic review requests or change the notification setting.",
-    "implementation": "The events implementation is unchanged. domain.Defaults changes ExecutionMode only and retains Notifications=true; source-dependent verification is refreshed for the shared domain input.",
-    "tests": "Reviewed TestSubscriptionVerificationRetryDedupRefreshAndExpiry signature verification and stable webhook retry identity. The mapped Go suite reruns; existing unverified failure classes and installed-host acceptance remain unchanged."
+    "kind": "behavior",
+    "description": "S1\u2013S4 retain verified signed callback subscriptions and metadata-only inbox/attention notifications while replacing retired run.state discovery with session.changed. Existing retry/expiry/rotation semantics remain unchanged. C7 S4 metadata-only source alerts include changed signed webhook observations independent of matching agent rules; duplicate/no-change deliveries do not repeat alert. Current incremental review: Incremental flow-receive-notifications review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract. Follow-up correction review: The previously reviewed flow-receive-notifications behavior and stable scenario IDs are retained. This correction does not add or retire its product behavior.",
+    "implementation": "Read event Definitions/validate/Tick and new factory session/attention event emission. Public payloads retain only entity/kind; private summaries/questions never enter callback bodies. Native questions replace recovered textual-question notification sources. Read processDelivery source update and inbox.changed in the same transaction; no source body enters the notification payload. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection. Follow-up correction review: Reviewed the incremental diff for discussion ordering, independent baseline/detail discovery, cache freshness and installer recovery. Its shared implementation changes preserve this contract; only operate-installation authored behavior is refined, while mapped consumers receive fresh verification.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry, TestCallbackSafetyAndFailedChallenge and updated TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications. The latter checks inbox, native attention and session callbacks once each and excludes private text. Real Work callback acceptance stays an open gap. Read actual signed handler\u2192Poll\u2192events.Tick subscriber test with matching and nonmatching rules, committed currenthead/body, one alert then same-ID and new-ID/unchanged-source silence, no privatebody or native turn. This is fixture webhook delivery, not installed-host acceptance. Current incremental review: Retain the subject-specific assertions documented above for flow-receive-notifications. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance. Follow-up correction review: Retain the subject-specific assertion review already recorded for flow-receive-notifications. Required suites will rerun after the current source freeze; the new targeted assertions establish only their precise fixture scope and do not waive existing host/provider gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 316.242
+      "seconds": 53.671
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.164
+      "seconds": 1.184
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.548
+      "seconds": 34.669
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 286.943
+      "seconds": 285.907
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.674
+      "seconds": 4.655
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "ebe0f67a7be565e2c12a5467b8f2fc4f549855d20ff5596614d6d7c0c9cdde1a",
-    "term:attention-request": "b0615d57238e603c3c76a17f9271369c0b4777995063008da1a1f3d8fe7711aa",
-    "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
-    "term:host": "a13c4dee7b2a58a1bbc37d82e54a8b8a175f419b07ca5b54cd55b0f4c9c01875",
-    "term:known-limitation": "2bed8d13431f74114b78d1f14270c6c4bcca514f523b6caafad1aaab8c5d2246",
-    "term:subscription": "989394a9a35cf7d9f0dfb05c4d7c3792dac0f53c045d36162a24fd6add1cde40",
-    "term:unverified-behavior": "a0984cd19de83b7bce49252e48b279a636dc594030980e1b237bf7b613d60a77"
+    "flow:receive-notifications": "b6ea86d1f663ea28f6eb0a2473deb7531cfd607e61ae17568db9799dfe48e5ee",
+    "term:attention-request": "44763a71f94d586a37ce694e5417e86a0d19046d9e46dea395d1e4bc142601a0",
+    "term:coverage-gap": "b6c01eac139642dd99d8128c27f13fd063467bacc3274d14a81b02894c133ef8",
+    "term:host": "51996b5788cbb112feb9f8c0177f8c2fb6a52386d84f37cc868b48080c103c5a",
+    "term:known-limitation": "a16fab2da63b2bbf9e7228ebb071488c5a5d335b2f6c18c80ad5e2e75ab70bc2",
+    "term:subscription": "5dc10aab7f9ef16672bf907bee5d20e3bb0c896e139674f9f97df2f21f00ca11",
+    "term:unverified-behavior": "ec6641a731d850f258008ff45df7610fefa3ac025f730cb411bb03d73765635f"
   }
 }

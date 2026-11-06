@@ -1,16 +1,14 @@
 # Browser and installed-host testing
 
-## Development port · 2026-10-25
+## Native wrapper verification
 
-The development UI has Working, Issues, My PRs, Review PRs and Messages queues.
-Opening an item shows its conversation; opening an item never starts an agent.
-Review the selected pipeline and authority before explicit Start. Pending answers
-belong to their owning run; uncertain delivery must not replay automatically.
-Settings opens separately and includes dependency and plugin administration.
-
-These are source contracts awaiting fresh verification against the published
-base. Follow [acceptance](acceptance.md) for the draft port's current blockers;
-private pilot observations do not establish acceptance for this branch.
+The UI has Working, Issues, My PRs, Review PRs, Messages, Configuration and Events.
+Opening an item never launches work. Authorized event rules and explicit messages
+start or steer one retained native conversation. Native questions/approvals keep
+exact identities; uncertain delivery is reconciled without blind replay.
+Configuration chat requires explicit diff confirmation for every edit. This build
+uses fresh application state; earlier pilot observations do not establish its
+installed-host acceptance.
 
 This is a generic operator guide. Supply your own approved private pilot repository,
 Tailscale hostname, registered app ID and installed plugin ID; none are bundled.
@@ -46,8 +44,7 @@ is not a passed assertion. Preserve selected plugin mentions in Work composers.
 
 Open the installed complete plugin in a fresh Work chat and invoke open_factory
 without launching work. Confirm the actual iframe is Connected, displays only
-approved pilot data and advances sync times. Review a Plan/read-only/ask snapshot
-before Start. Ask a real provider to present Continue/Stop with request_user_input,
+approved pilot data and advances sync times. Select an owner-approved native read-only profile before the first message. Ask a real provider to present Continue/Stop with request_user_input,
 answer in the widget, observe its actual response and wait for idle before sending
 a follow-up. Exercise reload/restart recovery and reject stale answers; resume
 explicitly with retained history and workspace. Cleanup must refuse dirty work.
@@ -65,28 +62,11 @@ logout/login with the owner because it closes desktop apps, Chrome and RDP; insp
 again only after the owner confirms authentication is complete. Preserve SSH and
 existing service/lingering policy. A session cycle is not cold-boot proof.
 
-## Question recovery and response confirmation · 2026-10-22
+## Native input verification
 
-The published Agents pane retains native and structured-message questions. A
-stopped textual ask is checked in a separate ephemeral read-only helper; the
-optional helper model defaults to the task model. The retained task gets at most
-two question-only Plan form-repair attempts, then a durable text fallback. Task
-mode, sandbox and publishing authority remain those of the original run.
-
-A clock accompanies readable waiting labels; a circular arrow accompanies recovery
-progress. Take over stops recovery. Inspect technical transcript opens the owning
-agent and preserves its message draft. Automatic inputs are labelled Question
-recovery; actual user replies retain their role. No reply needed dismisses only a
-textual fallback and never answers or authorizes work.
-
-After a successful UI answer, the owning agent opens with ✓ Answer sent for five
-seconds; approvals and other forms show ✓ Response sent. This confirmation is local
-to that run and view lifetime. Polling does not prolong it. Failed or uncertain
-submissions never confirm or replay; refresh failure after successful submission
-is separate feedback. Agent text, including UI_ANSWER_OK, stays literal transcript
-content. Old records without origin metadata retain native-request semantics.
-
-The 2026-10-22 source verification in [acceptance](acceptance.md) covers fixtures
-only. No services were restarted and no installed plugin was changed for this
-merge. Actual-host recovery, assistive technology, callbacks, one-hour soak and
-login-cycle acceptance require separate version-bound observations.
+Exercise explicit working/done/blocked status reports and the suspended blocked
+status response. Test exact native choices, free text, approvals and disconnect
+expiry in the approved private pilot. A turn that stops without a report must
+appear idle. No classifier or repair turn should run. Configure rules through a
+reviewed diff and confirm quiet-period resets, human-triggered flushing and retained
+history without authorizing changes to production repositories.

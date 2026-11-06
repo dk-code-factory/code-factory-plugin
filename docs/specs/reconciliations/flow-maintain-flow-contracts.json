@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "90d5b3656cd59629fa73997533513a7fc380b2f2",
-  "fingerprint": "50612a22790be7ee3d3ca04a677f70c880b6376a503ae4137c8c02c0f721e205",
+  "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
+  "fingerprint": "cfae0832f59c1ca8d8e79f208ecd2713fd288f0d2f97cd326a72ecfd4feeae00",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "Against main, S4/S5 add hosted setup timing, atomic initial publication and reservation-backed missing-file recovery with truthful partial outcomes. Cycle4 corrects the prose and mapping quantifier: reconstruction requires a valid matching reservation and does not replace an existing path, including a broken symlink. This documentation correction adds no new behavior; normal finalization of selected existing journals remains unchanged.",
-    "implementation": "Read materialize_reserved: reconstruction is attempted only when the selected path is absent and not a symlink, then checks exact selected results path, reserved filename, finite numeric clock, exact typed options and hosted origin. Existing selected journals return to normal setup/overall finalization without a new schema-validation promise. Journal.create still writes complete JSON through owned staging before replace; workflow still exports selection, starts setup before metadata, finalizes before artifacts and uploads one selected file. Full tracked-file identity proof confirms runtime, tests and workflow are unchanged from270e84a. The whole main comparison remains behavior because the original meaningful implementation/test cochanges are retained.",
-    "tests": "Read test_hosted_recovery_rejects_unknown_reservations_and_preserves_existing_files and ran it successfully: absent evidence is not created for missing, malformed, mismatched or ill-typed reservations; the exact empty and invalid-JSON strings remain unchanged after both finalizers; the broken symlink remains a symlink with no target. These assertions do not claim preservation of all structurally corrupt or foreign parseable JSON. Existing real SIGINT/SIGTERM partial-write and metadata tests, ordinary-write-failure assertions and workflow-order test remain byte-identical. Required full fixture reconciliation and separate local CI will rerun them; no text-mirroring test or real-host acceptance is added."
+    "kind": "structure",
+    "description": "Contributor S1\u2013S5 and pinned historical adoption base/list remain unchanged. Registry ownership and generated references now point to current native wrapper contracts and retired feature deletions instead of missing pipeline files. Corrected identical real-provider opt-in wording in this guide without changing reconciliation rules: the retained target checks installed handshake/account/skills and makes no model turn. Current incremental review: Incremental flow-maintain-flow-contracts review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract. Follow-up correction review: The previously reviewed flow-maintain-flow-contracts behavior and stable scenario IDs are retained. This correction does not add or retire its product behavior.",
+    "implementation": "Reviewed original/current mappings and exact schema/render/runner behavior. No reconciliation runner logic was weakened or receipt edited. New native code/tests have their own behavior mappings and retired contracts select related current fixture suites. Foundation dependency ownership remains glossary then UI then flows. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection. Follow-up correction review: Reviewed the incremental diff for discussion ordering, independent baseline/detail discovery, cache freshness and installer recovery. Its shared implementation changes preserve this contract; only operate-installation authored behavior is refined, while mapped consumers receive fresh verification.",
+    "tests": "Ran the existing 251 specification tests, including offline copied-client Go-cache regression and dependency/receipt freshness assertions. Updated native sources remain standard-library-only at that copied boundary. Full reviewed reconciliation executes the current mapped fixture suites before writing any success record. Current incremental review: Retain the subject-specific assertions documented above for flow-maintain-flow-contracts. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance. Follow-up correction review: Retain the subject-specific assertion review already recorded for flow-maintain-flow-contracts. Required suites will rerun after the current source freeze; the new targeted assertions establish only their precise fixture scope and do not waive existing host/provider gaps."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.99
+      "seconds": 34.669
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 290.31
+      "seconds": 285.907
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.693
+      "seconds": 4.655
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "a691c4965179ebfd9dc3cdd89a671b9d956349a031921db91445991b953f6167",
-    "term:coverage-gap": "9048646ef374cf96bf1662ad2c705db909c58180e77b88fc80fb349658d1621b",
-    "term:entity": "06b62bc0acce4dd60e89dffec74ad6c87412b0632945458a62639c4f2ae1756c",
-    "term:glossary": "50f9b5c537080749bb2e118b5d3bdd430985898271826fa0a96ae2935dc4f1b5",
-    "term:known-limitation": "2bed8d13431f74114b78d1f14270c6c4bcca514f523b6caafad1aaab8c5d2246",
-    "term:reconciliation": "bab71061027e523dd1e37cd73f0af732fdca1ba675df21612b69f770696df8b0",
-    "term:unverified-behavior": "a0984cd19de83b7bce49252e48b279a636dc594030980e1b237bf7b613d60a77",
-    "term:verification": "603876b6663551969457f654ac19f55fe36d99757f5171de6d5538bde0665fee"
+    "flow:maintain-flow-contracts": "1efcb4401bd56a2bb80c946f7088f79c4633acd4b504bd759a5ec994a1c9a85f",
+    "term:coverage-gap": "b6c01eac139642dd99d8128c27f13fd063467bacc3274d14a81b02894c133ef8",
+    "term:entity": "00377826f7063508630b6b9fc7e4e53f80cb0de4127959880c392668ae9260cc",
+    "term:glossary": "e68654f9c552c769508e5ac36f7dd2dec548b30a64a643de4423a3b8ff74e107",
+    "term:known-limitation": "a16fab2da63b2bbf9e7228ebb071488c5a5d335b2f6c18c80ad5e2e75ab70bc2",
+    "term:reconciliation": "f08bff9d01fc813bae3080b0a06913cf0e2e5202da75ae9532bbb608ea957f46",
+    "term:unverified-behavior": "ec6641a731d850f258008ff45df7610fefa3ac025f730cb411bb03d73765635f",
+    "term:verification": "9dedaca81797f97a0421edf5debc4ac86846d284768c33e3ed0b44984645f336"
   }
 }

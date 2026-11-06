@@ -29,22 +29,22 @@ func ContainsQueue(entry domain.InboxEntry, queue string) bool {
 }
 
 func (a *App) projectWork(ctx context.Context, items []domain.Item, links []domain.Relationship, entries []domain.InboxEntry) error {
-	runs, err := store.ListWithout[domain.Run](ctx, a.Store, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
+	runs, err := store.ListWithout[savedSession](ctx, a.Store, "factory-session", "$.pending")
 	if err != nil {
 		return err
 	}
-	attention, err := store.List[domain.Attention](ctx, a.Store, "attention")
+	attention, err := store.List[savedQuestion](ctx, a.Store, "factory-question")
 	if err != nil {
 		return err
 	}
-	external, err := store.ListWithout[domain.Item](ctx, a.Store, "linked-pr", "$.activity", "$.checks", "$.body")
+	external, err := store.ListWithout[domain.Item](ctx, a.Store, "linked-pr", "$.activity", "$.checks", "$.body", "$.pr.checks")
 	if err != nil {
 		return err
 	}
 	return a.projectWorkRecords(ctx, items, links, entries, runs, attention, external)
 }
 
-func (a *App) projectWorkRecords(ctx context.Context, items []domain.Item, links []domain.Relationship, entries []domain.InboxEntry, runs []domain.Run, attention []domain.Attention, external []domain.Item) error {
+func (a *App) projectWorkRecords(ctx context.Context, items []domain.Item, links []domain.Relationship, entries []domain.InboxEntry, runs []savedSession, attention []savedQuestion, external []domain.Item) error {
 	var viewer domain.GitHubViewer
 	if err := a.Store.Get(ctx, "identity", "github", &viewer); err != nil && err != store.ErrNotFound {
 		return err
@@ -95,11 +95,11 @@ func (a *App) projectWorkRecords(ctx context.Context, items []domain.Item, links
 		e.HasPullRequest = len(e.LinkedPullRequests) > 0
 		// Runtime state is not completion: idle/failed/cleaned work stays tracked.
 		for _, r := range runs {
-			if r.ItemID == e.Item.ID && r.Status != "prepared" {
+			if r.ItemID == e.Item.ID && r.Execution != "prepared" {
 				e.Work.Tracked = true
 				e.Work.RunIDs = append(e.Work.RunIDs, r.ID)
 				state := "Inactive"
-				switch r.Status {
+				switch r.Execution {
 				case "deferred":
 					state = "Waiting for GitHub"
 				case "queued", "starting":
@@ -119,7 +119,7 @@ func (a *App) projectWorkRecords(ctx context.Context, items []domain.Item, links
 					e.Work.Status = state
 				}
 				for _, at := range attention {
-					if at.RunID == r.ID && at.Status == "pending" && (at.Origin == "async" || at.Origin == "text" || r.Status == "running" || r.Status == "waiting") {
+					if at.SessionID == r.ID && at.Status == "pending" && true {
 						e.Work.AttentionCount++
 						if at.Blocking {
 							e.Work.Status = "Waiting for you"
@@ -192,30 +192,23 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	runs, err := store.ListWithout[struct{ ID, ItemID, Status string }](ctx, a.Store, "run", "$.skills", "$.profile", "$.prompt", "$.reviewPromptSnapshot", "$.sourceSnapshot")
+	runs, err := store.ListWithout[savedSession](ctx, a.Store, "factory-session", "$.pending")
 	if err != nil {
 		return err
 	}
 	tracked := map[string]bool{}
 	retirement := map[string]bool{}
 	for _, r := range runs {
-		if r.Status != "prepared" {
+		if r.Execution != "prepared" {
 			tracked[r.ItemID] = true
-			if r.Status != "cleaned" && r.Status != "terminated" {
+			if r.Execution != "cleaned" && r.Execution != "terminated" {
 				retirement[r.ItemID] = true
 			}
 		}
 	}
 	// Accepted source closure is a local retirement obligation, even while
 	// remote metadata is fresh, cooling down or paused after an interrupted pass.
-	for id := range retirement {
-		var saved domain.Item
-		if a.Runs != nil && a.Store.Get(ctx, "item", id, &saved) == nil && closedWork(saved) {
-			if err := a.Runs.stopClosedItem(ctx, saved); err != nil {
-				return err
-			}
-		}
-	}
+
 	focuses, err := store.List[detailFocus](ctx, a.Store, "github-detail-focus")
 	if err != nil {
 		return err
@@ -242,7 +235,7 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 	}
 	for _, r := range runs {
 		var i domain.Item
-		if r.Status != "prepared" && a.Store.Get(ctx, "item", r.ItemID, &i) == nil && i.Kind == "pr" {
+		if r.Execution != "prepared" && a.Store.Get(ctx, "item", r.ItemID, &i) == nil && i.Kind == "pr" {
 			wanted[i.ID] = true
 		}
 	}
@@ -295,6 +288,25 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 			}
 
 		}
+		// Capture the exact row before releasing control to provider I/O. Other
+		// importers do not hold providerMu and may commit a newer webhook meanwhile.
+		starting := string(raw(old))
+		unchanged := func(t *store.Tx) (bool, error) {
+			if kind == "linked-pr" {
+				var promoted domain.Item
+				if e := t.Get("item", id, &promoted); e == nil {
+					return false, nil
+				} else if e != store.ErrNotFound {
+					return false, e
+				}
+			}
+			var current domain.Item
+			e := t.Get(kind, id, &current)
+			if e != nil && e != store.ErrNotFound {
+				return false, e
+			}
+			return string(raw(current)) == starting, nil
+		}
 		processed++
 		fresh, err := a.GitHub.PullRequest(ctx, parts[0], number)
 		if ctx.Err() != nil {
@@ -312,7 +324,16 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 				p.RetryAt = rate.Until
 			}
 			old.PR = &p
-			if err = a.Store.Put(ctx, kind, id, old, "pr.changed"); err != nil {
+			if err = a.Store.Write(ctx, func(t *store.Tx) error {
+				ok, e := unchanged(t)
+				if e != nil || !ok {
+					return e
+				}
+				if e = t.Put(kind, id, old); e != nil {
+					return e
+				}
+				return t.Event("pr.changed", id, map[string]string{"id": id})
+			}); err != nil {
 				return err
 			}
 			continue
@@ -324,6 +345,10 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 		retainPRMetadata(old, &fresh)
 		fresh.Revision = fresh.ContentRevision()
 		if err = a.Store.Write(ctx, func(t *store.Tx) error {
+			ok, e := unchanged(t)
+			if e != nil || !ok {
+				return e
+			}
 			if err := t.Put(kind, id, fresh); err != nil {
 				return err
 			}
@@ -344,11 +369,13 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 		}); err != nil {
 			return err
 		}
-		if a.Runs != nil {
-			if err := a.Runs.stopClosedItem(ctx, fresh); err != nil {
-				return err
-			}
-		}
+
 	}
 	return nil
+}
+
+type savedSession struct{ ID, ItemID, Execution string }
+type savedQuestion struct {
+	SessionID, Status string
+	Blocking          bool
 }
