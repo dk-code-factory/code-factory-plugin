@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "07ba62a847b019f4bf7ab758bf0956de784dee7b",
-  "fingerprint": "4b7db6ed756a6c4d2c193bcfecfc9a67a4dd5f4154fe078d0e7184046cbbe865",
+  "base": "8bc9137227661a1b003b45707897e72a91c4d199",
+  "fingerprint": "ab4ff378a11b1210e2e5089a1fba371fdba0eb2b8c31e453ddc9ced514cbd782",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "refactor",
-    "description": "S1 installation, rollback and S2 diagnostics retain private state and local-only credential inspection.",
-    "implementation": "Inspected both main and current mapped inputs. The only production changes are shared REST cache keys/storage, explicit GET-only bootstrap access, origin-scoped GraphQL caching and forced-live cache rules. This consumer is selected by shared verification inputs; its authored behavior, UI definitions and native dispatch implementation remain unchanged.",
-    "tests": "Existing installer fixtures cover failed upgrade rollback; TestDiagnosticsUseLocalGitHubCredentialAndRespectReconciliationCadence keeps diagnostics free of API probes. New installer discovery coverage is separately mapped to install-connect. Fixture verification does not close any installed-host or accessibility gap."
+    "description": "Inspect health, upgrade, roll back and uninstall remains unchanged for S1, S2, S3, S4, S5. Only the shared local verification machinery and freshness inputs change; existing host and incomplete-coverage gaps remain explicit.",
+    "implementation": "Compared the flow registry, authored contract and mapped product inputs against main. Product implementation remains byte-identical, including internal/setup/lifecycle.go. The new invocation executor wraps fixture execution and changes no product transition, ownership or dependency direction. Refreshed the comparison to main8bc9137 after inheriting PR41: its provider/setup cache implementation and install/sync mappings are byte-identical between this new base and the rebased branch; the PR remains the owned-verifier change.",
+    "tests": "Inspected def test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall( in scripts/test_installer.py: Packaged process-backed install/rerun, returned upgrade failure with deferred automatic recovery, explicit rollback, successful upgrade and uninstall/reinstall. It does not interrupt the installer process or establish recovery from a durable pending operation left by interruption. The assertion body is unchanged across snapshots. New verifier regressions protect the execution/evidence boundary for this suite; they do not claim additional product or real-host acceptance. Rechecked the unchanged subject-specific assertions and current shared suite input after the fixture portability repair: local-verification fixtures now clear inherited GITHUB_ACTIONS, retain only selected installation and distro helper search directories, and the real native ABI control selects distro Python. The explicit hosted-marker rejection test asserts no required command or receipt, while the full fixture suite is separately exercised under an inherited hosted marker. These test-context corrections do not change this subject contract or waive production input admission. The C-library mutation/negative controls now inventory their explicit compiled fixtures rather than unrelated host launchers. An actual Python-name ELF with a private RUNPATH reproduced three false early rejections before the correction; afterward all real load/mutation and own-input negative assertions complete successfully. Current ordinary-reconciliation deadline and native-alias correction: inspected actual exact-vector/custom-executor dispatch and timeout invalidation assertions, plus Python-loaded header-free native library import through two directory aliases. The control consumes value 7; unsupported private RUNPATH rejects before any required command or receipt. Explicitly inventoried dependencies consuming value 9 and restoring bytes invalidate evidence. These operational assertions refresh this subject suite without changing product semantics or closing real-host gaps. The native-alias fixture now uses a Python package loading a plain C library through ctypes; every C fixture compiles with -nostdinc and no Python C API/include-directory lookup. Its real package import, value7 control, pre-run outside-RUNPATH rejection and consumed/restored value9 assertions remain intact. The same real test passes when an outer compiler probe disables all headers and strips explicit include paths; the former Python.h fixture fails in that context. This removes an undeclared test prerequisite without changing production admission or this subject behavior. Current cache/browser controls exercise actual same-size Go archive tampering with an unchanged build ID, showing value9 under the prior production implementation for both environment and GOENV selectors. Independent new invocations ignore those external archives and consume7. Earlier-command cache entries are removed before a subsequent check; changing their retained hard-link alias to9 still yields7 from fresh compilation. Caller environment and cache disposal are asserted. Late cache-directory binding changes and disposal failures invalidate successful publications while preserving original failures/cancellation. Pinned chrome-headless-shell and its older spelling reject real outside-RUNPATH/alternate-interpreter ELF controls before runner calls or receipts. These operational assertions add no product or real-host acceptance. The probe supervisor now records cancellation rather than throwing across child assignment or cleanup entry. A deterministic SIGINT at its first cleanup instruction preserves exit130 and reaps both a TERM-ignoring child and detached grandchild, with an outer supervisor protecting failure cleanup. The prior supervisor was directly observed leaving two descendants alive under that exact schedule; this closes that specific test-helper gap only. The scheduling microbenchmark fixture now initializes the optional Go cache field when deliberately bypassing Session construction; actual assertions still require27 preparation entries,8 executions,35 versus16 scans, ordered contexts and environment-change rejection. Current public-CLI/bootstrap and probe-readiness correction: the actual entrypoint previously consumed a relative secrets.py and exited0 before verification (retained direct before control). New subprocess assertions require nonzero rejection before module consumption, while direct API and admitted-root controls remain. The cleanup probe receives a pipe acknowledgement after its child and detached grandchild PID marker exists before starting its inner deadline; first-cleanup SIGINT, exit130, no survivors and outer cleanup assertions remain. The real Go VCS-stamping fixture now retains build stdout/stderr on failure; original and alternate embedded revisions, restored source and failed-receipt assertions remain intact. An old-head independent Make failed that build with captured stderr omitted, while its isolated diagnostic and the corrected focused fixture pass. No root cause or flaky-test exception is claimed; a new independent Make remains mandatory before merge."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.141
+      "seconds": 0.181
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 18.446
+      "seconds": 18.885
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 54.647
+      "seconds": 91.83
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.854
+      "seconds": 4.095
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.791
+      "seconds": 3.01
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.673
+      "seconds": 22.25
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.202
+      "seconds": 0.201
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.181
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.643
+      "seconds": 0.663
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.285
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 451.085
+      "seconds": 871.224
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 473.079
+      "seconds": 624.338
     },
     {
       "command": [
@@ -147,36 +147,36 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.717
+      "seconds": 5.057
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "43493d6f6d8a7c0b6223e03bb1d7b7c554de51b08cace36cbfb203ebde9fb5d5",
-    "term:connection-submits": "9eb00e791b52eda65abe0d1f0af2067b1de6336b1acd3ccfee27e37489b5c368",
-    "term:coverage-gap": "b17df55d62c3bf8be994368de8b8e3c886972e971705980fdfc92ee3ea0b5e84",
-    "term:dependency-operation": "29a7ca89ee8f53dff3f28bc67b4f174badf6db934723c15c70426c5b276acae6",
-    "term:element-w-browser-lab-key-controls": "6cf685425f3fc9d9efa9cf12995b200050c73778d60e2b010dfefdfcb9c4c331",
-    "term:element-w-browser-lab-location": "0cf00222ae321f8a80f7fca6cd60932f0de0198751f66346c27d3c130959b9b1",
-    "term:element-w-browser-lab-message": "356340d838b532fa7de12a7aaab1d287451e992fe8e7e9c8a6bf004270f40324",
-    "term:element-w-browser-lab-navigate": "a08b3ace2017b28e05e0316a3fb8c7da6d43ad381b4fa7fc3c3a2bacc6f6f3f4",
-    "term:element-w-browser-lab-refresh": "47acd8e88950a8fc1b9ffdf1690a4fe7257b505042978db4d5ff420698d9a1b4",
-    "term:element-w-browser-lab-screenshot": "c32abe38414cc4a1ec84ee0b99a56b20afc20fd30a8914825197acd39d4c5d8d",
-    "term:element-w-browser-lab-scroll-up-down": "95a329c6ddf8e0f50b572ab48555c3e0432065e5a19632796fcf6fc0246c6385",
-    "term:element-w-browser-lab-send-text": "a03b72e01d95acdff25b780840e2bc7b39a24e173000602248500a45a6f15cfa",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "375e4dfece725e1e172199b86c5b7e5b92e2315cf1fc825324d6193148d12046",
-    "term:element-w-browser-lab-text-to-send": "bb4d1d789a4936673523d0127dc80346600af11e220e1aa4002caed8301172f5",
-    "term:element-w-browser-lab-url": "631af1ae5c608cfb91d4fabae4c3f522d027df794fb4fb8670f2017682570a82",
-    "term:github-skill-source": "b4ed6343b2297bf9576897fbe4f1e2d8ee23f025e386d407a617e0dc852b4226",
-    "term:owner": "1133612f6606804054a3e3675613dc0f04778bdac698bc3825e450b0f6ec76b9",
-    "term:ui-c-browser-lab": "e9ea25551f3c4e75eabe4b3ae246dcb612595e2c3ea4e0d4e5f8da4d2f810bdd",
-    "term:ui-p-browser-lab": "1f02d365a82b8db6aebfedd1f8baee9317a592d58ff651049083b6968d5f0225",
-    "term:ui-page-browser-lab": "5333549ead07a8916a3583d646f91e67320d697c8591a5bb5d18e12367e99030",
-    "term:ui-w-browser-lab": "6573a36db4c69ad1be4a0cc886de16df6d04999961f19057ae15a05a93f1af71",
-    "term:unverified-behavior": "e917ac30b59ce45403a28e03219133d35614bc954b233f36f84050d3278f8686",
-    "term:verification": "e011b3e590437bcab604dc9cfd3394f0116e4814e83ca48cea5fc57833e462ee",
-    "ui:C-BROWSER-LAB": "dfa92e3c27303f9e1e30c3afbe6e80a022dda995fdfbae148f7bccbc54c00be0",
-    "ui:P-BROWSER-LAB": "fbb386e215ea7ac96f5f4c7ace720dd51094d356bc5a62063fca23d6738dc4fe",
-    "ui:PAGE-BROWSER-LAB": "3dfc85692184372de1652c2a4bfe02cc710286916d188255cf93dec31ac1cf1a",
-    "ui:W-BROWSER-LAB": "41e3bdcf2249726701b65324285b6b1b81eb5aada07cb69277503c335038e26a"
+    "flow:operate-installation": "9d338d6fa11708b5fab72013e29fb7c8b7b9fabf7e75fa955eb821f4bd7249cb",
+    "term:connection-submits": "0b6c4e4c89f38ba3f1d2714aa6a92690fa3693407fe3243c3e2388ff0ef61181",
+    "term:coverage-gap": "352d65b9bd0cb928941fa9085c43d10091e759b5492ee3c7b9db7ddba1496933",
+    "term:dependency-operation": "b7405bcff40c1b91d15b4d48c62ee0795d6c8a493ee2ffc1fdd96221b6b418c2",
+    "term:element-w-browser-lab-key-controls": "17c153cf10703075ad8dd0b68e09b7a1f16dc9014de44ca806bd802bab5b8064",
+    "term:element-w-browser-lab-location": "b2b43902fd93307c184ff6ec935a3438ba799484d477392b041c66ecba024f40",
+    "term:element-w-browser-lab-message": "bfbc6078c1494810748d7779d81acb958898c013083d961e70cbd0de090d44ff",
+    "term:element-w-browser-lab-navigate": "8239cc6e0c7645c2034f38c7514aac2ac18fd47de3c22b8087079c46df1e990e",
+    "term:element-w-browser-lab-refresh": "c9a481b9773a13fc87de40ec4008cd23ba142def3ac755ae7a7722730040c53b",
+    "term:element-w-browser-lab-screenshot": "7dd997fdf6fdf9020eace483317aff5d1f4b8bd4812252235cf4ca9c06ce2cd7",
+    "term:element-w-browser-lab-scroll-up-down": "fd552a16e26fd40e852358dc6561b62a20f742f7ad9ea1ca03893213a7c0bf04",
+    "term:element-w-browser-lab-send-text": "96a6a5b8a555c7b85cd9475baea9bfe4ea44aeb598b8107943a3bd1f51d1a34b",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "8facaa398a0c95d9b773d4d938fd26026e834b9af9f3e95d975cf7707a6f8950",
+    "term:element-w-browser-lab-text-to-send": "c66b26fec16699c829545ac99d8c2a5bbaf34e6a93ec560ea73c6174c8275b73",
+    "term:element-w-browser-lab-url": "63c04119b87da26fc016a6fdf4ef567e33e4e366f531edd18e6cbed015ef24c3",
+    "term:github-skill-source": "bd7d3618555e5daade47c9b003a403b8bee9a50bd0d7e612432b29207f3bb776",
+    "term:owner": "247c385f3a3842b33dbf50829bd34c0b507e98a8c904f82563926b4116128c06",
+    "term:ui-c-browser-lab": "bdd2700987b56ce8c8944c0ea94816af3362b18cbf26c16a2d3932e6f70270d8",
+    "term:ui-p-browser-lab": "f6afb9d8e35662208ac2f40971e944acf4ebe10ea7e6a026f18856bfab8fa92e",
+    "term:ui-page-browser-lab": "324bf00a7a08f5d381ce5846b36510081f2273c417abdc43e6754108b8f6a710",
+    "term:ui-w-browser-lab": "d98585bea5590778ba9cebc37093ab9fa477eefc6daf45f3df83acc4cbdc1a89",
+    "term:unverified-behavior": "c766085404e48ba833646fd6670d690d1a8cffa5ddc3f3911b49ed01c891141a",
+    "term:verification": "e08692c3a706eaa32eb0aa2c1fcce8144833db4f43b1b3fdd8901a61c606dfdb",
+    "ui:C-BROWSER-LAB": "090f82b0b9fedc98d91147dc3d6b60275c8b32cd681c7f46551d567bc877513b",
+    "ui:P-BROWSER-LAB": "59b984c82495908fa8b0e31145c1a473a79d593213c4b564fb0f046d89e85cf6",
+    "ui:PAGE-BROWSER-LAB": "7a6a66396f6d664013be89ce4196fdfb1230b633f86cf77ea69e9abc7f98bdb7",
+    "ui:W-BROWSER-LAB": "53506ab2f78a51d64c7bf139d4de6edd6284594add440c7c9a3a573c1cd1e214"
   }
 }

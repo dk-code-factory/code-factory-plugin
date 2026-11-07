@@ -5240,6 +5240,105 @@
           "path": "scripts/specs_lib/make_owner.py",
           "anchor": "def retain(",
           "purpose": "Bind ownership to native Make PID lifetime, reuse its guardian across re-exec, and drain authenticated managed-helper leases before private-state removal and lock release. Independent contention rejects while the initiating process is live; after native Make exits, a new Make can wait up to 35 seconds for its draining guardian before attempting fresh ownership and may succeed after release. Framed value files through the live owner directory descriptor preserve literal exported pathname bytes without Make-source parsing or shell newline normalization. Admission commits at the final live-Make pidfd observation after identity verification; committed leases drain even when Make exits before acknowledgement."
+        },
+        {
+          "path": "scripts/verify_local.py",
+          "purpose": "Explicit single-invocation entrypoint rejects unsupported Python selectors before application imports, then performs owned reconciliation and complete branch verification."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def verify(",
+          "purpose": "Constrained native Make planning, invocation-local exact command sharing, selector-bound helper discovery and input admission, with cancellation rollback through owner teardown and final cache validation"
+        },
+        {
+          "path": "scripts/specs_lib/input_watch.py",
+          "anchor": "class InputWatch:",
+          "purpose": "Invocation-bound inode/directory mutation watches and shared read leases bind root pathname ancestry before initial tree traversal, detect restored ancestor, hard-link and mapped changes, refuse existing writers, reject lost coverage and restore signal/descriptor ownership on teardown."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def command_timeout(",
+          "purpose": "Bounded owned-command deadlines for the exact two maintained long suites without extending lookalikes, other working directories or shorter explicit session limits"
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "class PythonCache:",
+          "purpose": "Invocation-local source-derived bytecode preparation, automatic-write suppression and complete independent cache identity/mutation guards through outer cleanup; nonblocking typed regular-file reads retain metadata/path bindings and primary-error cleanup."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def gcc_include_inputs(",
+          "purpose": "Bounded GCC default header search discovery preserves existing and absent selected lookup spellings for identity and mutation coverage"
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def validate_loader_environment(",
+          "purpose": "Reject nonempty ELF preload, audit and library-search selectors before ownership, planning or subprocess-helper discovery; empty selectors preserve standard execution."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "class Session:",
+          "purpose": "Check every source/helper/artifact monitor before and after digest traversal and at final release; attempt all drains and closes while preserving an existing verification failure or cancellation."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def git_inputs(",
+          "purpose": "Bind Go VCS revision/time/status inputs to watched file-backed Git selection, refs, objects, index and configuration; reject unsupported contexts and rediscover under watches."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def git_readonly(",
+          "purpose": "Suppress optional Git index refresh writes within the combined invocation while retaining status/stamping and restoring caller policy on every outcome."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def prepare_once(",
+          "purpose": "Keep exact preparation first occurrences within one captured environment/checkout-owner session without repeating scans for pure duplicate schedule entries; retain actual-command, reuse and final guards."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def helper_identity(",
+          "purpose": "Retain all alias/lookup/mode rows while stable opened regular-file identity shares one content read inside a single traversal; before/after metadata and lookup checks, mandatory descriptor cleanup and fresh next-checkpoint reads preserve mutation/error/cancellation protection."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def review_content(",
+          "purpose": "Consume review decisions through stable nonblocking regular-file descriptors with alias checks; initial watches and immutable reconciliation bytes prevent later pathname reads from blocking cancellation."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def npm_script_prefixes(",
+          "purpose": "One per-working-directory npm ancestor .bin and node-gyp prefix inventory supplies both selected launcher discovery and earlier-candidate mutation watches."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def source_snapshot(",
+          "purpose": "Keep exact committed Git blobs while requiring typed nonblocking regular-file admission for present worktree inputs in initial analysis, identity and reconciliation refresh."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def input_content(",
+          "purpose": "Use one typed stable regular-file primitive for alias-bound review decisions, Makefile reads and maintained browser/npm/loader/Git discovery payloads. Text discovery retains native decoding and universal newline conversion after admission."
+        },
+        {
+          "path": "scripts/specs_lib/processes.py",
+          "anchor": "def reconcile(",
+          "purpose": "Ordinary reconciliation gives only the two exact maintained root suite vectors bounded 900-second deadlines, retains default budgets for other commands and preserves caller-supplied executor ownership, deduplicated execution and failed-rerun invalidation."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def native_library_inputs(",
+          "purpose": "Resolve the complete nested directory-alias closure before bundled native-module ELF admission, so aliased Python extensions reject outside RUNPATH inputs and admitted dependencies remain monitored through execution and reuse. Admit the actual pinned chrome-headless-shell executable through the same loader checks."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "class GoCache:",
+          "purpose": "Bind the private cache directory and empty it before each required command so retained or previous-command archives cannot influence later checks; mutable compiler index/output files remain command-owned temporary state."
+        },
+        {
+          "path": "scripts/specs_lib/local_verification.py",
+          "anchor": "def go_build_cache(",
+          "purpose": "Override environment/GOENV Go cache selection with authenticated-owner temporary output, restore caller selection and preserve primary errors while rejecting failed disposal."
         }
       ],
       "tests": [
@@ -8370,6 +8469,1049 @@
             "S5"
           ],
           "purpose": "Recording-only Go, Python and Node stand-ins retain exact opt-in argv and cwd without contacting providers or services. The named real-provider target preserves child opt-in1 and managed Git bounds; ordinary direct helper forces0. Service-only connection probes retain their native caller Git choice."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_identical_commands_execute_once_per_invocation_and_real_receipts_check(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Identical commands execute once per invocation and real receipts check."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_source_helper_untracked_environment_and_review_mutations_fail(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Source helper untracked environment and review mutations fail."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_failed_and_cancelled_reruns_remove_previous_success_and_late_receipts(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Failed and cancelled reruns remove previous success and late receipts."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_review_validation_precedes_make_and_does_not_destroy_prior_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Review validation precedes make and does not destroy prior success."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_verifier_subprocess_runs_once_and_observes_fixture_environment(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real verifier subprocess runs once and observes fixture environment."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_same_command_in_different_directory_is_not_reused(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Same command in different directory is not reused."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_native_current_graph_and_aggregate_required_targets(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Native current graph and aggregate required targets."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_unknown_new_make_command_is_rejected_before_execution(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Unknown new make command is rejected before execution."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_unsafe_make_constructs_fail_before_native_make(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Unsafe make constructs fail before native make."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_generated_asset_changes_invalidate_before_reuse(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Generated helper mutations reject execution reuse before a command reruns."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_subprocess_source_and_helper_mutations_invalidate_receipts(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real successful verifier subprocesses that mutate source or an ignored helper invalidate receipts instead of supplying reusable evidence."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_mutate_restore_and_directory_replacement_are_rejected(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real mutate restore and directory replacement are rejected."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_mutation_monitor_overflow_fails_closed(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Mutation monitor overflow rejects immediately and permanently; draining the failed evidence does not make a later unchanged-input check eligible again."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_summary_cannot_overwrite_decisions_or_a_reconciliation_receipt(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Summary cannot overwrite decisions or a reconciliation receipt."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_continuous_ignored_mutation_events_have_a_local_drain_bound(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A continuous valid stream of ignored output events fails within a local read bound rather than keeping the coordinator in an unbounded drain."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_moving_comparison_is_rejected_without_changing_head_or_inputs(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Moving the selected symbolic comparison while HEAD and source stay unchanged rejects the invocation and removes selected receipts."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_toolchain_identity_change_is_rejected_without_other_mutations(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An isolated executable-identity change reaches the toolchain comparison and rejects reuse without filesystem mutations or rerunning the command."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_external_compiler_helper_mutation_and_restoration_invalidate_reuse(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real subprocess writes to an external compiler helper, including restored writes with unchanged final digest, reject reuse through monitored helper inputs."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_selected_go_and_gcc_helper_inventory_is_complete_or_fails(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Discovery includes the actual selected Go compiler tree and GCC subprocess resources, and unavailable compilers fail before execution."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_signals_after_reconciliation_invalidate_receipts_and_preserve_status(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Bounded real Python subprocesses receive SIGINT and SIGTERM after CLI reconciliation wrote receipts; both invalidate those receipts and preserve exit130/143."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_summary_write_failure_preserves_success_and_cancellation_status(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An actual unwritable summary path preserves success0 or real SIGINT/SIGTERM exit130/143, while cancelled verification removes selected receipts."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_invocation_restores_callers_signal_handlers(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Successful and failed owned verification restore the caller SIGINT and SIGTERM handlers."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_absent_tool_config_creation_is_watched_without_telemetry_outputs(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An absent Go environment configuration remains a watched input: unrelated telemetry counters permit reuse, but creating the configuration rejects reuse before rerunning the command."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_selected_browser_inventory_and_unsupported_overrides(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Installed Playwright registry selects Chromium, headless shell and FFmpeg roots; in-package storage and custom browser selection fail closed."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_actual_npm_configuration_context_and_restored_change(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual npm config discovery covers root/web user/global paths; custom web shell rejects. A real npm subprocess observes a temporarily changed user config while restored-input monitoring rejects reuse."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_browser_root_mutation_restore_and_alias_retarget_reject_reuse(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real subprocess restores a browser resource or installation alias with unchanged final identity; the watcher rejects reuse before another command runs."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_intermediate_executable_symlink_switch_and_restore_is_watched(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real subprocess runs a second installation through an intermediate executable symlink then restores the link; unchanged final tool identity cannot authorize reuse."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_cleanup_signals_and_close_failure_remove_receipts(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Bounded real subprocesses deliver SIGINT/SIGTERM or raise close failure during cleanup after real receipts exist, for both final-check success and failure; receipts are removed and cancellation status retained."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_summary_uses_frozen_wall_boundary_before_optional_work(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Summary preparation and writing cannot resample elapsed time after the required-cleanup boundary."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_signals_at_prior_cleanup_handler_installation_window(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Bounded actual subprocesses inject SIGINT/SIGTERM at the first cleanup line where handlers previously changed, after failed final checks and real receipt creation; all watches close, receipts disappear and130/143 survive."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_pending_outer_cancellation_prevents_new_work_and_reuse(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An actual pending outer SIGINT rejects both a new required command and an already completed command before either result can be accepted."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_selected_go_compiler_helper_and_resource_aliases_are_preserved(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual Go/GCC discovery preserves admitted GOROOT/GOTOOLDIR, configured compiler, compiler-reported helper and library spellings through external aliases while content identity resolves their targets."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_watch_close_failure_still_closes_remaining_real_descriptors(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real invalid first watch descriptor raises OSError, but remaining helper and artifact descriptors are closed before the failure propagates."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_native_owner_plumbing_requires_exact_reviewed_binding_before_make(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "The existing native ownership prologue is bound by reviewed identity; changed ownership plumbing and new executable expansions fail before Make can execute."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_owned_entry_shares_stable_owner_and_rejects_competitor_before_work(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real nested managed subprocesses share the enclosing owner and stable temporary environment under an external parent, while an independent same-checkout invocation fails before required work."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_only_authenticated_owner_namespace_is_omitted_from_input_guards(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Runtime writes under the authenticated exact owner namespace permit sharing; a different ignored verifier-shaped directory remains guarded and rejects reuse."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_go_overlay_and_workspace_configuration_reject_before_module_discovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Effective Go flags and custom workspaces reject before module discovery, including external overlays."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_selected_python_search_covers_installed_dependencies_and_alias_data(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual interpreter search roots include jsonschema and yaml sources; directory aliases retain package-data identity."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_go_and_python_dependency_source_restoration_rejects_evidence(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual selected Go module and Python package source writes, including restored content, reject evidence and leave no successful receipts."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_real_late_summary_and_owner_signals_invalidate_exact_publications(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Bounded real SIGINT/SIGTERM injections during summary publication and enclosing owner teardown invalidate exact receipt and summary objects."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_late_rollback_preserves_subsequent_owner_atomic_receipts(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real subsequent-owner CLI receipt replacements survive rollback of earlier exact publication objects after late cancellation or cache mutation; current receipt validation succeeds."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_publication_capture_failure_rolls_back_and_release_attempts_all_descriptors(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Capture failure invalidates selected receipts and closes captured descriptors; a failed descriptor release still attempts remaining descriptors."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_partial_receipt_publication_failure_removes_all_selected_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real first atomic receipt publication followed by the second publication failing removes every selected success while ownership is held."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_cold_module_cache_rejects_before_execution_without_source_changes(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An actual isolated cold Go module cache rejects before runner execution with the setup diagnostic and byte-for-byte unchanged module and checksum files."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_private_python_bytecode_ignores_default_cache_and_uses_source(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Fresh checked-hash invocation bytecode ignores unchecked stale default caches; real normal and optimized cache-miss imports use current source without automatic cache writes."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_python_cache_descriptor_loss_rejects_and_restores_context(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A noninherited cache directory descriptor rejects replacement or closure, preserves replacement descriptors, invalidates evidence and restores caller state."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_only_exact_maintained_long_suites_receive_bounded_local_deadlines(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Both exact maintained root vectors receive900seconds, while lookalikes, unrelated commands and other directories retain600 and shorter explicit session deadlines reach the runner unchanged."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_prepared_python_cache_poison_and_restore_reject_before_reuse(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual subprocess cache poisoning and write followed by restoration reject before command reuse and retain no successful receipts."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_python_cache_late_summary_and_owner_teardown_mutations_reject_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Cache write followed by restoration during summary publication or after owner teardown invalidates exact owned receipts and summary."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_python_cache_preparation_failure_restores_policy_and_closes_binding(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Preparation timeout restores environment and interpreter write policy, closes the held descriptor and removes the private cache."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_checkout_temporary_parent_rejects_before_owned_work(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An in-checkout temporary parent is rejected before owned work because cache binding must survive owner namespace cleanup."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_helper_rediscovery_rejects_real_goenv_switch_before_watches(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual GOENV compiler selection changes in the prewatch interval reject before required execution; all installed real watch descriptors close."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_node_startup_source_rejects_before_discovery_or_required_work(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real external NODE_OPTIONS preload cannot execute during discovery or required work; no new receipts are created."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_effective_cgo_flags_reject_environment_and_goenv_external_inputs(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual effective cgo overrides from environment and GOENV reject before module discovery or required work across preprocessor, compiler and linker flags."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_alias_runner_timeout_reaps_child_and_closes_session(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "The same executable-alias runner forwards the shorter deadline to a real sleeping child; timeout leaves no completed evidence and closes both session watches."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_default_sigterm_after_owner_restoration_and_final_cache_check_rolls_back(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real default-SIGTERM injections after isolated restores handlers and at final cache validation invalidate exact publications; fresh subsequent-owner CLI replacements remain valid."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_gcc_search_overrides_reject_before_compiler_discovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Every unsupported GCC include, library and helper search environment carrier rejects before compiler discovery."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_gcc_header_search_roots_preserve_aliases_and_guard_restoration_and_creation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual GCC default headers are selected; real aliased, initially duplicate and absent search candidates retain guards against restored header writes, duplicate-alias retarget/restoration and directory creation."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_effective_npm_node_options_reject_environment_and_config_preloads(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual npm node-options selected through environment or npmrc cannot preload external code in lifecycle children; admission rejects before required work."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_default_sigterm_at_exception_handoff_and_rollback_keeps_outputs_invalid(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real late cache failure followed by default-SIGTERM at exception entry, rollback call and rollback body invalidates publications and preserves143 status before restoring caller handlers."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_checked_signal_exit_and_cache_disposal_precede_publication_release(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real SIGTERM at checked-scope exit or cache disposal and a real post-removal cleanup error roll back with live publication descriptors; after commitment caller SIGTERM at descriptor release preserves validated completed evidence."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_elf_loader_selectors_reject_before_discovery_and_allow_empty_values(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual preload, audit and library-search environment selectors reject before discovery/ownership/planning without child execution; empty selections complete an owned invocation."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_terminal_digest_restored_source_helper_and_artifact_writes_invalidate(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real restored source, external helper and generated-artifact writes after terminal digest reads leave equal hashes but invalidate actual owned-run receipts and summary."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_final_watch_drain_invalidates_success_and_preserves_error_and_cancellation(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Pending real helper events at session cleanup invalidate selected success, close every monitor and preserve original required-command failure or cancellation."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_independent_cache_watch_close_failure_and_pending_event_roll_back_publications(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real invalid cache-watch descriptor and restored pending cache write at independent disposal roll back captured publications with live exact descriptors; existing failure/cancellation and complete namespace/descriptor cleanup are asserted."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_watch_installation_covers_child_created_at_parent_watch_boundary(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real child package created at parent watch installation is monitored before its contents are consumed and restored; accepted shared evidence is rejected."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_runner_cancellation_survives_cleanup_cache_guard_event(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual runner-owned SIGINT and SIGTERM with a pending restored cache write preserve130/143 through the cleanup guard and invalidate publications."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_earlier_path_shadow_creation_and_removal_rejects_zero_result(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real earlier PATH executable returns zero and removes itself; installed lookup watches reject its result, while relative and empty PATH contexts fail admission."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_bash_startup_source_rejects_before_owned_work_and_empty_is_admitted(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real noninteractive Bash consumes BASH_ENV; the combined command rejects that source before ownership or discovery and admits empty values."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_cleanup_cache_guard_preserves_original_error_and_rejects_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Late Python cache-file and restored Go cache-directory binding mutations after session teardown reject successful publications and preserve an existing required-check error."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_native_library_inventory_real_abi_and_unsupported_loader_contexts(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An actual loader resolves and executes a probe against a byte-identical distro libc copy in an isolated ABI inventory derived from real ldconfig output. Real readelf discovery retains loader/cache/libc inputs; an unrelated cached ELF with an unrepresented RUNPATH still rejects, as do unsupported loader environment contexts."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_native_library_real_load_restoration_uncached_creation_and_custom_elf_reject(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real compiled dlopen by bare name consumes changed values before restored library writes, uncached creation and dangling-target creation reject evidence; compiled custom RUNPATH, alternate interpreters and aliased ORIGIN search contexts outside inventories fail admission. Explicit C-probe inventories isolate this control from unrelated host Python RUNPATH selections, so the positive mutation probes execute and each negative admission targets its own compiled input."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_restored_git_revision_consumed_by_real_go_build_rejects_evidence(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real Go build embeds the original Git revision; a changed-and-restored HEAD embeds the alternate revision and invalidates evidence. Build failures retain actual stdout/stderr without weakening stamping, restoration or receipt assertions."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_git_status_inputs_and_unsupported_contexts_have_bounded_coverage(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Restored Git status metadata and valid refs containing __pycache__ reject independently of Python-cache exclusions. Native status consumes an actually selected external clean filter before admission rejects it; unused definitions remain supported. Unsupported config/selectors fail closed, and optional-lock policy restores after success, error and cancellation. Native status distinguishes literal set/unset/unspecified driver execution from identically rendered special states; configured reserved clean/process names reject conservatively."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_esbuild_override_consumes_external_binary_but_rejects_before_ownership(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual esbuild consumes a compatible external binary; the owned entrypoint rejects the nonempty override before ownership/discovery and accepts empty selection."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_used_transitive_python_sources_in_excluded_search_paths_reject_with_aliases(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real jsonschema imports a compatible transitive referencing source beneath excluded cache paths; direct and alias-selected paths reject, while ordinary source roots and unused automatic caches remain admitted."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_preparation_schedule_preserves_native_order_and_bound_context_without_duplicate_scans(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual Session execute/assert methods keep the same eight native preparation command calls/order while identity scans drop from 35 to 16; distinct captured contexts remain fresh and changed effective environment rejects."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_helper_identity_memo_is_single_traversal_preserves_rows_and_closes_opened_files(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Digest rows/output stay identical for three aliases sharing one read; distinct inodes and later traversals read anew. Actual restored writes, memo-hit changes, regular/FIFO/symlink substitution, stat/read/hash/close failures and pending SIGINT assert metadata rejection, bounded FIFO handling and descriptor/error/cancellation cleanup."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_effective_go_cache_program_rejects_environment_and_goenv_before_modules(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual go env selects external GOCACHEPROG through environment and GOENV; both reject before module discovery, while empty selections retain normal helper discovery."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_planning_rejects_restored_checkout_ancestor_substitution(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real native Make captures a graph omitting vet through a temporarily substituted checkout ancestor, with original root/Makefile inodes and final source preserved. Substitution during initial watch construction is also covered. Both schedules reject before required runner calls or receipts; direct genuine-plan, Makefile-write and planner-shadow controls remain."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_planning_rejects_a_restored_makefile_before_required_execution(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Native Make captures a temporary graph without the required static check, then its original bytes are restored; source monitoring rejects before any runner execution or new receipts. The unchanged graph includes the static check."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_cache_disposal_preserves_runner_errors_and_exceptional_command_timings(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Runner KeyboardInterrupt, SIGTERM exit, verification failure and timeout retain their exact exception despite an additional real temporary-cache disposal failure. Failed summaries count the attempted check, retain its elapsed seconds and report unavailable exit code as null; no receipts survive. Python and Go cache disposal failures invalidate otherwise successful publications; required failures, cancellation and timeout retain their original exception and timing records."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_npm_shebang_interpreter_content_changes_reject_results(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An isolated npm-like launcher actually executes through its selected shebang interpreter; changing that interpreter after zero exit rejects the verification result and leaves no reusable success."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_indirect_setpriv_shadow_rejects_successful_go_fixture_results(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real setpriv invocation succeeds normally; a transient earlier-PATH delegating wrapper executes and removes itself, then the Go verification session rejects the zero exit without a reusable result."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_executable_fifo_substitution_rejects_without_blocking(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A five-second-bounded child substitutes a no-writer FIFO after selected-executable metadata inspection; identity hashing rejects promptly and closes every acquired descriptor."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_indirect_npx_inherited_and_npm_ancestor_shadows_reject_zero_results(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Both maintained browser npm scripts consume transient npx launchers in inherited PATH, npm-added external ancestors and checkout-root/web .bin directories; zero exit followed by removal rejects evidence. Actual npm also consumes Path/path/pAtH selectors before owned admission rejects those nonempty carriers ahead of ownership/discovery. Ordinary npm ci preparation and empty alternate carriers retain stable npx execution/reuse."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_artifact_symlink_chains_reject_every_excluded_target_and_keep_internal_aliases(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real Node imports consume excluded symlink targets before artifact admission rejects direct and redirected Git/cache/report/owner targets. Ordinary internal aliases remain admitted and target content changes alter identity."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_artifact_typed_open_rejects_fifo_replacement_and_preserves_cleanup_errors(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A bounded child substitutes a FIFO after artifact type inspection; nonblocking descriptor admission rejects and closes every opened file. Regular replacement, primary error and real SIGINT controls assert binding checks, descriptor cleanup and signal restoration."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_watch_fixture_setup_failures_close_every_acquired_descriptor(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual extra/artifact watch installation fails at separate fixture setup boundaries; every previously acquired descriptor is closed before propagation, while the original close-failure regression still checks later watches."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_independent_fixture_cleans_setup_failure_body_failure_and_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Injected filesystem setup failure after the environment patch starts executes and unregisters the nested owned cleanup, restores the exact caller environment and retains unrelated active patches; normal and assertion-failure acquisition paths also release their state."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_python_cache_typed_reads_reject_replacements_and_close_on_failure(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Cache identity rows retain their normal digest; existing special entries and regular/symlink replacements reject. Restored writes, primary read/cancellation failures, secondary close errors and real SIGINT verify descriptor cleanup, unchanged error precedence and handler restoration."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_python_cache_fifo_after_type_checks_rejects_without_blocking(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A five-second-bounded child replaces the cache entry with a real no-writer FIFO after pathname type inspection and before its open; consumption rejects promptly and closes the acquired descriptor."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_python_cache_late_fifo_rejects_outputs_and_preserves_new_owner_replacements(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A bounded child injects FIFO replacement during independent cache reads after summary publication and owner teardown. Existing outputs roll back, while a subsequent real reconciliation and atomic summary replacement survive exact-object invalidation."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_probe_timeout_reaps_detached_verifier_descendants_before_fixture_cleanup(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A two-second probe deadline terminates a coordinator and reaps verifier and grandchild processes that start separate sessions before the fixture is removed."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_probe_cleanup_entry_interrupt_reaps_detached_descendants(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An explicit pipe acknowledgement after child/grandchild PID creation precedes the inner cleanup deadline. A deterministic SIGINT at the first cleanup instruction preserves exit130 and reaps both descendants; the outer subreaper protects failure cleanup."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_nested_python_cache_name_source_and_legacy_modules_are_monitored(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real source and legacy bytecode imports beneath nested __pycache__ names consume a temporary changed value at external and checkout package roots; restoration still rejects success before reuse."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_linked_worktree_private_refs_reject_restored_vcs_revision_changes(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A linked-worktree symbolic HEAD consumes a temporarily changed private ref through git log, then restoration rejects the successful command without a reusable result."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_elf_discovery_fifo_substitution_rejects_without_blocking(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An isolated discovery probe substitutes a no-writer FIFO between metadata inspection and opening; the typed nonblocking descriptor rejects promptly and closes."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_review_typed_reads_reject_fifo_substitution_and_preserve_aliases(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A five-second-bounded child preserves ordinary review aliases, substitutes a no-writer FIFO after regular-file metadata inspection, rejects promptly and closes every acquired descriptor. A native text-reader comparison preserves CRLF/CR/LF newline handling."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_review_fifo_replacements_reject_after_work_and_leave_no_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A bounded supervised child replaces review JSON before reconciliation consumption, after actual receipts and during the final check. Ordinary failure and real SIGINT/SIGTERM leave no successful outputs, preserve cancellation status and permit fresh checkout ownership."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_review_watch_rejects_restored_change_before_initial_consumption(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Review bytes change and restore immediately before their first typed read. The early lookup watch rejects before any required command or new summary/receipt, even though the admitted bytes match the original."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_source_fifo_between_metadata_and_open_invalidates_receipts(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A bounded supervised probe replaces a tracked source file with a no-writer FIFO after metadata inspection during the final checkpoint, after real receipts exist. Typed admission rejects, closes acquired descriptors, preserves SIGINT/SIGTERM outcomes, removes success and releases ownership."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_external_hardlink_restoration_rejects_consumed_temporary_source(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A required subprocess consumes temporary source written through an external hard link, restores the exact bytes and still produces no successful receipts; checkout ownership can be reacquired."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_prefaulted_writable_mapping_rejects_before_required_commands(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Prefaulted shared writable mappings retained after descriptor close reject admission on checkout storage and tmpfs; actual verification rejects before native planning or required commands."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_late_shared_mapping_restoration_rejects_while_writer_remains_open(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A same-process writer creates a shared mapping after admission, consumes changed source and restores bytes while both writer and mapping remain open. Success rejects and SIGIO ownership restores."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_read_leases_share_aliases_and_admit_readonly_and_private_mappings(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Two overlapping watches and hard-link aliases share one held lease; readonly/private-copy mappings remain usable, the last watch retains coverage and final cleanup restores descriptors and signal mask/handler. Fork-child cleanup preserves the parent lease; an unexpectedly removed lease invalidates the watch and disposes cleanly even when unlocking an absent lease returns EAGAIN. A real duplicate-descriptor close followed by failure refuses the second owner without increasing the retained reference count or disturbing the first owner."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_unavailable_read_lease_and_reserved_signal_fail_closed_without_leaks(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Existing writable descriptors, unsupported leases, a custom SIGIO handler and blocked SIGIO reject conservatively without retained leases or signal changes. A secondary actual descriptor close error preserves the original unsupported-admission failure."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_read_lease_release_rejects_late_writer_and_restores_signal_after_close_error(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Late write attempts before and during lease release reject; pending SIGIO drains before restoring the default handler. An actual descriptor close followed by failure still releases every lease."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_read_lease_acquisition_cancellation_releases_ownership_and_preserves_signal(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Actual SIGINT queued immediately after kernel lease acquisition preserves KeyboardInterrupt and releases every lease/descriptor before restoring caller signal handlers."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_relative_python_search_paths_reject_before_ownership_and_browser_startup(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A relative secrets.py actually exits0 before a browser body. The public CLI rejects relative/empty selector entries before application imports without consuming that module; direct APIs reject before ownership/planning. Admitted absolute roots and empty selectors retain their positive controls."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_planning_rejects_a_removed_external_make_shadow_before_required_execution(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An actual external PATH Make wrapper omits native vet output and removes itself. Planning monitoring rejects the captured incomplete graph before runner execution or receipts; the unchanged genuine graph includes vet."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_hosted_marker_rejects_entrypoint_before_required_execution(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Fixture tests isolate the caller hosted marker; explicitly restoring GITHUB_ACTIONS still rejects the local-only entrypoint before required execution and leaves no reconciliation receipts. The fixture suite also runs under an inherited hosted marker without bypassing this production restriction."
+        },
+        {
+          "path": "scripts/test_specs_modules.py",
+          "anchor": "def test_ordinary_reconcile_bounds_long_suites_and_preserves_custom_executors(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real reconciliation dispatch gives both exact long suite vectors 900 seconds, keeps lookalikes on default budgets, deduplicates argv, preserves custom executor deadlines and removes prior receipts when the owned deadline fails."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_python_native_directory_aliases_admit_loader_inputs_before_execution(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A real Python package loads value7 through two nested directory aliases from a header-free native library built with -nostdinc; outside private RUNPATH rejects before required work/receipts, while an explicitly inventoried library consuming9 and restoring bytes invalidates evidence. No Python development headers are required."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_owned_go_cache_isolates_archives_and_empties_between_commands(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real same-size cached Go archive edits preserve the actual build ID and change consumed value7 to9. Environment/GOENV-selected external caches are ignored by independent owned invocations, which consume7. Before the next required command the earlier cache is empty; changing its retained hard-link alias to9 cannot influence the fresh compilation, which still consumes7. Caller environment, successful receipts and final cache cleanup are asserted."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_selected_headless_browser_rejects_external_loader_inputs_before_checks(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "The pinned registry supplies chrome-headless-shell. Real header-free ELF controls under that selected name and the older headless_shell spelling reject outside RUNPATH and alternate interpreters before any runner calls or receipts."
         }
       ],
       "suites": [

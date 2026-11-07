@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 import specs
 import user_flows as uf
+from specs_lib import processes
 from test_specs import ROOT, fixture
 from test_user_flows import fixture as legacy_fixture
 
@@ -64,6 +65,43 @@ class ModuleCompatibilityTests(unittest.TestCase):
             record = json.loads((root / 'records/example.json').read_text())
             self.assertEqual(record['environment'], uf.FIXTURE_ENV)
             self.assertEqual([entry['command'] for entry in record['verification']], [command, command])
+
+    def test_ordinary_reconcile_bounds_long_suites_and_preserves_custom_executors(self):
+        long_commands = [['python3', 'scripts/test_ci.py'],
+                         ['python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py']]
+        commands = [*long_commands, long_commands[0] + ['--extra'],
+                    long_commands[1][:-1] + ['other*.py'], ['fixture-verifier']]
+        affected = {'example': {'description_changed': False, 'adopted': False, 'fingerprint': 'fixture-inputs',
+                                'suites': {'unit': {'commands': commands + commands}}}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            review = root / 'review.json'
+            review.write_text(json.dumps({'example': dict.fromkeys(
+                ('description', 'implementation', 'tests'), 'Reviewed exact suite deadlines and executor ownership.')}))
+            receipt = root / 'records/example.json'
+            for custom in (False, True):
+                with self.subTest(custom=custom), patch.object(uf, 'snapshot', return_value={}), \
+                        patch.object(uf, 'run_verification', return_value=subprocess.CompletedProcess([], 0)) as verifier:
+                    options = {'executor': verifier, 'constraints': uf.contract_errors} if custom else {}
+                    reconcile = processes.reconcile if custom else uf.reconcile
+                    result = reconcile(root, {}, affected, 'base', review, records='records/',
+                                          analyzer=lambda before, after, base: ({}, affected),
+                                          log_stream=io.StringIO(), **options)
+                    self.assertEqual(result, {'reconciled': ['example']})
+                    self.assertEqual(verifier.call_count, len(commands))
+                    for command, call in zip(commands, verifier.call_args_list):
+                        self.assertEqual(call.args, (command,))
+                        self.assertEqual(call.kwargs['cwd'], root)
+                        expected = 900 if not custom and command in long_commands else None
+                        self.assertEqual(call.kwargs.get('timeout'), expected)
+                    self.assertEqual([row['command'] for row in json.loads(receipt.read_text())['verification']],
+                                     commands + commands)
+            with patch.object(uf, 'run_verification', side_effect=subprocess.TimeoutExpired(long_commands[0], 900)), \
+                    patch.object(uf, 'snapshot', side_effect=AssertionError('failed verification must not publish')):
+                with self.assertRaisesRegex(uf.FlowError, 'could not complete'):
+                    uf.reconcile(root, {}, affected, 'base', review, records='records/',
+                                 analyzer=lambda before, after, base: ({}, affected), log_stream=io.StringIO())
+            self.assertFalse(receipt.exists())
 
     def test_module_additions_changes_and_removals_stale_both_runner_fingerprints(self):
         path = 'scripts/specs_lib/future_feature.py'

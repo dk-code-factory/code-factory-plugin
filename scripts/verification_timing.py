@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PHASES = {
     'npm-install': 'npm ci',
     'frontend': 'npm run build',
+    'browser-optimize': 'node node_modules/vite/bin/vite.js optimize',
     'embed': 'python3 scripts/package_plugin.py --embed',
     'fake-provider': 'go build -o bin/fake-codex ./internal/testutil/fakecodex',
     'build': 'go build -trimpath -o bin/code-factory ./cmd/code-factory',

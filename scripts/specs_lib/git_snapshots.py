@@ -29,7 +29,7 @@ def content_id(files, path):
     return (getattr(files, "modes", {}).get(path, "100644"), hashlib.sha256(files[path]).hexdigest())
 
 
-def snapshot(root, ref=None):
+def snapshot(root, ref=None, *, read_file=None):
     import user_flows as uf
     if ref:
         entries = []
@@ -62,8 +62,11 @@ def snapshot(root, ref=None):
         path = root / name
         if path.is_symlink():
             raise uf.FlowError("Symlinks are unsupported in flow inputs: " + name)
-        if path.is_file():
-            files[name] = path.read_bytes()
+        # An enclosing owner can require typed, nonblocking descriptor admission
+        # for every present input, including rejecting special-file replacements.
+        present = path.exists() if read_file is not None else path.is_file()
+        if present:
+            files[name] = path.read_bytes() if read_file is None else read_file(path)
             # Git records only the owner's executable bit, irrespective of the
             # group/other execute permissions retained by the filesystem.
             modes[name] = "100755" if path.stat().st_mode & 0o100 else "100644"
