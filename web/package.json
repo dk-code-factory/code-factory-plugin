@@ -7,8 +7,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build && node defer-ui.mjs",
     "check": "tsc --noEmit",
-    "test": "playwright test",
-    "test:performance": "playwright test -c playwright.performance.config.ts"
+    "test": "python3 ../scripts/verification_run.py -- sh -c 'cd web && exec npx playwright test \"$@\"' --",
+    "test:performance": "python3 ../scripts/verification_run.py -- sh -c 'cd web && exec npx playwright test -c playwright.performance.config.ts \"$@\"' --"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "2.0.3",

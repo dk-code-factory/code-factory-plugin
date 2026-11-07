@@ -129,6 +129,7 @@ class FixtureCIEnvironmentTests(unittest.TestCase):
     def test_ci_overrides_environment_and_command_line_real_provider_opt_ins(self):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
+            import shutil
             (root / 'Makefile').write_text((ROOT / 'Makefile').read_text().replace(
                 'verify-steps: verification-context specs-check build check test test-performance package test-installer smoke',
                 'verify-steps: verification-context\n\t@printf \"%s\\n\" \"$$CODE_FACTORY_REAL_CODEX\"'))
@@ -165,11 +166,14 @@ class FixtureCIEnvironmentTests(unittest.TestCase):
     def test_real_provider_target_remains_explicit(self):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
+            import shutil
+            shutil.copytree(ROOT / 'scripts', root / 'scripts', ignore=shutil.ignore_patterns('__pycache__'))
             executable = root / 'go'
             executable.write_text('#!/bin/sh\nprintf "%s" "$CODE_FACTORY_REAL_CODEX"\n')
             executable.chmod(0o755)
             result = subprocess.run(['make', '--no-print-directory', '-f', str(ROOT / 'Makefile'), 'test-real-provider'],
-                                    cwd=root, env={**os.environ, 'PATH': str(root) + ':' + os.environ['PATH']}, capture_output=True, text=True)
+                                    cwd=root, env={**os.environ, 'PATH': str(root) + ':' + os.environ['PATH']},
+                                    capture_output=True, text=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.splitlines()[-1], '1')
 

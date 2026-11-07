@@ -80,6 +80,24 @@ class HostedCITests(unittest.TestCase):
         self.assertIn("  pull_request:\n    branches: [main, sync/local-development]\n", triggers)
         self.assertIn("  workflow_dispatch:\n", triggers)
 
+    def test_hosted_checkout_ownership_spans_artifact_manifest_publication(self):
+        from specs_lib.isolation import isolated
+        event = self.root / 'event.json'
+        event.write_text('{}')
+        def publish(*args):
+            independent = {key: value for key, value in os.environ.items()
+                           if not key.startswith('CODE_FACTORY_VERIFY_')}
+            with patch.dict(os.environ, independent, clear=True):
+                with self.assertRaisesRegex(RuntimeError, 'already owns this checkout'):
+                    with isolated(self.root):
+                        self.fail('manifest publication lost checkout ownership')
+        with patch.object(sys, 'argv', ['ci.py', 'verify', '--event', str(event)]), \
+                patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_REF': 'refs/pull/1/head'}), \
+                patch.object(ci, 'comparison', return_value={'base': self.first, 'head': self.first, 'bootstrap': False}), \
+                patch.object(ci, 'run_verification'), patch.object(ci, 'artifact_manifest', side_effect=publish), \
+                patch('sys.stdout', new=io.StringIO()):
+            ci.main()
+
     def test_browser_benchmark_retains_samples_and_stops_on_failure(self):
         workflow = yaml.safe_load((Path(__file__).resolve().parents[1] /
             ".github/workflows/browser-benchmark.yml").read_text())
@@ -433,7 +451,7 @@ class VerificationGraphTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         source = Path(__file__).resolve().parents[1]
-        for name in ('Makefile', 'scripts/verify.sh', 'scripts/verification_timing.py',
+        for name in ('Makefile', 'scripts/verify.sh', 'scripts/verification_timing.py', 'scripts/verification_run.py',
                      'scripts/specs_lib/processes.py', 'scripts/user_flows.py'):
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -475,6 +493,8 @@ if args in (['--version'], ['version']):
         observe_startup('passed')
     print('1.24.2')
     sys.exit(0)
+if command == 'python3' and args[:1] == ['scripts/verification_run.py']:
+    os.execv('/usr/bin/python3', ['/usr/bin/python3', *args])
 key = command + ' ' + ' '.join(args)
 if command == 'python3' and args[:2] == ['scripts/specs.py', 'check'] and os.environ.get('EXPECTED_COMPARISON_BASE'):
     summary=json.loads(pathlib.Path(os.environ['CODE_FACTORY_TIMING_FILE']).read_text())
@@ -487,7 +507,7 @@ inputs = ['web/package.json', 'web/package-lock.json', 'web/vite.config.ts',
 digest = hashlib.sha256(b''.join((root / p).read_bytes() for p in inputs)).hexdigest()
 def record(event):
     with (root / 'commands.jsonl').open('a') as output:
-        output.write(json.dumps(dict(event=event, key=key, fixture=os.environ.get('CODE_FACTORY_REAL_CODEX'), marker=os.environ.get('VERIFICATION_COMMAND_MARKER'), marker_flavor=os.environ.get('VERIFICATION_COMMAND_FLAVOR'), native_scope=os.environ.get('NATIVE_SCOPE'), mflags=os.environ.get('MFLAGS'), mflags_flavor=os.environ.get('VERIFICATION_MFLAGS_FLAVOR'), mflags_origin=os.environ.get('VERIFICATION_MFLAGS_ORIGIN'), tmpdir=os.environ.get('TMPDIR'), tmpdir_exists=pathlib.Path(os.environ.get('TMPDIR', '/tmp')).is_dir(), digest=digest)) + '\\n')
+        output.write(json.dumps(dict(event=event, key=key, cwd=os.getcwd(), fixture=os.environ.get('CODE_FACTORY_REAL_CODEX'), marker=os.environ.get('VERIFICATION_COMMAND_MARKER'), marker_flavor=os.environ.get('VERIFICATION_COMMAND_FLAVOR'), native_scope=os.environ.get('NATIVE_SCOPE'), mflags=os.environ.get('MFLAGS'), mflags_flavor=os.environ.get('VERIFICATION_MFLAGS_FLAVOR'), mflags_origin=os.environ.get('VERIFICATION_MFLAGS_ORIGIN'), tmpdir=os.environ.get('TMPDIR'), tmpdir_exists=pathlib.Path(os.environ.get('TMPDIR', '/tmp')).is_dir(), digest=digest)) + '\\n')
 def require(*paths):
     for path in paths:
         assert (root / path).read_text() == digest, 'stale or missing ' + path
@@ -820,6 +840,17 @@ record('end')
             helper.write_text(original)
         self.assertEqual(helper.read_text(), original)
 
+    def test_standalone_benchmark_preparation_keeps_recipe_working_directories(self):
+        events = self.successful('ui', 'plugin-embed', 'fake-provider', 'browser-deps')
+        starts = [event for event in events if event['event'] == 'start']
+        self.assertCountEqual([event['key'] for event in starts], [
+            'npm ci', 'npm run build', 'python3 scripts/package_plugin.py --embed',
+            'go build -o bin/fake-codex ./internal/testutil/fakecodex',
+            'npx playwright install --with-deps chromium'])
+        for event in starts:
+            expected = self.root / 'web' if event['key'].startswith(('npm ', 'npx ')) else self.root
+            self.assertEqual(event['cwd'], str(expected), event)
+
     def test_assigned_makeflags_preserve_variable_flavor_and_literal_dollars(self):
         temporary = self.root / 'ci$run'
         temporary.mkdir()
@@ -838,7 +869,7 @@ record('end')
                         direct=goal == 'direct')
                     self.assert_shared_once(events)
                     self.assertTrue(all(e['marker'] == marker and e['marker_flavor'] == flavor
-                                        and e['tmpdir'] == str(temporary) and e['tmpdir_exists']
+                                        and Path(e['tmpdir']).is_relative_to(temporary) and e['tmpdir_exists']
                                         for e in events), events)
 
     def test_parallel_flags_preserve_native_variable_flavors(self):
@@ -866,8 +897,89 @@ record('end')
                             flags=flags, inherited_flags=inherited, direct=goal == 'direct')
                         self.assert_shared_once(events)
                         self.assertTrue(all(e['marker'] == expected and e['marker_flavor'] == flavor
-                                            and e['tmpdir'] == str(temporary) and e['tmpdir_exists']
+                                            and Path(e['tmpdir']).is_relative_to(temporary) and e['tmpdir_exists']
                                             for e in events), events)
+
+    def test_checkout_contention_stops_every_mutating_entrypoint_before_preparation(self):
+        from specs_lib.isolation import isolated
+        journal = self.root / 'verification-results' / 'existing.json'
+        journal.parent.mkdir()
+        journal.write_text('retained timing evidence')
+        with isolated(self.root):
+            for goal in ('verify', 'ci', 'hosted-verify', 'build', 'test', 'test-performance', 'package'):
+                with self.subTest(goal=goal):
+                    result, events = self.run_make(goal, 'FLOW_BASE=fixture-main')
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(events, [], result.stdout + result.stderr)
+                    self.assertIn('already owns this checkout', result.stderr)
+                    self.assertEqual(list(journal.parent.iterdir()), [journal])
+                    self.assertEqual(journal.read_text(), 'retained timing evidence')
+                    self.assertFalse((self.root / 'bin').exists())
+                    self.assertFalse((self.root / 'web/node_modules').exists())
+
+    def test_private_temporary_root_is_shared_inside_run_and_fresh_between_runs(self):
+        previous = None
+        for _ in range(2):
+            events = self.successful('verify', 'FLOW_BASE=fixture-main')
+            roots = {event['tmpdir'] for event in events}
+            self.assertEqual(len(roots), 1)
+            temporary = roots.pop()
+            self.assertTrue(all(event['tmpdir_exists'] for event in events))
+            self.assertNotEqual(temporary, previous)
+            self.assertFalse(Path(temporary).exists())
+            previous = temporary
+
+    def test_independent_nested_checkout_preserves_explicit_temporary_parent(self):
+        from specs_lib.isolation import isolated
+        outer = self.root / 'outer'
+        outer.mkdir()
+        requested = self.root / 'nested$parent'
+        requested.mkdir()
+        with isolated(outer):
+            self.env.update({key: value for key, value in os.environ.items()
+                             if key.startswith('CODE_FACTORY_VERIFY_') or key == 'TMPDIR'})
+            events = self.successful('verify', 'FLOW_BASE=fixture-main',
+                                     'TMPDIR:=' + str(requested).replace('$', '$$'),
+                                     'MAKEFLAGS=-k -j8')
+        self.assertTrue(all(Path(event['tmpdir']).is_relative_to(requested)
+                            and event['tmpdir_exists'] for event in events))
+
+    def test_stale_inherited_make_owner_fails_before_preparation(self):
+        from specs_lib.isolation import isolated
+        with isolated(self.root):
+            stale = {key: value for key, value in os.environ.items()
+                     if key.startswith('CODE_FACTORY_VERIFY_')}
+        self.env.update(stale)
+        result, events = self.run_make('test')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(events, [], result.stdout + result.stderr)
+        self.assertIn('Stale or malformed', result.stderr)
+
+    def test_partial_inherited_make_owner_cannot_bypass_checkout_guard(self):
+        self.env['CODE_FACTORY_VERIFY_ROOT'] = str(self.root)
+        self.env.pop('CODE_FACTORY_VERIFY_RUN', None)
+        result, events = self.run_make('test')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(events, [], result.stdout + result.stderr)
+        self.assertIn('Stale or malformed', result.stderr)
+
+    def test_missing_or_mismatched_inherited_make_root_fails_before_preparation(self):
+        from specs_lib.isolation import isolated
+        with isolated(self.root):
+            inherited = {key: value for key, value in os.environ.items()
+                         if key.startswith('CODE_FACTORY_VERIFY_') or key == 'TMPDIR'}
+            for value in (None, str(self.root / 'wrong')):
+                with self.subTest(root=value):
+                    self.env.update(inherited)
+                    self.env.pop('CODE_FACTORY_VERIFY_ROOT', None)
+                    if value is not None:
+                        self.env['CODE_FACTORY_VERIFY_ROOT'] = value
+                    result, events = self.run_make('build')
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(events, [], result.stdout + result.stderr)
+                    self.assertIn('Stale or malformed', result.stderr)
+                    self.assertFalse((self.root / 'bin').exists())
+                    self.assertFalse((self.root / 'web/node_modules').exists())
 
     def test_standalone_goals_retain_requested_keep_going(self):
         result, events = self.run_make('check', 'ui', flags=('-k', '-j1'), fail='go vet ./...')
@@ -1021,7 +1133,23 @@ pathlib.Path('jobserver.json').write_text(json.dumps({'kind':kind,'fixture':os.e
                 self.assertEqual(events, [])
                 self.assertIsNone(self.last_timing)
 
-    def graph_cancellation_probe(self, *, hosted=False, before_context=False, dry=False):
+    def graph_cancellation_probe(self, *, hosted=False, before_context=False, dry=False, outer=False):
+        # This recording-tools graph fixture checks ordering and evidence, using
+        # shorter copied budgets around the real .25s finalization delay. The
+        # permanent isolation/death regressions exercise production 10/15/30s.
+        for name, original, scaled in (
+                ('verification_timing.py', 'termination_grace=10', 'termination_grace=.5'),
+                ('verification_run.py', 'termination_grace=15', 'termination_grace=1.5')):
+            path = self.root / 'scripts' / name
+            source = path.read_text()
+            if not getattr(self, '_recording_cancellation_budgets', False):
+                self.assertEqual(source.count(original), 1, name)
+                self.assertEqual(source.count(scaled), 0, name)
+                path.write_text(source.replace(original, scaled))
+            else:
+                self.assertEqual(source.count(original), 0, name)
+                self.assertEqual(source.count(scaled), 1, name)
+        self._recording_cancellation_budgets = True
         before = set((self.root / 'verification-results').glob('*.json'))
         listener = socket.socket()
         self.addCleanup(listener.close)
@@ -1045,9 +1173,15 @@ time.sleep(60)
             (self.root / 'before-context.mk').write_text(
                 '$(shell ' + shlex.quote(sys.executable) + ' tools/before-context.py)\ninclude Makefile\n')
             argv = ['make', *(['-n'] if dry else []), '-f', 'before-context.mk', *argv[1:]]
-        process = subprocess.Popen([sys.executable, 'scripts/verification_timing.py',
-            'verify', '--', *argv],
-            cwd=self.root, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        command = [sys.executable, 'scripts/verification_timing.py', 'verify', '--', *argv]
+        if outer:
+            # Normal cancellation enters through Make's ownership dispatch.
+            # Before worker-context creation, exercise that exact outer CLI.
+            command = ([sys.executable, 'scripts/verification_run.py', '--', *command]
+                       if before_context else ['make', '--no-print-directory',
+                           'hosted-verify' if hosted else 'verify'])
+        process = subprocess.Popen(command, cwd=self.root, env=environment,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=outer)
         self.addCleanup(cleanup_process, process)
         ready, _, _ = select.select([listener], [], [], 10)
         self.assertTrue(ready, 'graph command did not start')
@@ -1061,6 +1195,30 @@ time.sleep(60)
         else:
             journal, = set((self.root / 'verification-results').glob('*.json')) - before
         return process, child_pid, journal
+
+    def test_standard_outer_owner_cancellation_finalizes_running_and_reserved_timing(self):
+        helper = self.root / 'scripts/verification_timing.py'
+        # A cooperative journal writer may take longer than the inner process
+        # cleanup. Give its final write real work after that cleanup completes.
+        helper.write_text(helper.read_text().replace(
+            'current.finish("interrupted"', 'time.sleep(.25)\n                current.finish("interrupted"'))
+        for before_context in (False, True):
+            for number in (signal.SIGINT, signal.SIGTERM):
+                with self.subTest(before_context=before_context, signal=number):
+                    process, child_pid, journal = self.graph_cancellation_probe(
+                        outer=True, before_context=before_context)
+                    os.killpg(process.pid, number)
+                    _, errors = process.communicate(timeout=15)
+                    self.assertIn(process.returncode, (-number, 128 + number), errors.decode())
+                    data = json.loads(journal.read_text())
+                    self.assertEqual(data['outcome'], 'interrupted')
+                    self.assertIsNotNone(data['wall_seconds'])
+                    self.assertFalse(any(row['outcome'] == 'running' for row in data['phases']))
+                    with self.assertRaises(ProcessLookupError):
+                        os.kill(child_pid, 0)
+                    from specs_lib.isolation import isolated
+                    with isolated(self.root):
+                        pass
 
     def test_real_graph_cancellation_keeps_partial_journal_and_cleans_owned_command(self):
         for hosted in (False, True):

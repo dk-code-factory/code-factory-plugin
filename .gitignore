@@ -10,6 +10,9 @@ __pycache__/
 
 /dist/
 /verification-results/
+/.verification.lock
+# Reserved private verifier namespace, including caller-selected TMPDIR parents.
+.code-factory-verify-*/
 
 # Personal installation and browser state never belongs in public source.
 **/runtime.json
