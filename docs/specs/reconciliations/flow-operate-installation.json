@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "7f4cfbbd485376c5a0c4b91fbc3feee14a4320b7",
-  "fingerprint": "df81dfb52f289f21d4e1bcec34fa95017307ac429af3d3f58ca6367067aaf15d",
+  "base": "07ba62a847b019f4bf7ab758bf0956de784dee7b",
+  "fingerprint": "e66976065ec2c7074c3112b63bafb5d5e09c40d70dba62c8d37feb0e865dd4f2",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Fixture installer and packaged delivery retain factory-v1.db, native configuration and explicit service lifecycle boundaries.",
-    "implementation": "Setup/install and release payload sources remain main's implementation; verification ownership serializes fixture builds without performing installed-host changes.",
-    "tests": "Read process-backed installer rerun/rollback assertions preserving owner token, vault key and factory-v1.db, plus the pending-upgrade interruption fixture's bounded service-restart gate. This remains fixture acceptance, not live deployment."
+    "kind": "structure",
+    "description": "operate-installation retains its current described scenarios and product behavior. This comparison changes operational suite execution and contributor guidance; its authored contract and mapped product implementation are unchanged.",
+    "implementation": "Compared operate-installation mapped implementation and its UI/glossary dependencies with main. The shared runner uses the original execution callback by default; only the explicit local command supplies invocation-bound evidence for exact required commands, with unchanged fixture environment and fingerprint checks.",
+    "tests": "Inspected scripts/test_installer.py at def test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall( and its concrete existing assertions for operate-installation. The required current suites remain intact, including fresh uncached Go race and browser fixtures where declared; no fixture result is used to close real-host, login or accessibility gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 17.538
+      "seconds": 17.313
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 52.643
+      "seconds": 52.032
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.99
+      "seconds": 3.194
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.468
+      "seconds": 2.328
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.589
+      "seconds": 21.432
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.161
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.162
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.663
+      "seconds": 0.644
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.182
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 451.837
+      "seconds": 591.344
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 482.58
+      "seconds": 499.796
     },
     {
       "command": [
@@ -147,36 +147,36 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.736
+      "seconds": 4.756
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "624d61be59f061eecd1199b4fd8591c9df95020ac9aa5d32727e77ca9b696e58",
-    "term:connection-submits": "5d5311a035b7295eec37dcb11abea0eaf29dd49e0f28fd7bbcd77fb81bc178d0",
-    "term:coverage-gap": "96dffce17a3093b311e1df3695af6979443a4efc1b395aa201384f749d2c0b4f",
-    "term:dependency-operation": "942e230ce99e0d52ae63b2523cf5efa83eed1b73607f68d50065aef2fd2bf5d4",
-    "term:element-w-browser-lab-key-controls": "22a21d7201be95e051105328fa8e547d24ff8d194af085a6dff70f952f5b524d",
-    "term:element-w-browser-lab-location": "e0f919c49d2eb955964fbe2f715ad10076434f6cf6ff470e2b89a97a159f338d",
-    "term:element-w-browser-lab-message": "03ab9722f1cff3da3f14eaf76355f014e548ffe2447b2279b5f37c6866d16958",
-    "term:element-w-browser-lab-navigate": "41410053d8e1a29c5305ff75163160053cc2997798ac3e95dd79405c1f3a5d4b",
-    "term:element-w-browser-lab-refresh": "018cbda0ba47834f1bd2b03da1ccd7870712f0c5854b11e50f050a3590784e7f",
-    "term:element-w-browser-lab-screenshot": "cc332e266cbbbffb5f61550ab3830ab33f42139434f42f5ef68472651153b71a",
-    "term:element-w-browser-lab-scroll-up-down": "fbe7bcdf4638c11b23e93828e2170b0854da8ea4d0f28b68efba1680b4ca08e2",
-    "term:element-w-browser-lab-send-text": "5b2164b3915a4bd1a5c10f248e92cde417f57a76e8281372c7401a2411518734",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "5f3c7b61c6138f4607aac07ab479f2b3bb9171b686760ddf490bfc017758d35b",
-    "term:element-w-browser-lab-text-to-send": "37800f1bf97f2c248619aab9012134434c8eb9ab764596fac7b57d2d1fea8981",
-    "term:element-w-browser-lab-url": "7e6a5172aad0d52d8d3144a4aab25ce73d8f58d91a1b5ea63f3a6242472da986",
-    "term:github-skill-source": "f787cf05e57af79cad82a3b41720fd0a634137129d9ab893eac490cd251dd616",
-    "term:owner": "f001e64a657aadde4e44d111c3bf3ca8801faefaa343e1a5dfb400b8edb5b00e",
-    "term:ui-c-browser-lab": "64d088063349dc7785a98fc54a24f4d92967d9a5ef362c33e9eb625a6329d10d",
-    "term:ui-p-browser-lab": "89ebd5723aad8d7ad46ae6b734ae61efa01ed69b675236fc247924671bff5a48",
-    "term:ui-page-browser-lab": "cacdcd0a96d9a8f4991206c09bad27f06ef14945c9126512267a402b4c1e0ef0",
-    "term:ui-w-browser-lab": "4d6c5b060bb6f7305ee531da728ffe6cead3f9c79734c209b66a4ac9940cc891",
-    "term:unverified-behavior": "104990e4e89f0b26b9c963243641749a211a436292ba16dba389b6ec2061acc7",
-    "term:verification": "6f6e5c2a86567e639bf4df5deca6b51d4b7f50816b3da503c88acbd3de7a71b8",
-    "ui:C-BROWSER-LAB": "645eff2840481382e7f0f227dc9f2af3fd8f0b57633258fa415b29c291c22e34",
-    "ui:P-BROWSER-LAB": "55f8e92f83ca69359289089efe612f1c4bc8b45b4a083b05b745250ebb9140a0",
-    "ui:PAGE-BROWSER-LAB": "54a5fba5dca3fe4f9ee797525b9aa9f60e2516a552619f996512e5ce1df3bd1b",
-    "ui:W-BROWSER-LAB": "0be31cc2565eaa6a0360ae3f764ad29b2e70a5a364ae5bd77aaf5d55ae679fcb"
+    "flow:operate-installation": "8f018f7f8cd97fb8627b0b76b2086a47f4e81e0f136cf30790900425d3b84b20",
+    "term:connection-submits": "4063386977c14bf5b82b80f713ddd9f5a9d6fb1a1e7e1ca4d1abbe87d396cc69",
+    "term:coverage-gap": "023b9c55a13173478e6ce0feaad0ee293841123b74c135bc1576408a2fa0fcfe",
+    "term:dependency-operation": "5e1674d9adf11c9692bf58a2c61fc7beab24005a6556cc1a5ad036ab2f7e960f",
+    "term:element-w-browser-lab-key-controls": "184b16cdeccd3c6f6995aef04cb61e5107097b83e0b0f68a39bf1a2a2dc4bd5f",
+    "term:element-w-browser-lab-location": "a579bc011916c674e678d2d1bd2bd7dd5fa57ba80e67290914475620bfd754aa",
+    "term:element-w-browser-lab-message": "42d8c550b3442655883ecf6c622ec0d1dbea968180d19e54f61632dc8d2d89db",
+    "term:element-w-browser-lab-navigate": "4311b7dd42a59d0ea1e671bd315ee7d9c0b8df5b02ba2eaa7e7cbbd323581c26",
+    "term:element-w-browser-lab-refresh": "942ee8427016557b855b193caaa2ee7a3ff9199deffa69af3fb951c88da2d177",
+    "term:element-w-browser-lab-screenshot": "3ddf0bb127cc724c4fb8aba3812db3ed9484d70d5917f065e0b40684371c4bc4",
+    "term:element-w-browser-lab-scroll-up-down": "18749bdb89f367ae7535fad3d73dd702f25c03f980ad0223426f6c63cb4e5a09",
+    "term:element-w-browser-lab-send-text": "847c2c4b4f042930af7fe0832b855aed8d824de864dfdbb06d6933b5cdd5f3fb",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "8f18864400a946db069120559b3f0a5c5206697521c66b6d1572b358d0a354d0",
+    "term:element-w-browser-lab-text-to-send": "b00f1fe3e29c3ccb073fdfcc4ca0851bc9cb227a46f59143ad676b29acb7c695",
+    "term:element-w-browser-lab-url": "b6d76cde266f0e5f2ae5943155d20a35ae4257ec848b4ae9ac85ac66f28be79c",
+    "term:github-skill-source": "f1832cd2060f39982d43fc32df8d2d4a4eda03ffedbac0fd6e40e67e65754124",
+    "term:owner": "6400dd78dc83a6734a34e2610f46b9d635469c833b4bbd2391ecd6644105f25e",
+    "term:ui-c-browser-lab": "3d0added13fa88deaa5852b23337ba9bbb5b4b6072a23e4fae73bf7f690fda80",
+    "term:ui-p-browser-lab": "50e9efd1f42f89fe35bd96be021189adc9d61c4bb08843b070e8c24b67a5d0e5",
+    "term:ui-page-browser-lab": "9dbbb8bc823b3d97f3ae0cc4d3cd1041acff02857c7d9c018b3b228097561eb7",
+    "term:ui-w-browser-lab": "cdd4dd925ace0b7a0769e250809a4eef1eff55b3b693f6bc1b09edf68d12515a",
+    "term:unverified-behavior": "16cfd94ef73740ad0c749345e1ada651965ae1625aa6de1c5948ccbe6b22a0e7",
+    "term:verification": "64b591986720fb11d9c9c50abaca513d4f6d2a52b225f2a45c3b64987a0759aa",
+    "ui:C-BROWSER-LAB": "985598663054a6f3a3b600fcb544ee98c2431caaad22ed413ff35c9081f7c710",
+    "ui:P-BROWSER-LAB": "9da6df056bf307b45e7401eda7b1126bfcd69dfc2c69b5da17d1ea540862c6a2",
+    "ui:PAGE-BROWSER-LAB": "4024e6053381a5a90235f6853847135b1c76f06e13a162cefabb2da171a02eb3",
+    "ui:W-BROWSER-LAB": "9a6047dc721df9421a32fd8902d703af4506f0ddc985a49fe69c092891e06839"
   }
 }
