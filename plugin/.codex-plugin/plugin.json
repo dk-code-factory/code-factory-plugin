@@ -1,6 +1,6 @@
 {
   "name": "code-factory",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "Route GitHub events into retained Codex conversations and configure them through confirmed chat proposals.",
   "keywords": [
     "github",

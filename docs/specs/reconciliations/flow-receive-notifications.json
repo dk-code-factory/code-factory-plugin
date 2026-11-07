@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "a9f9ffeee5ab1895bfb2a4530c4dc9ce000dcf0a",
-  "fingerprint": "63dd77ce0fb019884785ca18df5df420c593143b6a79d2ce79f8a1cc2e186300",
+  "base": "19219f177651357eb3505bcedecc8cf17a8c4e4b",
+  "fingerprint": "ad4c9949d95a33cb30daf5e7aaf025f9952cb1227c5d32e9cf9f898cb8fa1ac5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S1\u2013S4 retain verified signed callback subscriptions and metadata-only inbox/attention notifications while replacing retired run.state discovery with session.changed. Existing retry/expiry/rotation semantics remain unchanged. C7 S4 metadata-only source alerts include changed signed webhook observations independent of matching agent rules; duplicate/no-change deliveries do not repeat alert. Current incremental review: Incremental flow-receive-notifications review retains the earlier branch description and scenario decisions; the three corrections do not add or retire this contract. Follow-up correction review: The previously reviewed flow-receive-notifications behavior and stable scenario IDs are retained. This correction does not add or retire its product behavior.",
-    "implementation": "Read event Definitions/validate/Tick and new factory session/attention event emission. Public payloads retain only entity/kind; private summaries/questions never enter callback bodies. Native questions replace recovered textual-question notification sources. Read processDelivery source update and inbox.changed in the same transaction; no source body enters the notification payload. Current incremental review: Compared this contract with the reviewed starting commit: its authored behavior and implementation anchors are unchanged. The shared factoryState cache preserves fresh mutation versions; busy webhook paging changes only independent discovery and the sibling source link bypasses conversation selection. Follow-up correction review: Reviewed the incremental diff for discussion ordering, independent baseline/detail discovery, cache freshness and installer recovery. Its shared implementation changes preserve this contract; only operate-installation authored behavior is refined, while mapped consumers receive fresh verification.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry, TestCallbackSafetyAndFailedChallenge and updated TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications. The latter checks inbox, native attention and session callbacks once each and excludes private text. Real Work callback acceptance stays an open gap. Read actual signed handler\u2192Poll\u2192events.Tick subscriber test with matching and nonmatching rules, committed currenthead/body, one alert then same-ID and new-ID/unchanged-source silence, no privatebody or native turn. This is fixture webhook delivery, not installed-host acceptance. Current incremental review: Retain the subject-specific assertions documented above for flow-receive-notifications. The full required fixture suites will be re-executed by reconciliation; the three new regression checks add no installed-host, real-provider or accessibility acceptance. Follow-up correction review: Retain the subject-specific assertion review already recorded for flow-receive-notifications. Required suites will rerun after the current source freeze; the new targeted assertions establish only their precise fixture scope and do not waive existing host/provider gaps."
+    "kind": "structure",
+    "description": "Subscription, retry and metadata-only notification behavior is unchanged; packaging changes do not establish real-host alert acceptance.",
+    "implementation": "No internal/events source changes exist relative to main; rebuilt skill payloads retain the wrapper's native question and session behavior.",
+    "tests": "Read TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications: callbacks reject private question context, and inbox, attention and session notifications each deliver exactly once across repeated ticks."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 53.671
+      "seconds": 56.372
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 34.669
+      "seconds": 35.637
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 285.907
+      "seconds": 293.651
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.655
+      "seconds": 4.735
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "b6ea86d1f663ea28f6eb0a2473deb7531cfd607e61ae17568db9799dfe48e5ee",
-    "term:attention-request": "44763a71f94d586a37ce694e5417e86a0d19046d9e46dea395d1e4bc142601a0",
-    "term:coverage-gap": "b6c01eac139642dd99d8128c27f13fd063467bacc3274d14a81b02894c133ef8",
-    "term:host": "51996b5788cbb112feb9f8c0177f8c2fb6a52386d84f37cc868b48080c103c5a",
-    "term:known-limitation": "a16fab2da63b2bbf9e7228ebb071488c5a5d335b2f6c18c80ad5e2e75ab70bc2",
-    "term:subscription": "5dc10aab7f9ef16672bf907bee5d20e3bb0c896e139674f9f97df2f21f00ca11",
-    "term:unverified-behavior": "ec6641a731d850f258008ff45df7610fefa3ac025f730cb411bb03d73765635f"
+    "flow:receive-notifications": "db448c542c5591e09e7657d3ab0793adfaf9fa008e9893e784437f443ba271f1",
+    "term:attention-request": "202f38315eed3a2e52a9df435d445bc77c26f733aa8a3eab547895a1e62d7aff",
+    "term:coverage-gap": "ec8f913a915e6b0c527088669b5a33d72de90690e8d5d2c42432ba2d832a5963",
+    "term:host": "02bd6e4ae7c45a09174a0b4ebf21b2a0ecfe744e4f1ca87fa4134ddeadd1ae88",
+    "term:known-limitation": "64b9935be2a29039d1b90ed693a34aef5369ffe4c895f48f7afb06b5995c444b",
+    "term:subscription": "4a8fe7f4bc7ee6bd5af33c318dee083b6aa36a977a260e2d28c757260e8f1586",
+    "term:unverified-behavior": "22e71acb4997c17d5295cfbb724fa339757df58c67c407b55ea487ca38bda7e3"
   }
 }
