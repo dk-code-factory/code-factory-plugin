@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "7f4cfbbd485376c5a0c4b91fbc3feee14a4320b7",
-  "fingerprint": "b0076e67b24a6d00258944b3e3a4bad9628f65cf769ee9217236c43fa97889db",
+  "base": "07ba62a847b019f4bf7ab758bf0956de784dee7b",
+  "fingerprint": "522db2a1bb98579e87d48a90ac0e460eaf46d46e7893a440161bc71418ff7fda",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Webhook subscription verification, entity filtering and retry identity retain their current meaning; no notification transport changes.",
-    "implementation": "Compared internal/events and callback boundary sources to main. Persistent verification lock metadata is unrelated to notification subscriptions.",
-    "tests": "Read the complete TestSubscriptionVerificationRetryDedupRefreshAndExpiry: identical subscribe returns the same ID, a 503 retries the same event ID, acknowledged delivery is not repeated, expired subscriptions stop and unsubscribe is idempotent. Callback-safety assertions reject nonpublic URLs and failed challenges."
+    "kind": "structure",
+    "description": "receive-notifications retains its current described scenarios and product behavior. This comparison changes operational suite execution and contributor guidance; its authored contract and mapped product implementation are unchanged.",
+    "implementation": "Compared receive-notifications mapped implementation and its UI/glossary dependencies with main. The shared runner uses the original execution callback by default; only the explicit local command supplies invocation-bound evidence for exact required commands, with unchanged fixture environment and fingerprint checks.",
+    "tests": "Inspected internal/events/events_test.go at func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( and its concrete existing assertions for receive-notifications. The required current suites remain intact, including fresh uncached Go race and browser fixtures where declared; no fixture result is used to close real-host, login or accessibility gaps."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 52.643
+      "seconds": 52.032
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 451.837
+      "seconds": 591.344
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 482.58
+      "seconds": 499.796
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.736
+      "seconds": 4.756
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "f4fcd78e8b1716e0a4b37ef5060f276702a6f16093b13e33d4f5d7d384f31e74",
-    "term:attention-request": "18f506c031649f357daa6f6103873bab468409879928a02aa9b58663cab75050",
-    "term:coverage-gap": "96dffce17a3093b311e1df3695af6979443a4efc1b395aa201384f749d2c0b4f",
-    "term:host": "98c637eb0abbbd816f596709792bb6deab7db84c2b2505fc27207c5e32aafbf6",
-    "term:known-limitation": "34045aad6228d660d78dbbd8332e8518b6d51dbce38f6ec1c1a1e5455678e9d4",
-    "term:subscription": "4d0b5b08c8198c0755e2016501f8d48d102ff860fe1d34ec5234703c9b06f17d",
-    "term:unverified-behavior": "104990e4e89f0b26b9c963243641749a211a436292ba16dba389b6ec2061acc7"
+    "flow:receive-notifications": "6c63a1a4725a3f5600ea81b6ed3456dfd0c03f334d098101ac15407f5e1a87e2",
+    "term:attention-request": "7fd18e86b39b28fe143fac927c57d32378db8c63ac734f46cfaa4295392cfc62",
+    "term:coverage-gap": "023b9c55a13173478e6ce0feaad0ee293841123b74c135bc1576408a2fa0fcfe",
+    "term:host": "5abb1f5dc9880d77e46a3393fe14a6065d5794e2ba7ab1e222f9000f65419d8a",
+    "term:known-limitation": "6372f68b2846711d685d6e9e6dead34d23b9adc50103daa2b8f67bf68d08ddae",
+    "term:subscription": "90edb1353393999f6a8c3b8f5fd3c5756ef92fda1c24d402918a63e1bc83e21a",
+    "term:unverified-behavior": "16cfd94ef73740ad0c749345e1ada651965ae1625aa6de1c5948ccbe6b22a0e7"
   }
 }

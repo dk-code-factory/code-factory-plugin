@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "7f4cfbbd485376c5a0c4b91fbc3feee14a4320b7",
-  "fingerprint": "3837987d408f75e62f77f8334f76c9e95071cfdc207a56a48f0dc0f0d025d85c",
+  "base": "07ba62a847b019f4bf7ab758bf0956de784dee7b",
+  "fingerprint": "7908e7e0c9df291a1584395dedb7fdbaa2bee6df8e5fa346933b8d19d6320e7f",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "Verification now owns its checkout before mutable preparation and shares authenticated private temporary state through native Make, reconciliation, npm, hosted timing and qualification. Caller graph/defaults, selected sources, exported values and explicit opt-ins remain native; abrupt caller death drains admitted managed work before release. Fixed browser ports remain outside this part.",
-    "implementation": "Inspected isolation.py held flock, process identity and lock-record admission; make_owner.py binds a pidfd guardian and helper leases; verification_run.py preserves selected Makefiles/stdin and creates or proves command sessions; processes.py retains leaders through cleanup and ci.py keeps ownership through manifest timing. Git ceilings compose actual exported caller values; borrowed state restores on exit. The Makefile-only startup .EXTRA_PREREQS is now a private override, so command-line empty/nonempty caller extras still apply to ordinary targets but cannot remove admission. Checker invocations share independent subreaper supervision; they stop exact Make on timeout, allow guardian drain, reap remaining owned descendants and require acknowledgement before deleting their fixture. Checker TestCase method dispatch now runs in a child beneath the independent subreaper while the parent retains fixture ownership. This covers direct Make and interactive stdin calls as well as the ordinary helper; parent deletion follows the whole-method drain acknowledgement. Child-side early capture-directory deletion is removed.",
-    "tests": "Inspected the actual native graph, process identity, cancellation, owner-token and Git-ceiling assertions. Extended caller extra-prerequisite controls cover command-line empty/nonempty values under serial, parallel and keep-going flags. The contended fake-provider control checks bin never appears; its old-hook negative control creates bin before rejection. The real checker timeout control observes cooperative helper cleanup, guardian/worker disappearance, removed private state and an unrelated surviving child before fixture deletion. Existing supervisor interruption, nonzero and missing-ack controls still apply. Complete declared fixture suites are required for these refreshed inputs; no real-host coverage is inferred. A real direct Make timeout inside a checker-method worker exercises the formerly bypassing route: the test failure reaches its parent only after cooperative helper cleanup and guardian/worker reaping; the fixture still exists for inspection and an unrelated child survives. Focused native Git-ceiling and interactive stdin cases also pass through that method boundary."
+    "description": "S3/S4 provide one fixture-only owned local invocation sharing exact checks only under stable admitted source, artifacts, dependencies, comparison and reviewed decisions. Recursive directory watches precede enumeration. All concrete executable/helper PATH candidates retain lookup-edge coverage; empty, relative or missing PATH and nonempty Bash startup sources reject. The supported native ABI is x86-64 glibc with explicit system library, loader, cache, lookup and bundled-module inputs. Source/helper/artifact monitors end at their final drains; independent cache/cancellation guards retain the documented later outcome boundaries.",
+    "implementation": "Read the native plan, source/helper/artifact identities, root-before-enumeration InputWatch traversal and candidate-specific executable search watches. Indirect Bash/Node and discovered executable helpers retain watched earlier lookup candidates and symlink/absence edges. Native ABI admission inventories system plugin/dlopen modules, cached and uncached direct lookup files, hwcaps, native tools and loader/configuration aliases, rejecting alternate interpreters, custom path-qualified dependency/audit/filter contexts and unrepresented existing RUNPATH. Repeated discovery under watches binds the selected closure. The final cleanup cache guard records secondary failures without replacing an already-raised verification error or runner-owned cancellation. Exact publication rollback remains live through owner/cache teardown and final checked signal outcomes. ELF ORIGIN admission checks both original and resolved object-parent spellings against represented roots; no canonicalization can erase an alias lookup.",
+    "tests": "Inspected all72 local verification methods and8 runner controls. New actual negative controls consume altered package source created at watch installation; run a self-removing earlier PATH helper returning zero; prove Bash BASH_ENV startup and pre-ownership rejection; send real SIGINT/SIGTERM while the owned runner controls handlers and a restored cache write is pending; distinguish success and original-error cleanup-guard events; discover actual selected glibc libc/loader/cache inputs; compile and load native shared objects by bare name through admitted RUNPATH, observing changed value9 before restored writes, uncached file creation and dangling-target creation reject evidence; reject compiled custom RUNPATH and alternate interpreters. Existing disposal, timeout, restored helper/artifact writes and later atomic receipt replacements remain asserted. No fixture evidence closes provider, real-host, sign-in or accessibility gaps. A compiled aliased shared object has an absent canonical ORIGIN lookup and a distinct existing unrepresented alias lookup; admission rejects the latter."
   },
   "verification": [
     {
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 451.837
+      "seconds": 591.344
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 482.58
+      "seconds": 499.796
     },
     {
       "command": [
@@ -49,17 +49,17 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.736
+      "seconds": 4.756
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "8672afa197943bc298b3a35433870aabe656e400f98387331e1945add609a17e",
-    "term:coverage-gap": "96dffce17a3093b311e1df3695af6979443a4efc1b395aa201384f749d2c0b4f",
-    "term:entity": "2bf19ca544097be823a1082fc6ae4f0eebf27f0d7350494130e8de06b5892acb",
-    "term:glossary": "2e06d62ab9f0a17e1402fdabc367f76239615f1e50af6f2e4459418ca4dac7ba",
-    "term:known-limitation": "34045aad6228d660d78dbbd8332e8518b6d51dbce38f6ec1c1a1e5455678e9d4",
-    "term:reconciliation": "7e85377d24df7082817dcb52fe1a11c120334441e7cce81c9978f36b519ce5a8",
-    "term:unverified-behavior": "104990e4e89f0b26b9c963243641749a211a436292ba16dba389b6ec2061acc7",
-    "term:verification": "6f6e5c2a86567e639bf4df5deca6b51d4b7f50816b3da503c88acbd3de7a71b8"
+    "flow:maintain-flow-contracts": "6b9962c0e4ddb16fc654c2c872043ce8c04707d3b15834283d52ded6f80f39cd",
+    "term:coverage-gap": "023b9c55a13173478e6ce0feaad0ee293841123b74c135bc1576408a2fa0fcfe",
+    "term:entity": "8ddc33a09b1beb938af111b7c371e2c88ba0861084d98bf9bc706bc4f7f7108c",
+    "term:glossary": "8563d392fe202695043ba5b621fd8f04424be3de831f22cc8ce1dcb2210415de",
+    "term:known-limitation": "6372f68b2846711d685d6e9e6dead34d23b9adc50103daa2b8f67bf68d08ddae",
+    "term:reconciliation": "9243c50c460cf27fb2c061de6b08d65d07d0f644a35385cfbc53b72b8f9a1375",
+    "term:unverified-behavior": "16cfd94ef73740ad0c749345e1ada651965ae1625aa6de1c5948ccbe6b22a0e7",
+    "term:verification": "64b591986720fb11d9c9c50abaca513d4f6d2a52b225f2a45c3b64987a0759aa"
   }
 }
