@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "7f4cfbbd485376c5a0c4b91fbc3feee14a4320b7",
-  "fingerprint": "b0076e67b24a6d00258944b3e3a4bad9628f65cf769ee9217236c43fa97889db",
+  "base": "07ba62a847b019f4bf7ab758bf0956de784dee7b",
+  "fingerprint": "4e30d055a5ad61e393acab9bf031e7b04697d5cd3b8b9af559bf61d2aadb7907",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "refactor",
-    "description": "Webhook subscription verification, entity filtering and retry identity retain their current meaning; no notification transport changes.",
-    "implementation": "Compared internal/events and callback boundary sources to main. Persistent verification lock metadata is unrelated to notification subscriptions.",
-    "tests": "Read the complete TestSubscriptionVerificationRetryDedupRefreshAndExpiry: identical subscribe returns the same ID, a 503 retries the same event ID, acknowledged delivery is not repeated, expired subscriptions stop and unsubscribe is idempotent. Callback-safety assertions reject nonpublic URLs and failed challenges."
+    "description": "S1/S2 subscription callbacks, retry identity and disabled delivery retain their existing behavior.",
+    "implementation": "Inspected both main and current mapped inputs. The only production changes are shared REST cache keys/storage, explicit GET-only bootstrap access, origin-scoped GraphQL caching and forced-live cache rules. This consumer is selected by shared verification inputs; its authored behavior, UI definitions and native dispatch implementation remain unchanged.",
+    "tests": "TestSubscriptionVerificationRetryDedupRefreshAndExpiry remains the callback lifecycle assertion; GitHub response-cache dispatch does not send host notification callbacks. Fixture verification does not close any installed-host or accessibility gap."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 52.643
+      "seconds": 54.647
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.205
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 451.837
+      "seconds": 451.085
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 482.58
+      "seconds": 473.079
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.736
+      "seconds": 4.717
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "f4fcd78e8b1716e0a4b37ef5060f276702a6f16093b13e33d4f5d7d384f31e74",
-    "term:attention-request": "18f506c031649f357daa6f6103873bab468409879928a02aa9b58663cab75050",
-    "term:coverage-gap": "96dffce17a3093b311e1df3695af6979443a4efc1b395aa201384f749d2c0b4f",
-    "term:host": "98c637eb0abbbd816f596709792bb6deab7db84c2b2505fc27207c5e32aafbf6",
-    "term:known-limitation": "34045aad6228d660d78dbbd8332e8518b6d51dbce38f6ec1c1a1e5455678e9d4",
-    "term:subscription": "4d0b5b08c8198c0755e2016501f8d48d102ff860fe1d34ec5234703c9b06f17d",
-    "term:unverified-behavior": "104990e4e89f0b26b9c963243641749a211a436292ba16dba389b6ec2061acc7"
+    "flow:receive-notifications": "79abfefe20f4f82089042c156b01e0ffdaf3b70092be23f063d5842fed537e34",
+    "term:attention-request": "45e385a0b11895a37daf4fe7516a830f641ba8182f14185e259e6251df28787c",
+    "term:coverage-gap": "b17df55d62c3bf8be994368de8b8e3c886972e971705980fdfc92ee3ea0b5e84",
+    "term:host": "ab31f3c6fda5ca09bd2cb40f520df653a47fc17d2715c175d331e02f2f0ad399",
+    "term:known-limitation": "94f66e7b1f95545756527f93e24008f8bf16cc0a3b506fdaaeeb1ca2c8a516df",
+    "term:subscription": "5062f156217e37ea5c8fb887390b6125aef78fae4207b977cce96cea1ce177dc",
+    "term:unverified-behavior": "e917ac30b59ce45403a28e03219133d35614bc954b233f36f84050d3278f8686"
   }
 }

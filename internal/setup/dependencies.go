@@ -3,6 +3,7 @@ package setup
 import (
 	"archive/zip"
 	"bytes"
+	"codefactory/internal/providers"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -17,6 +18,26 @@ import (
 	"strings"
 	"time"
 )
+
+var tunnelGitHub = providers.NewPublicGitHub()
+
+type tunnelRelease struct {
+	Tag    string `json:"tag_name"`
+	Assets []struct {
+		Name   string
+		URL    string `json:"browser_download_url"`
+		Digest string
+	}
+}
+
+func latestTunnelRelease(ctx context.Context, github *providers.GitHub) (tunnelRelease, error) {
+	var release tunnelRelease
+	body, _, err := github.Request(ctx, http.MethodGet, "/repos/openai/tunnel-client/releases/latest", nil, "")
+	if err == nil {
+		err = json.Unmarshal(body, &release)
+	}
+	return release, err
+}
 
 // InstallTunnel preserves existing clients. GitHub's release-asset digest verifies
 // the download from the official upstream, over authenticated HTTPS transport.
@@ -44,20 +65,7 @@ func InstallTunnel(ctx context.Context) error {
 		}
 		return res, nil
 	}
-	res, e := get("https://api.github.com/repos/openai/tunnel-client/releases/latest")
-	if e != nil {
-		return e
-	}
-	var release struct {
-		Tag    string `json:"tag_name"`
-		Assets []struct {
-			Name   string
-			URL    string `json:"browser_download_url"`
-			Digest string
-		}
-	}
-	e = json.NewDecoder(io.LimitReader(res.Body, 2<<20)).Decode(&release)
-	res.Body.Close()
+	release, e := latestTunnelRelease(ctx, tunnelGitHub)
 	if e != nil {
 		return e
 	}
@@ -69,7 +77,7 @@ func InstallTunnel(ctx context.Context) error {
 		if !strings.HasPrefix(a.URL, "https://github.com/openai/tunnel-client/releases/download/") || !strings.HasPrefix(a.Digest, "sha256:") {
 			return fmt.Errorf("official release asset has no verifiable SHA256 digest")
 		}
-		res, e = get(a.URL)
+		res, e := get(a.URL)
 		if e != nil {
 			return e
 		}

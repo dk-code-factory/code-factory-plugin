@@ -4,7 +4,6 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -55,13 +54,25 @@ type GitHub struct {
 	policy      func(context.Context) (GitHubPolicy, error)
 	clock       func() time.Time
 
-	cacheBytes   int
-	mu           sync.Mutex
-	cache        map[string]cacheEntry
-	graphRetryAt time.Time
-	BaseURL      string
-	Client       *http.Client
-	Token        func(context.Context) (string, error)
+	cacheBytes         int
+	mu                 sync.Mutex
+	cache              map[string]cacheEntry
+	cacheEpochs        map[string]string
+	cacheEpochFailures map[string]bool
+	graphRetryAt       time.Time
+	BaseURL            string
+	Client             *http.Client
+	Token              func(context.Context) (string, error)
+	publicRead         bool
+}
+
+// NewPublicGitHub permits anonymous GETs for bootstrap release discovery only.
+// Application clients continue to fail closed when CLI credentials are missing.
+func NewPublicGitHub() *GitHub {
+	g := NewGitHub()
+	g.Token = nil
+	g.publicRead = true
+	return g
 }
 
 func NewGitHub() *GitHub {
@@ -130,11 +141,11 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 	if e != nil {
 		return nil, e
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-	tokenHash := sha256.Sum256([]byte(token))
-	cacheKey := fmt.Sprintf("%s#%x", u, tokenHash)
 	if g.Managed() {
 		unlock, err := g.lockUsage(ctx)
 		if err != nil {
@@ -142,11 +153,15 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		}
 		defer unlock()
 	}
+	cacheKey, err := g.responseCacheKey(ctx, u, token, "application/vnd.github+json")
+	if err != nil {
+		return nil, fmt.Errorf("GitHub cache unavailable")
+	}
 	cached, hasCache, err := g.cached(ctx, cacheKey)
 	if err != nil {
 		return nil, fmt.Errorf("GitHub cache unavailable")
 	}
-	if g.Managed() && hasCache && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true {
+	if g.Managed() && hasCache && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true {
 		if cached.Redirect != "" {
 			return nil, &githubRedirect{location: cached.Redirect}
 		}
@@ -168,6 +183,9 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		return nil, fmt.Errorf("GitHub connection failed")
 	}
 	defer res.Body.Close()
+	if err := g.invalidateRejectedCredential(ctx, token, res.StatusCode, res.Header); err != nil {
+		return nil, fmt.Errorf("GitHub cache unavailable")
+	}
 	if err = g.observe(ctx, token, "core", parsed.Path, res.Header); err != nil {
 		return nil, fmt.Errorf("GitHub request budget unavailable")
 	}
