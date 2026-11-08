@@ -2,6 +2,7 @@ package providers
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -345,9 +346,7 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 }
 
 func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, error) {
-	g.mu.Lock()
-	v, ok := g.cache[key]
-	g.mu.Unlock()
+	v, ok := g.cacheGet(key)
 	if ok {
 		return v, true, nil
 	}
@@ -365,8 +364,74 @@ func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, erro
 	if g.now().Sub(v.CheckedAt) > 24*time.Hour {
 		return cacheEntry{}, false, nil
 	}
+	if !v.Expires.IsZero() && !g.now().Before(v.Expires) {
+		return cacheEntry{}, false, nil
+	}
 	return v, true, nil
 }
+
+// Successfully retained rejection generations prevent older response/query hits.
+// Generations are origin/principal scoped; retained old entries remain bounded.
+func (g *GitHub) credentialCacheScope(ctx context.Context, token string) (string, error) {
+	scope := CooldownKey(g.BaseURL, token)
+	g.mu.Lock()
+	failed := g.cacheEpochFailures[scope]
+	g.mu.Unlock()
+	if failed {
+		return "", errors.New("GitHub cache generation unavailable")
+	}
+	var epoch string
+	if g.usageStore != nil {
+		if err := g.usageStore.Get(ctx, "github-cache-epoch", scope, &epoch); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return "", err
+		}
+	} else {
+		g.mu.Lock()
+		epoch = g.cacheEpochs[scope]
+		g.mu.Unlock()
+	}
+	return scope + ":" + epoch, nil
+}
+
+func (g *GitHub) invalidateCredentialCache(ctx context.Context, token string) error {
+	scope := CooldownKey(g.BaseURL, token)
+	var nonce [16]byte
+	if _, err := rand.Read(nonce[:]); err != nil {
+		return err
+	}
+	epoch := fmt.Sprintf("%x", nonce)
+	if g.usageStore != nil {
+		err := g.usageStore.Put(ctx, "github-cache-epoch", scope, epoch, "")
+		g.mu.Lock()
+		if g.cacheEpochFailures == nil {
+			g.cacheEpochFailures = map[string]bool{}
+		}
+		g.cacheEpochFailures[scope] = err != nil
+		g.mu.Unlock()
+		return err
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.cacheEpochs == nil {
+		g.cacheEpochs = map[string]string{}
+	}
+	g.cacheEpochs[scope] = epoch
+	return nil
+}
+
+// Invalidate from status/headers before accounting or reading an error body.
+// A 403 identified as throttling only by its body may conservatively lose hits;
+// its rate-limit classification and retry deadline are still handled normally.
+func (g *GitHub) invalidateRejectedCredential(ctx context.Context, token string, status int, header http.Header) error {
+	if status != http.StatusUnauthorized && status != http.StatusForbidden {
+		return nil
+	}
+	if status == http.StatusForbidden && (header.Get("X-RateLimit-Remaining") == "0" || header.Get("Retry-After") != "") {
+		return nil
+	}
+	return g.invalidateCredentialCache(ctx, token)
+}
+
 func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
 	g.cachePut(key, v)
 	if g.usageStore != nil {
@@ -395,6 +460,7 @@ func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
 			}
 		}
 		v.ID = id
+		v.Header = safeCacheHeader(v.Header)
 		return g.usageStore.Put(ctx, "github-cache", id, v, "")
 	}
 	return nil
@@ -416,6 +482,9 @@ func restTTL(path string, h http.Header) time.Duration {
 	}
 	if path == "/user/teams" {
 		ttl = 15 * time.Minute
+	}
+	if strings.HasSuffix(path, "/releases/latest") {
+		ttl = time.Minute
 	}
 	if n, e := strconv.Atoi(h.Get("X-Poll-Interval")); e == nil && n > 0 && time.Duration(n)*time.Second > ttl {
 		ttl = time.Duration(n) * time.Second

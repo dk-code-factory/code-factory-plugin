@@ -18,6 +18,9 @@ type githubHeadContext struct{}
 
 // graph only accepts application-owned queries, never mutations or source text.
 func (g *GitHub) graph(ctx context.Context, query string, variables any, out any) error {
+	if g.publicRead {
+		return fmt.Errorf("Public GitHub access permits GET requests only")
+	}
 	ctx = g.Operation(ctx, nil, false)
 	op := ctx.Value(operationKey{}).(*operation)
 	g.dispatch.Lock()
@@ -45,12 +48,16 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 		}
 		defer unlock()
 	}
-	key := fmt.Sprintf("graphql:%x:%x", sha256.Sum256([]byte(token)), sha256.Sum256(append(b, []byte(fmt.Sprint(ctx.Value(githubHeadContext{})))...)))
+	scope, err := g.credentialCacheScope(ctx, token)
+	if err != nil {
+		return fmt.Errorf("GitHub cache unavailable")
+	}
+	key := fmt.Sprintf("graphql:%s:%x", scope, sha256.Sum256(append(b, []byte(fmt.Sprint(ctx.Value(githubHeadContext{})))...)))
 	cached, ok, err := g.cached(ctx, key)
 	if err != nil {
 		return fmt.Errorf("GitHub cache unavailable")
 	}
-	if g.Managed() && ok && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true {
+	if g.Managed() && ok && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true {
 		noteRead(ctx, cached.CheckedAt)
 		return json.Unmarshal(cached.Body, out)
 	}
@@ -69,6 +76,9 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 		return fmt.Errorf("GitHub metadata connection failed")
 	}
 	defer res.Body.Close()
+	if err := g.invalidateRejectedCredential(ctx, token, res.StatusCode, res.Header); err != nil {
+		return fmt.Errorf("GitHub cache unavailable")
+	}
 	if err = g.observe(ctx, token, "graphql", "/graphql", res.Header); err != nil {
 		return fmt.Errorf("GitHub request budget unavailable")
 	}
@@ -92,6 +102,9 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	if res.StatusCode == 403 && rateBody(body) {
 		return rateLimit()
 	}
+	if res.StatusCode == 401 || res.StatusCode == 403 {
+		return fmt.Errorf("GitHub access revoked or insufficient repository permissions")
+	}
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("GitHub metadata unavailable (HTTP %d)", res.StatusCode)
 	}
@@ -106,10 +119,24 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	if err = json.Unmarshal(body, &result); err != nil {
 		return fmt.Errorf("GitHub metadata unavailable")
 	}
+	authRejected := false
+	for _, e := range result.Errors {
+		if e.Type == "FORBIDDEN" || e.Type == "UNAUTHORIZED" || e.Extensions.Code == "FORBIDDEN" || e.Extensions.Code == "UNAUTHORIZED" {
+			authRejected = true
+		}
+	}
+	if authRejected {
+		if err := g.invalidateCredentialCache(ctx, token); err != nil {
+			return fmt.Errorf("GitHub cache unavailable")
+		}
+	}
 	for _, e := range result.Errors {
 		if e.Type == "RATE_LIMITED" || e.Extensions.Code == "RATE_LIMITED" || strings.Contains(strings.ToLower(e.Message), "rate limit") || res.Header.Get("X-RateLimit-Remaining") == "0" {
 			return rateLimit()
 		}
+	}
+	if authRejected {
+		return fmt.Errorf("GitHub access revoked or insufficient repository permissions")
 	}
 	if len(result.Errors) > 0 || len(result.Data) == 0 || string(result.Data) == "null" {
 		return fmt.Errorf("GitHub metadata unavailable")
@@ -121,10 +148,8 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	if err = g.requestSucceeded(ctx); err != nil {
 		return fmt.Errorf("GitHub request budget unavailable")
 	}
-	if g.Managed() {
-		if err = g.remember(ctx, key, cacheEntry{Body: result.Data, Header: http.Header{}, CheckedAt: g.now(), Until: g.now().Add(GitHubDetailTTL)}); err != nil {
-			return fmt.Errorf("GitHub cache unavailable")
-		}
+	if err = g.remember(ctx, key, cacheEntry{Body: result.Data, Header: http.Header{}, CheckedAt: g.now(), Until: g.now().Add(GitHubDetailTTL)}); err != nil {
+		return fmt.Errorf("GitHub cache unavailable")
 	}
 	return nil
 }

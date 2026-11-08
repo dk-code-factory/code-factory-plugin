@@ -484,6 +484,14 @@
           "scenarios": [
             "S1"
           ]
+        },
+        {
+          "path": "internal/setup/dependencies_test.go",
+          "anchor": "func TestTunnelReleaseDiscoveryUsesPublicGitHubCache(",
+          "purpose": "Tunnel release discovery reuses the shared anonymous GET cache, validates live reads conditionally and rejects anonymous mutation before dispatch.",
+          "scenarios": [
+            "S1"
+          ]
         }
       ],
       "suites": [
@@ -1364,6 +1372,46 @@
             "S2",
             "S5"
           ]
+        },
+        {
+          "path": "internal/providers/github_transport_cache_test.go",
+          "anchor": "func TestGitHubRESTTransportsSharePersistentCacheAndLiveReads(",
+          "purpose": "Typed and generic REST share persisted bodies and ETags across restart; forced live reads update both paths, expiry revalidates, copies remain isolated and another credential cannot reuse the result.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_transport_cache_test.go",
+          "anchor": "func TestGitHubGenericCachePersistsLastModifiedAndNeverMemoizesWrites(",
+          "purpose": "Restart retains Last-Modified, response body and pagination; 200/304 durable records exclude cookies and private headers while live responses preserve them. Repeated writes dispatch independently while batch GETs memoize and forced live reads bypass the memo.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_transport_cache_test.go",
+          "anchor": "func TestGitHubGraphCacheSeparatesOriginsAndSurvivesRestart(",
+          "purpose": "Identical GraphQL queries and credentials at two API origins retain independent results across client restarts.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_transport_cache_test.go",
+          "anchor": "func TestGitHubRevocationInvalidatesCredentialCacheAcrossTransportsAndRestart(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A live 401/403 with empty, truncated or oversized body, or a GraphQL FORBIDDEN/UNAUTHORIZED envelope, invalidates the same credential response/query caches across operations and restart in memory/durable modes; another credential retains hits. Mixed auth/rate envelopes in either order, using type and extensions.code, retain rate classification while invalidating; auth with zero remaining quota also invalidates."
+        },
+        {
+          "path": "internal/providers/github_transport_cache_test.go",
+          "anchor": "func TestGitHubCacheGenerationFailuresCannotReturnCachedSuccess(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "A real SQLite trigger rejecting generation writes blocks subsequent same-client response/query cache hits; malformed persisted generation data fails closed after client restart without contacting GitHub. Mixed GraphQL auth/rate generation-write failure returns cache failure before rate classification and blocks that client query hits."
         }
       ],
       "suites": [

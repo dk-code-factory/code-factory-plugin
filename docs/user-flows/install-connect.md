@@ -104,6 +104,7 @@ flowchart TD
 - [scripts/test_packaging.py](../../scripts/test_packaging.py) — `def test_zip_is_self_contained_deterministic_and_contains_no_host_state(`; S1. Archive includes admin, daily-use and setup skills with checksums while private host state remains excluded.
 - [internal/gateway/audit_test.go](../../internal/gateway/audit_test.go) — `func TestRequestAuditExcludesCredentialsAndPreservesStreaming(`; S1. Current install-connect fixture assertion TestRequestAuditExcludesCredentialsAndPreservesStreaming. Inspect its exact assertion scope.
 - [internal/gateway/audit_test.go](../../internal/gateway/audit_test.go) — `func TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails(`; S1. Current install-connect fixture assertion TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails. Inspect its exact assertion scope.
+- [internal/setup/dependencies_test.go](../../internal/setup/dependencies_test.go) — `func TestTunnelReleaseDiscoveryUsesPublicGitHubCache(`; S1. Tunnel release discovery reuses the shared anonymous GET cache, validates live reads conditionally and rejects anonymous mutation before dispatch.
 
 ## Verification and gaps
 

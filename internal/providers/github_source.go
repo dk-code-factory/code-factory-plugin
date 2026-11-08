@@ -4,8 +4,6 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
-	"crypto/sha256"
-	"fmt"
 	"time"
 )
 
@@ -43,11 +41,14 @@ func WithGitHubRead(ctx context.Context, mode GitHubReadMode) context.Context {
 }
 
 func (g *GitHub) CacheScope(ctx context.Context) (string, error) {
+	if g.publicRead {
+		return g.credentialCacheScope(ctx, "")
+	}
 	token, err := g.Token(ctx)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(g.BaseURL+"\x00"+token))), nil
+	return g.credentialCacheScope(ctx, token)
 }
 
 var _ GitHubSource = (*GitHub)(nil)

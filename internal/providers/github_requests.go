@@ -81,11 +81,16 @@ func (g *GitHub) resolve(ctx context.Context, op *operation) error {
 		if g.Token != nil {
 			op.token, op.err = g.Token(ctx)
 		}
-		if g.Token == nil || op.err != nil || strings.TrimSpace(op.token) == "" {
+		if !g.publicRead && (g.Token == nil || op.err != nil || strings.TrimSpace(op.token) == "") {
 			op.err = errors.New("GitHub authentication unavailable; restore GitHub CLI authentication and resume")
 		}
 	}
 	return op.err
+}
+
+func (g *GitHub) responseCacheKey(ctx context.Context, target, token, accept string) (string, error) {
+	scope, err := g.credentialCacheScope(ctx, token)
+	return target + "#" + scope + "#" + accept + "#" + apiVersion, err
 }
 func (g *GitHub) Scope(ctx context.Context) (string, error) {
 	ctx = g.Operation(ctx, nil, false)
@@ -227,6 +232,9 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	fail := func(phase RequestPhase, status int, err error) ([]byte, http.Header, error) {
 		return nil, nil, &RequestError{Phase: phase, Status: status, Cause: err}
 	}
+	if g.publicRead && method != http.MethodGet {
+		return fail(BeforeDispatch, 0, errors.New("Public GitHub access permits GET requests only"))
+	}
 	target, err := g.endpoint(endpoint)
 	if err != nil {
 		return fail(BeforeDispatch, 0, err)
@@ -265,28 +273,18 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	if accept == "" {
 		accept = "application/vnd.github+json"
 	}
-	key := target + "#" + scope + "#" + accept + "#" + apiVersion
-	if method == http.MethodGet && op.memoize && ctx.Value(revalidateKey{}) != true {
-		if op.memo[key] {
-			if c, ok := g.cacheGet(key); ok {
-				return c.Body, c.Header.Clone(), nil
-			}
-		}
-	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, method, target, bytes.NewReader(body))
 	if err != nil {
 		return fail(BeforeDispatch, 0, errors.New("GitHub request configuration is invalid; restore settings and resume"))
 	}
-	req.Header.Set("Authorization", "Bearer "+op.token)
+	if op.token != "" {
+		req.Header.Set("Authorization", "Bearer "+op.token)
+	}
 	req.Header.Set("Accept", accept)
 	req.Header.Set("X-GitHub-Api-Version", apiVersion)
 	req.Header.Set("Content-Type", "application/json")
-	c, cached := g.cacheGet(key)
-	if method == http.MethodGet && cached && c.ETag != "" {
-		req.Header.Set("If-None-Match", c.ETag)
-	}
 	if g.Client == nil {
 		return fail(BeforeDispatch, 0, errors.New("GitHub HTTP client unavailable; restore settings and resume"))
 	}
@@ -296,6 +294,30 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 			return fail(BeforeDispatch, 0, err)
 		}
 		defer unlock()
+	}
+	key, err := g.responseCacheKey(ctx, target, op.token, accept)
+	if err != nil {
+		return fail(BeforeDispatch, 0, errors.New("GitHub cache unavailable"))
+	}
+	var c cacheEntry
+	var cached bool
+	if method == http.MethodGet {
+		c, cached, err = g.cached(ctx, key)
+		if err != nil {
+			return fail(BeforeDispatch, 0, errors.New("GitHub cache unavailable"))
+		}
+		fresh := ctx.Value(requireFreshRead{}) == true || ctx.Value(revalidateKey{}) == true
+		if cached && c.Redirect == "" && !fresh && (op.memoize && op.memo[key] || (g.Managed() || g.publicRead) && c.Until.After(g.now())) {
+			noteRead(ctx, c.CheckedAt)
+			return append([]byte(nil), c.Body...), c.Header.Clone(), nil
+		}
+		if cached {
+			if c.ETag != "" {
+				req.Header.Set("If-None-Match", c.ETag)
+			} else if modified := c.Header.Get("Last-Modified"); modified != "" {
+				req.Header.Set("If-Modified-Since", modified)
+			}
+		}
 	}
 	safe := *g.Client
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
@@ -307,6 +329,9 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 		return fail(Uncertain, 0, errors.New("GitHub connection failed"))
 	}
 	defer res.Body.Close()
+	if err := g.invalidateRejectedCredential(ctx, op.token, res.StatusCode, res.Header); err != nil {
+		return fail(HTTPRejected, res.StatusCode, errors.New("GitHub cache unavailable"))
+	}
 	if err = g.observe(ctx, op.token, "core", req.URL.Path, res.Header); err != nil {
 		return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
 	}
@@ -353,20 +378,28 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 		return fail(HTTPRejected, res.StatusCode, op.err)
 	}
 	if res.StatusCode == 304 && method == http.MethodGet && cached {
+		if err = g.requestSucceeded(ctx); err != nil {
+			return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
+		}
 		merged := c.Header.Clone()
 		for k, v := range res.Header {
 			merged[k] = v
 		}
 		c.Header = merged
 		c.ETag = merged.Get("ETag")
-		g.cachePut(key, c)
+		c.CheckedAt = g.now()
+		c.Until = c.CheckedAt.Add(restTTL(req.URL.Path, merged))
+		if err = g.remember(ctx, key, c); err != nil {
+			return fail(Uncertain, res.StatusCode, errors.New("GitHub cache unavailable"))
+		}
+		noteRead(ctx, c.CheckedAt)
 		if op.memoize {
 			if len(op.memo) >= cacheEntries {
 				op.memo = map[string]bool{}
 			}
 			op.memo[key] = true
 		}
-		return c.Body, c.Header.Clone(), nil
+		return append([]byte(nil), c.Body...), c.Header.Clone(), nil
 	}
 	if method == http.MethodGet && accept == "application/octet-stream" && res.StatusCode == 302 {
 		u, e := url.Parse(res.Header.Get("Location"))
@@ -393,12 +426,17 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	if len(b) > 16<<20 {
 		return fail(Uncertain, res.StatusCode, errors.New("GitHub response exceeds limit"))
 	}
-	entry := cacheEntry{ETag: res.Header.Get("ETag"), Body: b, Header: res.Header.Clone()}
+	if err = g.requestSucceeded(ctx); err != nil {
+		return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
+	}
+	entry := cacheEntry{ETag: res.Header.Get("ETag"), Body: append([]byte(nil), b...), Header: res.Header.Clone(), CheckedAt: g.now(), Until: g.now().Add(restTTL(req.URL.Path, res.Header))}
 	if method == http.MethodGet {
 		if strings.Contains(target, "/issues?") && strings.Contains(target, "since=") {
 			entry.Expires = g.now().Add(10 * time.Minute)
 		}
-		g.cachePut(key, entry)
+		if err = g.remember(ctx, key, entry); err != nil {
+			return fail(Uncertain, res.StatusCode, errors.New("GitHub cache unavailable"))
+		}
 		if op.memoize {
 			if len(op.memo) >= cacheEntries {
 				op.memo = map[string]bool{}
@@ -406,6 +444,7 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 			op.memo[key] = true
 		}
 	}
+	noteRead(ctx, entry.CheckedAt)
 	return b, res.Header.Clone(), nil
 }
 
