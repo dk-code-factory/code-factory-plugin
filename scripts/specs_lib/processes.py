@@ -9,6 +9,12 @@ from pathlib import Path
 from specs_lib.isolation import owned
 
 
+LONG_SUITE_COMMANDS = frozenset({
+    ('python3', 'scripts/test_ci.py'),
+    ('python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py'),
+})
+
+
 def run_verification(command, *, cwd, log_stream=None, timeout=600, pass_fds=(), termination_grace=0.1):
     """Run a verifier in an owned session, retaining the checkout cleanup lease.
 
@@ -107,10 +113,13 @@ def _run_verification(command, *, cwd, log_stream, timeout, pass_fds, terminatio
 
 
 @owned
-def reconcile(root, files, affected, base, review_path, *, records, analyzer, constraints, log_stream=None):
+def reconcile(root, files, affected, base, review_path, *, records, analyzer, constraints, log_stream=None,
+              executor=None, review_bytes=None, source_snapshot=None):
     import user_flows as uf
     try:
-        reviews = uf.decode_json(review_path.read_text())
+        # An enclosing verifier can supply its already-admitted immutable bytes;
+        # do not reopen a replaceable external pathname after required work.
+        reviews = uf.decode_json(review_path.read_text() if review_bytes is None else review_bytes.decode())
     except (OSError, ValueError) as error:
         raise uf.FlowError("Review file must be JSON keyed by affected flow ID") from error
     if not isinstance(reviews, dict) or not reviews or set(reviews) - set(affected):
@@ -137,15 +146,19 @@ def reconcile(root, files, affected, base, review_path, *, records, analyzer, co
                 print("Verify: " + json.dumps(command), flush=True, file=log_stream)
                 started = time.monotonic()
                 try:
-                    result = uf.run_verification(command, cwd=root, log_stream=log_stream)
+                    # These maintained root suites exceed the ordinary runner's
+                    # default budget. Supplied executors own their own deadlines.
+                    options = {'timeout': 900} if executor is None and key in LONG_SUITE_COMMANDS else {}
+                    result = (executor or uf.run_verification)(command, cwd=root, log_stream=log_stream, **options)
                 except (OSError, subprocess.TimeoutExpired) as error:
                     raise uf.FlowError("Verification could not complete; no receipts written") from error
                 if result.returncode:
                     raise uf.FlowError("Verification failed; no receipts written")
-                completed[key] = {"command": command, "exit_code": 0, "seconds": round(time.monotonic() - started, 3)}
+                completed[key] = {"command": command, "exit_code": 0, "seconds": getattr(result, "verification_seconds", round(time.monotonic() - started, 3))}
     # Recompute input digests after testing; a test/build must not accidentally
     # attest to inputs that it changed while running.
-    _, refreshed = analyzer(uf.snapshot(root, base), uf.snapshot(root), base)
+    capture = uf.snapshot if source_snapshot is None else source_snapshot
+    _, refreshed = analyzer(capture(root, base), capture(root), base)
     if any(fid not in refreshed or refreshed[fid]["fingerprint"] != affected[fid]["fingerprint"] for fid in reviews):
         raise uf.FlowError("Flow inputs changed during verification; review and reconcile again")
     target = root / records

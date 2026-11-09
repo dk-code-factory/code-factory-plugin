@@ -55,7 +55,7 @@ endif
 endif
 
 .PHONY: build test test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci npm-deps plugin-embed fake-provider hosted-prerequisites python-deps browser-deps hosted-verify hosted-verify-bootstrap verify-bootstrap test-installer smoke
-.PHONY: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps verification-context
+.PHONY: local-verification-prepare verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps verification-context
 .DEFAULT_GOAL := ui
 # Ordinary verification is deterministic even with inherited or command-line opt-ins.
 override export CODE_FACTORY_REAL_CODEX := 0
@@ -102,6 +102,10 @@ verify verify-bootstrap hosted-verify hosted-verify-bootstrap:
 
 verification-context:
 	python3 scripts/verification_timing.py worker-start
+
+# Explicit combined-local preparation; ordinary verification retains its graph.
+local-verification-prepare: build fake-provider package
+	cd web && python3 ../scripts/verification_timing.py command browser-optimize -- node node_modules/vite/bin/vite.js optimize
 
 verify-steps: verification-context specs-check build check test test-performance package test-installer smoke
 

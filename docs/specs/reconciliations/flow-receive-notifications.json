@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "07ba62a847b019f4bf7ab758bf0956de784dee7b",
-  "fingerprint": "4e30d055a5ad61e393acab9bf031e7b04697d5cd3b8b9af559bf61d2aadb7907",
+  "base": "8bc9137227661a1b003b45707897e72a91c4d199",
+  "fingerprint": "8871dbf2a61bb894767bdbac25db75861378b3ae3523a675756b78a20ad87948",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "refactor",
-    "description": "S1/S2 subscription callbacks, retry identity and disabled delivery retain their existing behavior.",
-    "implementation": "Inspected both main and current mapped inputs. The only production changes are shared REST cache keys/storage, explicit GET-only bootstrap access, origin-scoped GraphQL caching and forced-live cache rules. This consumer is selected by shared verification inputs; its authored behavior, UI definitions and native dispatch implementation remain unchanged.",
-    "tests": "TestSubscriptionVerificationRetryDedupRefreshAndExpiry remains the callback lifecycle assertion; GitHub response-cache dispatch does not send host notification callbacks. Fixture verification does not close any installed-host or accessibility gap."
+    "description": "Subscribe to host notifications and manage delivery remains unchanged for S1, S2, S3, S4. Only the shared local verification machinery and freshness inputs change; existing host and incomplete-coverage gaps remain explicit.",
+    "implementation": "Compared the flow registry, authored contract and mapped product inputs against main. Product implementation remains byte-identical, including internal/events/events.go. The new invocation executor wraps fixture execution and changes no product transition, ownership or dependency direction. Refreshed the comparison to main8bc9137 after inheriting PR41: its provider/setup cache implementation and install/sync mappings are byte-identical between this new base and the rebased branch; the PR remains the owned-verifier change.",
+    "tests": "Inspected func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( in internal/events/events_test.go: Signature verification, duplicate creation, entity filtering, stable identity across a 503 retry, expiry and idempotent unsubscribe fixtures; other failure classes and notification disabling are not asserted. The assertion body is unchanged across snapshots. New verifier regressions protect the execution/evidence boundary for this suite; they do not claim additional product or real-host acceptance. Rechecked the unchanged subject-specific assertions and current shared suite input after the fixture portability repair: local-verification fixtures now clear inherited GITHUB_ACTIONS, retain only selected installation and distro helper search directories, and the real native ABI control selects distro Python. The explicit hosted-marker rejection test asserts no required command or receipt, while the full fixture suite is separately exercised under an inherited hosted marker. These test-context corrections do not change this subject contract or waive production input admission. The C-library mutation/negative controls now inventory their explicit compiled fixtures rather than unrelated host launchers. An actual Python-name ELF with a private RUNPATH reproduced three false early rejections before the correction; afterward all real load/mutation and own-input negative assertions complete successfully. Current ordinary-reconciliation deadline and native-alias correction: inspected actual exact-vector/custom-executor dispatch and timeout invalidation assertions, plus Python-loaded header-free native library import through two directory aliases. The control consumes value 7; unsupported private RUNPATH rejects before any required command or receipt. Explicitly inventoried dependencies consuming value 9 and restoring bytes invalidate evidence. These operational assertions refresh this subject suite without changing product semantics or closing real-host gaps. The native-alias fixture now uses a Python package loading a plain C library through ctypes; every C fixture compiles with -nostdinc and no Python C API/include-directory lookup. Its real package import, value7 control, pre-run outside-RUNPATH rejection and consumed/restored value9 assertions remain intact. The same real test passes when an outer compiler probe disables all headers and strips explicit include paths; the former Python.h fixture fails in that context. This removes an undeclared test prerequisite without changing production admission or this subject behavior. Current cache/browser controls exercise actual same-size Go archive tampering with an unchanged build ID, showing value9 under the prior production implementation for both environment and GOENV selectors. Independent new invocations ignore those external archives and consume7. Earlier-command cache entries are removed before a subsequent check; changing their retained hard-link alias to9 still yields7 from fresh compilation. Caller environment and cache disposal are asserted. Late cache-directory binding changes and disposal failures invalidate successful publications while preserving original failures/cancellation. Pinned chrome-headless-shell and its older spelling reject real outside-RUNPATH/alternate-interpreter ELF controls before runner calls or receipts. These operational assertions add no product or real-host acceptance. The probe supervisor now records cancellation rather than throwing across child assignment or cleanup entry. A deterministic SIGINT at its first cleanup instruction preserves exit130 and reaps both a TERM-ignoring child and detached grandchild, with an outer supervisor protecting failure cleanup. The prior supervisor was directly observed leaving two descendants alive under that exact schedule; this closes that specific test-helper gap only. The scheduling microbenchmark fixture now initializes the optional Go cache field when deliberately bypassing Session construction; actual assertions still require27 preparation entries,8 executions,35 versus16 scans, ordered contexts and environment-change rejection. Current public-CLI/bootstrap and probe-readiness correction: the actual entrypoint previously consumed a relative secrets.py and exited0 before verification (retained direct before control). New subprocess assertions require nonzero rejection before module consumption, while direct API and admitted-root controls remain. The cleanup probe receives a pipe acknowledgement after its child and detached grandchild PID marker exists before starting its inner deadline; first-cleanup SIGINT, exit130, no survivors and outer cleanup assertions remain. The real Go VCS-stamping fixture now retains build stdout/stderr on failure; original and alternate embedded revisions, restored source and failed-receipt assertions remain intact. An old-head independent Make failed that build with captured stderr omitted, while its isolated diagnostic and the corrected focused fixture pass. No root cause or flaky-test exception is claimed; a new independent Make remains mandatory before merge."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 54.647
+      "seconds": 91.83
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.285
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 451.085
+      "seconds": 871.224
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 473.079
+      "seconds": 624.338
     },
     {
       "command": [
@@ -60,16 +60,16 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.717
+      "seconds": 5.057
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "79abfefe20f4f82089042c156b01e0ffdaf3b70092be23f063d5842fed537e34",
-    "term:attention-request": "45e385a0b11895a37daf4fe7516a830f641ba8182f14185e259e6251df28787c",
-    "term:coverage-gap": "b17df55d62c3bf8be994368de8b8e3c886972e971705980fdfc92ee3ea0b5e84",
-    "term:host": "ab31f3c6fda5ca09bd2cb40f520df653a47fc17d2715c175d331e02f2f0ad399",
-    "term:known-limitation": "94f66e7b1f95545756527f93e24008f8bf16cc0a3b506fdaaeeb1ca2c8a516df",
-    "term:subscription": "5062f156217e37ea5c8fb887390b6125aef78fae4207b977cce96cea1ce177dc",
-    "term:unverified-behavior": "e917ac30b59ce45403a28e03219133d35614bc954b233f36f84050d3278f8686"
+    "flow:receive-notifications": "1293760b5362f2085186e0d16b6cac53a945c733e751f381e8b0e395d2ceaddd",
+    "term:attention-request": "51e6ceaf28b566534964a16db21f1e9c8c669404c7cea3c25406c02a5558613e",
+    "term:coverage-gap": "352d65b9bd0cb928941fa9085c43d10091e759b5492ee3c7b9db7ddba1496933",
+    "term:host": "9a61a410defec75cf50c7b6769db26a1650f2df1e3f5f6dc28e3c406513eb097",
+    "term:known-limitation": "9c6e92f14c5d1a532ee9b00f6df21e58519617b868e0d98e1a6754579bafdcfc",
+    "term:subscription": "cf3f9096cd9a0fa1ae383bb881648dd6ccbcde80a4fd11aed70c916595def9ed",
+    "term:unverified-behavior": "c766085404e48ba833646fd6670d690d1a8cffa5ddc3f3911b49ed01c891141a"
   }
 }

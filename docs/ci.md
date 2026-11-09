@@ -105,6 +105,13 @@ cleanup: native Make waits for foreground managed helpers to finish. Signal deat
 timeout, wait errors and cancellation retain the full enclosing cleanup budget
 even if the direct leader has already exited.
 
+Local-verifier regression probes use an independent subreaper supervisor. Its
+signal handler records cancellation, allowing child assignment and cleanup entry
+to complete. A deterministic SIGINT at the first cleanup instruction asserts
+exit130 and no surviving detached descendants before fixture disposal. The child
+acknowledges creation of both descendant PIDs through a pipe before the inner
+cleanup deadline starts; startup has its own bounded readiness wait.
+
 Each invocation creates a private temporary root, propagates it through `TMPDIR`
 and bounds fixture Git discovery there, so an unrelated ancestor `.git` cannot
 become a fixture repository. A caller's `TMPDIR` selects the parent of this root.
@@ -298,6 +305,315 @@ system and toolchain caches remain available. Compare equivalent conditions,
 retain raw reports and avoid extrapolating these measurements to real hosts.
 This is an explicit correctness qualification, not part of ordinary local CI.
 
+
+## Combined local reconciliation and verification
+
+For the standard repository Make graph, one explicit local invocation accepts complete
+review decisions and performs reconciliation plus complete branch verification without
+rerunning an identical check:
+
+```sh
+python3 scripts/verify_local.py --base main --merge-base --review /private/spec-review.json
+```
+
+Review all affected subjects before running it. The command validates those decisions
+first, inspects the native Make dependency plan, prepares current frontend/plugin/helper
+and release artifacts once, then executes the union of local checks and required catalog
+suites. It records ordinary CLI reconciliation receipts and runs the final comparison
+check. The default ignored `verification-results/` summary retains command counts,
+individual elapsed seconds and owned-call wall time (preflight through required cleanup,
+excluding interpreter startup and optional summary preparation/writing); `--summary FILE` can select a
+destination outside source inputs.
+Launched checks remain counted when timeout or cancellation interrupts the runner;
+their elapsed duration is retained and an unavailable exit code is JSON null.
+
+Sharing is in memory for this invocation only. Exact command arguments and working
+directories must match; different npm invocation forms are intentionally separate.
+Preparation schedules retain first occurrences inside one environment- and
+checkout-owner-bound session. Pure duplicate preparation entries do not repeat
+full input scans; actual commands, reconciliation reuse and final boundaries
+retain their input guards.
+Required `make build` and `make test-performance` commands expand through the same
+inspected native graph. Source, ignored generated inputs and helpers, resolved
+executable bytes/versions, effective environment, comparison and review changes fail
+verification. Source monitoring begins before the initial snapshot and native Make
+planning, so a changed-and-restored Makefile cannot supply an unbound plan.
+The checkout's pathname ancestry is bound before the initial watched tree traversal.
+Temporarily substituting an ancestor directory invalidates verification even when
+the original checkout and Makefile inodes are restored before the next checkpoint.
+The selected Make executable and every PATH candidate are monitored before any
+native plan is captured; a temporary planner cannot leave an accepted plan after
+removing itself or restoring the selected executable.
+Linux mutation monitoring also rejects writes restored before digest
+comparison, including writes through external hard links. Inode watches complement
+directory watches. Read leases reject existing writable file descriptors/shared
+mappings and invalidate the invocation before permitting a later writer; restoring
+mapped bytes does not restore eligibility. Close editors that retain writable
+descriptors before starting. The command requires the main Python thread, unused
+and unblocked SIGIO, available file/watch descriptors and Linux read-lease support
+for user-controlled inputs. Overlapping watches share leases until their last
+owner releases them; teardown restores the caller's signal state. Unsupported
+admission or lost lease coverage fails closed.
+The host administrator and kernel remain trusted. An unprivileged invocation
+cannot lease root-owned tools: only root-owned files without group/other write
+permission on ext2/3/4, XFS, Btrfs, overlayfs or tmpfs may use the administrator
+trust boundary instead. They retain inode watches and persistent metadata checks;
+root changes to the installed toolchain must not overlap verification. Other
+unleaseable inputs reject, including any conflicting writer. Monitoring also rejects
+directory replacement, lost event coverage and a nonquiescent event stream. Report directories, unused default Python
+bytecode caches, transient Vite config bundles and reconciliation receipts are excluded from
+input identity; the prepared invocation cache is explicitly included, and release archives remain inputs. The combined command prepares packages
+before running checks so every check sees the same packaged binary. The explicit `local-verification-prepare` Make target also prepares Vite's development dependency bundles
+before their contents become verification inputs; browser-created cache changes
+therefore cannot be silently accepted after checks. Ordinary Make verification retains
+its existing late packaging order. A failed or cancelled required run invalidates selected
+success records, even when failure follows receipt creation. No previous summary or
+receipt supplies a new execution. Independent Go race runs retain `-count=1`.
+Artifact symlink lookups and targets must remain inside admitted checkout inputs;
+chains crossing Git metadata, report/cache/owner outputs or external paths reject.
+Worktree source snapshots, regular artifacts, resolved executables, ELF discovery
+prefixes and review decision files use descriptor opens without last-component symlink following or blocking
+on FIFOs, then checked by descriptor type, metadata and pathname binding before
+and after consumption. Failure and cancellation close the opened descriptor while
+retaining the original error.
+Review lookup watches begin before the first read. Checkpoints repeat typed reads,
+while reconciliation decodes the already-admitted immutable bytes instead of
+reopening the external review pathname. Replacement still rejects after required
+work or receipt creation and retains the original cancellation outcome.
+Worktree snapshots reject present nonregular inputs; committed comparisons still
+read exact Git blobs. Initial analysis, source identity and reconciliation's
+post-check snapshot use this admission. Makefile, browser configuration, npm
+manifest and loader/Git discovery payloads use the same typed read primitive.
+The selected npm installation, Go installation and tool directory, GCC compiler
+helpers/resources and Go environment configuration are also fingerprinted and
+mutation-monitored. Git participates in executable identity as an indirect helper.
+The maintained npm launcher also binds its `/usr/bin/env` interpreter.
+Go fixture runs also bind the selected `setpriv` executable and every earlier
+PATH candidate, so a transient wrapper cannot supply reusable success.
+The selected Playwright Chromium, headless-shell and FFmpeg installation roots,
+actual npm user/global configuration in both repository and web contexts, and
+default npm shell also participate. Admitted helper lookup edges are monitored,
+including intermediate symlinks and their selected targets. A nonempty
+`ESBUILD_BINARY_PATH` is unsupported and rejects before ownership or discovery;
+the standard graph uses the locked package's bundled esbuild executable. Go/GCC discovery
+retains admitted root, compiler and reported-resource spellings until monitoring; unrelated ancestor
+entries remain outside that scope.
+After installing the complete selector and lookup watches, the command repeats
+helper discovery and requires identical selected paths and alias closure before
+recording its identity baseline. Changed selected paths/closure or selector writes
+observed by installed watches fail before required work. A prewatch change that
+retains the same fully covered selected set may be adopted by the current baseline.
+Each helper-identity traversal reopens selected regular files and retains every
+alias, lookup and mode row. Stable opened device/inode identities can share one
+content digest within that traversal only. Metadata and lookup bindings are
+checked before and after fresh reads and memo hits; access-time-only effects are
+excluded. Changed or replaced targets reject, and the next checkpoint reads
+content afresh. File descriptors close on success, error and cancellation;
+secondary close failures retain an existing error or cancellation.
+Selected Go module build-list source trees and module metadata, and the selected
+Python interpreter's admitted import search directories and package data, are
+also inputs. A selected Python search path that intersects omitted runtime or
+`__pycache__` trees is unsupported, even when it contains used package source.
+Nonempty `PYTHONPATH`, `PYTHONHOME` and `PYTHONUSERBASE` selectors must contain
+only absolute paths, with no empty entries. Relative selectors can mean different
+imports in root and browser-helper working directories and reject before ownership
+or planning. The public CLI checks these selectors using its bootstrap `os`/`sys`
+modules before importing application code or parsing arguments. Interpreter
+startup and its hooks precede this application preflight; admitted absolute roots
+retain normal Python behavior. Empty selectors retain ordinary interpreter behavior.
+Admission checks original paths, resolved paths and intermediate alias lookups;
+unused tagged automatic cache files beneath ordinary search roots retain their exclusion.
+Nested directories named `__pycache__` remain traversed and watched: they can
+contain importable namespace source and legacy sourceless modules.
+External directory aliases retain both lookup and content watches.
+Verification prepares fresh invocation-local checked-hash Python bytecode from
+inventoried sources without importing those packages. The cache is then an
+explicit generated input: all entries, metadata and lookup bindings are hashed
+and watched, including when the owner namespace is otherwise excluded. Automatic
+bytecode writes are disabled in subprocesses and the current interpreter. Missing
+entries compile from inventoried source without writing; unused default
+CPython-tagged automatic cache files are excluded. A cache write, replacement or write followed
+by restoration rejects evidence before work or reuse. No cache survives the invocation.
+Cache entry reads use nonblocking, no-follow regular-file descriptor admission
+with metadata and pathname binding checks before and after hashing. A replacement
+FIFO rejects without waiting for a writer. Opened files close on success, error
+and cancellation; an earlier failure takes precedence over a secondary close error.
+The cache directory descriptor and independent watch remain live through summary
+publication and outer owner teardown, with binding checks before final success.
+The temporary parent must be outside the checkout so the cache can outlive the
+owner's private namespace; caller environment and interpreter settings are restored.
+This controls normal source-backed automatic bytecode caches. Frozen runtime code
+and inventoried sourceless modules retain their ordinary behavior; non-cache
+module sources and data remain inputs. Custom effective Go flags (including
+overlays), external workspaces and nonempty effective GOCACHEPROG selections are
+rejected before module discovery. The cache-program check reads Go's effective
+environment, including GOENV configuration.
+The combined invocation replaces environment- and GOENV-selected GOCACHE with a
+fresh cache inside its authenticated owner's temporary namespace. Each required
+command starts with that directory empty; completed cache outputs are discarded
+before the next command. Retained external archives and an earlier command's
+compilation artifacts cannot supply a later check. Within one command, cache
+files remain that command's temporary outputs, including Go's normal mutable
+index records. Exact completed command results can still share under the source,
+toolchain, environment and comparison guards. Compilation across different
+required commands starts fresh, adding overhead compared with ordinary Make.
+The cache directory's selection, lookup and inode binding remain guarded through
+summary publication. The guard closes before owner teardown. Failed disposal
+invalidates successful publications while preserving an existing verification
+error or cancellation. The cache is removed and caller selection is restored.
+Go retains ordinary VCS stamping. Its Git revision, timestamp and status queries
+use watched repository/worktree selection files, HEAD, refs, packed refs, object
+stores, index, shallow state, configuration and ignore/attribute inputs, including
+linked-worktree private `refs/worktree`, `refs/bisect` and `refs/rewritten`. Discovery
+is repeated under those watches. Git metadata traversal has no Python-cache
+exclusion, including valid refs whose names contain `__pycache__`. Optional index refresh writes are disabled with
+`GIT_OPTIONAL_LOCKS=0` inside this invocation; status semantics and stamping remain
+unchanged, and the caller's setting is restored. Custom Git selection variables,
+configuration includes, fsmonitor, configured external ignore/attribute paths,
+alternate object stores, grafts and nonstandard ref storage are unsupported.
+Default system/global configuration candidates and ignore/attribute paths are
+included even when absent, including Git's reported system attributes file.
+Tracked-file attribute selection is inspected before required work; selected
+clean/process filters reject because status may execute external helpers. Unused
+filter definitions remain supported except clean/process drivers named `set`,
+`unset` or `unspecified`: Git's attribute query renders those literal names
+identically to its special states, so their definitions are unsupported even
+when currently unused. Ref/object writes restored before a checkpoint still
+reject evidence. Reflogs and lock files do not supply reused build evidence.
+Nonempty `LD_PRELOAD`, `LD_AUDIT` and `LD_LIBRARY_PATH` are unsupported because
+they select external ELF loader code or library search inputs. The local entrypoint
+rejects them before ownership, planning or helper discovery; empty values are admitted.
+Nonempty `NODE_OPTIONS` is unsupported, including external startup modules.
+Effective npm `node-options` in both checkout and web contexts is also checked;
+nonempty selections through npm environment configuration or npmrc files reject
+before required work can launch lifecycle children.
+Effective cgo preprocessor/compiler/linker flags are read through `go env`, so
+both environment and GOENV selections are checked. Only Go's standard empty
+CPPFLAGS and `-O2 -g` CFLAGS, CXXFLAGS, FFLAGS and LDFLAGS are admitted; custom
+external includes, libraries or compiler arguments fail before required checks.
+GCC's reported default C/C++ header search roots, including currently absent
+and duplicate lookup candidates, are hashed and watched. Directory aliases retain lookup and
+resolved-content coverage. Nonempty CPATH, C_INCLUDE_PATH, CPLUS_INCLUDE_PATH,
+OBJC_INCLUDE_PATH, LIBRARY_PATH, COMPILER_PATH and GCC_EXEC_PREFIX are unsupported;
+custom search contexts fail before compiler discovery.
+
+The combined command supports the maintained x86-64 glibc ABI. It inventories the
+canonical system native-library tree, direct files in built-in and cached lookup
+directories, hardware-capability candidates, selected cache entries, loader/cache
+configuration and absent preload/search paths. This includes native modules loaded
+by Python, Node and Chromium as well as startup dependencies. The native ABI tree
+also covers ordinary system plugin and dlopen modules; unrelated SDK trees are not
+recursively selected. The full helper/package inventories resolve nested directory
+aliases before scanning bundled native modules, so extensions beneath aliased
+packages receive the same loader admission and monitored dependency coverage.
+The maintained executable inventory includes the pinned Playwright registry's
+`chrome-headless-shell`, alongside the older `headless_shell` spelling.
+ELF search admission checks original and resolved ORIGIN parent
+spellings. Interpreter and RPATH/RUNPATH admission rejects alternate
+loaders, relative searches, unsupported tokens and existing search directories
+outside these inventories. Path-qualified dependencies and ELF audit/filter
+indirection are unsupported. Absent search directories are watched; creation fails
+rather than broadening an active invocation. Nonempty LD_* or GLIBC_TUNABLES
+contexts and system preloads are unsupported. ldconfig and readelf, their aliases
+and selected library inputs participate in repeated discovery and identity checks.
+PATH entries must be nonempty absolute directories. Nonempty case-insensitive
+PATH carriers with a spelling other than `PATH` reject
+before ownership or discovery, since npm merges those variables into its search.
+Empty alternate carriers are admitted. The maintained graph's selected
+launchers, fixed compiler/shell lookup names and discovered helper filenames have
+lookup watches, including earlier unselected candidates. Its npm scripts use npx;
+that launcher is inventoried under npm's ancestor node_modules/.bin prefixes,
+node-gyp prefix and inherited PATH, with candidate lookups watched even when absent.
+Discovery and watches derive each working directory's npm prefixes from the same
+inventory, preserving selection order without maintaining a second safety rule.
+This inventory supports the maintained scripts and admitted tool contexts; it does
+not infer the dependencies of arbitrary subprocess scripts. Recursive watches
+are installed before enumerating each directory, so a newly admitted child cannot
+escape the observation interval. Nonempty BASH_ENV is rejected before ownership,
+planning or helper discovery; ordinary Bash and Make behavior is unchanged.
+
+Source-only attempts of the complete `python3 scripts/test_ci.py` command reached
+600- and 900-second deadlines. Those observations do not isolate interpreter
+startup cost. This combined command prepares its guarded bytecode cache
+and retains bounded 900-second deadlines for the exact repository-root
+`python3 scripts/test_ci.py` and
+`python3 -m unittest discover -s scripts -p 'test_specs*.py'` commands. Cache
+preparation has a 120-second deadline and records elapsed time, entry count and
+byte volume as an additional command phase. Other commands retain 600 seconds; a
+shorter explicitly requested session deadline remains shorter. Lookalike
+arguments and other working directories receive no extension. Independent
+reconciliation uses the same 900-second bounds for these exact catalog commands
+from the repository root; supplied executors retain ownership of their deadlines.
+Ordinary Make retains its existing deadlines. Timeouts still drain
+required owned work and invalidate evidence.
+Dependencies must already be available; Go module discovery disables proxy fetching.
+This includes every module in the selected build list, even modules a previous
+`go test ./...` did not import. Cold or partially populated module caches fail
+before verification. This restriction applies to the combined command; ordinary
+Make and focused tests retain their existing dependency requirements. Run setup
+before preparing review decisions: `go mod download all` may update `go.sum`.
+Review and preserve those changes; the combined command never rewrites sums to
+admit missing dependencies.
+Unavailable helper inventories fail before required work. The combined coordinator
+records outer SIGINT/SIGTERM from entry, rejects pending cancellation at command
+and reuse checkpoints, and closes all watches and invalidates failed receipts
+before propagating cancellation and restoring its caller's handlers. Subprocess
+signals retain the existing owned process-group cleanup. Watch-close
+failures also invalidate receipts, including after otherwise successful checks.
+Digest checkpoints drain all source/helper/artifact watches before and after
+traversal. Cleanup attempts a final drain and close for every such watch, preserving
+an existing error or cancellation while still invalidating selected successes.
+Each monitor's final empty read ends its input-observation interval before that
+descriptor is released; later changes are outside that monitor's completed evidence.
+The independent Python-cache watch also drains after digest traversal and before
+closing. Its drain or close failure propagates to exact-publication rollback on
+an otherwise successful invocation. Cleanup-time cache validation and disposal
+retain an already-raised verification failure or runner cancellation; a new cache
+failure is authoritative only when no earlier failure or cancellation is active.
+Optional summary-write failures retain the verification or cancellation status.
+Rollback remains active through optional summary publication and enclosing checkout
+owner teardown. Checked signal protection covers the owner's handler restoration,
+final cache validation and cache disposal. Its final pending-signal check runs
+while publication descriptors remain open. Signals observed through that check
+trigger rollback. An outer record-only scope protects exception handoff and the
+complete rollback body. The outcome then commits; caller-handler restoration and
+publication-descriptor release are later bookkeeping, with no further exit-time
+verification check. After caller-handler restoration, signals use that disposition;
+post-outcome signals do not invalidate completed verification evidence.
+Receipts are captured by descriptor while ownership is held;
+summaries publish atomically with their descriptor retained before replacement.
+Late rollback invalidates those exact objects, leaving empty rejected JSON when
+their paths still name them, and preserves a later owner's atomic replacements.
+Descriptor release is diagnostic bookkeeping after the outcome or rollback.
+The recorded duration ends after check/watch cleanup, before optional summary
+work, enclosing owner teardown and final cache disposal; final success also
+requires the checked teardown and disposal scope to complete.
+
+Install the locked npm dependencies, matching Chromium browsers and Go module
+inputs (`go mod download all`) before using
+this entrypoint. Browser discovery uses the installed pinned Playwright registry;
+missing or unknown layouts fail before required work. Only the two reviewed repository Chromium configuration file identities are
+supported. Configuration edits require reviewing this explicit inventory binding;
+custom configuration, browser/channel/executable launch overrides,
+in-package browser installations (`PLAYWRIGHT_BROWSERS_PATH=0`), and custom npm
+`script-shell` settings are rejected. External browser locations selected through
+`PLAYWRIGHT_BROWSERS_PATH` are inventoried from the registry.
+
+The combined invocation retains the existing managed checkout owner across preparation,
+reconciliation and every verification command. Nested managed commands share its authenticated
+temporary environment. Planning binds the reviewed native ownership prologue and entry
+recipes, omitting only that ownership plumbing from its private dry-run copy while
+the enclosing owner remains held. Changed bindings fail before Make execution. Only
+the authenticated owner namespace is omitted from generated-input monitoring.
+
+This entrypoint deliberately supports the standard graph, without supplemental
+Makefiles, inherited Make flags/overrides, custom exported variables/shell modes,
+includes, executable Make expansions, selected recursive/forced recipes or unfamiliar
+shell recipes. Unsupported graph changes fail closed rather than omit a check. Use
+ordinary Make entrypoints for custom native Make behavior. This local command refuses
+hosted CI and real-provider opt-ins; hosted CI executes its own fresh graph. Existing
+focused checks and this PR's required `make ci FLOW_BASE=main` validation remain
+applicable.
 
 ## Final verification and PR handoff
 
