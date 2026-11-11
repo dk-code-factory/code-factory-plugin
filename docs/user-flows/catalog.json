@@ -170,6 +170,11 @@
         [
           "python3",
           "scripts/test_browser_benchmark.py"
+        ],
+        [
+          "node",
+          "--test",
+          "scripts/test_fixture_listener.mjs"
         ]
       ],
       "inputs": [
@@ -183,7 +188,10 @@
         "scripts/benchmark_browser.py",
         "scripts/verification_run.py",
         "web/package.json",
-        "web/package-lock.json"
+        "web/package-lock.json",
+        "web/fixture-runner.mjs",
+        "web/fixture-listener.mjs",
+        "scripts/fixture_test_process.py"
       ]
     },
     "inbox-performance": {
@@ -5339,6 +5347,51 @@
           "path": "scripts/specs_lib/local_verification.py",
           "anchor": "def go_build_cache(",
           "purpose": "Override environment/GOENV Go cache selection with authenticated-owner temporary output, restore caller selection and preserve primary errors while rejecting failed disposal."
+        },
+        {
+          "path": "web/fixture-runner.mjs",
+          "anchor": "async function ready(",
+          "purpose": "Kernel-allocated owned loopback fixtures publish actual origins before Playwright; explicit ports fail strictly and cancellation retains status through bounded child/private-state cleanup"
+        },
+        {
+          "path": "web/fixture-runner.mjs",
+          "anchor": "function stopChildren(",
+          "purpose": "Start owned-child escalation when cancellation arrives, including pending build startup; repeated signals and finalization share the first cleanup deadline and cannot admit later children."
+        },
+        {
+          "path": "web/fixture-runner.mjs",
+          "anchor": "async function beforeStartupDeadline(",
+          "purpose": "Share the original correctness 60-second or performance 120-second Go startup budget across compilation and daemon readiness, then apply a separate correctness UI 60-second readiness guard. Timeout reports failure and drains retained child handles without changing cancellation status."
+        },
+        {
+          "path": "web/fixture-runner.mjs",
+          "anchor": "testCommand.parseOptions(args)",
+          "purpose": "Use the installed Playwright test command's option model to select matching owned fixtures, including consumed values and the -- positional boundary."
+        },
+        {
+          "path": "internal/testhost/listener.go",
+          "anchor": "func serveFixture(",
+          "purpose": "Retain the real loopback listener before atomically publishing its actual address"
+        },
+        {
+          "path": "web/fixture-listener.mjs",
+          "anchor": "export async function listenFixture(",
+          "purpose": "Bind the owned HTTP listener on loopback, bypassing Vite default-port substitution for port zero"
+        },
+        {
+          "path": "web/fixture-listener.mjs",
+          "anchor": "export async function createFixtureServer(",
+          "purpose": "Use Vite middleware with the owned HTTP/HMR listener, leaving caller signal listeners and process exit under invocation ownership"
+        },
+        {
+          "path": "scripts/fixture_test_process.py",
+          "anchor": "def main():",
+          "purpose": "Supervise Node fixture test commands with bounded shutdown, retain the unreaped leader through original-group cleanup to prevent PID/PGID reuse, and reap orphaned fixture descendants before reporting completion. An optional raw leader-exit observation holds safety cleanup for explicit observer acknowledgment. EOF, interruption and a five-second deadline fail while still cleaning owned work; partial control lines cannot block the deadline."
+        },
+        {
+          "path": "web/fixture-listener.mjs",
+          "anchor": "async function main(",
+          "purpose": "Run Vite in an owned child with atomic actual-origin/error readiness and signal-driven close; imports remain passive through typed exact real-path main identity. Parent ownership can terminate an initializer that never settles."
         }
       ],
       "tests": [
@@ -7913,7 +7966,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "The reconciliation process helper runs the real npm wrapper under authenticated ownership; cancellation removes TERM-ignoring workload members and private state within local deadlines."
+          "purpose": "The process helper runs the real npm ownership wrapper and a narrow fixture launcher that preserves authenticated lease sockets and group identity while forwarding signals to the controlled TERM-ignoring workload; cancellation removes workload members and private state within local deadlines."
         },
         {
           "path": "scripts/test_specs_isolation.py",
@@ -8683,7 +8736,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Installed Playwright registry selects Chromium, headless shell and FFmpeg roots; in-package storage and custom browser selection fail closed."
+          "purpose": "Admit the exact maintained browser configuration identities and installed Chromium/headless-shell/FFmpeg roots; in-package storage and custom browser selection fail closed."
         },
         {
           "path": "scripts/test_specs_local_verification.py",
@@ -9236,12 +9289,12 @@
         },
         {
           "path": "scripts/test_specs_local_verification.py",
-          "anchor": "def test_indirect_npx_inherited_and_npm_ancestor_shadows_reject_zero_results(",
+          "anchor": "def test_indirect_npm_helpers_inherited_and_ancestor_shadows_reject_zero_results(",
           "scenarios": [
             "S3",
             "S4"
           ],
-          "purpose": "Both maintained browser npm scripts consume transient npx launchers in inherited PATH, npm-added external ancestors and checkout-root/web .bin directories; zero exit followed by removal rejects evidence. Actual npm also consumes Path/path/pAtH selectors before owned admission rejects those nonempty carriers ahead of ownership/discovery. Ordinary npm ci preparation and empty alternate carriers retain stable npx execution/reuse."
+          "purpose": "Both maintained npm scripts consume transient Python, Node and Go helpers in inherited PATH, npm-added external ancestors and checkout-root/web .bin directories; zero exit followed by removal rejects evidence. Actual npm consumes Path/path/pAtH selectors before owned admission rejects them. Ordinary npm ci and empty alternate carriers retain stable helper-alias execution and reuse."
         },
         {
           "path": "scripts/test_specs_local_verification.py",
@@ -9512,6 +9565,177 @@
             "S4"
           ],
           "purpose": "The pinned registry supplies chrome-headless-shell. Real header-free ELF controls under that selected name and the older headless_shell spelling reject outside RUNPATH and alternate interpreters before any runner calls or receipts."
+        },
+        {
+          "path": "internal/testhost/listener_test.go",
+          "anchor": "func TestFixtureListenerOwnsEphemeralLoopbackBeforePublishing(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Published loopback port stays owned by the actual HTTP fixture; HTTP requests and fixture teardown have local failure deadlines."
+        },
+        {
+          "path": "internal/testhost/listener_test.go",
+          "anchor": "func TestFixtureListenerCollisionDoesNotPublishOrReuseUnknownServer(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Occupied requested ports fail without readiness or unknown-server reuse"
+        },
+        {
+          "path": "internal/testhost/listener_test.go",
+          "anchor": "func TestFixtureDaemonPortValidation(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Daemon dynamic port validation and explicit adjacent base-port compatibility"
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"concurrent Vite fixtures retain distinct kernel allocations\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Two actual Vite instances own distinct live loopback origins; requests and server lifecycle waits have local deadlines."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"occupied explicit Vite port rejects instead of selecting or reusing a server\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Occupied explicit Vite ports reject with EADDRINUSE while the first owned server remains reachable; requests and server lifecycle waits have local deadlines."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"performance configuration spellings select the owned performance fixture\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Actual fixture startup with bare, relative, absolute, separate and supported equals/attached config arguments selects the performance daemon before Playwright discovery; all invocations remain fixture-only. A retained unreaped leader protects bounded original-group cleanup even after leader exit."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"config-like option values and positional arguments retain owned correctness fixtures\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Actual Playwright CLI parsing of long/short option values and the -- positional boundary retains matching owned correctness fixtures. A reporter requests the live Vite client and daemon health endpoint, distinguishing the correctness daemon from performance mode even when --list succeeds. A retained unreaped leader protects bounded original-group cleanup even after leader exit."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"owned Vite fixtures preserve caller signal listeners\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Actual fixture startup and close retain the caller SIGTERM listeners without installing a Vite process-exit handler"
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"runner SIGTERM retains cancellation status and cleans owned children and state\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "SIGTERM targets the real correctness runner with actual owned UI/daemon and an unresponsive Playwright child. Raw runner exit must preserve status 143 within a 7.5-second cancellation bound. All three retained UI/daemon/browser children must be absent and private state removed before supervisor safety cleanup is acknowledged; final supervisor status must also succeed."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"runner SIGTERM during an unresponsive build uses one bounded cleanup window\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A controlled inherited-PATH Go build ignores TERM before any daemon exists. Runner-only repeated SIGTERM must complete within the first cleanup window with status 143, no surviving owned build and no private fixture state."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_npm_fixture_python_content_changes_reject_results(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "An npm-only verification step executes its indirect Python fixture helper; changing the selected interpreter after zero exit rejects the result and leaves no reusable success"
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_npm_helper_inventory_admits_aliases_and_rejects_different_launchers(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Npm discovery inventories Python/Node/Go aliases to canonical tools. Actual npm consumes a different delegating launcher, but owned admission rejects that unrepresented selection before work instead of using another executable resource inventory."
+        },
+        {
+          "path": "scripts/test_specs_local_verification.py",
+          "anchor": "def test_npm_python_alias_virtualenv_selection_and_config_mutations_reject(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "A Python alias resolving to the same binary rejects when adjacent pyvenv.cfg changes its actual import inventory; transient creation/removal during a real successful npm run selects the alternate prefix but invalidates evidence instead of retaining success."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"fixture requests abort stalled response headers and bodies\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Real loopback HTTP fixtures withhold response headers or body completion; the same request helper used by live Vite assertions aborts locally after acceptance, and bounded teardown closes owned connections."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"fixture supervisor cleans descendants after normal and abrupt leader exit\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A real command leader exits normally or is killed while its TERM-resistant descendant retains inherited pipes. Raw exit observation must leave that descendant present until explicit acknowledgment releases safety cleanup. Missing acknowledgment, EOF, interruption and a partial control line must fail within local bounds and still kill/reap descendants, preserving an unrelated concurrent command."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"runner bounds Go startup by its maintained mode\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Run the whole real runner with a controlled TERM-resistant Go build in both modes. A private frozen clock preserves exact requested 60000/120000ms timers while shortening their firing delay; raw exit 1, diagnostic, build disappearance and private-state removal precede supervisor safety cleanup."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"late Vite creation retains cleanup after its local deadline\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Delay the maintained Vite private-cache metadata read while shortening only local test deadlines in a subprocess. Its raw natural failure exit must occur with zero tracked filesystem watchers and no cache directory before supervisor fallback; the original helper fails this probe."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"Vite fixture cleanup preserves creation and close failures\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Controlled constructor rejection and close failure retain their errors, remove the private cache and share one cleanup operation across repeated teardown calls."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"runner bounds owned UI startup before supervisor fallback\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Stall the maintained Vite cache metadata read in the retained UI child. A private frozen parent clock checks the exact UI 60000ms timer with shortened firing. Raw failure exit, UI/daemon disappearance and private-state removal must precede supervisor safety cleanup; the old in-process runner fails this probe."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"owned UI module imports and CLI aliases preserve lifecycle identity\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Importing the listener with absent or flag-like argv leaves no CLI lifecycle; executing a symlink alias starts the actual retained loopback UI, serves a real client and closes naturally on SIGTERM before safety cleanup."
+        },
+        {
+          "path": "scripts/test_fixture_listener.mjs",
+          "anchor": "test(\"owned UI exit fails active browser verification and drains retained children\"",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Kill the captured owned UI handle after actual browser-child startup. The runner must report failure and remove all three retained UI/daemon/browser children plus private state before supervisor cleanup is released."
         }
       ],
       "suites": [

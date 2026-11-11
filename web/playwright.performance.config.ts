@@ -13,7 +13,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   reporter: "list",
-  webServer: {
+  webServer: process.env.CODE_FACTORY_TEST_FIXTURES_OWNED === "1" ? [] : {
     command: "cd .. && CODE_FACTORY_PERFORMANCE=1 go run ./internal/testhost",
     url: fixtureDaemonOrigin + "/healthz",
     reuseExistingServer: false,

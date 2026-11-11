@@ -50,8 +50,9 @@ MAKE_OWNER_RECIPES = {
     'b0852362f56309620a7822156211006e21281dbfa20f2f247ca588d9d02439c2',
 }
 # Browser inventory supports these reviewed repository configurations only.
-BROWSER_CONFIGS = {'playwright.config.ts': '092ff21abf20155d8ae261fa0fc271afe5af31568142a762b5ff39d7f9df97e5', 'playwright.performance.config.ts': '29faaabb43a8e72a971c78fcfe5c23de2faa13c32fc6315b3ad94a5e7c695e7e'}
+BROWSER_CONFIGS = {'playwright.config.ts': 'b46558bd33acba71ddaa0613cfb2b0900f1e68fca79d5759a77e671b5001533c', 'playwright.performance.config.ts': 'ba2327cb04366db9a365adca7f0ddb4dab72af540dbf148b97861cc5df07760a'}
 NPM_INTERPRETER = '/usr/bin/env'
+NPM_HELPERS = ('python3', 'node', 'go', 'sh', 'git', 'gcc', 'g++', 'cc', 'c++', 'as', 'ld', 'setpriv')
 
 
 @dataclass(frozen=True)
@@ -458,10 +459,26 @@ def npm_inputs(root):
     for cwd in npm_working_directories(root):
         directories = npm_script_prefixes(cwd, installation)
         search = os.pathsep.join([*(str(path) for path in directories), os.environ['PATH']])
-        selected = shutil.which('npx', path=search)
-        if not selected:
-            raise uf.FlowError('Maintained npm npx launcher is unavailable')
-        files.add(selected_input(selected))
+        for name in NPM_HELPERS:
+            selected, canonical = shutil.which(name, path=search), shutil.which(name)
+            if not selected and name in ('python3', 'node', 'go'):
+                raise uf.FlowError('Maintained npm helper is unavailable: ' + name)
+            if selected is None and canonical is None:
+                continue
+            # Resource discovery uses the inherited PATH. Npm's augmented search
+            # may retain aliases to those tools, but cannot select another launcher.
+            if (selected is None or canonical is None or
+                    Path(selected).resolve(strict=True) != Path(canonical).resolve(strict=True)):
+                raise uf.FlowError('Npm helper selection differs from inventoried PATH: ' + name)
+            files.add(selected_input(selected))
+            if name == 'python3':
+                # Python can select a virtual environment beside an executable
+                # alias even when that alias resolves to the canonical binary.
+                for executable in (Path(selected), Path(canonical)):
+                    files.update((executable.parent / 'pyvenv.cfg', executable.parent.parent / 'pyvenv.cfg'))
+                if (selected != canonical and
+                        python_inputs(root, selected) != python_inputs(root, canonical)):
+                    raise uf.FlowError('Npm Python import selection differs from inventoried PATH')
     return files
 
 
@@ -1078,14 +1095,16 @@ class Session:
         self.head = uf.revision(root, 'HEAD')
         self.environment = dict(os.environ)
         self.search_directories = executable_search_inputs()
-        self.executables = sorted({step.command[0] for step in steps} | {'make', 'git', 'bash', 'node'})
+        executables = {step.command[0] for step in steps} | {'make', 'git', 'bash', 'node'}
+        if 'npm' in executables:
+            # Maintained npm fixtures enter Python ownership and compile the Go host.
+            executables.update((NPM_INTERPRETER, 'python3', 'go'))
+        self.executables = sorted(executables)
         if 'go' in self.executables:
             # The maintained Go provider fixtures execute this PATH-selected helper.
             self.executables.append('setpriv')
             self.executables.sort()
         if 'npm' in self.executables:
-            self.executables.append(NPM_INTERPRETER)
-            self.executables.sort()
             launcher = shutil.which('npm')
             if not launcher:
                 raise uf.FlowError('Verification executable unavailable: npm')
@@ -1115,7 +1134,7 @@ class Session:
         try:
             self.watch.external(root / '.git', contents=False)
             lookup_names = {Path(name).name for name in self.executables}
-            lookup_names.update(('node', 'sh', 'go', 'gcc', 'g++', 'cc', 'c++', 'as', 'ld', 'npx'))
+            lookup_names.update((*NPM_HELPERS, 'npx'))
             lookup_names.update(path.name for path in self.helper_files)
             for directory in sorted(self.search_directories):
                 for name in sorted(lookup_names):

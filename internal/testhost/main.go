@@ -40,6 +40,10 @@ func run() error {
 		}
 		basePort = port
 	}
+	port, e := fixturePort(basePort)
+	if e != nil {
+		return e
+	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	dir, e := os.MkdirTemp("", "factory-browser-")
@@ -48,7 +52,7 @@ func run() error {
 	}
 	defer os.RemoveAll(dir)
 	if os.Getenv("CODE_FACTORY_PERFORMANCE") == "1" {
-		return servePerformance(ctx, dir, basePort+1)
+		return servePerformance(ctx, dir, port)
 	}
 	s, e := store.Open(filepath.Join(dir, "state.db"))
 	if e != nil {
@@ -122,14 +126,14 @@ func run() error {
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]bool{"ready": true})
 	})
-	server := &http.Server{Addr: fmt.Sprintf("127.0.0.1:%d", basePort+1), Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: fmt.Sprintf("127.0.0.1:%d", port), Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shutdown, c := context.WithTimeout(context.Background(), 5*time.Second)
 		defer c()
 		_ = server.Shutdown(shutdown)
 	}()
-	e = server.ListenAndServe()
+	e = serveFixture(server)
 	if e == http.ErrServerClosed {
 		return nil
 	}
