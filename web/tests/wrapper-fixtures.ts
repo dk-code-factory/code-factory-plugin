@@ -69,6 +69,13 @@ export async function host(
     assembled?: boolean;
     archive?: Record<string, Record<string, any>[]>;
     observeToolCompletions?: boolean;
+    deferred?: {
+      name: string;
+      polls?: number;
+      error?: string;
+      losePoll?: boolean | number;
+      complete?: () => boolean;
+    };
     fail?: string;
     lost?: string;
     settings?: boolean;
@@ -87,6 +94,8 @@ export async function host(
   } = {},
 ) {
   const state = options.state ?? initial();
+  let deferredResult: unknown;
+  let deferredPolls = 0;
   const calls: Call[] = [];
   const toolCompletions: Call[] = [];
   if (options.observeToolCompletions) {
@@ -182,6 +191,42 @@ export async function call(name, args = {}) {
       const result = await response.json();
       if (result.error) throw new Error(JSON.stringify(result.error));
       return result.result;
+    }
+    if (p.name === "operation_result") {
+      expect(p.arguments.id).toBe("fixture-operation");
+      deferredPolls++;
+      const lostPolls =
+        typeof options.deferred?.losePoll === "number"
+          ? options.deferred.losePoll
+          : options.deferred?.losePoll
+            ? 1
+            : 0;
+      if (deferredPolls <= lostPolls)
+        return {
+          isError: true,
+          content: [
+            { type: "text", text: "McpServerError: Connection failed" },
+          ],
+        };
+      if (
+        deferredPolls < (options.deferred?.polls ?? 3) ||
+        options.deferred?.complete?.() === false
+      )
+        return {
+          structuredContent: {
+            operation: {
+              id: "fixture-operation",
+              tool: options.deferred?.name,
+              state: "running",
+            },
+          },
+        };
+      if (options.deferred?.error)
+        return {
+          isError: true,
+          content: [{ type: "text", text: options.deferred.error }],
+        };
+      return { structuredContent: { data: deferredResult } };
     }
     const rejection = options.reject?.(p);
     if (p.name === options.fail || rejection)
@@ -443,6 +488,18 @@ export async function call(name, args = {}) {
       throw new Error("Connection failed after acceptance");
     const responseData = structuredClone(data);
     await options.after?.(p, responseData);
+    if (p.name === options.deferred?.name) {
+      deferredResult = responseData;
+      return {
+        structuredContent: {
+          operation: {
+            id: "fixture-operation",
+            tool: p.name,
+            state: "running",
+          },
+        },
+      };
+    }
     return {
       content: [{ type: "text", text: "Fixture result" }],
       structuredContent: { data: responseData },

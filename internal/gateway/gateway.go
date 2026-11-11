@@ -3,6 +3,7 @@
 package gateway
 
 import (
+	"codefactory/internal/httpbudget"
 	"codefactory/internal/pluginbundle"
 	"context"
 	"crypto/rand"
@@ -245,7 +246,7 @@ func (g *Gateway) Public() http.Handler {
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]string{"status": "verified", "transport": "tailscale"})
 	})
-	return harden(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return httpbudget.Wrap(audit("public", harden(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Tailscale Serve can strip its mount prefix before proxying. Also
 		// accept the complete public path for direct reverse proxies. Exact
 		// local routes win if a chosen prefix overlaps a built-in route.
@@ -259,7 +260,7 @@ func (g *Gateway) Public() http.Handler {
 			r.URL.RawPath = ""
 		}
 		mux.ServeHTTP(w, r)
-	}))
+	}))))
 }
 func validRedirect(raw string) bool {
 	u, e := url.Parse(raw)
@@ -354,7 +355,7 @@ func (g *Gateway) authorize(w http.ResponseWriter, r *http.Request) {
 var consent = template.Must(template.New("consent").Parse(`<!doctype html><html><meta charset="utf-8"><title>Connect Code Factory</title><style>body{font:17px system-ui;max-width:560px;margin:60px auto;padding:24px}button{padding:12px;margin:10px}</style><h1>Connect Code Factory</h1><p>Signed in through your private Tailscale connection.</p><p>Allow {{.Name}} ({{.Redirect}}) to access your repository inbox and control local Codex runs as this computer's owner?</p><form method="post" action="/approve"><input type="hidden" name="request" value="{{.ID}}"><input type="hidden" name="nonce" value="{{.Nonce}}"><button name="decision" value="allow">Connect Code Factory</button><button name="decision" value="deny">Cancel</button></form></html>`))
 
 func (g *Gateway) Private() http.Handler {
-	return harden(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return httpbudget.Wrap(audit("approval", harden(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/approve" {
 			http.NotFound(w, r)
 			return
@@ -423,7 +424,7 @@ func (g *Gateway) Private() http.Handler {
 		}
 		u.RawQuery = q.Encode()
 		http.Redirect(w, r, u.String(), http.StatusSeeOther)
-	}))
+	}))))
 }
 func (g *Gateway) token(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 8192)
@@ -525,8 +526,8 @@ func (g *Gateway) Serve(ctx context.Context) error {
 		return e
 	}
 	defer private.Close()
-	p := &http.Server{Handler: audit("public", g.Public()), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
-	a := &http.Server{Handler: audit("approval", g.Private()), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, MaxHeaderBytes: 16 << 10}
+	p := &http.Server{Handler: httpbudget.WrapContext(ctx, g.Public()), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	a := &http.Server{Handler: httpbudget.WrapContext(ctx, g.Private()), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, MaxHeaderBytes: 16 << 10}
 	errs := make(chan error, 2)
 	go func() { errs <- p.Serve(public) }()
 	go func() { errs <- a.Serve(private) }()
@@ -538,6 +539,7 @@ func (g *Gateway) Serve(ctx context.Context) error {
 	defer cancel()
 	_ = p.Shutdown(shutdown)
 	_ = a.Shutdown(shutdown)
+	_ = httpbudget.Drain(shutdown)
 	if e == http.ErrServerClosed {
 		return nil
 	}

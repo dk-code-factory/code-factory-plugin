@@ -28,7 +28,7 @@ func TestUIResourceContentIdentityAndUnknownURI(t *testing.T) {
 		if uri != want || repeated != uri || resourceURI(html) != uri || uri == previousURI {
 			t.Fatalf("UI content did not receive its deterministic identity: %q", uri)
 		}
-		bind(server, uri, "open_factory", "Open the UI fixture.", false, true, func(context.Context, Empty) (any, error) { return nil, nil })
+		bind(&Server{MCP: server, operations: &operations{ctx: ctx, entries: map[string]*pendingOperation{}}}, uri, "open_factory", "Open the UI fixture.", false, true, func(context.Context, Empty) (any, error) { return nil, nil })
 		serverTransport, clientTransport := mcp.NewInMemoryTransports()
 		serverSession, err := server.Connect(ctx, serverTransport, nil)
 		if err != nil {
@@ -104,8 +104,8 @@ func TestSettingsResourceIsIndependentFromInbox(t *testing.T) {
 		if inboxURI == settingsURI || settingsURI == previousSettings || settingsURI != repeated || settingsURI != fmt.Sprintf("ui://code-factory/settings-%x.html", sha256.Sum256([]byte(settings))) {
 			t.Fatal("settings identity is not independent and content-specific")
 		}
-		bind(server, inboxURI, "open_factory", "Inbox", false, true, func(context.Context, Empty) (any, error) { return "inbox", nil })
-		bind(server, settingsURI, "open_settings", "Settings", false, true, func(context.Context, Empty) (any, error) { return "settings", nil })
+		bind(&Server{MCP: server, operations: &operations{ctx: ctx, entries: map[string]*pendingOperation{}}}, inboxURI, "open_factory", "Inbox", false, true, func(context.Context, Empty) (any, error) { return "inbox", nil })
+		bind(&Server{MCP: server, operations: &operations{ctx: ctx, entries: map[string]*pendingOperation{}}}, settingsURI, "open_settings", "Settings", false, true, func(context.Context, Empty) (any, error) { return "settings", nil })
 		st, ct := mcp.NewInMemoryTransports()
 		ss, err := server.Connect(ctx, st, nil)
 		if err != nil {

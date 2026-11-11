@@ -540,7 +540,7 @@ elif key.startswith('npm ') or command == 'npx':
     require('web/node_modules/prepared')
     if key in ('npm test', 'npm run test:performance'):
         require('internal/web/dist/index.html', 'internal/pluginbundle/dist/code-factory.zip', 'bin/fake-codex')
-elif key == 'go test -race -count=1 ./...':
+elif key == 'go test -race -count=1 ./...' or key == 'go test -p 1 -count=1 -run APILatency ./internal/transport ./internal/gateway ./internal/setup ./internal/factory ./internal/httpbudget -args -api-performance':
     require('internal/web/dist/index.html', 'internal/pluginbundle/dist/code-factory.zip', 'bin/fake-codex')
 elif key == 'python3 scripts/package.py':
     require('bin/code-factory', 'internal/web/dist/index.html', 'internal/pluginbundle/dist/code-factory.zip')
@@ -612,6 +612,10 @@ record('end')
         self.assertLess(starts.index('python3 scripts/test_browser_benchmark.py'), starts.index('npm run test:performance'))
         self.assertLess(starts.index('npm test'), starts.index('npm run test:performance'))
         self.assertLess(starts.index('go test -race -count=1 ./...'), starts.index('npm run test:performance'))
+        api = 'go test -p 1 -count=1 -run APILatency ./internal/transport ./internal/gateway ./internal/setup ./internal/factory ./internal/httpbudget -args -api-performance'
+        self.assertEqual(starts.count(api), 1)
+        self.assertLess(starts.index('python3 scripts/test_browser_benchmark.py'), starts.index(api))
+        self.assertLess(starts.index(api), starts.index('npm run test:performance'))
         self.assertLess(starts.index('npm run test:performance'), starts.index('python3 scripts/package.py'))
         self.assertLess(starts.index('python3 scripts/package.py'), starts.index('python3 scripts/test_installer.py'))
         self.assertLess(starts.index('python3 scripts/test_installer.py'), starts.index('python3 scripts/smoke.py'))

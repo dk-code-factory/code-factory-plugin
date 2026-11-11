@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "af1a219d66e64eb241947c06982cecdf398a8fef",
-  "fingerprint": "ec9f19caaf71fec5c890fa0c0aa984b25452ac95d240ee6a241f73922b47ae53",
+  "base": "98581c5cef50f1480d965bc70a5791eb074f65d2",
+  "fingerprint": "11992277dbbce0c01685cdc687e6e0a4c3ff0d1e4b0455720e63fc948c50cb66",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Reviewed Subscribe to host notifications and manage delivery and its declared scenarios against main. Product behavior, stable IDs, dependency ownership and existing acceptance gaps remain accurate; only the shared fixture execution/listener infrastructure changes.",
-    "implementation": "Inspected unchanged internal/events/events.go at its mapped implementation and the new fixture-runner/listener boundary. Actual retained loopback origins replace fixed defaults for npm entrypoints; production item, session and owner authority transitions are preserved.",
-    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry: the fake transport verifies delivery signatures, stable event identity and initial503 retry handling; listener allocation does not alter notification delivery semantics. Full current declared fixture suites remain required; real-host acceptance is not inferred."
+    "kind": "behavior",
+    "description": "S1 rejects slow or failed ownership proof before activation while successful registration remains unchanged. S2 permits foreground management during callback work and ignores results belonging to canceled/replaced subscription generations. S3 real-host acceptance remains open.",
+    "implementation": "Reviewed50ms bounded verification with32 retained actual-work slots, per-ID pending token ownership, cancellation checked under state lock, atomic Vault.SetTx activation and persisted opaque generations. Tick snapshots signing keys outside delivery I/O, serializes only background ticks and conditionally persists each matching generation; callback headers/body/close never hold shared state mutex. The HTTP handler captures originating bounded context as a value before SDK detachment; event mutations link cancellation to that origin for both2025 and2026 protocol clients, while accepted tool work and live streams keep their own lifetimes. Cycle2F6 restores one generation-conditional cursor commit for an ignored page or tail, with no signing-key snapshot for nonmatching events; matching callback delivery retains conditional per-result commits.",
+    "tests": "Read noncooperative125ms header/body proofs,32-slot admission/actual exit, concurrent management, canceled queued request, stale200/503/410 suppression, failed refresh and rotated-key/cursor/retry assertions. Wire fixtures separately require successful list/management, existing callback error, Store.Write deadline rejection and actual SDK stream acknowledgement. Ordinary410 disable,429/permanent/exhaustion, disabled-setting no-replay, rotation expiry and restart gaps remain explicit. Ordinary TestEventStoreAdmissionPreservesRequestCancellation covers2025/2026 actual custom Subscribe/Unsubscribe with held125ms writer under response deadline and earlier caller cancellation, then Drain and exact original subscription-state assertions. This directly guards detached-origin SDK cancellation semantics. Read TestIgnoredEventPagesCommitOnceWithoutSigningMaterial: SQLite triggers prove one commit per100ignored events for unrelated, filtered and notification-disabled pages; nil vault forbids secret reads and empty re-ticks do not write. TestIgnoredPageCommitRejectsChangedGenerationAndDeletion races a real held writer with replacement/deletion and proves stale page commits neither overwrite nor resurrect. Disabled-setting cursor advancement is now asserted; re-enable no-replay and restart acceptance remain gaps. Reviewed the named pending-proof fixture: it exercises unrelated Subscribe/Unsubscribe and replacement/cancellation, while actual wire list contention is covered separately. The concurrent Tick fixture proves serialized callback delivery and foreground Subscribe/Unsubscribe; it does not supply an eligible later event to the removed peer, so its purpose makes no no-later-delivery assertion."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 52.576
+      "seconds": 55.368
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.184
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 710.402
+      "seconds": 711.335
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 483.621
+      "seconds": 493.895
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.716
+      "seconds": 4.675
     },
     {
       "command": [
@@ -69,16 +69,16 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.68
+      "seconds": 60.611
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "f00bd58f8855e4181e0af83ad9f7296e4ad8dd0f8da533c513967ab8aeda2cf1",
-    "term:attention-request": "256d97e0f773e7af1a5c71073856923c7428b8e4439f93ed6b422564a157dd87",
-    "term:coverage-gap": "4bafb9375510799ac23aba7c46b5eda416e310e952790dbe80fd0df5741b0fec",
-    "term:host": "cff331b376c8d3c3da1f13f847734f65433e4b73bfd1eb1c03d6da85eff8e8d3",
-    "term:known-limitation": "f106e3d60ae96b179b22581df2cdef734a20fc4766606b342ac85e8247b55b45",
-    "term:subscription": "a0cae3eaf232268587993c90c0e5697760f11261bc03afb4a0ed0db750c80d9d",
-    "term:unverified-behavior": "10e009f66225b31cee1e007f9bfda2b3ec106452deb2eebab2b89db3986e0224"
+    "flow:receive-notifications": "9258679243a2109df3a12c58345cc2963f62b1fb11f6fe4d5355c1bf3046c967",
+    "term:attention-request": "460d1c7346698237c314765130f0bdd06903d53c40d730acb356e559d9c59039",
+    "term:coverage-gap": "53a5c851326375597d0d514ccc5296f3e1d1958d2d9dde413c1b7a867262ee23",
+    "term:host": "b51dbbae17346ef005f9263da6c31b2a2f45c870e775f6c464d2db0e713477dc",
+    "term:known-limitation": "8d3c3d228e5d7e8725193328e2a5e16ed8d6c61e98f223a57f879293d4d9bd8d",
+    "term:subscription": "da08d28caa16bc21783f96f9a99f8c96e733482ae12f0212d001accc6a05c7ca",
+    "term:unverified-behavior": "e0412baa54bbae048ce39be2c42209287e2762e85515f3e06918c54c675d663c"
   }
 }

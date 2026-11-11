@@ -27,12 +27,22 @@ The private owner connection is established. Application data starts clean in th
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
+Slow actions are acknowledged promptly and remain pending until their result arrives.
+Connection recovery reads the same accepted action without submitting it again. If
+the result expires or the service restarts, inspect saved state before deciding to
+retry. Acknowledgement does not mean the action has completed. A temporary unavailable
+result read keeps the same accepted action pending; a rejected original action is
+never automatically replayed. Responses that cannot finish promptly report an
+unknown outcome, while an unsupported oversized result reports a terminal error.
+Inspect saved state before deciding to repeat an uncertain action.
+
 ## Scenarios
 
 - **S1** — Open saved work and queue state without a model turn.
 - **S2** — Display execution, reported status and pending event count independently.
 - **S3** — Stream and page redacted native output in the owning conversation.
 - **S4** — Retain conversation history when a turn completes or source work closes.
+- **S5** — Keep an accepted slow action pending and retrieve its result without replay.
 
 ## Verification scope
 
@@ -42,7 +52,7 @@ The assertion references below establish their fixture scope. Native installed-h
 ## Terminology and UI references
 
 Glossary: [retained-session](../glossary/README.md#retained-session), [execution-state](../glossary/README.md#execution-state), [reported-work-status](../glossary/README.md#reported-work-status).
-UI entities: [S-FACTORY](../ui/README.md#S-FACTORY), [W-TRANSCRIPT](../ui/README.md#W-TRANSCRIPT), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-EVENT-BATCHES](../ui/README.md#W-EVENT-BATCHES).
+UI entities: [S-FACTORY](../ui/README.md#S-FACTORY), [W-TRANSCRIPT](../ui/README.md#W-TRANSCRIPT), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-EVENT-BATCHES](../ui/README.md#W-EVENT-BATCHES), [W-CONNECTION-BLOCKER](../ui/README.md#W-CONNECTION-BLOCKER).
 
 ## Flow diagram
 
@@ -55,6 +65,7 @@ flowchart TD
     N4["Retain conversation history when a turn completes or source work closes #40;S4#41;"]
     N5(["Hold saved work and show the failure or human request"])
     N6(["Retain conversation and saved evidence"])
+    N7["Keep accepted action pending and retrieve its exact result without replay #40;S5#41;"]
     N0 -->|"authorized action"| N1
     N1 -->|"validated or explicitly resumed"| N2
     N1 -->|"missing authority, stale identity or unavailable dependency"| N5
@@ -64,6 +75,10 @@ flowchart TD
     N3 -->|"missing authority, stale identity or unavailable dependency"| N5
     N4 -->|"validated or explicitly resumed"| N6
     N4 -->|"missing authority, stale identity or unavailable dependency"| N5
+    N1 -->|"slow action accepted"| N7
+    N7 -->|"saved result retrieved"| N2
+    N7 -->|"terminal error, oversized result, expiry or restart requires inspection"| N5
+    N7 -->|"temporary result-read failure#59; keep the exact identity"| N7
 ```
 
 ## Implementation references
@@ -83,6 +98,10 @@ flowchart TD
 - [web/playwright.config.ts](../../web/playwright.config.ts) — Current view-live-work implementation or fixture/build dependency.
 - [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate. (`func factoryState(`)
 - [internal/store/snapshot.go](../../internal/store/snapshot.go) — Durable metadata-only UI change cursor supports unchanged state reads without transcript-driven rebuilding. (`func (s *Store) UILatest(`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Acknowledge slow owner tools promptly and retain one execution/result identity with bounded capacity, lifetime and retention. (`func (o *operations) run(`)
+- [web/src/bridge.ts](../../web/src/bridge.ts) — Retrieve the exact pending action result without replaying accepted work. (`export async function call<T>(`)
+- [internal/codex/client.go](../../internal/codex/client.go) — Apply caller cancellation to native write admission and full stdin pipes; a partial write disconnects and reports uncertain delivery. (`func (c *Client) send(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
 
 ## Test references
 
@@ -116,6 +135,24 @@ flowchart TD
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestBlockedAndAnsweredTransitionsEmitSessionSubscription(`; S2. An exact session.changed webhook subscriber receives one blocked and one answered transition; notifications contain neither question nor answer text.
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestAnswerPreservesOtherExplicitBlockedRequests(`; S2. For blocking and nonblocking native input, an invalid answer fails; valid native and first explicit-status answers retain blocked/waiting while a second explicit status question remains. Only the final answer yields working/running.
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestFactoryStateReusesInboxAcrossQueriesAndRefreshesAfterMutation(`; S1. After warming the derived inbox, a raw SQL sentinel makes any repeated full decode fail. Changed filter/page/search/tab and conversation queries still succeed from the retained projection; an ordinary source mutation invalidates the cache and returns the updated title.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationsRetainExactResultWithoutRepeatingMutation(`; S5. A disconnected original request and repeated result reads execute one mutation and retain its exact completed result.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationsBoundCapacityExpiryCancellationAndErrors(`; S5. Full capacity rejects before execution; expiry, cancellation, shutdown, restart and delayed errors preserve truthful outcomes.
+- [internal/transport/api_performance_test.go](../../internal/transport/api_performance_test.go) — `func TestUserFacingAPILatency(`; S1, S5. Runtime registered SDK/custom receiving-method keys and discovered tool catalog are completeness oracles. Every method, including incoming notifications, has a timed meaningful success, accepted notification, exact protocol rejection or real stream acknowledgement. Tool results retain successful, accepted-pending and exact-result polling coverage within100ms for normal and125ms provider fixtures with1000saved sources; background completion/network transit are separate.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `accepted slow mutation polls one identity and recovers a lost polling response`; S5. Five consecutive failed result reads exceed the ordinary retry budget while Send and the draft remain pending; explicit completion gate proves exact-identity recovery and one created session.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `delayed operation error preserves the draft without repeating the action`; S5. Delayed failure displays the error and preserves the draft without replaying the action.
+- [internal/codex/client_write_test.go](../../internal/codex/client_write_test.go) — `func TestBlockedNativeWriteHonorsDeadlineAndPreservesUncertainDelivery(`; S5. A real full stdin pipe stops on the call deadline, reports uncertain delivery, disconnects its partial stream and removes the pending response.
+- [internal/codex/client_write_test.go](../../internal/codex/client_write_test.go) — `func TestQueuedNativeWriterCancelsWithoutWritingOrDisconnectingActiveWriter(`; S5. Cancelling a queued writer does not disconnect the active write or emit queued mutation bytes; later active cancellation closes the partial stream.
+- [internal/transport/response_budget_test.go](../../internal/transport/response_budget_test.go) — `func TestMCPActualSubscriptionListenHandshakeAndCancellation(`; S3. Real SDK subscription listen emits an actual acknowledged data event within100ms, survives125ms and exits on request cancellation.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestFiniteResponseDeadlineRetainsAdmissionAndDiscardsLateSuccess(`; S1, S5. A timed-out handler keeps its worker slot, late private success is discarded and capacity rejection starts no second action.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestResponseBufferLimitAndCancellation(`; S1, S5. Response limit is a terminal rejection and request/service cancellation suppresses late output.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestCompletedResponseKeepsWorkerThroughAuditAndReportsWireOutcome(`; S1. Completed202 identity remains available while audit is delayed and consumes admitted capacity through actual audit exit.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestEmptyOrPrimingSSEFlushDoesNotAcknowledgeDelayedStream(`; S3. Empty or comment-only flush cannot evade the finite handshake budget.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestSSEHandshakeRetainsStreamAndCancelsOnDisconnect(`; S3. Real acknowledged stream remains open beyond125ms, keeps admission and ends on disconnect.
+- [internal/httpbudget/api_performance_test.go](../../internal/httpbudget/api_performance_test.go) — `func TestHTTPBoundaryAPILatency(`; S1, S5. Isolated100ms finite/capacity/8MiB response boundary samples distinguish success, accepted work and rejection.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `accepted mutation retains its identity through HTTP503 poll outages`; S5. Exact accepted identity and one original mutation survive five503 poll failures until explicit completion.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `HTTP503 after mutation delivery preserves the draft without replay`; S5. Original mutation503 preserves draft and prompts state inspection without replay.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `oversized accepted result ends polling with draft retained and no replay`; S5. Oversized final result is terminal; polling ends and draft remains with one mutation.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `accepted operation reports terminal provider HTTP503 without polling again`; S5. Terminal structured provider HTTP503 is reported once rather than mistaken for transient transport503; exact-ID polling ends, Send becomes enabled, draft survives and one original mutation exists.
 
 ## Verification and gaps
 

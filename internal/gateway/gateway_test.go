@@ -39,7 +39,9 @@ func TestOwnerConsentPKCERotationPersistenceAndAuthenticatedProxy(t *testing.T) 
 			r.Header.Set(k, v)
 		}
 		w := httptest.NewRecorder()
+		started := time.Now()
 		handler.ServeHTTP(w, r)
+		recordGatewayTiming(t, method, path, w.Code, started)
 		return w
 	}
 	pub, private := g.Public(), g.Private()
@@ -192,7 +194,9 @@ func TestPublicDownloadsKeepMCPAndConsentProtected(t *testing.T) {
 	}
 	for path, status := range map[string]int{"/": 200, "/plugin.zip": 200, "/plugin.json": 200, "/mcp.json": 200, "/assets/logo.svg": 200, "/mcp": 401, "/approve": 404, "/owner.token": 404, "/gateway-auth.json": 404} {
 		w := httptest.NewRecorder()
+		started := time.Now()
 		g.Public().ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+		recordGatewayTiming(t, "GET", path, w.Code, started)
 		if w.Code != status {
 			t.Errorf("%s: got %d want %d", path, w.Code, status)
 		}

@@ -3,6 +3,8 @@ package transport
 import (
 	"bytes"
 	"codefactory/internal/app"
+	"codefactory/internal/httpbudget"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -202,12 +205,87 @@ func TestAPILogBoundsMalformedBodiesAndPreservesPanic(t *testing.T) {
 	path := filepath.Join(s.App.DataDir, "logs", "api-calls.jsonl")
 	records := apiLogRecords(t, path, 3)
 	data, _ := os.ReadFile(path)
-	if !panicked || !records[2].Panicked || records[2].HTTPStatus != 500 || len(data) > 3*(8<<10) {
+	var panicRecord *apiCallRecord
+	for i := range records {
+		if records[i].Panicked {
+			panicRecord = &records[i]
+		}
+	}
+	if !panicked || panicRecord == nil || panicRecord.HTTPStatus != 0 || panicRecord.HTTPStatusKnown || panicRecord.HandlerStatus != 500 || len(data) > 3*(8<<10) {
 		t.Fatal("panic handling or record bounds changed", records)
 	}
 	for _, private := range []string{"malformed-secret", "oversized-private-payload", "private panic payload"} {
 		if bytes.Contains(data, []byte(private)) {
 			t.Fatal("invalid request/panic text leaked", private)
+		}
+	}
+}
+
+func TestAPILogCapacityRejectionsReachDaemonAndExportedBoundary(t *testing.T) {
+	s := &Server{App: &app.App{DataDir: t.TempDir()}}
+	release, entered := make(chan struct{}), make(chan struct{}, httpbudget.Capacity)
+	var once sync.Once
+	var wg sync.WaitGroup
+	releaseWork := func() { once.Do(func() { close(release) }) }
+	t.Cleanup(func() {
+		releaseWork()
+		awaitTransportGroup(t, &wg, "capacity fixture responses")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := httpbudget.Drain(ctx); err != nil {
+			t.Error("capacity fixture drain", err)
+		}
+	})
+	blocker := httpbudget.Wrap(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { entered <- struct{}{}; <-release }))
+	for i := 0; i < httpbudget.Capacity; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			blocker.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/", nil))
+		}()
+	}
+	for i := 0; i < httpbudget.Capacity; i++ {
+		awaitTransportSignal(t, entered, "capacity fixture admission")
+	}
+	var calls atomic.Int32
+	next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { calls.Add(1) })
+	mux := http.NewServeMux()
+	mux.Handle("/healthz", s.LogAPI("owner", "private-token", next))
+	mux.Handle("/mcp", s.LogAPI("mcp", "private-token", next))
+	root := s.BoundHTTP(context.Background(), mux)
+	for _, row := range []struct {
+		handler http.Handler
+		path    string
+	}{
+		{root, "/healthz?token=private-query"}, {root, "/mcp?token=private-query"},
+		{root, "/private-route?token=private-query"},
+		{httpbudget.Wrap(s.LogAPI("owner", "private-token", next)), "/healthz"},
+	} {
+		w := httptest.NewRecorder()
+		started := time.Now()
+		row.handler.ServeHTTP(w, httptest.NewRequest("POST", row.path, strings.NewReader("private-body")))
+		if w.Code != 503 || !strings.Contains(w.Body.String(), "request_not_started") || time.Since(started) > 100*time.Millisecond {
+			t.Fatal("unbounded/dishonest capacity rejection", w.Code)
+		}
+	}
+	records := apiLogRecords(t, filepath.Join(s.App.DataDir, "logs", "api-calls.jsonl"), 4)
+	if calls.Load() != 0 || len(records) != 4 {
+		t.Fatal("business started or duplicated rejection audit", calls.Load(), len(records))
+	}
+	seen := map[string]int{}
+	for _, record := range records {
+		seen[record.API]++
+		if record.HTTPStatus != 503 || !record.HTTPStatusKnown || record.RejectionReason != "request_not_started" || record.RejectedCount != 1 || record.Coalesced || record.StartedAt.IsZero() {
+			t.Fatal("missing truthful rejection diagnostic", record)
+		}
+	}
+	if seen["healthz"] != 2 || seen["mcp_http"] != 1 || seen["owner_unknown"] != 1 {
+		t.Fatal("missing bounded API identities", seen)
+	}
+	data, _ := os.ReadFile(filepath.Join(s.App.DataDir, "logs", "api-calls.jsonl"))
+	for _, secret := range []string{"private-token", "private-query", "private-route", "private-body"} {
+		if bytes.Contains(data, []byte(secret)) {
+			t.Fatal("rejection audit retained private request data", secret)
 		}
 	}
 }

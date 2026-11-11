@@ -1679,3 +1679,190 @@ test("a delayed state version cannot replace a newer accepted refresh", async ({
     release();
   }
 });
+
+test("accepted slow mutation polls one identity and recovers a lost polling response", async ({
+  page,
+}) => {
+  let complete = false;
+  const { ui, calls, state } = await host(page, {
+    deferred: {
+      name: "session_chat",
+      losePoll: 5,
+      complete: () => complete,
+    },
+  });
+  try {
+    await ui.getByRole("button", { name: /Fix reconnect/ }).click();
+    await ui.getByLabel("Message", { exact: true }).fill("Inspect once");
+    await ui.getByRole("button", { name: "Send", exact: true }).click();
+    const pollCount = () =>
+      calls.filter((c) => c.name === "operation_result").length;
+    // Five consecutive failures exceed the ordinary three-attempt read budget.
+    await expect.poll(pollCount).toBeGreaterThan(5);
+    // Completion stays explicitly gated even if assertions are scheduled late.
+    const beforeAssertions = pollCount();
+    await expect.poll(pollCount).toBeGreaterThan(beforeAssertions + 2);
+    await expect(
+      ui.getByRole("button", { name: "Send", exact: true }),
+    ).toBeDisabled();
+    await expect(ui.getByLabel("Message", { exact: true })).toHaveValue(
+      "Inspect once",
+    );
+    expect(calls.filter((c) => c.name === "session_chat")).toHaveLength(1);
+    complete = true;
+    await expect(ui.getByLabel("Message", { exact: true })).toHaveValue("");
+    await ui.getByLabel("Message", { exact: true }).fill("Next draft");
+    await expect(
+      ui.getByRole("button", { name: "Send", exact: true }),
+    ).toBeEnabled();
+    expect(calls.filter((c) => c.name === "session_chat")).toHaveLength(1);
+    expect(state.sessions).toHaveLength(1);
+    expect(
+      calls
+        .filter((c) => c.name === "operation_result")
+        .every((c) => c.arguments.id === "fixture-operation"),
+    ).toBe(true);
+  } finally {
+    complete = true;
+  }
+});
+
+test("delayed operation error preserves the draft without repeating the action", async ({
+  page,
+}) => {
+  const { ui, calls } = await host(page, {
+    deferred: { name: "session_chat", error: "Saved operation failed" },
+  });
+  await ui.getByRole("button", { name: /Fix reconnect/ }).click();
+  await ui.getByLabel("Message", { exact: true }).fill("Keep this draft");
+  await ui.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(ui.getByRole("alert")).toContainText("Saved operation failed");
+  await expect(ui.getByLabel("Message", { exact: true })).toHaveValue(
+    "Keep this draft",
+  );
+  await expect(
+    ui.getByRole("button", { name: "Send", exact: true }),
+  ).toBeEnabled();
+  expect(calls.filter((c) => c.name === "session_chat")).toHaveLength(1);
+});
+
+test("accepted operation reports terminal provider HTTP503 without polling again", async ({
+  page,
+}) => {
+  const { ui, calls } = await host(page, {
+    deferred: {
+      name: "session_chat",
+      error: "GitHub request failed (HTTP 503)",
+    },
+  });
+  await ui.getByRole("button", { name: /Fix reconnect/ }).click();
+  await ui
+    .getByLabel("Message", { exact: true })
+    .fill("Keep provider failure draft");
+  await ui.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(ui.getByRole("alert")).toContainText(
+    "GitHub request failed (HTTP 503)",
+  );
+  await expect(ui.getByLabel("Message", { exact: true })).toHaveValue(
+    "Keep provider failure draft",
+  );
+  await expect(
+    ui.getByRole("button", { name: "Send", exact: true }),
+  ).toBeEnabled();
+  expect(calls.filter((c) => c.name === "session_chat")).toHaveLength(1);
+  const polls = calls.filter((c) => c.name === "operation_result");
+  expect(polls).toHaveLength(3);
+  expect(polls.every((c) => c.arguments.id === "fixture-operation")).toBe(true);
+});
+
+test("accepted mutation retains its identity through HTTP503 poll outages", async ({
+  page,
+}) => {
+  let failures = 0;
+  let complete = false;
+  const { ui, calls } = await host(page, {
+    deferred: { name: "session_chat", complete: () => complete },
+    before: async (call) => {
+      if (call.name === "operation_result" && failures++ < 5)
+        throw new Error(
+          'Error POSTing to endpoint (HTTP503): {"error":"outcome_unknown"}',
+        );
+    },
+  });
+  try {
+    await ui.getByRole("button", { name: /Fix reconnect/ }).click();
+    await ui.getByLabel("Message", { exact: true }).fill("Keep exact identity");
+    await ui.getByRole("button", { name: "Send", exact: true }).click();
+    await expect
+      .poll(() => calls.filter((c) => c.name === "operation_result").length)
+      .toBeGreaterThan(5);
+    await expect(
+      ui.getByRole("button", { name: "Send", exact: true }),
+    ).toBeDisabled();
+    await expect(ui.getByLabel("Message", { exact: true })).toHaveValue(
+      "Keep exact identity",
+    );
+    expect(calls.filter((c) => c.name === "session_chat")).toHaveLength(1);
+    complete = true;
+    await expect(ui.getByLabel("Message", { exact: true })).toHaveValue("");
+    expect(
+      calls
+        .filter((c) => c.name === "operation_result")
+        .every((c) => c.arguments.id === "fixture-operation"),
+    ).toBe(true);
+  } finally {
+    complete = true;
+  }
+});
+
+test("HTTP503 after mutation delivery preserves the draft without replay", async ({
+  page,
+}) => {
+  const { ui, calls, state } = await host(page, {
+    after: async (call) => {
+      if (call.name === "session_chat")
+        throw new Error(
+          'Error POSTing to endpoint (HTTP503): {"error":"outcome_unknown"}',
+        );
+    },
+  });
+  await ui.getByRole("button", { name: /Fix reconnect/ }).click();
+  await ui
+    .getByLabel("Message", { exact: true })
+    .fill("Inspect saved state first");
+  await ui.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(ui.getByRole("alert")).toContainText("outcome may be unknown");
+  await expect(ui.getByLabel("Message", { exact: true })).toHaveValue(
+    "Inspect saved state first",
+  );
+  expect(calls.filter((c) => c.name === "session_chat")).toHaveLength(1);
+  expect(state.sessions).toHaveLength(1);
+});
+
+test("oversized accepted result ends polling with draft retained and no replay", async ({
+  page,
+}) => {
+  const { ui, calls } = await host(page, {
+    deferred: { name: "session_chat" },
+    before: async (call) => {
+      if (call.name === "operation_result")
+        throw new Error(
+          'Error POSTing to endpoint (HTTP500): {"error":"response_limit_exceeded","message":"Inspect saved state and use a narrower read."}',
+        );
+    },
+  });
+  await ui.getByRole("button", { name: /Fix reconnect/ }).click();
+  await ui
+    .getByLabel("Message", { exact: true })
+    .fill("Keep oversized result draft");
+  await ui.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(ui.getByRole("alert")).toContainText("response_limit_exceeded");
+  await expect(ui.getByLabel("Message", { exact: true })).toHaveValue(
+    "Keep oversized result draft",
+  );
+  await expect(
+    ui.getByRole("button", { name: "Send", exact: true }),
+  ).toBeEnabled();
+  expect(calls.filter((c) => c.name === "session_chat")).toHaveLength(1);
+  expect(calls.filter((c) => c.name === "operation_result")).toHaveLength(1);
+});

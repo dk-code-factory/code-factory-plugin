@@ -123,6 +123,10 @@ func (s *Service) Init(ctx context.Context) error {
 	}
 	return s.projectSettings(ctx)
 }
+
+// Context is the daemon lifetime for accepted asynchronous owner operations.
+func (s *Service) Context() context.Context { return s.ctx }
+
 func (s *Service) Close() {
 	s.cancel()
 	s.mu.Lock()

@@ -33,7 +33,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -110,7 +110,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -157,7 +157,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -191,10 +191,40 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export async function call<T>(",
+          "purpose": "Keep an accepted action pending while reading its exact result; retry only result reads after transport loss."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (o *operations) run(",
+          "purpose": "Bound inline tool work, retain one operation identity and cancel background work with the daemon lifetime."
+        },
+        {
+          "path": "internal/codex/client.go",
+          "anchor": "func (c *Client) send(",
+          "purpose": "Cancel queued writes before admission and interrupt a blocked native pipe at the call deadline; partial writes retain unknown-delivery safety."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func Wrap(",
+          "purpose": "Bound finite responses and admission, preserve actual SSE acknowledgement and expose sanitized deadline/size failures without replaying mutations."
         }
       ],
       "assertions": [
-        "WRAP-UNCERTAIN"
+        "WRAP-UNCERTAIN",
+        "WRAP-OPERATION",
+        "WRAP-OPERATION-ERROR",
+        "GO-OPERATION-ONCE",
+        "GO-OPERATION-BOUNDS",
+        "GO-NATIVE-WRITE-CANCEL",
+        "GO-NATIVE-WRITE-QUEUED",
+        "WRAP-OPERATION-HTTP503",
+        "WRAP-MUTATION-HTTP503",
+        "WRAP-RESULT-LIMIT",
+        "WRAP-OPERATION-BUSINESS503"
       ],
       "gaps": [
         {
@@ -203,7 +233,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -211,12 +241,12 @@
         "browser",
         "go"
       ],
-      "context": "Connection state; bounded transport retries for reads, no retry for uncertain mutations.",
-      "composition": "Connection state; bounded transport retries for reads, no retry for uncertain mutations.",
-      "interactions": "Connection state; bounded transport retries for reads, no retry for uncertain mutations.",
-      "state_description": "Connection state; bounded transport retries for reads, no retry for uncertain mutations.",
-      "element_description": "Connection state; bounded transport retries for reads, no retry for uncertain mutations.",
-      "purpose": "Connection state; bounded transport retries for reads, no retry for uncertain mutations."
+      "context": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
+      "composition": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
+      "interactions": "Slow actions remain pending while their exact accepted result is read. Temporary result-read503 failures preserve that identity. An original deadline rejection reports uncertain outcome without replay; terminal result-size failures retain the draft and require inspection.",
+      "state_description": "Pending accepted action; completed result; temporary result-read outage; original action outcome unknown; terminal result failure with draft retained; unavailable expired or restarted result.",
+      "element_description": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
+      "purpose": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations."
     },
     {
       "id": "W-INBOX-QUERY",
@@ -354,7 +384,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -548,7 +578,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1\u2013P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
+          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1–P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
           "next_verification": "Exercise remaining choices and rejected/concurrent override writes while confirming manual, label and AI precedence."
         }
       ],
@@ -556,12 +586,12 @@
         "browser",
         "go"
       ],
-      "context": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "composition": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "interactions": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "state_description": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "element_description": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "purpose": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error."
+      "context": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "composition": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "interactions": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "state_description": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "element_description": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "purpose": "Explicit local P0–P3 override or Automatic; display source and assessment error."
     },
     {
       "id": "W-RELATIONSHIPS",
@@ -785,7 +815,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -1408,7 +1438,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -1456,7 +1486,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -1503,7 +1533,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -2050,7 +2080,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         },
         {
@@ -2059,7 +2089,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -2582,7 +2612,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -2611,7 +2641,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-NAVIGATION \u2192 PAGE-INBOX, PAGE-MY-PRS, PAGE-REVIEW-PRS, PAGE-WORKING, PAGE-AGENTS, PAGE-AGENT, PAGE-SETTINGS, PAGE-EVENTS",
+      "endpoint_description": "W-NAVIGATION → PAGE-INBOX, PAGE-MY-PRS, PAGE-REVIEW-PRS, PAGE-WORKING, PAGE-AGENTS, PAGE-AGENT, PAGE-SETTINGS, PAGE-EVENTS",
       "trigger": "Select a saved page without launching an agent."
     },
     {
@@ -2675,7 +2705,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-INBOX-QUERY \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-INBOX-QUERY → W-ITEM-ROW",
       "trigger": "Filter saved entries."
     },
     {
@@ -2737,7 +2767,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-ITEM-ROW, W-WAITING-ROW \u2192 PAGE-AGENT",
+      "endpoint_description": "W-ITEM-ROW, W-WAITING-ROW → PAGE-AGENT",
       "trigger": "Read selected item and exact revision; no session creation."
     },
     {
@@ -2804,7 +2834,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-ITEM-ACTIONS \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-ITEM-ACTIONS → W-ITEM-ROW",
       "trigger": "Acknowledge local discovery."
     },
     {
@@ -2839,7 +2869,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1\u2013P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
+          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1–P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
           "next_verification": "Exercise remaining choices and rejected/concurrent override writes while confirming manual, label and AI precedence."
         }
       ],
@@ -2861,7 +2891,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-PRIORITY \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-PRIORITY → W-ITEM-ROW",
       "trigger": "Persist a manual priority override or clear it."
     },
     {
@@ -2926,7 +2956,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-RELATIONSHIPS \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-RELATIONSHIPS → W-ITEM-ROW",
       "trigger": "Add or remove a manual relationship; discovered evidence remains."
     },
     {
@@ -2974,7 +3004,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-MESSAGE \u2192 W-TRANSCRIPT, W-WORK-STATUS",
+      "endpoint_description": "W-MESSAGE → W-TRANSCRIPT, W-WORK-STATUS",
       "trigger": "Authorized first message creates the canonical retained session."
     },
     {
@@ -3032,7 +3062,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-MESSAGE \u2192 W-TRANSCRIPT, W-WORK-STATUS",
+      "endpoint_description": "W-MESSAGE → W-TRANSCRIPT, W-WORK-STATUS",
       "trigger": "Chat attaches queued events and bypasses timer; unblocked active work is steered."
     },
     {
@@ -3101,7 +3131,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-RUN-CONTROLS \u2192 W-WORK-STATUS",
+      "endpoint_description": "W-RUN-CONTROLS → W-WORK-STATUS",
       "trigger": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work."
     },
     {
@@ -3173,7 +3203,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-QUESTIONS, W-APPROVAL, W-ELICITATION \u2192 W-TRANSCRIPT, W-WORK-STATUS",
+      "endpoint_description": "W-QUESTIONS, W-APPROVAL, W-ELICITATION → W-TRANSCRIPT, W-WORK-STATUS",
       "trigger": "Answer the exact live request once; stale identities fail."
     },
     {
@@ -3259,7 +3289,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "S-FACTORY, S-SETTINGS \u2192 W-WORK-STATUS, W-ITEM-ROW",
+      "endpoint_description": "S-FACTORY, S-SETTINGS → W-WORK-STATUS, W-ITEM-ROW",
       "trigger": "Read saved state without a model call."
     },
     {
@@ -3324,7 +3354,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-TRANSCRIPT \u2192 W-TRANSCRIPT",
+      "endpoint_description": "W-TRANSCRIPT → W-TRANSCRIPT",
       "trigger": "Read a bounded page of retained redacted output."
     },
     {
@@ -3371,7 +3401,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-NAVIGATION \u2192 PAGE-SETTINGS",
+      "endpoint_description": "W-NAVIGATION → PAGE-SETTINGS",
       "trigger": "Open configuration chat and settings."
     },
     {
@@ -3420,7 +3450,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-CONFIGURATION-CHAT \u2192 W-CONFIGURATION-PROPOSAL",
+      "endpoint_description": "W-CONFIGURATION-CHAT → W-CONFIGURATION-PROPOSAL",
       "trigger": "Read/propose only; agent cannot confirm."
     },
     {
@@ -3473,7 +3503,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-CONFIGURATION-PROPOSAL \u2192 W-EFFECTIVE-SETTINGS",
+      "endpoint_description": "W-CONFIGURATION-PROPOSAL → W-EFFECTIVE-SETTINGS",
       "trigger": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries."
     },
     {
@@ -3537,7 +3567,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-NAVIGATION \u2192 W-EVENT-BATCHES",
+      "endpoint_description": "W-NAVIGATION → W-EVENT-BATCHES",
       "trigger": "Inspect event rules, normalized changes and delivery claims without flushing."
     },
     {
@@ -3579,7 +3609,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "Package page links \u2192 artifacts / external host setup",
+      "endpoint_description": "Package page links → artifacts / external host setup",
       "trigger": "Download or follow documented setup instructions.",
       "interactions": "External package downloads and OAuth connection guidance. Only a valid observed registration enables the primary browser package. Portable downloads stay advanced; no connection is fabricated.",
       "from": [
@@ -3633,7 +3663,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-BROWSER-LAB` controls \u2192 isolated browser \u2192 screenshot/location",
+      "endpoint_description": "`W-BROWSER-LAB` controls → isolated browser → screenshot/location",
       "trigger": "Explicit lab navigation/click/key/scroll operations.",
       "interactions": "Developer utility feedback loop; never an Inbox/Agents page transition.",
       "from": [
@@ -3666,7 +3696,8 @@
         }
       ],
       "assertions": [
-        "LOCAL-KEY"
+        "LOCAL-KEY",
+        "LOCAL-KEY-DEADLINE"
       ],
       "gaps": [
         {
@@ -3675,7 +3706,7 @@
           "kind": "known-limitation",
           "severity": "P3",
           "owner": "specification-coordinator",
-          "reason": "`LOCAL-KEY` validates handler boundaries. Alternate transport remains disabled; no fresh real setup acceptance is claimed.",
+          "reason": "LOCAL-KEY and LOCAL-KEY-DEADLINE validate local handler, single-use and unknown-outcome boundaries. Browser execution and real alternate-transport setup remain unverified; this transport is disabled in the pilot.",
           "next_verification": "For PAGE-LOCAL-TUNNEL-SETUP: Recheck isolated local-form reachability, origin, expiry and single-submission boundaries; keep alternate-transport live acceptance open while that integration remains disabled in this pilot."
         }
       ],
@@ -3684,7 +3715,7 @@
         "go"
       ],
       "composition": "`P-LOCAL-TUNNEL-KEY`.",
-      "interactions": "Temporary local alternate-transport setup session. Successful private key submission starts the configured alternate tunnel and removes the form. This transport is not currently enabled in the pilot."
+      "interactions": "A successful private submission removes the form. An unknown save outcome locks the used submission and requires saved-state inspection or fresh setup authorization; the submitted key is never automatically replayed. Alternate transport remains disabled in the pilot."
     },
     {
       "id": "PAGE-PACKAGE",
@@ -3794,7 +3825,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -3955,7 +3986,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -3978,7 +4009,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "External host \u2192 `PAGE-OWNER-CONSENT` \u2192 registered host callback",
+      "endpoint_description": "External host → `PAGE-OWNER-CONSENT` → registered host callback",
       "trigger": "Valid private request; Allow or Deny.",
       "interactions": "External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL.",
       "from": [
@@ -4032,7 +4063,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -4055,7 +4086,7 @@
         "tooling",
         "go"
       ],
-      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** \u201cConnect Code Factory\u201d, **deny** \u201cCancel\u201d.",
+      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”.",
       "state_description": "Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages.",
       "interactions": "Allow or Deny consumes the request and redirects to its registered host callback. No credential field."
     },
@@ -4104,7 +4135,8 @@
         }
       ],
       "assertions": [
-        "LOCAL-KEY"
+        "LOCAL-KEY",
+        "LOCAL-KEY-DEADLINE"
       ],
       "gaps": [
         {
@@ -4113,7 +4145,7 @@
           "kind": "known-limitation",
           "severity": "P3",
           "owner": "specification-coordinator",
-          "reason": "`LOCAL-KEY` validates handler boundaries. Alternate transport remains disabled; no fresh real setup acceptance is claimed.",
+          "reason": "LOCAL-KEY and LOCAL-KEY-DEADLINE validate local handler, single-use and unknown-outcome boundaries. Browser execution and real alternate-transport setup remain unverified; this transport is disabled in the pilot.",
           "next_verification": "For W-LOCAL-TUNNEL-KEY: Recheck isolated local-form reachability, origin, expiry and single-submission boundaries; keep alternate-transport live acceptance open while that integration remains disabled in this pilot."
         }
       ],
@@ -4122,8 +4154,8 @@
         "go"
       ],
       "element_description": "**heading**, **restricted-key-help**, hidden-then-visible **key** password field, **save-and-start**, **status**.",
-      "state_description": "Alternate tunnel setup only. Form revealed after local reachability/session verification; expires and accepts a submission once.",
-      "interactions": "Clears the input on submit, displays result, removes form on success. This is distinct from both owner consent and the Jira token input."
+      "state_description": "Form revealed after local reachability/session verification; expires and accepts one submission. Saving, confirmed completion, rejected request and unknown-outcome locked state remain distinct.",
+      "interactions": "A successful private submission removes the form. An unknown save outcome locks the used submission and requires saved-state inspection or fresh setup authorization; the submitted key is never automatically replayed. Alternate transport remains disabled in the pilot."
     },
     {
       "id": "W-BROWSER-LAB",
@@ -4348,7 +4380,8 @@
         }
       ],
       "assertions": [
-        "LOCAL-KEY"
+        "LOCAL-KEY",
+        "LOCAL-KEY-DEADLINE"
       ],
       "gaps": [
         {
@@ -4357,7 +4390,7 @@
           "kind": "known-limitation",
           "severity": "P3",
           "owner": "specification-coordinator",
-          "reason": "`LOCAL-KEY` validates handler boundaries. Alternate transport remains disabled; no fresh real setup acceptance is claimed.",
+          "reason": "LOCAL-KEY and LOCAL-KEY-DEADLINE validate local handler, single-use and unknown-outcome boundaries. Browser execution and real alternate-transport setup remain unverified; this transport is disabled in the pilot.",
           "next_verification": "For C-TUNNEL-KEY: Recheck isolated local-form reachability, origin, expiry and single-submission boundaries; keep alternate-transport live acceptance open while that integration remains disabled in this pilot."
         }
       ],
@@ -4365,9 +4398,9 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` \u2192 alternate local transport session",
+      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` → alternate local transport session",
       "trigger": "Single-use private setup input.",
-      "interactions": "Submits and removes form on success; does not navigate into Settings or activate Jira.",
+      "interactions": "A successful private submission removes the form. An unknown save outcome locks the used submission and requires saved-state inspection or fresh setup authorization; the submitted key is never automatically replayed. Alternate transport remains disabled in the pilot.",
       "from": [
         "W-LOCAL-TUNNEL-KEY"
       ],
@@ -4401,7 +4434,8 @@
         }
       ],
       "assertions": [
-        "LOCAL-KEY"
+        "LOCAL-KEY",
+        "LOCAL-KEY-DEADLINE"
       ],
       "gaps": [
         {
@@ -4410,7 +4444,7 @@
           "kind": "known-limitation",
           "severity": "P3",
           "owner": "specification-coordinator",
-          "reason": "`LOCAL-KEY` validates handler boundaries. Alternate transport remains disabled; no fresh real setup acceptance is claimed.",
+          "reason": "LOCAL-KEY and LOCAL-KEY-DEADLINE validate local handler, single-use and unknown-outcome boundaries. Browser execution and real alternate-transport setup remain unverified; this transport is disabled in the pilot.",
           "next_verification": "For P-LOCAL-TUNNEL-KEY: Recheck isolated local-form reachability, origin, expiry and single-submission boundaries; keep alternate-transport live acceptance open while that integration remains disabled in this pilot."
         }
       ],
@@ -4419,7 +4453,8 @@
         "go"
       ],
       "composition": "`W-LOCAL-TUNNEL-KEY`",
-      "context": "One local alternate-tunnel setup session. Disabled/unused in the current selected pilot transport."
+      "context": "One local alternate-tunnel setup session. Disabled/unused in the current selected pilot transport.",
+      "interactions": "A successful private submission removes the form. An unknown save outcome locks the used submission and requires saved-state inspection or fresh setup authorization; the submitted key is never automatically replayed. Alternate transport remains disabled in the pilot."
     },
     {
       "id": "P-CONNECTION-GUIDE",
@@ -4478,7 +4513,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -4776,7 +4811,7 @@
       "id": "WRAP-AXE",
       "path": "web/tests/wrapper.spec.ts",
       "anchor": "wrapper keyboard navigation and contrast pass fixture accessibility",
-      "assertion": "At 390\u00d7844, explicit light and dark inbox including linked row, Configuration and Conversation have no WCAG A/AA axe violations; keyboard Enter opens Configuration."
+      "assertion": "At 390×844, explicit light and dark inbox including linked row, Configuration and Conversation have no WCAG A/AA axe violations; keyboard Enter opens Configuration."
     },
     {
       "id": "WRAP-ASSEMBLED",
@@ -5389,6 +5424,72 @@
       "path": "internal/factory/review7_test.go",
       "anchor": "func TestDetailRefreshRetainsCachedFreshnessWithoutRepeatedImports(",
       "assertion": "After an actual CachedGitHub detail load, controlled passes at 31 seconds, one minute, just before the provider detail TTL and twice after the service freshness deadline preserve the UI version and one underlying fetch. An identical still-cached observation skips item import while event reconciliation remains available."
+    },
+    {
+      "id": "WRAP-OPERATION",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "accepted slow mutation polls one identity and recovers a lost polling response",
+      "assertion": "Five consecutive failed result reads exhaust the ordinary read budget without losing the accepted identity, busy Send or draft; explicitly gated completion creates one session without replay."
+    },
+    {
+      "id": "WRAP-OPERATION-ERROR",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "delayed operation error preserves the draft without repeating the action",
+      "assertion": "An asynchronously failed action displays its error, preserves the draft and is never resubmitted."
+    },
+    {
+      "id": "GO-OPERATION-ONCE",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestOperationsRetainExactResultWithoutRepeatingMutation(",
+      "assertion": "Request disconnect and repeated pending/completed polls retain the exact result and execute the accepted mutation once."
+    },
+    {
+      "id": "GO-OPERATION-BOUNDS",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestOperationsBoundCapacityExpiryCancellationAndErrors(",
+      "assertion": "Capacity rejects before execution; expiry frees slots; pre-cancelled requests start no work; delayed errors/panics stay errors; shutdown cancels accepted work and restart cannot invent success."
+    },
+    {
+      "id": "GO-NATIVE-WRITE-CANCEL",
+      "path": "internal/codex/client_write_test.go",
+      "anchor": "func TestBlockedNativeWriteHonorsDeadlineAndPreservesUncertainDelivery(",
+      "assertion": "A real full stdin pipe stops on the call deadline, reports uncertain delivery, disconnects its partial stream and removes the pending response."
+    },
+    {
+      "id": "GO-NATIVE-WRITE-QUEUED",
+      "path": "internal/codex/client_write_test.go",
+      "anchor": "func TestQueuedNativeWriterCancelsWithoutWritingOrDisconnectingActiveWriter(",
+      "assertion": "Cancelling a queued writer does not disconnect the active write or emit queued mutation bytes; later active cancellation closes the partial stream."
+    },
+    {
+      "id": "LOCAL-KEY-DEADLINE",
+      "path": "internal/setup/onboarding_test.go",
+      "anchor": "func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(",
+      "assertion": "A stalled credential save returns explicit503 uncertainty within100ms, accepts its private input once, retains cancellation and never emits late success."
+    },
+    {
+      "id": "WRAP-OPERATION-HTTP503",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "accepted mutation retains its identity through HTTP503 poll outages",
+      "assertion": "Five503 result-read failures preserve the accepted identity, busy state and draft, then complete one original mutation."
+    },
+    {
+      "id": "WRAP-MUTATION-HTTP503",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "HTTP503 after mutation delivery preserves the draft without replay",
+      "assertion": "An original mutation503 preserves its draft, exposes inspect-state uncertainty and sends the mutation once."
+    },
+    {
+      "id": "WRAP-RESULT-LIMIT",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "oversized accepted result ends polling with draft retained and no replay",
+      "assertion": "A terminal response-size rejection ends accepted-result polling with draft retained and one mutation; it cannot loop as a transient503."
+    },
+    {
+      "id": "WRAP-OPERATION-BUSINESS503",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "accepted operation reports terminal provider HTTP503 without polling again",
+      "assertion": "Structured terminal provider HTTP503 remains a business failure: accepted action stops at its third exact-ID poll, displays the original error, retains draft, releases busy state and creates one mutation."
     }
   ],
   "source_map": [
@@ -6008,7 +6109,7 @@
           ],
           "headers": [
             "ID",
-            "From \u2192 to",
+            "From → to",
             "Trigger and carried context",
             "Result/type"
           ]

@@ -13,6 +13,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -26,6 +27,7 @@ import (
 )
 
 type Subscription struct {
+	Generation  string            `json:"generation,omitempty"`
 	VerifiedAt  time.Time         `json:"verifiedAt"`
 	DeliveredAt time.Time         `json:"deliveredAt"`
 	ID          string            `json:"id"`
@@ -57,11 +59,51 @@ type Service struct {
 	Vault    *store.Vault
 	Client   *http.Client
 	mu       sync.Mutex
+	tickMu   sync.Mutex
 	verified map[string]time.Time
+	pending  map[string]verification
+	next     uint64
+	proofs   chan struct{}
+}
+
+type verification struct {
+	token  uint64
+	cancel context.CancelFunc
+}
+
+type requestContextKey struct{}
+
+// WithRequestContext preserves the originating HTTP cancellation through the
+// SDK's detached RPC context. Only synchronous subscription mutations use it.
+func WithRequestContext(ctx context.Context) context.Context {
+	return context.WithValue(ctx, requestContextKey{}, ctx)
+}
+
+type eventRequestContext struct {
+	context.Context
+	values context.Context
+}
+
+func (c eventRequestContext) Value(key any) any { return c.values.Value(key) }
+
+func requestContext(ctx context.Context) (context.Context, func()) {
+	origin, ok := ctx.Value(requestContextKey{}).(context.Context)
+	if !ok {
+		return ctx, func() {}
+	}
+	// Derive from the HTTP context so cancellation reaches storage synchronously.
+	// The overlay retains request/session values added by the SDK, and its own
+	// cancellation still stops the synchronous mutation as well.
+	bounded, cancel := context.WithCancel(origin)
+	stop := context.AfterFunc(ctx, cancel)
+	if ctx.Err() != nil {
+		cancel()
+	}
+	return eventRequestContext{Context: bounded, values: ctx}, func() { stop(); cancel() }
 }
 
 func New(s *store.Store, v *store.Vault) *Service {
-	return &Service{Store: s, Vault: v, Client: SafeClient(), verified: map[string]time.Time{}}
+	return &Service{Store: s, Vault: v, Client: SafeClient(), verified: map[string]time.Time{}, pending: map[string]verification{}, proofs: make(chan struct{}, 32)}
 }
 
 var denied = []string{"0.0.0.0/8", "100.64.0.0/10", "192.0.0.0/24", "192.0.2.0/24", "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "240.0.0.0/4", "2001:db8::/32", "2001::/23", "64:ff9b::/96", "64:ff9b:1::/48", "2002::/16"}
@@ -156,7 +198,7 @@ func validate(in SubscribeInput) error {
 	}
 	return ValidateURL(in.Delivery.URL)
 }
-func (s *Service) post(ctx context.Context, sub Subscription, secret, id string, body []byte) (*http.Response, error) {
+func (s *Service) post(ctx context.Context, sub Subscription, secret, previous, id string, body []byte) (*http.Response, error) {
 	if len(body) > 256<<10 {
 		return nil, fmt.Errorf("event too large")
 	}
@@ -168,13 +210,10 @@ func (s *Service) post(ctx context.Context, sub Subscription, secret, id string,
 	if e != nil {
 		return nil, e
 	}
-	if time.Now().Before(sub.RotateUntil) {
-		old, e := s.Vault.Get(ctx, sub.ID+":previous")
+	if previous != "" {
+		extra, e := Sign(previous, id, ts, body)
 		if e == nil {
-			extra, e := Sign(old, id, ts, body)
-			if e == nil {
-				sig += " " + extra
-			}
+			sig += " " + extra
 		}
 	}
 	req, e := http.NewRequestWithContext(ctx, "POST", sub.URL, bytes.NewReader(body))
@@ -189,8 +228,8 @@ func (s *Service) post(ctx context.Context, sub Subscription, secret, id string,
 	return s.Client.Do(req)
 }
 func (s *Service) Subscribe(ctx context.Context, in SubscribeInput) (map[string]any, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	ctx, cancelRequest := requestContext(ctx)
+	defer cancelRequest()
 	if in.Arguments == nil {
 		in.Arguments = map[string]string{}
 	}
@@ -212,33 +251,78 @@ func (s *Service) Subscribe(ctx context.Context, in SubscribeInput) (map[string]
 			ttl = time.Minute
 		}
 	}
-	sub := Subscription{ID: identity(in), Name: in.Name, Arguments: in.Arguments, URL: in.Delivery.URL, Expires: time.Now().UTC().Add(ttl), Cursor: s.Store.Latest(ctx)}
-	var old Subscription
-	if e := s.Store.Get(ctx, "subscription", sub.ID, &old); e == nil {
-		sub.Cursor = old.Cursor
-		sub.DeliveredAt = old.DeliveredAt
-	}
+	sub := Subscription{ID: identity(in), Name: in.Name, Arguments: in.Arguments, URL: in.Delivery.URL, Cursor: s.Store.Latest(ctx)}
 	cacheHash := sha256.Sum256([]byte(in.Delivery.URL + "\n" + in.Delivery.Secret))
 	cacheKey := hex.EncodeToString(cacheHash[:])
-	if time.Now().After(s.verified[cacheKey]) {
-		challengeBytes := make([]byte, 32)
-		if _, e := rand.Read(challengeBytes); e != nil {
+	proofCtx, cancel := context.WithCancel(ctx)
+	s.mu.Lock()
+	if proofCtx.Err() != nil {
+		s.mu.Unlock()
+		cancel()
+		return nil, &CallbackError{Reason: "connection_failed"}
+	}
+	if previous, ok := s.pending[sub.ID]; ok {
+		previous.cancel()
+	}
+	s.next++
+	token := s.next
+	s.pending[sub.ID] = verification{token: token, cancel: cancel}
+	cached := time.Now().Before(s.verified[cacheKey])
+	s.mu.Unlock()
+	defer func() {
+		cancel()
+		s.mu.Lock()
+		if s.pending[sub.ID].token == token {
+			delete(s.pending, sub.ID)
+		}
+		s.mu.Unlock()
+	}()
+	if !cached {
+		if e := s.verify(proofCtx, sub, in.Delivery.Secret); e != nil {
 			return nil, e
 		}
-		challenge := hex.EncodeToString(challengeBytes)
-		body, _ := json.Marshal(map[string]string{"type": "verification", "challenge": challenge})
-		res, e := s.post(ctx, sub, in.Delivery.Secret, "verify_"+challenge, body)
-		if e != nil {
-			return nil, &CallbackError{Reason: "connection_failed"}
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if proofCtx.Err() != nil || s.pending[sub.ID].token != token {
+		return nil, &CallbackError{Reason: "connection_failed"}
+	}
+	generation := make([]byte, 16)
+	if _, e := rand.Read(generation); e != nil {
+		return nil, e
+	}
+	sub.Generation = hex.EncodeToString(generation)
+	sub.VerifiedAt = time.Now().UTC()
+	sub.Expires = sub.VerifiedAt.Add(ttl)
+	var old Subscription
+	if e := s.Store.Get(ctx, "subscription", sub.ID, &old); e == nil {
+		// Proof may take time: retain progress committed while it was in flight.
+		sub.Cursor, sub.DeliveredAt = old.Cursor, old.DeliveredAt
+		sub.Attempts, sub.RetryAt, sub.Error = old.Attempts, old.RetryAt, old.Error
+		sub.RotateUntil = old.RotateUntil
+	} else if !errors.Is(e, store.ErrNotFound) {
+		return nil, e
+	}
+	previous, e := s.Vault.Get(ctx, sub.ID)
+	if e != nil && !errors.Is(e, store.ErrNotFound) {
+		return nil, e
+	}
+	if e = s.Store.Write(ctx, func(tx *store.Tx) error {
+		if previous != "" && previous != in.Delivery.Secret {
+			if e := s.Vault.SetTx(tx, sub.ID+":previous", previous); e != nil {
+				return e
+			}
+			sub.RotateUntil = time.Now().Add(5 * time.Minute)
 		}
-		defer res.Body.Close()
-		var got struct{ Challenge string }
-		if res.StatusCode < 200 || res.StatusCode >= 300 || json.NewDecoder(io.LimitReader(res.Body, 4096)).Decode(&got) != nil || subtle.ConstantTimeCompare([]byte(got.Challenge), []byte(challenge)) != 1 {
-			return nil, &CallbackError{Reason: "challenge_failed"}
+		if e := s.Vault.SetTx(tx, sub.ID, in.Delivery.Secret); e != nil {
+			return e
 		}
-		if s.verified == nil {
-			s.verified = map[string]time.Time{}
-		}
+		return tx.Put("subscription", sub.ID, sub)
+	}); e != nil {
+		return nil, e
+	}
+	if !cached {
 		for k, until := range s.verified {
 			if time.Now().After(until) {
 				delete(s.verified, k)
@@ -252,33 +336,75 @@ func (s *Service) Subscribe(ctx context.Context, in SubscribeInput) (map[string]
 		}
 		s.verified[cacheKey] = time.Now().Add(10 * time.Minute)
 	}
-
-	sub.VerifiedAt = time.Now().UTC()
-	if previous, e := s.Vault.Get(ctx, sub.ID); e == nil && previous != in.Delivery.Secret {
-		if e = s.Vault.Set(ctx, sub.ID+":previous", previous); e != nil {
-			return nil, e
-		}
-		sub.RotateUntil = time.Now().Add(5 * time.Minute)
-	}
-	if e := s.Vault.Set(ctx, sub.ID, in.Delivery.Secret); e != nil {
-		return nil, e
-	}
-	if e := s.Store.Put(ctx, "subscription", sub.ID, sub, ""); e != nil {
-		return nil, e
-	}
 	return map[string]any{"id": sub.ID, "refreshBefore": sub.Expires, "cursor": nil, "truncated": false}, nil
 }
+
+// The result has no side effects. Even a transport or body reader that ignores
+// cancellation cannot activate a subscription after the caller has timed out.
+func (s *Service) verify(ctx context.Context, sub Subscription, secret string) error {
+	select {
+	case s.proofs <- struct{}{}:
+	default:
+		return &CallbackError{Reason: "connection_failed"}
+	}
+	ctx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
+	defer cancel()
+	result := make(chan error, 1)
+	go func() {
+		defer func() { <-s.proofs }()
+		challengeBytes := make([]byte, 32)
+		if _, e := rand.Read(challengeBytes); e != nil {
+			result <- e
+			return
+		}
+		challenge := hex.EncodeToString(challengeBytes)
+		body, _ := json.Marshal(map[string]string{"type": "verification", "challenge": challenge})
+		res, e := s.post(ctx, sub, secret, "", "verify_"+challenge, body)
+		if e != nil {
+			result <- &CallbackError{Reason: "connection_failed"}
+			return
+		}
+		defer res.Body.Close()
+		var got struct{ Challenge string }
+		if res.StatusCode < 200 || res.StatusCode >= 300 || json.NewDecoder(io.LimitReader(res.Body, 4096)).Decode(&got) != nil || subtle.ConstantTimeCompare([]byte(got.Challenge), []byte(challenge)) != 1 {
+			result <- &CallbackError{Reason: "challenge_failed"}
+			return
+		}
+		result <- nil
+	}()
+	select {
+	case <-ctx.Done():
+		return &CallbackError{Reason: "connection_failed"}
+	case e := <-result:
+		if ctx.Err() != nil {
+			return &CallbackError{Reason: "connection_failed"}
+		}
+		return e
+	}
+}
+
 func (s *Service) Unsubscribe(ctx context.Context, in SubscribeInput) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	ctx, cancelRequest := requestContext(ctx)
+	defer cancelRequest()
 	if in.Arguments == nil {
 		in.Arguments = map[string]string{}
 	}
 	if e := validate(in); e != nil {
 		return e
 	}
-	return s.Store.Write(ctx, func(t *store.Tx) error { return t.Delete("subscription", identity(in)) })
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if e := ctx.Err(); e != nil {
+		return e
+	}
+	id := identity(in)
+	if pending, ok := s.pending[id]; ok {
+		pending.cancel()
+		delete(s.pending, id)
+	}
+	return s.Store.Write(ctx, func(t *store.Tx) error { return t.Delete("subscription", id) })
 }
+
 func Definitions() []map[string]any {
 	out := []map[string]any{}
 	for _, v := range []struct{ name, desc string }{{"inbox.changed", "An issue or PR changed in the local inbox."}, {"attention.required", "An agent needs an answer or approval."}, {"session.changed", "A retained conversation changed execution, reported status or queued event count."}} {
@@ -287,8 +413,10 @@ func Definitions() []map[string]any {
 	return out
 }
 func (s *Service) Tick(ctx context.Context) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	// Delivery serialization belongs only to background work. Foreground methods
+	// never wait on a callback request or its response body.
+	s.tickMu.Lock()
+	defer s.tickMu.Unlock()
 	subs, e := store.List[Subscription](ctx, s.Store, "subscription")
 	if e != nil {
 		return e
@@ -305,20 +433,33 @@ func (s *Service) Tick(ctx context.Context) error {
 		if e != nil {
 			return e
 		}
+		cursorPending := false
 		for _, ev := range evs {
+			retry := false
 			name := ev.Kind
 			if name == "item.changed" || name == "pr.changed" {
 				name = "inbox.changed"
 			}
 			match := name == sub.Name && (sub.Arguments["entity"] == "" || sub.Arguments["entity"] == ev.Entity) && config.Notifications
+			if !match {
+				sub.Cursor = ev.Seq
+				sub.Attempts = 0
+				sub.RetryAt = time.Time{}
+				cursorPending = true
+				continue
+			}
 			if match {
-				secret, e := s.Vault.Get(ctx, sub.ID)
+				secret, previous, current, e := s.deliverySnapshot(ctx, sub)
 				if e != nil {
 					return e
 				}
+				if !current {
+					cursorPending = false
+					break
+				}
 				id := fmt.Sprintf("evt_%d_%s", ev.Seq, sub.ID)
 				body, _ := json.Marshal(map[string]any{"eventId": id, "name": name, "timestamp": ev.At, "data": map[string]string{"entity": ev.Entity, "kind": ev.Kind}, "cursor": nil})
-				res, err := s.post(ctx, sub, secret, id, body)
+				res, err := s.post(ctx, sub, secret, previous, id, body)
 				status := 0
 				if res != nil {
 					status = res.StatusCode
@@ -337,23 +478,84 @@ func (s *Service) Tick(ctx context.Context) error {
 					}
 					if (err != nil || status == 429 || status >= 500) && !sub.Disabled && sub.Attempts < 8 {
 						sub.RetryAt = time.Now().Add(time.Second * time.Duration(1<<sub.Attempts))
-						break
+						retry = true
 					}
 				}
 			}
-			sub.Cursor = ev.Seq
-			if sub.Disabled {
+			if !retry {
+				sub.Cursor = ev.Seq
+				if !sub.Disabled {
+					sub.Attempts = 0
+					sub.RetryAt = time.Time{}
+				}
+			}
+			saved, e := s.saveDelivery(ctx, sub)
+			cursorPending = false
+			if e != nil {
+				return e
+			}
+			if !saved || retry || sub.Disabled {
 				break
 			}
-			sub.Attempts = 0
-			sub.RetryAt = time.Time{}
 		}
-		if e := s.Store.Put(ctx, "subscription", sub.ID, sub, ""); e != nil {
-			return e
+		if cursorPending {
+			// Ignored events need no signing material or per-event transaction.
+			// The same generation check still guards their one page-level save.
+			if _, e := s.saveDelivery(ctx, sub); e != nil {
+				return e
+			}
 		}
 	}
 	return nil
 }
+
+// Snapshot signing material together with activation identity, before network I/O.
+func (s *Service) deliverySnapshot(ctx context.Context, sub Subscription) (string, string, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var current Subscription
+	if e := s.Store.Get(ctx, "subscription", sub.ID, &current); errors.Is(e, store.ErrNotFound) {
+		return "", "", false, nil
+	} else if e != nil {
+		return "", "", false, e
+	}
+	if current.Generation != sub.Generation {
+		return "", "", false, nil
+	}
+	secret, e := s.Vault.Get(ctx, sub.ID)
+	if e != nil {
+		return "", "", false, e
+	}
+	previous := ""
+	if time.Now().Before(sub.RotateUntil) {
+		previous, _ = s.Vault.Get(ctx, sub.ID+":previous")
+	}
+	return secret, previous, true, nil
+}
+
+func (s *Service) saveDelivery(ctx context.Context, sub Subscription) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	saved := false
+	e := s.Store.Write(ctx, func(tx *store.Tx) error {
+		var current Subscription
+		if e := tx.Get("subscription", sub.ID, &current); errors.Is(e, store.ErrNotFound) {
+			return nil
+		} else if e != nil {
+			return e
+		}
+		if current.Generation != sub.Generation {
+			return nil
+		}
+		if e := tx.Put("subscription", sub.ID, sub); e != nil {
+			return e
+		}
+		saved = true
+		return nil
+	})
+	return saved, e
+}
+
 func (s *Service) Loop(ctx context.Context) {
 	t := time.NewTicker(time.Second)
 	defer t.Stop()

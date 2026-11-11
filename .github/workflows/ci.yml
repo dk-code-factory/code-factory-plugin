@@ -73,6 +73,20 @@ jobs:
           path: web/performance-results/
           if-no-files-found: warn
           retention-days: 30
+      - name: Store API latency measurements
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: api-latency
+          path: |
+            verification-results/api-latency.json
+            verification-results/gateway-latency.json
+            verification-results/event-api-latency.json
+            verification-results/onboarding-latency.json
+            verification-results/webhook-latency.json
+            verification-results/http-boundary-latency.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Store verification phase timings
         if: ${{ always() && env.CODE_FACTORY_TIMING_FILE != '' }}
         continue-on-error: true

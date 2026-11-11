@@ -2,6 +2,7 @@ package factory
 
 import (
 	"codefactory/internal/domain"
+	"codefactory/internal/httpbudget"
 	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
@@ -35,7 +36,7 @@ type delivery struct {
 // Webhook validates GitHub's HMAC over the exact bytes, then persists the
 // delivery before acknowledgement. Processing is restartable and transactional.
 func (s *Service) Webhook(secret func(context.Context) (string, error)) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return httpbudget.WrapContext(s.ctx, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			http.Error(w, "POST required", 405)
 			return
@@ -84,7 +85,7 @@ func (s *Service) Webhook(secret func(context.Context) (string, error)) http.Han
 			return
 		}
 		w.WriteHeader(http.StatusAccepted)
-	})
+	}))
 }
 func event(item domain.Item, kind, action, facet string, value any) Event {
 	// Keep one current full PR context in the batch. Each event carries its

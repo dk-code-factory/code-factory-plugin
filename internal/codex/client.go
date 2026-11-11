@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -33,9 +34,9 @@ func (e *RPCError) Error() string { return fmt.Sprintf("Codex RPC %d: %s", e.Cod
 
 type Client struct {
 	cmd        *exec.Cmd
-	stdin      io.WriteCloser
+	stdin      *os.File
 	mu         sync.Mutex
-	writeMu    sync.Mutex
+	writeGate  chan struct{}
 	seq        int
 	pending    map[string]chan Message
 	done       chan struct{}
@@ -151,7 +152,7 @@ func Start(ctx context.Context, binary string, extra []string, onMessage func(Me
 	if e = cmd.Start(); e != nil {
 		return nil, fmt.Errorf("could not start Codex app-server")
 	}
-	c := &Client{cmd: cmd, stdin: in, pending: map[string]chan Message{}, done: make(chan struct{}), exited: make(chan struct{}), OnMessage: onMessage, wake: make(chan struct{}, 1)}
+	c := &Client{cmd: cmd, stdin: in.(*os.File), writeGate: make(chan struct{}, 1), pending: map[string]chan Message{}, done: make(chan struct{}), exited: make(chan struct{}), OnMessage: onMessage, wake: make(chan struct{}, 1)}
 	go c.read(out)
 	go c.dispatch()
 
@@ -235,16 +236,55 @@ func (c *Client) dispatch() {
 		<-c.wake
 	}
 }
-func (c *Client) send(v any) error {
-	c.writeMu.Lock()
-	defer c.writeMu.Unlock()
+
+// Every native write, including admission and context-less answers, is bounded.
+const nativeWriteTimeout = 30 * time.Second
+
+func (c *Client) send(ctx context.Context, v any) error {
+	ctx, cancel := context.WithTimeout(ctx, nativeWriteTimeout)
+	defer cancel()
+	select {
+	case c.writeGate <- struct{}{}:
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-c.done:
+		return errors.New("Codex process disconnected")
+	}
+	defer func() { <-c.writeGate }()
+	// Admission can race cancellation/disconnect. Never write after either wins.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	select {
 	case <-c.done:
 		return errors.New("Codex process disconnected")
 	default:
 	}
-	return json.NewEncoder(c.stdin).Encode(v)
+	// StdinPipe is an os.Pipe: its write deadline interrupts a full pipe, unlike
+	// a context select reached only after Encode. Join the cancellation callback
+	// before clearing the deadline or allowing another writer into this stream.
+	interrupted := make(chan struct{})
+	stop := context.AfterFunc(ctx, func() {
+		_ = c.stdin.SetWriteDeadline(time.Now())
+		close(interrupted)
+	})
+	err := json.NewEncoder(c.stdin).Encode(v)
+	if !stop() {
+		<-interrupted
+	}
+	_ = c.stdin.SetWriteDeadline(time.Time{})
+	if err != nil {
+		// A partial JSON line cannot be followed safely by another request.
+		// Disconnect and preserve uncertain delivery instead of replaying it.
+		_ = c.Close()
+		if ctx.Err() != nil {
+			return fmt.Errorf("Codex write interrupted; delivery may be unknown; inspect saved state before retrying: %w", ctx.Err())
+		}
+		return errors.New("Codex write failed; delivery may be unknown; inspect saved state before retrying")
+	}
+	return nil
 }
+
 func (c *Client) Call(ctx context.Context, method string, params any, out any) error {
 	c.mu.Lock()
 	c.seq++
@@ -254,7 +294,7 @@ func (c *Client) Call(ctx context.Context, method string, params any, out any) e
 	c.pending[key] = ch
 	c.mu.Unlock()
 	defer func() { c.mu.Lock(); delete(c.pending, key); c.mu.Unlock() }()
-	if e := c.send(map[string]any{"id": id, "method": method, "params": params}); e != nil {
+	if e := c.send(ctx, map[string]any{"id": id, "method": method, "params": params}); e != nil {
 		return e
 	}
 	select {
@@ -276,17 +316,23 @@ func (c *Client) Initialize(ctx context.Context) error {
 	if e := c.Call(ctx, "initialize", map[string]any{"clientInfo": map[string]any{"name": "code_factory", "version": "0.1.0"}, "capabilities": map[string]any{"experimentalApi": true}}, nil); e != nil {
 		return e
 	}
-	return c.send(map[string]any{"method": "initialized"})
+	return c.send(ctx, map[string]any{"method": "initialized"})
 }
 func (c *Client) Reply(id json.RawMessage, result any) error {
-	return c.send(map[string]any{"id": id, "result": result})
+	return c.send(context.Background(), map[string]any{"id": id, "result": result})
 }
 func (c *Client) Reject(id json.RawMessage, message string) error {
-	return c.send(map[string]any{"id": id, "error": map[string]any{"code": -32601, "message": message}})
+	return c.send(context.Background(), map[string]any{"id": id, "error": map[string]any{"code": -32601, "message": message}})
 }
 func (c *Client) Close() error {
 	var e error
-	c.once.Do(func() { close(c.done); e = syscall.Kill(-c.cmd.Process.Pid, syscall.SIGKILL) })
+	c.once.Do(func() {
+		close(c.done)
+		_ = c.stdin.Close()
+		if c.cmd != nil && c.cmd.Process != nil {
+			e = syscall.Kill(-c.cmd.Process.Pid, syscall.SIGKILL)
+		}
+	})
 	return e
 }
 

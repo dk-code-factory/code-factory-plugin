@@ -22,7 +22,7 @@ Invalid packages or occupied ports fail without replacing a healthy installation
 
 The first legacy-to-wrapper cutover preserves the legacy database without importing it. Recovery restores the prior absence of wrapper state before starting the previous binary. Explicit rollback archives newly created wrapper state before restoring that absence. A missing recorded database snapshot fails before stopping services.
 
-The owner can inspect private rotating diagnostics for incoming MCP and owner API calls, with UTC start time, API name, bounded safe parameters, transport status and server processing duration. The duration does not measure client latency or background agent completion. Logs survive restart, rotate within fixed bounds and never broaden request authority. Rejected calls are recorded; unsafe paths and write failures produce a generic warning while preserving API behavior. Existing earlier calls are not reconstructed.
+The owner can inspect private rotating diagnostics for incoming MCP and owner API calls, with UTC start time, API name, bounded safe parameters, transport status and server processing duration. The duration does not measure client latency or background agent completion. Completed responses need not wait for diagnostic storage. Records retain the committed transport status when available; an uncommitted panic records an explicit unknown transport status separately from its handler failure. Records can arrive after the response or out of request order. Logs survive restart, rotate within fixed bounds and never broaden request authority. Calls rejected before work starts are recorded without reading their bodies. If rejection diagnostics saturate, marked aggregate records retain exact rejection counts and UTC time intervals; individual API identities and parameters for that overflow are unavailable. Unsafe paths and write failures produce a generic warning while preserving API behavior. Existing earlier calls are not reconstructed.
 
 ## Scenarios
 
@@ -53,7 +53,7 @@ flowchart TD
     N8["Authenticate owner and inspect or update identified managed dependencies #40;S5#41;"]
     N9(["Observe verified per-dependency outcomes#59; retain backups and existing authentication"])
     N10(["Reject busy, invalid or incompatible changes#59; retain state and inspect uncertain outcomes"])
-    N11["Record API name, safe parameters, transport status and server processing time #40;S4#41;"]
+    N11["Record safe request diagnostics or explicit coalesced rejection counts #40;S4#41;"]
     N12(["Retain private bounded logs with secret values redacted"])
     N13(["Warn once if logging is unavailable#59; preserve the API result without replay"])
     N14(["Retain running services and report unavailable recorded snapshot"])
@@ -111,6 +111,8 @@ flowchart TD
 - [internal/transport/api_log_parameters.go](../../internal/transport/api_log_parameters.go) — Redact credentials, answer/free-text payloads and metadata; mask URL userinfo/query/fragment and bound remaining parameters before persistence. (`func privateAPIParameter(`)
 - [scripts/smoke.py](../../scripts/smoke.py) — Compiled fresh-state session daemon smoke checks.
 - [internal/factory/configuration.go](../../internal/factory/configuration.go) — Explicit confirmed app/native configuration at safe boundaries. (`func (s *Service) Confirm(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — A bounded diagnostic lane retains ordinary admission rejections or explicit coalesced overflow counts without starting business work or reading private requests. (`func AuditRejections(`)
 
 ## Test references
 
@@ -147,6 +149,16 @@ flowchart TD
 - [internal/factory/service_test.go](../../internal/factory/service_test.go) — `func TestConfigurationConfirmationStalenessAndSafeBoundary(`; S5. Explicit confirmation rejects stale app proposals and waits until active turns finish.
 - [internal/setup/gateway_profile_backup_test.go](../../internal/setup/gateway_profile_backup_test.go) — `func TestLegacyCutoverRestoresDatabaseAbsenceDuringRecoveryAndRollback(`; S1, S2. An actual failed install from legacy-only state records wrapper-database absence, removes partial new state, restores the old release/profile and preserves legacy database/credentials. Explicit rollback from that persisted record archives new wrapper data, removes wrapper files and clears the consumed absence marker.
 - [internal/setup/gateway_profile_backup_test.go](../../internal/setup/gateway_profile_backup_test.go) — `func TestRollbackMissingDatabaseSnapshotFailsBeforeStoppingServices(`; S2. A missing recorded database snapshot reports its specific error before any systemctl invocation.
+- [internal/setup/diagnostics_operations_test.go](../../internal/setup/diagnostics_operations_test.go) — `func TestFetchDiagnosticsPollsAcceptedOperationAndPreservesFailure(`; S4. Doctor retrieves an accepted diagnostics result using its exact operation identity; delayed failures remain failures and diagnostics is submitted once.
+- [internal/transport/response_budget_test.go](../../internal/transport/response_budget_test.go) — `func TestAPILogSlowSinkPreservesSuccessAndLateBusinessLogs503(`; S4. Delayed diagnostic sink does not delay completed200; late business work records actual503 rather than discarded success.
+- [internal/transport/response_budget_test.go](../../internal/transport/response_budget_test.go) — `func TestAPILogVaultPoolDelayDoesNotBlockFinishedResponse(`; S4. An exhausted vault read pool cannot delay an already completed successful response; diagnostics later record actual status.
+- [internal/transport/response_budget_test.go](../../internal/transport/response_budget_test.go) — `func TestAPILogUncommittedPanicAndSlowSinkNeverInventWire500(`; S4. Uncommitted panic records preserve handler500 separately and actual503 when known, otherwise explicit unknown wire status0.
+- [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestGatewayAuditKeepsActualWireStatusWithSlowSink(`; S4. Production gateway audit sink cannot delay completed success and records actual wire200/503.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestCapacityRejectionAuditBoundsOverflowAndDrainsActualWorker(`; S4. A blocked diagnostic sink retains one in-flight record,32 queued records and one exact-count overflow aggregate; rejected handlers never run, nested boundaries audit once and service cancellation/drain track actual sink exit.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestCoalescedRejectionIntervalSurvivesOutOfOrderEnqueue(`; S4. Aggregate UTC interval uses actual earliest and latest request starts despite opposite lock-acquisition order.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestRejectionAuditIncludesCanceledBeforeAdmission(`; S4. A request rejected for canceled service lifetime records request-not-started without running business work.
+- [internal/transport/api_log_test.go](../../internal/transport/api_log_test.go) — `func TestAPILogCapacityRejectionsReachDaemonAndExportedBoundary(`; S4. Real daemon mux and exported handlers record each ordinary capacity rejection exactly once with truthful503 status, safe unread metadata and no private query/body/unknown-route values.
+- [internal/gateway/audit_test.go](../../internal/gateway/audit_test.go) — `func TestCapacityRejectionsReachProductionGatewayAuditOnce(`; S4. Nested production public/private gateway boundaries emit one sanitized503 request-not-started audit per rejected call with fixed route labels.
 
 ## Verification and gaps
 
