@@ -25,7 +25,7 @@ Working, Issues, My PRs, Review PRs, Messages, Configuration and Events are navi
 | --- | --- | --- |
 | `PAGE-PACKAGE` | `P-PACKAGE-OVERVIEW`, `P-CONNECTION-GUIDE`. | Public, scoped application landing page. Downloads artifacts or guides the user into the external host. A package link is not an authenticated product session. |
 | `PAGE-OWNER-CONSENT` | `P-OWNER-CONSENT`. | Private owner-only consent surface for one active request. Allow/Deny returns to the registered host callback. Expired or invalid requests remain error responses, not access to the embedded inbox. |
-| `PAGE-LOCAL-TUNNEL-SETUP` | `P-LOCAL-TUNNEL-KEY`. | Temporary local alternate-transport setup session. Successful private key submission starts the configured alternate tunnel and removes the form. This transport is not currently enabled in the pilot. |
+| `PAGE-LOCAL-TUNNEL-SETUP` | `P-LOCAL-TUNNEL-KEY`. | A successful private submission removes the form. An unknown save outcome locks the used submission and requires saved-state inspection or fresh setup authorization; the submitted key is never automatically replayed. Alternate transport remains disabled in the pilot. |
 | `PAGE-BROWSER-LAB` | `P-BROWSER-LAB`. | Optional developer/operator utility with its own private session and isolated browser profile. Its screenshot/navigation controls are outside the product shell. |
 <!-- /specs:pages-2 -->
 

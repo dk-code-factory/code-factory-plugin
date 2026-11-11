@@ -10,6 +10,7 @@ import (
 	"codefactory/internal/testutil"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -67,6 +68,24 @@ func (f *trackingFixture) call(t *testing.T, name string, args map[string]any) (
 	return data, false
 }
 func trackingCall(client *http.Client, url, token, name string, args map[string]any) (map[string]any, int, time.Duration, error) {
+	started := time.Now()
+	result, n, elapsed, err := trackingRequest(client, url, token, name, args)
+	for err == nil {
+		fields, _ := result["structuredContent"].(map[string]any)
+		pending, _ := fields["operation"].(map[string]any)
+		if pending == nil {
+			return result, n, time.Since(started), nil
+		}
+		if time.Since(started) > 15*time.Second {
+			return nil, n, elapsed, fmt.Errorf("operation did not finish")
+		}
+		time.Sleep(10 * time.Millisecond)
+		result, n, elapsed, err = trackingRequest(client, url, token, "operation_result", map[string]any{"id": pending["id"]})
+	}
+	return result, n, elapsed, err
+}
+
+func trackingRequest(client *http.Client, url, token, name string, args map[string]any) (map[string]any, int, time.Duration, error) {
 	body, _ := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": map[string]any{"name": name, "arguments": args}})
 	req, _ := http.NewRequest("POST", url+"/mcp", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")

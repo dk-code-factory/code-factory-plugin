@@ -54,7 +54,7 @@ override export CODE_FACTORY_VERIFY_TMPDIR := $(value CODE_FACTORY_VERIFY_TMPDIR
 endif
 endif
 
-.PHONY: build test test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci npm-deps plugin-embed fake-provider hosted-prerequisites python-deps browser-deps hosted-verify hosted-verify-bootstrap verify-bootstrap test-installer smoke
+.PHONY: build test test-api-performance test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci npm-deps plugin-embed fake-provider hosted-prerequisites python-deps browser-deps hosted-verify hosted-verify-bootstrap verify-bootstrap test-installer smoke
 .PHONY: local-verification-prepare verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps verification-context
 .DEFAULT_GOAL := ui
 # Ordinary verification is deterministic even with inherited or command-line opt-ins.
@@ -64,7 +64,7 @@ FLOW_ARGS ?= --base $(if $(FLOW_BASE),$(FLOW_BASE),HEAD)
 # Share preparation only inside this Make graph. Independent invocations always
 # prepare current inputs, including changed tooling and missing outputs.
 # Serialize phases even when the caller supplies -j or inherited MAKEFLAGS.
-.NOTPARALLEL: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps hosted-prerequisites build test test-performance
+.NOTPARALLEL: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps hosted-prerequisites build test test-api-performance test-performance
 npm-deps:
 	cd web && python3 ../scripts/verification_timing.py command npm-install -- npm ci
 ui: npm-deps
@@ -94,7 +94,10 @@ test: ui plugin-embed fake-provider
 	python3 scripts/verification_timing.py command tooling-browser-benchmark -- python3 scripts/test_browser_benchmark.py
 	python3 scripts/verification_timing.py command tooling-user-flows -- python3 scripts/test_user_flows.py
 	python3 scripts/verification_timing.py command specification-tests -- python3 -m unittest discover -s scripts -p 'test_specs*.py'
-test-performance: ui plugin-embed fake-provider
+test-api-performance: ui plugin-embed fake-provider
+	python3 scripts/verification_timing.py command api-performance -- go test -p 1 -count=1 -run APILatency ./internal/transport ./internal/gateway ./internal/setup ./internal/factory ./internal/httpbudget -args -api-performance
+
+test-performance: test-api-performance ui plugin-embed fake-provider
 	cd web && python3 ../scripts/verification_timing.py command performance -- npm run test:performance
 package: build
 	python3 scripts/verification_timing.py command packaging -- python3 scripts/package.py

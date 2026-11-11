@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "af1a219d66e64eb241947c06982cecdf398a8fef",
-  "fingerprint": "c6d5b3f517c4585a2723e3e43b5a6a1119f79c2719e0da3de5c987438a6b82d5",
+  "base": "98581c5cef50f1480d965bc70a5791eb074f65d2",
+  "fingerprint": "22330793d96d55146446434c1612981d8c73ec800e15a82af78bb67fb8af38e0",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S4 retains kernel-assigned owned loopback listeners, strict explicit adjacent ports and fixture-only defaults. Browser startup preserves caller signal listeners and runner-only cancellation retains status through bounded owned-child/private-state cleanup. S3/S4 combined verification binds maintained browser configurations and the Python/Node/Go helpers selected by actual npm prefixes, including Python alias import resources. Product vocabulary, UI ownership and the historical adoption policy remain unchanged. The contributor failure-safety assertions now apply local deadlines to Node request/server waits and retain owned process groups through abnormal leader exit. Preserved Go compilation/daemon startup guards60s correctness/120s performance and separate60s correctness UI startup using owned UI process; performance needs noUI child.",
-    "implementation": "Reviewed both snapshots of the fixture runner/listener, maintained npm scripts, canonical helper resource discovery and Session monitoring. Vite middleware uses an owned HTTP/HMR listener without process-exit handlers. BROWSER_CONFIGS matches current maintained blobs. One helper-name inventory drives npm prefix selection and candidate watches; differing executable selections reject while lexical canonical aliases remain covered. Same-binary Python aliases compare actual import inventories and watch adjacent pyvenv.cfg selectors. The synthetic cancellation launcher retains authenticated lease sockets and the original process/group/status assertions. All helper and assertion anchors are mapped in the contributor catalog. Fixture mode now reads the installed Playwright test command option model through parseOptions/opts, so required option values and the positional boundary cannot masquerade as config switches. The Go listener regression supplies local HTTP and cleanup deadlines. Inspected all77lines of the test-only fixture_test_process.py supervisor: it starts a new session, keeps the original leader unreaped via waitid WNOWAIT, signals only that reserved process group before reaping, and adopts/reaps its test descendants. All runner subprocess regressions use its retained control pipe, including runner-only SIGTERM. The helper is an explicit tooling input. Direct listener tests bound create/listen/close and AbortSignal covers header and body consumption; teardown forces owned connections closed. Reviewed stopChildren shared escalation: first SIGINT/SIGTERM starts the same five-second retained-handle deadline used by finally; repeated signals cannot postpone it, the first status is preserved, and child admission rejects after interruption even during startup. Timer checks the owned ChildProcess Set, not scanned process identities. Reviewed optional raw leader-exit notification while WNOWAIT still reserves group identity: caller acknowledgment precedes protective group teardown, bounded nonblocking framing covers partial input, and missing ack/EOF/signals produce failure rather than successful cleanup evidence. Exact daemon/browser handles are observed before supervisor cleanup; full direct-child reaping remains a separate final assertion. Reviewed existing listener module CLI atomic origin/error publication, realpath main/import identity, private UI cache and signalclose. Runner retains the UI ChildProcess after shared Go compile+daemon readiness, observes UI exit/errors during browser work, and drains all owned children before state removal. Late test Vite construction is retained through memoized cleanup: eventual returned server closes and private cache is removed even after local creation deadline rejection; creation/close errors remain observed.",
-    "tests": "Read actual daemon allocation/collision and Node fixture/cancellation assertions: runner-only SIGTERM returns143, reaps a TERM-resistant owned child and removes private state; caller listeners remain intact. Read the maintained-config binding test and actual npm subprocess controls: twenty-four transient Python/Node/Go shadows invalidate zero-exit results, alternate PATH carriers reject, npm ci and canonical alias reuse remain positive controls. Actual same-binary Python alias tests distinguish changed import roots and restored pyvenv.cfg creation/removal. The original hosted-death and lease checks retain lock/private-state, rejection-of-contention and complete-drain assertions; the full61-test isolation and50-test CI-tooling suites passed. Settled-source complete118-test local-verification module passed. Declared fixture suites must verify all selected subjects before CLI receipts are written; these checks establish no real-host/provider acceptance. Three actual CLI reporter probes distinguish matching correctness fixtures by fetching the live Vite client and JSON daemon health when config-like text is consumed as another option value or after the positional boundary; all seven genuine performance config spellings remain positive controls. A stalled post-readiness Serve probe produces both HTTP deadline and bounded cleanup diagnostics without relying on the outer Go test timeout. All37 Node fixture tests and the current Go race testhost checks passed. Real accepted-but-stalled HTTP header and body probes assert abort locally; normal/SIGKILL leader-exit probes leave TERM-resistant pipe-holding descendants and assert their disappearance before completion while an unrelated supervised command stays alive. Before-fix probes reproduced pending fetch and surviving worker; retained-process cleanup safely removed those probe children. Final focused22Node tests and mocked1scenario smoke passed on d737143. These test-only probes use no agents, credentials or real-provider opt-ins. Controlled inherited-PATH Go launcher regression proves build is the only owned child, sends TERM to runner alone twice three seconds apart, and asserts status143, child absence and private-state removal within7.5seconds. Before source failed the bound; fixed4ebf1e0 passed about5.4seconds. Final23Node tests, Go race testhost and one assembled browser smoke passed; stock-Go resistance is not claimed. Inspected the corrected individual mapping: existing concurrent-Vite stable assertion now claims only distinct reachable allocations, while a separate occupied-port preservation assertion points to its exact existing EADDRINUSE/retained-server test and S4 scenario. Registry/generated correction adds no behavior or fabricated new coverage; focused23Node tests passed after the mapping-only change. Original cancellation assertion accepted a private omitted-drain runner in30.26seconds; improved assertion rejects same mutant at7.5second local bound (8.42seconds overall). Production runner restored byte-identically. Four protocol probes cover missing acknowledgment, EOF, supervisor TERM and incomplete line. Normal/abrupt leader probes observe the resistant descendant alive before release and gone after cleanup. Final27Node cases and assembled1browser smoke passed; no new production cancellation change was made. Controlled whole-runner negative probes reject lost Go60/120s bounds and original in-process UI stalled cache read before protective fallback; clocks are privately frozen/shortened rather than waiting real minute periods or stalling a network download. Actual delayed Vite metadata read proves eventual zero watchers/no cache. Browser cancellation observes retained UI/daemon/browser3handles, state and raw143 before CLEANUPack; import/flag/absentargv and symlinkCLI/realserve/close controls plus unexpectedUIexit verify new boundary. Final37Node,36correctnessbrowser andGo race passed on4100ac1. Fresh concurrent separate-worktree acceptance on4100ac1 passed36scenarios each, zero skip/unexpected/flaky,17.613seconds overlap andfourdistinct owned origins."
+    "description": "Required final verification now includes isolated API response measurements after heavy suites while keeping the existing glossary/UI/flow ownership, historical adoption and separate reconciliation/local-CI obligations.",
+    "implementation": "Make runs the strict100ms isolated API gate across five packages with -p1, transitive through test-performance without altering fixture-sensitive verify prerequisite lists. Hosted CI retains six outcome-specific API timing artifacts. Final reconciliation still uses CLI-written fingerprints and separate make ci; no agent/model credentials run in CI. Cycle2F5 synchronizes timing.PHASES API command identity with the actual five-package serial Make command; execution and recorded evidence retain exactly the same-p1scope.",
+    "tests": "Read VerificationGraphTests requiring one ordered API-performance invocation after heavy tooling and before UI performance/package. New package fixtures measure normal successful responses, accepted pending work, bounded rejection and first real SSE acknowledgement separately;100ms gate and fixture-only enforcement remain mandatory. Exact fake-command dispatch and the ordered once-only assertion both require -p 1 and all five API packages. The complete focused suites passed: 50 CI graph/entrypoint, 51 timing, 118 local-verification and 10 strict-gate tests. Read the full52-case timing fixture result and new test_api_phase_records_exact_make_command_and_serial_package_scope, which extracts actual Make argv, checks timing phase identity and asserts the successful emitted journal row. Static both CI fake-command literals also match; unchanged prerequisite lists remain intact."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.184
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 710.402
+      "seconds": 711.335
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 483.621
+      "seconds": 493.895
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.716
+      "seconds": 4.675
     },
     {
       "command": [
@@ -58,17 +58,17 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.68
+      "seconds": 60.611
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "d0358b43dfc3dba85f34918c97018b9a6666e27758982590598bb81cc85e5750",
-    "term:coverage-gap": "4bafb9375510799ac23aba7c46b5eda416e310e952790dbe80fd0df5741b0fec",
-    "term:entity": "9528a1915e07e386f54841ae0c50d0f35e13b5c7599cd5b2630a0bbf701a69f0",
-    "term:glossary": "d2dca10aa3c91bae50d6459352a250f72b7d945cbafef57c3dc88a6933964824",
-    "term:known-limitation": "f106e3d60ae96b179b22581df2cdef734a20fc4766606b342ac85e8247b55b45",
-    "term:reconciliation": "62f787a4ed90f3b285267e0643c165f3fc8e50e5f0e3b8d80342f9ec7b37b7a4",
-    "term:unverified-behavior": "10e009f66225b31cee1e007f9bfda2b3ec106452deb2eebab2b89db3986e0224",
-    "term:verification": "8e619a44fb7d1cf1915419eb731cf7ea0e18be4e176e0d062845168c920943b0"
+    "flow:maintain-flow-contracts": "32505e1830c4dcf7a4bc1b24447b831ca5befebd944dba39c8e8317790eee23c",
+    "term:coverage-gap": "53a5c851326375597d0d514ccc5296f3e1d1958d2d9dde413c1b7a867262ee23",
+    "term:entity": "4b75fba7c9702004b689ee70d96d39131b89dd543223374f6fb7fd3d24fed0f4",
+    "term:glossary": "691078ff55d4f0fdd2514fb7e011fbda3db2c5021da5b7ca27872adb1c9ad25d",
+    "term:known-limitation": "8d3c3d228e5d7e8725193328e2a5e16ed8d6c61e98f223a57f879293d4d9bd8d",
+    "term:reconciliation": "ef3c282b7501bc2563a92e60d41fa545dc2730d349ac223059ef200ebfe2dc25",
+    "term:unverified-behavior": "e0412baa54bbae048ce39be2c42209287e2762e85515f3e06918c54c675d663c",
+    "term:verification": "ddf4617cd13bc1184cca32e5604d30396bb7414bb70898d9bed8f6461231eddb"
   }
 }

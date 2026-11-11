@@ -2,7 +2,9 @@ import type { App } from "@modelcontextprotocol/ext-apps";
 
 class ConnectionError extends Error {
   constructor() {
-    super("Connection to Code Factory interrupted.");
+    super(
+      "Connection to Code Factory interrupted; request outcome may be unknown. Inspect saved state before retrying.",
+    );
     this.name = "ConnectionError";
   }
 }
@@ -20,6 +22,7 @@ function transientTransport(error: unknown): boolean {
     );
   if (isConnectionFailure(error)) return true;
   const message = error instanceof Error ? error.message : String(error);
+  if (/\boutcome_unknown\b|\bHTTP[\s:(]+503\b/i.test(message)) return true;
   return /connection failed|connection (?:closed|reset)|not connected|network (?:error|request failed)|failed to fetch|fetch failed|socket hang up|request timed out|transport closed/i.test(
     message,
   );
@@ -65,11 +68,12 @@ const retryableReads = new Set([
   "open_factory",
   "open_settings",
   "diagnostics",
+  "operation_result",
 ]);
-export async function call<T>(
+async function request<T>(
   name: string,
   args: Record<string, unknown> = {},
-): Promise<T> {
+): Promise<ToolResult<T>> {
   for (let attempt = 0; ; attempt++) {
     try {
       await connect();
@@ -85,10 +89,10 @@ export async function call<T>(
           result.content?.map((c) => ("text" in c ? c.text : "")).join("\n") ||
             "Operation failed",
         );
-      const value = result.structuredContent as { data: T } | undefined;
+      const value = result.structuredContent as ToolResult<T> | undefined;
       if (!value)
         throw new Error("The host returned no data. Reconnect Code Factory.");
-      return value.data;
+      return value;
     } catch (error) {
       if (!transientTransport(error)) throw error;
       if (!retryableReads.has(name) || attempt >= 2)
@@ -98,6 +102,35 @@ export async function call<T>(
       );
     }
   }
+}
+
+type ToolResult<T> = {
+  data?: T;
+  operation?: { id: string; tool: string; state: "running" };
+};
+
+export async function call<T>(
+  name: string,
+  args: Record<string, unknown> = {},
+): Promise<T> {
+  let result = await request<T>(name, args);
+  const accepted = result.operation;
+  while (accepted && result.operation) {
+    const id = accepted.id;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Only this read is retryable. In particular, losing its response must
+    // never resend the original message, approval or configuration change.
+    try {
+      result = await request<T>("operation_result", { id });
+    } catch (error) {
+      // An accepted action still owns this wait and its draft during an outage.
+      // Keep the known identity after a read's retry budget is exhausted.
+      if (!isConnectionFailure(error)) throw error;
+    }
+  }
+  if (!("data" in result))
+    throw new Error("The host returned no operation result.");
+  return result.data as T;
 }
 
 export async function openLink(url: string) {

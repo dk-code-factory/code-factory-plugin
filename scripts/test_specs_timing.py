@@ -88,6 +88,25 @@ class VerificationTimingTests(unittest.TestCase):
     def data(self, journal):
         return json.loads(journal.path.read_text())
 
+    def test_api_phase_records_exact_make_command_and_serial_package_scope(self):
+        makefile = MODULE_DIRECTORY.parent.joinpath('Makefile').read_text()
+        prefix = '\tpython3 scripts/verification_timing.py command api-performance -- '
+        commands = [line[len(prefix):] for line in makefile.splitlines()
+                    if line.startswith(prefix)]
+        self.assertEqual(len(commands), 1)
+        expected = ('go test -p 1 -count=1 -run APILatency ./internal/transport '
+                    './internal/gateway ./internal/setup ./internal/factory '
+                    './internal/httpbudget -args -api-performance')
+        self.assertEqual(commands[0], expected)
+        self.assertEqual(timing.PHASES['api-performance'], commands[0])
+        journal = self.journal()
+        journal.stop(journal.start('api-performance'), 0)
+        journal.finish('success')
+        phase = next(row for row in self.data(journal)['phases']
+                     if row['phase'] == 'api-performance')
+        self.assertEqual((phase['command'], phase['outcome'], phase['exit_code']),
+                         (commands[0], 'success', 0))
+
     def test_jobserver_selection_keeps_only_valid_advertised_pipe_descriptors(self):
         read, write = os.pipe()
         other_read, other_write = os.pipe()

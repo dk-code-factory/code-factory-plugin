@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"codefactory/internal/httpbudget"
 	"codefactory/internal/store"
 	"context"
 	"io"
@@ -93,5 +94,70 @@ func TestOnboardReusesSavedCredentialWithoutBrowser(t *testing.T) {
 	}
 	if e = Onboard(context.Background(), v, dir, false, false); e != nil {
 		t.Fatal("saved credential required another browser session", e)
+	}
+}
+
+func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(t *testing.T) {
+	var saves atomic.Int32
+	entered, release, exited := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	var releaseOnce sync.Once
+	releaseSave := func() { releaseOnce.Do(func() { close(release) }) }
+	defer func() {
+		releaseSave()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := httpbudget.Drain(ctx); err != nil {
+			t.Error("onboarding worker cleanup failed", err)
+		}
+	}()
+	f := &credentialForm{origin: "http://127.0.0.1:8787", nonce: "private-nonce", expires: time.Now().Add(time.Minute), done: make(chan error, 1), save: func(ctx context.Context, key string) error {
+		saves.Add(1)
+		close(entered)
+		defer close(exited)
+		<-release
+		return ctx.Err()
+	}}
+	f.ready.Store(true)
+	post := func() *httptest.ResponseRecorder {
+		r := httptest.NewRequest("POST", f.origin+"/credential", strings.NewReader("key=private-key"))
+		r.Header.Set("Origin", f.origin)
+		r.Header.Set("Authorization", "Bearer "+f.nonce)
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		w := httptest.NewRecorder()
+		f.ServeHTTP(w, r)
+		return w
+	}
+	started := time.Now()
+	w := post()
+	awaitOnboarding(t, entered, "credential save readiness")
+	if time.Since(started) > 100*time.Millisecond || w.Code != 503 || !strings.Contains(w.Body.String(), "outcome_unknown") || strings.Contains(w.Body.String(), "private-key") {
+		t.Fatal("save did not expose bounded uncertainty", w.Code, w.Body.String())
+	}
+	if post().Code != 409 || saves.Load() != 1 {
+		t.Fatal("uncertain credential was replayed")
+	}
+	time.Sleep(time.Until(started.Add(125 * time.Millisecond)))
+	releaseSave()
+	awaitOnboarding(t, exited, "credential save exit")
+	var result error
+	select {
+	case result = <-f.done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("credential form did not finish")
+	}
+	if err := result; err == nil {
+		t.Fatal("deadline cancellation lost")
+	}
+	if strings.Contains(w.Body.String(), "Credential saved") {
+		t.Fatal("late onboarding success escaped")
+	}
+}
+
+func awaitOnboarding(t *testing.T, signal <-chan struct{}, label string) {
+	t.Helper()
+	select {
+	case <-signal:
+	case <-time.After(2 * time.Second):
+		t.Fatal(label + " timed out")
 	}
 }

@@ -92,7 +92,7 @@ class ConnectionTest:
             payload = urllib.parse.urlencode(value).encode() if form else json.dumps(value).encode()
         return request(self.origin + path, method, payload, headers, self.public_ip)
 
-    def rpc(self, method, params, token):
+    def rpc_request(self, method, params, token):
         self.sequence += 1
         headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/json, text/event-stream', 'MCP-Protocol-Version': '2025-11-25', 'Mcp-Method': method}
         if params.get('name'):
@@ -102,6 +102,16 @@ class ConnectionTest:
         result = json.loads(body)
         self.require(not result.get('error'), 'MCP protocol rejected request')
         return result['result']
+
+    def rpc(self, method, params, token):
+        value = self.rpc_request(method, params, token)
+        deadline = time.monotonic() + 30
+        while method == 'tools/call' and value.get('structuredContent', {}).get('operation'):
+            operation = value['structuredContent']['operation']
+            self.require(time.monotonic() < deadline, 'Accepted operation did not finish')
+            time.sleep(.1)
+            value = self.rpc_request('tools/call', {'name': 'operation_result', 'arguments': {'id': operation['id']}}, token)
+        return value
 
     def probes(self):
         host = urllib.parse.urlsplit(self.origin).hostname

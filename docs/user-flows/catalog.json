@@ -378,6 +378,16 @@
         {
           "path": "internal/gateway/audit.go",
           "purpose": "Current install-connect implementation or fixture/build dependency."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func Wrap(",
+          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+        },
+        {
+          "path": "internal/setup/onboarding.go",
+          "anchor": "func (f *credentialForm) ServeHTTP(",
+          "purpose": "Single-use local authorization distinguishes successful save from deadline uncertainty and locks ambiguous submissions."
         }
       ],
       "tests": [
@@ -500,6 +510,62 @@
           "scenarios": [
             "S1"
           ]
+        },
+        {
+          "path": "internal/gateway/api_performance_test.go",
+          "anchor": "func TestGatewayAPILatency(",
+          "purpose": "Public mux registrations and generated artifact routes are the completeness oracle. Local wire samples cover GET/HEAD at root and configured prefix, RFC metadata aliases and accepted webhook proxying, plus existing OAuth/private consent fixtures, with each finite response or real stream acknowledgement within100ms. Status/body/metadata identity assertions distinguish success, accepted response and rejection; no public-network/real-host claim.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "internal/setup/onboarding_test.go",
+          "anchor": "func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "A stalled save returns503 uncertainty without credential echo, accepts one submission and never claims late success."
+        },
+        {
+          "path": "internal/setup/api_performance_test.go",
+          "anchor": "func TestOnboardingAPILatency(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Immediate successful page/readiness/save cases and125ms dependency rejection are timed as distinct outcomes; no installed-host claim."
+        },
+        {
+          "path": "internal/gateway/response_budget_test.go",
+          "anchor": "func TestGatewayFiniteResponseContentionAndDelayedProxy(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Every registered mutable OAuth/private-consent entry point and delayed finite proxy response rejects within100ms under a held authentication lock; partial body cannot escape."
+        },
+        {
+          "path": "internal/gateway/response_budget_test.go",
+          "anchor": "func TestGatewayDelayedRegistrationMappingRemainsFinite(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Landing and browser-package routes reject boundedly when registered-app filesystem input is delayed."
+        },
+        {
+          "path": "internal/gateway/response_budget_test.go",
+          "anchor": "func TestOAuthDeadlineDoesNotReplayConsumedRefresh(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "A completed but lost token exchange is reported unknown, and a consumed refresh cannot authorize another exchange."
+        },
+        {
+          "path": "internal/gateway/response_budget_test.go",
+          "anchor": "func TestGatewaySSERequiresFirstDataAndKeepsAcknowledgedStream(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Actual proxy acknowledges within100ms, forwards a second real data frame sent150ms later, remains live until body close and promptly cancels upstream after disconnect; delayed first acknowledgement still rejects despite header flush."
         }
       ],
       "suites": [
@@ -578,6 +644,11 @@
             "id": "n6",
             "label": "Host acceptance remains unverified",
             "terminal": true
+          },
+          {
+            "id": "uncertain_response",
+            "label": "Inspect saved state or obtain fresh owner authorization",
+            "scenario": "S2"
           }
         ],
         "edges": [
@@ -620,6 +691,16 @@
             "from": "n2",
             "to": "n6",
             "label": "local health alone"
+          },
+          {
+            "from": "n1",
+            "to": "uncertain_response",
+            "label": "response deadline or unknown outcome"
+          },
+          {
+            "from": "uncertain_response",
+            "to": "n1",
+            "label": "fresh authorization after inspection"
           }
         ]
       }
@@ -3434,7 +3515,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -3502,6 +3584,26 @@
           "path": "internal/store/snapshot.go",
           "anchor": "func (s *Store) UILatest(",
           "purpose": "Durable metadata-only UI change cursor supports unchanged state reads without transcript-driven rebuilding."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (o *operations) run(",
+          "purpose": "Acknowledge slow owner tools promptly and retain one execution/result identity with bounded capacity, lifetime and retention."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export async function call<T>(",
+          "purpose": "Retrieve the exact pending action result without replaying accepted work."
+        },
+        {
+          "path": "internal/codex/client.go",
+          "anchor": "func (c *Client) send(",
+          "purpose": "Apply caller cancellation to native write admission and full stdin pipes; a partial write disconnects and reports uncertain delivery."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func Wrap(",
+          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
         }
       ],
       "tests": [
@@ -3748,6 +3850,154 @@
           "scenarios": [
             "S1"
           ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationsRetainExactResultWithoutRepeatingMutation(",
+          "purpose": "A disconnected original request and repeated result reads execute one mutation and retain its exact completed result.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationsBoundCapacityExpiryCancellationAndErrors(",
+          "purpose": "Full capacity rejects before execution; expiry, cancellation, shutdown, restart and delayed errors preserve truthful outcomes.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/api_performance_test.go",
+          "anchor": "func TestUserFacingAPILatency(",
+          "purpose": "Runtime registered SDK/custom receiving-method keys and discovered tool catalog are completeness oracles. Every method, including incoming notifications, has a timed meaningful success, accepted notification, exact protocol rejection or real stream acknowledgement. Tool results retain successful, accepted-pending and exact-result polling coverage within100ms for normal and125ms provider fixtures with1000saved sources; background completion/network transit are separate.",
+          "scenarios": [
+            "S1",
+            "S5"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "accepted slow mutation polls one identity and recovers a lost polling response",
+          "purpose": "Five consecutive failed result reads exceed the ordinary retry budget while Send and the draft remain pending; explicit completion gate proves exact-identity recovery and one created session.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "delayed operation error preserves the draft without repeating the action",
+          "purpose": "Delayed failure displays the error and preserves the draft without replaying the action.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/codex/client_write_test.go",
+          "anchor": "func TestBlockedNativeWriteHonorsDeadlineAndPreservesUncertainDelivery(",
+          "purpose": "A real full stdin pipe stops on the call deadline, reports uncertain delivery, disconnects its partial stream and removes the pending response.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/codex/client_write_test.go",
+          "anchor": "func TestQueuedNativeWriterCancelsWithoutWritingOrDisconnectingActiveWriter(",
+          "purpose": "Cancelling a queued writer does not disconnect the active write or emit queued mutation bytes; later active cancellation closes the partial stream.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/response_budget_test.go",
+          "anchor": "func TestMCPActualSubscriptionListenHandshakeAndCancellation(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Real SDK subscription listen emits an actual acknowledged data event within100ms, survives125ms and exits on request cancellation."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestFiniteResponseDeadlineRetainsAdmissionAndDiscardsLateSuccess(",
+          "scenarios": [
+            "S1",
+            "S5"
+          ],
+          "purpose": "A timed-out handler keeps its worker slot, late private success is discarded and capacity rejection starts no second action."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestResponseBufferLimitAndCancellation(",
+          "scenarios": [
+            "S1",
+            "S5"
+          ],
+          "purpose": "Response limit is a terminal rejection and request/service cancellation suppresses late output."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestCompletedResponseKeepsWorkerThroughAuditAndReportsWireOutcome(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Completed202 identity remains available while audit is delayed and consumes admitted capacity through actual audit exit."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestEmptyOrPrimingSSEFlushDoesNotAcknowledgeDelayedStream(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Empty or comment-only flush cannot evade the finite handshake budget."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestSSEHandshakeRetainsStreamAndCancelsOnDisconnect(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Real acknowledged stream remains open beyond125ms, keeps admission and ends on disconnect."
+        },
+        {
+          "path": "internal/httpbudget/api_performance_test.go",
+          "anchor": "func TestHTTPBoundaryAPILatency(",
+          "scenarios": [
+            "S1",
+            "S5"
+          ],
+          "purpose": "Isolated100ms finite/capacity/8MiB response boundary samples distinguish success, accepted work and rejection."
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "accepted mutation retains its identity through HTTP503 poll outages",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Exact accepted identity and one original mutation survive five503 poll failures until explicit completion."
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "HTTP503 after mutation delivery preserves the draft without replay",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Original mutation503 preserves draft and prompts state inspection without replay."
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "oversized accepted result ends polling with draft retained and no replay",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Oversized final result is terminal; polling ends and draft remains with one mutation."
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "accepted operation reports terminal provider HTTP503 without polling again",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Terminal structured provider HTTP503 is reported once rather than mistaken for transient transport503; exact-ID polling ends, Send becomes enabled, draft survives and one original mutation exists."
         }
       ],
       "suites": [
@@ -3771,7 +4021,8 @@
         "S-FACTORY",
         "W-TRANSCRIPT",
         "W-WORK-STATUS",
-        "W-EVENT-BATCHES"
+        "W-EVENT-BATCHES",
+        "W-CONNECTION-BLOCKER"
       ],
       "terms": [
         "retained-session",
@@ -3814,6 +4065,11 @@
             "id": "done",
             "label": "Retain conversation and saved evidence",
             "terminal": true
+          },
+          {
+            "id": "pending_action",
+            "label": "Keep accepted action pending and retrieve its exact result without replay",
+            "scenario": "S5"
           }
         ],
         "edges": [
@@ -3861,6 +4117,26 @@
             "from": "s4",
             "to": "wait",
             "label": "missing authority, stale identity or unavailable dependency"
+          },
+          {
+            "from": "s1",
+            "to": "pending_action",
+            "label": "slow action accepted"
+          },
+          {
+            "from": "pending_action",
+            "to": "s2",
+            "label": "saved result retrieved"
+          },
+          {
+            "from": "pending_action",
+            "to": "wait",
+            "label": "terminal error, oversized result, expiry or restart requires inspection"
+          },
+          {
+            "from": "pending_action",
+            "to": "pending_action",
+            "label": "temporary result-read failure; keep the exact identity"
           }
         ]
       }
@@ -3908,6 +4184,16 @@
         {
           "path": "internal/testutil/fakecodex/main.go",
           "purpose": "Shared fake-provider verification input; changes require assertion reconciliation."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func Wrap(",
+          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "func (s *Server) Handler(",
+          "purpose": "Capture originating HTTP cancellation for custom event methods across SDK detached contexts; accepted tool lifetime and live stream behavior retain their separate ownership."
         }
       ],
       "tests": [
@@ -3943,6 +4229,106 @@
           "scenarios": [
             "S4"
           ]
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestVerificationDeadlineCoversUncooperativeHeadersAndBody(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "125ms noncooperative callback headers/body yield bounded failed proof and no late activation."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestPendingVerificationDoesNotBlockOrResurrect(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Unrelated subscribe/unsubscribe proceeds while proof is blocked; replaced or canceled verification cannot activate late."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestVerificationAdmissionRemainsBoundedUntilActualExit(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Proof admission remains capped until ignored-cancellation callback work actually exits."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestInFlightDeliveryCannotOverwriteReplacementOrResurrect(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Stale delivery200/503/410 responses cannot overwrite refreshed generation or resurrect a removed subscription."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestRefreshRetainsConcurrentProgressAndRotatedSignatures(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Refresh preserves concurrent acknowledged cursor/retry progress and deliveries carry current and previous signing keys; rotation expiry is not covered."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestConcurrentTicksSerializeDeliveryWithoutForegroundLock(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Tick delivery is serialized while foreground subscribe/unsubscribe remains available; concurrent ticks do not repeat an acknowledged callback."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestFailedRefreshKeepsActiveStateAndRetryProgress(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "A failed ownership refresh leaves the original active subscription, cursor and retry state intact."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestCanceledQueuedRequestCannotDisruptPendingVerification(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "A canceled queued management request cannot cancel or replace a newer pending verification."
+        },
+        {
+          "path": "internal/transport/api_performance_test.go",
+          "anchor": "func TestEventCallbackAPILatency(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Authenticates actual custom methods during125ms proof/delivery/store delay; separates successful management, callback rejection, deadline rejection and first subscription-stream acknowledgement."
+        },
+        {
+          "path": "internal/transport/api_performance_test.go",
+          "anchor": "func TestEventStoreAdmissionPreservesRequestCancellation(",
+          "scenarios": [
+            "S1",
+            "S2"
+          ],
+          "purpose": "Ordinary correctness fixture covers2025 and2026 actual custom subscribe/unsubscribe dispatch,75ms response deadline and direct caller cancellation during125ms Store.Write contention. Drain confirms no late activation or deletion and the original subscription survives."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestIgnoredEventPagesCommitOnceWithoutSigningMaterial(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "Actual SQLite triggers count one cursor commit for each100-event ignored page across unrelated, filtered and notifications-disabled events; nil vault forbids secret access, no callback is sent and empty re-ticks do not write."
+        },
+        {
+          "path": "internal/events/events_test.go",
+          "anchor": "func TestIgnoredPageCommitRejectsChangedGenerationAndDeletion(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "A held real store writer races an ignored-page commit with replacement or deletion; the generation guard preserves replacement state and cannot resurrect a removed subscription."
         }
       ],
       "suites": [
@@ -3956,8 +4342,8 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "user-flow-maintainer",
-          "reason": "Transport errors, HTTP 429, permanent unsuccessful responses, HTTP 410 disabling and retry exhaustion lack dedicated assertions; the existing retry fixture exercises HTTP 503 only. Notification-disabled cursor advancement and no replay after reenabling also lack assertions. Refresh with changed signing material, restart recovery and absence of delivery after explicit unsubscribe remain unasserted.",
-          "next_verification": "Assert transport/429/permanent/410 failure classes, retry exhaustion, disabled-setting cursor advancement/no replay, rotated signing material, restart progress and no delivery after unsubscribe."
+          "reason": "Transport errors, HTTP429, permanent unsuccessful responses, ordinary HTTP410 disabling and retry exhaustion lack dedicated assertions; stale410 suppression is covered separately. Notification-disabled cursor advancement is covered; no replay after re-enabling notifications and restart recovery remain unasserted. Rotation assertions cover both signing keys and preserved progress, but not five-minute key expiry.",
+          "next_verification": "Assert ordinary transport/429/permanent/410 failure classes, retry exhaustion, no replay after re-enabling notifications, five-minute rotated-key expiry and restart progress without broadening controlled fixture evidence to real-host callbacks."
         },
         {
           "version": 1,
@@ -4007,7 +4393,7 @@
           },
           {
             "id": "n5",
-            "label": "Reject unsafe callback or failed verification"
+            "label": "Reject unsafe callback or failed, slow or superseded verification"
           },
           {
             "id": "n6",
@@ -4036,6 +4422,11 @@
             "id": "workbench_s4",
             "label": "Deliver PR monitoring and recovered-question metadata without private message content",
             "scenario": "S4"
+          },
+          {
+            "id": "stale_callback",
+            "label": "Ignore obsolete callback results and retain current subscription state",
+            "scenario": "S2"
           }
         ],
         "edges": [
@@ -4057,7 +4448,7 @@
           {
             "from": "n1",
             "to": "n5",
-            "label": "invalid"
+            "label": "unsafe, failed, slow or superseded proof"
           },
           {
             "from": "n5",
@@ -4123,6 +4514,21 @@
             "from": "workbench_s4",
             "to": "n4",
             "label": "delivered or bounded retry"
+          },
+          {
+            "from": "n2",
+            "to": "stale_callback",
+            "label": "callback from older subscription completes"
+          },
+          {
+            "from": "stale_callback",
+            "to": "n2",
+            "label": "current subscription remains active"
+          },
+          {
+            "from": "stale_callback",
+            "to": "n4",
+            "label": "subscription was removed"
           }
         ]
       }
@@ -4178,6 +4584,16 @@
           "path": "cmd/code-factory/main.go",
           "anchor": "func run(",
           "purpose": "Serve opens the retained connection vault solely as a redaction source while fresh application state remains separate."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (o *operations) run(",
+          "purpose": "Retain a tool/operation identity, panic type and stack in owner diagnostics without formatting private panic values or leaking them into tool responses."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func Wrap(",
+          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
         }
       ],
       "tests": [
@@ -4265,6 +4681,30 @@
             "S2",
             "S3"
           ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationPanicRetainsOwnerDiagnosticsWithoutPrivatePayload(",
+          "purpose": "Owner diagnostics retain the failure stack/type/identity while credential and body sentinels appear in neither diagnostics nor the MCP error.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestLateHandlerPanicRetainsSanitizedOwnerDiagnostic(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Late panic diagnostics retain type/request identity/stack without raw private panic or query values."
+        },
+        {
+          "path": "cmd/code-factory/proxy_budget_test.go",
+          "anchor": "func TestProxyUnknownOutcomeDoesNotReplayMutation(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Actual stdio caller reports unknown outcome after503 and sends the original mutation once."
         }
       ],
       "suites": [
@@ -4506,6 +4946,16 @@
           "path": "internal/factory/configuration.go",
           "anchor": "func (s *Service) Confirm(",
           "purpose": "Explicit confirmed app/native configuration at safe boundaries."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func Wrap(",
+          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func AuditRejections(",
+          "purpose": "A bounded diagnostic lane retains ordinary admission rejections or explicit coalesced overflow counts without starting business work or reading private requests."
         }
       ],
       "tests": [
@@ -4775,6 +5225,86 @@
           "scenarios": [
             "S2"
           ]
+        },
+        {
+          "path": "internal/setup/diagnostics_operations_test.go",
+          "anchor": "func TestFetchDiagnosticsPollsAcceptedOperationAndPreservesFailure(",
+          "purpose": "Doctor retrieves an accepted diagnostics result using its exact operation identity; delayed failures remain failures and diagnostics is submitted once.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/transport/response_budget_test.go",
+          "anchor": "func TestAPILogSlowSinkPreservesSuccessAndLateBusinessLogs503(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Delayed diagnostic sink does not delay completed200; late business work records actual503 rather than discarded success."
+        },
+        {
+          "path": "internal/transport/response_budget_test.go",
+          "anchor": "func TestAPILogVaultPoolDelayDoesNotBlockFinishedResponse(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "An exhausted vault read pool cannot delay an already completed successful response; diagnostics later record actual status."
+        },
+        {
+          "path": "internal/transport/response_budget_test.go",
+          "anchor": "func TestAPILogUncommittedPanicAndSlowSinkNeverInventWire500(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Uncommitted panic records preserve handler500 separately and actual503 when known, otherwise explicit unknown wire status0."
+        },
+        {
+          "path": "internal/gateway/response_budget_test.go",
+          "anchor": "func TestGatewayAuditKeepsActualWireStatusWithSlowSink(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Production gateway audit sink cannot delay completed success and records actual wire200/503."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestCapacityRejectionAuditBoundsOverflowAndDrainsActualWorker(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A blocked diagnostic sink retains one in-flight record,32 queued records and one exact-count overflow aggregate; rejected handlers never run, nested boundaries audit once and service cancellation/drain track actual sink exit."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestCoalescedRejectionIntervalSurvivesOutOfOrderEnqueue(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Aggregate UTC interval uses actual earliest and latest request starts despite opposite lock-acquisition order."
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestRejectionAuditIncludesCanceledBeforeAdmission(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "A request rejected for canceled service lifetime records request-not-started without running business work."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogCapacityRejectionsReachDaemonAndExportedBoundary(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Real daemon mux and exported handlers record each ordinary capacity rejection exactly once with truthful503 status, safe unread metadata and no private query/body/unknown-route values."
+        },
+        {
+          "path": "internal/gateway/audit_test.go",
+          "anchor": "func TestCapacityRejectionsReachProductionGatewayAuditOnce(",
+          "scenarios": [
+            "S4"
+          ],
+          "purpose": "Nested production public/private gateway boundaries emit one sanitized503 request-not-started audit per rejected call with fixed route labels."
         }
       ],
       "suites": [
@@ -4885,7 +5415,7 @@
           },
           {
             "id": "api_call_log",
-            "label": "Record API name, safe parameters, transport status and server processing time",
+            "label": "Record safe request diagnostics or explicit coalesced rejection counts",
             "scenario": "S4"
           },
           {
@@ -9736,6 +10266,14 @@
             "S4"
           ],
           "purpose": "Kill the captured owned UI handle after actual browser-child startup. The runner must report failure and remove all three retained UI/daemon/browser children plus private state before supervisor cleanup is released."
+        },
+        {
+          "path": "scripts/test_specs_timing.py",
+          "anchor": "def test_api_phase_records_exact_make_command_and_serial_package_scope(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "The actual Make API command, all five serial Go packages, timing phase identity and successful emitted journal row must match exactly; command metadata cannot understate executed scope."
         }
       ],
       "suites": [
@@ -9988,6 +10526,11 @@
           "path": "internal/store/reads.go",
           "anchor": "func (s *Store) FactoryArchive(",
           "purpose": "Select bounded compact archive records before Go decoding rather than reading retained full-history payloads."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func Wrap(",
+          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
         }
       ],
       "tests": [
@@ -10372,6 +10915,22 @@
           "scenarios": [
             "S2"
           ]
+        },
+        {
+          "path": "internal/factory/webhook_budget_test.go",
+          "anchor": "func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Held secret or writer yields truthful deadline rejection and no late durable delivery; explicit exact-delivery-id redelivery succeeds202 only after persistence."
+        },
+        {
+          "path": "internal/factory/api_performance_test.go",
+          "anchor": "func TestWebhookAPILatency(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Isolated100ms webhook wire measurements separate delayed dependency rejection from successful durable acknowledgement."
         }
       ],
       "suites": [

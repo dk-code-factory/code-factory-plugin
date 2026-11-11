@@ -253,6 +253,8 @@ func Diagnose(ctx context.Context, dir, binary, address string, s *store.Store) 
 // FetchDiagnostics lets doctor use exactly the report exposed by the running
 // daemon, including sync/callback observations, without opening its database.
 func FetchDiagnostics(ctx context.Context, dir, address string) (Diagnostics, error) {
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
 	var d Diagnostics
 	if e := LoopbackAddress(address); e != nil {
 		return d, e
@@ -261,41 +263,67 @@ func FetchDiagnostics(ctx context.Context, dir, address string) (Diagnostics, er
 	if e != nil {
 		return d, e
 	}
-	params := map[string]any{"name": "diagnostics", "arguments": map[string]any{}, "_meta": map[string]any{"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": map[string]string{"name": "code-factory-doctor", "version": buildinfo.Version}, "io.modelcontextprotocol/clientCapabilities": map[string]any{}}}
-	b, e := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": params})
-	if e != nil {
-		return d, e
-	}
-	req, e := http.NewRequestWithContext(ctx, "POST", "http://"+address+"/mcp", bytes.NewReader(b))
-	if e != nil {
-		return d, e
-	}
-	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(string(token)))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json, text/event-stream")
-	req.Header.Set("MCP-Protocol-Version", "2026-07-28")
-	req.Header.Set("Mcp-Method", "tools/call")
-	req.Header.Set("Mcp-Name", "diagnostics")
+
 	client := &http.Client{Timeout: 20 * time.Second}
-	res, e := client.Do(req)
-	if e != nil {
-		return d, e
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return d, fmt.Errorf("daemon diagnostics unavailable")
-	}
-	var envelope struct {
-		Result struct {
-			StructuredContent struct{ Data Diagnostics }
-			IsError           bool
+	name, args := "diagnostics", map[string]any{}
+	for {
+		params := map[string]any{"name": name, "arguments": args, "_meta": map[string]any{"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": map[string]string{"name": "code-factory-doctor", "version": buildinfo.Version}, "io.modelcontextprotocol/clientCapabilities": map[string]any{}}}
+		b, e := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": params})
+		if e != nil {
+			return d, e
 		}
+		req, e := http.NewRequestWithContext(ctx, "POST", "http://"+address+"/mcp", bytes.NewReader(b))
+		if e != nil {
+			return d, e
+		}
+		req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(string(token)))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json, text/event-stream")
+		req.Header.Set("MCP-Protocol-Version", "2026-07-28")
+		req.Header.Set("Mcp-Method", "tools/call")
+		req.Header.Set("Mcp-Name", name)
+		res, e := client.Do(req)
+		if e != nil {
+			return d, e
+		}
+		var envelope struct {
+			Error  json.RawMessage
+			Result struct {
+				StructuredContent struct {
+					Data      Diagnostics
+					Operation *struct{ ID string }
+				}
+				IsError bool
+			}
+		}
+		e = json.NewDecoder(res.Body).Decode(&envelope)
+		res.Body.Close()
+		if res.StatusCode != 200 {
+			return d, fmt.Errorf("daemon diagnostics unavailable")
+		}
+		if e != nil {
+			return d, e
+		}
+		if envelope.Result.IsError || len(envelope.Error) > 0 {
+			return d, fmt.Errorf("invalid daemon diagnostics")
+		}
+		if op := envelope.Result.StructuredContent.Operation; op != nil {
+			if op.ID == "" {
+				return d, fmt.Errorf("invalid diagnostics operation")
+			}
+			name, args = "operation_result", map[string]any{"id": op.ID}
+			timer := time.NewTimer(100 * time.Millisecond)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return d, ctx.Err()
+			case <-timer.C:
+			}
+			continue
+		}
+		if envelope.Result.StructuredContent.Data.Version == "" {
+			return d, fmt.Errorf("invalid daemon diagnostics")
+		}
+		return envelope.Result.StructuredContent.Data, nil
 	}
-	if e = json.NewDecoder(res.Body).Decode(&envelope); e != nil {
-		return d, e
-	}
-	if envelope.Result.IsError || envelope.Result.StructuredContent.Data.Version == "" {
-		return d, fmt.Errorf("invalid daemon diagnostics")
-	}
-	return envelope.Result.StructuredContent.Data, nil
 }

@@ -29,6 +29,7 @@ type Server struct {
 	Events      *events.Service
 	MCP         *mcp.Server
 	lastRequest atomic.Int64
+	operations  *operations
 }
 type Empty struct {
 	Freshness string `json:"freshness,omitempty"`
@@ -88,7 +89,7 @@ func registerUIResource(m *mcp.Server, html string) string {
 	return uri
 }
 
-func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnly bool, f func(context.Context, I) (any, error)) {
+func bind[I any](s *Server, resourceURI, name, desc string, appOnly, readOnly bool, f func(context.Context, I) (any, error)) {
 	vis := []string{"model", "app"}
 	if appOnly {
 		vis = []string{"app"}
@@ -106,12 +107,8 @@ func bind[I any](s *mcp.Server, resourceURI, name, desc string, appOnly, readOnl
 	}
 	openWorld := name == "session_chat" || name == "configuration_chat" || name == "session_control" || name == "answer_session_question" || name == "confirm_configuration"
 	destructive := name == "session_control"
-	mcp.AddTool(s, &mcp.Tool{Name: name, Description: desc, Meta: meta, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, OpenWorldHint: ptr(openWorld), DestructiveHint: ptr(destructive)}}, func(ctx context.Context, _ *mcp.CallToolRequest, in I) (*mcp.CallToolResult, map[string]any, error) {
-		v, e := f(ctx, in)
-		if e != nil {
-			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: e.Error()}}}, nil, nil
-		}
-		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: name + " returned saved state or operation result; inspect structuredContent.data."}}}, map[string]any{"data": v}, nil
+	mcp.AddTool(s.MCP, &mcp.Tool{Name: name, Description: desc, Meta: meta, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, OpenWorldHint: ptr(openWorld), DestructiveHint: ptr(destructive)}}, func(ctx context.Context, _ *mcp.CallToolRequest, in I) (*mcp.CallToolResult, map[string]any, error) {
+		return s.operations.run(ctx, name, func(workCtx context.Context) (any, error) { return f(workCtx, in) })
 	})
 }
 
@@ -131,7 +128,7 @@ func (s *Server) Handler(token string) http.Handler {
 		}
 		s.lastRequest.Store(time.Now().Unix())
 		w.Header().Set("Cache-Control", "no-store")
-		h.ServeHTTP(w, r)
+		h.ServeHTTP(w, r.WithContext(events.WithRequestContext(r.Context())))
 	}))
 }
 

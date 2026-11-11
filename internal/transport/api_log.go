@@ -2,6 +2,7 @@ package transport
 
 import (
 	"bytes"
+	"codefactory/internal/httpbudget"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -20,14 +21,20 @@ import (
 const apiLogBodyLimit = 1 << 20
 
 type apiCallRecord struct {
-	StartedAt  time.Time `json:"startedAt"`
-	API        string    `json:"api"`
-	RPCMethod  string    `json:"rpcMethod,omitempty"`
-	HTTPMethod string    `json:"httpMethod"`
-	Parameters any       `json:"parameters"`
-	HTTPStatus int       `json:"httpStatus"`
-	DurationMS float64   `json:"durationMs"`
-	Panicked   bool      `json:"panicked,omitempty"`
+	StartedAt       time.Time  `json:"startedAt"`
+	API             string     `json:"api"`
+	RPCMethod       string     `json:"rpcMethod,omitempty"`
+	HTTPMethod      string     `json:"httpMethod"`
+	Parameters      any        `json:"parameters"`
+	HTTPStatus      int        `json:"httpStatus"`
+	HTTPStatusKnown bool       `json:"httpStatusKnown"`
+	HandlerStatus   int        `json:"handlerStatus,omitempty"`
+	DurationMS      float64    `json:"durationMs"`
+	Panicked        bool       `json:"panicked,omitempty"`
+	RejectionReason string     `json:"rejectionReason,omitempty"`
+	RejectedCount   uint64     `json:"rejectedCount,omitempty"`
+	Coalesced       bool       `json:"coalesced,omitempty"`
+	LastStartedAt   *time.Time `json:"lastStartedAt,omitempty"`
 }
 
 type apiCallLog struct {
@@ -49,7 +56,11 @@ func (s *Server) callLog() *apiCallLog {
 // LogAPI records incoming Code Factory requests, never outbound GitHub traffic.
 // It observes consumed bytes without pre-reading, changing limits or retrying.
 func (s *Server) LogAPI(boundary, token string, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	lifetime := context.Background()
+	if s.operations != nil {
+		lifetime = s.operations.ctx
+	}
+	return s.BoundHTTP(lifetime, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		started := time.Now()
 		body := &apiBodyCapture{ReadCloser: r.Body}
 		if r.Body != nil {
@@ -65,6 +76,7 @@ func (s *Server) LogAPI(boundary, token string, next http.Handler) http.Handler 
 			if !finished && record.HTTPStatus == 0 {
 				record.HTTPStatus = http.StatusInternalServerError
 			}
+			record.HTTPStatus = httpbudget.Outcome(r.Context(), record.HTTPStatus)
 			record.API, record.RPCMethod, record.Parameters = apiRequestParameters(boundary, r, body)
 			secrets := []string{token}
 			if s.App != nil && s.App.Vault != nil {
@@ -77,13 +89,57 @@ func (s *Server) LogAPI(boundary, token string, next http.Handler) http.Handler 
 			record.RPCMethod = clean.text(record.RPCMethod)
 			record.HTTPMethod = clean.text(record.HTTPMethod)
 			record.Parameters = clean.value("", record.Parameters, 0)
+			// A panic can reach audit before the outer boundary commits a response.
+			// Keep the inner failure separate instead of inventing a wire500.
+			handlerStatus := record.HTTPStatus
+			if !finished {
+				handlerStatus = http.StatusInternalServerError
+			}
+			record.HTTPStatus = httpbudget.Outcome(r.Context(), 0)
+			record.HTTPStatusKnown = record.HTTPStatus != 0
+			if !finished || !record.HTTPStatusKnown {
+				record.HandlerStatus = handlerStatus
+			}
 			if log := s.callLog(); log != nil {
 				log.record(record)
 			}
 		}()
 		next.ServeHTTP(response, r)
 		finished = true
-	})
+		httpbudget.Complete(r.Context())
+	}))
+}
+
+// BoundHTTP covers the daemon mux as well as directly exported API handlers.
+// Rejections never read bodies, queries, credentials or the secret vault.
+func (s *Server) BoundHTTP(lifetime context.Context, next http.Handler) http.Handler {
+	return httpbudget.WrapContext(lifetime, httpbudget.AuditRejections(next, func(r *http.Request) string {
+		if r.URL.Path == "/mcp" {
+			return "mcp_http"
+		}
+		switch r.URL.Path {
+		case "/healthz":
+			return "healthz"
+		case "/admin/dependencies":
+			return "dependencies"
+		case "/admin/dependencies/operations":
+			return "dependency_operations"
+		case "/admin/dependencies/github-skills":
+			return "github_skill_source"
+		}
+		if strings.HasPrefix(r.URL.Path, "/admin/dependencies/operations/") {
+			return "dependency_operation"
+		}
+		return "owner_unknown"
+	}, func(_ context.Context, rejection httpbudget.Rejection) {
+		if log := s.callLog(); log != nil {
+			log.record(apiCallRecord{StartedAt: rejection.StartedAt, LastStartedAt: &rejection.LastAt,
+				API: rejection.API, HTTPMethod: rejection.HTTPMethod, Parameters: map[string]any{"unread": true},
+				HTTPStatus: http.StatusServiceUnavailable, HTTPStatusKnown: true,
+				DurationMS:      float64(rejection.Duration.Nanoseconds()) / 1e6,
+				RejectionReason: "request_not_started", RejectedCount: rejection.Count, Coalesced: rejection.Coalesced})
+		}
+	}))
 }
 
 type apiBodyCapture struct {

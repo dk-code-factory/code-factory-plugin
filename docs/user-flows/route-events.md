@@ -102,6 +102,7 @@ flowchart TD
 - [web/src/wrapper.tsx](../../web/src/wrapper.tsx) — Read-only bounded archive inspection with query guards and selected previews. (`function Archive(`)
 - [internal/transport/factory_events.go](../../internal/transport/factory_events.go) — Page each archive independently and return bounded compact record metadata. (`func factoryEvents(`)
 - [internal/store/reads.go](../../internal/store/reads.go) — Select bounded compact archive records before Go decoding rather than reading retained full-history payloads. (`func (s *Store) FactoryArchive(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
 
 ## Test references
 
@@ -150,6 +151,8 @@ flowchart TD
 - [internal/factory/review7_test.go](../../internal/factory/review7_test.go) — `func TestEqualTimestampDiscussionRetainsCurrentPRContext(`; S2. Inline-comment, review and thread webhooks with tied PR timestamps retain the saved current head/title/body/labels and route new discussion with that current context rather than the older enclosing snapshot.
 - [internal/factory/review7_test.go](../../internal/factory/review7_test.go) — `func TestInitialBaselineSkipsBusyItemAndObservesIndependentPeer(`; S2, S3, S5, S6. With pending baseline [A,B] and A locked, B establishes a quiet baseline, then routes a saved head change and a later provider-only discussion with exact quiet deadlines before A releases. Release completes A without reconstructing historical work or starting native turns.
 - [internal/factory/review7_test.go](../../internal/factory/review7_test.go) — `func TestDetailRefreshRetainsCachedFreshnessWithoutRepeatedImports(`; S2. After an actual CachedGitHub detail load, controlled passes at 31 seconds, one minute, just before the provider detail TTL and twice after the service freshness deadline preserve the UI version and one underlying fetch. An identical still-cached observation skips item import while event reconciliation remains available.
+- [internal/factory/webhook_budget_test.go](../../internal/factory/webhook_budget_test.go) — `func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(`; S1. Held secret or writer yields truthful deadline rejection and no late durable delivery; explicit exact-delivery-id redelivery succeeds202 only after persistence.
+- [internal/factory/api_performance_test.go](../../internal/factory/api_performance_test.go) — `func TestWebhookAPILatency(`; S1. Isolated100ms webhook wire measurements separate delayed dependency rejection from successful durable acknowledgement.
 
 ## Verification and gaps
 

@@ -2,19 +2,25 @@ package gateway
 
 import (
 	"bytes"
+	"codefactory/internal/httpbudget"
+	"context"
 	"encoding/json"
+	"log"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestRequestAuditExcludesCredentialsAndPreservesStreaming(t *testing.T) {
 	var output bytes.Buffer
 	previous := slog.Default()
+	oldWriter, oldFlags := log.Writer(), log.Flags()
 	slog.SetDefault(slog.New(slog.NewJSONHandler(&output, nil)))
-	defer slog.SetDefault(previous)
+	defer func() { slog.SetDefault(previous); log.SetOutput(oldWriter); log.SetFlags(oldFlags) }()
 	handler := audit("public", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		if e := http.NewResponseController(w).Flush(); e != nil {
@@ -42,8 +48,9 @@ func TestRequestAuditExcludesCredentialsAndPreservesStreaming(t *testing.T) {
 func TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails(t *testing.T) {
 	var output bytes.Buffer
 	previous := slog.Default()
+	oldWriter, oldFlags := log.Writer(), log.Flags()
 	slog.SetDefault(slog.New(slog.NewJSONHandler(&output, nil)))
-	defer slog.SetDefault(previous)
+	defer func() { slog.SetDefault(previous); log.SetOutput(oldWriter); log.SetFlags(oldFlags) }()
 	handler := audit("public", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		if err := http.NewResponseController(w).Flush(); err != nil {
@@ -74,4 +81,91 @@ func TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails(t *testing.T) {
 	if response.Code != http.StatusNotFound || !response.Flushed {
 		t.Fatal("audit changed unknown-route HTTP behavior")
 	}
+}
+
+func TestCapacityRejectionsReachProductionGatewayAuditOnce(t *testing.T) {
+	g := budgetGateway(t, "")
+	var output capacityAuditBuffer
+	previous := slog.Default()
+	oldWriter, oldFlags := log.Writer(), log.Flags()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&output, nil)))
+	t.Cleanup(func() { slog.SetDefault(previous); log.SetOutput(oldWriter); log.SetFlags(oldFlags) })
+	release, entered := make(chan struct{}), make(chan struct{}, httpbudget.Capacity)
+	var once sync.Once
+	releaseWork := func() { once.Do(func() { close(release) }) }
+	var wg sync.WaitGroup
+	t.Cleanup(func() {
+		releaseWork()
+		done := make(chan struct{})
+		go func() { wg.Wait(); close(done) }()
+		awaitGatewaySignal(t, done, "capacity fixture responses")
+		waitBudgetWorkers(t)
+	})
+	blocker := httpbudget.Wrap(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { entered <- struct{}{}; <-release }))
+	for i := 0; i < httpbudget.Capacity; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			blocker.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/", nil))
+		}()
+	}
+	for i := 0; i < httpbudget.Capacity; i++ {
+		awaitGatewaySignal(t, entered, "capacity fixture admission")
+	}
+	for _, row := range []struct {
+		handler http.Handler
+		path    string
+	}{
+		{httpbudget.WrapContext(context.Background(), g.Public()), "/token?code=private-code"},
+		{httpbudget.WrapContext(context.Background(), g.Private()), "/approve?request=private-request"},
+	} {
+		w := httptest.NewRecorder()
+		started := time.Now()
+		row.handler.ServeHTTP(w, httptest.NewRequest("POST", row.path, strings.NewReader("private-body")))
+		if w.Code != 503 || !strings.Contains(w.Body.String(), "request_not_started") || time.Since(started) > 100*time.Millisecond {
+			t.Fatal("invalid capacity rejection", w.Code)
+		}
+	}
+	releaseWork()
+	waitBudgetWorkers(t)
+	data := output.String()
+	lines := strings.Split(strings.TrimSpace(data), "\n")
+	if len(lines) != 2 {
+		t.Fatal("capacity rejection missing/duplicated", data)
+	}
+	seen := map[string]bool{}
+	for _, line := range lines {
+		var record map[string]any
+		if err := json.Unmarshal([]byte(line), &record); err != nil {
+			t.Fatal(err)
+		}
+		seen[record["route"].(string)] = true
+		if record["status"] != float64(503) || record["rejection_reason"] != "request_not_started" || record["rejected_count"] != float64(1) || record["coalesced"] != false {
+			t.Fatal("missing rejection outcome", record)
+		}
+	}
+	if !seen["oauth_token"] || !seen["owner_approval"] {
+		t.Fatal("missing safe route identities", data)
+	}
+	for _, secret := range []string{"private-code", "private-request", "private-body"} {
+		if strings.Contains(data, secret) {
+			t.Fatal("private request retained", data)
+		}
+	}
+}
+
+type capacityAuditBuffer struct {
+	mu     sync.Mutex
+	buffer bytes.Buffer
+}
+
+func (b *capacityAuditBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.Write(p)
+}
+func (b *capacityAuditBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.String()
 }

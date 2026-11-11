@@ -8,6 +8,7 @@ import (
 	"codefactory/internal/events"
 	"codefactory/internal/factory"
 	"codefactory/internal/gateway"
+	"codefactory/internal/httpbudget"
 	"codefactory/internal/providers"
 	"codefactory/internal/setup"
 	"codefactory/internal/store"
@@ -281,7 +282,7 @@ func run() error {
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"version": buildinfo.Version, "status": "verified"})
 	})))
-	httpServer := &http.Server{Addr: *address, Handler: mux, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	httpServer := &http.Server{Addr: *address, Handler: server.BoundHTTP(ctx, mux), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	var wg sync.WaitGroup
 	for _, loop := range []func(context.Context){a.SyncLoop, factoryService.Loop, ev.Loop} {
 		wg.Add(1)
@@ -292,6 +293,7 @@ func run() error {
 		shutdown, c := context.WithTimeout(context.Background(), 5*time.Second)
 		defer c()
 		_ = httpServer.Shutdown(shutdown)
+		_ = httpbudget.Drain(shutdown)
 	}()
 	e = httpServer.ListenAndServe()
 	cancel()
@@ -349,6 +351,9 @@ func proxy(ctx context.Context, address, token string) error {
 			return e
 		}
 		if res.StatusCode < 200 || res.StatusCode >= 300 {
+			if res.StatusCode == 503 {
+				return fmt.Errorf("local MCP request failed (HTTP %d); outcome may be unknown; inspect saved state before retrying", res.StatusCode)
+			}
 			return fmt.Errorf("local MCP request failed (HTTP %d)", res.StatusCode)
 		}
 		if len(msg.ID) > 0 && len(b) > 0 {

@@ -72,6 +72,8 @@ flowchart TD
 - [internal/store/vault.go](../../internal/store/vault.go) — Current protect-secrets implementation or fixture/build dependency.
 - [internal/store/redactor.go](../../internal/store/redactor.go) — Current protect-secrets implementation or fixture/build dependency.
 - [cmd/code-factory/main.go](../../cmd/code-factory/main.go) — Serve opens the retained connection vault solely as a redaction source while fresh application state remains separate. (`func run(`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Retain a tool/operation identity, panic type and stack in owner diagnostics without formatting private panic values or leaking them into tool responses. (`func (o *operations) run(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
 
 ## Test references
 
@@ -85,6 +87,9 @@ flowchart TD
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestSecretVaultFailureCannotBecomeUnpersistedRetry(`; S2, S3. A real readonly-vault write failure leaves the question pending with no reply or in-memory commitment; identical retry persists before answering and resumed output stays redacted.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestRetainedConnectionVaultRedactsWithoutImportingLegacyApplicationState(`; S1, S3. A separate retained connection vault supplies split/completed/native-request/audit redactions without exposing its credential through fresh application lookups or importing legacy items.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestSecretAnswerWithRedactedQuestionIDSurvivesResume(`; S2, S3. A masked secret question ID restores the original native answer key and exact value, durably retains the new secret, and redacts split/completed/fresh-service resumed output.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationPanicRetainsOwnerDiagnosticsWithoutPrivatePayload(`; S1. Owner diagnostics retain the failure stack/type/identity while credential and body sentinels appear in neither diagnostics nor the MCP error.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestLateHandlerPanicRetainsSanitizedOwnerDiagnostic(`; S1. Late panic diagnostics retain type/request identity/stack without raw private panic or query values.
+- [cmd/code-factory/proxy_budget_test.go](../../cmd/code-factory/proxy_budget_test.go) — `func TestProxyUnknownOutcomeDoesNotReplayMutation(`; S1. Actual stdio caller reports unknown outcome after503 and sends the original mutation once.
 
 ## Verification and gaps
 

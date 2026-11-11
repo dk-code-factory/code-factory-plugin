@@ -29,7 +29,46 @@ Standalone goals retain the requested Make keep-going behavior.
 
 The job validates specifications, checks Go/TypeScript, runs uncached Go race and
 browser/accessibility fixtures, tooling, packaging, installer and compiled smoke
-tests. After the heavy suites, the required isolated `make test-performance` gate
+tests. After the heavy suites, `make test-api-performance` checks authenticated
+MCP tools and protocol methods, local OAuth, health, signed webhook, artifact and
+onboarding handlers through their response boundaries. The five Go packages run
+sequentially. Every measured finite response and initial subscription-stream
+acknowledgement is limited to 100 ms; an acknowledged stream can remain open until
+cancellation. Successful responses, accepted pending work, callback rejection,
+deadline rejection and terminal response-size rejection are separate outcomes.
+A fast rejection is never counted as successful completion. Immediate and 125 ms
+provider fixtures retain 1,000 saved sources. Additional controlled callback,
+database, lock, filesystem, audit and service delays exercise the response boundary
+and actual caller recovery without running real services.
+
+Finite handlers have a 75 ms response allowance, 32 admitted workers and an 8 MiB
+buffer limit. Capacity remains owned until a handler and its audit actually exit.
+Completed business responses can finish before slow audit storage; records retain
+the committed wire status when available; an uncommitted panic records an explicit
+unknown status separately from its handler failure. Requests rejected before admission use a separate bounded audit lane: one sink call, 32 queued records and one overflow aggregate per observer. The aggregate retains exact rejection counts and their UTC interval, with individual request identities omitted. Diagnostic sinks receive the service lifetime; drain waits for their actual exit. A delayed or saturated handler reports a sanitized 503;
+an admitted action can have an unknown outcome and must not be replayed blindly.
+An oversized response reports a terminal error. Only a real flushed SSE data
+acknowledgement opens a long-lived stream; headers or priming comments cannot
+bypass the response allowance. Callback verification has a separate 50 ms bound
+and never activates a canceled or late proof. Callback I/O holds no shared event
+state lock, and obsolete delivery results cannot recreate or overwrite subscriptions.
+
+Slow tools return an accepted identity after 25 ms of inline work; completion is
+separate from response latency. The UI and doctor read that identity rather than
+repeating the action. Results remain readable for ten minutes after completion,
+with at most 128 retained/running operations and a five-minute work context bounded
+by daemon lifetime. Native writes have cancellation-aware admission and a 30-second
+bound; an interrupted partial write reports uncertain delivery. Expiry or restart
+reports an unavailable result and requires saved-state inspection before retry.
+
+Measurements are saved in `verification-results/` as `api-latency.json`,
+`gateway-latency.json`, `event-api-latency.json`, `onboarding-latency.json`,
+`webhook-latency.json` and `http-boundary-latency.json`, uploaded as `api-latency`.
+These controlled server-response measurements do not establish public-network,
+installed-host or arbitrary scheduler/filesystem latency guarantees.
+`make test-performance` also includes this API gate when invoked separately.
+
+After the heavy suites, the required isolated `make test-performance` gate
 serves the production embedded UI through a fixture MCP host. One worker and zero
 retries retain all 20 fresh and 10 warm launch samples, each limited to 100 ms.
 Empty, cold-server and synthetic retained-state cases use provider operations

@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"codefactory/internal/httpbudget"
 	"codefactory/internal/store"
 	"context"
 	"crypto/rand"
@@ -24,10 +25,14 @@ type credentialForm struct {
 	ready         atomic.Bool
 	used          atomic.Bool
 	save          func(context.Context, string) error
+	lifetime      context.Context
 	done          chan error
 }
 
 func (f *credentialForm) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	httpbudget.WrapContext(f.lifetime, http.HandlerFunc(f.serveHTTP)).ServeHTTP(w, r)
+}
+func (f *credentialForm) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -75,7 +80,7 @@ func (f *credentialForm) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Local session already submitted; reopen onboarding to retry", 409)
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	e := f.save(ctx, key)
 	if e != nil {
@@ -109,7 +114,7 @@ func Onboard(ctx context.Context, vault *store.Vault, dir string, manual, replac
 	if e != nil {
 		return e
 	}
-	f := &credentialForm{origin: "http://" + listener.Addr().String(), nonce: hex.EncodeToString(b), expires: time.Now().Add(10 * time.Minute), done: make(chan error, 1)}
+	f := &credentialForm{origin: "http://" + listener.Addr().String(), nonce: hex.EncodeToString(b), expires: time.Now().Add(10 * time.Minute), done: make(chan error, 1), lifetime: ctx}
 	f.save = func(ctx context.Context, key string) error {
 		if e := vault.Set(ctx, "tunnel-key", key); e != nil {
 			return e
@@ -128,6 +133,7 @@ func Onboard(ctx context.Context, vault *store.Vault, dir string, manual, replac
 		if server.Shutdown(shutdown) != nil {
 			_ = server.Close()
 		}
+		_ = httpbudget.Drain(shutdown)
 	}()
 	url := f.origin + "/#" + f.nonce
 	if manual {
@@ -156,4 +162,4 @@ func Onboard(ctx context.Context, vault *store.Vault, dir string, manual, replac
 	}
 }
 
-const formHTML = `<!doctype html><html lang="en"><meta charset="utf-8"><title>Code Factory · local setup</title><style>body{font:16px system-ui;max-width:520px;margin:70px auto;padding:24px;color:#244430}input{display:block;width:100%;padding:12px;margin:20px 0;box-sizing:border-box}button{padding:12px;background:#285d45;color:white;border:0;border-radius:6px}</style><h1>Connect your private tunnel</h1><p>Enter the restricted runtime key for your configured OpenAI Secure MCP Tunnel. It is encrypted on this computer and never displayed in Work.</p><form hidden><label>Tunnel runtime key<input name="key" type="password" autocomplete="off" required></label><button>Save and start tunnel</button></form><p id="status" role="status"></p><script>const nonce=location.hash.slice(1);history.replaceState(null,'','/');fetch('/ready',{method:'POST',headers:{Authorization:'Bearer '+nonce}}).then(r=>{if(r.ok)document.querySelector('form').hidden=false;else document.querySelector('#status').textContent='Local setup session unavailable';});document.querySelector('form').onsubmit=async e=>{e.preventDefault();const input=document.querySelector('input');const key=input.value;input.value='';const r=await fetch('/credential',{method:'POST',headers:{Authorization:'Bearer '+nonce,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({key})});document.querySelector('#status').textContent=await r.text();if(r.ok)document.querySelector('form').remove()};</script></html>`
+const formHTML = `<!doctype html><html lang="en"><meta charset="utf-8"><title>Code Factory · local setup</title><style>body{font:16px system-ui;max-width:520px;margin:70px auto;padding:24px;color:#244430}input{display:block;width:100%;padding:12px;margin:20px 0;box-sizing:border-box}button{padding:12px;background:#285d45;color:white;border:0;border-radius:6px}</style><h1>Connect your private tunnel</h1><p>Enter the restricted runtime key for your configured OpenAI Secure MCP Tunnel. It is encrypted on this computer and never displayed in Work.</p><form hidden><label>Tunnel runtime key<input name="key" type="password" autocomplete="off" required></label><button>Save and start tunnel</button></form><p id="status" role="status"></p><script>const nonce=location.hash.slice(1);history.replaceState(null,'','/');fetch('/ready',{method:'POST',headers:{Authorization:'Bearer '+nonce}}).then(r=>{if(r.ok)document.querySelector('form').hidden=false;else document.querySelector('#status').textContent='Local setup session unavailable';});document.querySelector('form').onsubmit=async e=>{e.preventDefault();const input=document.querySelector('input');const key=input.value;input.value='';const r=await fetch('/credential',{method:'POST',headers:{Authorization:'Bearer '+nonce,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({key})});document.querySelector('#status').textContent=await r.text();if(r.ok||r.status===503)document.querySelector('form').remove()};</script></html>`
