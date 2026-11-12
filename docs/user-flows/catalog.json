@@ -155,17 +155,13 @@
         ],
         [
           "python3",
-          "-m",
-          "unittest",
-          "discover",
-          "-s",
-          "scripts",
-          "-p",
-          "test_specs*.py"
+          "scripts/python_suites.py",
+          "specs"
         ],
         [
           "python3",
-          "scripts/test_ci.py"
+          "scripts/python_suites.py",
+          "ci"
         ],
         [
           "python3",
@@ -191,7 +187,8 @@
         "web/package-lock.json",
         "web/fixture-runner.mjs",
         "web/fixture-listener.mjs",
-        "scripts/fixture_test_process.py"
+        "scripts/fixture_test_process.py",
+        "scripts/python_suites.py"
       ]
     },
     "inbox-performance": {
@@ -6415,7 +6412,7 @@
         {
           "path": "scripts/specs_lib/local_verification.py",
           "anchor": "def command_timeout(",
-          "purpose": "Bounded owned-command deadlines for the exact two maintained long suites without extending lookalikes, other working directories or shorter explicit session limits"
+          "purpose": "Bounded owned-command deadlines for the maintained serial and sharded commands for both long suites without extending lookalikes, other working directories or shorter explicit session limits"
         },
         {
           "path": "scripts/specs_lib/local_verification.py",
@@ -6480,7 +6477,7 @@
         {
           "path": "scripts/specs_lib/processes.py",
           "anchor": "def reconcile(",
-          "purpose": "Ordinary reconciliation gives only the two exact maintained root suite vectors bounded 900-second deadlines, retains default budgets for other commands and preserves caller-supplied executor ownership, deduplicated execution and failed-rerun invalidation."
+          "purpose": "Ordinary reconciliation gives only the four exact maintained serial and sharded root suite vectors bounded 900-second deadlines, retains default budgets for other commands and preserves caller-supplied executor ownership, deduplicated execution and failed-rerun invalidation."
         },
         {
           "path": "scripts/specs_lib/local_verification.py",
@@ -6541,6 +6538,10 @@
           "path": "web/fixture-listener.mjs",
           "anchor": "async function main(",
           "purpose": "Run Vite in an owned child with atomic actual-origin/error readiness and signal-driven close; imports remain passive through typed exact real-path main identity. Parent ownership can terminate an initializer that never settles."
+        },
+        {
+          "path": "scripts/python_suites.py",
+          "purpose": "Bounded Python process shards retain checkout ownership, preserve complete discovered inventories and propagate failed or incomplete worker outcomes."
         }
       ],
       "tests": [
@@ -10092,7 +10093,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Both exact maintained root vectors receive900seconds, while lookalikes, unrelated commands and other directories retain600 and shorter explicit session deadlines reach the runner unchanged."
+          "purpose": "All four exact maintained serial and sharded root vectors receive900seconds, while lookalikes, unrelated commands and other directories retain600 and shorter explicit session deadlines reach the runner unchanged."
         },
         {
           "path": "scripts/test_specs_local_verification.py",
@@ -10686,7 +10687,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Real reconciliation dispatch gives both exact long suite vectors 900 seconds, keeps lookalikes on default budgets, deduplicates argv, preserves custom executor deadlines and removes prior receipts when the owned deadline fails."
+          "purpose": "Real reconciliation dispatch gives all four exact serial and sharded long suite vectors 900 seconds, keeps lookalikes on default budgets, deduplicates argv, preserves custom executor deadlines and removes prior receipts when the owned deadline fails."
         },
         {
           "path": "scripts/test_specs_local_verification.py",
@@ -10893,6 +10894,95 @@
             "S1"
           ],
           "purpose": "The actual Make API command, all five serial Go packages, timing phase identity and successful emitted journal row must match exactly; command metadata cannot understate executed scope."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_workers_execute_complete_inventory_with_independent_module_globals(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Independent Python worker globals and exact discovered/completed inventories are checked; a serial control proves the assertions execute."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_failed_subtests_and_missing_worker_reports_cannot_supply_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real failed subtests and an abruptly exiting worker cannot produce successful complete-inventory evidence."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_import_errors_and_empty_inventories_invalidate_previous_summary(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Broken discovery and empty inventories reject before execution and remove an old successful diagnostic summary."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_enclosing_timeout_and_cancellation_drain_same_group(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real enclosing timeout, SIGINT and coordinator death keep TERM-ignoring ordinary workers and descendants in the authenticated group through final cleanup; pinned descriptors verify exit before safety drain."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_direct_coordinator_death_retains_supervisor_cleanup(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Direct CLI coordinator death retains its existing verifier supervisor, which drains TERM-ignoring worker descendants."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_helper_timeout_drains_term_ignoring_descendants(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "The test execution timeout owns and drains its exact descendant tree with acknowledged cleanup while preserving an unrelated process."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_internal_cli_modes_and_unadmitted_bootstraps_reject_before_discovery(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Under a healthy independent managed checkout owner, ordinary contenders and private bootstraps reject before discovery or report mutation; former internal CLI modes reject in argparse. Without a competing owner, private entry still requires group admission. Coordinator-death cleanup is asserted separately."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_fixture_import_and_method_skips_preserve_unittest_success(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Ordinary unittest class, module, import and method skips plus expected failures retain successful outcomes with one or two workers. Repeated same-scope setup/cleanup SkipTest events preserve ordinary skip-event counts while each assigned fixture-skipped ID is accounted once."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_non_skipped_omissions_and_duplicate_execution_fail_real_workers(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Real custom TestCase runs that omit or duplicate non-skipped execution fail completeness even alongside a valid fixture whose setup and cleanup emit repeated skip events."
+        },
+        {
+          "path": "scripts/test_specs_parallel.py",
+          "anchor": "def test_completeness_rejects_omitted_duplicate_and_unrelated_skip_ids(",
+          "scenarios": [
+            "S3",
+            "S4"
+          ],
+          "purpose": "Exact report accounting rejects missing, duplicate, overlapping or unrelated skipped IDs and unmatched start/stop events."
         }
       ],
       "suites": [

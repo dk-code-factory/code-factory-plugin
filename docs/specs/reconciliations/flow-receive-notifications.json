@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "f8ebb2854a515b4129e992f6d86bd7866c630087cfb41bda5968ec8681d2ec37",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "648ef8504c494bf58eaf85228b1f8c8532abb416858165dfec222df0287530e3",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "refactor",
-    "description": "The custom event subscription, callback proof and cancellation behavior are unchanged by API v2 tool routing. Event handshakes remain a separately measured protocol boundary, not operation receipts.",
-    "implementation": "Handler continues to attach events.WithRequestContext to preserve real request cancellation. Existing BoundHTTP admission, signed callbacks and event custom-method registration remain the authoritative subscription implementation.",
-    "tests": "Existing event API latency and response-budget assertions still verify initial SSE acknowledgement, rejection and cancellation. The isolated API gate retains those protocol samples separately from the dynamically enumerated plugin tools."
+    "description": "Compared receive-notifications specification and catalog contract with main; authored scenarios and dependency ownership are unchanged. The change is limited to contributor verification: complete Python suite inventories run in two bounded worker processes; fixture behavior and acceptance thresholds remain unchanged. Current comparison remains main5097e2a7. Contributor verification now uses authenticated enclosing-group admission, real-case rediscovery and explicit ordinary fixture/import skip accounting; product meanings, interface ownership, historical adoption and acceptance thresholds are unchanged. Incoming plugin API v2 product/foundation changes are preserved as current target behavior; this PR adds only contributor verification changes.",
+    "implementation": "Compared the complete receive-notifications registry entry and mapped product implementation with main5097e2a7; no product implementation, scenario, UI or glossary ownership is changed by this PR. The incoming target entry is preserved byte-for-byte, while tooling commands select complete current inventories.",
+    "tests": "Inspected actual assertions at internal/events/events_test.go / func TestSubscriptionVerificationRetryDedupRefreshAndExpiry( for scenarios S1, S2. The subscription fixture recomputes the signature over actual delivered bytes and checks it against the webhook-signature header; its declared filtering/retry/expiry assertions and explicit untested failure classes remain unchanged. Other mapped assertions and declared gaps are preserved; all required catalog suites remain selected. No fixture result establishes installed-host acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 85.109
+      "seconds": 69.369
     },
     {
       "command": [
@@ -30,29 +30,25 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.226
     },
     {
       "command": [
         "python3",
-        "-m",
-        "unittest",
-        "discover",
-        "-s",
-        "scripts",
-        "-p",
-        "test_specs*.py"
+        "scripts/python_suites.py",
+        "specs"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 407.613
     },
     {
       "command": [
         "python3",
-        "scripts/test_ci.py"
+        "scripts/python_suites.py",
+        "ci"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 250.543
     },
     {
       "command": [
@@ -60,7 +56,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 4.882
     },
     {
       "command": [
@@ -69,16 +65,16 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 60.465
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "796f7c7a84bf491f4bd98f39696069d3dd4029bc391bd6c49c73ee2374c21de6",
-    "term:attention-request": "73984fc21eb95722b7ed8b6aa86b4cb35b6e7ad0549a4a104c974d9667abd4d7",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:host": "ee1b68f918767b4c8e303634da6fe67fb81b3d85b90f05e82d5c14211a745d97",
-    "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
-    "term:subscription": "87e899717051b06fffbc8073e3615c0e28a862d6763aaffb6c56137a125b4f81",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b"
+    "flow:receive-notifications": "ba032d767972b7fd77e807b9f2931fa1910721c7d120e233513c14692c9f189c",
+    "term:attention-request": "fc37299e22f99a2ae5fbb16501e212c0395d43c8a576166fd4eea4e129186e47",
+    "term:coverage-gap": "68f0017b3bcbe08c3efbe39b089bf734be1f965c7b9f9357ac90e9ea1e5d8ad8",
+    "term:host": "7916edb38293c1d565e03be7f8e1df51001513ecd6c143dbff542abde7fbdcc1",
+    "term:known-limitation": "b3077eb950f7e871150780273d629c94a549caa1bc5a0c5e760521cfe38c94de",
+    "term:subscription": "033bbae7619738bd87b65ecb0d8983656d00d0ec2791b32812d9056b3f85b4d0",
+    "term:unverified-behavior": "466f7ba8e5fe302cc6b32279919c31faebb5c9b735dcd3e7db064b4239fdfafa"
   }
 }

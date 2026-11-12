@@ -29,7 +29,29 @@ Standalone goals retain the requested Make keep-going behavior.
 
 The job validates specifications, checks Go/TypeScript, runs uncached Go race and
 browser/accessibility fixtures, tooling, packaging, installer and compiled smoke
-tests. After the heavy suites, `make test-api-performance` checks authenticated
+tests. The Python CI and specification phases use
+`python3 scripts/python_suites.py ci` and `python3 scripts/python_suites.py specs`.
+Each command discovers the complete ordinary unittest inventory and partitions
+unique test IDs across two separate processes. `--workers 1` selects serial
+execution; the explicit upper bound is four. Global patches and environment
+changes remain local to each worker. Missing or duplicate executions, a missing
+worker report, or any failed worker makes the phase fail. Standard unittest skip
+and expected-failure outcomes remain visible in the worker logs and summary.
+Workers rediscover and select real case objects against the same full inventory.
+Class/module fixture skips explicitly account for each affected case ID once,
+including when setup and cleanup emit multiple legitimate skip events. Ordinary
+skip-event counts remain visible without fabricating individual executions;
+omitted non-skipped cases still fail.
+The enclosing owned process group includes the coordinator, workers and ordinary
+descendants, including when the coordinator exits abruptly. Already admitted
+Make/reconciliation calls reuse that supervised group; direct CLI calls create
+one through the existing verifier. Child bootstraps require that admission;
+there are no internal coordinator/worker CLI modes. Per-test durations,
+inventory identity, completion counts and outcomes are retained in ignored
+`verification-results/python-ci.json` and `python-specs.json`; they never authorize
+reuse. Phase order and the isolated performance gates remain unchanged.
+
+After the heavy suites, `make test-api-performance` checks authenticated
 MCP tools and protocol methods, local OAuth, health, signed webhook, artifact and
 onboarding handlers through their response boundaries. The five Go packages run
 sequentially. Every measured finite response and initial subscription-stream
@@ -630,7 +652,9 @@ Source-only attempts of the complete `python3 scripts/test_ci.py` command reache
 startup cost. This combined command prepares its guarded bytecode cache
 and retains bounded 900-second deadlines for the exact repository-root
 `python3 scripts/test_ci.py` and
-`python3 -m unittest discover -s scripts -p 'test_specs*.py'` commands. Cache
+`python3 -m unittest discover -s scripts -p 'test_specs*.py'` commands, plus the
+maintained `python3 scripts/python_suites.py ci` and
+`python3 scripts/python_suites.py specs` commands. Cache
 preparation has a 120-second deadline and records elapsed time, entry count and
 byte volume as an additional command phase. Other commands retain 600 seconds; a
 shorter explicitly requested session deadline remains shorter. Lookalike

@@ -10,6 +10,8 @@ from specs_lib.isolation import owned
 
 
 LONG_SUITE_COMMANDS = frozenset({
+    ('python3', 'scripts/python_suites.py', 'ci'),
+    ('python3', 'scripts/python_suites.py', 'specs'),
     ('python3', 'scripts/test_ci.py'),
     ('python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py'),
 })

@@ -90,10 +90,10 @@ test: ui plugin-embed fake-provider
 	python3 scripts/verification_timing.py command browser-lab -- node --test scripts/test_browser_lab.mjs
 	python3 scripts/verification_timing.py command browser-control -- node --test scripts/test_browser_control.mjs
 	python3 scripts/verification_timing.py command fixture-listener -- node --test scripts/test_fixture_listener.mjs
-	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/test_ci.py
+	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/python_suites.py ci
 	python3 scripts/verification_timing.py command tooling-browser-benchmark -- python3 scripts/test_browser_benchmark.py
 	python3 scripts/verification_timing.py command tooling-user-flows -- python3 scripts/test_user_flows.py
-	python3 scripts/verification_timing.py command specification-tests -- python3 -m unittest discover -s scripts -p 'test_specs*.py'
+	python3 scripts/verification_timing.py command specification-tests -- python3 scripts/python_suites.py specs
 test-api-performance: ui plugin-embed fake-provider
 	python3 scripts/verification_timing.py command api-performance -- go test -p 1 -count=1 -run APILatency ./internal/transport ./internal/gateway ./internal/setup ./internal/factory ./internal/httpbudget -args -api-performance
 
@@ -151,10 +151,10 @@ specs-gaps:
 	python3 scripts/specs.py gaps $(FLOW_ARGS)
 
 specs-ci: specs-validate
-	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/test_ci.py
+	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/python_suites.py ci
 	python3 scripts/verification_timing.py command tooling-browser-benchmark -- python3 scripts/test_browser_benchmark.py
 	python3 scripts/verification_timing.py command tooling-user-flows -- python3 scripts/test_user_flows.py
-	python3 scripts/verification_timing.py command specification-tests -- python3 -m unittest discover -s scripts -p 'test_specs*.py'
+	python3 scripts/verification_timing.py command specification-tests -- python3 scripts/python_suites.py specs
 	+@python3 scripts/verification_run.py --make-parent $(shell echo $$PPID) -- $(MAKE) specs-check
 
 ci:

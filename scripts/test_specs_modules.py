@@ -68,9 +68,12 @@ class ModuleCompatibilityTests(unittest.TestCase):
 
     def test_ordinary_reconcile_bounds_long_suites_and_preserves_custom_executors(self):
         long_commands = [['python3', 'scripts/test_ci.py'],
-                         ['python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py']]
+                         ['python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py'],
+                         ['python3', 'scripts/python_suites.py', 'ci'],
+                         ['python3', 'scripts/python_suites.py', 'specs']]
         commands = [*long_commands, long_commands[0] + ['--extra'],
-                    long_commands[1][:-1] + ['other*.py'], ['fixture-verifier']]
+                    long_commands[1][:-1] + ['other*.py'],
+                    long_commands[2] + ['--workers', '2'], long_commands[3][:-1] + ['custom'], ['fixture-verifier']]
         affected = {'example': {'description_changed': False, 'adopted': False, 'fingerprint': 'fixture-inputs',
                                 'suites': {'unit': {'commands': commands + commands}}}}
         with tempfile.TemporaryDirectory() as directory:

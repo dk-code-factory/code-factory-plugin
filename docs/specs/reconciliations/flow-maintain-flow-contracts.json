@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "8f780d4cd55a8f5a96052d48a357df2cdd34157ed4cc6218c83e628d9dcc5be3",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "0638be6030bb1b98f74a00a3a3d4a2de6ef258d65797b1964dae3c7240bcc0b0",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "The maintenance procedure, dependency direction and pinned adoption policy are unchanged. docs/ci.md now describes the API v2 runtime and the existing fixture-performance boundary, selecting this operational consumer conservatively.",
-    "implementation": "No reconciliation tooling or policy implementation changes. Existing registry/source/assertion mappings are rendered deterministically; review records will be written only by the CLI after its real suites succeed. Integrating target3413d63 retains its streaming verification digests and bounded-read regressions unchanged; only generated receipts overlap the API feature. Rebase preserves all API implementation and assertion bytes. Fresh CLI reconciliation binds the current target comparison.",
-    "tests": "The tooling suite validates schemas, complete review decisions, cochange requirements and generated output. This review makes no new product behavior or installed-host coverage claim for the maintenance flow. The incoming bounded-read hashing assertion now belongs to the comparison baseline and remains intact; full fixture verification is rerun with its streaming implementation, without treating target-owned work as a new API feature."
+    "kind": "behavior",
+    "description": "Reviewed maintain-flow-contracts S3/S4/S5 against main5097e2a7. Complete Python inventories run in bounded independent workers; ownership, cancellation and ordinary unittest skips retain their intended semantics. Each fixture-skipped case is accounted once even when setup and cleanup emit multiple same-scope skip events; every ordinary skip event remains visible. Missing or duplicate non-skipped executions remain failures. Stable IDs, foundational dependency direction, pinned adoption, complete verification and isolated performance thresholds remain unchanged. Target refresh onto5097 preserves all incoming product/foundation mappings; the contributor delta and its assertions remain the tested b311 source bytes. Restored incoming CLI baseline records will be regenerated only after fresh verification.",
+    "implementation": "Reviewed discovered_cases real-object selection and identical inventory digest checks, bounded partitioning, RecordedResult event recording and separate fixture case-ID ledger, exact Counter completeness, process/report success checks and atomic diagnostic publication. super.addSkip retains every standard event while fixture_skipped_ids prevents repeated same-scope setup/cleanup events from double-accounting assigned cases. main reuses authenticated enclosing supervision; source-controlled child entry checks managed ownership/group admission before discovery or mutation. Matching catalog, Make and timing commands retain exact bounded suite deadlines.",
+    "tests": "test_fixture_import_and_method_skips_preserve_unittest_success compares ordinary discovery with one/two workers for class/module/import/method skips and expected failures, including setup plus cleanup SkipTest; it checks each fixture-skipped ID once and all ordinary skip-event counts. test_non_skipped_omissions_and_duplicate_execution_fail_real_workers rejects actual missing/duplicate non-skipped runs alongside a legitimate repeated fixture skip. test_internal_cli_modes_and_unadmitted_bootstraps_reject_before_discovery launches contenders under a healthy independent managed checkout owner and verifies argparse, ownership and group-admission rejection without discovery/report writes. Separately, test_enclosing_timeout_and_cancellation_drain_same_group and test_direct_coordinator_death_retains_supervisor_cleanup verify TERM-ignoring descendant exit after default-grace enclosing timeout/SIGINT/death and direct coordinator death; neither death control supplies the contender assertion. test_helper_timeout_drains_term_ignoring_descendants verifies acknowledged exact-child drain while preserving an unrelated process. Independent-global, failed-subtest, missing-report, import-error/empty inventory and exact deadline/lookalike/shorter-bound assertions remain selected."
   },
   "verification": [
     {
@@ -19,29 +19,25 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.226
     },
     {
       "command": [
         "python3",
-        "-m",
-        "unittest",
-        "discover",
-        "-s",
-        "scripts",
-        "-p",
-        "test_specs*.py"
+        "scripts/python_suites.py",
+        "specs"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 407.613
     },
     {
       "command": [
         "python3",
-        "scripts/test_ci.py"
+        "scripts/python_suites.py",
+        "ci"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 250.543
     },
     {
       "command": [
@@ -49,7 +45,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 4.882
     },
     {
       "command": [
@@ -58,17 +54,17 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 60.465
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "93dc325df4fda2c1019b6b6a3875d42ea3643682262141686e416d8483efcb7a",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:entity": "c00dea15a34a8b066c9f3f5d727d1f2d34590a8133ce052fd04fa266be16b513",
-    "term:glossary": "c1a8303e0e5372eb92225e89752c0f441d80234a7bee5f07c7e1eb14e382e5ac",
-    "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
-    "term:reconciliation": "69aabae63c127bdae8cb3b01c8d360d88affca7a957845ff7bdfb925799fa181",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
-    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe"
+    "flow:maintain-flow-contracts": "aa2d88c33c3c3b00fe57a074774817bd8cb4a535bc86c956be36438f210356fc",
+    "term:coverage-gap": "68f0017b3bcbe08c3efbe39b089bf734be1f965c7b9f9357ac90e9ea1e5d8ad8",
+    "term:entity": "6c8a0b2ee59430d9d42deca1a31ef4ac9cf6e81717b7daf75b5367a263dc68d4",
+    "term:glossary": "6c4a42ea0ecbfe08975a1983e324fbc68f868601554c5325fc8e85a92f5ce630",
+    "term:known-limitation": "b3077eb950f7e871150780273d629c94a549caa1bc5a0c5e760521cfe38c94de",
+    "term:reconciliation": "48c1d233b244ff9e6107fe122bd6732bd0943956ebd1007ed853c52d336293e8",
+    "term:unverified-behavior": "466f7ba8e5fe302cc6b32279919c31faebb5c9b735dcd3e7db064b4239fdfafa",
+    "term:verification": "5a7bfa2591dcd95248190aad31f7cefe76b8e73397b07776e4cf0d01730f238f"
   }
 }

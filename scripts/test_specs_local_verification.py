@@ -2632,7 +2632,9 @@ class LocalVerificationTests(unittest.TestCase):
 
     def test_only_exact_maintained_long_suites_receive_bounded_local_deadlines(self):
         commands = [('python3', 'scripts/test_ci.py'),
-                    ('python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py')]
+                    ('python3', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_specs*.py'),
+                    ('python3', 'scripts/python_suites.py', 'ci'),
+                    ('python3', 'scripts/python_suites.py', 'specs')]
         for command in commands:
             step = local.Step('required-suite', self.root, command)
             self.assertEqual(local.command_timeout(self.root, step), 900)
@@ -2642,7 +2644,8 @@ class LocalVerificationTests(unittest.TestCase):
             self.assertEqual(local.command_timeout(self.root, other), 600)
             self.assertEqual(local.command_timeout(self.root, other, 12), 12)
         for command in [commands[0] + ('--extra',), ('python3', 'scripts/custom.py'),
-                        (sys.executable, 'scripts/test_ci.py'), commands[1][:-1] + ('other*.py',), self.step.command]:
+                        (sys.executable, 'scripts/test_ci.py'), commands[1][:-1] + ('other*.py',),
+                        commands[2] + ('--workers', '2'), commands[3][:-1] + ('custom',), self.step.command]:
             self.assertEqual(local.command_timeout(self.root, local.Step('required-suite', self.root, command)), 600)
         for requested in (0, -1, True, float('inf'), float('nan')):
             with self.subTest(requested=requested), self.assertRaises(uf.FlowError):
