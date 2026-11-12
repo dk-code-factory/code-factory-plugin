@@ -159,7 +159,7 @@ def file_stamp(value):
 
 def artifact_digest(path, expected):
     """Hash the admitted regular object without blocking on a substituted FIFO."""
-    return read_regular(path, expected, lambda source: hashlib.sha256(source.read()).digest())
+    return read_regular(path, expected, lambda source: hashlib.file_digest(source, hashlib.sha256).digest())
 
 
 def read_regular(path, expected, consume):
@@ -958,7 +958,7 @@ def helper_identity(directories, files, *, omit=None):
                 if ((cached is not None and cached[0] != stamp) or
                         (resolved in lookups and lookups[resolved] != stamp)):
                     raise uf.FlowError('External helper input changed during traversal')
-                digest = cached[1] if cached is not None else hashlib.sha256(source.read()).digest()
+                digest = cached[1] if cached is not None else hashlib.file_digest(source, hashlib.sha256).digest()
                 if identity(os.fstat(descriptor)) != stamp or identity(resolved.stat()) != stamp:
                     raise uf.FlowError('External helper input changed during traversal')
                 contents[stamp[:2]] = (stamp, digest)
