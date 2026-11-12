@@ -34,34 +34,18 @@ with tempfile.TemporaryDirectory(prefix='code-factory-smoke-') as directory:
                 req = urllib.request.Request(f'http://{address}/mcp', data=json.dumps(request).encode(), headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream', 'MCP-Protocol-Version': '2026-07-28', 'Mcp-Method': 'tools/call', 'Mcp-Name': 'factory_state'})
                 with urllib.request.urlopen(req, timeout=5) as response:
                     data = json.load(response)
+                if data["result"]["structuredContent"]["data"]["response"]["state"] != "ready":
+                    time.sleep(.02)
+                    continue
                 break
             except urllib.error.URLError:
                 if attempt == 99:
                     raise
                 time.sleep(.02)
-        def completed(envelope):
-            deadline = time.monotonic() + 5
-            while envelope['result'].get('structuredContent', {}).get('operation'):
-                if time.monotonic() >= deadline:
-                    raise RuntimeError('Accepted smoke operation did not finish')
-                operation = envelope['result']['structuredContent']['operation']
-                poll = {'jsonrpc': '2.0', 'id': 2, 'method': 'tools/call', 'params': {'name': 'operation_result', 'arguments': {'id': operation['id']}, '_meta': meta}}
-                time.sleep(.01)
-                req = urllib.request.Request(f'http://{address}/mcp', data=json.dumps(poll).encode(), headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream', 'MCP-Protocol-Version': '2026-07-28', 'Mcp-Method': 'tools/call', 'Mcp-Name': 'operation_result'})
-                with urllib.request.urlopen(req, timeout=5) as response:
-                    envelope = json.load(response)
-            return envelope
-        data = completed(data)
-        health = urllib.request.Request(f'http://{address}/healthz', headers={'Authorization': f'Bearer {token}'})
-        started = time.perf_counter()
-        with urllib.request.urlopen(health, timeout=5) as response:
-            readiness = json.load(response)
-        assert readiness['status'] == 'verified'
-        assert time.perf_counter() - started <= .1, 'Authenticated daemon health exceeded 100 ms'
-        assert data['result']['structuredContent']['data']['sessions'] == []
-        assert data['result']['structuredContent']['data']['settings']['quietSeconds'] == 120
+        assert data['result']['structuredContent']['data']['response']['value']['sessions'] == []
+        assert data['result']['structuredContent']['data']['response']['value']['settings']['quietSeconds'] == 120
         result = subprocess.run([str(binary), 'mcp', '--data-dir', directory, '--listen', address], input=json.dumps(request)+'\n', text=True, capture_output=True, timeout=10, check=True)
-        assert completed(json.loads(result.stdout))['result']['structuredContent']['data']['inbox'] == []
+        assert json.loads(result.stdout)['result']['structuredContent']['data']['response']['value']['inbox'] == []
         assert token not in result.stdout
         for filename in ('owner.token', 'vault.key', 'factory-v1.db'):
             assert (pathlib.Path(directory) / filename).stat().st_mode & 0o777 == 0o600

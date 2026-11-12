@@ -831,6 +831,15 @@
           "scenarios": [
             "S5"
           ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestQueuedConfigurationRejectsStaleConfirmation(",
+          "purpose": "A queued confirmation runs after a newer proposal is applied, rejects its stale original identity and preserves current settings.",
+          "scenarios": [
+            "S4",
+            "S5"
+          ]
         }
       ],
       "suites": [
@@ -1630,7 +1639,8 @@
         "S3",
         "S4",
         "S5",
-        "S6"
+        "S6",
+        "S7"
       ],
       "implementation": [
         {
@@ -1660,6 +1670,21 @@
           "path": "internal/transport/factory_projection.go",
           "anchor": "func factoryState(",
           "purpose": "Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Background immutable snapshot preparation and revision matching; exact large-document chunks."
+        },
+        {
+          "path": "internal/store/revisions.go",
+          "anchor": "func (s *Store) Revision(",
+          "purpose": "Committed dependency revisions isolate unrelated transcript traffic and selected items."
+        },
+        {
+          "path": "internal/store/revisions.go",
+          "anchor": "func (s *Store) publishRevisions(",
+          "purpose": "Persistent immutable revision branches share unchanged history and preserve pinned snapshot revisions."
         }
       ],
       "tests": [
@@ -1895,6 +1920,70 @@
           "scenarios": [
             "S5"
           ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "pending saved revisions hide stale context and disable dependent actions",
+          "purpose": "Pending revisions hide old source, disable Send and poll again. A held current-detail response permits no new-revision acknowledgment; at the eventual acknowledgment bridge entry the matching new source is already displayed.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestProjectionCurrentReadsChunksAndUnrelatedTranscript(",
+          "purpose": "Large Unicode source is reconstructed exactly, old projections cannot claim a newly committed revision, and unrelated transcript output leaves a prepared inbox ready.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/store/revisions_test.go",
+          "anchor": "func TestRevisionSnapshotsMatchSavedDataAcrossCommits(",
+          "purpose": "A pinned read sees matching old saved data and revision across a newer commit; the live store sees matching new data.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/store/revisions_test.go",
+          "anchor": "func TestTranscriptRevisionAllocationWithRetainedHistory(",
+          "purpose": "With 200001 retained keys, transcript revision updates allocate under 32 KiB each, preserve pinned revisions and retain every unrelated item/user revision.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func TestProjectionReadIdentifiersBoundBeforeCacheAdmission(",
+          "purpose": "Authenticated read selectors reject1,025 ASCII bytes and1,026 UTF-8 bytes before any projection/operation entry, accept the exact1,024-byte boundary, and reconstruct the entire large source unchanged.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func TestProjectionDependencyFailureIsVisibleAndRecoversAfterRepair(",
+          "purpose": "Cold malformed relationship IDs and malformed source/target endpoints inserted after a useful prepared read report failed with a nonzero saved revision for item detail and conversation state; replacing the record restores current source.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func TestRelationshipCASInvalidatesPreparedSelectedReads(",
+          "purpose": "Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/store/revisions_test.go",
+          "anchor": "func TestRelationshipCASEndpointsAdvanceOnlyOnSuccessfulWrites(",
+          "purpose": "CAS insertion and replacement publish old/new endpoint revisions. Stale and absence-predicate rejections preserve all revisions; unrelated endpoints stay unchanged.",
+          "scenarios": [
+            "S7"
+          ]
         }
       ],
       "suites": [
@@ -1925,7 +2014,11 @@
       ],
       "terms": [
         "inbox",
-        "work-item"
+        "work-item",
+        "operation-receipt",
+        "daemon-instance",
+        "read-projection",
+        "document-chunk"
       ],
       "graph": {
         "start": "entry",
@@ -1973,6 +2066,11 @@
             "id": "done",
             "label": "Retain conversation and saved evidence",
             "terminal": true
+          },
+          {
+            "id": "api_v2_s7",
+            "label": "Wait for current saved context and retrieve complete large source without acknowledging an abandoned revision",
+            "scenario": "S7"
           }
         ],
         "edges": [
@@ -2040,6 +2138,21 @@
             "from": "s6",
             "to": "wait",
             "label": "missing authority, stale identity or unavailable dependency"
+          },
+          {
+            "from": "entry",
+            "to": "api_v2_s7",
+            "label": "inspect current state or submit authorized work"
+          },
+          {
+            "from": "api_v2_s7",
+            "to": "done",
+            "label": "current result or completed action"
+          },
+          {
+            "from": "api_v2_s7",
+            "to": "wait",
+            "label": "pending, busy, failed, lost or uncertain outcome"
           }
         ]
       }
@@ -2270,6 +2383,14 @@
             "S4"
           ],
           "purpose": "Linked item revisions and saved ticket context invalidate stale assessments."
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func TestRelationshipCASInvalidatesPreparedSelectedReads(",
+          "purpose": "Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.",
+          "scenarios": [
+            "S1"
+          ]
         }
       ],
       "suites": [
@@ -2691,7 +2812,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -2718,6 +2840,11 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Session, configuration, event and retained triage APIs."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects."
         }
       ],
       "tests": [
@@ -2797,6 +2924,22 @@
           "scenarios": [
             "S1"
           ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "submitting feedback precedes the bridge and queued delivery preserves drafts across navigation",
+          "purpose": "Submitting feedback is present in the DOM at actual bridge entry within 100 ms; queued/running work keeps its draft and scope disabled while navigation remains usable; only success clears the draft.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "preserves its classification and draft beside raw errors",
+          "purpose": "Uncertain and lost outcomes keep their classification, inspection warning, exact timeout error and draft; navigating afterward creates no second mutation.",
+          "scenarios": [
+            "S6"
+          ]
         }
       ],
       "suites": [
@@ -2825,7 +2968,11 @@
         "retained-session",
         "execution-state",
         "reported-work-status",
-        "event-batch"
+        "event-batch",
+        "operation-receipt",
+        "daemon-instance",
+        "read-projection",
+        "document-chunk"
       ],
       "graph": {
         "start": "entry",
@@ -2868,6 +3015,11 @@
             "id": "done",
             "label": "Retain conversation and saved evidence",
             "terminal": true
+          },
+          {
+            "id": "api_v2_s6",
+            "label": "Show immediate submission feedback and retain drafts until delivery while other conversations remain usable",
+            "scenario": "S6"
           }
         ],
         "edges": [
@@ -2925,6 +3077,21 @@
             "from": "s5",
             "to": "wait",
             "label": "missing authority, stale identity or unavailable dependency"
+          },
+          {
+            "from": "entry",
+            "to": "api_v2_s6",
+            "label": "inspect current state or submit authorized work"
+          },
+          {
+            "from": "api_v2_s6",
+            "to": "done",
+            "label": "current result or completed action"
+          },
+          {
+            "from": "api_v2_s6",
+            "to": "wait",
+            "label": "pending, busy, failed, lost or uncertain outcome"
           }
         ]
       }
@@ -2966,6 +3133,11 @@
           "path": "internal/transport/factory_projection.go",
           "anchor": "func factoryState(",
           "purpose": "Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate."
+        },
+        {
+          "path": "internal/transport/questions.go",
+          "anchor": "func questionPage(",
+          "purpose": "Bounded session/status question collections preserve exact payloads and total counts."
         }
       ],
       "tests": [
@@ -3078,6 +3250,42 @@
           "anchor": "func TestSecretAnswerWithRedactedQuestionIDSurvivesResume(",
           "purpose": "A masked secret question ID restores the original native answer key and exact value, durably retains the new secret, and redacts split/completed/fresh-service resumed output.",
           "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestQuestionPagesKeepExactLargePayloads(",
+          "purpose": "A second page of large Unicode requests preserves total count, stable identity and the complete exact question body through versioned chunks.",
+          "scenarios": [
+            "S1",
+            "S2"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "question pages retain exact requests beyond the first page",
+          "purpose": "Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.",
+          "scenarios": [
+            "S1",
+            "S2"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "question text and JSON drafts survive pending reads and navigation",
+          "purpose": "Free-text and elicitation JSON drafts remain keyed by exact question identity through pending reads and navigation while stale forms are hidden.",
+          "scenarios": [
+            "S1",
+            "S2"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "answering the final question page returns to remaining requests",
+          "purpose": "Answer all five final-page requests and automatically return to the remaining 50 requests without a false empty state.",
+          "scenarios": [
+            "S1",
             "S2"
           ]
         }
@@ -3245,7 +3453,9 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6",
+        "S7"
       ],
       "implementation": [
         {
@@ -3277,6 +3487,26 @@
           "path": "internal/factory/native.go",
           "anchor": "func (s *Service) workspace(",
           "purpose": "Persist planned workspace before Git creation, verify registered ownership for recovery, and retain dirty content/explicit cleanup boundaries."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func operationPayloadBytes(",
+          "purpose": "Account every serialized terminal functional body independently of retained identity metadata."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) pruneResultsLocked(",
+          "purpose": "Evict oldest terminal results/errors under the retained-body ceiling while preserving original state and explicit unavailable-detail markers."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function onInstanceChange(",
+          "purpose": "Retire obsolete instance-scoped read ownership without repeating accepted commands."
         }
       ],
       "tests": [
@@ -3367,6 +3597,102 @@
             "S3",
             "S5"
           ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationRestartReportsUncertainAndLostWithoutReplay(",
+          "purpose": "Unfinished retained intent recovers as uncertain and old-instance memory-only work is lost; neither identity can replay the original mutation.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/transport/operation_restart_test.go",
+          "anchor": "func TestActualProcessRestartNeverReplaysMemoryOrRunningWork(",
+          "purpose": "Kill a separate fixture process before persistence and during its effect, then assert lost/uncertain original identities and no replay.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "preserves its classification and draft beside raw errors",
+          "purpose": "Uncertain and lost outcomes keep their classification, inspection warning, exact timeout error and draft; navigating afterward creates no second mutation.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationFailurePayloadsUseRetentionBudget(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "An authenticated invalid configuration produces the exact40KB error. Short/inline/chunked terminal payloads all enter accounting; oldest-first eviction preserves state/identity, explicitly reports unavailable details and duplicate IDs do not execute again."
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "reports unavailable error details without replay",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Failed, uncertain and lost outcomes keep classification, inspection warning and draft when error bodies are unavailable; later navigation cannot replay the mutation."
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func TestFactoryStateReopenScopesVersionToDaemonInstance(",
+          "purpose": "Reopening the same saved database creates a distinct daemon identity; lower and equal serials from the prior instance return current saved data, absent namespaces cannot claim unchanged, and the current namespace retains its unchanged optimization.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "for (const restartedVersion of [1, 1000]) {",
+          "purpose": "An open view accepts lower and equal counters after the daemon identity changes, displays the new source, acknowledges only its new-instance revision, preserves the message draft and returns to the saved inbox without submitting chat.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "a superseded daemon detail cannot display or acknowledge old content",
+          "purpose": "A held old-instance detail resolves only after current new-instance detail is displayed; actual bridge completion cannot replace or acknowledge old content, and the following action still uses the new identity.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "a late old-daemon command response resolves its original identity without replay",
+          "purpose": "Navigation and the saved draft survive a held command across daemon replacement; its late response is reconciled by the original instance/request pair as uncertain, with explicit inspection guidance and exactly one submission.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "an open archive retires its page and selection when the daemon changes",
+          "purpose": "Loaded archive replacement observes daemon identity, hides old page/selection while pending, then displays current records without manual refresh, preserving query controls and navigation without chat.",
+          "scenarios": [
+            "S7"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestDuplicateOperationReceiptsReflectIndependentDocumentEviction(",
+          "purpose": "Actual document-cache eviction removes terminal success/error chunks; authenticated duplicate submissions preserve original identity/tool/state, explicitly report unavailable details with no dead descriptors, and execute no additional work.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "the first accepted daemon retires concurrent initial replies from an obsolete instance",
+          "purpose": "The first accepted daemon retires concurrent unknown-identity replies: an old initial state completes after the new query, cannot broadcast obsolete ownership, and the next read-state action uses the new daemon.",
+          "scenarios": [
+            "S7"
+          ]
         }
       ],
       "suites": [
@@ -3403,7 +3729,11 @@
       "terms": [
         "retained-session",
         "event-batch",
-        "workspace"
+        "workspace",
+        "operation-receipt",
+        "daemon-instance",
+        "read-projection",
+        "document-chunk"
       ],
       "graph": {
         "start": "entry",
@@ -3446,6 +3776,16 @@
             "id": "done",
             "label": "Retain conversation and saved evidence",
             "terminal": true
+          },
+          {
+            "id": "api_v2_s6",
+            "label": "Keep original request identities across response loss and distinguish uncertain effects from lost memory-only work",
+            "scenario": "S6"
+          },
+          {
+            "id": "current_view",
+            "label": "Refresh an already open view after restart while keeping drafts and navigation",
+            "scenario": "S7"
           }
         ],
         "edges": [
@@ -3503,6 +3843,36 @@
             "from": "s5",
             "to": "wait",
             "label": "missing authority, stale identity or unavailable dependency"
+          },
+          {
+            "from": "entry",
+            "to": "api_v2_s6",
+            "label": "inspect current state or submit authorized work"
+          },
+          {
+            "from": "api_v2_s6",
+            "to": "done",
+            "label": "current result or completed action"
+          },
+          {
+            "from": "api_v2_s6",
+            "to": "wait",
+            "label": "pending, busy, failed, lost or uncertain outcome"
+          },
+          {
+            "from": "entry",
+            "to": "current_view",
+            "label": "connection observes the restarted service"
+          },
+          {
+            "from": "current_view",
+            "to": "wait",
+            "label": "current saved content is not ready"
+          },
+          {
+            "from": "current_view",
+            "to": "done",
+            "label": "display current content and retain unsent input"
           }
         ]
       }
@@ -3516,7 +3886,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -3581,14 +3952,9 @@
           "purpose": "Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate."
         },
         {
-          "path": "internal/store/snapshot.go",
-          "anchor": "func (s *Store) UILatest(",
-          "purpose": "Durable metadata-only UI change cursor supports unchanged state reads without transcript-driven rebuilding."
-        },
-        {
           "path": "internal/transport/operations.go",
-          "anchor": "func (o *operations) run(",
-          "purpose": "Acknowledge slow owner tools promptly and retain one execution/result identity with bounded capacity, lifetime and retention."
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects."
         },
         {
           "path": "web/src/bridge.ts",
@@ -3604,6 +3970,36 @@
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
           "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Background immutable snapshot preparation and revision matching; exact large-document chunks."
+        },
+        {
+          "path": "internal/store/revisions.go",
+          "anchor": "func (s *Store) Revision(",
+          "purpose": "Committed dependency revisions isolate unrelated transcript traffic and selected items."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func LimitResponse(",
+          "purpose": "Apply the 64 KiB bound to the complete parsed tool response, including SDK errors before tool middleware; keep large resources independent."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func operationPayloadBytes(",
+          "purpose": "Account every serialized terminal functional body independently of retained identity metadata."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) pruneResultsLocked(",
+          "purpose": "Evict oldest terminal results/errors under the retained-body ceiling while preserving original state and explicit unavailable-detail markers."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function onInstanceChange(",
+          "purpose": "Retire obsolete instance-scoped read ownership without repeating accepted commands."
         }
       ],
       "tests": [
@@ -3812,8 +4208,8 @@
         },
         {
           "path": "internal/transport/factory_test.go",
-          "anchor": "func TestFactoryStateVersionSkipsIdleProjectionAndTracksMetadata(",
-          "purpose": "An unchanged cursor returns only version/unchanged before decoding an intentionally invalid source; metadata writes advance the cursor, live deletion refreshes and transcript output does not invalidate state.",
+          "anchor": "func TestFactoryStateVersionSkipsIdleAndRejectsUnpreparedData(",
+          "purpose": "A same-instance unchanged cursor returns only version/unchanged; an unprepared invalid source fails, deleting that source refreshes the projection, and transcript output does not invalidate inbox state.",
           "scenarios": [
             "S1",
             "S2"
@@ -3853,16 +4249,16 @@
         },
         {
           "path": "internal/transport/operations_test.go",
-          "anchor": "func TestOperationsRetainExactResultWithoutRepeatingMutation(",
-          "purpose": "A disconnected original request and repeated result reads execute one mutation and retain its exact completed result.",
+          "anchor": "func TestOperationsDeduplicateBoundAdmissionAndReserveControl(",
+          "purpose": "Duplicate IDs retain original identities; pending queue capacity is bounded and reserved control workers execute behind blocked ordinary workers.",
           "scenarios": [
             "S5"
           ]
         },
         {
           "path": "internal/transport/operations_test.go",
-          "anchor": "func TestOperationsBoundCapacityExpiryCancellationAndErrors(",
-          "purpose": "Full capacity rejects before execution; expiry, cancellation, shutdown, restart and delayed errors preserve truthful outcomes.",
+          "anchor": "func TestOperationRestartReportsUncertainAndLostWithoutReplay(",
+          "purpose": "Unfinished retained intent recovers as uncertain and old-instance memory-only work is lost; neither identity can replay the original mutation.",
           "scenarios": [
             "S5"
           ]
@@ -3870,7 +4266,7 @@
         {
           "path": "internal/transport/api_performance_test.go",
           "anchor": "func TestUserFacingAPILatency(",
-          "purpose": "Runtime registered SDK/custom receiving-method keys and discovered tool catalog are completeness oracles. Every method, including incoming notifications, has a timed meaningful success, accepted notification, exact protocol rejection or real stream acknowledgement. Tool results retain successful, accepted-pending and exact-result polling coverage within100ms for normal and125ms provider fixtures with1000saved sources; background completion/network transit are separate.",
+          "purpose": "Runtime registered SDK/custom receiving-method keys and the discovered tool catalog are completeness oracles. Every method, including notifications, has a timed meaningful success, accepted notification, exact rejection or real stream acknowledgement. Every exposed tool is timed through authenticated HTTP across empty/cold/1000-source retained state, blocked storage/logging, saturation, continuous writes and three-second provider/process delays; useful current reads and healthy operation completion are required. Every sample must stay within100ms; host/network transit and background completion are separate.",
           "scenarios": [
             "S1",
             "S5"
@@ -3998,6 +4394,119 @@
             "S5"
           ],
           "purpose": "Terminal structured provider HTTP503 is reported once rather than mistaken for transient transport503; exact-ID polling ends, Send becomes enabled, draft survives and one original mutation exists."
+        },
+        {
+          "path": "internal/transport/budget_test.go",
+          "anchor": "func TestPluginAPIBudget(",
+          "purpose": "Every exposed tool is invoked through authenticated HTTP; all retained samples must stay within 100 ms and 64 KiB across cold/history, writes, blocked DB/log and saturated-queue scenarios, with useful eventual completion. A checked continuous writer must commit before client launch and between measured read halves; near-limit successful opener RPCs run while the logging sink is blocked and byte admission is asserted.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationDeadlineReleasesScopeWithoutReplay(",
+          "purpose": "A stalled context-aware effect reaches uncertain at its execution deadline, releases its session scope for healthy work, persists that outcome and cannot replay.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/response_budget_test.go",
+          "anchor": "func TestRPCEnvelopeBoundsBeforeOperationAdmission(",
+          "purpose": "Reject oversized transport IDs before admission/effects, preserve exact boundary IDs and separate logical identities, bound both unknown-tool and pre-middleware protocol metadata errors, and retain large resources.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/httpbudget/budget_test.go",
+          "anchor": "func TestRequestSpecificResponseLimitPreservesOtherRoutes(",
+          "purpose": "A lower per-request ceiling cannot be raised and discards buffered overflow/private headers while later resources retain their original capacity.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationFailurePayloadsUseRetentionBudget(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Terminal functional payload accounting includes successful results/descriptors, short errors and inline/chunked error documents while identity metadata remains available for deduplication."
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func assertOperationClassifiersMatchCatalog(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "Compare the actual authenticated catalog logical-identity schema and read-only annotation to both real bridge and fixture classifiers across every registered tool; reject unknown names without copying an expected operation list."
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func TestFactoryStateReopenScopesVersionToDaemonInstance(",
+          "purpose": "Reopening the same saved database creates a distinct daemon identity; lower and equal serials from the prior instance return current saved data, absent namespaces cannot claim unchanged, and the current namespace retains its unchanged optimization.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "for (const restartedVersion of [1, 1000]) {",
+          "purpose": "An open view accepts lower and equal counters after the daemon identity changes, displays the new source, acknowledges only its new-instance revision, preserves the message draft and returns to the saved inbox without submitting chat.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "a superseded daemon detail cannot display or acknowledge old content",
+          "purpose": "A held old-instance detail resolves only after current new-instance detail is displayed; actual bridge completion cannot replace or acknowledge old content, and the following action still uses the new identity.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "a late old-daemon command response resolves its original identity without replay",
+          "purpose": "Navigation and the saved draft survive a held command across daemon replacement; its late response is reconciled by the original instance/request pair as uncertain, with explicit inspection guidance and exactly one submission.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/factory_test.go",
+          "anchor": "func TestProjectionReadIdentifiersBoundBeforeCacheAdmission(",
+          "purpose": "Authenticated read selectors reject1,025 ASCII bytes and1,026 UTF-8 bytes before any projection/operation entry, accept the exact1,024-byte boundary, and reconstruct the entire large source unchanged.",
+          "scenarios": [
+            "S1",
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestCompletedOperationQueueClearsObsoleteInputClosures(",
+          "purpose": "Decreasing bursts of 8, 5 and 3 payload-capturing operations execute once, drain all live byte/scope accounting and leave every obsolete pending backing slot zero, releasing completed input closures.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestDuplicateOperationReceiptsReflectIndependentDocumentEviction(",
+          "purpose": "Actual document-cache eviction removes terminal success/error chunks; authenticated duplicate submissions preserve original identity/tool/state, explicitly report unavailable details with no dead descriptors, and execute no additional work.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "the first accepted daemon retires concurrent initial replies from an obsolete instance",
+          "purpose": "The first accepted daemon retires concurrent unknown-identity replies: an old initial state completes after the new query, cannot broadcast obsolete ownership, and the next read-state action uses the new daemon.",
+          "scenarios": [
+            "S6"
+          ]
         }
       ],
       "suites": [
@@ -4027,7 +4536,11 @@
       "terms": [
         "retained-session",
         "execution-state",
-        "reported-work-status"
+        "reported-work-status",
+        "operation-receipt",
+        "daemon-instance",
+        "read-projection",
+        "document-chunk"
       ],
       "graph": {
         "start": "entry",
@@ -4070,6 +4583,11 @@
             "id": "pending_action",
             "label": "Keep accepted action pending and retrieve its exact result without replay",
             "scenario": "S5"
+          },
+          {
+            "id": "api_v2_s6",
+            "label": "Return every plugin tool response within the local budget while healthy background work eventually completes",
+            "scenario": "S6"
           }
         ],
         "edges": [
@@ -4131,12 +4649,27 @@
           {
             "from": "pending_action",
             "to": "wait",
-            "label": "terminal error, oversized result, expiry or restart requires inspection"
+            "label": "failed or unavailable result, lost work or uncertain effects require inspection"
           },
           {
             "from": "pending_action",
             "to": "pending_action",
             "label": "temporary result-read failure; keep the exact identity"
+          },
+          {
+            "from": "entry",
+            "to": "api_v2_s6",
+            "label": "inspect current state or submit authorized work"
+          },
+          {
+            "from": "api_v2_s6",
+            "to": "done",
+            "label": "current result or completed action"
+          },
+          {
+            "from": "api_v2_s6",
+            "to": "wait",
+            "label": "pending, busy, failed, lost or uncertain outcome"
           }
         ]
       }
@@ -4541,7 +5074,8 @@
         "S1",
         "S2",
         "S3",
-        "S4"
+        "S4",
+        "S5"
       ],
       "implementation": [
         {
@@ -4587,13 +5121,18 @@
         },
         {
           "path": "internal/transport/operations.go",
-          "anchor": "func (o *operations) run(",
-          "purpose": "Retain a tool/operation identity, panic type and stack in owner diagnostics without formatting private panic values or leaking them into tool responses."
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects."
         },
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
           "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects."
         }
       ],
       "tests": [
@@ -4705,6 +5244,22 @@
             "S1"
           ],
           "purpose": "Actual stdio caller reports unknown outcome after503 and sends the original mutation once."
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestOperationJournalPrecedesEffectsAndNeverStoresAnswers(",
+          "purpose": "The effect observes its durable running intent; the operation journal contains neither answer bodies nor results.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_test.go",
+          "anchor": "func TestCompletedOperationQueueClearsObsoleteInputClosures(",
+          "purpose": "Decreasing bursts of 8, 5 and 3 payload-capturing operations execute once, drain all live byte/scope accounting and leave every obsolete pending backing slot zero, releasing completed input closures.",
+          "scenarios": [
+            "S5"
+          ]
         }
       ],
       "suites": [
@@ -4717,7 +5272,11 @@
         "W-TRANSCRIPT"
       ],
       "terms": [
-        "retained-session"
+        "retained-session",
+        "operation-receipt",
+        "daemon-instance",
+        "read-projection",
+        "document-chunk"
       ],
       "graph": {
         "start": "entry",
@@ -4755,6 +5314,11 @@
             "id": "done",
             "label": "Retain conversation and saved evidence",
             "terminal": true
+          },
+          {
+            "id": "api_v2_s5",
+            "label": "Persist operation intent without retaining command payloads or answer bodies",
+            "scenario": "S5"
           }
         ],
         "edges": [
@@ -4802,6 +5366,21 @@
             "from": "s4",
             "to": "wait",
             "label": "missing authority, stale identity or unavailable dependency"
+          },
+          {
+            "from": "entry",
+            "to": "api_v2_s5",
+            "label": "inspect current state or submit authorized work"
+          },
+          {
+            "from": "api_v2_s5",
+            "to": "done",
+            "label": "current result or completed action"
+          },
+          {
+            "from": "api_v2_s5",
+            "to": "wait",
+            "label": "pending, busy, failed, lost or uncertain outcome"
           }
         ]
       }
@@ -5191,7 +5770,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "Concurrent records remain valid JSONL under bounded private rotation; an unsafe log path cannot alter unrelated files or change the API response."
+          "purpose": "Actual queued linked-path log failure is observed before asserting unchanged HTTP success and preserved owner file; direct logging fixtures cancel and join all owned workers before storage disposal."
         },
         {
           "path": "internal/transport/api_log_test.go",
@@ -5305,6 +5884,46 @@
             "S4"
           ],
           "purpose": "Nested production public/private gateway boundaries emit one sanitized503 request-not-started audit per rejected call with fixed route labels."
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogQueueDropsAndRecordsOutcomeWithoutCommandPayload(",
+          "purpose": "A held log sink fills the bounded queue; the later record reports dropped count, queued outcome and response size without writing the command body.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogWorkersFinishBeforeFixtureStorageDisposal(",
+          "purpose": "Both Handler log workers finish after cancellation before fixture storage disposal, including queued records behind a held sink; admission remains nonblocking.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/setup/diagnostics_operations_test.go",
+          "anchor": "func TestFetchDiagnosticsReadsExactChunksAndBusyStatusWithoutResubmission(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Doctor retains one operation identity through temporary busy status and chunk reads, reconstructs a large exact Unicode report, and rejects a corrupt document version without resubmitting diagnostics."
+        },
+        {
+          "path": "internal/setup/diagnostics_operations_test.go",
+          "anchor": "func TestFetchDiagnosticsBoundsEntirePendingOperation(",
+          "purpose": "Repeated fast running/busy responses are bounded by one total diagnostics deadline, independent of individual HTTP request timeouts.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/transport/api_log_test.go",
+          "anchor": "func TestAPILogLargeRPCBacklogHasByteBoundAndReleasesReplayBodies(",
+          "purpose": "Two authenticated Handler instances share8MiB captured-buffer admission;64near-limit rejected-tool calls behind a blocked sink retain less than32MiB heap over baseline, release replay bodies and later report byte-pressure drops without raw command text.",
+          "scenarios": [
+            "S5"
+          ]
         }
       ],
       "suites": [
@@ -10787,8 +11406,8 @@
         },
         {
           "path": "web/tests/wrapper.spec.ts",
-          "anchor": "archive refresh preserves accepted data on failure and rejects stale queries",
-          "purpose": "Failed same-query refresh retains its accepted page and selected record; a failed changed kind displays no stale page or detail. The exact superseded delivery invocation completes SDK decoding and its React continuation barrier before asserting that the accepted batch page remains intact, without any repairing refresh. Reopening Events rereads the default page.",
+          "anchor": "archive refresh hides unavailable data on failure and rejects stale queries",
+          "purpose": "Failed same-query refresh hides its unavailable page and selected record; a failed changed kind displays no stale page or detail. The exact superseded delivery invocation completes SDK decoding and its React continuation barrier before asserting that the accepted batch page remains intact, without any repairing refresh. Reopening Events rereads the default page.",
           "scenarios": [
             "S9"
           ]
@@ -10931,6 +11550,14 @@
             "S1"
           ],
           "purpose": "Isolated100ms webhook wire measurements separate delayed dependency rejection from successful durable acknowledgement."
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "an open archive retires its page and selection when the daemon changes",
+          "purpose": "Loaded archive replacement observes daemon identity, hides old page/selection while pending, then displays current records without manual refresh, preserving query controls and navigation without chat.",
+          "scenarios": [
+            "S9"
+          ]
         }
       ],
       "suites": [
@@ -11094,7 +11721,7 @@
           {
             "from": "s9",
             "to": "wait",
-            "label": "read fails; preserve accepted page only for the same query"
+            "label": "read fails; hide unavailable page and selected record"
           }
         ]
       }

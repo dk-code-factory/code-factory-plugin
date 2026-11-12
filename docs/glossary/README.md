@@ -4609,4 +4609,67 @@ A connection representing c configuration confirm.
 `ui-c-event-inspect` · ui-connection
 
 A connection representing c event inspect.
+
+<a id="operation-receipt"></a>
+## Operation receipt
+
+`operation-receipt` · application
+
+A record identifying accepted work and its completion state; acceptance alone does not establish delivery or success.
+
+<a id="daemon-instance"></a>
+## Daemon instance
+
+`daemon-instance` · application
+
+One running service process with an identity distinct from every earlier process.
+
+<a id="read-projection"></a>
+## Read projection
+
+`read-projection` · application
+
+An immutable view of saved state identified by a daemon instance and the committed revisions of the data on which it depends.
+
+<a id="document-chunk"></a>
+## Document chunk
+
+`document-chunk` · application
+
+One ordered portion of a complete document identified by a shared immutable version.
+
+<a id="queued-operation"></a>
+## Queued operation
+
+`queued-operation` · application
+
+Accepted work waiting to begin execution.
+
+<a id="running-operation"></a>
+## Running operation
+
+`running-operation` · application
+
+Accepted work whose execution has begun and has no terminal outcome yet.
+
+<a id="uncertain-operation"></a>
+## Uncertain operation
+
+`uncertain-operation` · application
+
+Work whose effect or completion cannot be established from retained evidence.
+
+<a id="lost-operation"></a>
+## Lost operation
+
+`lost-operation` · application
+
+Previously submitted work for which the service has no retained acceptance or execution record.
+
+<a id="pending-projection"></a>
+## Pending projection
+
+`pending-projection` · application
+
+A requested view whose saved-state dependencies are not yet prepared at the required revisions.
 <!-- /specs:terms -->

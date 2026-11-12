@@ -26,6 +26,17 @@ The private owner connection is established. Application data starts clean in th
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
+
+Show local submission feedback before waiting for the connection. Acceptance is
+separate from delivery: keep queued and running work pending, and preserve the
+owning conversation draft until delivery succeeds. Navigation and unrelated
+conversations remain usable. Repeated request identities retrieve the original
+work; connection recovery never submits the command again. After restart, effects
+with retained intent are uncertain and memory-only work can be lost. Neither is
+authority to replay a mutation or reuse an expired answer.
+
+Question text and JSON drafts remain in memory by exact request identity through loading and navigation. Clear only the successfully delivered draft. If answers empty the final page while other questions remain, return to the last available page.
+
 ## Scenarios
 
 - **S1** — Persist native user-input questions with their options and blocking semantics.
@@ -80,6 +91,7 @@ flowchart TD
 - [web/src/wrapper.tsx](../../web/src/wrapper.tsx) — Saved inbox, session conversation, human input and confirmed configuration. (`function Factory(`)
 - [internal/transport/factory.go](../../internal/transport/factory.go) — Session, configuration, event and retained triage APIs. (`func NewFactory(`)
 - [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate. (`func factoryState(`)
+- [internal/transport/questions.go](../../internal/transport/questions.go) — Bounded session/status question collections preserve exact payloads and total counts. (`func questionPage(`)
 
 ## Test references
 
@@ -96,6 +108,10 @@ flowchart TD
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestElicitationSchemaAndRemainingBlockers(`; S1, S2. Missing content and wrong schema types retain requests without replies; valid answer preserves another pending blocker and final decline resumes execution.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestSecretVaultFailureCannotBecomeUnpersistedRetry(`; S2. A real readonly-vault write failure leaves the question pending with no reply or in-memory commitment; identical retry persists before answering and resumed output stays redacted.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestSecretAnswerWithRedactedQuestionIDSurvivesResume(`; S2. A masked secret question ID restores the original native answer key and exact value, durably retains the new secret, and redacts split/completed/fresh-service resumed output.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestQuestionPagesKeepExactLargePayloads(`; S1, S2. A second page of large Unicode requests preserves total count, stable identity and the complete exact question body through versioned chunks.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `question pages retain exact requests beyond the first page`; S1, S2. Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `question text and JSON drafts survive pending reads and navigation`; S1, S2. Free-text and elicitation JSON drafts remain keyed by exact question identity through pending reads and navigation while stale forms are hidden.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `answering the final question page returns to remaining requests`; S1, S2. Answer all five final-page requests and automatically return to the remaining 50 requests without a false empty state.
 
 ## Verification and gaps
 

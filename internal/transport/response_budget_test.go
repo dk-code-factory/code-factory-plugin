@@ -2,22 +2,27 @@ package transport
 
 import (
 	"bufio"
+	"bytes"
 	"codefactory/internal/app"
 	"codefactory/internal/httpbudget"
 	"codefactory/internal/store"
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/modelcontextprotocol/go-sdk/jsonrpc"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
 func TestAPILogSlowSinkPreservesSuccessAndLateBusinessLogs503(t *testing.T) {
-	s := &Server{App: &app.App{DataDir: t.TempDir()}}
+	s := apiLogFixture(t)
 	log := s.callLog()
 	log.mu.Lock()
 	var unlockOnce sync.Once
@@ -212,7 +217,7 @@ func TestAPILogVaultPoolDelayDoesNotBlockFinishedResponse(t *testing.T) {
 	for range 4 {
 		awaitTransportSignal(t, entered, "vault reader readiness")
 	}
-	server := &Server{App: &app.App{Store: db, Vault: vault, DataDir: dir}}
+	server := apiLogFixtureForApp(t, &app.App{Store: db, Vault: vault, DataDir: dir})
 	h := server.LogAPI("owner", "token", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) }))
 	w := httptest.NewRecorder()
 	started := time.Now()
@@ -235,7 +240,7 @@ func TestAPILogVaultPoolDelayDoesNotBlockFinishedResponse(t *testing.T) {
 }
 
 func TestAPILogUncommittedPanicAndSlowSinkNeverInventWire500(t *testing.T) {
-	s := &Server{App: &app.App{DataDir: t.TempDir()}}
+	s := apiLogFixture(t)
 	log := s.callLog()
 	log.mu.Lock()
 	var unlockOnce sync.Once
@@ -244,10 +249,16 @@ func TestAPILogUncommittedPanicAndSlowSinkNeverInventWire500(t *testing.T) {
 	h := s.LogAPI("owner", "token", http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("private-panic-fixture") }))
 	w := httptest.NewRecorder()
 	started := time.Now()
-	h.ServeHTTP(w, httptest.NewRequest("GET", "/healthz", nil))
-	if w.Code != 503 || time.Since(started) > 100*time.Millisecond {
-		t.Fatal("panic audit blocked response", w.Code)
+
+	var aborted bool
+	func() {
+		defer func() { aborted = recover() == http.ErrAbortHandler }()
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/healthz", nil))
+	}()
+	if !aborted || time.Since(started) > 100*time.Millisecond {
+		t.Fatal("panic did not propagate promptly")
 	}
+
 	time.Sleep(time.Until(started.Add(125 * time.Millisecond)))
 	unlockAPI()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -292,5 +303,113 @@ func drainTransportBudget(t *testing.T) {
 	defer cancel()
 	if err := httpbudget.Drain(ctx); err != nil {
 		t.Error("HTTP workers did not exit", err)
+	}
+}
+
+func TestRPCEnvelopeBoundsBeforeOperationAdmission(t *testing.T) {
+	f := newTrackingFixture(t)
+	var effects atomic.Int64
+	type fixtureInput struct {
+		ID string `json:"id"`
+	}
+	bind(f.server, "", "user_action", "fixture admission", true, false, func(context.Context, fixtureInput) (any, error) {
+		effects.Add(1)
+		return map[string]bool{"saved": true}, nil
+	})
+	invoke := func(method string, id any, params map[string]any) *httptest.ResponseRecorder {
+		t.Helper()
+		body, err := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": id, "method": method, "params": params})
+		if err != nil {
+			t.Fatal(err)
+		}
+		r := httptest.NewRequest("POST", "/mcp", bytes.NewReader(body))
+		r.Header.Set("Authorization", "Bearer "+f.token)
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Accept", "application/json, text/event-stream")
+		r.Header.Set("MCP-Protocol-Version", "2025-11-25")
+		w := httptest.NewRecorder()
+		started := time.Now()
+		f.server.Handler(f.token).ServeHTTP(w, r)
+		if elapsed := time.Since(started); elapsed > 100*time.Millisecond {
+			t.Fatalf("envelope handling exceeded100ms: %v", elapsed)
+		}
+		return w
+	}
+	for n, id := range []string{strings.Repeat("x", 100000), strings.Repeat("界", 100000), strings.Repeat("x", 511), strings.Repeat("<", 86)} {
+		for _, tool := range []string{"open_factory", "user_action"} {
+			logical := fmt.Sprintf("rejected-%d-%s", n, tool)
+			w := invoke("tools/call", id, map[string]any{"name": tool, "arguments": map[string]any{"id": "subject", "requestId": logical, "instanceId": f.server.operations.instance}})
+			if w.Code != http.StatusRequestEntityTooLarge || w.Body.Len() > responseLimit {
+				t.Errorf("oversized RPC ID: tool=%s status=%d bytes=%d", tool, w.Code, w.Body.Len())
+			}
+			f.server.operations.mu.Lock()
+			_, admitted := f.server.operations.operations[operationKey(f.server.operations.instance, logical)]
+			f.server.operations.mu.Unlock()
+			if admitted {
+				t.Error("rejected envelope admitted an operation", logical)
+			}
+		}
+	}
+	if effects.Load() != 0 {
+		t.Fatal("rejected envelope caused an effect", effects.Load())
+	}
+	// Outer RPC IDs have their own512-byte encoded limit. The logical operation
+	// identity remains the separately validated requestId/instanceId pair.
+	for n, id := range []string{strings.Repeat("x", 510), strings.Repeat("<", 85)} {
+		logical := fmt.Sprintf("accepted-%d", n)
+		deadline := time.Now().Add(5 * time.Second)
+		for {
+			w := invoke("tools/call", id, map[string]any{"name": "user_action", "arguments": map[string]any{"id": "subject", "requestId": logical, "instanceId": f.server.operations.instance}})
+			var wire struct {
+				ID     string `json:"id"`
+				Result struct {
+					StructuredContent struct {
+						Data struct {
+							Response operation `json:"response"`
+						} `json:"data"`
+					} `json:"structuredContent"`
+				} `json:"result"`
+			}
+			if err := json.Unmarshal(w.Body.Bytes(), &wire); err != nil || w.Code != http.StatusOK || w.Body.Len() > responseLimit || wire.ID != id {
+				t.Fatalf("boundary RPC ID changed or failed: status=%d bytes=%d err=%v", w.Code, w.Body.Len(), err)
+			}
+			if wire.Result.StructuredContent.Data.Response.State != "busy" {
+				if wire.Result.StructuredContent.Data.Response.RequestID != logical {
+					t.Fatal("logical identity conflated with RPC ID")
+				}
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatal("admission stayed busy")
+			}
+		}
+		waitOperation(t, f.server.operations, f.server.operations.instance, logical, "succeeded")
+	}
+	if effects.Load() != 2 {
+		t.Fatal("accepted boundary IDs lost or repeated effects", effects.Load())
+	}
+	w := invoke("tools/call", 1, map[string]any{"name": strings.Repeat("unknown", 15000), "arguments": map[string]any{}})
+	if w.Body.Len() > responseLimit {
+		t.Errorf("validation error exceeds64KiB: %d", w.Body.Len())
+	}
+	var rpcError struct {
+		Error *jsonrpc.Error `json:"error"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &rpcError); err != nil || rpcError.Error == nil {
+		t.Fatal("oversized unknown tool lacks explicit RPC error", err)
+	}
+	transportError := invoke("tools/call", 3, map[string]any{"name": "user_action", "arguments": map[string]any{"id": "subject", "requestId": "transport-rejected", "instanceId": f.server.operations.instance}, "_meta": map[string]any{"io.modelcontextprotocol/protocolVersion": strings.Repeat("x", 100000)}})
+	if transportError.Body.Len() > responseLimit {
+		t.Errorf("transport validation error exceeds64KiB: %d", transportError.Body.Len())
+	}
+	f.server.operations.mu.Lock()
+	_, admitted := f.server.operations.operations[operationKey(f.server.operations.instance, "transport-rejected")]
+	f.server.operations.mu.Unlock()
+	if admitted || effects.Load() != 2 {
+		t.Fatal("transport validation rejection admitted an effect")
+	}
+	resource := invoke("resources/read", 2, map[string]any{"uri": ResourceURI})
+	if resource.Code != http.StatusOK || resource.Body.Len() <= responseLimit {
+		t.Fatal("tool envelope guard capped the large UI resource", resource.Code, resource.Body.Len())
 	}
 }

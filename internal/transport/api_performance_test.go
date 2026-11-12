@@ -3,29 +3,21 @@ package transport
 import (
 	"bytes"
 	"codefactory/internal/app"
-	"codefactory/internal/domain"
 	"codefactory/internal/events"
 	"codefactory/internal/factory"
 	"codefactory/internal/httpbudget"
-	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
-	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -39,415 +31,9 @@ func TestUserFacingAPILatency(t *testing.T) {
 	if !*apiPerformance {
 		t.Skip("isolated API performance gate")
 	}
-	type sample struct {
-		Name    string  `json:"name"`
-		MS      float64 `json:"ms"`
-		Bytes   int     `json:"bytes"`
-		Outcome string  `json:"outcome"`
-	}
-	samples := []sample{}
-	defer func() {
-		if path := filepath.Join("..", "..", "verification-results", "api-latency.json"); path != "" {
-			if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-				t.Error(err)
-				return
-			}
-			data, err := json.MarshalIndent(map[string]any{"limit_ms": 100, "samples": samples}, "", "  ")
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			if err = os.WriteFile(path, append(data, '\n'), 0600); err != nil {
-				t.Error(err)
-			}
-		}
-	}()
-	record := func(name string, n int, elapsed time.Duration, outcomes ...string) {
-		t.Helper()
-		outcome := "success"
-		if len(outcomes) != 0 {
-			outcome = outcomes[0]
-		}
-		samples = append(samples, sample{Name: name, MS: float64(elapsed) / float64(time.Millisecond), Bytes: n, Outcome: outcome})
-		if elapsed > 100*time.Millisecond {
-			t.Errorf("%s exceeded 100 ms: %s", name, elapsed)
-		}
-	}
-
-	for _, delay := range []string{"0", "125"} {
-		t.Run("provider-delay-"+delay, func(t *testing.T) {
-			t.Setenv("CF_FAKE_OPERATION_DELAY_MS", delay)
-			f := newTrackingFixture(t)
-			f.http.Client().Timeout = 2 * time.Second
-			// Never read operator authentication or invoke installed service control.
-			tools := t.TempDir()
-			for _, name := range []string{"gh", "systemctl", "tunnel-client"} {
-				if err := os.WriteFile(filepath.Join(tools, name), []byte("#!/bin/sh\nexit 1\n"), 0700); err != nil {
-					t.Fatal(err)
-				}
-			}
-			t.Setenv("PATH", tools+":"+os.Getenv("PATH"))
-			checkout := t.TempDir()
-			for _, args := range [][]string{{"init", "-b", "main"}, {"-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "fixture"}} {
-				c := exec.Command("git", args...)
-				c.Dir = checkout
-				if b, e := c.CombinedOutput(); e != nil {
-					t.Fatal(e, string(b))
-				}
-			}
-			provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if delay == "125" {
-					time.Sleep(125 * time.Millisecond)
-				}
-				w.Header().Set("Content-Type", "application/json")
-				if r.URL.Path == "/user" {
-					fmt.Fprint(w, `{"login":"fixture"}`)
-				} else {
-					fmt.Fprint(w, `[]`)
-				}
-			}))
-			defer provider.Close()
-			gh := providers.NewGitHub()
-			gh.BaseURL = provider.URL
-			gh.Token = func(context.Context) (string, error) { return "fixture", nil }
-			f.a.GitHub = gh
-			settings := factory.Defaults()
-			settings.Repositories = []factory.Repository{{ID: "o/r", Checkout: checkout, Base: "HEAD"}}
-			if e := f.a.Store.Put(f.ctx, "factory-settings", "effective", settings, ""); e != nil {
-				t.Fatal(e)
-			}
-			if e := f.a.SaveRepository(f.ctx, domain.Repository{ID: "o/r", Checkout: checkout, Base: "HEAD"}); e != nil {
-				t.Fatal(e)
-			}
-			item := domain.Item{ID: "o/r#1", Repository: "o/r", Number: 1, Kind: "issue", State: "open", Title: "Fixture", Body: strings.Repeat("retained body ", 100), Revision: "r1", Updated: time.Now().UTC()}
-			if e := f.a.Store.Put(f.ctx, "item", item.ID, item, ""); e != nil {
-				t.Fatal(e)
-			}
-			if e := f.a.Store.Put(f.ctx, "user", item.ID, domain.UserState{ID: item.ID}, ""); e != nil {
-				t.Fatal(e)
-			}
-			if e := f.a.Store.Put(f.ctx, "identity", "github", domain.GitHubViewer{Login: "fixture"}, ""); e != nil {
-				t.Fatal(e)
-			}
-			if err := f.a.Store.Write(f.ctx, func(tx *store.Tx) error {
-				for n := 2; n <= 1000; n++ {
-					id := fmt.Sprintf("o/r#%d", n)
-					row := item
-					row.ID = id
-					row.Number = n
-					row.Body = strings.Repeat("saved source ", 1000)
-					if err := tx.Put("item", id, row); err != nil {
-						return err
-					}
-					if err := tx.Put("user", id, domain.UserState{ID: id}); err != nil {
-						return err
-					}
-				}
-				return nil
-			}); err != nil {
-				t.Fatal(err)
-			}
-			seen := map[string]bool{}
-			seenMethods := map[string]bool{}
-			call := func(name string, args map[string]any) map[string]any {
-				t.Helper()
-				var operationID string
-				polled := false
-				recordTool := func(label string, result map[string]any, n int, elapsed time.Duration, requestError error) {
-					t.Helper()
-					outcome := "success"
-					var shapeError string
-					if requestError != nil || result["isError"] == true {
-						outcome = "error"
-					} else {
-						sc, _ := result["structuredContent"].(map[string]any)
-						if raw, ok := sc["operation"]; ok {
-							pending, _ := raw.(map[string]any)
-							id, _ := pending["id"].(string)
-							if id == "" || pending["tool"] != name || pending["state"] != "running" || sc["data"] != nil || (operationID != "" && id != operationID) {
-								outcome, shapeError = "error", "invalid or changed accepted operation identity"
-							} else {
-								operationID = id
-								outcome = "accepted_pending"
-							}
-						} else if _, ok := sc["data"]; !ok {
-							outcome, shapeError = "error", "completed tool response omitted structuredContent.data"
-						}
-					}
-					record(label, n, elapsed, outcome)
-					seenMethods["tools/call"] = true
-					if shapeError != "" {
-						t.Fatalf("%s: %s: %v", name, shapeError, result)
-					}
-				}
-				result, n, d, e := trackingRequest(f.http.Client(), f.http.URL, f.token, name, args)
-				recordTool(name, result, n, d, e)
-				deadline := time.Now().Add(10 * time.Second)
-				for e == nil && result["isError"] != true {
-					sc, _ := result["structuredContent"].(map[string]any)
-					pending, _ := sc["operation"].(map[string]any)
-					if pending == nil {
-						break
-					}
-					if time.Now().After(deadline) {
-						t.Fatalf("%s operation did not finish", name)
-					}
-					time.Sleep(10 * time.Millisecond)
-					polled = true
-					result, n, d, e = trackingRequest(f.http.Client(), f.http.URL, f.token, "operation_result", map[string]any{"id": pending["id"]})
-					recordTool("operation_result", result, n, d, e)
-				}
-				if e != nil || result["isError"] == true {
-					t.Fatalf("%s failed: %v %v", name, e, result)
-				}
-				seen[name] = true
-				if polled {
-					seen["operation_result"] = true
-				}
-				if sc, ok := result["structuredContent"].(map[string]any); ok {
-					if data, ok := sc["data"].(map[string]any); ok {
-						return data
-					}
-				}
-				return nil
-			}
-			rpc := func(method string, params map[string]any, expectedError ...int) map[string]any {
-				t.Helper()
-				notification := strings.HasPrefix(method, "notifications/")
-				version := "2025-11-25"
-				if method == "server/discover" {
-					version = "2026-07-28"
-					params["_meta"] = map[string]any{"io.modelcontextprotocol/protocolVersion": version, "io.modelcontextprotocol/clientInfo": map[string]string{"name": "latency-fixture", "version": "1"}, "io.modelcontextprotocol/clientCapabilities": map[string]any{}}
-				}
-				message := map[string]any{"jsonrpc": "2.0", "method": method, "params": params}
-				if !notification {
-					message["id"] = 1
-				}
-				b, _ := json.Marshal(message)
-				req, _ := http.NewRequest("POST", f.http.URL+"/mcp", bytes.NewReader(b))
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("Accept", "application/json, text/event-stream")
-				req.Header.Set("MCP-Protocol-Version", version)
-				req.Header.Set("Mcp-Method", method)
-				req.Header.Set("Authorization", "Bearer "+f.token)
-				start := time.Now()
-				res, e := f.http.Client().Do(req)
-				if e != nil {
-					t.Fatal(e)
-				}
-				body, e := io.ReadAll(res.Body)
-				res.Body.Close()
-				elapsed := time.Since(start)
-				if notification {
-					record(method, len(body), elapsed, "notification_accepted")
-					if e != nil || res.StatusCode != http.StatusAccepted || len(body) != 0 {
-						t.Fatal("notification was not accepted without RPC response", method, res.StatusCode, e, string(body))
-					}
-					seenMethods[method] = true
-					return nil
-				}
-				var envelope map[string]any
-				if e != nil || res.StatusCode != http.StatusOK || json.Unmarshal(body, &envelope) != nil {
-					t.Fatal(method, res.StatusCode, e, string(body))
-				}
-				if len(expectedError) > 0 {
-					record(method, len(body), elapsed, "protocol_rejection")
-					failure, _ := envelope["error"].(map[string]any)
-					if failure["code"] != float64(expectedError[0]) || envelope["result"] != nil {
-						t.Fatal("unsupported protocol handler returned wrong rejection", method, string(body))
-					}
-					seenMethods[method] = true
-					return nil
-				}
-				record(method, len(body), elapsed)
-				result, ok := envelope["result"].(map[string]any)
-				if envelope["error"] != nil || !ok {
-					t.Fatal(method, string(body))
-				}
-				seenMethods[method] = true
-				return result
-			}
-			initialized := rpc("initialize", map[string]any{"protocolVersion": "2025-11-25", "capabilities": map[string]any{}, "clientInfo": map[string]any{"name": "latency-fixture", "version": "1"}})
-			if initialized["protocolVersion"] != "2025-11-25" || initialized["serverInfo"] == nil {
-				t.Fatal("initialize lost negotiated version or identity", initialized)
-			}
-			discovery := rpc("server/discover", map[string]any{})
-			capabilities, _ := discovery["capabilities"].(map[string]any)
-			if capabilities["events"] == nil || discovery["supportedVersions"] == nil {
-				t.Fatal("discovery lost production events capability or versions", discovery)
-			}
-			prompts := rpc("prompts/list", map[string]any{})
-			if list, ok := prompts["prompts"].([]any); !ok || len(list) != 0 {
-				t.Fatal("unexpected prompt inventory", prompts)
-			}
-			rpc("prompts/get", map[string]any{"name": "unregistered-fixture"}, -32602)
-			rpc("completion/complete", map[string]any{"ref": map[string]any{"type": "ref/resource", "uri": ResourceURI}, "argument": map[string]any{"name": "value", "value": ""}}, -32601)
-			rpc("resources/subscribe", map[string]any{"uri": ResourceURI}, -32601)
-			rpc("resources/unsubscribe", map[string]any{"uri": ResourceURI}, -32601)
-			rpc("logging/setLevel", map[string]any{"level": "warning"})
-			rpc("notifications/initialized", map[string]any{})
-			rpc("notifications/cancelled", map[string]any{"requestId": "no-running-fixture-request"})
-			rpc("notifications/roots/list_changed", map[string]any{})
-			rpc("notifications/progress", map[string]any{"progressToken": "fixture-progress", "progress": 1, "total": 1})
-
-			catalog := rpc("tools/list", map[string]any{})
-			t.Logf("TOOLS %d", len(catalog["tools"].([]any)))
-			rpc("resources/list", map[string]any{})
-			for _, uri := range []string{ResourceURI, SettingsResourceURI} {
-				rpc("resources/read", map[string]any{"uri": uri})
-			}
-			rpc("events/list", map[string]any{})
-			f.server.Events.Client = &http.Client{Transport: latencyCallbackTransport(func(r *http.Request) (*http.Response, error) {
-				var challenge map[string]any
-				if err := json.NewDecoder(r.Body).Decode(&challenge); err != nil {
-					return nil, err
-				}
-				body, _ := json.Marshal(map[string]any{"challenge": challenge["challenge"]})
-				return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(bytes.NewReader(body))}, nil
-			})}
-			subscription := map[string]any{"name": "inbox.changed", "delivery": map[string]any{"mode": "webhook", "url": "https://callback.example.invalid/events", "secret": "whsec_" + base64.StdEncoding.EncodeToString(make([]byte, 32))}}
-			rpc("events/subscribe", subscription)
-			rpc("events/unsubscribe", subscription)
-			rpc("ping", map[string]any{})
-			rpc("resources/templates/list", map[string]any{})
-			webhookService := factory.New(f.ctx, f.a, "")
-			defer webhookService.Close()
-			webhook := httptest.NewServer(webhookService.Webhook(func(context.Context) (string, error) { return "fixture-webhook-key", nil }))
-			defer webhook.Close()
-			webhook.Client().Timeout = 2 * time.Second
-			body := []byte(`{"repository":{"full_name":"o/r"},"action":"synchronize","pull_request":{"number":1,"state":"open","title":"Fixture"}}`)
-			for n := 0; n < 20; n++ {
-				req, _ := http.NewRequest("POST", webhook.URL+"/github/webhook", bytes.NewReader(body))
-				id := fmt.Sprintf("latency-delivery-%d", n)
-				req.Header.Set("X-GitHub-Delivery", id)
-				req.Header.Set("X-GitHub-Event", "pull_request")
-				mac := hmac.New(sha256.New, []byte("fixture-webhook-key"))
-				mac.Write(body)
-				req.Header.Set("X-Hub-Signature-256", "sha256="+hex.EncodeToString(mac.Sum(nil)))
-				start := time.Now()
-				res, err := webhook.Client().Do(req)
-				if err != nil {
-					t.Fatal(err)
-				}
-				received, err := io.ReadAll(res.Body)
-				res.Body.Close()
-				outcome := "success"
-				if err != nil || res.StatusCode != 202 {
-					outcome = "error"
-				}
-				record("github/webhook", len(received), time.Since(start), outcome)
-				if err != nil || res.StatusCode != 202 {
-					t.Fatal("signed webhook was not accepted", res.StatusCode, err)
-				}
-				var saved map[string]any
-				if err = f.a.Store.Get(f.ctx, "factory-delivery", id, &saved); err != nil || saved["state"] != "pending" {
-					t.Fatal("webhook acknowledged without durable delivery", err, saved)
-				}
-			}
-
-			for n := 0; n < 3; n++ {
-				call("open_factory", map[string]any{})
-				call("open_settings", map[string]any{})
-				for _, view := range []string{"working", "issues", "mine", "review", "messages", "configuration", "conversation", "events"} {
-					call("factory_state", map[string]any{"view": view, "itemId": item.ID})
-				}
-				call("factory_item", map[string]any{"id": item.ID})
-				call("session_questions", map[string]any{})
-				call("session_transcript", map[string]any{"id": item.ID})
-				for _, kind := range []string{"events", "deliveries", "batches", "rules"} {
-					call("factory_events", map[string]any{"kind": kind})
-				}
-				call("user_action", map[string]any{"id": item.ID, "action": "read", "revision": "r1"})
-				call("link_items", map[string]any{"source": item.ID, "target": "o/r#2", "remove": n%2 == 1})
-				proposal := call("propose_configuration", map[string]any{"settings": settings})
-				call("confirm_configuration", map[string]any{"id": proposal["id"], "confirm": true})
-				call("inspect_configuration", map[string]any{"cwd": checkout})
-				call("diagnostics", map[string]any{})
-				call("sync_repositories", map[string]any{})
-			}
-			call("session_chat", map[string]any{"itemId": item.ID, "text": "Inspect fixture"})
-			var qid string
-			deadline := time.Now().Add(10 * time.Second)
-			for time.Now().Before(deadline) {
-				questions, e := store.List[factory.Question](f.ctx, f.a.Store, "factory-question")
-				if e != nil {
-					break
-				}
-				for _, q := range questions {
-					if q.SessionID == item.ID && q.Status == "pending" {
-						qid = q.ID
-						break
-					}
-				}
-				if qid != "" {
-					break
-				}
-				time.Sleep(10 * time.Millisecond)
-			}
-			if qid != "" {
-				call("answer_session_question", map[string]any{"id": qid, "answer": map[string]any{"answers": map[string]any{"scope": map[string]any{"answers": []string{"Focused"}}}}})
-			} else {
-				t.Error("no native question")
-			}
-			call("session_control", map[string]any{"id": item.ID, "action": "interrupt"})
-			call("session_control", map[string]any{"id": item.ID, "action": "resume"})
-			call("session_control", map[string]any{"id": item.ID, "action": "interrupt"})
-			call("session_control", map[string]any{"id": item.ID, "action": "cleanup"})
-			call("configuration_chat", map[string]any{"text": "Inspect fixture configuration"})
-			// Resolve an explicitly retained uncertain creation without replaying work.
-			if e := f.a.Store.Put(f.ctx, "factory-session", "uncertain", factory.Session{ID: "uncertain", ThreadPending: true, Execution: "interrupted"}, ""); e != nil {
-				t.Fatal(e)
-			}
-			call("resolve_session_delivery", map[string]any{"id": "uncertain", "decision": "retry"})
-			ackElapsed, ackBytes := subscriptionListenHandshake(t)
-			record("subscriptions/listen", ackBytes, ackElapsed, "stream_ack")
-			seenMethods["subscriptions/listen"] = true
-			// The SDK has no public method catalog. Read only its registered map
-			// keys, including production custom methods; a changed SDK layout or
-			// newly registered method must fail rather than silently lose coverage.
-			methods := reflect.ValueOf(f.server.MCP).Elem().FieldByName("receiveMethods")
-			if !methods.IsValid() || methods.Kind() != reflect.Map {
-				t.Fatal("SDK receiving-method inventory unavailable")
-			}
-			for _, key := range methods.MapKeys() {
-				if !seenMethods[key.String()] {
-					t.Errorf("registered protocol method %s has no latency scenario", key.String())
-				}
-			}
-			for method := range seenMethods {
-				if !methods.MapIndex(reflect.ValueOf(method)).IsValid() {
-					t.Errorf("timed method %s is not registered", method)
-				}
-			}
-			t.Logf("timed %d registered protocol methods including incoming notifications and custom events", methods.Len())
-
-			// The discovered catalog is the coverage oracle; adding a tool without a
-			// successful performance scenario must fail this gate.
-			if delay == "125" {
-				for _, raw := range catalog["tools"].([]any) {
-					name := raw.(map[string]any)["name"].(string)
-					if !seen[name] {
-						t.Errorf("tool %s has no successful latency sample", name)
-					}
-				}
-			}
-
-		})
-	}
-	maxima := map[string]float64{}
-	for _, s := range samples {
-		if s.MS > maxima[s.Name] {
-			maxima[s.Name] = s.MS
-		}
-	}
-	names := []string{}
-	for name := range maxima {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	for _, name := range names {
-		t.Logf("%s maximum %.3f ms", name, maxima[name])
-	}
+	t.Setenv("CODE_FACTORY_API_PERFORMANCE", "1")
+	TestPluginAPIBudget(t)
+	t.Run("protocol", testProtocolAPILatency)
 }
 
 type latencyCallbackTransport func(*http.Request) (*http.Response, error)
@@ -753,6 +339,10 @@ func newEventLatencyFixture(t *testing.T) *trackingFixture {
 			if e != nil {
 				t.Error(e)
 			}
+			if f.server != nil {
+				awaitTransportGroup(t, &f.server.apiLogWorkers, "event latency log workers")
+				drainTransportBudget(t)
+			}
 		case <-time.After(time.Second):
 			t.Error("event latency fixture close did not finish")
 		}
@@ -889,4 +479,168 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 			}
 		}
 	}
+}
+
+// Keep protocol inventory coverage independent of the API v2 tool catalog gate.
+func testProtocolAPILatency(t *testing.T) {
+	f := newTrackingFixture(t)
+	type sample struct {
+		Name    string  `json:"name"`
+		MS      float64 `json:"ms"`
+		Bytes   int     `json:"bytes"`
+		Outcome string  `json:"outcome"`
+	}
+	samples := []sample{}
+	defer func() {
+		maxima := map[string]float64{}
+		for _, s := range samples {
+			maxima[s.Name] = max(maxima[s.Name], s.MS)
+		}
+		data, err := json.MarshalIndent(map[string]any{"limit_ms": 100, "samples": samples, "maxima": maxima}, "", "  ")
+		path := filepath.Join("..", "..", "verification-results", "protocol-api-latency.json")
+		if err == nil {
+			err = os.MkdirAll(filepath.Dir(path), 0700)
+		}
+		if err == nil {
+			err = os.WriteFile(path, data, 0600)
+		}
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+	record := func(name string, n int, elapsed time.Duration, outcomes ...string) {
+		t.Helper()
+		outcome := "success"
+		if len(outcomes) > 0 {
+			outcome = outcomes[0]
+		}
+		samples = append(samples, sample{name, float64(elapsed) / float64(time.Millisecond), n, outcome})
+		if elapsed > 100*time.Millisecond {
+			t.Errorf("%s exceeded 100 ms: %s", name, elapsed)
+		}
+	}
+	seenMethods := map[string]bool{}
+	rpc := func(method string, params map[string]any, expectedError ...int) map[string]any {
+		t.Helper()
+		notification := strings.HasPrefix(method, "notifications/")
+		version := "2025-11-25"
+		if method == "server/discover" {
+			version = "2026-07-28"
+			params["_meta"] = map[string]any{"io.modelcontextprotocol/protocolVersion": version, "io.modelcontextprotocol/clientInfo": map[string]string{"name": "latency-fixture", "version": "1"}, "io.modelcontextprotocol/clientCapabilities": map[string]any{}}
+		}
+		message := map[string]any{"jsonrpc": "2.0", "method": method, "params": params}
+		if !notification {
+			message["id"] = 1
+		}
+		b, _ := json.Marshal(message)
+		req, _ := http.NewRequest("POST", f.http.URL+"/mcp", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json, text/event-stream")
+		req.Header.Set("MCP-Protocol-Version", version)
+		req.Header.Set("Mcp-Method", method)
+		req.Header.Set("Authorization", "Bearer "+f.token)
+		start := time.Now()
+		res, e := f.http.Client().Do(req)
+		if e != nil {
+			t.Fatal(e)
+		}
+		body, e := io.ReadAll(res.Body)
+		res.Body.Close()
+		elapsed := time.Since(start)
+		if notification {
+			record(method, len(body), elapsed, "notification_accepted")
+			if e != nil || res.StatusCode != http.StatusAccepted || len(body) != 0 {
+				t.Fatal("notification was not accepted without RPC response", method, res.StatusCode, e, string(body))
+			}
+			seenMethods[method] = true
+			return nil
+		}
+		var envelope map[string]any
+		if e != nil || res.StatusCode != http.StatusOK || json.Unmarshal(body, &envelope) != nil {
+			t.Fatal(method, res.StatusCode, e, string(body))
+		}
+		if len(expectedError) > 0 {
+			record(method, len(body), elapsed, "protocol_rejection")
+			failure, _ := envelope["error"].(map[string]any)
+			if failure["code"] != float64(expectedError[0]) || envelope["result"] != nil {
+				t.Fatal("unsupported protocol handler returned wrong rejection", method, string(body))
+			}
+			seenMethods[method] = true
+			return nil
+		}
+		record(method, len(body), elapsed)
+		result, ok := envelope["result"].(map[string]any)
+		if envelope["error"] != nil || !ok {
+			t.Fatal(method, string(body))
+		}
+		seenMethods[method] = true
+		return result
+	}
+	initialized := rpc("initialize", map[string]any{"protocolVersion": "2025-11-25", "capabilities": map[string]any{}, "clientInfo": map[string]any{"name": "latency-fixture", "version": "1"}})
+	if initialized["protocolVersion"] != "2025-11-25" || initialized["serverInfo"] == nil {
+		t.Fatal("initialize lost negotiated version or identity", initialized)
+	}
+	discovery := rpc("server/discover", map[string]any{})
+	capabilities, _ := discovery["capabilities"].(map[string]any)
+	if capabilities["events"] == nil || discovery["supportedVersions"] == nil {
+		t.Fatal("discovery lost production events capability or versions", discovery)
+	}
+	prompts := rpc("prompts/list", map[string]any{})
+	if list, ok := prompts["prompts"].([]any); !ok || len(list) != 0 {
+		t.Fatal("unexpected prompt inventory", prompts)
+	}
+	rpc("prompts/get", map[string]any{"name": "unregistered-fixture"}, -32602)
+	rpc("completion/complete", map[string]any{"ref": map[string]any{"type": "ref/resource", "uri": ResourceURI}, "argument": map[string]any{"name": "value", "value": ""}}, -32601)
+	rpc("resources/subscribe", map[string]any{"uri": ResourceURI}, -32601)
+	rpc("resources/unsubscribe", map[string]any{"uri": ResourceURI}, -32601)
+	rpc("logging/setLevel", map[string]any{"level": "warning"})
+	rpc("notifications/initialized", map[string]any{})
+	rpc("notifications/cancelled", map[string]any{"requestId": "no-running-fixture-request"})
+	rpc("notifications/roots/list_changed", map[string]any{})
+	rpc("notifications/progress", map[string]any{"progressToken": "fixture-progress", "progress": 1, "total": 1})
+
+	catalog := rpc("tools/list", map[string]any{})
+	if len(catalog["tools"].([]any)) == 0 {
+		t.Fatal("empty tool catalog")
+	}
+	rpc("tools/call", map[string]any{"name": "open_factory", "arguments": map[string]any{}})
+	rpc("resources/list", map[string]any{})
+	for _, uri := range []string{ResourceURI, SettingsResourceURI} {
+		rpc("resources/read", map[string]any{"uri": uri})
+	}
+	rpc("events/list", map[string]any{})
+	f.server.Events.Client = &http.Client{Transport: latencyCallbackTransport(func(r *http.Request) (*http.Response, error) {
+		var challenge map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&challenge); err != nil {
+			return nil, err
+		}
+		body, _ := json.Marshal(map[string]any{"challenge": challenge["challenge"]})
+		return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(bytes.NewReader(body))}, nil
+	})}
+	subscription := map[string]any{"name": "inbox.changed", "delivery": map[string]any{"mode": "webhook", "url": "https://callback.example.invalid/events", "secret": "whsec_" + base64.StdEncoding.EncodeToString(make([]byte, 32))}}
+	rpc("events/subscribe", subscription)
+	rpc("events/unsubscribe", subscription)
+	rpc("ping", map[string]any{})
+	rpc("resources/templates/list", map[string]any{})
+	ackElapsed, ackBytes := subscriptionListenHandshake(t)
+	record("subscriptions/listen", ackBytes, ackElapsed, "stream_ack")
+	seenMethods["subscriptions/listen"] = true
+	// The SDK has no public method catalog. Read only its registered map
+	// keys, including production custom methods; a changed SDK layout or
+	// newly registered method must fail rather than silently lose coverage.
+	methods := reflect.ValueOf(f.server.MCP).Elem().FieldByName("receiveMethods")
+	if !methods.IsValid() || methods.Kind() != reflect.Map {
+		t.Fatal("SDK receiving-method inventory unavailable")
+	}
+	for _, key := range methods.MapKeys() {
+		if !seenMethods[key.String()] {
+			t.Errorf("registered protocol method %s has no latency scenario", key.String())
+		}
+	}
+	for method := range seenMethods {
+		if !methods.MapIndex(reflect.ValueOf(method)).IsValid() {
+			t.Errorf("timed method %s is not registered", method)
+		}
+	}
+	t.Logf("timed %d registered protocol methods including incoming notifications and custom events", methods.Len())
 }

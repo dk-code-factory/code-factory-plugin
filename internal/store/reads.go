@@ -265,3 +265,36 @@ func (s *Store) FactoryArchive(ctx context.Context, kind string, offset, limit i
 	}
 	return out, total, rows.Err()
 }
+
+// QuestionPage retains exact payloads for one bounded collection page. Count and
+// page share the caller's read view; payload encoding happens in background readers.
+func (s *Store) QuestionPage(ctx context.Context, sessionID, status string, offset, limit int) ([]json.RawMessage, int, error) {
+	where := "kind='factory-question'"
+	args := []any{}
+	if sessionID != "" {
+		where += " AND json_extract(data,'$.sessionId')=?"
+		args = append(args, sessionID)
+	}
+	if status != "all" {
+		where += " AND json_extract(data,'$.status')=?"
+		args = append(args, status)
+	}
+	var total int
+	if err := s.reader().QueryRowContext(ctx, "SELECT count(*) FROM entities WHERE "+where, args...).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+	rows, err := s.reader().QueryContext(ctx, "SELECT data FROM entities WHERE "+where+" ORDER BY id LIMIT ? OFFSET ?", append(args, limit, offset)...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+	out := []json.RawMessage{}
+	for rows.Next() {
+		var raw json.RawMessage
+		if err := rows.Scan(&raw); err != nil {
+			return nil, 0, err
+		}
+		out = append(out, raw)
+	}
+	return out, total, rows.Err()
+}

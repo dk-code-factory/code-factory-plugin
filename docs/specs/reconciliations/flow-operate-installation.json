@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "15b7a602462d6611cece8e552de0a53ae686880a",
-  "fingerprint": "2d7464b7ce8279162e43ce737dc79efdb08d91d654275ebb3b9ae611a159243c",
+  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
+  "fingerprint": "761060af1ea13a7fee63e58cf68e000d23171ffccf193d8f90044b99cf32f7b2",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Compared operate-installation specification and catalog contract with main; authored scenarios and dependency ownership are unchanged. Bounded SHA-256 reads affect verification resource use only.",
-    "implementation": "All operate-installation product implementation mappings are unchanged. The installer fixture checks owner-token preservation, failed-upgrade rollback, database backup, app configuration and uninstall preservation.",
-    "tests": "The installer fixture checks owner-token preservation, failed-upgrade rollback, database backup, app configuration and uninstall preservation. Full selected fixture suites are retained; timing evidence establishes no additional installed-host acceptance."
+    "kind": "behavior",
+    "description": "S4 diagnostics now starts background work and follows its original operation receipt to completion. API audit records are admitted without disk or redaction waits; dropped-log counts and outcomes distinguish accepted work from delivered results. Background logging is bounded by queued payload bytes across handlers as well as per-handler job count. Redaction and filesystem work remain outside responses, and byte-pressure drops are counted without command payloads on disk.",
+    "implementation": "FetchDiagnostics bootstraps API v2, generates one identity and polls status under one total20second deadline including chunk retrieval. LogAPI captures bounded response metadata, admits a bounded background job and omits MCP arguments before writing private logs. Existing owner/event response boundaries remain active. Every direct logging fixture supplies a cancellable service lifetime and joins actual workers before TempDir cleanup; manual factory/event fixtures also join after store cancellation. Production request-time admission remains nonblocking. apiCallLog reserves at most8MiB of captured buffer capacities, response capacities and cloned method/path/query bytes using bounded CAS attempts. Jobs hold only a consumed-buffer value and minimal request metadata, never replay Body/readers, headers or request contexts; active work retains its byte reservation until processing returns. Existing cancellation/join ownership is unchanged.",
+    "tests": "The total-deadline fixture repeats fast running/busy responses and proves retrieval terminates without resubmission. Diagnostics operation fixtures validate pending completion and failure without resubmission; the exact-chunk regression handles busy status/chunks, reconstructs a large Unicode report and rejects corrupted data. TestAPILogQueueDropsAndRecordsOutcomeWithoutCommandPayload blocks the sink, saturates admission, then verifies drops, completion outcome and absence of private command data. TestAPILogWorkersFinishBeforeFixtureStorageDisposal blocks one shared sink behind two Handler workers, cancels their service lifetime, joins both actual workers and disposes storage without recreation. The linked-path logging refusal test awaits the actual queued warning before checking unchanged API success and preserved owner bytes. Focused repeated logger races include held sinks and all direct handler constructions. The actual authenticated64near-limit unknown-tool regression failed before the fix with131465328heap bytes versus3615464baseline. Final assertion uses two Handler instances sharing one budget, checks post-GC heap below32MiB over baseline plus actual retained-buffer count within8MiB, and observes same-handler drop counts after the held sink drains without private command text. Race instrumentation may reach the truthful HTTP deadline during large decoding; the test drains that exact owned handler before heap measurement and never calls that a successful tool result. Repeated race and existing logging tests pass. The standalone two-handler logging lifetime test installs cancellation, bounded worker joining and rejection-audit drain cleanup before any failure-capable assertion, ahead of temporary directory disposal. Deferred sink unlock still precedes cleanup on fatal assertions."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.141
+      "seconds": 1.677
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 21.665
+      "seconds": 41.371
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 55.765
+      "seconds": 85.109
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.568
+      "seconds": 9.627
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.668
+      "seconds": 8.956
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.184
+      "seconds": 27.505
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.186
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.17
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.663
+      "seconds": 0.667
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.188
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.169
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.211
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 685.949
+      "seconds": 678.74
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 502.197
+      "seconds": 517.627
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.937
+      "seconds": 4.972
     },
     {
       "command": [
@@ -156,36 +156,36 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.176
+      "seconds": 67.281
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "5174a1798d68528a223c4819d792f3cd0deba8ff3004458ed7762b85f5d1a73c",
-    "term:connection-submits": "a9d7e0545589a1b9e86bde84fc8143f09a5f521b375bbfd2bcf3c81c6f961fce",
-    "term:coverage-gap": "4711a29553de19a6ea6bba9ca6d553cda219aa9cda4dd52072c3c1fd8e67a2d9",
-    "term:dependency-operation": "41669fbfeb1a0a8e11b422efaf6996e4eefac679479fa3d21eae92691319ba77",
-    "term:element-w-browser-lab-key-controls": "514bc13e4314fe46c8101cf845bcd4229f81662c00eb47575ec19f0c3e234c3a",
-    "term:element-w-browser-lab-location": "61398b7bf74e2a629535baee025986bf6048ef3c06eee0e40b2f5bb4ac7dfb60",
-    "term:element-w-browser-lab-message": "4a5b45e6b0daf8706bc7a49bbdcfcf622ab3d2ea77be8ffd2633ab0caa85f7f8",
-    "term:element-w-browser-lab-navigate": "505255eafde569a1bf1f45bab8bb89306fa15a3c6b2378123e03b34131e350d7",
-    "term:element-w-browser-lab-refresh": "96708b563f55d9826d13f27cab64e5fb1b4732b1c03a931038c16df84b846396",
-    "term:element-w-browser-lab-screenshot": "264871a5836d4548684f5d227cb3d07d35c19498a26fe99538f6d1a5e8756f5f",
-    "term:element-w-browser-lab-scroll-up-down": "1770cd94a9dc82b161603ffc34fbdc3d758c38f7b23b08c41cde2d7567952a95",
-    "term:element-w-browser-lab-send-text": "b3079c26fe0672e499f6e8efc3f4f8b9d3cf80b3661584a0ecf9ecd0c60138d9",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "f8c95f693821450438b5a1334dad6416d628b12329b2a7c2e086b8167284dc55",
-    "term:element-w-browser-lab-text-to-send": "78554d49cc9b70f400af5984bd7bc37bd3f76bd097ca5dbb41eb9b78f8ce0b40",
-    "term:element-w-browser-lab-url": "1c214b01c0d7cb632e49e7de7d588424043c1c0f0d707c1f8bd7ab9bb39810d4",
-    "term:github-skill-source": "d86a1f8cdbe27ea427e5765e33b1f9073d9e8c4a866d81504be41b5e84f1acbf",
-    "term:owner": "bb8ec8288f2664af35df7d5922357f20ed5115603fd8a959f1a8f9d8532437dd",
-    "term:ui-c-browser-lab": "c71e408efa1383424fed0a9dfae17ab934210b535b386df17f3a6eb3ad1e50dc",
-    "term:ui-p-browser-lab": "3fc34b5d8f53e42d6e5f72685c6120a0bc0c2bde2940f0cfd8bee9636ac8b7c9",
-    "term:ui-page-browser-lab": "4caaec7bc72b2b2e654b03434eeaec175e78beb9d12ac5ad86b7a0ff7d2d3a2c",
-    "term:ui-w-browser-lab": "511def3b38baad8a37d5292a5cb5e588d18d5e7d0b00f394fa16b12bb4f49049",
-    "term:unverified-behavior": "e322a3b33c5777e8654050db10aa70c0c27fa2726934edc8f30e0934fd774c34",
-    "term:verification": "dc1edb27a60833e97ddf4aa1fb9388e42b73bbbb06a321b4d9311af050920d01",
-    "ui:C-BROWSER-LAB": "1945d6183d726b7e064db0659f310086945d4368592fc9da150fac8154fdac2c",
-    "ui:P-BROWSER-LAB": "6c116eecf37c093a1c8844ba8a1a6409b8bb1bf72b340205d6933771cab4886f",
-    "ui:PAGE-BROWSER-LAB": "b496b662f6a6621db24bac2beb5208fb7662dcc42bc05ad9a38e3e9284cf7220",
-    "ui:W-BROWSER-LAB": "f636574497b1e9890a356050e6ee044324180c63becb08395b4d1d65fcd49ae6"
+    "flow:operate-installation": "5e791e9eb23a67bff760e6ff07acb36ddb0aca37d0e3618958fdaa134ccf1904",
+    "term:connection-submits": "d4e13d8d6fd26f7a72f5d77b2325daf1eca0fc72102faec1ac78de107881cb30",
+    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
+    "term:dependency-operation": "312e5dd6f1ddfdfc1ecea784922bfd8f66ef3d5869742388f43972b1aa3dfaa3",
+    "term:element-w-browser-lab-key-controls": "d1dc8eb6b7a9967474df0b40b4756fc68d04d0eb111671ce14d1b8d88bcaf350",
+    "term:element-w-browser-lab-location": "7b1d170eac2a84bf84b1f00499b6b233a2216d6a3bacfac39aea214d372fdd63",
+    "term:element-w-browser-lab-message": "72e74fe44e775fc45130b47936c683d5de5d343c50fa38467c06460a58a11051",
+    "term:element-w-browser-lab-navigate": "e8d1d98af2b7836b66bcd8f89387fb83c727bbe30df73a78ddd729fea37c72fb",
+    "term:element-w-browser-lab-refresh": "9f27cd525e3f199a8c040a0da6e3d78399252295d5b6f2c341e52ad41afb36f0",
+    "term:element-w-browser-lab-screenshot": "0c39d988bcf326732b66f1d0266f2999de1375401b79137f1c8f340cdc158fcb",
+    "term:element-w-browser-lab-scroll-up-down": "b4c09876170b7b61378fbb4477939188e638ec5af09f37094f0ad04239ae9eb4",
+    "term:element-w-browser-lab-send-text": "8b1d4d04299f29a2e06fba5788df47305753362e2697f4677081dfcf10578d15",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "9149693f51bbae30140e7d657106458eeef59b8e847a581f525e2dfae900fdfa",
+    "term:element-w-browser-lab-text-to-send": "8ddebdffc074797c4d9237eee792558f885b43e548d276ca4ce9cdaeeb94c842",
+    "term:element-w-browser-lab-url": "cf0620274830a77fe93f0c6e7c5fe503107cf542d2d34206a73f99cbfc0e1dd7",
+    "term:github-skill-source": "7fd7a75ab391d9f7cba0b42bf3c5eb93286b8cb5469713113fa710c174f2913b",
+    "term:owner": "2682dc63ff4d3ca6d82b42c261a7f276ad964e994b48a4ef4c8ef0dfc0ec34a8",
+    "term:ui-c-browser-lab": "3dc48f72542d82e96ccc7c5c7a3ee421ca1166ac46c6d4c89c356e6f09b2953a",
+    "term:ui-p-browser-lab": "8c0da77238e42874b4215e2fc4cd9fb10a4244c58e1a34d8eb6964270a3f69d2",
+    "term:ui-page-browser-lab": "5d1919bad914fbb7a2af15374ab9815f2dd9d5167b74e059ef41a1a56e224e89",
+    "term:ui-w-browser-lab": "3c9f629261ad98429ac379b806f76ed72d440343f0b666e1b032fb30d73afc0d",
+    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
+    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe",
+    "ui:C-BROWSER-LAB": "cbca260d543fdca1a04c5fbb4230b59fe719b0d13c4e64541f5c5b13eb702c77",
+    "ui:P-BROWSER-LAB": "f0c0aa49a0b88b70cd4674d37daa104e6c23fb089c5a7f78740a79091f0e1b47",
+    "ui:PAGE-BROWSER-LAB": "dcc5330ae4a56c2801a3b8a3349ec8842e0a6ad6cb2308ce3ba977c187c0b382",
+    "ui:W-BROWSER-LAB": "fd61d4ada7221042794534249bb1f77ee3bc3c82150963b22fc69f20e303d928"
   }
 }

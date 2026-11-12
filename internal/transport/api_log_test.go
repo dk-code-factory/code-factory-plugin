@@ -8,16 +8,51 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	stdlog "log"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 )
+
+func apiLogFixture(t *testing.T) *Server {
+	t.Helper()
+	return apiLogFixtureForApp(t, &app.App{DataDir: t.TempDir()})
+}
+
+func apiLogFixtureForApp(t *testing.T, a *app.App) *Server {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	s := &Server{App: a, operations: &operationQueue{ctx: ctx}}
+	t.Cleanup(func() {
+		cancel()
+		awaitTransportGroup(t, &s.apiLogWorkers, "direct API log workers")
+		drainTransportBudget(t)
+	})
+	return s
+}
+
+type apiLogWarningHandler struct {
+	slog.Handler
+	warnings chan struct{}
+}
+
+func (h apiLogWarningHandler) Handle(_ context.Context, record slog.Record) error {
+	if record.Message == "Code Factory API call log unavailable; requests continue without retry" {
+		select {
+		case h.warnings <- struct{}{}:
+		default:
+		}
+	}
+	return nil
+}
 
 func apiLogRecords(t *testing.T, path string, want int) []apiCallRecord {
 	t.Helper()
@@ -89,7 +124,7 @@ func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(t *testing.T
 	if len(records) != 9 {
 		t.Fatal("request logging duplicated or omitted calls", len(records))
 	}
-	if records[0].API != "factory_state" || records[0].RPCMethod != "tools/call" || records[0].Parameters.(map[string]any)["queue"] != "review" || records[0].StartedAt.IsZero() || records[0].DurationMS < 0 {
+	if records[0].API != "factory_state" || records[0].RPCMethod != "tools/call" || len(records[0].Parameters.(map[string]any)) != 0 || records[0].APIVersion != 2 || records[0].ResponseBytes == 0 || records[0].StartedAt.IsZero() || records[0].DurationMS < 0 {
 		t.Fatal("missing API parameters/timing", records[0])
 	}
 	if records[7].API != "resources/read" || records[8].HTTPStatus != 401 {
@@ -109,7 +144,7 @@ func TestAPILogRecordsMCPParametersMethodsFailuresAndRedactsSecrets(t *testing.T
 }
 
 func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(t *testing.T) {
-	s := &Server{App: &app.App{DataDir: t.TempDir()}}
+	s := apiLogFixture(t)
 	const body = `{"action":"check","targets":["codex"],"token":"owner-body-secret"}`
 	h := s.LogAPI("owner", "owner-auth-token", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		got, err := io.ReadAll(r.Body)
@@ -133,6 +168,10 @@ func TestAPILogOwnerParametersTimingAndUnchangedRequestBody(t *testing.T) {
 }
 
 func TestAPILogRotationConcurrencyAndFailurePreserveAPI(t *testing.T) {
+	previous, writer, flags := slog.Default(), stdlog.Writer(), stdlog.Flags()
+	warnings := make(chan struct{}, 1)
+	slog.SetDefault(slog.New(apiLogWarningHandler{slog.NewTextHandler(io.Discard, nil), warnings}))
+	t.Cleanup(func() { slog.SetDefault(previous); stdlog.SetOutput(writer); stdlog.SetFlags(flags) })
 	dir := t.TempDir()
 	path := filepath.Join(dir, "logs", "api-calls.jsonl")
 	log := &apiCallLog{path: path, maxBytes: 600}
@@ -166,11 +205,16 @@ func TestAPILogRotationConcurrencyAndFailurePreserveAPI(t *testing.T) {
 		}
 	}
 	// Refuse a linked log path rather than changing unrelated owner files.
+	select {
+	case <-warnings:
+		t.Fatal("ordinary rotation failed before the refusal fixture")
+	default:
+	}
 	other := filepath.Join(t.TempDir(), "preserve.txt")
 	if err := os.WriteFile(other, []byte("preserve"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	s := &Server{App: &app.App{DataDir: t.TempDir()}}
+	s := apiLogFixture(t)
 	if err := os.Mkdir(filepath.Join(s.App.DataDir, "logs"), 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -179,6 +223,7 @@ func TestAPILogRotationConcurrencyAndFailurePreserveAPI(t *testing.T) {
 	}
 	w := httptest.NewRecorder()
 	s.LogAPI("owner", "token", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) })).ServeHTTP(w, httptest.NewRequest("GET", "/healthz", nil))
+	awaitTransportSignal(t, warnings, "queued logging failure")
 	data, _ := os.ReadFile(other)
 	if w.Code != 204 || string(data) != "preserve" {
 		t.Fatal("log failure changed API behavior or unrelated file")
@@ -186,7 +231,7 @@ func TestAPILogRotationConcurrencyAndFailurePreserveAPI(t *testing.T) {
 }
 
 func TestAPILogBoundsMalformedBodiesAndPreservesPanic(t *testing.T) {
-	s := &Server{App: &app.App{DataDir: t.TempDir()}}
+	s := apiLogFixture(t)
 	for _, body := range []string{`{"method":"tools/call","params":{"token":"malformed-secret"`, strings.Repeat("oversized-private-payload", apiLogBodyLimit/8)} {
 		w := httptest.NewRecorder()
 		s.LogAPI("mcp", "token", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -222,7 +267,7 @@ func TestAPILogBoundsMalformedBodiesAndPreservesPanic(t *testing.T) {
 }
 
 func TestAPILogCapacityRejectionsReachDaemonAndExportedBoundary(t *testing.T) {
-	s := &Server{App: &app.App{DataDir: t.TempDir()}}
+	s := apiLogFixture(t)
 	release, entered := make(chan struct{}), make(chan struct{}, httpbudget.Capacity)
 	var once sync.Once
 	var wg sync.WaitGroup
@@ -252,7 +297,7 @@ func TestAPILogCapacityRejectionsReachDaemonAndExportedBoundary(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.Handle("/healthz", s.LogAPI("owner", "private-token", next))
 	mux.Handle("/mcp", s.LogAPI("mcp", "private-token", next))
-	root := s.BoundHTTP(context.Background(), mux)
+	root := s.BoundHTTP(s.operations.ctx, mux)
 	for _, row := range []struct {
 		handler http.Handler
 		path    string
@@ -287,5 +332,176 @@ func TestAPILogCapacityRejectionsReachDaemonAndExportedBoundary(t *testing.T) {
 		if bytes.Contains(data, []byte(secret)) {
 			t.Fatal("rejection audit retained private request data", secret)
 		}
+	}
+}
+
+func TestAPILogQueueDropsAndRecordsOutcomeWithoutCommandPayload(t *testing.T) {
+	s := apiLogFixture(t)
+	sink := s.callLog()
+	sink.mu.Lock()
+	var once sync.Once
+	unlock := func() { once.Do(sink.mu.Unlock) }
+	defer unlock()
+	h := s.LogAPI("mcp", "private-token", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.Copy(io.Discard, r.Body)
+		io.WriteString(w, `{"result":{"structuredContent":{"data":{"response":{"state":"queued"}}}}}`)
+	}))
+	invoke := func(name string) {
+		body := fmt.Sprintf(`{"method":"tools/call","params":{"name":%q,"arguments":{"text":"private-command-body"}}}`, name)
+		h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("POST", "/mcp", strings.NewReader(body)))
+	}
+	for n := 0; n < 300; n++ {
+		invoke("fixture")
+	}
+	unlock()
+	path := filepath.Join(s.App.DataDir, "logs", "api-calls.jsonl")
+	apiLogRecords(t, path, 256)
+	invoke("final")
+	var final apiCallRecord
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		records := apiLogRecords(t, path, 257)
+		for _, record := range records {
+			if record.API == "final" {
+				final = record
+				break
+			}
+		}
+		if final.API != "" {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if final.DroppedLogs == 0 || final.Outcome != "queued" || final.APIVersion != 2 || final.ResponseBytes == 0 {
+		t.Fatal("missing bounded logging evidence", final)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(data, []byte("private-command-body")) {
+		t.Fatal("command payload entered disk log")
+	}
+}
+
+func TestAPILogWorkersFinishBeforeFixtureStorageDisposal(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	dir := t.TempDir()
+	s := &Server{App: &app.App{DataDir: dir}, operations: &operationQueue{ctx: ctx}}
+	t.Cleanup(func() {
+		cancel()
+		awaitTransportGroup(t, &s.apiLogWorkers, "standalone API log workers")
+		drainTransportBudget(t)
+	})
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	first, second := s.LogAPI("owner", "fixture", next), s.LogAPI("mcp", "fixture", next)
+	invoke := func(h http.Handler) { h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/healthz", nil)) }
+	invoke(first)
+	invoke(second)
+	apiLogRecords(t, filepath.Join(dir, "logs", "api-calls.jsonl"), 2)
+	done := make(chan struct{})
+	go func() { s.apiLogWorkers.Wait(); close(done) }()
+	select {
+	case <-done:
+		t.Fatal("active logger workers were not owned")
+	case <-time.After(20 * time.Millisecond):
+	}
+	sink := s.callLog()
+	sink.mu.Lock()
+	var once sync.Once
+	unlock := func() { once.Do(sink.mu.Unlock) }
+	defer unlock()
+	for range 100 {
+		invoke(first)
+		invoke(second)
+	}
+	cancel()
+	unlock()
+	awaitTransportSignal(t, done, "all Handler logger workers exiting")
+	drainTransportBudget(t)
+	if err := os.RemoveAll(dir); err != nil {
+		t.Fatal("owned worker raced storage disposal", err)
+	}
+	if _, err := os.Stat(dir); !os.IsNotExist(err) {
+		t.Fatal("disposed logging storage recreated", err)
+	}
+}
+
+func TestAPILogLargeRPCBacklogHasByteBoundAndReleasesReplayBodies(t *testing.T) {
+	f := newTrackingFixture(t)
+	sink := f.server.callLog()
+	sink.mu.Lock()
+	var once sync.Once
+	unlock := func() { once.Do(sink.mu.Unlock) }
+	defer unlock()
+	handlers := []http.Handler{f.server.Handler(f.token), f.server.Handler(f.token)}
+	body, err := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": map[string]any{"name": "unknown_tool", "arguments": map[string]any{"text": strings.Repeat("private-large-body", 55000)}}})
+	if err != nil || len(body) >= rpcRequestLimit {
+		t.Fatal("invalid near-limit RPC fixture", len(body), err)
+	}
+	runtime.GC()
+	var before runtime.MemStats
+	runtime.ReadMemStats(&before)
+	for n := 0; n < 64; n++ {
+		req := httptest.NewRequest("POST", "/mcp", bytes.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+f.token)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json, text/event-stream")
+		req.Header.Set("MCP-Protocol-Version", "2025-11-25")
+		reply := httptest.NewRecorder()
+		handlers[n%len(handlers)].ServeHTTP(reply, req)
+		if reply.Code == http.StatusServiceUnavailable && bytes.Contains(reply.Body.Bytes(), []byte("outcome_unknown")) {
+			// Race instrumentation may exhaust the HTTP deadline while decoding
+			// a near-limit body; wait for its owned handler before measuring heap.
+			drainTransportBudget(t)
+		} else if reply.Code != http.StatusOK || !bytes.Contains(reply.Body.Bytes(), []byte(`"error"`)) {
+			t.Fatal("fixture did not reject unknown tool", reply.Code, reply.Body.String())
+		}
+	}
+	drainTransportBudget(t)
+	runtime.GC()
+	var after runtime.MemStats
+	runtime.ReadMemStats(&after)
+	if after.HeapAlloc > before.HeapAlloc+32<<20 {
+		t.Errorf("completed near-limit RPC logging retained more than32MiB: before%d after%d", before.HeapAlloc, after.HeapAlloc)
+	}
+	if retained := sink.retained.Load(); retained <= 0 || retained > apiLogQueueBytes {
+		t.Errorf("shared backlog byte admission outside bound: %d", retained)
+	}
+	unlock()
+	path := filepath.Join(f.a.DataDir, "logs", "api-calls.jsonl")
+	apiLogRecords(t, path, 1)
+	deadline := time.Now().Add(2 * time.Second)
+	var dropped bool
+	for time.Now().Before(deadline) {
+		req := httptest.NewRequest("POST", "/mcp", strings.NewReader(`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"open_factory","arguments":{}}}`))
+		req.Header.Set("Authorization", "Bearer "+f.token)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json, text/event-stream")
+		req.Header.Set("MCP-Protocol-Version", "2025-11-25")
+		reply := httptest.NewRecorder()
+		handlers[0].ServeHTTP(reply, req)
+		if reply.Code != http.StatusOK {
+			t.Fatal("post-backlog opener failed", reply.Code)
+		}
+		for _, record := range apiLogRecords(t, path, 1) {
+			if record.API == "open_factory" && record.DroppedLogs > 0 {
+				dropped = true
+			}
+		}
+		if dropped {
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if !dropped {
+		t.Error("large queued bodies did not consume a bounded log byte budget")
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(data, []byte("private-large-body")) {
+		t.Error("raw command payload reached log")
 	}
 }

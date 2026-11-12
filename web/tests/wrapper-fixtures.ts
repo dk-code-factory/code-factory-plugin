@@ -66,9 +66,13 @@ export async function host(
   page: Page,
   options: {
     state?: ReturnType<typeof initial>;
+    instanceId?: () => string;
+    stateVersion?: () => number;
     assembled?: boolean;
     archive?: Record<string, Record<string, any>[]>;
     observeToolCompletions?: boolean;
+    observeToolStarts?: boolean;
+    waitForConnection?: boolean;
     deferred?: {
       name: string;
       polls?: number;
@@ -76,6 +80,7 @@ export async function host(
       losePoll?: boolean | number;
       complete?: () => boolean;
     };
+    response?: (call: Call, value: any) => any;
     fail?: string;
     lost?: string;
     settings?: boolean;
@@ -94,11 +99,9 @@ export async function host(
   } = {},
 ) {
   const state = options.state ?? initial();
-  let deferredResult: unknown;
-  let deferredPolls = 0;
   const calls: Call[] = [];
   const toolCompletions: Call[] = [];
-  if (options.observeToolCompletions) {
+  if (options.observeToolCompletions || options.observeToolStarts) {
     await page.exposeFunction("fixtureToolCompleted", (call: Call) => {
       toolCompletions.push(call);
     });
@@ -108,17 +111,19 @@ export async function host(
       const signature = "export async function call(";
       if (source.split(signature).length !== 2)
         throw new Error("Expected one actual bridge call implementation");
-      // Observe the actual SDK result decoding/resolution. The wrapper returns
-      // the same result/error; two frames then let its React continuation and
-      // read-acknowledgement effects run before notifying the test. Only this
-      // fixture requests the observer; production modules contain no test hook.
+      // Capture the DOM synchronously at bridge entry when requested. Completion
+      // observers retain the real result/error and allow two frames for React
+      // continuations before notification. Production modules have no test hook.
       const body =
         source.replace(signature, "async function fixtureObservedCall(") +
         `
-export async function call(name, args = {}) {
-  try { return await fixtureObservedCall(name, args); }
+export async function call(name, args = {}, options = {}) {
+  if (${!!options.observeToolStarts}) {
+    (window.fixtureToolStarts ||= []).push({ name, arguments: args, body: document.body.innerText });
+  }
+  try { return await fixtureObservedCall(name, args, options); }
   finally {
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (${!!options.observeToolCompletions}) requestAnimationFrame(() => requestAnimationFrame(() => {
       void window.fixtureToolCompleted({ name, arguments: args });
     }));
   }
@@ -157,8 +162,26 @@ export async function call(name, args = {}) {
     )
       forbidden.push(r.url());
   });
+  const operations = new Map<string, any>();
+  let deferredID = "";
+  let deferredPolls = 0;
+  const operationTools = new Set([
+    "session_chat",
+    "configuration_chat",
+    "session_control",
+    "answer_session_question",
+    "resolve_session_delivery",
+    "inspect_configuration",
+    "propose_configuration",
+    "confirm_configuration",
+    "user_action",
+    "link_items",
+    "sync_repositories",
+    "diagnostics",
+  ]);
   await page.exposeFunction("fixtureCall", async (p: Call) => {
     calls.push(p);
+    const respondingInstance = options.instanceId?.() ?? "fixture";
     await options.before?.(p);
     if (options.assembled) {
       const response = await fetch(fixtureDaemonOrigin + "/mcp", {
@@ -192,42 +215,6 @@ export async function call(name, args = {}) {
       if (result.error) throw new Error(JSON.stringify(result.error));
       return result.result;
     }
-    if (p.name === "operation_result") {
-      expect(p.arguments.id).toBe("fixture-operation");
-      deferredPolls++;
-      const lostPolls =
-        typeof options.deferred?.losePoll === "number"
-          ? options.deferred.losePoll
-          : options.deferred?.losePoll
-            ? 1
-            : 0;
-      if (deferredPolls <= lostPolls)
-        return {
-          isError: true,
-          content: [
-            { type: "text", text: "McpServerError: Connection failed" },
-          ],
-        };
-      if (
-        deferredPolls < (options.deferred?.polls ?? 3) ||
-        options.deferred?.complete?.() === false
-      )
-        return {
-          structuredContent: {
-            operation: {
-              id: "fixture-operation",
-              tool: options.deferred?.name,
-              state: "running",
-            },
-          },
-        };
-      if (options.deferred?.error)
-        return {
-          isError: true,
-          content: [{ type: "text", text: options.deferred.error }],
-        };
-      return { structuredContent: { data: deferredResult } };
-    }
     const rejection = options.reject?.(p);
     if (p.name === options.fail || rejection)
       return {
@@ -239,6 +226,55 @@ export async function call(name, args = {}) {
     let data: any = null;
     const args = p.arguments;
     switch (p.name) {
+      case "open_factory":
+      case "open_settings":
+        data = {};
+        break;
+      case "operation_status": {
+        let result = operations.get(args.requestId) || {
+          state: "lost",
+          error:
+            "Connection interrupted; request outcome may be unknown. Inspect saved state before retrying.",
+        };
+        if (args.requestId === deferredID) {
+          deferredPolls++;
+          const losses =
+            typeof options.deferred?.losePoll === "number"
+              ? options.deferred.losePoll
+              : options.deferred?.losePoll
+                ? 1
+                : 0;
+          if (deferredPolls <= losses)
+            return {
+              isError: true,
+              content: [
+                { type: "text", text: "McpServerError: Connection failed" },
+              ],
+            };
+          if (
+            deferredPolls < (options.deferred?.polls ?? 3) ||
+            options.deferred?.complete?.() === false
+          )
+            result = { ...result, state: "running" };
+          else if (options.deferred?.error)
+            result = {
+              ...result,
+              state: "failed",
+              error: options.deferred.error,
+            };
+        }
+        return {
+          content: [],
+          structuredContent: {
+            data: {
+              apiVersion: 2,
+              instanceId: respondingInstance,
+              response: options.response?.(p, result) ?? result,
+            },
+          },
+        };
+      }
+
       case "factory_state": {
         const view = args.view || "issues";
         const fingerprint = JSON.stringify([state, relationships]);
@@ -246,12 +282,16 @@ export async function call(name, args = {}) {
           stateFingerprint = fingerprint;
           stateVersion++;
         }
-        if (args.sinceVersion === stateVersion) {
-          data = { unchanged: true, version: stateVersion };
-          stateReplies.push({ version: stateVersion, unchanged: true, view });
+        const version = options.stateVersion?.() ?? stateVersion;
+        if (
+          args.sinceVersion === version &&
+          args.sinceInstanceId === respondingInstance
+        ) {
+          data = { unchanged: true, version };
+          stateReplies.push({ version, unchanged: true, view });
           break;
         }
-        stateReplies.push({ version: stateVersion, unchanged: false, view });
+        stateReplies.push({ version, unchanged: false, view });
         const filter = args.filter || "open";
         const search = String(args.search || "").toLowerCase();
         const rows = state.inbox.filter((entry) => {
@@ -290,7 +330,7 @@ export async function call(name, args = {}) {
           limit = Math.min(200, args.limit || 50);
         data = {
           ...state,
-          version: stateVersion,
+          version,
           selectedEntry:
             view === "conversation"
               ? state.inbox
@@ -307,6 +347,32 @@ export async function call(name, args = {}) {
           })),
           inboxTotal: rows.length,
         };
+        const scope =
+          view === "configuration"
+            ? "configuration"
+            : view === "conversation"
+              ? args.itemId
+              : undefined;
+        const pending = state.questions.filter(
+          (q) => q.status === "pending" && (!scope || q.sessionId === scope),
+        );
+        const questionOffset = [
+          "messages",
+          "conversation",
+          "configuration",
+        ].includes(view)
+          ? offset
+          : 0;
+        data.questionTotal = pending.length;
+        data.questionOffset = questionOffset;
+        data.questionLimit = limit;
+        data.pendingQuestionTotal = state.questions.filter(
+          (q) => q.status === "pending",
+        ).length;
+        data.questions = [
+          ...pending.slice(questionOffset, questionOffset + limit),
+          ...state.questions.filter((q) => q.status !== "pending").slice(-25),
+        ];
         if (view !== "configuration") {
           data.settings = undefined;
           data.proposals = [];
@@ -484,25 +550,42 @@ export async function call(name, args = {}) {
       default:
         throw new Error(`Unimplemented fixture tool ${p.name}`);
     }
-    if (p.name === options.lost)
-      throw new Error("Connection failed after acceptance");
+
     const responseData = structuredClone(data);
     await options.after?.(p, responseData);
-    if (p.name === options.deferred?.name) {
-      deferredResult = responseData;
-      return {
-        structuredContent: {
-          operation: {
-            id: "fixture-operation",
-            tool: p.name,
-            state: "running",
-          },
-        },
-      };
+    const operation = operationTools.has(p.name);
+    const receipt = {
+      state: "succeeded",
+      requestId: args.requestId,
+      instanceId: respondingInstance,
+      result: responseData,
+    };
+    if (operation) operations.set(args.requestId, receipt);
+    if (p.name === options.deferred?.name) deferredID = args.requestId;
+    if (p.name === options.lost) {
+      operations.set(args.requestId, {
+        ...receipt,
+        state: "uncertain",
+        error:
+          "Connection to Code Factory interrupted; inspect saved state before retrying.",
+      });
+      throw new Error("Connection failed after acceptance");
     }
     return {
       content: [{ type: "text", text: "Fixture result" }],
-      structuredContent: { data: responseData },
+      structuredContent: {
+        data: {
+          apiVersion: 2,
+          instanceId: respondingInstance,
+          response:
+            options.response?.(p, responseData) ??
+            (p.name === options.deferred?.name
+              ? { ...receipt, state: "queued" }
+              : operation
+                ? receipt
+                : { state: "ready", value: responseData }),
+        },
+      },
     };
   });
   await page.route("**/wrapper-host", (route) =>
@@ -523,9 +606,10 @@ export async function call(name, args = {}) {
     });
   await page.goto("/wrapper-host");
   const ui = page.frameLocator("iframe");
-  await expect(
-    ui.getByRole("status", { name: "Connection status" }),
-  ).toHaveText("Connected");
+  if (options.waitForConnection !== false)
+    await expect(
+      ui.getByRole("status", { name: "Connection status" }),
+    ).toHaveText("Connected");
   const nextStateCallAfter = async (count: number) => {
     await expect
       .poll(() => calls.filter((call) => call.name === "factory_state").length)

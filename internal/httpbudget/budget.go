@@ -22,6 +22,7 @@ const MaxResponseBytes = 8 << 20
 
 type key struct{}
 type requestState struct {
+	writer   *response
 	complete chan chan int
 	outcome  atomic.Int32
 }
@@ -62,6 +63,29 @@ func Complete(ctx context.Context) int {
 		return <-ack
 	case <-ctx.Done():
 		return Outcome(ctx, http.StatusServiceUnavailable)
+	}
+}
+
+// LimitResponse lowers this request's finite response ceiling while preserving
+// any smaller enclosing limit. Live streams retain their acknowledged lifetime.
+func LimitResponse(ctx context.Context, maxBytes int) {
+	state, _ := ctx.Value(key{}).(*requestState)
+	if state == nil || state.writer == nil || maxBytes <= 0 {
+		return
+	}
+	w := state.writer
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.live || maxBytes >= w.maxBytes {
+		return
+	}
+	w.maxBytes = maxBytes
+	if w.body.Len() > maxBytes {
+		w.failed = true
+		select {
+		case w.overflow <- struct{}{}:
+		default:
+		}
 	}
 }
 
@@ -131,6 +155,7 @@ func (b *boundary) wrap(lifetime context.Context, next http.Handler) http.Handle
 		s := &requestState{complete: make(chan chan int)}
 		ctx = context.WithValue(ctx, key{}, s)
 		rw := &response{header: make(http.Header), maxBytes: b.maxBytes, stream: make(chan chan bool), ctx: ctx, wire: w, overflow: make(chan struct{}, 1)}
+		s.writer = rw
 		done := make(chan struct{})
 		var panicValue any
 		requestID := requests.Add(1)
@@ -156,7 +181,7 @@ func (b *boundary) wrap(lifetime context.Context, next http.Handler) http.Handle
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Cache-Control", "no-store")
 			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = io.WriteString(w, `{"error":"response_limit_exceeded","message":"Response exceeds the supported 8MiB limit; inspect saved state and use a narrower read before retrying."}`+"\n")
+			_, _ = io.WriteString(w, `{"error":"response_limit_exceeded","message":"Response exceeds its supported size limit; inspect saved state and use a narrower read before retrying."}`+"\n")
 		}
 		commit := func() int {
 			if time.Now().After(deadline) || ctx.Err() != nil {

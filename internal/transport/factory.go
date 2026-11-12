@@ -17,14 +17,31 @@ import (
 // Pipeline launch, retained review publication and report orchestration are absent.
 func NewFactory(a *app.App, f *factory.Service, ev *events.Service) *Server {
 	s := &Server{App: a, Events: ev}
-	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.3.0"}, &mcp.ServerOptions{Instructions: "Code Factory routes configured GitHub events to one retained Codex conversation per PR. Listing and opening do not launch agents. Use session_chat to start or steer authorized work, session_control to run/resume/interrupt/clean up, and session_questions plus answer_session_question for exact human answers and approvals. Inspect uncertain delivery before retrying. Skills own execution and publishing. Use configuration_chat for settings changes, inspect concrete proposals, and obtain explicit user confirmation before confirm_configuration. Never invent answers or confirmation. Native Codex configuration and authentication are reused.", SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
+	m := mcp.NewServer(&mcp.Implementation{Name: "code-factory", Version: "0.4.0"}, &mcp.ServerOptions{Instructions: "API version 2. First call open_factory or open_settings for bootstrap instanceId. Reads return ready/value or pending; poll pending reads every 250 ms. Mutations, diagnostics and native inspection return operation receipts: use a new client-generated requestId with bootstrap instanceId, poll operation_status, and never describe queued/running acceptance as delivery. Repeated IDs retrieve the original operation; lost or uncertain work requires inspection, never automatic replay. Resolve large JSON document descriptors using versioned document_chunk calls. Code Factory routes configured GitHub events to one retained Codex conversation per PR. Listing and opening do not launch agents. Use session_chat to start or steer authorized work, session_control to run/resume/interrupt/clean up, and session_questions plus answer_session_question for exact human answers and approvals. Inspect uncertain delivery before retrying. Skills own execution and publishing. Use configuration_chat for settings changes, inspect concrete proposals, and obtain explicit user confirmation before confirm_configuration. Never invent answers or confirmation. Native Codex configuration and authentication are reused.", SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25", "2025-06-18"}})
 	s.MCP = m
-	registerOperations(s, f.Context())
+	registerToolBudget(m)
 	uri := registerUIResource(m, web.HTML)
 	settingsURI := registerSettingsUIResource(m, web.SettingsHTML())
+	s.documents = &documentCache{}
+	s.operations = newOperationQueue(a.Store, s.documents)
+	s.projections = newProjectionCache(a.Store, s.documents)
 	cache := &factoryInboxCache{}
+	bind(s, uri, "operation_status", "Read an operation by its original instance and request identity; never replay lost or uncertain work.", false, true, func(_ context.Context, in struct {
+		Empty
+		InstanceID string `json:"instanceId"`
+		RequestID  string `json:"requestId"`
+	}) (any, error) {
+		return s.operations.status(in.InstanceID, in.RequestID), nil
+	})
+	bind(s, uri, "document_chunk", "Read one immutable JSON document chunk (32 KiB base64); reassemble all chunks of the exact version before using functional data.", false, true, func(_ context.Context, in struct {
+		Empty
+		Version string `json:"version"`
+		Index   int    `json:"index"`
+	}) (any, error) {
+		return s.documents.chunk(in.Version, in.Index)
+	})
 	state := func(ctx context.Context, in factoryStateInput) (any, error) {
-		return factoryState(ctx, a, f, in, cache)
+		return factoryState(ctx, a, in, cache)
 	}
 	bind(s, uri, "open_factory", "Open the GitHub inbox and retained sessions.", false, true, state)
 	bind(s, settingsURI, "open_settings", "Open persistent configuration chat and effective settings.", false, true, func(ctx context.Context, _ Empty) (any, error) {
@@ -33,10 +50,10 @@ func NewFactory(a *app.App, f *factory.Service, ev *events.Service) *Server {
 	bind(s, uri, "factory_state", "Read one bounded bodyless inbox page and compact session/question status for the requested view. Full source is available through factory_item; configuration payloads are returned only for that view. Viewing never launches work.", false, true, state)
 	bind(s, uri, "factory_item", "Read a source item and its local relationships without marking it read or flushing events.", false, true, func(ctx context.Context, in IDInput) (any, error) {
 		var item domain.Item
-		if err := a.Store.Get(ctx, "item", in.ID, &item); err != nil {
+		if err := projectionStore(ctx, a.Store).Get(ctx, "item", in.ID, &item); err != nil {
 			return nil, err
 		}
-		links, err := store.Select[domain.Relationship](ctx, a.Store, "relationship", "related", item.ID)
+		links, err := store.Select[domain.Relationship](ctx, projectionStore(ctx, a.Store), "relationship", "related", item.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +82,10 @@ func NewFactory(a *app.App, f *factory.Service, ev *events.Service) *Server {
 	}) (any, error) {
 		return f.Control(ctx, in.ID, in.Action)
 	})
-	bind(s, uri, "session_questions", "Read native questions/approvals and explicit blocked status requests with exact options and identities.", false, true, func(ctx context.Context, _ Empty) (any, error) { return f.Questions(ctx) })
+	bind(s, uri, "session_questions", "Read a bounded page of exact native questions/approvals or explicit status requests. Filter by sessionId and status (pending by default); page through total without truncating payloads.", false, true, func(ctx context.Context, in questionPageInput) (any, error) {
+		return questionPage(ctx, projectionStore(ctx, a.Store), in)
+	})
+
 	bind(s, uri, "answer_session_question", "Deliver the human's answer once. Stale, duplicate and uncertain answers are never replayed.", false, false, func(ctx context.Context, in struct {
 		ID     string         `json:"id"`
 		Answer map[string]any `json:"answer"`
@@ -90,7 +110,7 @@ func NewFactory(a *app.App, f *factory.Service, ev *events.Service) *Server {
 		ID    string `json:"id"`
 		After int64  `json:"after,omitempty"`
 	}) (any, error) {
-		return a.Store.SessionEvents(ctx, in.ID, in.After, 100)
+		return projectionStore(ctx, a.Store).SessionEvents(ctx, in.ID, in.After, 100)
 	})
 	bind(s, settingsURI, "inspect_configuration", "Read actual native Codex configuration layers for a checkout. No model turn or file write.", true, true, func(ctx context.Context, in struct {
 		Empty

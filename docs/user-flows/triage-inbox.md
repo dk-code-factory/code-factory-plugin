@@ -26,6 +26,13 @@ The private owner connection is established. Application data starts clean in th
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
+
+Saved content is current only after its required saved revisions are ready. While
+the requested revision is preparing, show loading and disable actions needing that
+content. Searches include saved source bodies. Large source, configuration and exact
+question documents remain complete through versioned parts; never silently discard
+functional text. A lost or abandoned detail view does not acknowledge a revision.
+
 ## Scenarios
 
 - **S1** — Open an issue or PR conversation without creating or flushing a session.
@@ -35,6 +42,8 @@ Read-only inspection does not launch a model turn. Surface validation or provide
 - **S5** — Filter saved Issues, My PRs, Review PRs and Working queues.
 - **S6** — Inspect source context and issue-to-PR relationships.
 
+- **S7** — Wait for current saved context and retrieve complete large source without acknowledging an abandoned revision.
+
 ## Verification scope
 
 The assertion references below establish their fixture scope. Native installed-host, real-provider and assistive-technology acceptance require separate dated observations. The retired pipeline editor, review artifacts, AI question repair and built-in issue-report ledger have no compatibility path.
@@ -42,7 +51,7 @@ The assertion references below establish their fixture scope. Native installed-h
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item).
+Glossary: [inbox](../glossary/README.md#inbox), [work-item](../glossary/README.md#work-item), [operation-receipt](../glossary/README.md#operation-receipt), [daemon-instance](../glossary/README.md#daemon-instance), [read-projection](../glossary/README.md#read-projection), [document-chunk](../glossary/README.md#document-chunk).
 UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [PAGE-MY-PRS](../ui/README.md#PAGE-MY-PRS), [PAGE-REVIEW-PRS](../ui/README.md#PAGE-REVIEW-PRS), [PAGE-WORKING](../ui/README.md#PAGE-WORKING), [W-INBOX-QUERY](../ui/README.md#W-INBOX-QUERY), [W-ITEM-OVERVIEW](../ui/README.md#W-ITEM-OVERVIEW), [W-PRIORITY](../ui/README.md#W-PRIORITY), [W-RELATIONSHIPS](../ui/README.md#W-RELATIONSHIPS).
 
 ## Flow diagram
@@ -58,6 +67,7 @@ flowchart TD
     N6["Inspect source context and issue-to-PR relationships #40;S6#41;"]
     N7(["Hold saved work and show the failure or human request"])
     N8(["Retain conversation and saved evidence"])
+    N9["Wait for current saved context and retrieve complete large source without acknowledging an abandoned revision #40;S7#41;"]
     N0 -->|"authorized action"| N1
     N1 -->|"validated or explicitly resumed"| N2
     N1 -->|"missing authority, stale identity or unavailable dependency"| N7
@@ -71,6 +81,9 @@ flowchart TD
     N5 -->|"missing authority, stale identity or unavailable dependency"| N7
     N6 -->|"validated or explicitly resumed"| N8
     N6 -->|"missing authority, stale identity or unavailable dependency"| N7
+    N0 -->|"inspect current state or submit authorized work"| N9
+    N9 -->|"current result or completed action"| N8
+    N9 -->|"pending, busy, failed, lost or uncertain outcome"| N7
 ```
 
 ## Implementation references
@@ -81,6 +94,9 @@ flowchart TD
 - [internal/app/github_usage.go](../../internal/app/github_usage.go) — Current triage-inbox implementation or fixture/build dependency.
 - [internal/app/work.go](../../internal/app/work.go) — Current triage-inbox implementation or fixture/build dependency.
 - [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate. (`func factoryState(`)
+- [internal/transport/projections.go](../../internal/transport/projections.go) — Background immutable snapshot preparation and revision matching; exact large-document chunks. (`func (c *projectionCache) read(`)
+- [internal/store/revisions.go](../../internal/store/revisions.go) — Committed dependency revisions isolate unrelated transcript traffic and selected items. (`func (s *Store) Revision(`)
+- [internal/store/revisions.go](../../internal/store/revisions.go) — Persistent immutable revision branches share unchanged history and preserve pinned snapshot revisions. (`func (s *Store) publishRevisions(`)
 
 ## Test references
 
@@ -111,6 +127,14 @@ flowchart TD
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestIncomingPriorityRelationshipsInvalidateCacheAndLateToolRecords(`; S4, S6. Incoming relationship add, ticket-state change, evidence change and removal reject stale tool records, invalidate actual InboxSummaries AI priority, and trigger one fresh assessment each. Fresh results cache and all five assessments reuse one native thread; label then manual override precedence starts no extra assessment.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `inbox source links open GitHub without selecting or reading an item`; S1, S2, S6. Separate issue and PR row links invoke the host with the exact GitHub URL, keep inbox selection/read state unchanged and make no detail, read-acknowledgment or session mutation call.
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestFactoryStateReusesInboxAcrossQueriesAndRefreshesAfterMutation(`; S5. After warming the derived inbox, a raw SQL sentinel makes any repeated full decode fail. Changed filter/page/search/tab and conversation queries still succeed from the retained projection; an ordinary source mutation invalidates the cache and returns the updated title.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `pending saved revisions hide stale context and disable dependent actions`; S7. Pending revisions hide old source, disable Send and poll again. A held current-detail response permits no new-revision acknowledgment; at the eventual acknowledgment bridge entry the matching new source is already displayed.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestProjectionCurrentReadsChunksAndUnrelatedTranscript(`; S7. Large Unicode source is reconstructed exactly, old projections cannot claim a newly committed revision, and unrelated transcript output leaves a prepared inbox ready.
+- [internal/store/revisions_test.go](../../internal/store/revisions_test.go) — `func TestRevisionSnapshotsMatchSavedDataAcrossCommits(`; S7. A pinned read sees matching old saved data and revision across a newer commit; the live store sees matching new data.
+- [internal/store/revisions_test.go](../../internal/store/revisions_test.go) — `func TestTranscriptRevisionAllocationWithRetainedHistory(`; S7. With 200001 retained keys, transcript revision updates allocate under 32 KiB each, preserve pinned revisions and retain every unrelated item/user revision.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestProjectionReadIdentifiersBoundBeforeCacheAdmission(`; S7. Authenticated read selectors reject1,025 ASCII bytes and1,026 UTF-8 bytes before any projection/operation entry, accept the exact1,024-byte boundary, and reconstruct the entire large source unchanged.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestProjectionDependencyFailureIsVisibleAndRecoversAfterRepair(`; S7. Cold malformed relationship IDs and malformed source/target endpoints inserted after a useful prepared read report failed with a nonzero saved revision for item detail and conversation state; replacing the record restores current source.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestRelationshipCASInvalidatesPreparedSelectedReads(`; S7. Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.
+- [internal/store/revisions_test.go](../../internal/store/revisions_test.go) — `func TestRelationshipCASEndpointsAdvanceOnlyOnSuccessfulWrites(`; S7. CAS insertion and replacement publish old/new endpoint revisions. Stale and absence-predicate rejections preserve all revisions; unrelated endpoints stay unchanged.
 
 ## Verification and gaps
 

@@ -43,7 +43,7 @@ func factoryEvents(ctx context.Context, a *app.App, in factoryEventsInput) (any,
 	if in.Limit > 200 {
 		in.Limit = 200
 	}
-	records, total, err := a.Store.FactoryArchive(ctx, in.Kind, in.Offset, in.Limit)
+	records, total, err := projectionStore(ctx, a.Store).FactoryArchive(ctx, in.Kind, in.Offset, in.Limit)
 	if err != nil {
 		return nil, err
 	}
