@@ -105,12 +105,7 @@ class ConnectionTest:
 
     def rpc(self, method, params, token):
         value = self.rpc_request(method, params, token)
-        deadline = time.monotonic() + 30
-        while method == 'tools/call' and value.get('structuredContent', {}).get('operation'):
-            operation = value['structuredContent']['operation']
-            self.require(time.monotonic() < deadline, 'Accepted operation did not finish')
-            time.sleep(.1)
-            value = self.rpc_request('tools/call', {'name': 'operation_result', 'arguments': {'id': operation['id']}}, token)
+
         return value
 
     def probes(self):
@@ -189,7 +184,7 @@ class ConnectionTest:
         tool = next((t for t in result['tools'] if t['name'] == 'open_factory'), None)
         self.require(tool is not None, 'open_factory missing from deployed MCP tools')
         result = self.rpc('tools/call', {'name': 'open_factory', 'arguments': {}}, tokens['access_token'])
-        self.require(not result.get('isError') and 'data' in result.get('structuredContent', {}), 'open_factory did not return app state')
+        self.require(not result.get('isError') and result.get('structuredContent', {}).get('data', {}).get('apiVersion') == 2, 'open_factory did not return API v2 bootstrap')
         resource = tool.get('_meta', {}).get('ui', {}).get('resourceUri')
         self.require(bool(resource), 'MCP App resource is not advertised')
         result = self.rpc('resources/read', {'uri': resource}, tokens['access_token'])

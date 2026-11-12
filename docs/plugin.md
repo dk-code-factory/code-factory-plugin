@@ -1,6 +1,6 @@
 # Code Factory plugin
 
-The complete private plugin is `dist/code-factory-plugin-0.3.0.zip`. Its root
+The complete private plugin is `dist/code-factory-plugin-0.4.0.zip`. Its root
 contains a portable `plugin.json`, portable `mcp.json`, Codex compatibility
 manifests, SVG branding, onboarding, daily-work, administration, issue-drafting and status-reporting skills.
 It bundles the Tailscale HTTPS endpoint and discovers OAuth from the server's
@@ -9,7 +9,7 @@ protected-resource metadata. No client secret or local owner token ships.
 When bundled plugin content changes, advance the version in both `plugin.json`
 and `.codex-plugin/plugin.json` before replacing the browser package. Work's
 **Upload new version** action rejects an archive that reuses the installed version.
-Version 0.3.0 packages the native conversation wrapper and all five current skills;
+Version 0.4.0 packages API v2 with the daemon and all five current skills;
 earlier upload observations do not establish acceptance of this version.
 
 The installed source lives at `~/.local/lib/code-factory/plugin`. Running
@@ -128,3 +128,65 @@ and explicit run/resume bypass the timer.
 Agent and skill GitHub commands, native plugin management and other clients use
 GitHub independently of the daemon's request budget. Verify each installation
 separately using the [acceptance guide](acceptance.md).
+
+## API version 2
+
+Upgrade the daemon and plugin together, refresh tool schemas and open a new
+content-addressed UI resource. The application database and saved conversations
+remain in place; only safe operation metadata is added.
+
+Tool results without MCP `isError` return `structuredContent.data` with
+`apiVersion: 2`, the current `instanceId` and a `response`. Check `isError` first:
+ordinary tool
+errors, including an unavailable document version, use text content without that
+envelope. `open_factory` and `open_settings` return ready
+bootstrap and `resourceUri`; application data is loaded with separate read tools.
+Read responses are `pending`, `busy`, `failed`, or `ready` with `revision` and
+`value`. Pending means the requested saved revision is not prepared; do not present
+an older snapshot as current. Poll visible pending work after 250 ms.
+Read selectors `factory_item.id`, `session_transcript.id` and
+`factory_state.itemId` accept at most 1024 UTF-8 bytes. Oversized selectors are
+explicitly rejected before projection admission; identifiers are never shortened.
+This bound does not limit source bodies or document chunks.
+Revisions are comparable only within their daemon instance. A `factory_state`
+unchanged check requires both `sinceVersion` and its `sinceInstanceId`; another or
+absent instance returns the full current projection. A daemon change retires old
+read ownership, including displayed-detail acknowledgments. Late prior-instance
+responses cannot replace current content or change the active command identity.
+
+Chat, controls, answers, local edits, configuration proposals/confirmation,
+synchronization, diagnostics and native configuration inspection require a new
+client-generated `requestId` and bootstrap `instanceId`. Their receipt has
+`requestId`, `instanceId`, `tool` and `state`. Poll `operation_status` with those
+original identities for queued, running, succeeded, failed, uncertain or lost.
+Acceptance is never delivery. A succeeded receipt contains `result`; an unavailable
+retained result is explicit. Error details can also expire; `errorUnavailable`
+distinguishes missing details from an empty error. Terminal identities and states
+survive body eviction, and neither eviction nor restart permits replay. Retained
+serialized result/error payloads share a 64 MiB budget, separate from the encoded
+document cache; identity metadata is retained separately.
+Lost responses are resolved by status without another
+submission. Repeated IDs return original work with the same current detail-availability flags
+as status polling, including independently evicted document chunks. IDs from an older daemon
+instance never authorize resubmission after restart. Queue saturation returns
+`busy` without acceptance. Outer JSON-RPC IDs are separate transport correlation
+identifiers: their daemon JSON encoding, including escaping, is limited to 512
+bytes. Larger identifiers receive HTTP 413 before tool execution or operation
+admission; identifiers are never shortened. This limit does not reduce resource
+content or change the logical `requestId`/`instanceId` contract. The complete
+tool response, including SDK transport validation errors, has a 64 KiB ceiling;
+large resource responses retain their separate limit. Background operation execution has a separate five-minute
+deadline; interrupted effects are uncertain and never replayed automatically. Doctor
+bounds its complete retrieval, including polling, to 20 seconds.
+
+A large value/result is represented as `document` with `version`, `chunks`, `bytes`
+and `encoding: "base64-json"`. Fetch each zero-based `document_chunk` using the
+exact version and index. Decode base64, concatenate bytes in order, verify the
+byte count, then decode UTF-8 JSON. Each encoded chunk is at most 32 KiB and each
+tool response at most 64 KiB. Evicted document versions require refreshing their
+owning read; never silently truncate exact source, configuration or questions.
+
+`session_questions` returns `questions`, `total`, `offset` and `limit` in its ready
+value. It accepts an optional `sessionId`, a `status` (pending by default, or all
+for retained history), nonnegative offset and a limit from 1 to 200. The UI exposes
+previous/next question pages; exact payloads can still use document chunks.

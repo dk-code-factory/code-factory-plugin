@@ -22,12 +22,17 @@ The private owner connection is established. Application data starts clean in th
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
+Operation receipts retain safe identities and completion metadata. Their journal
+never stores answer bodies or command payloads; API disk logs omit tool arguments.
+
 ## Scenarios
 
 - **S1** — Reuse native Codex and GitHub authentication without importing credentials into app settings.
 - **S2** — Encrypt secret answers for retained redaction before native delivery.
 - **S3** — Redact secrets across split streaming and completed output after resumption.
 - **S4** — Expire live request identities on disconnect instead of replaying secret answers.
+
+- **S5** — Persist operation intent without retaining command payloads or answer bodies.
 
 ## Verification scope
 
@@ -36,7 +41,7 @@ The assertion references below establish their fixture scope. Native installed-h
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [retained-session](../glossary/README.md#retained-session).
+Glossary: [retained-session](../glossary/README.md#retained-session), [operation-receipt](../glossary/README.md#operation-receipt), [daemon-instance](../glossary/README.md#daemon-instance), [read-projection](../glossary/README.md#read-projection), [document-chunk](../glossary/README.md#document-chunk).
 UI entities: [W-QUESTIONS](../ui/README.md#W-QUESTIONS), [W-TRANSCRIPT](../ui/README.md#W-TRANSCRIPT).
 
 ## Flow diagram
@@ -50,6 +55,7 @@ flowchart TD
     N4["Expire live request identities on disconnect instead of replaying secret answers #40;S4#41;"]
     N5(["Hold saved work and show the failure or human request"])
     N6(["Retain conversation and saved evidence"])
+    N7["Persist operation intent without retaining command payloads or answer bodies #40;S5#41;"]
     N0 -->|"authorized action"| N1
     N1 -->|"validated or explicitly resumed"| N2
     N1 -->|"missing authority, stale identity or unavailable dependency"| N5
@@ -59,6 +65,9 @@ flowchart TD
     N3 -->|"missing authority, stale identity or unavailable dependency"| N5
     N4 -->|"validated or explicitly resumed"| N6
     N4 -->|"missing authority, stale identity or unavailable dependency"| N5
+    N0 -->|"inspect current state or submit authorized work"| N7
+    N7 -->|"current result or completed action"| N6
+    N7 -->|"pending, busy, failed, lost or uncertain outcome"| N5
 ```
 
 ## Implementation references
@@ -72,8 +81,9 @@ flowchart TD
 - [internal/store/vault.go](../../internal/store/vault.go) — Current protect-secrets implementation or fixture/build dependency.
 - [internal/store/redactor.go](../../internal/store/redactor.go) — Current protect-secrets implementation or fixture/build dependency.
 - [cmd/code-factory/main.go](../../cmd/code-factory/main.go) — Serve opens the retained connection vault solely as a redaction source while fresh application state remains separate. (`func run(`)
-- [internal/transport/operations.go](../../internal/transport/operations.go) — Retain a tool/operation identity, panic type and stack in owner diagnostics without formatting private panic values or leaking them into tool responses. (`func (o *operations) run(`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects. (`func (q *operationQueue) submit(`)
 - [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects. (`func (q *operationQueue) submit(`)
 
 ## Test references
 
@@ -90,6 +100,8 @@ flowchart TD
 - [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationPanicRetainsOwnerDiagnosticsWithoutPrivatePayload(`; S1. Owner diagnostics retain the failure stack/type/identity while credential and body sentinels appear in neither diagnostics nor the MCP error.
 - [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestLateHandlerPanicRetainsSanitizedOwnerDiagnostic(`; S1. Late panic diagnostics retain type/request identity/stack without raw private panic or query values.
 - [cmd/code-factory/proxy_budget_test.go](../../cmd/code-factory/proxy_budget_test.go) — `func TestProxyUnknownOutcomeDoesNotReplayMutation(`; S1. Actual stdio caller reports unknown outcome after503 and sends the original mutation once.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationJournalPrecedesEffectsAndNeverStoresAnswers(`; S5. The effect observes its durable running intent; the operation journal contains neither answer bodies nor results.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestCompletedOperationQueueClearsObsoleteInputClosures(`; S5. Decreasing bursts of 8, 5 and 3 payload-capturing operations execute once, drain all live byte/scope accounting and leave every obsolete pending backing slot zero, releasing completed input closures.
 
 ## Verification and gaps
 

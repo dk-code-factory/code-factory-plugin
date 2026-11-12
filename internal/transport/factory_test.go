@@ -13,7 +13,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -40,7 +42,12 @@ func TestFactoryPublicInterfacesRetirePipelines(t *testing.T) {
 	if err = f.Init(ctx); err != nil {
 		t.Fatal(err)
 	}
-	s := httptest.NewServer(NewFactory(a, f, events.New(db, vault)).Handler(strings.Repeat("a", 64)))
+	server := NewFactory(a, f, events.New(db, vault))
+	t.Cleanup(func() {
+		awaitTransportGroup(t, &server.apiLogWorkers, "public-interface log workers")
+		drainTransportBudget(t)
+	})
+	s := httptest.NewServer(server.Handler(strings.Repeat("a", 64)))
 	defer s.Close()
 	request := func(method string, params map[string]any) map[string]any {
 		t.Helper()
@@ -73,6 +80,7 @@ func TestFactoryPublicInterfacesRetirePipelines(t *testing.T) {
 		return value.Result
 	}
 	catalog := request("tools/list", map[string]any{})
+	assertOperationClassifiersMatchCatalog(t, catalog)
 	names := map[string]bool{}
 	for _, raw := range catalog["tools"].([]any) {
 		name := raw.(map[string]any)["name"].(string)
@@ -101,11 +109,69 @@ func TestFactoryPublicInterfacesRetirePipelines(t *testing.T) {
 		t.Fatal(result)
 	}
 	result = request("tools/call", map[string]any{"name": "answer_session_question", "arguments": map[string]any{"id": "missing", "answer": map[string]any{"answers": map[string]any{}}}})
-	if result["isError"] != true || !strings.Contains(string(mustJSON(result)), "record not found") {
-		t.Fatal("answer object failed schema validation instead of reaching the question handler", result)
+	if result["isError"] != true || !strings.Contains(string(mustJSON(result)), "requestId") {
+		t.Fatal("answer submission did not require an operation identity", result)
 	}
 }
 func mustJSON(v any) []byte { b, _ := json.Marshal(v); return b }
+
+func assertOperationClassifiersMatchCatalog(t *testing.T, catalog map[string]any) {
+	t.Helper()
+	classifiers := map[string]map[string]bool{}
+	pattern := regexp.MustCompile(`(?s)const\s+operationTools\s*=\s*new Set\(\[(.*?)\]\)`)
+	for _, path := range []string{"../../web/src/bridge.ts", "../../web/tests/wrapper-fixtures.ts"} {
+		source, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		matches := pattern.FindAllSubmatch(source, -1)
+		if len(matches) != 1 {
+			t.Fatalf("cannot inspect the actual operation classifier in %s", path)
+		}
+		var names []string
+		if err := json.Unmarshal([]byte("["+strings.TrimRight(string(matches[0][1]), " \t\r\n,")+"]"), &names); err != nil {
+			t.Fatal("operation classifier must expose its static tool names", path, err)
+		}
+		classifiers[path] = map[string]bool{}
+		for _, name := range names {
+			if classifiers[path][name] {
+				t.Fatal("duplicate operation classifier name", path, name)
+			}
+			classifiers[path][name] = true
+		}
+	}
+	registered := map[string]bool{}
+	for _, raw := range catalog["tools"].([]any) {
+		tool := raw.(map[string]any)
+		name := tool["name"].(string)
+		registered[name] = true
+		required := map[string]bool{}
+		fields, _ := tool["inputSchema"].(map[string]any)["required"].([]any)
+		for _, field := range fields {
+			required[field.(string)] = true
+		}
+		readOnly := false
+		if annotations, ok := tool["annotations"].(map[string]any); ok {
+			readOnly = annotations["readOnlyHint"] == true
+		}
+		wireOperation := required["requestId"] && required["instanceId"] && !readOnly
+		if wireOperation != isOperationTool(name) {
+			t.Fatal("server operation classification contradicts its exposed identity schema", name)
+		}
+		for path, names := range classifiers {
+			if names[name] != wireOperation {
+				t.Fatal("client/fixture classification differs from authenticated server contract", path, name)
+			}
+		}
+	}
+	for path, names := range classifiers {
+		for name := range names {
+			if !registered[name] {
+				t.Fatal("operation classifier refers to an unregistered tool", path, name)
+			}
+		}
+	}
+}
 
 func TestFactoryStatePagesCompactDataAndExplicitDelivery(t *testing.T) {
 	f := newTrackingFixture(t)
@@ -190,9 +256,9 @@ func TestFactoryStatePagesCompactDataAndExplicitDelivery(t *testing.T) {
 	if failed || !strings.Contains(detail["item"].(map[string]any)["body"].(string), marker) {
 		t.Fatal("full source detail was lost")
 	}
-	mutation, _, _, err := trackingCall(f.http.Client(), f.http.URL, f.token, "user_action", map[string]any{"id": "o/r#0777", "action": "priority", "priority": 2})
-	if err != nil || mutation["isError"] == true {
-		t.Fatal("priority mutation failed", err, mutation)
+	mutation, failed := f.call(t, "user_action", map[string]any{"id": "o/r#0777", "action": "priority", "priority": 2})
+	if failed {
+		t.Fatal("priority mutation failed", mutation)
 	}
 	conversation, failed := f.call(t, "factory_state", map[string]any{"view": "conversation", "itemId": "o/r#0777"})
 	if failed {
@@ -263,9 +329,9 @@ func TestFactoryItemReadsRequireDisplayedRevisionAcknowledgmentAndVersions(t *te
 	}
 	acknowledge := func(revision string) {
 		t.Helper()
-		r, _, _, err := trackingCall(f.http.Client(), f.http.URL, f.token, "user_action", map[string]any{"id": item.ID, "action": "read", "revision": revision})
-		if err != nil || r["isError"] == true {
-			t.Fatal("read acknowledgment failed", err, r)
+		r, failed := f.call(t, "user_action", map[string]any{"id": item.ID, "action": "read", "revision": revision})
+		if failed {
+			t.Fatal("read acknowledgment failed", r)
 		}
 	}
 	acknowledge(oldRevision)
@@ -302,7 +368,184 @@ func TestFactoryItemReadsRequireDisplayedRevisionAcknowledgmentAndVersions(t *te
 	}
 }
 
-func TestFactoryStateVersionSkipsIdleProjectionAndTracksMetadata(t *testing.T) {
+func TestFactoryStateReopenScopesVersionToDaemonInstance(t *testing.T) {
+	dir := t.TempDir()
+	first := newTrackingFixtureAt(t, dir)
+	item := domain.Item{ID: "o/r#restart", Kind: "issue", State: "open", Title: "Before restart", Revision: "before"}
+	if err := first.a.Store.Put(first.ctx, "item", item.ID, item, ""); err != nil {
+		t.Fatal(err)
+	}
+	for n := 0; n < 100; n++ {
+		if err := first.a.Store.Put(first.ctx, "user", item.ID, domain.UserState{}, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	before, failed := first.call(t, "factory_state", map[string]any{"view": "issues"})
+	if failed {
+		t.Fatal(before)
+	}
+	oldVersion, oldInstance := before["version"].(float64), first.server.operations.instance
+	first.close()
+	second := newTrackingFixtureAt(t, dir)
+	if second.server.operations.instance == oldInstance {
+		t.Fatal("reopen did not establish a new daemon identity")
+	}
+	item.Title, item.Revision = "Saved after restart", "after"
+	if err := second.a.Store.Put(second.ctx, "item", item.ID, item, ""); err != nil {
+		t.Fatal(err)
+	}
+	read := func(namespace string) map[string]any {
+		t.Helper()
+		value, failed := second.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": oldVersion, "sinceInstanceId": namespace})
+		if failed || value["unchanged"] == true || value["inbox"].([]any)[0].(map[string]any)["item"].(map[string]any)["title"] != item.Title {
+			t.Fatal("old or absent namespace suppressed different saved data", value)
+		}
+		return value
+	}
+	after := read(oldInstance)
+	if after["version"].(float64) >= oldVersion {
+		t.Fatal("fixture did not exercise a lower restarted counter")
+	}
+	for after["version"].(float64) < oldVersion {
+		if err := second.a.Store.Put(second.ctx, "user", item.ID, domain.UserState{}, ""); err != nil {
+			t.Fatal(err)
+		}
+		value, failed := second.call(t, "factory_state", map[string]any{"view": "issues"})
+		if failed {
+			t.Fatal(value)
+		}
+		if value["version"].(float64) <= after["version"].(float64) {
+			t.Fatal("saved user mutation did not advance the collision fixture")
+		}
+		after = value
+	}
+	if after["version"] != oldVersion {
+		t.Fatal("fixture did not exercise equal counters across daemon instances")
+	}
+	read(oldInstance)
+	read("")
+	idle, failed := second.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": oldVersion, "sinceInstanceId": second.server.operations.instance})
+	if failed || idle["unchanged"] != true || len(idle) != 2 {
+		t.Fatal("current instance lost its unchanged optimization", idle)
+	}
+}
+
+func TestProjectionDependencyFailureIsVisibleAndRecoversAfterRepair(t *testing.T) {
+	for _, name := range []string{"factory_item", "factory_state"} {
+		for _, shape := range []string{"cold-id", "warm-source", "warm-target"} {
+			t.Run(name+"/"+shape, func(t *testing.T) {
+				f := newTrackingFixture(t)
+				item := domain.Item{ID: "o/r#1", Repository: "o/r", Kind: "issue", State: "open", Title: "Saved source", Revision: "v1"}
+				for _, source := range []domain.Item{item, {ID: "o/r#2", Repository: "o/r", Kind: "pr", State: "open", Title: "Linked PR", Revision: "linked-v1"}} {
+					if err := f.a.Store.Put(f.ctx, "item", source.ID, source, ""); err != nil {
+						t.Fatal(err)
+					}
+					if err := f.a.Store.Put(f.ctx, "user", source.ID, domain.UserState{ID: source.ID, New: true}, ""); err != nil {
+						t.Fatal(err)
+					}
+				}
+				args := map[string]any{"id": item.ID}
+				if name == "factory_state" {
+					args = map[string]any{"view": "conversation", "itemId": item.ID}
+				}
+				if shape != "cold-id" {
+					if value, failed := f.call(t, name, args); failed {
+						t.Fatal("could not prepare valid source", value)
+					}
+				}
+				broken := map[string]any{"id": 7, "source": item.ID, "target": "o/r#2"}
+				if shape == "warm-source" {
+					broken = map[string]any{"id": "broken", "source": 7, "target": item.ID}
+				}
+				if shape == "warm-target" {
+					broken = map[string]any{"id": "broken", "source": item.ID, "target": 7}
+				}
+				if err := f.a.Store.Put(f.ctx, "relationship", "broken", broken, ""); err != nil {
+					t.Fatal(err)
+				}
+				failure, failed := f.call(t, name, args)
+				revision, hasRevision := failure["revision"].(float64)
+				if !failed || failure["state"] != "failed" || !strings.Contains(fmt.Sprint(failure["error"]), "cannot unmarshal number") || !hasRevision || revision == 0 {
+					t.Fatal("dependency failure did not reach caller at saved revision", failure)
+				}
+				link := domain.Relationship{ID: "broken", Source: item.ID, Target: "o/r#2", Kind: "implements", Manual: true}
+				if err := f.a.Store.Put(f.ctx, "relationship", link.ID, link, ""); err != nil {
+					t.Fatal(err)
+				}
+				value, failed := f.call(t, name, args)
+				if failed {
+					t.Fatal("repaired dependencies did not produce current source", value)
+				}
+				source := value
+				if name == "factory_state" {
+					source = value["selectedEntry"].(map[string]any)
+				}
+				if source["item"].(map[string]any)["title"] != item.Title {
+					t.Fatal("repaired source changed", value)
+				}
+				if name == "factory_item" && len(value["relationships"].([]any)) != 1 {
+					t.Fatal("repaired relationship missing", value)
+				}
+			})
+		}
+	}
+}
+
+func TestRelationshipCASInvalidatesPreparedSelectedReads(t *testing.T) {
+	for _, name := range []string{"factory_item", "factory_state"} {
+		t.Run(name, func(t *testing.T) {
+			f := newTrackingFixture(t)
+			for _, id := range []string{"a", "b", "c", "d"} {
+				item := domain.Item{ID: id, Repository: "o/r", Kind: "issue", State: "open", Title: id, Revision: "v1"}
+				if err := f.a.Store.Put(f.ctx, "item", id, item, ""); err != nil {
+					t.Fatal(err)
+				}
+				if err := f.a.Store.Put(f.ctx, "user", id, domain.UserState{ID: id, New: true}, ""); err != nil {
+					t.Fatal(err)
+				}
+			}
+			read := func(id string) string {
+				t.Helper()
+				args := map[string]any{"id": id}
+				if name == "factory_state" {
+					args = map[string]any{"view": "conversation", "itemId": id}
+				}
+				value, failed := f.call(t, name, args)
+				if failed {
+					t.Fatal("selected read failed", value)
+				}
+				if name == "factory_state" {
+					value = value["selectedEntry"].(map[string]any)
+				}
+				return value["detailVersion"].(string)
+			}
+			originalA, originalC := read("a"), read("c")
+			first := domain.Relationship{ID: "link", Source: "a", Target: "b", Kind: "implements", Manual: true}
+			if changed, err := f.a.Store.CompareAndSwap(f.ctx, "relationship", first.ID, nil, first); err != nil || !changed {
+				t.Fatal("CAS insert failed", changed, err)
+			}
+			insertedA := read("a")
+			if insertedA == originalA || read("c") != originalC {
+				t.Fatal("CAS insert did not refresh the selected endpoint")
+			}
+			var previous json.RawMessage
+			if err := f.a.Store.Get(f.ctx, "relationship", first.ID, &previous); err != nil {
+				t.Fatal(err)
+			}
+			next := first
+			next.Source = "c"
+			next.Target = "d"
+			if changed, err := f.a.Store.CompareAndSwap(f.ctx, "relationship", first.ID, previous, next); err != nil || !changed {
+				t.Fatal("CAS move failed", changed, err)
+			}
+			if read("a") == insertedA || read("c") == originalC {
+				t.Fatal("CAS move left an old or new endpoint stale")
+			}
+		})
+	}
+}
+
+func TestFactoryStateVersionSkipsIdleAndRejectsUnpreparedData(t *testing.T) {
 	f := newTrackingFixture(t)
 	ctx := context.Background()
 	full, failed := f.call(t, "factory_state", map[string]any{"view": "issues"})
@@ -310,56 +553,31 @@ func TestFactoryStateVersionSkipsIdleProjectionAndTracksMetadata(t *testing.T) {
 		t.Fatal(full)
 	}
 	version := full["version"].(float64)
-	idle, failed := f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": version})
+	idle, failed := f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": version, "sinceInstanceId": f.server.operations.instance})
 	if failed || idle["unchanged"] != true || len(idle) != 2 {
 		t.Fatal("idle projection was rebuilt", idle)
 	}
-	for _, kind := range []string{"factory-session", "factory-question", "factory-proposal", "factory-settings", "factory-batch"} {
-		// Test actual metadata-only writes. These never need retained contents in the cursor.
-		value := map[string]any{"id": "metadata", "execution": "idle", "status": "answered", "state": "applied", "pending": []any{}}
-		if err := f.a.Store.Put(ctx, kind, "metadata", value, ""); err != nil {
-			t.Fatal(err)
-		}
-		current, err := f.a.Store.UILatest(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if float64(current) <= version {
-			t.Fatal("metadata update invisible", kind)
-		}
-		version = float64(current)
-	}
-	// A matching version must return before scanning/decoding an inbox. The invalid
-	// title is an intentional sentinel for the otherwise expensive projection read.
-	if err := f.a.Store.Put(ctx, "item", "projection-sentinel", map[string]any{"id": "projection-sentinel", "title": map[string]string{"invalid": "would fail domain decoding"}}, ""); err != nil {
+	if err := f.a.Store.Put(ctx, "item", "projection-sentinel", map[string]any{"id": "projection-sentinel", "title": map[string]string{"invalid": "must not serve old data"}}, ""); err != nil {
 		t.Fatal(err)
 	}
-	cursor, err := f.a.Store.UILatest(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	idle, failed = f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": cursor})
-	if failed || idle["unchanged"] != true {
-		t.Fatal("idle request traversed invalid projection", idle)
-	}
-	_, failed = f.call(t, "factory_state", map[string]any{"view": "issues"})
+	_, failed = f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": version, "sinceInstanceId": f.server.operations.instance})
 	if !failed {
-		t.Fatal("projection sentinel did not exercise a failing full decode")
+		t.Fatal("unprepared revision appeared current")
 	}
-	if err = f.a.Store.Write(ctx, func(tx *store.Tx) error { return tx.Delete("item", "projection-sentinel") }); err != nil {
+	if err := f.a.Store.Write(ctx, func(tx *store.Tx) error { return tx.Delete("item", "projection-sentinel") }); err != nil {
 		t.Fatal(err)
 	}
-	full, failed = f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": cursor})
-	if failed || full["unchanged"] == true || full["version"].(float64) <= float64(cursor) {
+	full, failed = f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": version, "sinceInstanceId": f.server.operations.instance})
+	if failed || full["unchanged"] == true || full["version"].(float64) <= version {
 		t.Fatal("live mutation did not refresh", full)
 	}
 	version = full["version"].(float64)
-	if err = f.a.Store.Write(ctx, func(tx *store.Tx) error {
+	if err := f.a.Store.Write(ctx, func(tx *store.Tx) error {
 		return tx.Event("session.output", "metadata", map[string]string{"delta": "stream"})
 	}); err != nil {
 		t.Fatal(err)
 	}
-	idle, failed = f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": version})
+	idle, failed = f.call(t, "factory_state", map[string]any{"view": "issues", "sinceVersion": version, "sinceInstanceId": f.server.operations.instance})
 	if failed || idle["unchanged"] != true {
 		t.Fatal("transcript forced full inbox rebuild", idle)
 	}
@@ -497,5 +715,79 @@ func TestFactoryEventsProjectsBoundedPagesBeforeArchiveDecode(t *testing.T) {
 	sessions, e := f.a.Store.List(ctx, "factory-session")
 	if e != nil || len(sessions) != 0 {
 		t.Fatal("archive reads launched work", e)
+	}
+}
+
+func TestProjectionReadIdentifiersBoundBeforeCacheAdmission(t *testing.T) {
+	f := newTrackingFixture(t)
+	handler := f.server.Handler(f.token)
+	for _, example := range []struct{ name, field string }{{"factory_item", "id"}, {"session_transcript", "id"}, {"factory_state", "itemId"}} {
+		for _, id := range []string{strings.Repeat("x", 1025), strings.Repeat("界", 342)} {
+			args := map[string]any{example.field: id}
+			if example.name == "factory_state" {
+				args["view"] = "conversation"
+			}
+			body, err := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": map[string]any{"name": example.name, "arguments": args}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			r := httptest.NewRequest(http.MethodPost, "/mcp", bytes.NewReader(body))
+			r.Header.Set("Authorization", "Bearer "+f.token)
+			r.Header.Set("Content-Type", "application/json")
+			r.Header.Set("Accept", "application/json, text/event-stream")
+			r.Header.Set("MCP-Protocol-Version", "2025-11-25")
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, r)
+			var wire struct {
+				Error  json.RawMessage `json:"error"`
+				Result map[string]any  `json:"result"`
+			}
+			if err := json.Unmarshal(w.Body.Bytes(), &wire); err != nil || w.Code != http.StatusOK || w.Body.Len() > responseLimit {
+				t.Fatalf("selector rejection failed: tool=%s bytes=%d status=%d err=%v", example.name, w.Body.Len(), w.Code, err)
+			}
+			// ASCII is rejected by the SDK schema; multibyte values within its
+			// rune ceiling reach the explicit UTF-8-byte admission validation.
+			if len(wire.Error) == 0 && wire.Result["isError"] != true {
+				t.Errorf("oversized %s.%s entered projection admission", example.name, example.field)
+			}
+			if !bytes.Contains(w.Body.Bytes(), []byte("1024")) {
+				t.Errorf("selector rejection lost the explicit bound: tool=%s", example.name)
+			}
+		}
+	}
+	f.server.projections.mu.Lock()
+	entries := len(f.server.projections.entries)
+	f.server.projections.mu.Unlock()
+	if entries != 0 {
+		t.Error("rejected selectors retained projection entries", entries)
+	}
+	f.server.operations.mu.Lock()
+	operations := len(f.server.operations.operations)
+	f.server.operations.mu.Unlock()
+	if operations != 0 {
+		t.Error("read rejection admitted work", operations)
+	}
+	for _, id := range []string{strings.Repeat("x", 1024), strings.Repeat("界", 341) + "x"} {
+		body := strings.Repeat("complete source 界<&", 10000)
+		if err := f.a.Store.Put(f.ctx, "item", id, domain.Item{ID: id, Kind: "issue", State: "open", Title: "boundary identity", Revision: "r1", Body: body}, ""); err != nil {
+			t.Fatal(err)
+		}
+		value, failed := f.call(t, "factory_item", map[string]any{"id": id})
+		if failed {
+			t.Fatal("exact boundary identifier rejected", value)
+		}
+		item := value["item"].(map[string]any)
+		if item["id"] != id || item["body"] != body {
+			t.Fatal("identifier or full source silently truncated")
+		}
+		if _, failed := f.call(t, "session_transcript", map[string]any{"id": id}); failed {
+			t.Fatal("boundary transcript selector rejected")
+		}
+		// An arbitrary synthetic ID need not satisfy conversation domain rules;
+		// this assertion checks identifier admission, independently of preparation.
+		result, _, _, err := trackingCall(f.http.Client(), f.http.URL, f.token, "factory_state", map[string]any{"view": "conversation", "itemId": id})
+		if err != nil || result["isError"] == true {
+			t.Fatal("boundary conversation selector rejected before preparation", err, result)
+		}
 	}
 }

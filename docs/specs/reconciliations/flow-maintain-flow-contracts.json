@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "15b7a602462d6611cece8e552de0a53ae686880a",
-  "fingerprint": "040dc621fedfd3b91a2273261d6d410539f185f92f42fd6268752d90df24c889",
+  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
+  "fingerprint": "8f780d4cd55a8f5a96052d48a357df2cdd34157ed4cc6218c83e628d9dcc5be3",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "Compared maintain-flow-contracts specification and catalog contract with main; authored scenarios and dependency ownership are unchanged. Bounded SHA-256 reads affect verification resource use only.",
-    "implementation": "The contributor verification still binds file descriptors and checks identity before/after reading; only digest buffering changes. Existing receipt tests reject changed source/assertion inputs without reconciliation. New bounded-read tests cover empty and multi-buffer content, while alias memoization, restored writes, FIFO substitution, cancellation and descriptor cleanup assertions remain active.",
-    "tests": "Existing receipt tests reject changed source/assertion inputs without reconciliation. New bounded-read tests cover empty and multi-buffer content, while alias memoization, restored writes, FIFO substitution, cancellation and descriptor cleanup assertions remain active. Full selected fixture suites are retained; timing evidence establishes no additional installed-host acceptance."
+    "kind": "structure",
+    "description": "The maintenance procedure, dependency direction and pinned adoption policy are unchanged. docs/ci.md now describes the API v2 runtime and the existing fixture-performance boundary, selecting this operational consumer conservatively.",
+    "implementation": "No reconciliation tooling or policy implementation changes. Existing registry/source/assertion mappings are rendered deterministically; review records will be written only by the CLI after its real suites succeed. Integrating target3413d63 retains its streaming verification digests and bounded-read regressions unchanged; only generated receipts overlap the API feature. Rebase preserves all API implementation and assertion bytes. Fresh CLI reconciliation binds the current target comparison.",
+    "tests": "The tooling suite validates schemas, complete review decisions, cochange requirements and generated output. This review makes no new product behavior or installed-host coverage claim for the maintenance flow. The incoming bounded-read hashing assertion now belongs to the comparison baseline and remains intact; full fixture verification is rerun with its streaming implementation, without treating target-owned work as a new API feature."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.211
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 685.949
+      "seconds": 678.74
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 502.197
+      "seconds": 517.627
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.937
+      "seconds": 4.972
     },
     {
       "command": [
@@ -58,17 +58,17 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.176
+      "seconds": 67.281
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "bf85f10874acc33958859cfd2a0ff58d67f84dd50ddc3e76c85108606009ed57",
-    "term:coverage-gap": "4711a29553de19a6ea6bba9ca6d553cda219aa9cda4dd52072c3c1fd8e67a2d9",
-    "term:entity": "e0d5c5c9c970f6976790ddb28401c1e88ccd65c610efabf070e6a007515a7c1d",
-    "term:glossary": "c2ee49052b14ff43a632cda8bd8d374031238c9dce89bd68ba5a717159e5a784",
-    "term:known-limitation": "c5edc604b1d28fd343474b8fb000e572719cbb5a7029325bb1aa6e42def869e0",
-    "term:reconciliation": "545ee73b035dc23e09fcac8de789833158219dd1a2b4266e0beee856ab2ea6b5",
-    "term:unverified-behavior": "e322a3b33c5777e8654050db10aa70c0c27fa2726934edc8f30e0934fd774c34",
-    "term:verification": "dc1edb27a60833e97ddf4aa1fb9388e42b73bbbb06a321b4d9311af050920d01"
+    "flow:maintain-flow-contracts": "93dc325df4fda2c1019b6b6a3875d42ea3643682262141686e416d8483efcb7a",
+    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
+    "term:entity": "c00dea15a34a8b066c9f3f5d727d1f2d34590a8133ce052fd04fa266be16b513",
+    "term:glossary": "c1a8303e0e5372eb92225e89752c0f441d80234a7bee5f07c7e1eb14e382e5ac",
+    "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
+    "term:reconciliation": "69aabae63c127bdae8cb3b01c8d360d88affca7a957845ff7bdfb925799fa181",
+    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
+    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe"
   }
 }

@@ -24,6 +24,15 @@ The private owner connection is established. Application data starts clean in th
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
+
+Show local submission feedback before waiting for the connection. Acceptance is
+separate from delivery: keep queued and running work pending, and preserve the
+owning conversation draft until delivery succeeds. Navigation and unrelated
+conversations remain usable. Repeated request identities retrieve the original
+work; connection recovery never submits the command again. After restart, effects
+with retained intent are uncertain and memory-only work can be lost. Neither is
+authority to replay a mutation or reuse an expired answer.
+
 ## Scenarios
 
 - **S1** — Use configuration chat to inspect effective settings and native layers.
@@ -88,6 +97,7 @@ flowchart TD
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestConfigurationAppliedMarkerAndAllBindingsCommitAtomically(`; S5. Actual SQLite binding-write abort rolls back settings and applied marker without retiring the current client; restart applies item/configuration/priority bindings together.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestMultipleNativeProposalsNeverRestoreRetiredEpoch(`; S5. Two independent deferred native proposals both apply without restoring a retired epoch; delayed old disconnect leaves execution idle, unheld and detached.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestSchedulerSkipsHeldQueueDecodeAndBusyConfiguration(`; S5. Thirty intentionally undecodable histories cover 15 held, 14 due but paused, and one running session with runtime rows within 512 bytes; three ticks preserve deferred active configuration and start no native work.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestQueuedConfigurationRejectsStaleConfirmation(`; S4, S5. A queued confirmation runs after a newer proposal is applied, rejects its stale original identity and preserves current settings.
 
 ## Verification and gaps
 

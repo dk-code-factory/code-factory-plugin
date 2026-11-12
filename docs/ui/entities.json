@@ -129,11 +129,18 @@
       "id": "W-GLOBAL-ERROR",
       "kind": "widget",
       "terms": [
-        "ui-w-global-error"
+        "ui-w-global-error",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -144,11 +151,21 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "WRAP-CHAT",
-        "WRAP-UNCERTAIN"
+        "WRAP-UNCERTAIN",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART",
+        "API-V2-TERMINAL-OUTCOME",
+        "API-V2-ERROR-DETAILS",
+        "API-V2-INSTANCE-DELIVERY"
       ],
       "gaps": [
         {
@@ -168,7 +185,7 @@
       "context": "Visible read or mutation errors; failures preserve local drafts.",
       "composition": "Visible read or mutation errors; failures preserve local drafts.",
       "interactions": "Visible read or mutation errors; failures preserve local drafts.",
-      "state_description": "Visible read or mutation errors; failures preserve local drafts.",
+      "state_description": "Visible read or mutation errors; failures preserve local drafts. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery. Uncertain and lost outcomes retain their explicit classification and inspect-before-retry instruction alongside any error detail.",
       "element_description": "Visible read or mutation errors; failures preserve local drafts.",
       "purpose": "Visible read or mutation errors; failures preserve local drafts."
     },
@@ -176,11 +193,18 @@
       "id": "W-CONNECTION-BLOCKER",
       "kind": "widget",
       "terms": [
-        "ui-w-connection-blocker"
+        "ui-w-connection-blocker",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -199,7 +223,7 @@
         },
         {
           "path": "internal/transport/operations.go",
-          "anchor": "func (o *operations) run(",
+          "anchor": "func (q *operationQueue) submit(",
           "purpose": "Bound inline tool work, retain one operation identity and cancel background work with the daemon lifetime."
         },
         {
@@ -211,6 +235,21 @@
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
           "purpose": "Bound finite responses and admission, preserve actual SSE acknowledgement and expose sanitized deadline/size failures without replaying mutations."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
+        },
+        {
+          "path": "internal/httpbudget/budget.go",
+          "anchor": "func LimitResponse(",
+          "purpose": "Tighten the existing finite HTTP buffer for parsed tool calls, including SDK transport errors; other resource responses retain their own bound."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function onInstanceChange(",
+          "purpose": "Retire prior-instance view ownership and coalesced reads when a new daemon is observed; preserve original mutation identities."
         }
       ],
       "assertions": [
@@ -224,7 +263,22 @@
         "WRAP-OPERATION-HTTP503",
         "WRAP-MUTATION-HTTP503",
         "WRAP-RESULT-LIMIT",
-        "WRAP-OPERATION-BUSINESS503"
+        "WRAP-OPERATION-BUSINESS503",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART",
+        "API-V2-JOURNAL",
+        "API-V2-BUDGET",
+        "API-V2-TERMINAL-OUTCOME",
+        "API-V2-ENVELOPE",
+        "API-V2-ROUTE-LIMIT",
+        "API-V2-RESULT-RETENTION",
+        "API-V2-ERROR-DETAILS",
+        "API-V2-CLASSIFICATION",
+        "API-V2-READ-INSTANCE",
+        "API-V2-VIEW-INSTANCE",
+        "API-V2-STALE-INSTANCE",
+        "API-V2-INSTANCE-DELIVERY",
+        "API-V2-FIRST-INSTANCE"
       ],
       "gaps": [
         {
@@ -244,7 +298,7 @@
       "context": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
       "composition": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
       "interactions": "Slow actions remain pending while their exact accepted result is read. Temporary result-read503 failures preserve that identity. An original deadline rejection reports uncertain outcome without replay; terminal result-size failures retain the draft and require inspection.",
-      "state_description": "Pending accepted action; completed result; temporary result-read outage; original action outcome unknown; terminal result failure with draft retained; unavailable expired or restarted result.",
+      "state_description": "Pending accepted action; completed result; temporary result-read outage; original action outcome unknown; terminal result failure with draft retained; unavailable expired or restarted result. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery. Uncertain and lost outcomes retain their explicit classification and inspect-before-retry instruction alongside any error detail. A daemon change retires prior versions and displayed-detail ownership while preserving navigation and drafts; content becomes usable only after a current-instance read.",
       "element_description": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
       "purpose": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations."
     },
@@ -252,11 +306,15 @@
       "id": "W-INBOX-QUERY",
       "kind": "widget",
       "terms": [
-        "ui-w-inbox-query"
+        "ui-w-inbox-query",
+        "read-projection",
+        "document-chunk"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -272,6 +330,16 @@
           "path": "internal/transport/factory_projection.go",
           "anchor": "func factoryState(",
           "purpose": "Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "internal/store/revisions.go",
+          "anchor": "func (s *Store) Revision(",
+          "purpose": "Committed dependency revisions are published independently of request-time SQL."
         }
       ],
       "assertions": [
@@ -279,7 +347,9 @@
         "WRAP-QUERY-ORDER",
         "WRAP-BACK",
         "WRAP-PROJECTION",
-        "WRAP-BOOT-FILTER"
+        "WRAP-BOOT-FILTER",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS"
       ],
       "gaps": [
         {
@@ -299,7 +369,7 @@
       "context": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
       "composition": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
       "interactions": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
-      "state_description": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
+      "state_description": "Search and open/all/new/unread filter; show 50 rows and explicit Show more. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
       "purpose": "Search and open/all/new/unread filter; show 50 rows and explicit Show more."
     },
@@ -357,11 +427,15 @@
       "id": "W-INBOX-EMPTY",
       "kind": "widget",
       "terms": [
-        "ui-w-inbox-empty"
+        "ui-w-inbox-empty",
+        "read-projection",
+        "document-chunk"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -372,10 +446,17 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
         }
       ],
       "assertions": [
-        "WRAP-CONFIG"
+        "WRAP-CONFIG",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS"
       ],
       "gaps": [
         {
@@ -395,7 +476,7 @@
       "context": "No matching saved items; configure repositories in configuration chat.",
       "composition": "No matching saved items; configure repositories in configuration chat.",
       "interactions": "No matching saved items; configure repositories in configuration chat.",
-      "state_description": "No matching saved items; configure repositories in configuration chat.",
+      "state_description": "No matching saved items; configure repositories in configuration chat. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "No matching saved items; configure repositories in configuration chat.",
       "purpose": "No matching saved items; configure repositories in configuration chat."
     },
@@ -403,7 +484,10 @@
       "id": "W-ITEM-OVERVIEW",
       "kind": "widget",
       "terms": [
-        "ui-w-item-overview"
+        "ui-w-item-overview",
+        "read-projection",
+        "document-chunk",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [
@@ -424,7 +508,9 @@
           "term": "element-w-item-overview-body"
         }
       ],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -435,13 +521,29 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "func validateProjectionIdentifier(",
+          "purpose": "Reject read selectors beyond1,024 UTF-8 bytes before retaining projection keys and dependencies; preserve accepted identities and exact source bodies."
         }
       ],
       "assertions": [
         "WRAP-VIEW",
         "WRAP-DETAIL-REFRESH",
         "WRAP-REOPEN",
-        "WRAP-DETAIL-VERSION"
+        "WRAP-DETAIL-VERSION",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS",
+        "API-V2-VIEW-INSTANCE",
+        "API-V2-STALE-INSTANCE",
+        "API-V2-READ-ID",
+        "API-V2-FIRST-INSTANCE"
       ],
       "gaps": [
         {
@@ -461,7 +563,7 @@
       "context": "Selected item identifier, state, head and source body; open original URL.",
       "composition": "Selected item identifier, state, head and source body; open original URL.",
       "interactions": "Selected item identifier, state, head and source body; open original URL.",
-      "state_description": "Selected item identifier, state, head and source body; open original URL.",
+      "state_description": "Selected item identifier, state, head and source body; open original URL. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Selected item identifier, state, head and source body; open original URL.",
       "purpose": "Selected item identifier, state, head and source body; open original URL."
     },
@@ -676,7 +778,9 @@
       "id": "W-RUN-CONTROLS",
       "kind": "widget",
       "terms": [
-        "ui-w-run-controls"
+        "ui-w-run-controls",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [
@@ -701,7 +805,12 @@
           "term": "element-w-run-controls-session-status"
         }
       ],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -717,6 +826,11 @@
           "path": "internal/factory/native.go",
           "anchor": "func (s *Service) workspace(",
           "purpose": "Persist workspace intent and verify registered repository/path/branch before retained dirty-worktree recovery."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
@@ -727,7 +841,9 @@
         "RETRY-HISTORY",
         "RECOVERY-HISTORY-CHOICES",
         "WORKTREE-INTENT-RECOVERY",
-        "WORKTREE-RECOVERY-BOUNDARY"
+        "WORKTREE-RECOVERY-BOUNDARY",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [
         {
@@ -756,7 +872,7 @@
       "context": "Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly.",
       "composition": "Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly.",
       "interactions": "Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly.",
-      "state_description": "Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly.",
+      "state_description": "Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly.",
       "purpose": "Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly."
     },
@@ -834,7 +950,9 @@
       "id": "W-TRANSCRIPT",
       "kind": "widget",
       "terms": [
-        "ui-w-transcript"
+        "ui-w-transcript",
+        "read-projection",
+        "document-chunk"
       ],
       "contains": [],
       "elements": [
@@ -843,7 +961,9 @@
           "term": "element-w-transcript-read-error"
         }
       ],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -859,6 +979,16 @@
           "path": "internal/store/store.go",
           "anchor": "func (t *Tx) Event(",
           "purpose": "Bound every retained session.output row before pagination and preserve oversized JSON as ordered fragments."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "func validateProjectionIdentifier(",
+          "purpose": "Reject read selectors beyond1,024 UTF-8 bytes before retaining projection keys and dependencies; preserve accepted identities and exact source bodies."
         }
       ],
       "assertions": [
@@ -872,7 +1002,10 @@
         "CONNECTION-REDACTION",
         "STREAM-COMPACT",
         "SESSION-RUNTIME-ATOMIC",
-        "SECRET-QUESTION-ID"
+        "SECRET-QUESTION-ID",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS",
+        "API-V2-READ-ID"
       ],
       "gaps": [
         {
@@ -892,7 +1025,7 @@
       "context": "Paged retained output; an idle turn without a status report remains idle.",
       "composition": "Paged retained output; an idle turn without a status report remains idle.",
       "interactions": "Paged retained output; an idle turn without a status report remains idle.",
-      "state_description": "Paged retained output; an idle turn without a status report remains idle.",
+      "state_description": "Paged retained output; an idle turn without a status report remains idle. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Paged retained output; an idle turn without a status report remains idle.",
       "purpose": "Paged retained output; an idle turn without a status report remains idle."
     },
@@ -900,7 +1033,9 @@
       "id": "W-MESSAGE",
       "kind": "widget",
       "terms": [
-        "ui-w-message"
+        "ui-w-message",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [
@@ -913,7 +1048,12 @@
           "term": "element-w-message-send"
         }
       ],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -929,6 +1069,11 @@
           "path": "internal/factory/service.go",
           "anchor": "func (s *Service) Chat(",
           "purpose": "Canonical chat and durable event delivery."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
@@ -938,7 +1083,9 @@
         "WRAP-SELECTION",
         "WRAP-BACK",
         "WRAP-CROSS-SESSION",
-        "SESSION-CONCURRENCY"
+        "SESSION-CONCURRENCY",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [
         {
@@ -958,7 +1105,7 @@
       "context": "Per-item chat draft; Send bypasses timer; native blocking requests disable sending.",
       "composition": "Per-item chat draft; Send bypasses timer; native blocking requests disable sending.",
       "interactions": "Per-item chat draft; Send bypasses timer; native blocking requests disable sending.",
-      "state_description": "Per-item chat draft; Send bypasses timer; native blocking requests disable sending.",
+      "state_description": "Drafts remain scoped to their conversation through submitting, queued, running and uncertain outcomes. Completion clears only the delivered draft; navigation and unrelated conversations remain usable. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Per-item chat draft; Send bypasses timer; native blocking requests disable sending.",
       "purpose": "Per-item chat draft; Send bypasses timer; native blocking requests disable sending."
     },
@@ -1003,7 +1150,9 @@
       "id": "W-QUESTIONS",
       "kind": "widget",
       "terms": [
-        "ui-w-questions"
+        "ui-w-questions",
+        "read-projection",
+        "document-chunk"
       ],
       "contains": [],
       "elements": [
@@ -1028,7 +1177,9 @@
           "term": "element-w-questions-submit-answer"
         }
       ],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -1044,6 +1195,16 @@
           "path": "internal/factory/requests.go",
           "anchor": "func (s *Service) Answer(",
           "purpose": "Session/connection-bound question identities, exact answers and explicit reported status."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "internal/transport/questions.go",
+          "anchor": "func questionPage(",
+          "purpose": "Page exact question collections by session/status while preserving full large payloads."
         }
       ],
       "assertions": [
@@ -1056,7 +1217,12 @@
         "CONNECTION-REDACTION",
         "SECRET-QUESTION-ID",
         "STATUS-SUBSCRIPTION",
-        "STATUS-REMAINING-BLOCKERS"
+        "STATUS-REMAINING-BLOCKERS",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS",
+        "API-V2-QUESTION-PAGES",
+        "API-V2-QUESTION-DRAFTS",
+        "API-V2-QUESTION-DRAIN"
       ],
       "gaps": [
         {
@@ -1075,8 +1241,8 @@
       ],
       "context": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
       "composition": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
-      "interactions": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
-      "state_description": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
+      "interactions": "Native options, free text and secret input preserve question IDs; blocked status waits for answers. Previous and next question-page controls retain exact question identities beyond the first page. When answers shrink the final page, return to the last valid page of remaining questions.",
+      "state_description": "Native options, free text and secret input preserve question IDs; blocked status waits for answers. Loading while the requested saved revision is pending; older content is unavailable for dependent actions. Question drafts remain in memory through loading and navigation until successful delivery.",
       "element_description": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
       "purpose": "Native options, free text and secret input preserve question IDs; blocked status waits for answers."
     },
@@ -1161,7 +1327,8 @@
       "assertions": [
         "WRAP-ELICITATION",
         "WRAP-ELICITATION-URL",
-        "ELICITATION-SCHEMA"
+        "ELICITATION-SCHEMA",
+        "API-V2-QUESTION-DRAFTS"
       ],
       "gaps": [
         {
@@ -1190,7 +1357,7 @@
       "context": "Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated.",
       "composition": "Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated.",
       "interactions": "Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated.",
-      "state_description": "Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated.",
+      "state_description": "Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated. JSON drafts remain in memory through pending reads and navigation; successful delivery clears only the delivered draft.",
       "element_description": "Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated.",
       "purpose": "Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated."
     },
@@ -1198,11 +1365,18 @@
       "id": "W-CONFIGURATION-CHAT",
       "kind": "widget",
       "terms": [
-        "ui-w-configuration-chat"
+        "ui-w-configuration-chat",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -1218,11 +1392,18 @@
           "path": "internal/factory/configuration.go",
           "anchor": "func (s *Service) Confirm(",
           "purpose": "Concrete proposal confirmation, version validation and safe boundary application."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
-        "NATIVE-AGENT"
+        "NATIVE-AGENT",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [],
       "suites": [
@@ -1232,7 +1413,7 @@
       "context": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
       "composition": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
       "interactions": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
-      "state_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
+      "state_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
       "purpose": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills."
     },
@@ -1240,11 +1421,15 @@
       "id": "W-EFFECTIVE-SETTINGS",
       "kind": "widget",
       "terms": [
-        "ui-w-effective-settings"
+        "ui-w-effective-settings",
+        "read-projection",
+        "document-chunk"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -1260,11 +1445,18 @@
           "path": "internal/factory/configuration.go",
           "anchor": "func (s *Service) Confirm(",
           "purpose": "Concrete proposal confirmation, version validation and safe boundary application."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
-        "NATIVE-CONFIG"
+        "NATIVE-CONFIG",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS"
       ],
       "gaps": [],
       "suites": [
@@ -1274,7 +1466,7 @@
       "context": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "interactions": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
-      "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
+      "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "purpose": "Readable saved application settings and actual native configuration layers for an inspected checkout."
     },
@@ -1282,11 +1474,18 @@
       "id": "W-CONFIGURATION-PROPOSAL",
       "kind": "widget",
       "terms": [
-        "ui-w-configuration-proposal"
+        "ui-w-configuration-proposal",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -1302,6 +1501,11 @@
           "path": "internal/factory/configuration.go",
           "anchor": "func (s *Service) Confirm(",
           "purpose": "Concrete proposal confirmation, version validation and safe boundary application."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
@@ -1310,7 +1514,9 @@
         "NATIVE-CONFIG",
         "CONFIG-PREWRITE-RECOVERY",
         "CONFIG-BINDINGS-ATOMIC",
-        "CONFIG-RETIRED-EPOCH"
+        "CONFIG-RETIRED-EPOCH",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [],
       "suites": [
@@ -1320,7 +1526,7 @@
       "context": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
       "composition": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
       "interactions": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
-      "state_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
+      "state_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
       "purpose": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject."
     },
@@ -1328,11 +1534,16 @@
       "id": "W-EVENT-BATCHES",
       "kind": "widget",
       "terms": [
-        "ui-w-event-batches"
+        "ui-w-event-batches",
+        "read-projection",
+        "document-chunk",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -1358,6 +1569,11 @@
           "path": "internal/store/reads.go",
           "anchor": "func (s *Store) FactoryArchive(",
           "purpose": "SQL bounds and projects compact archive rows before Go decoding."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
         }
       ],
       "assertions": [
@@ -1393,19 +1609,22 @@
         "DISCUSSION-TOMBSTONE",
         "DISCUSSION-CONTEXT-TIE",
         "BASELINE-PEERS",
-        "DETAIL-CACHE-FRESH"
+        "DETAIL-CACHE-FRESH",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS",
+        "API-V2-ARCHIVE-INSTANCE"
       ],
       "gaps": [],
       "suites": [
         "browser",
         "go"
       ],
-      "context": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Manual refresh preserves accepted same-query data on failure; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work.",
-      "composition": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Manual refresh preserves accepted same-query data on failure; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work.",
-      "interactions": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Manual refresh preserves accepted same-query data on failure; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work.",
-      "state_description": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Manual refresh preserves accepted same-query data on failure; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work.",
-      "element_description": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Manual refresh preserves accepted same-query data on failure; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work.",
-      "purpose": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Manual refresh preserves accepted same-query data on failure; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work."
+      "context": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Pending or failed refresh hides unavailable page and selection; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work. Observing a replacement daemon retires the displayed archive page and reloads the same kind/page-size; pending replacement hides the previous selection.",
+      "composition": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Pending or failed refresh hides unavailable page and selection; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work. Observing a replacement daemon retires the displayed archive page and reloads the same kind/page-size; pending replacement hides the previous selection.",
+      "interactions": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Pending or failed refresh hides unavailable page and selection; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work. Observing a replacement daemon retires the displayed archive page and reloads the same kind/page-size; pending replacement hides the previous selection.",
+      "state_description": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Pending or failed refresh hides unavailable page and selection; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work. Loading while the requested saved revision is pending; older content is unavailable for dependent actions. Observing a replacement daemon retires the displayed archive page and reloads the same kind/page-size; pending replacement hides the previous selection.",
+      "element_description": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Pending or failed refresh hides unavailable page and selection; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work. Observing a replacement daemon retires the displayed archive page and reloads the same kind/page-size; pending replacement hides the previous selection.",
+      "purpose": "Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Pending or failed refresh hides unavailable page and selection; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work. Observing a replacement daemon retires the displayed archive page and reloads the same kind/page-size; pending replacement hides the previous selection."
     },
     {
       "id": "P-IDENTITY",
@@ -1505,11 +1724,18 @@
       "id": "P-FEEDBACK",
       "kind": "pane",
       "terms": [
-        "ui-p-feedback"
+        "ui-p-feedback",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -1520,11 +1746,18 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "WRAP-CHAT",
-        "WRAP-UNCERTAIN"
+        "WRAP-UNCERTAIN",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [
         {
@@ -1544,7 +1777,7 @@
       "context": "Contains W-GLOBAL-ERROR, W-CONNECTION-BLOCKER.",
       "composition": "Contains W-GLOBAL-ERROR, W-CONNECTION-BLOCKER.",
       "interactions": "Contains W-GLOBAL-ERROR, W-CONNECTION-BLOCKER.",
-      "state_description": "Contains W-GLOBAL-ERROR, W-CONNECTION-BLOCKER.",
+      "state_description": "Contains W-GLOBAL-ERROR, W-CONNECTION-BLOCKER. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Contains W-GLOBAL-ERROR, W-CONNECTION-BLOCKER.",
       "purpose": "Contains W-GLOBAL-ERROR, W-CONNECTION-BLOCKER."
     },
@@ -2457,7 +2690,9 @@
       "id": "S-FACTORY",
       "kind": "shell",
       "terms": [
-        "ui-s-factory"
+        "ui-s-factory",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [
         "P-IDENTITY",
@@ -2473,7 +2708,12 @@
         "PAGE-EVENTS"
       ],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -2489,6 +2729,31 @@
           "path": "internal/transport/factory_projection.go",
           "anchor": "func factoryState(",
           "purpose": "Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
+        },
+        {
+          "path": "internal/transport/api_log.go",
+          "anchor": "func (s *Server) LogAPI(",
+          "purpose": "Nonblocking byte/count logging admission retains consumed buffers and minimal metadata, redacting and writing outside tool dispatch."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "func validateProjectionIdentifier(",
+          "purpose": "Reject read selectors beyond1,024 UTF-8 bytes before retaining projection keys and dependencies; preserve accepted identities and exact source bodies."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) take(",
+          "purpose": "Clear obsolete queue slots when selecting work so completed payload closures do not survive queue drain."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) receiptLocked(",
+          "purpose": "Normalize current document availability for both status polling and duplicate submission without replay."
         }
       ],
       "assertions": [
@@ -2505,7 +2770,19 @@
         "WRAP-STATE-ORDER",
         "STATE-UNCHANGED",
         "NATIVE-STARTUP-CANCEL",
-        "STATE-QUERY-CACHE"
+        "STATE-QUERY-CACHE",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART",
+        "API-V2-READ-INSTANCE",
+        "API-V2-VIEW-INSTANCE",
+        "API-V2-STALE-INSTANCE",
+        "API-V2-INSTANCE-DELIVERY",
+        "API-V2-ARCHIVE-INSTANCE",
+        "API-V2-LOG-BYTES",
+        "API-V2-READ-ID",
+        "API-V2-INPUT-RELEASE",
+        "API-V2-DUPLICATE-DETAIL",
+        "API-V2-FIRST-INSTANCE"
       ],
       "gaps": [
         {
@@ -2534,7 +2811,7 @@
       "context": "Seven navigation tabs and one selected item conversation. Opening does not authorize work.",
       "composition": "Seven navigation tabs and one selected item conversation. Opening does not authorize work.",
       "interactions": "Seven navigation tabs and one selected item conversation. Opening does not authorize work.",
-      "state_description": "Seven navigation tabs and one selected item conversation. Opening does not authorize work.",
+      "state_description": "Seven navigation tabs and one selected item conversation. Opening does not authorize work. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Seven navigation tabs and one selected item conversation. Opening does not authorize work.",
       "purpose": "Seven navigation tabs and one selected item conversation. Opening does not authorize work."
     },
@@ -2542,7 +2819,9 @@
       "id": "S-SETTINGS",
       "kind": "shell",
       "terms": [
-        "ui-s-settings"
+        "ui-s-settings",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [
         "P-IDENTITY",
@@ -2550,7 +2829,12 @@
         "PAGE-SETTINGS"
       ],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -2561,11 +2845,18 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
-        "WRAP-API"
+        "WRAP-API",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [],
       "suites": [
@@ -2575,7 +2866,7 @@
       "context": "Configuration chat can open as a dedicated MCP Apps resource.",
       "composition": "Configuration chat can open as a dedicated MCP Apps resource.",
       "interactions": "Configuration chat can open as a dedicated MCP Apps resource.",
-      "state_description": "Configuration chat can open as a dedicated MCP Apps resource.",
+      "state_description": "Configuration chat can open as a dedicated MCP Apps resource. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Configuration chat can open as a dedicated MCP Apps resource.",
       "purpose": "Configuration chat can open as a dedicated MCP Apps resource."
     },
@@ -2712,11 +3003,16 @@
       "id": "C-SELECT-ITEM",
       "kind": "connection",
       "terms": [
-        "ui-c-select-item"
+        "ui-c-select-item",
+        "read-projection",
+        "document-chunk",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -2727,6 +3023,11 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
         }
       ],
       "assertions": [
@@ -2735,7 +3036,12 @@
         "WRAP-DETAIL-REFRESH",
         "WRAP-REOPEN",
         "WRAP-DETAIL-VERSION",
-        "DISPLAYED-REVISION"
+        "DISPLAYED-REVISION",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS",
+        "API-V2-VIEW-INSTANCE",
+        "API-V2-STALE-INSTANCE",
+        "API-V2-FIRST-INSTANCE"
       ],
       "gaps": [
         {
@@ -2755,7 +3061,7 @@
       "context": "Read selected item and exact revision; no session creation.",
       "composition": "Read selected item and exact revision; no session creation.",
       "interactions": "Read selected item and exact revision; no session creation.",
-      "state_description": "Read selected item and exact revision; no session creation.",
+      "state_description": "Read selected item and exact revision; no session creation. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Read selected item and exact revision; no session creation.",
       "purpose": "Read selected item and exact revision; no session creation.",
       "from": [
@@ -2963,11 +3269,18 @@
       "id": "C-START-CHAT",
       "kind": "connection",
       "terms": [
-        "ui-c-start-chat"
+        "ui-c-start-chat",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -2978,11 +3291,18 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "WRAP-CHAT",
-        "QUEUE-UNIQUE"
+        "QUEUE-UNIQUE",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [],
       "suites": [
@@ -2992,7 +3312,7 @@
       "context": "Authorized first message creates the canonical retained session.",
       "composition": "Authorized first message creates the canonical retained session.",
       "interactions": "Authorized first message creates the canonical retained session.",
-      "state_description": "Authorized first message creates the canonical retained session.",
+      "state_description": "Authorized first message creates the canonical retained session. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Authorized first message creates the canonical retained session.",
       "purpose": "Authorized first message creates the canonical retained session.",
       "from": [
@@ -3011,11 +3331,18 @@
       "id": "C-FOLLOW-UP",
       "kind": "connection",
       "terms": [
-        "ui-c-follow-up"
+        "ui-c-follow-up",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -3026,11 +3353,18 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "QUEUE-CHAT",
-        "WRAP-ASSEMBLED"
+        "WRAP-ASSEMBLED",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [
         {
@@ -3050,7 +3384,7 @@
       "context": "Chat attaches queued events and bypasses timer; unblocked active work is steered.",
       "composition": "Chat attaches queued events and bypasses timer; unblocked active work is steered.",
       "interactions": "Chat attaches queued events and bypasses timer; unblocked active work is steered.",
-      "state_description": "Chat attaches queued events and bypasses timer; unblocked active work is steered.",
+      "state_description": "Chat attaches queued events and bypasses timer; unblocked active work is steered. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Chat attaches queued events and bypasses timer; unblocked active work is steered.",
       "purpose": "Chat attaches queued events and bypasses timer; unblocked active work is steered.",
       "from": [
@@ -3069,11 +3403,18 @@
       "id": "C-RUN-ACTION",
       "kind": "connection",
       "terms": [
-        "ui-c-run-action"
+        "ui-c-run-action",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -3084,6 +3425,11 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
@@ -3091,7 +3437,9 @@
         "WRAP-RECOVERY",
         "QUEUE-CHAT",
         "WORKTREE-DIRTY",
-        "RETRY-HISTORY"
+        "RETRY-HISTORY",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [
         {
@@ -3120,7 +3468,7 @@
       "context": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work.",
       "composition": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work.",
       "interactions": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work.",
-      "state_description": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work.",
+      "state_description": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work.",
       "purpose": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work.",
       "from": [
@@ -3138,11 +3486,18 @@
       "id": "C-ANSWER",
       "kind": "connection",
       "terms": [
-        "ui-c-answer"
+        "ui-c-answer",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -3158,6 +3513,11 @@
           "path": "internal/factory/requests.go",
           "anchor": "func (s *Service) Answer(",
           "purpose": "Session/connection-bound question identities, exact answers and explicit reported status."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
@@ -3169,7 +3529,9 @@
         "WRAP-ELICITATION-URL",
         "WRAP-SECRET-INPUT",
         "STATUS-NATIVE",
-        "ELICITATION-SCHEMA"
+        "ELICITATION-SCHEMA",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [
         {
@@ -3189,7 +3551,7 @@
       "context": "Answer the exact live request once; stale identities fail.",
       "composition": "Answer the exact live request once; stale identities fail.",
       "interactions": "Answer the exact live request once; stale identities fail.",
-      "state_description": "Answer the exact live request once; stale identities fail.",
+      "state_description": "Answer the exact live request once; stale identities fail. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Answer the exact live request once; stale identities fail.",
       "purpose": "Answer the exact live request once; stale identities fail.",
       "from": [
@@ -3210,11 +3572,16 @@
       "id": "C-STATE-REFRESH",
       "kind": "connection",
       "terms": [
-        "ui-c-state-refresh"
+        "ui-c-state-refresh",
+        "read-projection",
+        "document-chunk",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -3232,9 +3599,29 @@
           "purpose": "Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate."
         },
         {
-          "path": "internal/store/snapshot.go",
-          "anchor": "func (s *Store) UILatest(",
-          "purpose": "Durable metadata-only UI change cursor supports unchanged state reads without transcript-driven rebuilding."
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export function onInstanceChange(",
+          "purpose": "Retire prior-instance view ownership and coalesced reads when a new daemon is observed; preserve original mutation identities."
+        },
+        {
+          "path": "internal/transport/mcp.go",
+          "anchor": "func validateProjectionIdentifier(",
+          "purpose": "Reject read selectors beyond1,024 UTF-8 bytes before retaining projection keys and dependencies; preserve accepted identities and exact source bodies."
+        },
+        {
+          "path": "internal/store/store.go",
+          "anchor": "func (s *Store) CompareAndSwap(",
+          "purpose": "Successful relationship swaps invalidate their exact old and new endpoints; rejected predicates publish no revision."
+        },
+        {
+          "path": "internal/store/revisions.go",
+          "anchor": "func (t *Tx) touchRelationshipEndpoints(",
+          "purpose": "Decode endpoint identities independently so a malformed peer cannot hide a saved dependency error behind an older prepared read."
         }
       ],
       "assertions": [
@@ -3247,7 +3634,17 @@
         "WRAP-STATE-ORDER",
         "STATE-UNCHANGED",
         "WEBHOOK-INBOX-NOTIFY",
-        "STATE-QUERY-CACHE"
+        "STATE-QUERY-CACHE",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS",
+        "API-V2-READ-INSTANCE",
+        "API-V2-VIEW-INSTANCE",
+        "API-V2-STALE-INSTANCE",
+        "API-V2-ARCHIVE-INSTANCE",
+        "API-V2-READ-ID",
+        "API-V2-DEPENDENCY-ERROR",
+        "API-V2-RELATIONSHIP-CAS",
+        "API-V2-FIRST-INSTANCE"
       ],
       "gaps": [
         {
@@ -3275,8 +3672,8 @@
       ],
       "context": "Read saved state without a model call.",
       "composition": "Read saved state without a model call.",
-      "interactions": "Read saved state without a model call.",
-      "state_description": "Read saved state without a model call.",
+      "interactions": "Poll pending saved revisions every 250 ms while visible, then every second when idle or ten seconds when hidden; superseded responses cannot replace current content. Read selectors are limited to1,024 UTF-8 bytes and explicitly rejected before projection admission; accepted identities and source documents are complete.",
+      "state_description": "Read saved state without a model call. Loading while the requested saved revision is pending; older content is unavailable for dependent actions. A daemon change retires prior versions and displayed-detail ownership while preserving navigation and drafts; content becomes usable only after a current-instance read. Saved dependency-decoding failures report an error for that saved revision; a repaired revision can load.",
       "element_description": "Read saved state without a model call.",
       "purpose": "Read saved state without a model call.",
       "from": [
@@ -3408,11 +3805,18 @@
       "id": "C-CONFIGURATION-PROPOSE",
       "kind": "connection",
       "terms": [
-        "ui-c-configuration-propose"
+        "ui-c-configuration-propose",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -3423,13 +3827,20 @@
           "path": "internal/transport/factory.go",
           "anchor": "func NewFactory(",
           "purpose": "Only new session/configuration tools and retained triage operations are registered."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
         "CONFIG-CONFIRM",
         "NATIVE-CONFIG",
-        "NATIVE-SCHEMA"
+        "NATIVE-SCHEMA",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [],
       "suites": [
@@ -3439,7 +3850,7 @@
       "context": "Read/propose only; agent cannot confirm.",
       "composition": "Read/propose only; agent cannot confirm.",
       "interactions": "Read/propose only; agent cannot confirm.",
-      "state_description": "Read/propose only; agent cannot confirm.",
+      "state_description": "Read/propose only; agent cannot confirm. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Read/propose only; agent cannot confirm.",
       "purpose": "Read/propose only; agent cannot confirm.",
       "from": [
@@ -3457,11 +3868,18 @@
       "id": "C-CONFIGURATION-CONFIRM",
       "kind": "connection",
       "terms": [
-        "ui-c-configuration-confirm"
+        "ui-c-configuration-confirm",
+        "operation-receipt",
+        "daemon-instance"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "queued-operation",
+        "running-operation",
+        "uncertain-operation",
+        "lost-operation"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -3477,12 +3895,19 @@
           "path": "internal/factory/configuration.go",
           "anchor": "func (s *Service) Confirm(",
           "purpose": "Concrete proposal confirmation, version validation and safe boundary application."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) submit(",
+          "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
         }
       ],
       "assertions": [
         "WRAP-CONFIRM",
         "CONFIG-CONFIRM",
-        "NATIVE-CONFIG"
+        "NATIVE-CONFIG",
+        "API-V2-FEEDBACK",
+        "API-V2-RESTART"
       ],
       "gaps": [],
       "suites": [
@@ -3492,7 +3917,7 @@
       "context": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries.",
       "composition": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries.",
       "interactions": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries.",
-      "state_description": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries.",
+      "state_description": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries.",
       "purpose": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries.",
       "from": [
@@ -3510,11 +3935,15 @@
       "id": "C-EVENT-INSPECT",
       "kind": "connection",
       "terms": [
-        "ui-c-event-inspect"
+        "ui-c-event-inspect",
+        "read-projection",
+        "document-chunk"
       ],
       "contains": [],
       "elements": [],
-      "states": [],
+      "states": [
+        "pending-projection"
+      ],
       "implementation": [
         {
           "path": "web/src/wrapper.tsx",
@@ -3540,13 +3969,20 @@
           "path": "internal/store/reads.go",
           "anchor": "func (s *Store) FactoryArchive(",
           "purpose": "SQL bounds and projects compact archive rows before Go decoding."
+        },
+        {
+          "path": "internal/transport/projections.go",
+          "anchor": "func (c *projectionCache) read(",
+          "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
         }
       ],
       "assertions": [
         "WRAP-EVENTS",
         "QUEUE-CLOCK",
         "WRAP-ARCHIVE-ORDER",
-        "ARCHIVE-PAGE-BOUND"
+        "ARCHIVE-PAGE-BOUND",
+        "API-V2-CURRENT",
+        "API-V2-CHUNKS"
       ],
       "gaps": [],
       "suites": [
@@ -3556,7 +3992,7 @@
       "context": "Inspect event rules, normalized changes and delivery claims without flushing.",
       "composition": "Inspect event rules, normalized changes and delivery claims without flushing.",
       "interactions": "Inspect event rules, normalized changes and delivery claims without flushing.",
-      "state_description": "Inspect event rules, normalized changes and delivery claims without flushing.",
+      "state_description": "Inspect event rules, normalized changes and delivery claims without flushing. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Inspect event rules, normalized changes and delivery claims without flushing.",
       "purpose": "Inspect event rules, normalized changes and delivery claims without flushing.",
       "from": [
@@ -5236,8 +5672,8 @@
     {
       "id": "STATE-UNCHANGED",
       "path": "internal/transport/factory_test.go",
-      "anchor": "func TestFactoryStateVersionSkipsIdleProjectionAndTracksMetadata(",
-      "assertion": "An unchanged cursor returns only version/unchanged before decoding an intentionally invalid source; metadata writes advance the cursor, live deletion refreshes and transcript output does not invalidate state."
+      "anchor": "func TestFactoryStateVersionSkipsIdleAndRejectsUnpreparedData(",
+      "assertion": "A same-instance unchanged cursor returns only version/unchanged; an unprepared invalid source fails, deleting that source refreshes the projection, and transcript output does not invalidate inbox state."
     },
     {
       "id": "CACHED-OBS-FRESH",
@@ -5302,8 +5738,8 @@
     {
       "id": "WRAP-ARCHIVE-ORDER",
       "path": "web/tests/wrapper.spec.ts",
-      "anchor": "archive refresh preserves accepted data on failure and rejects stale queries",
-      "assertion": "Failed same-query refresh retains its accepted page and selected record; a failed changed kind displays no stale page or detail. The exact superseded delivery invocation completes SDK decoding and its React continuation barrier before asserting that the accepted batch page remains intact, without any repairing refresh. Reopening Events rereads the default page."
+      "anchor": "archive refresh hides unavailable data on failure and rejects stale queries",
+      "assertion": "Failed same-query refresh hides its unavailable page and selected record; a failed changed kind displays no stale page or detail. The exact superseded delivery invocation completes SDK decoding and its React continuation barrier before asserting that the accepted batch page remains intact, without any repairing refresh. Reopening Events rereads the default page."
     },
     {
       "id": "RETAINED-REFRESH-FRESH",
@@ -5440,14 +5876,14 @@
     {
       "id": "GO-OPERATION-ONCE",
       "path": "internal/transport/operations_test.go",
-      "anchor": "func TestOperationsRetainExactResultWithoutRepeatingMutation(",
-      "assertion": "Request disconnect and repeated pending/completed polls retain the exact result and execute the accepted mutation once."
+      "anchor": "func TestOperationsDeduplicateBoundAdmissionAndReserveControl(",
+      "assertion": "Repeated IDs retain original operation identity; 256 queued operations fill admission while reserved control work remains available behind eight blocked ordinary workers."
     },
     {
       "id": "GO-OPERATION-BOUNDS",
       "path": "internal/transport/operations_test.go",
-      "anchor": "func TestOperationsBoundCapacityExpiryCancellationAndErrors(",
-      "assertion": "Capacity rejects before execution; expiry frees slots; pre-cancelled requests start no work; delayed errors/panics stay errors; shutdown cancels accepted work and restart cannot invent success."
+      "anchor": "func TestOperationRestartReportsUncertainAndLostWithoutReplay(",
+      "assertion": "Persisted unfinished intent recovers as uncertain, missing old-instance work is lost, and neither permits mutation replay."
     },
     {
       "id": "GO-NATIVE-WRITE-CANCEL",
@@ -5490,6 +5926,168 @@
       "path": "web/tests/wrapper.spec.ts",
       "anchor": "accepted operation reports terminal provider HTTP503 without polling again",
       "assertion": "Structured terminal provider HTTP503 remains a business failure: accepted action stops at its third exact-ID poll, displays the original error, retains draft, releases busy state and creates one mutation."
+    },
+    {
+      "id": "API-V2-FEEDBACK",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "submitting feedback precedes the bridge and queued delivery preserves drafts across navigation",
+      "assertion": "Submitting feedback is present in the DOM at actual bridge entry within 100 ms; queued/running work keeps its draft and scope disabled while navigation remains usable; only success clears the draft."
+    },
+    {
+      "id": "API-V2-CURRENT",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "pending saved revisions hide stale context and disable dependent actions",
+      "assertion": "Pending revisions hide old source, disable Send and poll again. A held current-detail response permits no new-revision acknowledgment; at the eventual acknowledgment bridge entry the matching new source is already displayed."
+    },
+    {
+      "id": "API-V2-CHUNKS",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestProjectionCurrentReadsChunksAndUnrelatedTranscript(",
+      "assertion": "Large Unicode source is reconstructed exactly, old projections cannot claim a newly committed revision, and unrelated transcript output leaves a prepared inbox ready."
+    },
+    {
+      "id": "API-V2-RESTART",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestOperationRestartReportsUncertainAndLostWithoutReplay(",
+      "assertion": "Persisted running effects recover as uncertain, missing old-instance work reports lost, and neither identity is resubmitted."
+    },
+    {
+      "id": "API-V2-JOURNAL",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestOperationJournalPrecedesEffectsAndNeverStoresAnswers(",
+      "assertion": "An authenticated HTTP answer carries a private sentinel into the bound worker; the effect observes durable running intent and retained journal records exclude the answer and result."
+    },
+    {
+      "id": "API-V2-BUDGET",
+      "path": "internal/transport/budget_test.go",
+      "anchor": "func TestPluginAPIBudget(",
+      "assertion": "Every exposed tool is invoked through authenticated HTTP; all retained samples must stay within 100 ms and 64 KiB across cold/history, writes, blocked DB/log and saturated-queue scenarios, with useful eventual completion. The continuous writer checks errors and commits before clients start and between their measured halves; successful near-limit RPCs also cross the blocked logging path with bounded retained bytes. Near900KiB ASCII and oversized multibyte selectors are explicitly rejected within the same authenticated per-sample budget without growing the projection cache."
+    },
+    {
+      "id": "API-V2-QUESTION-PAGES",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "question pages retain exact requests beyond the first page",
+      "assertion": "Show a bounded first question page, navigate to the final page and submit the exact request identity and answer."
+    },
+    {
+      "id": "API-V2-QUESTION-DRAFTS",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "question text and JSON drafts survive pending reads and navigation",
+      "assertion": "Free-text and elicitation JSON drafts remain keyed by exact question identity through pending reads and navigation while stale forms are hidden."
+    },
+    {
+      "id": "API-V2-QUESTION-DRAIN",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "answering the final question page returns to remaining requests",
+      "assertion": "Answer all five final-page requests and automatically return to the remaining 50 requests without a false empty state."
+    },
+    {
+      "id": "API-V2-TERMINAL-OUTCOME",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "preserves its classification and draft beside raw errors",
+      "assertion": "Both uncertain and lost terminal outcomes retain their state-specific inspection warning alongside raw timeout details, keep the draft, and never replay the submitted mutation through navigation."
+    },
+    {
+      "id": "API-V2-ENVELOPE",
+      "path": "internal/transport/response_budget_test.go",
+      "anchor": "func TestRPCEnvelopeBoundsBeforeOperationAdmission(",
+      "assertion": "Authenticated oversized ASCII, Unicode and escaped RPC IDs are rejected below 100 ms and 64 KiB before any operation/effect; boundary IDs stay exact, oversized SDK validation errors remain bounded, and large UI resources stay complete."
+    },
+    {
+      "id": "API-V2-ROUTE-LIMIT",
+      "path": "internal/httpbudget/budget_test.go",
+      "anchor": "func TestRequestSpecificResponseLimitPreservesOtherRoutes(",
+      "assertion": "A tool-specific response ceiling cannot be raised, discards overflow including buffered private bytes/headers, and leaves later resource routes unchanged."
+    },
+    {
+      "id": "API-V2-RESULT-RETENTION",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestOperationFailurePayloadsUseRetentionBudget(",
+      "assertion": "An authenticated40KB configuration error and success/error payload variants all enter bounded terminal retention. Eviction preserves identity/state, explicitly marks unavailable details and rejects replay under the original identity."
+    },
+    {
+      "id": "API-V2-ERROR-DETAILS",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "reports unavailable error details without replay",
+      "assertion": "Failed, uncertain and lost outcomes with unavailable error bodies retain their classification, inspection warning and draft; navigation creates no additional mutation."
+    },
+    {
+      "id": "API-V2-CLASSIFICATION",
+      "path": "internal/transport/factory_test.go",
+      "anchor": "func assertOperationClassifiersMatchCatalog(",
+      "assertion": "The authenticated live tool catalog identity schema/read-only annotation matches the actual bridge and fixture operation sets for every registered tool, with no copied expected operation-name list."
+    },
+    {
+      "id": "API-V2-READ-INSTANCE",
+      "path": "internal/transport/factory_test.go",
+      "anchor": "func TestFactoryStateReopenScopesVersionToDaemonInstance(",
+      "assertion": "Reopening the same saved database creates a distinct daemon identity; lower and equal serials from the prior instance return current saved data, absent namespaces cannot claim unchanged, and the current namespace retains its unchanged optimization."
+    },
+    {
+      "id": "API-V2-VIEW-INSTANCE",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "for (const restartedVersion of [1, 1000]) {",
+      "assertion": "An open view accepts lower and equal counters after the daemon identity changes, displays the new source, acknowledges only its new-instance revision, preserves the message draft and returns to the saved inbox without submitting chat."
+    },
+    {
+      "id": "API-V2-STALE-INSTANCE",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "a superseded daemon detail cannot display or acknowledge old content",
+      "assertion": "A held old-instance detail resolves only after current new-instance detail is displayed; actual bridge completion cannot replace or acknowledge old content, and the following action still uses the new identity."
+    },
+    {
+      "id": "API-V2-INSTANCE-DELIVERY",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "a late old-daemon command response resolves its original identity without replay",
+      "assertion": "Navigation and the saved draft survive a held command across daemon replacement; its late response is reconciled by the original instance/request pair as uncertain, with explicit inspection guidance and exactly one submission."
+    },
+    {
+      "id": "API-V2-ARCHIVE-INSTANCE",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "an open archive retires its page and selection when the daemon changes",
+      "assertion": "A loaded selected archive page observes replacement without manual refresh; its pending replacement hides the prior page/selection, then displays the new daemon records while preserving archive kind/page-size and usable navigation. Viewing causes no chat submission."
+    },
+    {
+      "id": "API-V2-LOG-BYTES",
+      "path": "internal/transport/api_log_test.go",
+      "anchor": "func TestAPILogLargeRPCBacklogHasByteBoundAndReleasesReplayBodies(",
+      "assertion": "Two authenticated handlers share byte admission for64near-limit completed RPCs behind a held sink. Retained heap stays below32MiB over baseline and accounted body/response/URL buffers stay within8MiB; later same-handler records report byte-pressure drops without writing raw command text."
+    },
+    {
+      "id": "API-V2-READ-ID",
+      "path": "internal/transport/factory_test.go",
+      "anchor": "func TestProjectionReadIdentifiersBoundBeforeCacheAdmission(",
+      "assertion": "Authenticated read selectors reject1,025 ASCII bytes and1,026 UTF-8 bytes before any projection/operation entry, accept the exact1,024-byte boundary, and reconstruct the entire large source unchanged."
+    },
+    {
+      "id": "API-V2-INPUT-RELEASE",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestCompletedOperationQueueClearsObsoleteInputClosures(",
+      "assertion": "Decreasing bursts of 8, 5 and 3 payload-capturing operations execute once, drain all live byte/scope accounting and leave every obsolete pending backing slot zero, releasing completed input closures."
+    },
+    {
+      "id": "API-V2-DUPLICATE-DETAIL",
+      "path": "internal/transport/operations_test.go",
+      "anchor": "func TestDuplicateOperationReceiptsReflectIndependentDocumentEviction(",
+      "assertion": "Actual document-cache eviction removes terminal success/error chunks; authenticated duplicate submissions preserve original identity/tool/state, explicitly report unavailable details with no dead descriptors, and execute no additional work."
+    },
+    {
+      "id": "API-V2-DEPENDENCY-ERROR",
+      "path": "internal/transport/factory_test.go",
+      "anchor": "func TestProjectionDependencyFailureIsVisibleAndRecoversAfterRepair(",
+      "assertion": "Cold malformed relationship IDs and malformed source/target endpoints inserted after a useful prepared read report failed with a nonzero saved revision for item detail and conversation state; replacing the record restores current source."
+    },
+    {
+      "id": "API-V2-RELATIONSHIP-CAS",
+      "path": "internal/transport/factory_test.go",
+      "anchor": "func TestRelationshipCASInvalidatesPreparedSelectedReads(",
+      "assertion": "CAS relationship insertion refreshes a prepared selected endpoint; moving both endpoints refreshes the old and new selected detail versions for item and conversation reads."
+    },
+    {
+      "id": "API-V2-FIRST-INSTANCE",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "the first accepted daemon retires concurrent initial replies from an obsolete instance",
+      "assertion": "Before any bridge identity is accepted, hold an old-daemon state reply and accept a new-daemon query first. Completing the held bridge call cannot broadcast old ownership, and the next read-state action uses only the new daemon identity."
     }
   ],
   "source_map": [
@@ -5527,13 +6125,25 @@
       "path": "web/src/wrapper.tsx",
       "anchor": "function Archive(",
       "entities": "Read-only archive inspection",
-      "detail": "Explicit page controls and selection; failed same-query refresh preserves accepted data, changed queries and reopened views fetch independently."
+      "detail": "Explicit page controls and selection; pending or failed refresh hides unavailable old data, and superseded responses cannot replace a newer query."
     },
     {
       "path": "internal/store/reads.go",
       "anchor": "func (s *Store) FactoryArchive(",
       "entities": "Paged archive metadata and preview projection",
       "detail": "SQL selects one bounded page and compact fields before Go decoding; ordered rule metadata arrays have bounded lists and retain total counts."
+    },
+    {
+      "path": "internal/transport/projections.go",
+      "anchor": "func (c *projectionCache) read(",
+      "entities": "Current saved-state reads",
+      "detail": "Background snapshot preparation, domain and selected-item revisions, and exact versioned document chunks."
+    },
+    {
+      "path": "internal/store/revisions.go",
+      "anchor": "func (s *Store) Revision(",
+      "entities": "Committed saved-state dependencies",
+      "detail": "Immutable commit revisions are published without request-time database access."
     }
   ],
   "coverage_groups": [

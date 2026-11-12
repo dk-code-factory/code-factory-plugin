@@ -73,6 +73,7 @@ flowchart TD
 - [internal/factory/service_test.go](../../internal/factory/service_test.go) — `func TestPriorityBookkeepingReusesThreadAndRejectsStaleAssessment(`; S4. Reusable bookkeeping thread records only exact item revision/context/policy results.
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestInboxRevisionStatesPriorityAndLinks(`; S2, S3. Manual link removal preserves discovered evidence and independent item state.
 - [internal/app/inbox_reads_test.go](../../internal/app/inbox_reads_test.go) — `func TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions(`; S4. Linked item revisions and saved ticket context invalidate stale assessments.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestRelationshipCASInvalidatesPreparedSelectedReads(`; S1. Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.
 
 ## Verification and gaps
 

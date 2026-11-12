@@ -53,16 +53,54 @@ bypass the response allowance. Callback verification has a separate 50 ms bound
 and never activates a canceled or late proof. Callback I/O holds no shared event
 state lock, and obsolete delivery results cannot recreate or overwrite subscriptions.
 
-Slow tools return an accepted identity after 25 ms of inline work; completion is
-separate from response latency. The UI and doctor read that identity rather than
-repeating the action. Results remain readable for ten minutes after completion,
-with at most 128 retained/running operations and a five-minute work context bounded
-by daemon lifetime. Native writes have cancellation-aware admission and a 30-second
-bound; an interrupted partial write reports uncertain delivery. Expiry or restart
-reports an unavailable result and requires saved-state inspection before retry.
+Plugin API v2 handlers perform memory reads and bounded operation admission. They
+use an 80 ms internal budget within the 100 ms per-sample gate, with the existing
+75 ms finite-HTTP allowance as a defensive backstop. Openers return bootstrap and
+the UI resource immediately. Saved reads return pending until immutable projections
+match the domain and selected-item revisions observed at dispatch. Transcript
+traffic does not invalidate unrelated inbox pages. Saved state is distinct from
+upstream GitHub freshness, which remains governed by synchronization. Read selectors
+for item detail, transcripts and conversation state are limited to1,024 UTF-8 bytes
+and explicitly rejected before retaining projection entries. The isolated gate
+measures near-limit rejected selectors as well as useful accepted reads.
+
+Submitted operations require a client request ID and daemon instance ID. A repeated
+identity returns its original work without executing again. Acceptance into memory
+can lose queued work on process failure. The pending queue holds 256 operations
+with a 64 MiB payload ceiling, eight ordinary workers and two reserved control
+workers; full admission returns busy immediately. Workers persist safe intent
+metadata before effects, omitting command payloads and answer bodies. Restart
+never replays mutations: unfinished retained intent is uncertain and absent
+memory-only work is lost. Completed result retention is bounded separately;
+unavailable result bodies require saved-state inspection. Duplicate receipts use
+the same current document-availability checks as status polling; completed queue
+slots release their captured inputs rather than retaining them after accounting drains. Session locks, stale
+question and proposal checks, safe apply boundaries and dirty-worktree checks
+remain owned by the factory.
+
+Tool responses are bounded to 64 KiB. Larger exact JSON documents use immutable
+versioned chunks of at most 32 KiB of base64, reconstructed without truncation.
+Projection preparation, result encoding, providers, subprocesses, redaction and
+log writes run outside tool dispatch. API logging uses bounded background queues with a shared 8 MiB retained-buffer
+ceiling across handlers; jobs retain consumed bytes and minimal URL metadata,
+without retaining replay readers, headers or request contexts. It reports API version, outcome, response bytes, internal budget breaches and
+dropped-log counts without tool arguments. The all-tool gate dynamically checks
+the exposed catalog, retains every sample plus per-tool maxima and percentiles,
+and requires useful current reads and healthy operation completion alongside
+pending/busy responses. It exercises empty/cold/history, large documents,
+concurrent clients, checked committed writes before and between client read batches,
+near-limit RPC bodies with blocked logging, blocked database/logging, saturated queues
+and providers/native subprocesses delayed for several seconds.
+
+UI feedback precedes bridge calls. Pending work polls every 250 ms while visible;
+idle reads use one second and hidden polling ten seconds. Drafts and owning-scope
+action locks last through delivery, including temporary status-read outages.
+Host round trips, operation completion and local click-to-feedback measurements
+are distinct from the local handler budget. Arbitrary OS suspension and external
+host/network delays do not have an absolute wall-clock guarantee.
 
 Measurements are saved in `verification-results/` as `api-latency.json`,
-`gateway-latency.json`, `event-api-latency.json`, `onboarding-latency.json`,
+`protocol-api-latency.json`, `gateway-latency.json`, `event-api-latency.json`, `onboarding-latency.json`,
 `webhook-latency.json` and `http-boundary-latency.json`, uploaded as `api-latency`.
 These controlled server-response measurements do not establish public-network,
 installed-host or arbitrary scheduler/filesystem latency guarantees.

@@ -183,15 +183,8 @@ try {
   const tools = await client.listTools();
   const tool = tools.tools.find((value) => value.name === 'open_factory');
   requireCheck(tool, 'SDK tool list omitted open_factory');
-  let result = await client.callTool({ name: 'open_factory', arguments: {} });
-  const operationDeadline = Date.now() + 30_000;
-  while (result.structuredContent?.operation) {
-    requireCheck(Date.now() < operationDeadline, 'Accepted open_factory operation did not finish');
-    const id = result.structuredContent.operation.id;
-    await new Promise(resolve => setTimeout(resolve, 100));
-    result = await client.callTool({ name: 'operation_result', arguments: { id } });
-  }
-  requireCheck(!result.isError && result.structuredContent?.data, 'SDK open_factory did not return application data');
+  const result = await client.callTool({ name: 'open_factory', arguments: {} });
+  requireCheck(!result.isError && result.structuredContent?.data?.apiVersion === 2 && result.structuredContent.data.response.state === 'ready', 'SDK open_factory did not return API v2 bootstrap');
   await record(stage, 'passed', { toolCount: tools.tools.length });
   stage = 'SDK embedded UI resource';
   const uri = tool._meta?.ui?.resourceUri;

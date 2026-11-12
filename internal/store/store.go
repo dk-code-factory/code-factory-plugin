@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 	"unicode/utf8"
@@ -26,18 +27,20 @@ var ErrNotFound = errors.New("record not found")
 const ApplicationFile = "factory-v1.db"
 
 type Store struct {
-	db      *sql.DB
-	view    *sql.Tx
-	ctx     context.Context
-	cancel  context.CancelFunc
-	changed chan struct{}
-	mu      sync.Mutex
-	path    string
+	db        *sql.DB
+	view      *sql.Tx
+	ctx       context.Context
+	cancel    context.CancelFunc
+	changed   chan struct{}
+	mu        sync.Mutex
+	path      string
+	revisions atomic.Pointer[revisionState]
 }
 type Tx struct {
-	tx      *sql.Tx
-	ctx     context.Context
-	changes map[string]map[string]bool
+	tx           *sql.Tx
+	ctx          context.Context
+	changes      map[string]map[string]bool
+	revisionKeys map[string]bool
 }
 
 func Open(path string) (*Store, error) {
@@ -233,11 +236,13 @@ func (s *Store) JSONByteSizes(ctx context.Context, kind, path string) (map[strin
 }
 
 func (t *Tx) Put(kind, id string, v any) error {
+	t.touch(kind, id)
 	t.invalidate(kind, id)
 	b, e := json.Marshal(v)
 	if e != nil {
 		return e
 	}
+	t.touchRelationships(kind, id, b)
 	_, e = t.tx.ExecContext(t.ctx, `INSERT INTO entities VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET data=excluded.data`, kind, id, b)
 	if e != nil {
 		return e
@@ -255,6 +260,8 @@ func (t *Tx) sessionRuntime(kind, id string, data []byte) error {
 	return err
 }
 func (t *Tx) Delete(kind, id string) error {
+	t.touch(kind, id)
+	t.touchRelationships(kind, id, nil)
 	t.invalidate(kind, id)
 	_, e := t.tx.ExecContext(t.ctx, "DELETE FROM entities WHERE kind=? AND id=?", kind, id)
 	if e == nil && kind == "factory-session" {
@@ -263,6 +270,7 @@ func (t *Tx) Delete(kind, id string) error {
 	return e
 }
 func (t *Tx) Event(kind, id string, v any) error {
+	t.touch("event:"+kind, id)
 	b, e := json.Marshal(v)
 	if e != nil {
 		return e
@@ -328,6 +336,7 @@ func (s *Store) Write(ctx context.Context, f func(*Tx) error) error {
 	if e = tx.Commit(); e != nil {
 		return e
 	}
+	s.publishRevisions(t.revisionKeys)
 	s.signal()
 	return nil
 }
@@ -442,6 +451,12 @@ func (s *Store) CompareAndSwap(ctx context.Context, kind, id string, previous js
 		n, err := result.RowsAffected()
 		changed = n == 1
 		if changed {
+			t.touch(kind, id)
+			if kind == "relationship" {
+				// The successful predicate proves these are the replaced bytes.
+				t.touchRelationshipEndpoints(previous)
+				t.touchRelationshipEndpoints(b)
+			}
 			t.invalidate(kind, id)
 			if err == nil {
 				err = t.sessionRuntime(kind, id, b)

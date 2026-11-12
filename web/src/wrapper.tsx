@@ -5,8 +5,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { call, openLink } from "./bridge";
+import { call, onInstanceChange, openLink } from "./bridge";
 import "./wrapper.css";
 
 type Item = {
@@ -67,6 +68,10 @@ type State = {
   inboxTotal: number;
   sessions: Session[];
   questions: Question[];
+  questionTotal?: number;
+  pendingQuestionTotal?: number;
+  questionOffset?: number;
+  questionLimit?: number;
   proposals?: Proposal[];
   settings?: Record<string, unknown>;
 };
@@ -136,6 +141,7 @@ function Factory() {
   const [detail, setDetail] = useState<{
     item: Item;
     detailVersion: string;
+    instanceId?: string;
     relationships: {
       source: string;
       target: string;
@@ -169,7 +175,13 @@ function Factory() {
   const [connected, setConnected] = useState(false);
   const [operations, setOperations] = useState<Set<string>>(new Set());
   const operationsRef = useRef(new Set<string>());
+  const acknowledged = useRef(new Set<string>());
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [questionDrafts, setQuestionDrafts] = useState<
+    Record<string, QuestionDraft>
+  >({});
+  const changeQuestionDraft = (id: string, draft: QuestionDraft) =>
+    setQuestionDrafts((old) => ({ ...old, [id]: draft }));
   const [native, setNative] = useState<unknown>();
   const [cwd, setCwd] = useState("");
   const [links, setLinks] = useState<Record<string, string>>({});
@@ -197,7 +209,6 @@ function Factory() {
   const currentRef = useRef(current);
   currentRef.current = current;
   const session = state.sessions.find((s) => s.id === current);
-  const busy = operations.has(current || tab);
   const activeQuestions = state.questions.filter((q) => q.status === "pending");
   const request = {
     view: views[tab],
@@ -210,58 +221,133 @@ function Factory() {
   const requestKey = JSON.stringify(request);
   const requestRef = useRef(requestKey);
   requestRef.current = requestKey;
-  const projectionRef = useRef<{ key: string; version?: number }>({
+  const projectionRef = useRef<{
+    key: string;
+    version?: number;
+    instanceId?: string;
+  }>({
     key: requestKey,
   });
   if (projectionRef.current.key !== requestKey)
     projectionRef.current = { key: requestKey };
   const projection = projectionRef.current;
   const [stateKey, setStateKey] = useState("");
+  const [daemonGeneration, setDaemonGeneration] = useState(0);
+  useEffect(
+    () =>
+      onInstanceChange((next) => {
+        projectionRef.current = { key: requestRef.current, instanceId: next };
+        acknowledged.current.clear();
+        setStateKey("");
+        setDetail(undefined);
+        setNative(undefined);
+        setDaemonGeneration((value) => value + 1);
+      }),
+    [],
+  );
+  const busy = operations.has(current || tab) || stateKey !== requestKey;
   const detailVersion =
     stateKey === requestKey && state.selectedEntry?.item.id === selected
       ? state.selectedEntry.detailVersion
       : undefined;
   const detailReady =
-    tab === "Configuration" ||
+    (tab === "Configuration" && stateKey === requestKey) ||
     (tab === "Conversation" &&
       !!detailVersion &&
       detail?.item.id === selected &&
+      detail.instanceId === projection.instanceId &&
       detail.detailVersion === detailVersion);
-  const refresh = useCallback(async () => {
-    const args = JSON.parse(requestKey);
-    if (projection.version !== undefined)
-      args.sinceVersion = projection.version;
-    const value = await call<State | { unchanged: true; version: number }>(
-      "factory_state",
-      args,
-    );
-    if (
-      requestRef.current === requestKey &&
-      projectionRef.current === projection
-    ) {
-      if (
-        projection.version !== undefined &&
-        value.version < projection.version
-      )
-        return;
-      projection.version = value.version;
-      if (!("unchanged" in value)) {
-        setState(value);
-        setStateKey(requestKey);
+  const refresh = useCallback(
+    async (signal?: AbortSignal) => {
+      const beganAtVersion = projection.version;
+      const args = JSON.parse(requestKey);
+      if (projection.version !== undefined) {
+        args.sinceVersion = projection.version;
+        args.sinceInstanceId = projection.instanceId;
       }
-      setConnected(true);
-    }
-  }, [requestKey, projection]);
+      let responseInstanceId: string | undefined;
+      let value: State | { unchanged: true; version: number };
+      try {
+        value = await call<State | { unchanged: true; version: number }>(
+          "factory_state",
+          args,
+          {
+            signal,
+            onInstance: (id) => {
+              responseInstanceId = id;
+            },
+            onPending: () => {
+              if (
+                requestRef.current === requestKey &&
+                projectionRef.current === projection &&
+                projection.version === beganAtVersion
+              )
+                setStateKey("");
+            },
+          },
+        );
+      } catch (error) {
+        if (
+          requestRef.current === requestKey &&
+          projectionRef.current === projection &&
+          projection.version === beganAtVersion
+        )
+          setStateKey("");
+        throw error;
+      }
+      if (
+        requestRef.current === requestKey &&
+        projectionRef.current === projection
+      ) {
+        if (
+          projection.version !== undefined &&
+          projection.instanceId === responseInstanceId &&
+          value.version < projection.version
+        )
+          return;
+        projection.version = value.version;
+        projection.instanceId = responseInstanceId;
+        if (!("unchanged" in value)) {
+          const total = value.questionTotal;
+          const pageSize = value.questionLimit ?? limit;
+          if (
+            ["Messages", "Conversation", "Configuration"].includes(tab) &&
+            total !== undefined &&
+            offset > 0 &&
+            offset >= total
+          ) {
+            setStateKey("");
+            setQueries((old) => ({
+              ...old,
+              [tab]: {
+                ...(old[tab] || defaultQuery),
+                offset:
+                  total === 0
+                    ? 0
+                    : Math.floor((total - 1) / pageSize) * pageSize,
+              },
+            }));
+            return;
+          }
+          setState(value);
+        }
+        setStateKey(requestKey);
+        setConnected(true);
+      }
+    },
+    [requestKey, projection, tab, offset, limit],
+  );
   const refreshRef = useRef(refresh);
   refreshRef.current = refresh;
   useEffect(() => {
     let alive = true;
+    const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
     const poll = async () => {
       try {
-        await refresh();
+        await refresh(controller.signal);
       } catch (e) {
-        if (alive) {
+        if (alive && projectionRef.current === projection) {
           setConnected(false);
           setError(String(e));
         }
@@ -272,6 +358,7 @@ function Factory() {
     void poll();
     return () => {
       alive = false;
+      controller.abort();
       clearTimeout(timer);
     };
   }, [refresh]);
@@ -279,30 +366,66 @@ function Factory() {
     setDetail(undefined);
     if (tab !== "Conversation" || !selected || !detailVersion) return;
     let alive = true;
-    void call<typeof detail>("factory_item", { id: selected })
+    let responseInstanceId: string | undefined;
+    const controller = new AbortController();
+    void call<typeof detail>(
+      "factory_item",
+      { id: selected },
+      {
+        signal: controller.signal,
+        onInstance: (id) => {
+          responseInstanceId = id;
+        },
+        onPending: () => {
+          if (alive && projectionRef.current === projection)
+            setDetail(undefined);
+        },
+      },
+    )
       .then((d) => {
-        if (alive && d?.item.id === selected) {
+        if (
+          alive &&
+          projectionRef.current === projection &&
+          responseInstanceId === projection.instanceId &&
+          d?.item.id === selected
+        ) {
           if (d.detailVersion !== detailVersion)
             void refreshRef.current().catch((e) => setError(String(e)));
-          else setDetail(d);
+          else setDetail({ ...d, instanceId: responseInstanceId });
         }
       })
       .catch((e) => {
-        if (alive) setError(String(e));
+        if (alive && projectionRef.current === projection) setError(String(e));
       });
     return () => {
       alive = false;
+      controller.abort();
     };
-  }, [tab, selected, detailVersion]);
+  }, [tab, selected, detailVersion, daemonGeneration, projection]);
   useEffect(() => {
-    if (!detailReady || !detail || currentRef.current !== detail.item.id)
+    if (
+      !detailReady ||
+      !detail ||
+      projectionRef.current !== projection ||
+      currentRef.current !== detail.item.id
+    )
       return;
+    const key = `${detail.instanceId}:${detail.item.id}:${detail.item.revision}`;
+    if (acknowledged.current.has(key)) return;
+    acknowledged.current.add(key);
     // This effect runs only after matching detail is committed to the view.
-    void call("user_action", {
-      id: detail.item.id,
-      action: "read",
-      revision: detail.item.revision,
-    }).catch((e) => setError(String(e)));
+    void call(
+      "user_action",
+      {
+        id: detail.item.id,
+        action: "read",
+        revision: detail.item.revision,
+      },
+      { expectedInstanceId: detail.instanceId },
+    ).catch((e) => {
+      acknowledged.current.delete(key);
+      setError(String(e));
+    });
   }, [detail, detailReady]);
   useEffect(() => {
     if (stateKey !== requestKey || !inboxTabs.includes(tab) || !restore.current)
@@ -317,6 +440,7 @@ function Factory() {
   }, [stateKey, requestKey, tab]);
   useEffect(() => {
     let alive = true;
+    const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
     let cursor = 0;
     setTranscript({ events: [], cursor: 0, hasMore: false });
@@ -325,10 +449,14 @@ function Factory() {
       try {
         while (alive) {
           const previous = cursor;
-          const page = await call<Transcript>("session_transcript", {
-            id: current,
-            after: cursor,
-          });
+          const page = await call<Transcript>(
+            "session_transcript",
+            {
+              id: current,
+              after: cursor,
+            },
+            { signal: controller.signal },
+          );
           if (!alive) return;
           cursor = page.cursor;
           setTranscript((old) => ({
@@ -350,9 +478,10 @@ function Factory() {
     void poll();
     return () => {
       alive = false;
+      controller.abort();
       clearTimeout(timer);
     };
-  }, [current]);
+  }, [current, daemonGeneration]);
   async function mutate(
     name: string,
     args: Record<string, unknown>,
@@ -371,12 +500,34 @@ function Factory() {
             : String(args.itemId || args.id || args.source || current);
     if (operationsRef.current.has(scope)) return;
     operationsRef.current.add(scope);
-    setOperations(new Set(operationsRef.current));
-    setError("");
-    setNotice("");
+    const reportNotice = (text: string) =>
+      setNotice(
+        scope && scope !== "sync" && currentRef.current !== scope
+          ? `${text} (${scope})`
+          : text,
+      );
+    flushSync(() => {
+      setOperations(new Set(operationsRef.current));
+      setError("");
+      reportNotice("Submitting…");
+    });
     try {
-      const result = await call(name, args);
-      setNotice(success);
+      const result = await call(name, args, {
+        onProgress: (status) =>
+          reportNotice(
+            (
+              {
+                queued: "Queued…",
+                running: "Running…",
+                succeeded: "Completed",
+                failed: "Failed",
+                uncertain: "Delivery uncertain",
+                lost: "Submitted work lost",
+              } as Record<string, string>
+            )[status] || "Checking operation…",
+          ),
+      });
+      reportNotice(success);
       try {
         await refreshRef.current();
       } catch (e) {
@@ -386,6 +537,7 @@ function Factory() {
       }
       return result;
     } catch (e) {
+      setNotice("");
       setError(String(e));
     } finally {
       operationsRef.current.delete(scope);
@@ -408,6 +560,7 @@ function Factory() {
       );
   }
   function choose(id: string) {
+    acknowledged.current.clear();
     if (tab !== "Conversation")
       setOrigin({ tab, query: { ...query }, scroll: window.scrollY, id });
     setSelectedTitle(
@@ -416,6 +569,8 @@ function Factory() {
     setDetail(undefined);
     setError("");
     setNotice("");
+    if (id !== selected)
+      setQueries((old) => ({ ...old, Conversation: { ...defaultQuery } }));
     setSelected(id);
     setTab("Conversation");
   }
@@ -434,6 +589,33 @@ function Factory() {
     setNotice("");
   }
   const visible = stateKey === requestKey ? state.inbox : [];
+  const questionPager = (state.questionTotal ?? 0) >
+    (state.questionLimit ?? 50) && (
+    <div className="row" aria-label="Question pages">
+      <button
+        disabled={stateKey !== requestKey || offset === 0}
+        onClick={() => updateQuery({ offset: Math.max(0, offset - limit) })}
+      >
+        Previous question page
+      </button>
+      <span>
+        {(state.questionOffset ?? 0) + 1}–
+        {Math.min(
+          (state.questionOffset ?? 0) + (state.questionLimit ?? 50),
+          state.questionTotal!,
+        )}{" "}
+        of {state.questionTotal} questions
+      </span>
+      <button
+        disabled={
+          stateKey !== requestKey || offset + limit >= state.questionTotal!
+        }
+        onClick={() => updateQuery({ offset: offset + limit })}
+      >
+        Next question page
+      </button>
+    </div>
+  );
   return (
     <main>
       <header>
@@ -458,8 +640,9 @@ function Factory() {
             onClick={() => setTab(name)}
           >
             {name}
-            {name === "Messages" && activeQuestions.length
-              ? ` (${activeQuestions.length})`
+            {name === "Messages" &&
+            (state.pendingQuestionTotal ?? activeQuestions.length)
+              ? ` (${state.pendingQuestionTotal ?? activeQuestions.length})`
               : ""}
           </button>
         ))}
@@ -607,8 +790,12 @@ function Factory() {
       {tab === "Messages" && (
         <section aria-label="Questions">
           <h2>Questions and approvals</h2>
-          {activeQuestions.length === 0 && <p>No pending questions.</p>}
-          {activeQuestions.map((q) => (
+          {stateKey !== requestKey ? (
+            <p role="status">Loading questions…</p>
+          ) : (
+            activeQuestions.length === 0 && <p>No pending questions.</p>
+          )}
+          {(stateKey === requestKey ? activeQuestions : []).map((q) => (
             <article key={q.id}>
               <button
                 onClick={() => {
@@ -620,17 +807,28 @@ function Factory() {
               </button>
               <QuestionForm
                 question={q}
-                busy={operations.has(q.sessionId)}
+                draft={questionDrafts[q.id]}
+                changeDraft={(draft) => changeQuestionDraft(q.id, draft)}
+                busy={operations.has(q.sessionId) || stateKey !== requestKey}
                 answer={(answer) =>
                   mutate(
                     "answer_session_question",
                     { id: q.id, answer },
                     "Answer sent",
-                  )
+                  ).then((result) => {
+                    if (result !== undefined)
+                      setQuestionDrafts((old) => {
+                        const next = { ...old };
+                        delete next[q.id];
+                        return next;
+                      });
+                    return result;
+                  })
                 }
               />
             </article>
           ))}
+          {questionPager}
           {state.questions
             .filter((q) => ["stale", "uncertain"].includes(q.status))
             .map((q) => (
@@ -651,6 +849,9 @@ function Factory() {
                 ? detail.item.title
                 : selectedTitle || selected}
           </h2>
+          {tab === "Configuration" && stateKey !== requestKey && (
+            <p role="status">Loading configuration…</p>
+          )}
           {tab === "Conversation" && !detailReady && (
             <p role="status">
               Item context is unavailable until loading succeeds.
@@ -850,22 +1051,33 @@ function Factory() {
               )}
             </div>
           )}
-          {activeQuestions
+          {(stateKey === requestKey ? activeQuestions : [])
             .filter((q) => q.sessionId === current)
             .map((q) => (
               <QuestionForm
                 key={q.id}
                 question={q}
-                busy={operations.has(q.sessionId)}
+                draft={questionDrafts[q.id]}
+                changeDraft={(draft) => changeQuestionDraft(q.id, draft)}
+                busy={operations.has(q.sessionId) || stateKey !== requestKey}
                 answer={(answer) =>
                   mutate(
                     "answer_session_question",
                     { id: q.id, answer },
                     "Answer sent",
-                  )
+                  ).then((result) => {
+                    if (result !== undefined)
+                      setQuestionDrafts((old) => {
+                        const next = { ...old };
+                        delete next[q.id];
+                        return next;
+                      });
+                    return result;
+                  })
                 }
               />
             ))}
+          {questionPager}
           <div
             className="transcript"
             role="log"
@@ -891,6 +1103,7 @@ function Factory() {
                 busy ||
                 !detailReady ||
                 !drafts[current]?.trim() ||
+                session?.execution === "waiting" ||
                 activeQuestions.some(
                   (q) => q.sessionId === current && q.blocking,
                 )
@@ -899,7 +1112,7 @@ function Factory() {
               Send
             </button>
           </form>
-          {tab === "Configuration" && (
+          {tab === "Configuration" && stateKey === requestKey && (
             <>
               <h3>Proposed changes</h3>
               {!state.proposals?.length && <p>No configuration proposals.</p>}
@@ -912,7 +1125,7 @@ function Factory() {
                   {p.state === "proposed" && (
                     <div className="row">
                       <button
-                        disabled={busy}
+                        disabled={busy || stateKey !== requestKey}
                         onClick={() =>
                           void mutate(
                             "confirm_configuration",
@@ -924,7 +1137,7 @@ function Factory() {
                         Confirm these changes
                       </button>
                       <button
-                        disabled={busy}
+                        disabled={busy || stateKey !== requestKey}
                         onClick={() =>
                           void mutate(
                             "confirm_configuration",
@@ -971,7 +1184,10 @@ function Factory() {
         </section>
       )}
       {tab === "Events" && (
-        <Archive onConfigure={() => setTab("Configuration")} />
+        <Archive
+          generation={daemonGeneration}
+          onConfigure={() => setTab("Configuration")}
+        />
       )}
     </main>
   );
@@ -997,7 +1213,13 @@ type ArchivePage = {
   total: number;
   rows: ArchiveRow[];
 };
-function Archive({ onConfigure }: { onConfigure: () => void }) {
+function Archive({
+  generation,
+  onConfigure,
+}: {
+  generation: number;
+  onConfigure: () => void;
+}) {
   const [kind, setKind] = useState<ArchiveKind>("events");
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState(50);
@@ -1009,12 +1231,18 @@ function Archive({ onConfigure }: { onConfigure: () => void }) {
   const [selected, setSelected] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const key = JSON.stringify([kind, offset, limit]);
+  const key = JSON.stringify([generation, kind, offset, limit]);
   useEffect(() => {
     let current = true;
     setLoading(true);
+    setAccepted(undefined);
     setError("");
-    void call("factory_events", { kind, offset, limit }).then(
+    const controller = new AbortController();
+    void call(
+      "factory_events",
+      { kind, offset, limit },
+      { signal: controller.signal },
+    ).then(
       (result) => {
         if (!current) return;
         const page = result as ArchivePage;
@@ -1030,6 +1258,7 @@ function Archive({ onConfigure }: { onConfigure: () => void }) {
     );
     return () => {
       current = false;
+      controller.abort();
     };
   }, [kind, offset, limit, key, refresh]);
   const page = accepted?.key === key ? accepted.page : undefined;
@@ -1239,16 +1468,21 @@ function transcriptMessages(events: Transcript["events"]) {
   return rows;
 }
 
+type QuestionDraft = { values: Record<string, string>; advanced: string };
+
 function QuestionForm({
   question: q,
   busy,
   answer,
+  draft,
+  changeDraft,
 }: {
+  draft?: QuestionDraft;
+  changeDraft: (draft: QuestionDraft) => void;
   question: Question;
   busy: boolean;
   answer: (value: Record<string, unknown>) => Promise<unknown>;
 }) {
-  const [values, setValues] = useState<Record<string, string>>({});
   const elicitation = q.method === "mcpServer/elicitation/request";
   const urlMode = elicitation && q.params.mode === "url";
   const unsupported =
@@ -1256,9 +1490,14 @@ function QuestionForm({
     !["form", "openai/form", "openaiForm", "url"].includes(
       String(q.params.mode),
     );
-  const [advanced, setAdvanced] = useState(
-    elicitation && !urlMode ? '{"action":"accept","content":{}}' : "{}",
-  );
+  const values = draft?.values || {};
+  const advanced =
+    draft?.advanced ??
+    (elicitation && !urlMode ? '{"action":"accept","content":{}}' : "{}");
+  const setValues = (
+    next: (old: Record<string, string>) => Record<string, string>,
+  ) => changeDraft({ values: next(values), advanced });
+  const setAdvanced = (next: string) => changeDraft({ values, advanced: next });
   const [error, setError] = useState("");
   const params = q.params;
   const questions = (params.questions || []) as (

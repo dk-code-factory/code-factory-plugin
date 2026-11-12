@@ -22,12 +22,23 @@ func (s *Store) reader() reader {
 // ReadView pins every read, including the journal cursor, to one SQLite WAL
 // snapshot. The callback must not retain the view or attempt a write.
 func (s *Store) ReadView(ctx context.Context, f func(*Store) error) error {
+	// Establish the WAL snapshot and capture its revision while commits are excluded.
+	s.mu.Lock()
 	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
+		s.mu.Unlock()
 		return err
 	}
 	defer tx.Rollback()
-	return f(&Store{db: s.db, view: tx})
+	var pinned int
+	err = tx.QueryRowContext(ctx, "SELECT count(*) FROM migrations").Scan(&pinned)
+	view := &Store{db: s.db, view: tx}
+	view.revisions.Store(s.revisions.Load())
+	s.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	return f(view)
 }
 func (s *Store) Context() context.Context { return s.ctx }
 func (s *Store) Changes() <-chan struct{} { return s.changed }

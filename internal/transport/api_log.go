@@ -9,16 +9,19 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
 
 const apiLogBodyLimit = 1 << 20
+const apiLogQueueBytes = 8 << 20
 
 type apiCallRecord struct {
 	StartedAt       time.Time  `json:"startedAt"`
@@ -27,14 +30,19 @@ type apiCallRecord struct {
 	HTTPMethod      string     `json:"httpMethod"`
 	Parameters      any        `json:"parameters"`
 	HTTPStatus      int        `json:"httpStatus"`
-	HTTPStatusKnown bool       `json:"httpStatusKnown"`
-	HandlerStatus   int        `json:"handlerStatus,omitempty"`
 	DurationMS      float64    `json:"durationMs"`
 	Panicked        bool       `json:"panicked,omitempty"`
+	HTTPStatusKnown bool       `json:"httpStatusKnown"`
+	HandlerStatus   int        `json:"handlerStatus,omitempty"`
 	RejectionReason string     `json:"rejectionReason,omitempty"`
 	RejectedCount   uint64     `json:"rejectedCount,omitempty"`
 	Coalesced       bool       `json:"coalesced,omitempty"`
 	LastStartedAt   *time.Time `json:"lastStartedAt,omitempty"`
+	APIVersion      int        `json:"apiVersion"`
+	Outcome         string     `json:"outcome"`
+	ResponseBytes   int        `json:"responseBytes"`
+	BudgetBreached  bool       `json:"budgetBreached"`
+	DroppedLogs     uint64     `json:"droppedLogs"`
 }
 
 type apiCallLog struct {
@@ -42,6 +50,7 @@ type apiCallLog struct {
 	path     string
 	maxBytes int64
 	warn     sync.Once
+	retained atomic.Int64
 }
 
 func (s *Server) callLog() *apiCallLog {
@@ -55,10 +64,93 @@ func (s *Server) callLog() *apiCallLog {
 
 // LogAPI records incoming Code Factory requests, never outbound GitHub traffic.
 // It observes consumed bytes without pre-reading, changing limits or retrying.
+type apiLogJob struct {
+	record          apiCallRecord
+	boundary, token string
+	request         *http.Request
+	body            *apiBodyCapture
+	done            chan struct{}
+	response        []byte
+	retainedBytes   int64
+}
+
 func (s *Server) LogAPI(boundary, token string, next http.Handler) http.Handler {
 	lifetime := context.Background()
 	if s.operations != nil {
 		lifetime = s.operations.ctx
+	}
+	log := s.callLog()
+	jobs := make(chan *apiLogJob, 256)
+	var dropped atomic.Uint64
+	if log != nil {
+		s.apiLogWorkers.Add(1)
+		go func() {
+			defer s.apiLogWorkers.Done()
+			for {
+				var job *apiLogJob
+				select {
+				case job = <-jobs:
+				case <-lifetime.Done():
+					return
+				}
+				func() {
+					defer log.retained.Add(-job.retainedBytes)
+					<-job.done
+					if lifetime.Err() != nil {
+						return
+					}
+					record := job.record
+					var reply struct {
+						Result struct {
+							IsError           bool `json:"isError"`
+							StructuredContent struct {
+								Data struct {
+									Response struct {
+										State string `json:"state"`
+									}
+								}
+							}
+						}
+					}
+					if json.Unmarshal(job.response, &reply) == nil {
+						if reply.Result.IsError {
+							record.Outcome = "failed"
+						} else if state := reply.Result.StructuredContent.Data.Response.State; state != "" {
+							record.Outcome = state
+						}
+					}
+					record.API, record.RPCMethod, record.Parameters = apiRequestParameters(job.boundary, job.request, job.body)
+					secrets := []string{job.token}
+					if s.App != nil && s.App.Vault != nil {
+						ctx, cancel := context.WithTimeout(lifetime, time.Second)
+						secrets = s.App.Vault.Secrets(ctx, secrets)
+						interrupted := ctx.Err() != nil
+						cancel()
+						if interrupted {
+							dropped.Add(1)
+							if lifetime.Err() != nil {
+								return
+							}
+							return
+						}
+					}
+					clean := newAPIParameterSanitizer(secrets)
+					record.API = clean.text(record.API)
+					record.RPCMethod = clean.text(record.RPCMethod)
+					record.HTTPMethod = clean.text(record.HTTPMethod)
+					// Tool command payloads never enter the log, even after redaction.
+					if job.boundary == "mcp" {
+						record.Parameters = map[string]any{}
+					} else {
+						record.Parameters = clean.value("", record.Parameters, 0)
+					}
+					if lifetime.Err() != nil {
+						return
+					}
+					log.record(record)
+				}()
+			}
+		}()
 	}
 	return s.BoundHTTP(lifetime, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		started := time.Now()
@@ -69,40 +161,47 @@ func (s *Server) LogAPI(boundary, token string, next http.Handler) http.Handler 
 		response := &apiStatusWriter{ResponseWriter: w}
 		finished := false
 		defer func() {
-			record := apiCallRecord{StartedAt: started.UTC(), HTTPMethod: r.Method, HTTPStatus: response.status, DurationMS: float64(time.Since(started).Nanoseconds()) / 1e6, Panicked: !finished}
-			if record.HTTPStatus == 0 && finished {
-				record.HTTPStatus = http.StatusOK
+			if log == nil {
+				return
 			}
-			if !finished && record.HTTPStatus == 0 {
-				record.HTTPStatus = http.StatusInternalServerError
+			record := apiCallRecord{StartedAt: started.UTC(), HTTPMethod: r.Method, HTTPStatus: response.status, Panicked: !finished, APIVersion: APIVersion, ResponseBytes: response.bytes, Outcome: "returned"}
+			if record.HTTPStatus == 0 {
+				if finished {
+					record.HTTPStatus = http.StatusOK
+				} else {
+					record.HTTPStatus = http.StatusInternalServerError
+				}
 			}
-			record.HTTPStatus = httpbudget.Outcome(r.Context(), record.HTTPStatus)
-			record.API, record.RPCMethod, record.Parameters = apiRequestParameters(boundary, r, body)
-			secrets := []string{token}
-			if s.App != nil && s.App.Vault != nil {
-				ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), time.Second)
-				secrets = s.App.Vault.Secrets(ctx, secrets)
-				cancel()
-			}
-			clean := newAPIParameterSanitizer(secrets)
-			record.API = clean.text(record.API)
-			record.RPCMethod = clean.text(record.RPCMethod)
-			record.HTTPMethod = clean.text(record.HTTPMethod)
-			record.Parameters = clean.value("", record.Parameters, 0)
-			// A panic can reach audit before the outer boundary commits a response.
-			// Keep the inner failure separate instead of inventing a wire500.
-			handlerStatus := record.HTTPStatus
 			if !finished {
-				handlerStatus = http.StatusInternalServerError
+				record.Outcome = "panicked"
+			} else if record.HTTPStatus >= 400 {
+				record.Outcome = "rejected"
 			}
 			record.HTTPStatus = httpbudget.Outcome(r.Context(), 0)
 			record.HTTPStatusKnown = record.HTTPStatus != 0
-			if !finished || !record.HTTPStatusKnown {
-				record.HandlerStatus = handlerStatus
+			if !finished {
+				record.HandlerStatus = http.StatusInternalServerError
 			}
-			if log := s.callLog(); log != nil {
-				log.record(record)
+			// Keep one consumed-byte buffer, never the replay reader, headers or
+			// request context. Byte admission covers both waiting and active jobs.
+			retained := int64(body.data.Cap() + cap(response.sample) + len(r.Method) + len(r.URL.Path) + len(r.URL.RawQuery))
+			if lifetime.Err() != nil || !log.reserve(retained) {
+				dropped.Add(1)
+				return
 			}
+			request := &http.Request{Method: strings.Clone(r.Method), URL: &url.URL{Path: strings.Clone(r.URL.Path), RawQuery: strings.Clone(r.URL.RawQuery)}}
+			capture := &apiBodyCapture{data: body.data, truncated: body.truncated}
+			job := &apiLogJob{record: record, boundary: boundary, token: token, request: request, body: capture, done: make(chan struct{}), response: response.sample, retainedBytes: retained}
+			select {
+			case jobs <- job:
+			default:
+				log.retained.Add(-retained)
+				dropped.Add(1)
+			}
+			job.record.DurationMS = float64(time.Since(started).Nanoseconds()) / 1e6
+			job.record.BudgetBreached = job.record.DurationMS > 80
+			job.record.DroppedLogs = dropped.Load()
+			close(job.done)
 		}()
 		next.ServeHTTP(response, r)
 		finished = true
@@ -131,7 +230,10 @@ func (s *Server) BoundHTTP(lifetime context.Context, next http.Handler) http.Han
 			return "dependency_operation"
 		}
 		return "owner_unknown"
-	}, func(_ context.Context, rejection httpbudget.Rejection) {
+	}, func(ctx context.Context, rejection httpbudget.Rejection) {
+		if ctx.Err() != nil {
+			return
+		}
 		if log := s.callLog(); log != nil {
 			log.record(apiCallRecord{StartedAt: rejection.StartedAt, LastStartedAt: &rejection.LastAt,
 				API: rejection.API, HTTPMethod: rejection.HTTPMethod, Parameters: map[string]any{"unread": true},
@@ -163,6 +265,8 @@ func (b *apiBodyCapture) Read(p []byte) (int, error) {
 type apiStatusWriter struct {
 	http.ResponseWriter
 	status int
+	bytes  int
+	sample []byte
 }
 
 func (w *apiStatusWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }
@@ -181,7 +285,12 @@ func (w *apiStatusWriter) Write(p []byte) (int, error) {
 	if w.status == 0 {
 		w.WriteHeader(http.StatusOK)
 	}
-	return w.ResponseWriter.Write(p)
+	n, err := w.ResponseWriter.Write(p)
+	w.bytes += n
+	if len(w.sample)+n <= responseLimit {
+		w.sample = append(w.sample, p[:n]...)
+	}
+	return n, err
 }
 
 func apiRequestParameters(boundary string, r *http.Request, b *apiBodyCapture) (string, string, any) {
@@ -253,6 +362,22 @@ func apiRequestParameters(boundary string, r *http.Request, b *apiBodyCapture) (
 		api = "github_skill_source"
 	}
 	return api, "", params
+}
+
+func (l *apiCallLog) reserve(size int64) bool {
+	if size < 0 || size > apiLogQueueBytes {
+		return false
+	}
+	for attempt := 0; attempt < 8; attempt++ {
+		retained := l.retained.Load()
+		if retained > apiLogQueueBytes-size {
+			return false
+		}
+		if l.retained.CompareAndSwap(retained, retained+size) {
+			return true
+		}
+	}
+	return false
 }
 
 func (l *apiCallLog) record(record apiCallRecord) {

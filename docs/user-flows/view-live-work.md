@@ -27,14 +27,27 @@ The private owner connection is established. Application data starts clean in th
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
-Slow actions are acknowledged promptly and remain pending until their result arrives.
-Connection recovery reads the same accepted action without submitting it again. If
-the result expires or the service restarts, inspect saved state before deciding to
-retry. Acknowledgement does not mean the action has completed. A temporary unavailable
-result read keeps the same accepted action pending; a rejected original action is
-never automatically replayed. Responses that cannot finish promptly report an
-unknown outcome, while an unsupported oversized result reports a terminal error.
-Inspect saved state before deciding to repeat an uncertain action.
+
+Saved content is current only after its required saved revisions are ready. While
+the requested revision is preparing, show loading and disable actions needing that
+content. Searches include saved source bodies. Large source, configuration and exact
+question documents remain complete through versioned parts; never silently discard
+functional text. A lost or abandoned detail view does not acknowledge a revision.
+
+
+Show local submission feedback before waiting for the connection. Acceptance is
+separate from delivery: keep queued and running work pending, and preserve the
+owning conversation draft until delivery succeeds. Navigation and unrelated
+conversations remain usable. Repeated request identities retrieve the original
+work; connection recovery never submits the command again. After restart, effects
+with retained intent are uncertain and memory-only work can be lost. Neither is
+authority to replay a mutation or reuse an expired answer.
+
+Background operations have a separate five-minute execution deadline. An interrupted or timed-out effect remains uncertain and requires inspection; it never authorizes automatic replay.
+
+After a service restart, the open view retires its old version and waits for
+current saved content. Late prior-service responses cannot replace or acknowledge
+content. Keep the selected conversation, navigation and unsent drafts.
 
 ## Scenarios
 
@@ -44,6 +57,8 @@ Inspect saved state before deciding to repeat an uncertain action.
 - **S4** — Retain conversation history when a turn completes or source work closes.
 - **S5** — Keep an accepted slow action pending and retrieve its result without replay.
 
+- **S6** — Return every plugin tool response within the local budget while healthy background work eventually completes.
+
 ## Verification scope
 
 The assertion references below establish their fixture scope. Native installed-host, real-provider and assistive-technology acceptance require separate dated observations. The retired pipeline editor, review artifacts, AI question repair and built-in issue-report ledger have no compatibility path.
@@ -51,7 +66,7 @@ The assertion references below establish their fixture scope. Native installed-h
 <!-- flow-references -->
 ## Terminology and UI references
 
-Glossary: [retained-session](../glossary/README.md#retained-session), [execution-state](../glossary/README.md#execution-state), [reported-work-status](../glossary/README.md#reported-work-status).
+Glossary: [retained-session](../glossary/README.md#retained-session), [execution-state](../glossary/README.md#execution-state), [reported-work-status](../glossary/README.md#reported-work-status), [operation-receipt](../glossary/README.md#operation-receipt), [daemon-instance](../glossary/README.md#daemon-instance), [read-projection](../glossary/README.md#read-projection), [document-chunk](../glossary/README.md#document-chunk).
 UI entities: [S-FACTORY](../ui/README.md#S-FACTORY), [W-TRANSCRIPT](../ui/README.md#W-TRANSCRIPT), [W-WORK-STATUS](../ui/README.md#W-WORK-STATUS), [W-EVENT-BATCHES](../ui/README.md#W-EVENT-BATCHES), [W-CONNECTION-BLOCKER](../ui/README.md#W-CONNECTION-BLOCKER).
 
 ## Flow diagram
@@ -66,6 +81,7 @@ flowchart TD
     N5(["Hold saved work and show the failure or human request"])
     N6(["Retain conversation and saved evidence"])
     N7["Keep accepted action pending and retrieve its exact result without replay #40;S5#41;"]
+    N8["Return every plugin tool response within the local budget while healthy background work eventually completes #40;S6#41;"]
     N0 -->|"authorized action"| N1
     N1 -->|"validated or explicitly resumed"| N2
     N1 -->|"missing authority, stale identity or unavailable dependency"| N5
@@ -77,8 +93,11 @@ flowchart TD
     N4 -->|"missing authority, stale identity or unavailable dependency"| N5
     N1 -->|"slow action accepted"| N7
     N7 -->|"saved result retrieved"| N2
-    N7 -->|"terminal error, oversized result, expiry or restart requires inspection"| N5
+    N7 -->|"failed or unavailable result, lost work or uncertain effects require inspection"| N5
     N7 -->|"temporary result-read failure#59; keep the exact identity"| N7
+    N0 -->|"inspect current state or submit authorized work"| N8
+    N8 -->|"current result or completed action"| N6
+    N8 -->|"pending, busy, failed, lost or uncertain outcome"| N5
 ```
 
 ## Implementation references
@@ -97,11 +116,16 @@ flowchart TD
 - [web/tsconfig.json](../../web/tsconfig.json) — Current view-live-work implementation or fixture/build dependency.
 - [web/playwright.config.ts](../../web/playwright.config.ts) — Current view-live-work implementation or fixture/build dependency.
 - [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate. (`func factoryState(`)
-- [internal/store/snapshot.go](../../internal/store/snapshot.go) — Durable metadata-only UI change cursor supports unchanged state reads without transcript-driven rebuilding. (`func (s *Store) UILatest(`)
-- [internal/transport/operations.go](../../internal/transport/operations.go) — Acknowledge slow owner tools promptly and retain one execution/result identity with bounded capacity, lifetime and retention. (`func (o *operations) run(`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects. (`func (q *operationQueue) submit(`)
 - [web/src/bridge.ts](../../web/src/bridge.ts) — Retrieve the exact pending action result without replaying accepted work. (`export async function call<T>(`)
 - [internal/codex/client.go](../../internal/codex/client.go) — Apply caller cancellation to native write admission and full stdin pipes; a partial write disconnects and reports uncertain delivery. (`func (c *Client) send(`)
 - [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
+- [internal/transport/projections.go](../../internal/transport/projections.go) — Background immutable snapshot preparation and revision matching; exact large-document chunks. (`func (c *projectionCache) read(`)
+- [internal/store/revisions.go](../../internal/store/revisions.go) — Committed dependency revisions isolate unrelated transcript traffic and selected items. (`func (s *Store) Revision(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Apply the 64 KiB bound to the complete parsed tool response, including SDK errors before tool middleware; keep large resources independent. (`func LimitResponse(`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Account every serialized terminal functional body independently of retained identity metadata. (`func operationPayloadBytes(`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Evict oldest terminal results/errors under the retained-body ceiling while preserving original state and explicit unavailable-detail markers. (`func (q *operationQueue) pruneResultsLocked(`)
+- [web/src/bridge.ts](../../web/src/bridge.ts) — Retire obsolete instance-scoped read ownership without repeating accepted commands. (`export function onInstanceChange(`)
 
 ## Test references
 
@@ -130,14 +154,14 @@ flowchart TD
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `a delayed state version cannot replace a newer accepted refresh`; S1, S2. After a held older full response is consumed, its first successor poll retains the newer accepted version cursor; current rows remain visible and delayed stale rows stay absent.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestNativeStreamUsesCompactIdentityAndPreservesQueuedContexts(`; S3. Fifty deltas preserve 20 queued contexts of 100 KiB each; runtime rows stay within 512 bytes with pendingCount 20 and no pending payload, accept an opaque queue sentinel, leave the UI cursor unchanged and reject stale epochs.
 - [internal/store/factory_reads_test.go](../../internal/store/factory_reads_test.go) — `func TestSessionRuntimeProjectionIsAtomicForPutCASDeleteAndRollback(`; S3. Compact runtime epoch/thread identity follows session Put/CAS/delete atomically; rollback and failed CAS preserve the prior identity.
-- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestFactoryStateVersionSkipsIdleProjectionAndTracksMetadata(`; S1, S2. An unchanged cursor returns only version/unchanged before decoding an intentionally invalid source; metadata writes advance the cursor, live deletion refreshes and transcript output does not invalidate state.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestFactoryStateVersionSkipsIdleAndRejectsUnpreparedData(`; S1, S2. A same-instance unchanged cursor returns only version/unchanged; an unprepared invalid source fails, deleting that source refreshes the projection, and transcript output does not invalidate inbox state.
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestRetainedRefreshCannotOverwriteConcurrentWebhook(`; S2. An in-flight retained PR refresh cannot replace a newer webhook row on either success or provider failure: current head/body/discussion/CI and automatic links remain, and actual batch/native input agrees.
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestBlockedAndAnsweredTransitionsEmitSessionSubscription(`; S2. An exact session.changed webhook subscriber receives one blocked and one answered transition; notifications contain neither question nor answer text.
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestAnswerPreservesOtherExplicitBlockedRequests(`; S2. For blocking and nonblocking native input, an invalid answer fails; valid native and first explicit-status answers retain blocked/waiting while a second explicit status question remains. Only the final answer yields working/running.
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestFactoryStateReusesInboxAcrossQueriesAndRefreshesAfterMutation(`; S1. After warming the derived inbox, a raw SQL sentinel makes any repeated full decode fail. Changed filter/page/search/tab and conversation queries still succeed from the retained projection; an ordinary source mutation invalidates the cache and returns the updated title.
-- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationsRetainExactResultWithoutRepeatingMutation(`; S5. A disconnected original request and repeated result reads execute one mutation and retain its exact completed result.
-- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationsBoundCapacityExpiryCancellationAndErrors(`; S5. Full capacity rejects before execution; expiry, cancellation, shutdown, restart and delayed errors preserve truthful outcomes.
-- [internal/transport/api_performance_test.go](../../internal/transport/api_performance_test.go) — `func TestUserFacingAPILatency(`; S1, S5. Runtime registered SDK/custom receiving-method keys and discovered tool catalog are completeness oracles. Every method, including incoming notifications, has a timed meaningful success, accepted notification, exact protocol rejection or real stream acknowledgement. Tool results retain successful, accepted-pending and exact-result polling coverage within100ms for normal and125ms provider fixtures with1000saved sources; background completion/network transit are separate.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationsDeduplicateBoundAdmissionAndReserveControl(`; S5. Duplicate IDs retain original identities; pending queue capacity is bounded and reserved control workers execute behind blocked ordinary workers.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationRestartReportsUncertainAndLostWithoutReplay(`; S5. Unfinished retained intent recovers as uncertain and old-instance memory-only work is lost; neither identity can replay the original mutation.
+- [internal/transport/api_performance_test.go](../../internal/transport/api_performance_test.go) — `func TestUserFacingAPILatency(`; S1, S5. Runtime registered SDK/custom receiving-method keys and the discovered tool catalog are completeness oracles. Every method, including notifications, has a timed meaningful success, accepted notification, exact rejection or real stream acknowledgement. Every exposed tool is timed through authenticated HTTP across empty/cold/1000-source retained state, blocked storage/logging, saturation, continuous writes and three-second provider/process delays; useful current reads and healthy operation completion are required. Every sample must stay within100ms; host/network transit and background completion are separate.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `accepted slow mutation polls one identity and recovers a lost polling response`; S5. Five consecutive failed result reads exceed the ordinary retry budget while Send and the draft remain pending; explicit completion gate proves exact-identity recovery and one created session.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `delayed operation error preserves the draft without repeating the action`; S5. Delayed failure displays the error and preserves the draft without replaying the action.
 - [internal/codex/client_write_test.go](../../internal/codex/client_write_test.go) — `func TestBlockedNativeWriteHonorsDeadlineAndPreservesUncertainDelivery(`; S5. A real full stdin pipe stops on the call deadline, reports uncertain delivery, disconnects its partial stream and removes the pending response.
@@ -153,6 +177,20 @@ flowchart TD
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `HTTP503 after mutation delivery preserves the draft without replay`; S5. Original mutation503 preserves draft and prompts state inspection without replay.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `oversized accepted result ends polling with draft retained and no replay`; S5. Oversized final result is terminal; polling ends and draft remains with one mutation.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `accepted operation reports terminal provider HTTP503 without polling again`; S5. Terminal structured provider HTTP503 is reported once rather than mistaken for transient transport503; exact-ID polling ends, Send becomes enabled, draft survives and one original mutation exists.
+- [internal/transport/budget_test.go](../../internal/transport/budget_test.go) — `func TestPluginAPIBudget(`; S6. Every exposed tool is invoked through authenticated HTTP; all retained samples must stay within 100 ms and 64 KiB across cold/history, writes, blocked DB/log and saturated-queue scenarios, with useful eventual completion. A checked continuous writer must commit before client launch and between measured read halves; near-limit successful opener RPCs run while the logging sink is blocked and byte admission is asserted.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationDeadlineReleasesScopeWithoutReplay(`; S5. A stalled context-aware effect reaches uncertain at its execution deadline, releases its session scope for healthy work, persists that outcome and cannot replay.
+- [internal/transport/response_budget_test.go](../../internal/transport/response_budget_test.go) — `func TestRPCEnvelopeBoundsBeforeOperationAdmission(`; S6. Reject oversized transport IDs before admission/effects, preserve exact boundary IDs and separate logical identities, bound both unknown-tool and pre-middleware protocol metadata errors, and retain large resources.
+- [internal/httpbudget/budget_test.go](../../internal/httpbudget/budget_test.go) — `func TestRequestSpecificResponseLimitPreservesOtherRoutes(`; S6. A lower per-request ceiling cannot be raised and discards buffered overflow/private headers while later resources retain their original capacity.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationFailurePayloadsUseRetentionBudget(`; S6. Terminal functional payload accounting includes successful results/descriptors, short errors and inline/chunked error documents while identity metadata remains available for deduplication.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func assertOperationClassifiersMatchCatalog(`; S6. Compare the actual authenticated catalog logical-identity schema and read-only annotation to both real bridge and fixture classifiers across every registered tool; reject unknown names without copying an expected operation list.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestFactoryStateReopenScopesVersionToDaemonInstance(`; S1. Reopening the same saved database creates a distinct daemon identity; lower and equal serials from the prior instance return current saved data, absent namespaces cannot claim unchanged, and the current namespace retains its unchanged optimization.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `for (const restartedVersion of [1, 1000]) {`; S1. An open view accepts lower and equal counters after the daemon identity changes, displays the new source, acknowledges only its new-instance revision, preserves the message draft and returns to the saved inbox without submitting chat.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `a superseded daemon detail cannot display or acknowledge old content`; S1. A held old-instance detail resolves only after current new-instance detail is displayed; actual bridge completion cannot replace or acknowledge old content, and the following action still uses the new identity.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `a late old-daemon command response resolves its original identity without replay`; S5. Navigation and the saved draft survive a held command across daemon replacement; its late response is reconciled by the original instance/request pair as uncertain, with explicit inspection guidance and exactly one submission.
+- [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestProjectionReadIdentifiersBoundBeforeCacheAdmission(`; S1, S6. Authenticated read selectors reject1,025 ASCII bytes and1,026 UTF-8 bytes before any projection/operation entry, accept the exact1,024-byte boundary, and reconstruct the entire large source unchanged.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestCompletedOperationQueueClearsObsoleteInputClosures(`; S5. Decreasing bursts of 8, 5 and 3 payload-capturing operations execute once, drain all live byte/scope accounting and leave every obsolete pending backing slot zero, releasing completed input closures.
+- [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestDuplicateOperationReceiptsReflectIndependentDocumentEviction(`; S5. Actual document-cache eviction removes terminal success/error chunks; authenticated duplicate submissions preserve original identity/tool/state, explicitly report unavailable details with no dead descriptors, and execute no additional work.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `the first accepted daemon retires concurrent initial replies from an obsolete instance`; S6. The first accepted daemon retires concurrent unknown-identity replies: an old initial state completes after the new query, cannot broadcast obsolete ownership, and the next read-state action uses the new daemon.
 
 ## Verification and gaps
 

@@ -16,13 +16,14 @@ import (
 
 type factoryStateInput struct {
 	Empty
-	View         string `json:"view,omitempty"`
-	Search       string `json:"search,omitempty"`
-	Filter       string `json:"filter,omitempty"`
-	Offset       int    `json:"offset,omitempty"`
-	Limit        int    `json:"limit,omitempty"`
-	ItemID       string `json:"itemId,omitempty"`
-	SinceVersion *int64 `json:"sinceVersion,omitempty"`
+	View            string `json:"view,omitempty"`
+	Search          string `json:"search,omitempty"`
+	Filter          string `json:"filter,omitempty"`
+	Offset          int    `json:"offset,omitempty"`
+	Limit           int    `json:"limit,omitempty"`
+	ItemID          string `json:"itemId,omitempty"`
+	SinceVersion    *int64 `json:"sinceVersion,omitempty"`
+	SinceInstanceID string `json:"sinceInstanceId,omitempty"`
 }
 type sessionSummary struct {
 	ID            string        `json:"id"`
@@ -54,11 +55,11 @@ func factoryDetailVersion(revision string, links []domain.Relationship) string {
 type factoryInboxCache struct {
 	mu      sync.Mutex
 	valid   bool
-	version int64
+	version uint64
 	entries []domain.InboxEntry
 }
 
-func (c *factoryInboxCache) read(ctx context.Context, a *app.App, version int64) ([]domain.InboxEntry, error) {
+func (c *factoryInboxCache) read(ctx context.Context, a *app.App, version uint64) ([]domain.InboxEntry, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.valid && c.version == version {
@@ -73,7 +74,8 @@ func (c *factoryInboxCache) read(ctx context.Context, a *app.App, version int64)
 	return entries, nil
 }
 
-func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factoryStateInput, cache *factoryInboxCache) (any, error) {
+func factoryState(ctx context.Context, a *app.App, in factoryStateInput, cache *factoryInboxCache) (any, error) {
+	a = &app.App{Store: projectionStore(ctx, a.Store)}
 	if in.View == "" {
 		in.View = "issues"
 	}
@@ -96,14 +98,8 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 	default:
 		return nil, fmt.Errorf("unknown factory view")
 	}
-	// Capture before projection: a concurrent mutation must remain visible to the next poll.
-	version, err := a.Store.UILatest(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if in.SinceVersion != nil && *in.SinceVersion == version {
-		return map[string]any{"unchanged": true, "version": version}, nil
-	}
+	version := a.Store.Revision(projectionDependencies("factory_state", mustStateJSON(in))...)
+	inboxRevision := a.Store.Revision("item", "user", "relationship", "linked-pr", "identity", "repository", "config", "assessment", "ticket", "observation", "factory-session", "factory-question")
 	inbox := []domain.InboxEntry{}
 	total := 0
 	visible := map[string]bool{in.ItemID: true}
@@ -111,7 +107,7 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 		visible["configuration"] = true
 	}
 	if in.View == "issues" || in.View == "working" || in.View == "mine" || in.View == "review" {
-		entries, err := cache.read(ctx, a, version)
+		entries, err := cache.read(ctx, a, inboxRevision)
 		if err != nil {
 			return nil, err
 		}
@@ -134,10 +130,23 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 			total++
 		}
 	}
-	questions, err := store.Select[factory.Question](ctx, a.Store, "factory-question", "status", "pending")
+	questionScope := ""
+	if in.View == "conversation" || in.View == "configuration" {
+		questionScope = in.ItemID
+		if in.View == "configuration" {
+			questionScope = "configuration"
+		}
+	}
+	questionOffset := 0
+	if in.View == "conversation" || in.View == "configuration" || in.View == "messages" {
+		questionOffset = in.Offset
+	}
+	page, err := questionPage(ctx, a.Store, questionPageInput{SessionID: questionScope, Offset: questionOffset, Limit: in.Limit})
 	if err != nil {
 		return nil, err
 	}
+	questionResult := page.(map[string]any)
+	questions := questionResult["questions"].([]factory.Question)
 	for _, q := range questions {
 		visible[q.SessionID] = true
 	}
@@ -167,9 +176,13 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 			selected = append(selected, s)
 		}
 	}
-	result := map[string]any{"version": version, "inbox": inbox, "inboxTotal": total, "offset": in.Offset, "limit": in.Limit, "sessions": selected, "questions": questions}
+	_, pendingTotal, err := a.Store.QuestionPage(ctx, "", "pending", 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	result := map[string]any{"version": version, "inbox": inbox, "inboxTotal": total, "offset": in.Offset, "limit": in.Limit, "sessions": selected, "questions": questions, "pendingQuestionTotal": pendingTotal, "questionTotal": questionResult["total"], "questionOffset": questionOffset, "questionLimit": in.Limit}
 	if in.View == "conversation" && in.ItemID != "" {
-		entries, e := cache.read(ctx, a, version)
+		entries, e := cache.read(ctx, a, inboxRevision)
 		if e != nil {
 			return nil, e
 		}
@@ -189,7 +202,8 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 		}
 	}
 	if in.View == "configuration" {
-		settings, e := f.Settings(ctx)
+		var settings factory.Settings
+		e := a.Store.Get(ctx, "factory-settings", "effective", &settings)
 		if e != nil {
 			return nil, e
 		}
@@ -202,3 +216,5 @@ func factoryState(ctx context.Context, a *app.App, f *factory.Service, in factor
 	}
 	return result, nil
 }
+
+func mustStateJSON(in factoryStateInput) json.RawMessage { b, _ := json.Marshal(in); return b }

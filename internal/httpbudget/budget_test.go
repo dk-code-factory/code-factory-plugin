@@ -411,3 +411,32 @@ func TestCoalescedRejectionIntervalSurvivesOutOfOrderEnqueue(t *testing.T) {
 		t.Fatal("aggregate lost the actual request interval", got)
 	}
 }
+
+func TestRequestSpecificResponseLimitPreservesOtherRoutes(t *testing.T) {
+	b := boundary{make(chan struct{}, 1), Duration, 32}
+	h := b.wrap(context.Background(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/tool":
+			LimitResponse(r.Context(), 4)
+			LimitResponse(r.Context(), 32)
+			w.Header().Set("Private", "discarded")
+			_, _ = io.WriteString(w, "private-result")
+		case "/buffered":
+			_, _ = io.WriteString(w, "private-buffered")
+			LimitResponse(r.Context(), 4)
+		default:
+			_, _ = io.WriteString(w, "resource-content")
+		}
+	}))
+	for _, path := range []string{"/tool", "/resource", "/buffered", "/resource"} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+		if path == "/resource" {
+			if w.Code != 200 || w.Body.String() != "resource-content" {
+				t.Fatal("request limit leaked to another route", w.Code, w.Body.String())
+			}
+		} else if w.Code != 500 || strings.Contains(w.Body.String(), "private-") || w.Header().Get("Private") != "" {
+			t.Fatal("oversize scoped response escaped its boundary", w.Code, w.Body.String())
+		}
+	}
+}

@@ -8,6 +8,9 @@ import (
 	"codefactory/internal/gateway"
 	"codefactory/internal/store"
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -253,7 +256,10 @@ func Diagnose(ctx context.Context, dir, binary, address string, s *store.Store) 
 // FetchDiagnostics lets doctor use exactly the report exposed by the running
 // daemon, including sync/callback observations, without opening its database.
 func FetchDiagnostics(ctx context.Context, dir, address string) (Diagnostics, error) {
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	return fetchDiagnostics(ctx, dir, address, 20*time.Second)
+}
+func fetchDiagnostics(ctx context.Context, dir, address string, budget time.Duration) (Diagnostics, error) {
+	ctx, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	var d Diagnostics
 	if e := LoopbackAddress(address); e != nil {
@@ -265,16 +271,29 @@ func FetchDiagnostics(ctx context.Context, dir, address string) (Diagnostics, er
 	}
 
 	client := &http.Client{Timeout: 20 * time.Second}
-	name, args := "diagnostics", map[string]any{}
-	for {
+	type result struct {
+		APIVersion int    `json:"apiVersion"`
+		InstanceID string `json:"instanceId"`
+		Response   struct {
+			State             string          `json:"state"`
+			Error             string          `json:"error"`
+			Result            json.RawMessage `json:"result"`
+			ResultUnavailable bool            `json:"resultUnavailable"`
+			Version           string          `json:"version"`
+			Index             int             `json:"index"`
+			Chunk             string          `json:"chunk"`
+		} `json:"response"`
+	}
+	call := func(name string, args map[string]any) (result, error) {
+		var out result
 		params := map[string]any{"name": name, "arguments": args, "_meta": map[string]any{"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": map[string]string{"name": "code-factory-doctor", "version": buildinfo.Version}, "io.modelcontextprotocol/clientCapabilities": map[string]any{}}}
-		b, e := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": params})
-		if e != nil {
-			return d, e
+		body, err := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": params})
+		if err != nil {
+			return out, err
 		}
-		req, e := http.NewRequestWithContext(ctx, "POST", "http://"+address+"/mcp", bytes.NewReader(b))
-		if e != nil {
-			return d, e
+		req, err := http.NewRequestWithContext(ctx, "POST", "http://"+address+"/mcp", bytes.NewReader(body))
+		if err != nil {
+			return out, err
 		}
 		req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(string(token)))
 		req.Header.Set("Content-Type", "application/json")
@@ -282,48 +301,110 @@ func FetchDiagnostics(ctx context.Context, dir, address string) (Diagnostics, er
 		req.Header.Set("MCP-Protocol-Version", "2026-07-28")
 		req.Header.Set("Mcp-Method", "tools/call")
 		req.Header.Set("Mcp-Name", name)
-		res, e := client.Do(req)
-		if e != nil {
-			return d, e
+		res, err := client.Do(req)
+		if err != nil {
+			return out, err
+		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusOK {
+			return out, fmt.Errorf("daemon diagnostics unavailable")
 		}
 		var envelope struct {
-			Error  json.RawMessage
 			Result struct {
-				StructuredContent struct {
-					Data      Diagnostics
-					Operation *struct{ ID string }
-				}
-				IsError bool
+				StructuredContent struct{ Data result }
+				IsError           bool
 			}
+			Error any
 		}
-		e = json.NewDecoder(res.Body).Decode(&envelope)
-		res.Body.Close()
-		if res.StatusCode != 200 {
-			return d, fmt.Errorf("daemon diagnostics unavailable")
+		if err = json.NewDecoder(res.Body).Decode(&envelope); err != nil {
+			return out, err
 		}
-		if e != nil {
-			return d, e
+		if envelope.Result.IsError || envelope.Error != nil {
+			return out, fmt.Errorf("invalid daemon diagnostics")
 		}
-		if envelope.Result.IsError || len(envelope.Error) > 0 {
-			return d, fmt.Errorf("invalid daemon diagnostics")
+		out = envelope.Result.StructuredContent.Data
+		if out.APIVersion != 2 || out.InstanceID == "" {
+			return out, fmt.Errorf("daemon diagnostics requires coordinated API v2 upgrade")
 		}
-		if op := envelope.Result.StructuredContent.Operation; op != nil {
-			if op.ID == "" {
-				return d, fmt.Errorf("invalid diagnostics operation")
-			}
-			name, args = "operation_result", map[string]any{"id": op.ID}
-			timer := time.NewTimer(100 * time.Millisecond)
-			select {
-			case <-ctx.Done():
-				timer.Stop()
-				return d, ctx.Err()
-			case <-timer.C:
-			}
-			continue
-		}
-		if envelope.Result.StructuredContent.Data.Version == "" {
-			return d, fmt.Errorf("invalid daemon diagnostics")
-		}
-		return envelope.Result.StructuredContent.Data, nil
+		return out, nil
 	}
+	pause := func() error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(250 * time.Millisecond):
+			return nil
+		}
+	}
+	boot, err := call("open_factory", map[string]any{})
+	if err != nil {
+		return d, err
+	}
+	id := rand.Text()
+	args := map[string]any{"requestId": id, "instanceId": boot.InstanceID}
+	out, err := call("diagnostics", args)
+	if err == nil && out.Response.State == "busy" {
+		return d, fmt.Errorf("daemon diagnostics busy; operation was not accepted")
+	}
+	for err == nil {
+		switch out.Response.State {
+		case "succeeded":
+			if out.Response.ResultUnavailable {
+				return d, fmt.Errorf("completed daemon diagnostics result unavailable; inspect saved state")
+			}
+			data := out.Response.Result
+			var descriptor struct {
+				Document *struct {
+					Version  string `json:"version"`
+					Chunks   int    `json:"chunks"`
+					Bytes    int    `json:"bytes"`
+					Encoding string `json:"encoding"`
+				} `json:"document"`
+			}
+			if json.Unmarshal(data, &descriptor) != nil {
+				return d, fmt.Errorf("invalid daemon diagnostics")
+			}
+			if doc := descriptor.Document; doc != nil {
+				if doc.Encoding != "base64-json" || len(doc.Version) != 64 || doc.Bytes < 1 || doc.Bytes > 48<<20 || doc.Chunks != (doc.Bytes+(24<<10)-1)/(24<<10) {
+					return d, fmt.Errorf("invalid daemon diagnostics document")
+				}
+				data = make([]byte, 0, doc.Bytes)
+				for index := 0; index < doc.Chunks; index++ {
+					chunk, err := call("document_chunk", map[string]any{"version": doc.Version, "index": index})
+					for err == nil && chunk.Response.State == "busy" {
+						if err = pause(); err != nil {
+							break
+						}
+						chunk, err = call("document_chunk", map[string]any{"version": doc.Version, "index": index})
+					}
+					if err != nil {
+						return d, err
+					}
+					if chunk.Response.State != "ready" || chunk.Response.Version != doc.Version || chunk.Response.Index != index || len(chunk.Response.Chunk) > 32<<10 {
+						return d, fmt.Errorf("daemon diagnostics document unavailable")
+					}
+					part, err := base64.StdEncoding.DecodeString(chunk.Response.Chunk)
+					if err != nil || len(data)+len(part) > doc.Bytes {
+						return d, fmt.Errorf("invalid daemon diagnostics chunk")
+					}
+					data = append(data, part...)
+				}
+				if len(data) != doc.Bytes || fmt.Sprintf("%x", sha256.Sum256(data)) != doc.Version {
+					return d, fmt.Errorf("incomplete daemon diagnostics document")
+				}
+			}
+			if json.Unmarshal(data, &d) != nil || d.Version == "" {
+				return d, fmt.Errorf("invalid daemon diagnostics")
+			}
+			return d, nil
+		case "queued", "running", "pending", "busy":
+		default:
+			return d, fmt.Errorf("daemon diagnostics %s: %s", out.Response.State, out.Response.Error)
+		}
+		if err = pause(); err != nil {
+			return d, err
+		}
+		out, err = call("operation_status", args)
+	}
+	return d, err
 }

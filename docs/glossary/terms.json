@@ -4988,6 +4988,69 @@
       "aliases": [],
       "category": "ui-connection",
       "definition": "A connection representing c event inspect."
+    },
+    {
+      "id": "operation-receipt",
+      "name": "Operation receipt",
+      "aliases": [],
+      "category": "application",
+      "definition": "A record identifying accepted work and its completion state; acceptance alone does not establish delivery or success."
+    },
+    {
+      "id": "daemon-instance",
+      "name": "Daemon instance",
+      "aliases": [],
+      "category": "application",
+      "definition": "One running service process with an identity distinct from every earlier process."
+    },
+    {
+      "id": "read-projection",
+      "name": "Read projection",
+      "aliases": [],
+      "category": "application",
+      "definition": "An immutable view of saved state identified by a daemon instance and the committed revisions of the data on which it depends."
+    },
+    {
+      "id": "document-chunk",
+      "name": "Document chunk",
+      "aliases": [],
+      "category": "application",
+      "definition": "One ordered portion of a complete document identified by a shared immutable version."
+    },
+    {
+      "id": "queued-operation",
+      "name": "Queued operation",
+      "aliases": [],
+      "category": "application",
+      "definition": "Accepted work waiting to begin execution."
+    },
+    {
+      "id": "running-operation",
+      "name": "Running operation",
+      "aliases": [],
+      "category": "application",
+      "definition": "Accepted work whose execution has begun and has no terminal outcome yet."
+    },
+    {
+      "id": "uncertain-operation",
+      "name": "Uncertain operation",
+      "aliases": [],
+      "category": "application",
+      "definition": "Work whose effect or completion cannot be established from retained evidence."
+    },
+    {
+      "id": "lost-operation",
+      "name": "Lost operation",
+      "aliases": [],
+      "category": "application",
+      "definition": "Previously submitted work for which the service has no retained acceptance or execution record."
+    },
+    {
+      "id": "pending-projection",
+      "name": "Pending projection",
+      "aliases": [],
+      "category": "application",
+      "definition": "A requested view whose saved-state dependencies are not yet prepared at the required revisions."
     }
   ]
 }

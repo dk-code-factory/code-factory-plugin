@@ -30,7 +30,18 @@ The private owner connection is established. Application data starts clean in th
 
 ## Alternatives and recovery
 
-Read-only inspection does not launch a model turn. Begin with 50 records and offer 100 or 200 per page, previous/next navigation and manual refresh. Selecting a record reveals compact metadata and a bounded preview, including truncation and original byte counts where available; rule metadata lists are bounded and report total counts. Read full rule instructions through Configuration. Kind and size changes reset selection and offset. Preserve the accepted same-query page and selection on a failed refresh; a changed query must never show the previous kind's records. Discard late superseded responses and reread the archive when reopening Events. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Both retry and discard require a successful history lookup: unavailable history preserves the uncertain claim, confirmed delivery is reconciled as delivered, and only confirmed absence permits either choice. Recovery itself starts no turn. Explicit cleanup preserves dirty worktrees. A busy conversation must not delay independent event discovery or quiet deadlines in its repository or other repositories. Defer its own pending webhook or baseline without losing it, inventing historical work or treating contention as a provider failure.
+Read-only inspection does not launch a model turn. Begin with 50 records and offer 100 or 200 per page, previous/next navigation and manual refresh. Selecting a record reveals compact metadata and a bounded preview, including truncation and original byte counts where available; rule metadata lists are bounded and report total counts. Read full rule instructions through Configuration. Kind and size changes reset selection and offset. Hide the unavailable same-query page and selection on a pending or failed refresh; a changed query must never show the previous kind's records. Discard late superseded responses and reread the archive when reopening Events. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Both retry and discard require a successful history lookup: unavailable history preserves the uncertain claim, confirmed delivery is reconciled as delivered, and only confirmed absence permits either choice. Recovery itself starts no turn. Explicit cleanup preserves dirty worktrees. A busy conversation must not delay independent event discovery or quiet deadlines in its repository or other repositories. Defer its own pending webhook or baseline without losing it, inventing historical work or treating contention as a provider failure.
+
+
+Saved content is current only after its required saved revisions are ready. While
+the requested revision is preparing, show loading and disable actions needing that
+content. Searches include saved source bodies. Large source, configuration and exact
+question documents remain complete through versioned parts; never silently discard
+functional text. A lost or abandoned detail view does not acknowledge a revision.
+
+An already open archive reloads its current query when a replacement service is observed.
+While the replacement page is unavailable, hide the earlier page and selected record.
+Preserve the archive kind, page size and navigation; inspection launches no work.
 
 ## Scenarios
 
@@ -88,7 +99,7 @@ flowchart TD
     N8 -->|"validated or explicitly resumed"| N9
     N8 -->|"missing authority, stale identity or unavailable dependency"| N10
     N9 -->|"page read succeeds"| N11
-    N9 -->|"read fails#59; preserve accepted page only for the same query"| N10
+    N9 -->|"read fails#59; hide unavailable page and selected record"| N10
 ```
 
 ## Implementation references
@@ -136,7 +147,7 @@ flowchart TD
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestAutomaticBatchBypassesBusyAndSlowPeerAttachments(`; S6. Actual B turn/start occurs before A is released for both slow human attachment with empty queue and slow automatic due attachment; B running state has no pending events afterward.
 - [internal/factory/regressions_test.go](../../internal/factory/regressions_test.go) — `func TestPausedRepositoryRetainsQueueAndAllowsExplicitChat(`; S6, S7. Repository pause retains an authorized queue without automatic send; explicit chat flushes it, and unpause plus a new event automatically reuses the retained thread.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `event and rule inspection uses bounded pages and previews without starting work`; S9. A 1,000-row mocked archive displays 50 records by default, pages forward/back, resets selection and offset for 200-row and kind changes, shows a bounded preview with original byte count, reads all four archive kinds and opens Configuration without agent/configuration mutations. The fixture projection does not establish backend payload bounds.
-- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `archive refresh preserves accepted data on failure and rejects stale queries`; S9. Failed same-query refresh retains its accepted page and selected record; a failed changed kind displays no stale page or detail. The exact superseded delivery invocation completes SDK decoding and its React continuation barrier before asserting that the accepted batch page remains intact, without any repairing refresh. Reopening Events rereads the default page.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `archive refresh hides unavailable data on failure and rejects stale queries`; S9. Failed same-query refresh hides its unavailable page and selected record; a failed changed kind displays no stale page or detail. The exact superseded delivery invocation completes SDK decoding and its React continuation barrier before asserting that the accepted batch page remains intact, without any repairing refresh. Reopening Events rereads the default page.
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestRetainedRefreshCannotOverwriteConcurrentWebhook(`; S2. An in-flight retained PR refresh cannot replace a newer webhook row on either success or provider failure: current head/body/discussion/CI and automatic links remain, and actual batch/native input agrees.
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestUnchangedRetainedRefreshStillAppliesProviderResult(`; S2. An unchanged saved row accepts fresh provider title/CI and automatic links, while provider failure preserves source and records retry backoff.
 - [internal/factory/review6_test.go](../../internal/factory/review6_test.go) — `func TestBlockedAndAnsweredTransitionsEmitSessionSubscription(`; S6, S7. An exact session.changed webhook subscriber receives one blocked and one answered transition; notifications contain neither question nor answer text.
@@ -153,6 +164,7 @@ flowchart TD
 - [internal/factory/review7_test.go](../../internal/factory/review7_test.go) — `func TestDetailRefreshRetainsCachedFreshnessWithoutRepeatedImports(`; S2. After an actual CachedGitHub detail load, controlled passes at 31 seconds, one minute, just before the provider detail TTL and twice after the service freshness deadline preserve the UI version and one underlying fetch. An identical still-cached observation skips item import while event reconciliation remains available.
 - [internal/factory/webhook_budget_test.go](../../internal/factory/webhook_budget_test.go) — `func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(`; S1. Held secret or writer yields truthful deadline rejection and no late durable delivery; explicit exact-delivery-id redelivery succeeds202 only after persistence.
 - [internal/factory/api_performance_test.go](../../internal/factory/api_performance_test.go) — `func TestWebhookAPILatency(`; S1. Isolated100ms webhook wire measurements separate delayed dependency rejection from successful durable acknowledgement.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `an open archive retires its page and selection when the daemon changes`; S9. Loaded archive replacement observes daemon identity, hides old page/selection while pending, then displays current records without manual refresh, preserving query controls and navigation without chat.
 
 ## Verification and gaps
 
