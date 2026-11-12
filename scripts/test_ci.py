@@ -473,13 +473,16 @@ class VerificationGraphTests(unittest.TestCase):
         # The recorder validates dependency outputs, so a missing graph edge fails
         # instead of simply producing an apparently plausible command count.
         recorder = self.tools / 'recorder'
-        recorder.write_text('''#!/usr/bin/python3
+        # These recording tools and the copied ownership/timing helpers use only
+        # the standard library. Avoid loading unrelated host site packages in
+        # every short-lived fixture process; all graph assertions still run.
+        recorder.write_text('''#!/usr/bin/python3 -S
 import hashlib, json, os, pathlib, sys, time
 root = pathlib.Path(os.environ['RECORD_ROOT'])
 command = pathlib.Path(sys.argv[0]).name
 args = sys.argv[1:]
 if command == 'python3' and args and args[0].endswith('/verification_timing.py'):
-    os.execv('/usr/bin/python3', ['/usr/bin/python3', *args])
+    os.execv('/usr/bin/python3', ['/usr/bin/python3', '-S', *args])
 if args in (['--version'], ['version']):
     if os.environ.get('EXPECTED_COMPARISON_HEAD'):
         def observe_startup(event):
@@ -494,7 +497,7 @@ if args in (['--version'], ['version']):
     print('1.24.2')
     sys.exit(0)
 if command == 'python3' and args[:1] == ['scripts/verification_run.py']:
-    os.execv('/usr/bin/python3', ['/usr/bin/python3', *args])
+    os.execv('/usr/bin/python3', ['/usr/bin/python3', '-S', *args])
 key = command + ' ' + ' '.join(args)
 if command == 'python3' and args[:2] == ['scripts/specs.py', 'check'] and os.environ.get('EXPECTED_COMPARISON_BASE'):
     summary=json.loads(pathlib.Path(os.environ['CODE_FACTORY_TIMING_FILE']).read_text())
