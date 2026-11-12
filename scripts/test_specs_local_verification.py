@@ -506,6 +506,43 @@ class LocalVerificationTests(unittest.TestCase):
         self.assertNotEqual(contexts[0], contexts[2])
         self.assertTrue(all(item['PREPARATION_CONTEXT'] == 'first' for item in contexts[:2]))
 
+    def test_regular_input_hashes_stream_large_files_with_bounded_reads(self):
+        import hashlib
+        target = self.directory / 'large-input'
+        fdopen = os.fdopen
+        buffers = []
+        class Stream:
+            def __init__(self, source):
+                self.source = source
+            def __enter__(self):
+                self.source.__enter__()
+                return self
+            def __exit__(self, *args):
+                return self.source.__exit__(*args)
+            def readable(self):
+                return True
+            def readinto(self, buffer):
+                buffers.append(len(buffer))
+                self.assert_bounded(buffer)
+                return self.source.readinto(buffer)
+            def assert_bounded(self, buffer):
+                if not 0 < len(buffer) <= 1024 * 1024:
+                    raise AssertionError('Input hashing allocated an unbounded read buffer')
+            def read(self, *args):
+                raise AssertionError('Input hashing read the entire file at once')
+        for payload in (b'', b'bounded input\0' * 200000 + b'tail'):
+            with self.subTest(bytes=len(payload)):
+                target.write_bytes(payload)
+                buffers.clear()
+                with patch.object(local.os, 'fdopen', side_effect=lambda *args, **kwargs:
+                                  Stream(fdopen(*args, **kwargs))):
+                    self.assertEqual(local.artifact_digest(target, target.lstat()), hashlib.sha256(payload).digest())
+                    helper = local.helper_identity(set(), {target})
+                self.assertTrue(buffers)
+                self.assertEqual(helper, local.helper_identity(set(), {target}))
+                if payload:
+                    self.assertGreater(len(buffers), 2)
+
     def test_helper_identity_memo_is_single_traversal_preserves_rows_and_closes_opened_files(self):
         import hashlib
         target = self.directory / 'native-input'
@@ -534,11 +571,14 @@ class LocalVerificationTests(unittest.TestCase):
                 return self
             def __exit__(self, *args):
                 return self.stream.__exit__(*args)
-            def read(self):
-                reads.append(raw_fstat(self.stream.fileno()).st_ino)
-                result = self.stream.read()
-                if read_hook[0] is not None:
-                    read_hook[0]()
+            def readable(self):
+                return self.stream.readable()
+            def readinto(self, buffer):
+                result = self.stream.readinto(buffer)
+                if result:
+                    reads.append(raw_fstat(self.stream.fileno()).st_ino)
+                    if read_hook[0] is not None:
+                        read_hook[0]()
                 return result
         def fdopen(descriptor, *args, **options):
             opened.append(descriptor)
@@ -2401,14 +2441,13 @@ class LocalVerificationTests(unittest.TestCase):
                     with self.assertRaisesRegex(OSError, 'secondary cache close failure'):
                         cache.contents()
                 assert_closed()
-                original_hash = local.hashlib.sha256
+                original_hash = local.hashlib.file_digest
                 def restored_write(*args, **options):
                     result = original_hash(*args, **options)
-                    if args:
-                        target.write_bytes(b'changed cache input\n')
-                        target.write_bytes(payload)
+                    target.write_bytes(b'changed cache input\n')
+                    target.write_bytes(payload)
                     return result
-                with patch.object(local.hashlib, 'sha256', side_effect=restored_write):
+                with patch.object(local.hashlib, 'file_digest', side_effect=restored_write):
                     with self.assertRaisesRegex(uf.FlowError, 'changed during traversal'):
                         cache.contents()
                 assert_closed()
@@ -2416,10 +2455,9 @@ class LocalVerificationTests(unittest.TestCase):
                 previous = signal.getsignal(signal.SIGINT)
                 def interrupt(*args, **options):
                     result = original_hash(*args, **options)
-                    if args:
-                        os.kill(os.getpid(), signal.SIGINT)
+                    os.kill(os.getpid(), signal.SIGINT)
                     return result
-                with patch.object(local.hashlib, 'sha256', side_effect=interrupt):
+                with patch.object(local.hashlib, 'file_digest', side_effect=interrupt):
                     with self.assertRaises(KeyboardInterrupt), local.invocation_signals(cancellation):
                         cache.contents()
                 self.assertEqual(cancellation.number, signal.SIGINT)
@@ -4287,27 +4325,29 @@ child.on("exit", (code, signal) => { process.exitCode = code ?? 143; });
                 self.assertIs(caught.exception, original)
             with self.assertRaises(OSError):
                 os.fstat(opened[-1])
-        hashing = hashlib.sha256
+        hashing = hashlib.file_digest
         payload = target.read_bytes()
         before = target.lstat()
-        def restore_during_hash(data):
+        def restore_during_hash(*args):
+            result = hashing(*args)
             target.write_bytes(b'changed artifact\n')
             target.write_bytes(payload)
             os.utime(target, ns=(before.st_atime_ns, before.st_mtime_ns))
-            return hashing(data)
+            return result
         with patch.object(local.os, 'open', side_effect=record), \
-                patch.object(local.hashlib, 'sha256', side_effect=restore_during_hash):
+                patch.object(local.hashlib, 'file_digest', side_effect=restore_during_hash):
             with self.assertRaisesRegex(uf.FlowError, 'changed during traversal'):
                 local.artifact_digest(target, before)
         with self.assertRaises(OSError):
             os.fstat(opened[-1])
         cancellation = local.InvocationCancellation()
         previous = signal.getsignal(signal.SIGINT)
-        hashing = hashlib.sha256
-        def interrupt(data):
+        hashing = hashlib.file_digest
+        def interrupt(*args):
+            result = hashing(*args)
             os.kill(os.getpid(), signal.SIGINT)
-            return hashing(data)
-        with patch.object(local.os, 'open', side_effect=record), patch.object(local.hashlib, 'sha256', side_effect=interrupt):
+            return result
+        with patch.object(local.os, 'open', side_effect=record), patch.object(local.hashlib, 'file_digest', side_effect=interrupt):
             with self.assertRaises(KeyboardInterrupt):
                 with local.invocation_signals(cancellation):
                     local.artifact_digest(target, target.lstat())

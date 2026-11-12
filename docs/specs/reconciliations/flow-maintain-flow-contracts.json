@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "98581c5cef50f1480d965bc70a5791eb074f65d2",
-  "fingerprint": "22330793d96d55146446434c1612981d8c73ec800e15a82af78bb67fb8af38e0",
+  "base": "15b7a602462d6611cece8e552de0a53ae686880a",
+  "fingerprint": "040dc621fedfd3b91a2273261d6d410539f185f92f42fd6268752d90df24c889",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "Required final verification now includes isolated API response measurements after heavy suites while keeping the existing glossary/UI/flow ownership, historical adoption and separate reconciliation/local-CI obligations.",
-    "implementation": "Make runs the strict100ms isolated API gate across five packages with -p1, transitive through test-performance without altering fixture-sensitive verify prerequisite lists. Hosted CI retains six outcome-specific API timing artifacts. Final reconciliation still uses CLI-written fingerprints and separate make ci; no agent/model credentials run in CI. Cycle2F5 synchronizes timing.PHASES API command identity with the actual five-package serial Make command; execution and recorded evidence retain exactly the same-p1scope.",
-    "tests": "Read VerificationGraphTests requiring one ordered API-performance invocation after heavy tooling and before UI performance/package. New package fixtures measure normal successful responses, accepted pending work, bounded rejection and first real SSE acknowledgement separately;100ms gate and fixture-only enforcement remain mandatory. Exact fake-command dispatch and the ordered once-only assertion both require -p 1 and all five API packages. The complete focused suites passed: 50 CI graph/entrypoint, 51 timing, 118 local-verification and 10 strict-gate tests. Read the full52-case timing fixture result and new test_api_phase_records_exact_make_command_and_serial_package_scope, which extracts actual Make argv, checks timing phase identity and asserts the successful emitted journal row. Static both CI fake-command literals also match; unchanged prerequisite lists remain intact."
+    "kind": "refactor",
+    "description": "Compared maintain-flow-contracts specification and catalog contract with main; authored scenarios and dependency ownership are unchanged. Bounded SHA-256 reads affect verification resource use only.",
+    "implementation": "The contributor verification still binds file descriptors and checks identity before/after reading; only digest buffering changes. Existing receipt tests reject changed source/assertion inputs without reconciliation. New bounded-read tests cover empty and multi-buffer content, while alias memoization, restored writes, FIFO substitution, cancellation and descriptor cleanup assertions remain active.",
+    "tests": "Existing receipt tests reject changed source/assertion inputs without reconciliation. New bounded-read tests cover empty and multi-buffer content, while alias memoization, restored writes, FIFO substitution, cancellation and descriptor cleanup assertions remain active. Full selected fixture suites are retained; timing evidence establishes no additional installed-host acceptance."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.205
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 711.335
+      "seconds": 685.949
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 493.895
+      "seconds": 502.197
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.675
+      "seconds": 4.937
     },
     {
       "command": [
@@ -58,17 +58,17 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.611
+      "seconds": 61.176
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "32505e1830c4dcf7a4bc1b24447b831ca5befebd944dba39c8e8317790eee23c",
-    "term:coverage-gap": "53a5c851326375597d0d514ccc5296f3e1d1958d2d9dde413c1b7a867262ee23",
-    "term:entity": "4b75fba7c9702004b689ee70d96d39131b89dd543223374f6fb7fd3d24fed0f4",
-    "term:glossary": "691078ff55d4f0fdd2514fb7e011fbda3db2c5021da5b7ca27872adb1c9ad25d",
-    "term:known-limitation": "8d3c3d228e5d7e8725193328e2a5e16ed8d6c61e98f223a57f879293d4d9bd8d",
-    "term:reconciliation": "ef3c282b7501bc2563a92e60d41fa545dc2730d349ac223059ef200ebfe2dc25",
-    "term:unverified-behavior": "e0412baa54bbae048ce39be2c42209287e2762e85515f3e06918c54c675d663c",
-    "term:verification": "ddf4617cd13bc1184cca32e5604d30396bb7414bb70898d9bed8f6461231eddb"
+    "flow:maintain-flow-contracts": "bf85f10874acc33958859cfd2a0ff58d67f84dd50ddc3e76c85108606009ed57",
+    "term:coverage-gap": "4711a29553de19a6ea6bba9ca6d553cda219aa9cda4dd52072c3c1fd8e67a2d9",
+    "term:entity": "e0d5c5c9c970f6976790ddb28401c1e88ccd65c610efabf070e6a007515a7c1d",
+    "term:glossary": "c2ee49052b14ff43a632cda8bd8d374031238c9dce89bd68ba5a717159e5a784",
+    "term:known-limitation": "c5edc604b1d28fd343474b8fb000e572719cbb5a7029325bb1aa6e42def869e0",
+    "term:reconciliation": "545ee73b035dc23e09fcac8de789833158219dd1a2b4266e0beee856ab2ea6b5",
+    "term:unverified-behavior": "e322a3b33c5777e8654050db10aa70c0c27fa2726934edc8f30e0934fd774c34",
+    "term:verification": "dc1edb27a60833e97ddf4aa1fb9388e42b73bbbb06a321b4d9311af050920d01"
   }
 }

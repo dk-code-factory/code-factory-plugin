@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "98581c5cef50f1480d965bc70a5791eb074f65d2",
-  "fingerprint": "11992277dbbce0c01685cdc687e6e0a4c3ff0d1e4b0455720e63fc948c50cb66",
+  "base": "15b7a602462d6611cece8e552de0a53ae686880a",
+  "fingerprint": "58d3b7b65f6b503e81c5f27d98c60f57cf1001eca18f3a43fc765c9d32762a4d",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S1 rejects slow or failed ownership proof before activation while successful registration remains unchanged. S2 permits foreground management during callback work and ignores results belonging to canceled/replaced subscription generations. S3 real-host acceptance remains open.",
-    "implementation": "Reviewed50ms bounded verification with32 retained actual-work slots, per-ID pending token ownership, cancellation checked under state lock, atomic Vault.SetTx activation and persisted opaque generations. Tick snapshots signing keys outside delivery I/O, serializes only background ticks and conditionally persists each matching generation; callback headers/body/close never hold shared state mutex. The HTTP handler captures originating bounded context as a value before SDK detachment; event mutations link cancellation to that origin for both2025 and2026 protocol clients, while accepted tool work and live streams keep their own lifetimes. Cycle2F6 restores one generation-conditional cursor commit for an ignored page or tail, with no signing-key snapshot for nonmatching events; matching callback delivery retains conditional per-result commits.",
-    "tests": "Read noncooperative125ms header/body proofs,32-slot admission/actual exit, concurrent management, canceled queued request, stale200/503/410 suppression, failed refresh and rotated-key/cursor/retry assertions. Wire fixtures separately require successful list/management, existing callback error, Store.Write deadline rejection and actual SDK stream acknowledgement. Ordinary410 disable,429/permanent/exhaustion, disabled-setting no-replay, rotation expiry and restart gaps remain explicit. Ordinary TestEventStoreAdmissionPreservesRequestCancellation covers2025/2026 actual custom Subscribe/Unsubscribe with held125ms writer under response deadline and earlier caller cancellation, then Drain and exact original subscription-state assertions. This directly guards detached-origin SDK cancellation semantics. Read TestIgnoredEventPagesCommitOnceWithoutSigningMaterial: SQLite triggers prove one commit per100ignored events for unrelated, filtered and notification-disabled pages; nil vault forbids secret reads and empty re-ticks do not write. TestIgnoredPageCommitRejectsChangedGenerationAndDeletion races a real held writer with replacement/deletion and proves stale page commits neither overwrite nor resurrect. Disabled-setting cursor advancement is now asserted; re-enable no-replay and restart acceptance remain gaps. Reviewed the named pending-proof fixture: it exercises unrelated Subscribe/Unsubscribe and replacement/cancellation, while actual wire list contention is covered separately. The concurrent Tick fixture proves serialized callback delivery and foreground Subscribe/Unsubscribe; it does not supply an eligible later event to the removed peer, so its purpose makes no no-later-delivery assertion."
+    "kind": "refactor",
+    "description": "Compared receive-notifications specification and catalog contract with main; authored scenarios and dependency ownership are unchanged. Bounded SHA-256 reads affect verification resource use only.",
+    "implementation": "All receive-notifications product implementation mappings are unchanged. The subscription verification fixture checks the HMAC signature on delivered bytes and exercises retry, deduplication, refresh and expiry.",
+    "tests": "The subscription verification fixture checks the HMAC signature on delivered bytes and exercises retry, deduplication, refresh and expiry. Full selected fixture suites are retained; timing evidence establishes no additional installed-host acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 55.368
+      "seconds": 55.765
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.184
+      "seconds": 1.205
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 711.335
+      "seconds": 685.949
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 493.895
+      "seconds": 502.197
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.675
+      "seconds": 4.937
     },
     {
       "command": [
@@ -69,16 +69,16 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.611
+      "seconds": 61.176
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "9258679243a2109df3a12c58345cc2963f62b1fb11f6fe4d5355c1bf3046c967",
-    "term:attention-request": "460d1c7346698237c314765130f0bdd06903d53c40d730acb356e559d9c59039",
-    "term:coverage-gap": "53a5c851326375597d0d514ccc5296f3e1d1958d2d9dde413c1b7a867262ee23",
-    "term:host": "b51dbbae17346ef005f9263da6c31b2a2f45c870e775f6c464d2db0e713477dc",
-    "term:known-limitation": "8d3c3d228e5d7e8725193328e2a5e16ed8d6c61e98f223a57f879293d4d9bd8d",
-    "term:subscription": "da08d28caa16bc21783f96f9a99f8c96e733482ae12f0212d001accc6a05c7ca",
-    "term:unverified-behavior": "e0412baa54bbae048ce39be2c42209287e2762e85515f3e06918c54c675d663c"
+    "flow:receive-notifications": "c02558230965689fc2e435fa74059ffa625ff0e9d96ded3531da43e25b3d7808",
+    "term:attention-request": "8868868e8af49e50757dc6327a4d308320b2c36b0fa3ac382dc16f6342c1ec62",
+    "term:coverage-gap": "4711a29553de19a6ea6bba9ca6d553cda219aa9cda4dd52072c3c1fd8e67a2d9",
+    "term:host": "9417d34669a81a720fcfd998884088cffa99e6658b3345420f95f262f00a3744",
+    "term:known-limitation": "c5edc604b1d28fd343474b8fb000e572719cbb5a7029325bb1aa6e42def869e0",
+    "term:subscription": "4d81f43502bc62c276be79556f0d2998f5bab5f9a265801418e4f3d76f08ab98",
+    "term:unverified-behavior": "e322a3b33c5777e8654050db10aa70c0c27fa2726934edc8f30e0934fd774c34"
   }
 }
