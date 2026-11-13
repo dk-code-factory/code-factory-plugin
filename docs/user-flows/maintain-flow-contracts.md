@@ -33,6 +33,8 @@ the temporary parent is inside the checkout; unrelated untracked source stays vi
 Caller-selected Makefiles keep their order, includes and command-line overrides.
 Their recipes, shared prerequisites and file-defined default execute in the native
 caller graph. Native re-execution retains the same invocation and ownership.
+Each Make process exports its private ownership fields together, preserving
+literal values and rejecting incomplete exports before verification work starts.
 Managed commands finish cleanup and timing before releasing the checkout. Supplemental recipes keep
 native Make shell and cancellation semantics; arbitrary background descendants are
 outside managed cleanup. Stdin-selected configuration remains private and available
@@ -487,6 +489,7 @@ flowchart TD
 - [web/fixture-listener.mjs](../../web/fixture-listener.mjs) — Use Vite middleware with the owned HTTP/HMR listener, leaving caller signal listeners and process exit under invocation ownership (`export async function createFixtureServer(`)
 - [scripts/fixture_test_process.py](../../scripts/fixture_test_process.py) — Supervise Node fixture test commands with bounded shutdown, retain the unreaped leader through original-group cleanup to prevent PID/PGID reuse, and reap orphaned fixture descendants before reporting completion. An optional raw leader-exit observation holds safety cleanup for explicit observer acknowledgment. EOF, interruption and a five-second deadline fail while still cleaning owned work; partial control lines cannot block the deadline. (`def main():`)
 - [web/fixture-listener.mjs](../../web/fixture-listener.mjs) — Run Vite in an owned child with atomic actual-origin/error readiness and signal-driven close; imports remain passive through typed exact real-path main identity. Parent ownership can terminate an initializer that never settles. (`async function main(`)
+- [scripts/specs_lib/make_owner.py](../../scripts/specs_lib/make_owner.py) — Export one complete private, framed ownership batch through the live guardian descriptor alias; remove partial exports on failure. (`def fields(`)
 
 ## Test references
 
@@ -696,7 +699,7 @@ flowchart TD
 - [scripts/test_browser_control.mjs](../../scripts/test_browser_control.mjs) — `test('endpoint validation rejects remote hosts, normalized aliases and URL metadata'`; S3. Remote/alias/credential/path/query/fragment/invalid-port endpoint spellings reject without echoing the supplied secret value. Pure argument fixtures do not attach Chrome, read profiles or establish host acceptance.
 - [scripts/test_browser_control.mjs](../../scripts/test_browser_control.mjs) — `test('argument parsing is deterministic and cannot mutate inputs or later calls'`; S3. Option parsing is deterministic, read-only and isolated from prior result mutation. Pure argument fixtures do not attach Chrome, read profiles or establish host acceptance.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `class HostedCITests(`; S5. Temporary Git histories preserve exact main-push/PR/manual comparisons and pinned root bootstrap; unsupported feature routes reject before source verification or package-manifest creation; rejected jobs may retain partial timing summaries; fixture mode, artifact identities and main-push-only release proof fail closed.
-- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_workflow_routes_features_through_pull_requests(`; S5. The checked workflow admits PRs to main and sync/local-development only, retains main-only pushes and keeps manual dispatch available under its main guard.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_workflow_routes_features_through_pull_requests(`; S5. The checked workflow admits PRs to main and sync/local-development only, retains main-only pushes and keeps manual dispatch available under its main guard. The complete hosted verification job retains a bounded 60-minute budget.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_feature_push_and_dispatch_reject_before_verification(`; S5. CLI feature/tag push and manual attempts exit nonzero with a PR/main explanation before invoking verification or artifact-manifest creation.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_local_hosted_and_direct_entrypoints_share_preparation_once(`; S4, S5. Real Make commands record one locked npm install, frontend build, plugin embed and shared helper build in clean and prepared local, hosted, bootstrap and direct invocations; hosted setup and bootstrap comparison boundaries remain explicit. The existing browser benchmark assertions execute exactly once before performance in every complete native graph.
 - [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_standalone_commands_prepare_their_dependencies(`; S4. Standalone UI/build/test/performance/package/plugin commands prepare their required current artifacts. The check fixture asserts npm installation; Go vet still requires existing embedded frontend and plugin outputs.
@@ -999,6 +1002,9 @@ flowchart TD
 - [scripts/test_fixture_listener.mjs](../../scripts/test_fixture_listener.mjs) — `test("owned UI module imports and CLI aliases preserve lifecycle identity"`; S4. Importing the listener with absent or flag-like argv leaves no CLI lifecycle; executing a symlink alias starts the actual retained loopback UI, serves a real client and closes naturally on SIGTERM before safety cleanup.
 - [scripts/test_fixture_listener.mjs](../../scripts/test_fixture_listener.mjs) — `test("owned UI exit fails active browser verification and drains retained children"`; S4. Kill the captured owned UI handle after actual browser-child startup. The runner must report failure and remove all three retained UI/daemon/browser children plus private state before supervisor cleanup is released.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_api_phase_records_exact_make_command_and_serial_package_scope(`; S1. The actual Make API command, all five serial Go packages, timing phase identity and successful emitted journal row must match exactly; command metadata cannot understate executed scope.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_make_exports_ownership_with_one_batch_per_make_process(`; S4, S5. The real native caller and worker each launch one batch-export helper while all preparation, serial verification and downstream commands remain present.
+- [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_complete_batch_preserves_raw_values_private_modes_and_legacy_fields(`; S3, S4. Batch and legacy fields retain exact raw bytes including dollars, quotes, CR/LF and inherited Git ceilings, with a safe numeric descriptor alias and 0700/0600 permissions.
+- [scripts/test_specs_isolation.py](../../scripts/test_specs_isolation.py) — `def test_failed_batch_removes_partial_fields_before_returning_an_alias(`; S3, S4. A controlled later field-write failure removes the partial batch and raises before publishing an alias.
 
 ## Verification and gaps
 

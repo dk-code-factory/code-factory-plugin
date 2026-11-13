@@ -5,6 +5,8 @@ runs on pushes to main, pull requests to main or sync/local-development,
 and manual dispatch on main. Hosted Ubuntu
 installs Go from go.mod, Node24, Python3.12, locked npm/Python dependencies and the
 matching Playwright Chromium. All actions are pinned to full commit SHAs.
+The hosted verification job has a 60-minute limit for the complete pipeline,
+including the serial performance gates, packaging, installer and smoke checks.
 
 `make verify` and the direct `scripts/verify.sh` entry point invoke one Make
 worker dependency graph with `--no-keep-going`, so a failed phase stops further
@@ -171,6 +173,10 @@ the guardian drains their cleanup and timing before releasing checkout ownership
 The owner holds a non-inheritable directory descriptor through that drain.
 Make reads framed private field files through its safe `/proc` alias, preserving
 literal whitespace, newlines and Unicode without shell-output normalization.
+One helper exports the ownership fields as a complete private batch per Make
+process. A failed batch is removed before its alias can be returned; raw values
+remain file reads rather than shell substitutions. The single-field helper stays
+available for existing callers.
 Managed phases reuse an enclosing worker session only when the live runner's
 identity and its pinned direct-child group/session belong to the current
 ownership lifetime. Private owner-bound grants stay active through group cleanup,

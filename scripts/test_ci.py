@@ -79,6 +79,7 @@ class HostedCITests(unittest.TestCase):
         self.assertIn("  push:\n    branches: [main]\n", triggers)
         self.assertIn("  pull_request:\n    branches: [main, sync/local-development]\n", triggers)
         self.assertIn("  workflow_dispatch:\n", triggers)
+        self.assertEqual(yaml.safe_load(workflow)["jobs"]["verify"]["timeout-minutes"], 60)
 
     def test_hosted_checkout_ownership_spans_artifact_manifest_publication(self):
         from specs_lib.isolation import isolated
@@ -1074,6 +1075,21 @@ record('end')
         self.assert_shared_once(events)
         self.assertIn('python3 scripts/specs.py check --base ' + 'a' * 40 + ' --head ' + 'b' * 40,
                       [e['key'] for e in events])
+
+    def test_make_exports_ownership_with_one_batch_per_make_process(self):
+        recorder = self.tools / 'recorder'
+        source = recorder.read_text()
+        marker = "if command == 'python3' and args[:1] == ['scripts/verification_run.py']:\n"
+        source = source.replace(marker, marker + '''    if args[1:2] in (['--make-owner-fields'], ['--make-owner-field']):
+        with (root / 'ownership-exports.jsonl').open('a') as output:
+            output.write(json.dumps(args[1]) + '\\n')
+''')
+        recorder.write_text(source)
+        self.assert_shared_once(self.successful('verify', 'FLOW_BASE=main'))
+        exports = [json.loads(line) for line in
+                   (self.root / 'ownership-exports.jsonl').read_text().splitlines()]
+        # The native caller and its worker each export one complete batch.
+        self.assertEqual(exports, ['--make-owner-fields', '--make-owner-fields'])
 
     def test_native_pipe_and_fifo_jobservers_survive_the_timing_boundary(self):
         probe = self.root / 'jobserver_probe.py'

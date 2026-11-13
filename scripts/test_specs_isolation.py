@@ -2032,6 +2032,51 @@ Path('../parent-observation.json').write_text(json.dumps({
         self.assertEqual(list(self.parent.glob('.code-factory-verify-*')), [])
 
 
+class MakeOwnerFieldTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.run = Path(self.temporary.name) / "private $ #'\nrun\r\n"
+        self.run.mkdir()
+        descriptor = os.open(self.run, os.O_RDONLY | os.O_DIRECTORY)
+        self.addCleanup(os.close, descriptor)
+        self.state = {'pid': os.getpid(), 'directory_fd': descriptor,
+                      'root': "checkout $ #'\nroot\r\n", 'token': 'fixture-token'}
+        (self.run / 'owner.json').write_text(json.dumps(self.state))
+        self.encoded = base64.b64encode(os.fsencode(self.run)).decode('ascii')
+
+    def test_complete_batch_preserves_raw_values_private_modes_and_legacy_fields(self):
+        from specs_lib import make_owner
+        with patch.dict(os.environ, {'GIT_CEILING_DIRECTORIES': '/inherited'}):
+            directory = Path(make_owner.fields(self.encoded))
+            values = {'CODE_FACTORY_VERIFY_RUN': str(self.run),
+                      'CODE_FACTORY_VERIFY_ROOT': self.state['root'],
+                      'CODE_FACTORY_VERIFY_TOKEN': 'fixture-token',
+                      'CODE_FACTORY_VERIFY_TMPDIR': str(self.run / 'tmp'),
+                      'TMPDIR': str(self.run / 'tmp'),
+                      'GIT_CEILING_DIRECTORIES': str(self.run / 'tmp') + ':/inherited'}
+            self.assertEqual(set(path.name for path in directory.iterdir()), set(values))
+            self.assertEqual(directory.stat().st_mode & 0o777, 0o700)
+            self.assertNotIn('\n', str(directory))
+            for key, value in values.items():
+                path = directory / key
+                self.assertEqual(path.read_bytes(), os.fsencode(value) + b'\r\n')
+                self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(Path(make_owner.field(self.encoded, key)).read_bytes(), path.read_bytes())
+
+    def test_failed_batch_removes_partial_fields_before_returning_an_alias(self):
+        from specs_lib import make_owner
+        original = Path.open
+        def fail(path, *args, **kwargs):
+            if path.name == 'TMPDIR' and args == ('xb',):
+                raise OSError('controlled field write failure')
+            return original(path, *args, **kwargs)
+        with patch.object(Path, 'open', fail):
+            with self.assertRaisesRegex(OSError, 'controlled field write failure'):
+                make_owner.fields(self.encoded)
+        self.assertEqual(list((self.run / 'make-fields').iterdir()), [])
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 5 and sys.argv[1] == '--checker-worker':
         case = MakeOwnershipCheckerTests(sys.argv[4])

@@ -207,6 +207,10 @@ def main():
             os.environ['TMPDIR'] = ''.join(parent)
         print(acquire(Path(__file__).resolve().parents[1], int(command[1])))
         return 0
+    if command[:1] == ['--make-owner-fields']:
+        from specs_lib.make_owner import fields
+        print(fields(command[1]))
+        return 0
     if command[:1] == ['--make-owner-field']:
         from specs_lib.make_owner import field
         print(field(command[1], command[2]))

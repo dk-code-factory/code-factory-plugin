@@ -18,7 +18,7 @@ verification-capture-stdin = $(eval override export CODE_FACTORY_MAKE_STDIN := $
 verification-owner-fields = CODE_FACTORY_VERIFY_RUN CODE_FACTORY_VERIFY_ROOT CODE_FACTORY_VERIFY_TOKEN CODE_FACTORY_VERIFY_TMPDIR TMPDIR
 # Read fields after eval parses syntax. A live owner's directory-FD alias keeps
 # pathname bytes out of shell-output normalization and Make assignment parsing.
-verification-startup = $(verification-capture-stdin)$(eval verification-owner := $(shell python3 scripts/verification_run.py --acquire-make-owner $(shell echo $$PPID) '$(subst ','"'"',$(verification-encoded-parent))'))$(if $(verification-owner),,$(error Cannot acquire verification ownership))$(foreach field,$(verification-owner-fields),$(eval override export $(field) := $$(file <$$(shell python3 scripts/verification_run.py --make-owner-field '$(verification-owner)' $(field)))))
+verification-startup = $(verification-capture-stdin)$(eval verification-owner := $(shell python3 scripts/verification_run.py --acquire-make-owner $(shell echo $$PPID) '$(subst ','"'"',$(verification-encoded-parent))'))$(if $(verification-owner),,$(error Cannot acquire verification ownership))$(eval verification-fields := $(shell python3 scripts/verification_run.py --make-owner-fields '$(verification-owner)'))$(if $(verification-fields),,$(error Cannot export verification ownership))$(foreach field,$(verification-owner-fields),$(eval override export $(field) := $$(file <$(verification-fields)/$(field))))
 Makefile: private override .EXTRA_PREREQS = $(verification-startup)
 # Normalize inherited/explicit -k at the verification boundary. All preparation
 # and phases stay in one child graph. When a caller replaces MAKEFLAGS, retain
