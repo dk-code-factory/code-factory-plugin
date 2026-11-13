@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -197,6 +198,67 @@ func TestGitHubPersistentCacheRejectedWriteDoesNotPublishOrEvictMemory(t *testin
 	}
 	if err := db.Get(ctx, "github-cache", oldID, &cacheEntry{}); err != nil {
 		t.Fatal("failed replacement did not roll back eviction", err)
+	}
+}
+
+func TestGitHubPersistentCacheRejectedRevalidationPreservesMemoryHeaders(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	now := time.Now().UTC()
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		w.Header().Set("ETag", `"user"`)
+		if r.Header.Get("If-None-Match") == `"user"` {
+			w.Header().Set("Link", `<https://example.invalid/new>; rel="next"`)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		w.Header().Set("Link", `<https://example.invalid/old>; rel="next"`)
+		fmt.Fprint(w, `{"login":"fixture"}`)
+	}))
+	defer server.Close()
+	path := filepath.Join(t.TempDir(), "cache.db")
+	db, err := store.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	g := managedFixture(t, server, db, &now, 100, 0)
+	var user struct{ Login string }
+	initial, err := g.get(ctx, "/user", &user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := g.responseCacheKey(ctx, server.URL+"/user", "fixture-secret-token", "application/vnd.github+json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, ok, err := g.cached(ctx, key)
+	if err != nil || !ok {
+		t.Fatal("initial response not cached", ok, err)
+	}
+	control, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer control.Close()
+	if _, err := control.ExecContext(ctx, `CREATE TRIGGER reject_cache BEFORE INSERT ON entities WHEN NEW.kind='github-cache' BEGIN SELECT RAISE(ABORT, 'fixture cache failure'); END`); err != nil {
+		t.Fatal(err)
+	}
+	now = now.Add(time.Second)
+	if _, err := g.get(WithGitHubRead(ctx, RequireLive), "/user", &user); err == nil {
+		t.Fatal("failed durable revalidation was hidden")
+	}
+	for _, source := range []*GitHub{g, managedFixture(t, server, db, &now, 100, 0)} {
+		entry, ok, err := source.cached(ctx, key)
+		if err != nil || !ok || entry.Header.Get("Link") != initial.Get("Link") || string(entry.Body) != string(before.Body) || !entry.CheckedAt.Equal(before.CheckedAt) || !entry.Until.Equal(before.Until) {
+			t.Fatal("failed revalidation changed retained observation", entry, ok, err)
+		}
+	}
+	header, err := g.get(ctx, "/user", &user)
+	if err != nil || header.Get("Link") != initial.Get("Link") || user.Login != "fixture" || calls.Load() != 2 {
+		t.Fatal("ordinary read exposed rejected revalidation", header, user, calls.Load(), err)
 	}
 }
 

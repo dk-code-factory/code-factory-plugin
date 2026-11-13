@@ -349,6 +349,9 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, error) {
 	v, ok := g.cacheGet(key)
 	if ok {
+		// Revalidation may merge headers before the durable replacement commits.
+		// Keep those tentative changes separate from the retained memory entry.
+		v.Header = v.Header.Clone()
 		return v, true, nil
 	}
 	if g.usageStore == nil {
