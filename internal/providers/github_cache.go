@@ -221,7 +221,8 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 }
 
 // Invalidate removes this principal's cached queries for a repository/item.
-// An item invalidation also expires repository indexes; other repositories stay.
+// An item invalidation also expires repository indexes. Unrelated queries remain
+// reusable unless bounded invalidation metadata rolls over globally.
 // Empty resource explicitly invalidates all queries in this credential scope.
 func (g *CachedGitHub) Invalidate(ctx context.Context, resource string) error {
 	scope, err := g.CacheScope(ctx)

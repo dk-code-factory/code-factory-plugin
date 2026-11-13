@@ -1666,7 +1666,7 @@
         {
           "path": "internal/providers/github_cache_reuse_test.go",
           "anchor": "func TestGitHubCompositeKnownHeadRejectsOlderRESTLease(",
-          "purpose": "Managed and unmanaged HTTP fixtures with complete and incomplete issue metadata reject an older positive REST lease when the caller knows a new PR head, retain same-head GraphQL sharing, honor provider polling backoff and obtain the new head after permitted revalidation.",
+          "purpose": "Managed and unmanaged HTTP fixtures with complete and incomplete issue metadata reject an older positive REST lease when the caller knows a new PR head and obtain the new head after permitted revalidation. Managed cases retain same-head GraphQL sharing and honor provider polling backoff; unmanaged cases make another GraphQL request.",
           "scenarios": [
             "S1",
             "S2",
