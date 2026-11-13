@@ -985,7 +985,17 @@
             "S4",
             "S5"
           ],
-          "purpose": "Noncredential URL query parameters and anchors retain their exact values in inspection, proposed edits and one confirmed native write; no write occurs before confirmation."
+          "purpose": "Each noncredential URL retains its exact query/anchor spelling, including semicolon anchors and escaped noncredential fragment values, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Malformed parameter components and escaped URL credentials, including userinfo, are hidden in inspection, persisted proposals and legacy proposal/event projections, including encoded and decoded copies. Credential URL edits are refused without persistence or native writes; a remaining noncredential fragment value keeps its escaped ampersand."
         }
       ],
       "suites": [
@@ -5580,6 +5590,14 @@
             "S1"
           ],
           "purpose": "Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Malformed parameter components and escaped URL credentials, including userinfo, are hidden in inspection, persisted proposals and legacy proposal/event projections, including encoded and decoded copies. Credential URL edits are refused without persistence or native writes; a remaining noncredential fragment value keeps its escaped ampersand."
         }
       ],
       "suites": [

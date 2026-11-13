@@ -98,18 +98,20 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 						} else {
 							r.secrets = append(r.secrets, u.User.Username())
 						}
-					}
-					for key, values := range u.Query() {
-						if privateNativeKey(key) {
-							r.secrets = append(r.secrets, values...)
+						authority := raw[len(u.Scheme)+3:]
+						if end := strings.IndexAny(authority, "/?#"); end >= 0 {
+							authority = authority[:end]
+						}
+						if at := strings.LastIndexByte(authority, '@'); at >= 0 {
+							encoded := authority[:at]
+							if _, password, ok := strings.Cut(encoded, ":"); ok {
+								encoded = password
+							}
+							r.secrets = append(r.secrets, encoded)
 						}
 					}
-					fragment, _ := url.ParseQuery(u.Fragment)
-					for key, values := range fragment {
-						if privateNativeKey(key) {
-							r.secrets = append(r.secrets, values...)
-						}
-					}
+					r.secrets = append(r.secrets, nativeURLParameterSecrets(u.RawQuery)...)
+					r.secrets = append(r.secrets, nativeURLParameterSecrets(u.EscapedFragment())...)
 				}
 			}
 			if private && v != "" {
@@ -136,8 +138,12 @@ func (r nativeRedactor) text(value string) string {
 		if query, redacted := redactNativeURLParameters(u.RawQuery); redacted {
 			u.RawQuery, changed = query, true
 		}
-		if fragment, redacted := redactNativeURLParameters(u.Fragment); redacted {
-			u.Fragment, u.RawFragment, changed = fragment, "", true
+		fragment := u.EscapedFragment()
+		if strings.Contains(fragment, "=") {
+			if clean, redacted := redactNativeURLParameters(fragment); redacted {
+				u.Fragment, _ = url.PathUnescape(clean)
+				u.RawFragment, changed = clean, true
+			}
 		}
 		if !changed {
 			return raw
@@ -153,7 +159,10 @@ func (r nativeRedactor) text(value string) string {
 }
 
 func redactNativeURLParameters(raw string) (string, bool) {
-	parameters, _ := url.ParseQuery(raw)
+	parameters, err := url.ParseQuery(raw)
+	if err != nil {
+		return "", true // A partial parse cannot establish that omitted pairs are safe.
+	}
 	changed := false
 	for key, values := range parameters {
 		if privateNativeKey(key) {
@@ -170,6 +179,24 @@ func redactNativeURLParameters(raw string) (string, bool) {
 		return raw, false
 	}
 	return parameters.Encode(), true
+}
+
+func nativeURLParameterSecrets(raw string) []string {
+	var secrets []string
+	for _, pair := range strings.Split(raw, "&") {
+		key, value, _ := strings.Cut(pair, "=")
+		decodedKey, keyErr := url.QueryUnescape(key)
+		if keyErr == nil && !strings.Contains(key, ";") && !privateNativeKey(decodedKey) {
+			continue
+		}
+		if value != "" {
+			secrets = append(secrets, value)
+			if decoded, err := url.QueryUnescape(value); err == nil && decoded != value {
+				secrets = append(secrets, decoded)
+			}
+		}
+	}
+	return secrets
 }
 
 func (r nativeRedactor) value(value any, private, named bool) any {
