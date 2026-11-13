@@ -114,12 +114,19 @@ func (s *Service) Init(ctx context.Context) error {
 		return err
 	}
 	for _, p := range ps {
+		before := string(bytes(p))
+		sanitizeNativeProposal(&p)
 		if p.State == "applying" {
 			p.State = "uncertain"
+		}
+		if string(bytes(p)) != before {
 			if err = s.Store.Put(ctx, "factory-proposal", p.ID, p, ""); err != nil {
 				return err
 			}
 		}
+	}
+	if err = s.Store.RedactNativeProposalEvents(ctx, sanitizeNativeProposalEvent); err != nil {
+		return err
 	}
 	return s.projectSettings(ctx)
 }

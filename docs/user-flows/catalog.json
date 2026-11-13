@@ -757,6 +757,16 @@
           "path": "internal/factory/communication.go",
           "anchor": "func (s *Service) communicate(",
           "purpose": "Intentional structured configuration messages and questions; pending questions suspend until the exact owner answer."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "tests": [
@@ -906,6 +916,65 @@
           "scenarios": [
             "S1"
           ]
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeInspectionRedactsUnmanagedCredentials(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Native inspection and the configuration-agent tool redact unmanaged environment, header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeProposalRetainsRedactedSnapshotAndRawFreshness(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Stored proposals contain redacted snapshots; an invisible credential rotation rejects confirmation, and a fresh confirmed profile edit sends exactly one scoped native write."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeCredentialEditsAreRejectedWithoutPersistence(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeLegacyProposalMigrationPreservesStaleness(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4"
+          ],
+          "purpose": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(",
+          "scenarios": [
+            "S1",
+            "S3"
+          ],
+          "purpose": "Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeCredentialWordsInNamesRemainEditable(",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ],
+          "purpose": "Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
         }
       ],
       "suites": [
@@ -5299,6 +5368,16 @@
           "path": "internal/httpbudget/latency.go",
           "anchor": "func observeLatency(",
           "purpose": "Bounded asynchronous sanitized latency signals retain process-local request identity, actual status and exact slow/drop counters without canceling business work."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "tests": [
@@ -5442,6 +5521,54 @@
             "S1"
           ],
           "purpose": "Behind a blocked sink,32parsed megabyte request lines retain only fixed methods, owned bounded endpoint labels and exact numeric identities; live heap stays below8MiB over baseline. Oversized metadata becomes other rather than retaining caller allocations."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeInspectionRedactsUnmanagedCredentials(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Native inspection and the configuration-agent tool redact unmanaged environment, header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeProposalRetainsRedactedSnapshotAndRawFreshness(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Stored proposals contain redacted snapshots; an invisible credential rotation rejects confirmation, and a fresh confirmed profile edit sends exactly one scoped native write."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeCredentialEditsAreRejectedWithoutPersistence(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeLegacyProposalMigrationPreservesStaleness(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeCredentialWordsInNamesRemainEditable(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
         }
       ],
       "suites": [
