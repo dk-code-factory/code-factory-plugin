@@ -1518,6 +1518,22 @@
             "S3"
           ],
           "purpose": "A real SQLite trigger rejecting generation writes blocks subsequent same-client response/query cache hits; malformed persisted generation data fails closed after client restart without contacting GitHub. Mixed GraphQL auth/rate generation-write failure returns cache failure before rate classification and blocks that client query hits."
+        },
+        {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestGitHubDefaultBudgetAndExplicitOverride(",
+          "purpose": "Application policy defaults to 2,000 request attempts per hour while retaining an explicit 600-request override.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestGitHubDefaultBudgetReportingAndAdmission(",
+          "purpose": "Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.",
+          "scenarios": [
+            "S3"
+          ]
         }
       ],
       "suites": [

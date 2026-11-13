@@ -238,7 +238,7 @@ See [the plugin guide](plugin.md#conversations-and-configuration).
 ## GitHub request budget
 
 Inspect and propose the shared rolling-hour allowance, reported-quota reserve
-and notification interval through configuration chat. Defaults are 600 request
+and notification interval through configuration chat. Defaults are 2,000 request
 attempts/hour, 100 reported quota units reserved, and 120 seconds. REST quota uses
 requests and GraphQL quota uses points. Manual polls obey the same persistent
 provider gate, conditional cache and server cooldown as background synchronization.

@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
-  "fingerprint": "500f9582dbe6d5176d4893f1a8766391a4a8a762806b4fda6df96feae0e4c517",
+  "base": "49b774a8cab46761c64480270cf6b3e069743193",
+  "fingerprint": "bf532d6c0f4d7d027adc370e107fb581dacb52a2d0011305557eaabcd62fffc4",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S1/S2 slow management now waits through store contention and completes; only actual caller/service cancellation prevents late subscription changes. Callback proof remains separately bounded.",
-    "implementation": "Shared response observation does not cancel SDK methods; events request-origin cancellation still propagates across detached old/new protocol contexts.",
-    "tests": "Read both protocol versions and subscribe/unsubscribe cases in TestEventStoreAdmissionPreservesRequestCancellation:125ms slow operations change state exactly once while deliberately canceled calls preserve the original subscription."
+    "kind": "refactor",
+    "description": "Reviewed receive-notifications scenarios S1, S2, S3, S4 against unchanged authored flow and mapped dependencies. The default provider allowance is changed in sync-inbox S3; this flow has no direct behavior, authority, lifecycle or scenario change and is selected through shared verification dependencies.",
+    "implementation": "Checked receive-notifications against the bounded fallback diff in internal/app/github_usage.go and internal/providers/github_usage.go. No scheduler, native session, event, authentication, UI or transport mutation logic changes; existing owned source anchors remain valid.",
+    "tests": "For receive-notifications, existing assertion mappings and open gaps remain intact. New default-policy and request-2000/2001 tests exercise the shared dependency; required mapped fixture suites are rerun without claiming new real-host or unrelated scenario coverage."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.097
+      "seconds": 73.229
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 677.862
+      "seconds": 679.436
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 497.942
+      "seconds": 510.018
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.755
+      "seconds": 4.734
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.85
+      "seconds": 61.702
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "56e8229b3873caf45e156b89ff5c0b152df772d9719e2bd39421696d0778f7c2",
+    "flow:receive-notifications": "32d7124dcc4a6644092a4149e921d4e7e09341df7b0e857732e69df599a346eb",
     "term:attention-request": "73984fc21eb95722b7ed8b6aa86b4cb35b6e7ad0549a4a104c974d9667abd4d7",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:host": "ee1b68f918767b4c8e303634da6fe67fb81b3d85b90f05e82d5c14211a745d97",
