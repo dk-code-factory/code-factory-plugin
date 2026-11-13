@@ -32,7 +32,7 @@ func (a *App) EnableGitHubUsage(ctx context.Context) error {
 		if c.GitHubReserve != nil {
 			reserve = *c.GitHubReserve
 		}
-		return providers.GitHubPolicy{RequestsPerHour: budget, Reserve: reserve, MinInterval: time.Second}, nil
+		return providers.GitHubPolicy{RequestsPerHour: budget, Reserve: reserve, MinInterval: time.Second, DetailTTL: c.GitHubDetailPollInterval()}, nil
 	})
 	var existing map[string]any
 	if err := a.Store.Get(ctx, "github-usage", "application", &existing); err == nil {
@@ -90,7 +90,11 @@ func (a *App) RefreshItemDetail(ctx context.Context, id string) error {
 	if err := a.Store.Put(ctx, "github-detail-focus", id, detailFocus{ID: id, SeenAt: time.Now().UTC()}, ""); err != nil {
 		return err
 	}
-	if !item.DetailSyncedAt.IsZero() && time.Since(item.DetailSyncedAt) < providers.GitHubDetailTTL {
+	c, err := a.Config(ctx)
+	if err != nil {
+		return err
+	}
+	if !item.DetailSyncedAt.IsZero() && time.Since(item.DetailSyncedAt) < c.GitHubDetailPollInterval() {
 		return nil
 	}
 	var repo domain.Repository

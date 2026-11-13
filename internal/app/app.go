@@ -233,6 +233,10 @@ func (a *App) ImportObservations(ctx context.Context, r domain.Repository, items
 	return a.importItems(ctx, r, items, "", nil, false)
 }
 func (a *App) importItems(ctx context.Context, r domain.Repository, items []domain.Item, user string, checkpoint *time.Time, full bool) error {
+	c, err := a.Config(ctx)
+	if err != nil {
+		return err
+	}
 	previousLinks, err := store.List[domain.Relationship](ctx, a.Store, "relationship")
 	if err != nil {
 		return err
@@ -272,7 +276,7 @@ func (a *App) importItems(ctx context.Context, r domain.Repository, items []doma
 							p.State = i.State
 							p.Draft = i.Draft
 							i.PR = &p
-							if i.DetailSyncedAt.IsZero() || time.Since(p.SyncedAt) > providers.GitHubDetailTTL {
+							if i.DetailSyncedAt.IsZero() || time.Since(p.SyncedAt) > c.GitHubDetailPollInterval() {
 								i.PR.Error = "PR details need refreshing"
 							}
 						}
@@ -379,9 +383,13 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 		return nil
 	}
 	if dueOnly {
+		c, err := a.Config(ctx)
+		if err != nil {
+			return err
+		}
 		selected := repos[:0]
 		for _, r := range repos {
-			if !r.Paused && (r.LastSync.IsZero() || time.Since(r.LastSync) >= 15*time.Minute) {
+			if !r.Paused && (r.LastSync.IsZero() || time.Since(r.LastSync) >= c.GitHubRepositoryPollInterval()) {
 				selected = append(selected, r)
 			}
 		}
@@ -499,6 +507,9 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 	workers.Wait()
 	if firstErr != nil {
 		return firstErr
+	}
+	if dueOnly {
+		return a.SyncNotifications(ctx)
 	}
 
 	return nil
@@ -675,6 +686,11 @@ func (a *App) SaveConfig(ctx context.Context, c domain.Config) error {
 	}
 	if c.GitHubPollSeconds != 0 && (c.GitHubPollSeconds < 60 || c.GitHubPollSeconds > 3600) {
 		return fmt.Errorf("invalid GitHub poll interval")
+	}
+	for _, interval := range []int{c.GitHubRepositoryPollSeconds, c.GitHubDetailPollSeconds} {
+		if interval != 0 && (interval < 60 || interval > 86400) {
+			return fmt.Errorf("GitHub repository and detail polling must be 60–86400 seconds")
+		}
 	}
 	old, err := a.Config(ctx)
 	if err != nil {

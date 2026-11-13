@@ -34,20 +34,22 @@ type Rule struct {
 	Disabled     bool     `json:"disabled,omitempty"`
 }
 type Settings struct {
-	Version               int              `json:"version"`
-	QuietSeconds          int              `json:"quietSeconds"`
-	Agent                 Agent            `json:"agent"`
-	ItemAgents            map[string]Agent `json:"itemAgents,omitempty"`
-	GitHubRequestsPerHour int              `json:"githubRequestsPerHour,omitempty"`
-	GitHubReserve         *int             `json:"githubReserve,omitempty"`
-	GitHubPollSeconds     int              `json:"githubPollSeconds,omitempty"`
-	ConfigurationAgent    Agent            `json:"configurationAgent"`
-	PriorityAgent         Agent            `json:"priorityAgent"`
-	PrioritySkill         string           `json:"prioritySkill,omitempty"`
-	PriorityLabels        map[string]int   `json:"priorityLabels"`
-	PriorityInstructions  string           `json:"priorityInstructions"`
-	Repositories          []Repository     `json:"repositories"`
-	Rules                 []Rule           `json:"rules"`
+	Version                     int              `json:"version"`
+	QuietSeconds                int              `json:"quietSeconds"`
+	Agent                       Agent            `json:"agent"`
+	ItemAgents                  map[string]Agent `json:"itemAgents,omitempty"`
+	GitHubRequestsPerHour       int              `json:"githubRequestsPerHour,omitempty"`
+	GitHubReserve               *int             `json:"githubReserve,omitempty"`
+	GitHubPollSeconds           int              `json:"githubPollSeconds,omitempty"`
+	GitHubRepositoryPollSeconds int              `json:"githubRepositoryPollSeconds,omitempty"`
+	GitHubDetailPollSeconds     int              `json:"githubDetailPollSeconds,omitempty"`
+	ConfigurationAgent          Agent            `json:"configurationAgent"`
+	PriorityAgent               Agent            `json:"priorityAgent"`
+	PrioritySkill               string           `json:"prioritySkill,omitempty"`
+	PriorityLabels              map[string]int   `json:"priorityLabels"`
+	PriorityInstructions        string           `json:"priorityInstructions"`
+	Repositories                []Repository     `json:"repositories"`
+	Rules                       []Rule           `json:"rules"`
 }
 
 func Defaults() Settings {

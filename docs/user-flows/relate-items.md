@@ -20,6 +20,10 @@ The private owner connection is established. Application data starts clean in th
 
 ## Alternatives and recovery
 
+Linked PR metadata follows the configured detail freshness interval. Existing
+relationship evidence remains saved while metadata is current; a due targeted
+refresh updates the retained PR observation and its current-head CI.
+
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
 ## Scenarios
@@ -74,6 +78,7 @@ flowchart TD
 - [internal/app/app_test.go](../../internal/app/app_test.go) — `func TestInboxRevisionStatesPriorityAndLinks(`; S2, S3. Manual link removal preserves discovered evidence and independent item state.
 - [internal/app/inbox_reads_test.go](../../internal/app/inbox_reads_test.go) — `func TestInboxBulkReadsPreserveContextKeysAndCurrentRevisions(`; S4. Linked item revisions and saved ticket context invalidate stale assessments.
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestRelationshipCASInvalidatesPreparedSelectedReads(`; S1. Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubReferencedPRCadenceSuppressesHTTPUntilDue(`; S1, S4. Manually referenced PR metadata follows configured detail freshness and retains newly observed current-head CI after the configured deadline.
 
 ## Verification and gaps
 

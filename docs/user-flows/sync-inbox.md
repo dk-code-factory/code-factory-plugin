@@ -22,6 +22,15 @@ The private owner connection is established. Application data starts clean in th
 
 ## Alternatives and recovery
 
+Automatic repository scans and saved detail refreshes follow their separate saved
+intervals; review notifications keep their own cadence even while repository scans
+remain due. After a successful automatic repository scan, overdue notifications
+are polled without waiting for an idle repository cycle. Increasing an interval defers
+the corresponding upstream reads, while shortening detail freshness also expires
+older cached metadata. Explicit synchronization remains available, and source reads
+that require live validation bypass detail freshness. Legacy settings retain the
+existing polling intervals.
+
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees. A busy conversation defers only its own ingestion; polling continues discovering independent changes in the same repository and other repositories, including their quiet deadlines. Deferred baseline observations stay historical, deferred webhooks remain durable without artificial failure backoff, and cancellation stops the poll. Changed webhook source commits a metadata-only inbox notification; redelivery and unchanged source do not create extra notifications.
 
 ## Scenarios
@@ -146,6 +155,14 @@ flowchart TD
 - [internal/providers/github_transport_cache_test.go](../../internal/providers/github_transport_cache_test.go) — `func TestGitHubCacheGenerationFailuresCannotReturnCachedSuccess(`; S3. A real SQLite trigger rejecting generation writes blocks subsequent same-client response/query cache hits; malformed persisted generation data fails closed after client restart without contacting GitHub. Mixed GraphQL auth/rate generation-write failure returns cache failure before rate classification and blocks that client query hits.
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestGitHubDefaultBudgetAndExplicitOverride(`; S3. Application policy defaults to 2,000 request attempts per hour while retaining an explicit 600-request override.
 - [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubDefaultBudgetReportingAndAdmission(`; S3. Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubRepositoryCadenceSuppressesHTTPAndManualSyncRemainsLive(`; S2, S3. A configured hourly repository cadence suppresses all HTTP at twenty minutes; explicit synchronization fetches both lists and identity; a due hourly scan fetches current lists independently of notification timing.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubDetailCadenceSuppressesSelectedItemHTTP(`; S2. Selected issue details perform no HTTP before the configured hour and then fetch source, comments and timeline, retaining the current title and observation timestamp.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubNotificationCadenceRemainsIndependent(`; S2, S3. A ten-minute notification interval suppresses a three-minute poll; lowering only that setting permits notifications while long repository/detail intervals remain configured.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubNotificationCadenceRunsWhileRepositoryScansStayDue(`; S2, S3. Repeated one-minute due repository scans still poll overdue notifications; a fresh ten-minute notification deadline suppresses only notifications, and canceled scheduling performs no upstream work.
+- [internal/factory/github_cadence_test.go](../../internal/factory/github_cadence_test.go) — `func TestBackgroundDetailCadenceSuppressesHTTPUntilDue(`; S2, S5. The service clock advances beyond the old fifteen-minute threshold with no HTTP; crossing the configured hourly deadline performs three source/history requests and saves their current observation.
+- [internal/providers/github_cadence_test.go](../../internal/providers/github_cadence_test.go) — `func TestGitHubDetailCadenceControlsHTTPQueryCacheAndExplicitLiveReads(`; S2, S3, S4. PR composite cache retains four HTTP responses across twenty minutes under an hourly policy; explicit live reads still dispatch, shortening the interval expires old data immediately, policy errors fail closed, and lifecycle validation remains live.
+- [internal/providers/github_cadence_test.go](../../internal/providers/github_cadence_test.go) — `func TestGitHubDetailCadenceControlsGraphQLCacheAfterSettingChanges(`; S2, S3, S4. GraphQL metadata remains cached beyond fifteen minutes under an hourly policy, shortening the policy causes a new request, and RequireLive bypasses the configured interval.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubReferencedPRCadenceSuppressesHTTPUntilDue(`; S2, S4. A retained manually referenced PR produces no upstream reads at twenty minutes with an hourly detail interval, then four authoritative reads after the deadline and a retained successful CI observation.
 
 ## Verification and gaps
 

@@ -30,6 +30,11 @@ func validateSettings(c Settings) error {
 	if c.GitHubPollSeconds != 0 && (c.GitHubPollSeconds < 60 || c.GitHubPollSeconds > 3600) {
 		return fmt.Errorf("GitHub polling must be 60–3600 seconds")
 	}
+	for _, interval := range []int{c.GitHubRepositoryPollSeconds, c.GitHubDetailPollSeconds} {
+		if interval != 0 && (interval < 60 || interval > 86400) {
+			return fmt.Errorf("GitHub repository and detail polling must be 60–86400 seconds")
+		}
+	}
 	seen := map[string]bool{}
 	for _, r := range c.Repositories {
 		if !repoName.MatchString(r.ID) || strings.Contains(r.ID, "..") || seen[r.ID] || strings.HasPrefix(r.Base, "-") {
@@ -393,6 +398,8 @@ func (s *Service) projectSettingsTx(ctx context.Context, t *store.Tx, c Settings
 	old.GitHubRequestsPerHour = c.GitHubRequestsPerHour
 	old.GitHubReserve = c.GitHubReserve
 	old.GitHubPollSeconds = c.GitHubPollSeconds
+	old.GitHubRepositoryPollSeconds = c.GitHubRepositoryPollSeconds
+	old.GitHubDetailPollSeconds = c.GitHubDetailPollSeconds
 	old.AssessmentPrompt = c.PriorityInstructions
 	old.PolicyVersion = digest([]any{c.PriorityLabels, c.PriorityInstructions, c.PriorityAgent, c.PrioritySkill})
 	if err := t.Put("config", "settings", old); err != nil {

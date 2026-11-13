@@ -906,6 +906,26 @@
           "scenarios": [
             "S1"
           ]
+        },
+        {
+          "path": "internal/factory/github_cadence_test.go",
+          "anchor": "func TestConfirmedGitHubCadencesReachRuntimeWithoutChangingPriorityPolicy(",
+          "purpose": "The compact proposal shows complete before/after notification, repository and detail values while omitting unchanged settings; unconfirmed runtime remains unchanged; confirmation projects the intervals without changing assessment policy; invalid intervals are rejected.",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubCadenceValidationPreservesSavedSettings(",
+          "purpose": "Legacy settings retain fifteen-minute repository/detail and two-minute notification defaults; invalid cadence values cannot replace saved settings or assessment policy.",
+          "scenarios": [
+            "S3",
+            "S5"
+          ]
         }
       ],
       "suites": [
@@ -1592,6 +1612,79 @@
           "scenarios": [
             "S3"
           ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubRepositoryCadenceSuppressesHTTPAndManualSyncRemainsLive(",
+          "purpose": "A configured hourly repository cadence suppresses all HTTP at twenty minutes; explicit synchronization fetches both lists and identity; a due hourly scan fetches current lists independently of notification timing.",
+          "scenarios": [
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubDetailCadenceSuppressesSelectedItemHTTP(",
+          "purpose": "Selected issue details perform no HTTP before the configured hour and then fetch source, comments and timeline, retaining the current title and observation timestamp.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubNotificationCadenceRemainsIndependent(",
+          "purpose": "A ten-minute notification interval suppresses a three-minute poll; lowering only that setting permits notifications while long repository/detail intervals remain configured.",
+          "scenarios": [
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubNotificationCadenceRunsWhileRepositoryScansStayDue(",
+          "purpose": "Repeated one-minute due repository scans still poll overdue notifications; a fresh ten-minute notification deadline suppresses only notifications, and canceled scheduling performs no upstream work.",
+          "scenarios": [
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/factory/github_cadence_test.go",
+          "anchor": "func TestBackgroundDetailCadenceSuppressesHTTPUntilDue(",
+          "purpose": "The service clock advances beyond the old fifteen-minute threshold with no HTTP; crossing the configured hourly deadline performs three source/history requests and saves their current observation.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cadence_test.go",
+          "anchor": "func TestGitHubDetailCadenceControlsHTTPQueryCacheAndExplicitLiveReads(",
+          "purpose": "PR composite cache retains four HTTP responses across twenty minutes under an hourly policy; explicit live reads still dispatch, shortening the interval expires old data immediately, policy errors fail closed, and lifecycle validation remains live.",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cadence_test.go",
+          "anchor": "func TestGitHubDetailCadenceControlsGraphQLCacheAfterSettingChanges(",
+          "purpose": "GraphQL metadata remains cached beyond fifteen minutes under an hourly policy, shortening the policy causes a new request, and RequireLive bypasses the configured interval.",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubReferencedPRCadenceSuppressesHTTPUntilDue(",
+          "purpose": "A retained manually referenced PR produces no upstream reads at twenty minutes with an hourly detail interval, then four authoritative reads after the deadline and a retained successful CI observation.",
+          "scenarios": [
+            "S2",
+            "S4"
+          ]
         }
       ],
       "suites": [
@@ -2066,6 +2159,15 @@
           "scenarios": [
             "S7"
           ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubDetailCadenceSuppressesSelectedItemHTTP(",
+          "purpose": "A selected issue uses the configured hourly detail freshness: no HTTP at twenty minutes, then source/comment/timeline refresh and current saved title after expiry.",
+          "scenarios": [
+            "S1",
+            "S6"
+          ]
         }
       ],
       "suites": [
@@ -2472,6 +2574,15 @@
           "purpose": "Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.",
           "scenarios": [
             "S1"
+          ]
+        },
+        {
+          "path": "internal/app/github_cadence_test.go",
+          "anchor": "func TestGitHubReferencedPRCadenceSuppressesHTTPUntilDue(",
+          "purpose": "Manually referenced PR metadata follows configured detail freshness and retains newly observed current-head CI after the configured deadline.",
+          "scenarios": [
+            "S1",
+            "S4"
           ]
         }
       ],

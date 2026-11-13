@@ -24,6 +24,10 @@ The private owner connection is established. Application data starts clean in th
 
 ## Alternatives and recovery
 
+Opening saved item details follows the configured detail freshness interval.
+A still-current saved observation avoids an upstream refresh; after the interval,
+the selected item refresh retains current source and history without starting work.
+
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
 
@@ -135,6 +139,7 @@ flowchart TD
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestProjectionDependencyFailureIsVisibleAndRecoversAfterRepair(`; S7. Cold malformed relationship IDs and malformed source/target endpoints inserted after a useful prepared read report failed with a nonzero saved revision for item detail and conversation state; replacing the record restores current source.
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestRelationshipCASInvalidatesPreparedSelectedReads(`; S7. Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.
 - [internal/store/revisions_test.go](../../internal/store/revisions_test.go) — `func TestRelationshipCASEndpointsAdvanceOnlyOnSuccessfulWrites(`; S7. CAS insertion and replacement publish old/new endpoint revisions. Stale and absence-predicate rejections preserve all revisions; unrelated endpoints stay unchanged.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubDetailCadenceSuppressesSelectedItemHTTP(`; S1, S6. A selected issue uses the configured hourly detail freshness: no HTTP at twenty minutes, then source/comment/timeline refresh and current saved title after expiry.
 
 ## Verification and gaps
 

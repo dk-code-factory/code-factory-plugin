@@ -188,6 +188,10 @@ func retainPRMetadata(old domain.Item, next *domain.Item) {
 func (a *App) RefreshPullRequests(ctx context.Context) error {
 	a.providerMu.Lock()
 	defer a.providerMu.Unlock()
+	c, err := a.Config(ctx)
+	if err != nil {
+		return err
+	}
 	links, err := store.List[domain.Relationship](ctx, a.Store, "relationship")
 	if err != nil {
 		return err
@@ -278,7 +282,7 @@ func (a *App) RefreshPullRequests(ctx context.Context) error {
 		if old.PR != nil && time.Now().Before(old.PR.RetryAt) {
 			continue
 		}
-		if old.PR != nil && old.PR.Error == "" && time.Since(old.PR.SyncedAt) < providers.GitHubDetailTTL {
+		if old.PR != nil && old.PR.Error == "" && time.Since(old.PR.SyncedAt) < c.GitHubDetailPollInterval() {
 			continue
 		}
 		var repository domain.Repository
