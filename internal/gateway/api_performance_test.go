@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"codefactory/internal/httpbudget"
 	"encoding/json"
 	"flag"
 	"go/ast"
@@ -43,8 +44,8 @@ func recordGatewayTiming(t *testing.T, method, path string, status int, started 
 	gatewaySamples.Lock()
 	gatewaySamples.Rows = append(gatewaySamples.Rows, gatewaySample{Method: method, Path: path, Status: status, MS: float64(elapsed) / float64(time.Millisecond), Outcome: gatewayOutcome(status)})
 	gatewaySamples.Unlock()
-	if elapsed > 100*time.Millisecond {
-		t.Errorf("%s %s exceeded 100 ms: %s", method, path, elapsed)
+	if elapsed > httpbudget.Duration {
+		t.Errorf("%s %s exceeded 75 ms: %s", method, path, elapsed)
 	}
 }
 func gatewayOutcome(status int) string {
@@ -71,7 +72,7 @@ func TestGatewayAPILatency(t *testing.T) {
 		}
 		gatewaySamples.Lock()
 		defer gatewaySamples.Unlock()
-		data, err := json.MarshalIndent(map[string]any{"limit_ms": 100, "samples": gatewaySamples.Rows}, "", "  ")
+		data, err := json.MarshalIndent(map[string]any{"limit_ms": httpbudget.Duration.Milliseconds(), "samples": gatewaySamples.Rows}, "", "  ")
 		if err != nil {
 			t.Error(err)
 			return
@@ -84,9 +85,6 @@ func TestGatewayAPILatency(t *testing.T) {
 	// token exchange/rotation/revocation and authenticated upstream proxying.
 	t.Run("oauth", TestOwnerConsentPKCERotationPersistenceAndAuthenticatedProxy)
 	t.Run("downloads", TestPublicDownloadsKeepMCPAndConsentProtected)
-	t.Run("delayed_finite_dependencies", TestGatewayFiniteResponseContentionAndDelayedProxy)
-	t.Run("delayed_registration_mapping", TestGatewayDelayedRegistrationMappingRemainsFinite)
-	t.Run("delayed_audit", TestGatewayAuditKeepsActualWireStatusWithSlowSink)
 	t.Run("uncertain_refresh", TestOAuthDeadlineDoesNotReplayConsumedRefresh)
 	t.Run("stream_handshake", TestGatewaySSERequiresFirstDataAndKeepsAcknowledgedStream)
 

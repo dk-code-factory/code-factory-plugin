@@ -382,7 +382,7 @@
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
-          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+          "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
         },
         {
           "path": "internal/setup/onboarding.go",
@@ -525,7 +525,7 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "A stalled save returns503 uncertainty without credential echo, accepts one submission and never claims late success."
+          "purpose": "An explicit caller deadline interrupts a held credential save, preserves its single-submission identity, reports uncertainty and never echoes the private input."
         },
         {
           "path": "internal/setup/api_performance_test.go",
@@ -533,7 +533,7 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "Immediate successful page/readiness/save cases and125ms dependency rejection are timed as distinct outcomes; no installed-host claim."
+          "purpose": "Twenty isolated successful local form/reachability/save sequences each satisfy the75ms verification gate; deliberately slow and canceled saves have separate correctness fixtures."
         },
         {
           "path": "internal/gateway/response_budget_test.go",
@@ -541,7 +541,7 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "Every registered mutable OAuth/private-consent entry point and delayed finite proxy response rejects within100ms under a held authentication lock; partial body cannot escape."
+          "purpose": "Gateway authorization and token routes retain actual protocol results during 125 ms mutex contention; a slow finite upstream returns its entire response."
         },
         {
           "path": "internal/gateway/response_budget_test.go",
@@ -549,7 +549,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Landing and browser-package routes reject boundedly when registered-app filesystem input is delayed."
+          "purpose": "A registration mapping held for 125 ms still returns the requested package or browser archive."
         },
         {
           "path": "internal/gateway/response_budget_test.go",
@@ -565,7 +565,15 @@
           "scenarios": [
             "S2"
           ],
-          "purpose": "Actual proxy acknowledges within100ms, forwards a second real data frame sent150ms later, remains live until body close and promptly cancels upstream after disconnect; delayed first acknowledgement still rejects despite header flush."
+          "purpose": "Immediate and 125 ms delayed real proxy acknowledgements succeed; later stream frames remain live and caller body close cancels upstream."
+        },
+        {
+          "path": "internal/setup/onboarding_test.go",
+          "anchor": "func TestCredentialFormSlowSaveCompletesOnce(",
+          "scenarios": [
+            "S2"
+          ],
+          "purpose": "A125ms private credential save completes successfully once without echoing its input; a repeated submission cannot save again."
         }
       ],
       "suites": [
@@ -695,7 +703,7 @@
           {
             "from": "n1",
             "to": "uncertain_response",
-            "label": "response deadline or unknown outcome"
+            "label": "caller cancellation or unknown outcome"
           },
           {
             "from": "uncertain_response",
@@ -3265,7 +3273,7 @@
         {
           "path": "web/tests/wrapper.spec.ts",
           "anchor": "question pages retain exact requests beyond the first page",
-          "purpose": "Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.",
+          "purpose": "Navigate to requests 51\u201355 and deliver the exact second-page question identity and free-text answer.",
           "scenarios": [
             "S1",
             "S2"
@@ -3969,7 +3977,7 @@
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
-          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+          "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
         },
         {
           "path": "internal/transport/projections.go",
@@ -4000,6 +4008,11 @@
           "path": "web/src/bridge.ts",
           "anchor": "export function onInstanceChange(",
           "purpose": "Retire obsolete instance-scoped read ownership without repeating accepted commands."
+        },
+        {
+          "path": "internal/httpbudget/latency.go",
+          "anchor": "func observeLatency(",
+          "purpose": "Bounded asynchronous sanitized latency signals retain process-local request identity, actual status and exact slow/drop counters without canceling business work."
         }
       ],
       "tests": [
@@ -4266,7 +4279,7 @@
         {
           "path": "internal/transport/api_performance_test.go",
           "anchor": "func TestUserFacingAPILatency(",
-          "purpose": "Runtime registered SDK/custom receiving-method keys and the discovered tool catalog are completeness oracles. Every method, including notifications, has a timed meaningful success, accepted notification, exact rejection or real stream acknowledgement. Every exposed tool is timed through authenticated HTTP across empty/cold/1000-source retained state, blocked storage/logging, saturation, continuous writes and three-second provider/process delays; useful current reads and healthy operation completion are required. Every sample must stay within100ms; host/network transit and background completion are separate.",
+          "purpose": "Runtime registered SDK/custom receiving-method keys and the discovered tool catalog are completeness oracles. Every method, including notifications, has a timed meaningful success, accepted notification, exact rejection or real stream acknowledgement. Every exposed tool is timed through authenticated HTTP across empty/cold/1000-source retained state, blocked storage/logging, saturation, continuous writes and three-second provider/process delays; useful current reads and healthy operation completion are required. Every sample must stay within75ms; host/network transit and background completion are separate.",
           "scenarios": [
             "S1",
             "S5"
@@ -4314,12 +4327,12 @@
         },
         {
           "path": "internal/httpbudget/budget_test.go",
-          "anchor": "func TestFiniteResponseDeadlineRetainsAdmissionAndDiscardsLateSuccess(",
+          "anchor": "func TestSlowResponseRetainsAdmissionAndReturnsSuccess(",
           "scenarios": [
             "S1",
             "S5"
           ],
-          "purpose": "A timed-out handler keeps its worker slot, late private success is discarded and capacity rejection starts no second action."
+          "purpose": "A request held beyond 125 ms keeps its uncanceled context and worker slot; saturated admission starts no second action, and release returns the original successful response."
         },
         {
           "path": "internal/httpbudget/budget_test.go",
@@ -4340,11 +4353,11 @@
         },
         {
           "path": "internal/httpbudget/budget_test.go",
-          "anchor": "func TestEmptyOrPrimingSSEFlushDoesNotAcknowledgeDelayedStream(",
+          "anchor": "func TestEmptyOrPrimingSSEFlushPreservesDelayedStream(",
           "scenarios": [
             "S3"
           ],
-          "purpose": "Empty or comment-only flush cannot evade the finite handshake budget."
+          "purpose": "Empty or priming-comment flushes wait for real data; an acknowledgement delayed beyond 125 ms still reaches the caller."
         },
         {
           "path": "internal/httpbudget/budget_test.go",
@@ -4361,7 +4374,7 @@
             "S1",
             "S5"
           ],
-          "purpose": "Isolated100ms finite/capacity/8MiB response boundary samples distinguish success, accepted work and rejection."
+          "purpose": "Isolated 75 ms per-sample verification covers successful finite results, accepted work, capacity rejection and response-size limits without imposing a production latency cutoff."
         },
         {
           "path": "web/tests/wrapper.spec.ts",
@@ -4398,7 +4411,7 @@
         {
           "path": "internal/transport/budget_test.go",
           "anchor": "func TestPluginAPIBudget(",
-          "purpose": "Every exposed tool is invoked through authenticated HTTP; all retained samples must stay within 100 ms and 64 KiB across cold/history, writes, blocked DB/log and saturated-queue scenarios, with useful eventual completion. A checked continuous writer must commit before client launch and between measured read halves; near-limit successful opener RPCs run while the logging sink is blocked and byte admission is asserted.",
+          "purpose": "Every exposed tool is invoked through authenticated HTTP; all retained samples must stay within 75 ms and 64 KiB across cold/history, writes, blocked DB/log and saturated-queue scenarios, with useful eventual completion. A checked continuous writer must commit before client launch and between measured read halves; near-limit successful opener RPCs run while the logging sink is blocked and byte admission is asserted.",
           "scenarios": [
             "S6"
           ]
@@ -4507,6 +4520,38 @@
           "scenarios": [
             "S6"
           ]
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestSlowRequestBodyStillCompletes(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "An HTTP request body arriving after 125 ms is still fully read and returned successfully."
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestPerformanceGateFailsSlowSuccess(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A subprocess runs a slow useful 200 response through the actual isolated timing assertion and must fail verification above 75 ms."
+        },
+        {
+          "path": "internal/transport/response_budget_test.go",
+          "anchor": "func TestSlowMCPDispatchPreservesResultAndContext(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "An authenticated real tool handler delayed125ms inside production receiving middleware retains its context and exact useful response; the regression also detects reinstating the80ms tool deadline."
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestSlowWireSignalsWhilePendingAndIncludesAcknowledgement(",
+          "scenarios": [
+            "S6"
+          ],
+          "purpose": "A blocked finite wire write or initial SSE flush emits the pending threshold warning and active count without cancellation; release preserves useful success and records the full output duration, including the initial stream flush."
         }
       ],
       "suites": [
@@ -4586,7 +4631,7 @@
           },
           {
             "id": "api_v2_s6",
-            "label": "Return every plugin tool response within the local budget while healthy background work eventually completes",
+            "label": "Verify useful responses meet the latency target; preserve and signal slow production requests",
             "scenario": "S6"
           }
         ],
@@ -4721,7 +4766,7 @@
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
-          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+          "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
         },
         {
           "path": "internal/transport/mcp.go",
@@ -4836,7 +4881,7 @@
             "S1",
             "S2"
           ],
-          "purpose": "Authenticates actual custom methods during125ms proof/delivery/store delay; separates successful management, callback rejection, deadline rejection and first subscription-stream acknowledgement."
+          "purpose": "Actual custom methods distinguish successful management and first stream acknowledgement from rejected callback proof during controlled verification/delivery delays, with a 75 ms verification gate."
         },
         {
           "path": "internal/transport/api_performance_test.go",
@@ -4845,7 +4890,7 @@
             "S1",
             "S2"
           ],
-          "purpose": "Ordinary correctness fixture covers2025 and2026 actual custom subscribe/unsubscribe dispatch,75ms response deadline and direct caller cancellation during125ms Store.Write contention. Drain confirms no late activation or deletion and the original subscription survives."
+          "purpose": "Both 2025 and 2026 custom subscribe/unsubscribe calls succeed through 125 ms store contention; deliberate caller cancellation instead prevents late subscription activation or deletion."
         },
         {
           "path": "internal/events/events_test.go",
@@ -5127,12 +5172,17 @@
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
-          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+          "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
         },
         {
           "path": "internal/transport/operations.go",
           "anchor": "func (q *operationQueue) submit(",
           "purpose": "Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects."
+        },
+        {
+          "path": "internal/httpbudget/latency.go",
+          "anchor": "func observeLatency(",
+          "purpose": "Bounded asynchronous sanitized latency signals retain process-local request identity, actual status and exact slow/drop counters without canceling business work."
         }
       ],
       "tests": [
@@ -5260,6 +5310,22 @@
           "scenarios": [
             "S5"
           ]
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestSlowRequestSignalsBeforeCompletionAndCorrelatesOutcome(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Observe one threshold warning before completion and a matching final successful outcome; raw paths, queries, bodies and custom methods are excluded."
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestLatencyMetadataDoesNotRetainCallerRequestLines(",
+          "scenarios": [
+            "S1"
+          ],
+          "purpose": "Behind a blocked sink,32parsed megabyte request lines retain only fixed methods, owned bounded endpoint labels and exact numeric identities; live heap stays below8MiB over baseline. Oversized metadata becomes other rather than retaining caller allocations."
         }
       ],
       "suites": [
@@ -5529,12 +5595,17 @@
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
-          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+          "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
         },
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func AuditRejections(",
           "purpose": "A bounded diagnostic lane retains ordinary admission rejections or explicit coalesced overflow counts without starting business work or reading private requests."
+        },
+        {
+          "path": "internal/httpbudget/latency.go",
+          "anchor": "func observeLatency(",
+          "purpose": "Bounded asynchronous sanitized latency signals retain process-local request identity, actual status and exact slow/drop counters without canceling business work."
         }
       ],
       "tests": [
@@ -5815,11 +5886,11 @@
         },
         {
           "path": "internal/transport/response_budget_test.go",
-          "anchor": "func TestAPILogSlowSinkPreservesSuccessAndLateBusinessLogs503(",
+          "anchor": "func TestAPILogSlowSinkAndSlowBusinessPreserveSuccess(",
           "scenarios": [
             "S4"
           ],
-          "purpose": "Delayed diagnostic sink does not delay completed200; late business work records actual503 rather than discarded success."
+          "purpose": "A blocked log sink does not delay success; slow business work still returns its original 200 result and its record retains request identity, duration and the 75 ms breach flag."
         },
         {
           "path": "internal/transport/response_budget_test.go",
@@ -5843,7 +5914,7 @@
           "scenarios": [
             "S4"
           ],
-          "purpose": "Production gateway audit sink cannot delay completed success and records actual wire200/503."
+          "purpose": "A slow audit sink preserves completed success; mutex-delayed business work returns and logs the actual protocol result."
         },
         {
           "path": "internal/httpbudget/budget_test.go",
@@ -5924,6 +5995,38 @@
           "scenarios": [
             "S5"
           ]
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestSlowRequestSignalsBeforeCompletionAndCorrelatesOutcome(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Observe one threshold warning before completion and a matching final successful outcome; raw paths, queries, bodies and custom methods are excluded."
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestSlowDiagnosticsRemainBoundedAndNeverBlockResponse(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "A blocked diagnostic sink and saturated 64-record queue never block a slow successful response; dropped records remain counted."
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestSlowWireSignalsWhilePendingAndIncludesAcknowledgement(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "A blocked finite wire write or initial SSE flush emits the pending threshold warning and active count without cancellation; release preserves useful success and records the full output duration, including the initial stream flush."
+        },
+        {
+          "path": "internal/httpbudget/latency_test.go",
+          "anchor": "func TestLatencyMetadataDoesNotRetainCallerRequestLines(",
+          "scenarios": [
+            "S5"
+          ],
+          "purpose": "Behind a blocked sink,32parsed megabyte request lines retain only fixed methods, owned bounded endpoint labels and exact numeric identities; live heap stays below8MiB over baseline. Oversized metadata becomes other rather than retaining caller allocations."
         }
       ],
       "suites": [
@@ -11149,7 +11252,7 @@
         {
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
-          "purpose": "Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime."
+          "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
         }
       ],
       "tests": [
@@ -11541,7 +11644,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Held secret or writer yields truthful deadline rejection and no late durable delivery; explicit exact-delivery-id redelivery succeeds202 only after persistence."
+          "purpose": "Explicit caller cancellation reports uncertainty during held secret/store access, prevents late persistence and preserves safe exact-id redelivery."
         },
         {
           "path": "internal/factory/api_performance_test.go",
@@ -11549,7 +11652,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Isolated100ms webhook wire measurements separate delayed dependency rejection from successful durable acknowledgement."
+          "purpose": "Twenty isolated successful signed webhook acknowledgements each retain a durable delivery before202 and satisfy the75ms verification gate; deliberate slow/canceled paths are separate correctness fixtures."
         },
         {
           "path": "web/tests/wrapper.spec.ts",

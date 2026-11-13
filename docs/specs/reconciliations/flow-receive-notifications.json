@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "5097e2a7d87c6e312da960c10998956a69115228",
-  "fingerprint": "4f7ce2123088182e926a805fc1b21dc2c5d6e2c12bd1cba7a067b146d1690953",
+  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
+  "fingerprint": "500f9582dbe6d5176d4893f1a8766391a4a8a762806b4fda6df96feae0e4c517",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Host subscription verification and notification delivery retain explicit activation and cancellation semantics. Only contributor guidance changes.",
-    "implementation": "Background callback delivery remains outside application read handlers; cache access is not an alternative authorization path.",
-    "tests": "Inspected TestPluginAPIBudget assertions: authenticated exposed tools must remain within 100 ms and 64 KiB with cold reads, blocked DB/provider/log dependencies and saturated queues; healthy reads and operations must eventually complete. Existing assertions are unchanged; fixture success does not establish real-host acceptance."
+    "kind": "behavior",
+    "description": "S1/S2 slow management now waits through store contention and completes; only actual caller/service cancellation prevents late subscription changes. Callback proof remains separately bounded.",
+    "implementation": "Shared response observation does not cancel SDK methods; events request-origin cancellation still propagates across detached old/new protocol contexts.",
+    "tests": "Read both protocol versions and subscribe/unsubscribe cases in TestEventStoreAdmissionPreservesRequestCancellation:125ms slow operations change state exactly once while deliberately canceled calls preserve the original subscription."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 328.488
+      "seconds": 70.097
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.55
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 1004.223
+      "seconds": 677.862
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 869.737
+      "seconds": 497.942
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 5.852
+      "seconds": 4.755
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 80.479
+      "seconds": 61.85
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "796f7c7a84bf491f4bd98f39696069d3dd4029bc391bd6c49c73ee2374c21de6",
+    "flow:receive-notifications": "56e8229b3873caf45e156b89ff5c0b152df772d9719e2bd39421696d0778f7c2",
     "term:attention-request": "73984fc21eb95722b7ed8b6aa86b4cb35b6e7ad0549a4a104c974d9667abd4d7",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:host": "ee1b68f918767b4c8e303634da6fe67fb81b3d85b90f05e82d5c14211a745d97",

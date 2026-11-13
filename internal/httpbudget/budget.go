@@ -1,5 +1,5 @@
-// Package httpbudget bounds finite local HTTP responses, including dependencies
-// that ignore cancellation. Admission lasts until the actual handler exits.
+// Package httpbudget observes response latency and bounds admission and output.
+// Slow requests continue until completion or caller/service cancellation.
 package httpbudget
 
 import (
@@ -25,6 +25,9 @@ type requestState struct {
 	writer   *response
 	complete chan chan int
 	outcome  atomic.Int32
+	id       uint64
+	started  time.Time
+	elapsed  atomic.Int64
 }
 type boundary struct {
 	slots    chan struct{}
@@ -102,7 +105,7 @@ func WrapContext(lifetime context.Context, next http.Handler) http.Handler {
 func Drain(ctx context.Context) error {
 	timer := time.NewTicker(time.Millisecond)
 	defer timer.Stop()
-	for len(shared.slots) > 0 || rejectionWorkers.Load() > 0 {
+	for len(shared.slots) > 0 || rejectionWorkers.Load() > 0 || latencyWorkers.Load() > 0 {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -152,17 +155,17 @@ func (b *boundary) wrap(lifetime context.Context, next http.Handler) http.Handle
 		stop := context.AfterFunc(lifetime, cancel)
 		defer stop()
 		defer cancel()
-		s := &requestState{complete: make(chan chan int)}
+		s := &requestState{complete: make(chan chan int), id: requests.Add(1), started: started}
 		ctx = context.WithValue(ctx, key{}, s)
 		rw := &response{header: make(http.Header), maxBytes: b.maxBytes, stream: make(chan chan bool), ctx: ctx, wire: w, overflow: make(chan struct{}, 1)}
 		s.writer = rw
 		done := make(chan struct{})
 		var panicValue any
-		requestID := requests.Add(1)
+		requestID := s.id
 		go func() {
 			defer func() {
 				panicValue = recover()
-				if panicValue != nil {
+				if panicValue != nil && panicValue != http.ErrAbortHandler {
 					slog.Error("Code Factory HTTP handler panicked", "request_id", requestID, "panic_type", fmt.Sprintf("%T", panicValue), "stack", string(debug.Stack()))
 				}
 				<-b.slots
@@ -170,9 +173,45 @@ func (b *boundary) wrap(lifetime context.Context, next http.Handler) http.Handle
 			}()
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		}()
-		deadline := time.Now().Add(b.duration)
-		timer := time.NewTimer(b.duration)
-		defer timer.Stop()
+		var latencyMu sync.Mutex
+		tracked, finished := false, false
+		api := "other"
+		if audit != nil {
+			api = safeLabel(audit.classify(r))
+		}
+		method := safeMethod(r.Method)
+		observe := func() {
+			if tracked || finished || time.Since(started) <= b.duration {
+				return
+			}
+			tracked = true
+			slowRequests.Add(1)
+			activeSlowRequests.Add(1)
+			observeLatency(latencyRecord{RequestID: requestID, API: api, Method: method, StartedAt: started.UTC(), Phase: "slow", Duration: time.Since(started)})
+		}
+		// Observe independently of wire I/O: a blocked Write or Flush must not
+		// suppress the pending threshold signal or cancel the useful response.
+		timer := time.AfterFunc(time.Until(started.Add(b.duration)), func() {
+			latencyMu.Lock()
+			defer latencyMu.Unlock()
+			observe()
+		})
+		finish := func() {
+			latencyMu.Lock()
+			defer latencyMu.Unlock()
+			timer.Stop()
+			observe()
+			finished = true
+			if tracked {
+				activeSlowRequests.Add(-1)
+				observeLatency(latencyRecord{RequestID: requestID, API: api, Method: method, StartedAt: started.UTC(), Phase: "finished", Duration: time.Since(started), Status: Outcome(ctx, 0)})
+			}
+		}
+		defer func() {
+			if finish != nil {
+				finish()
+			}
+		}()
 		reject := func() { s.outcome.Store(http.StatusServiceUnavailable); rw.close(); cancel(); unavailable(w, true) }
 		limitExceeded := func() {
 			s.outcome.Store(http.StatusInternalServerError)
@@ -184,7 +223,7 @@ func (b *boundary) wrap(lifetime context.Context, next http.Handler) http.Handle
 			_, _ = io.WriteString(w, `{"error":"response_limit_exceeded","message":"Response exceeds its supported size limit; inspect saved state and use a narrower read before retrying."}`+"\n")
 		}
 		commit := func() int {
-			if time.Now().After(deadline) || ctx.Err() != nil {
+			if ctx.Err() != nil {
 				reject()
 				return http.StatusServiceUnavailable
 			}
@@ -204,47 +243,50 @@ func (b *boundary) wrap(lifetime context.Context, next http.Handler) http.Handle
 			s.outcome.Store(int32(status))
 			w.WriteHeader(status)
 			_, _ = w.Write(rw.body.Bytes())
+			s.elapsed.Store(int64(time.Since(started)))
 			rw.body.Reset()
 			rw.mu.Unlock()
 			return status
 		}
-		select {
-		case <-done:
-			if panicValue != nil {
-				panic(http.ErrAbortHandler)
-			}
-			commit()
-		case ack := <-s.complete:
-			ack <- commit()
-			// Keep ordinary audit completion synchronous when it fits the original
-			// budget; a slow sink retains its admission after the response returns.
+		for {
 			select {
 			case <-done:
-			case <-timer.C:
+				if panicValue != nil {
+					panic(http.ErrAbortHandler)
+				}
+				commit()
+				return
+			case ack := <-s.complete:
+				ack <- commit()
+				// Audit retains admission, but never holds up a completed response.
+				return
+			case ack := <-rw.stream:
+				commit()
+				if ctx.Err() != nil {
+					ack <- false
+					return
+				}
+				rw.mu.Lock()
+				rw.live = true
+				rw.mu.Unlock()
+				_ = http.NewResponseController(w).Flush()
+				s.elapsed.Store(int64(time.Since(started)))
+				finish()
+				finish = nil // Acknowledged stream lifetime is not response latency.
+				ack <- true
+				// An admitted stream owns the real writer until its handler actually exits.
+				<-done
+				if panicValue != nil {
+					panic(http.ErrAbortHandler)
+				}
+				return
+			case <-rw.overflow:
+				limitExceeded()
+				return
 			case <-ctx.Done():
-			}
-		case ack := <-rw.stream:
-			commit()
-			if ctx.Err() != nil {
-				ack <- false
+				reject()
 				return
 			}
-			rw.mu.Lock()
-			rw.live = true
-			rw.mu.Unlock()
-			_ = http.NewResponseController(w).Flush()
-			ack <- true
-			// An admitted stream owns the real writer until its handler actually exits.
-			<-done
-			if panicValue != nil {
-				panic(http.ErrAbortHandler)
-			}
-		case <-rw.overflow:
-			limitExceeded()
-		case <-timer.C:
-			reject()
-		case <-ctx.Done():
-			reject()
 		}
 	})}
 }
@@ -262,6 +304,8 @@ type Rejection struct {
 
 // AuditRejections attaches a separate bounded diagnostic lane. classify must
 // return a fixed endpoint label, never user-controlled paths or parameters.
+// Labels retain at most 64 ASCII letters, digits, underscores or hyphens;
+// invalid labels become "other", and accepted labels own their string storage.
 // There is at most one in-flight sink call, Capacity queued records, and one
 // overflow aggregate per configured observer. No request/body is retained.
 // Sink receives the service lifetime (not the canceled request context).
@@ -288,12 +332,7 @@ type rejectionAudit struct {
 }
 
 func (a *rejectionAudit) enqueue(lifetime context.Context, r *http.Request, started time.Time) {
-	method := "other"
-	switch r.Method {
-	case "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS":
-		method = r.Method
-	}
-	record := Rejection{StartedAt: started.UTC(), LastAt: started.UTC(), API: a.classify(r), HTTPMethod: method, Count: 1, Duration: time.Since(started)}
+	record := Rejection{StartedAt: started.UTC(), LastAt: started.UTC(), API: safeLabel(a.classify(r)), HTTPMethod: safeMethod(r.Method), Count: 1, Duration: time.Since(started)}
 	a.mu.Lock()
 	if a.size < len(a.queue) && a.overflow.record.Count == 0 {
 		a.queue[(a.head+a.size)%len(a.queue)] = rejectionJob{lifetime, record}

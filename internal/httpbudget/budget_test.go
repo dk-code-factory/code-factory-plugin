@@ -15,36 +15,47 @@ import (
 	"time"
 )
 
-func TestFiniteResponseDeadlineRetainsAdmissionAndDiscardsLateSuccess(t *testing.T) {
+func TestSlowResponseRetainsAdmissionAndReturnsSuccess(t *testing.T) {
 	b := boundary{make(chan struct{}, 1), Duration, 32}
-	release, exited := make(chan struct{}), make(chan struct{})
+	release, entered, returned := make(chan struct{}), make(chan context.Context, 1), make(chan struct{})
 	releaseWork := releaseBoundaryOnExit(t, &b, release)
 	var calls atomic.Int32
 	h := b.wrap(context.Background(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
-		defer close(exited)
+		entered <- r.Context()
 		<-release
-		w.Header().Set("Private", "secret")
-		_, err := io.WriteString(w, "late private success")
-		if err == nil {
-			t.Error("late write accepted")
+		if r.Context().Err() != nil {
+			t.Error("latency canceled business work")
 		}
+		w.Header().Set("Result", "preserved")
+		io.WriteString(w, "slow success")
 	}))
 	w := httptest.NewRecorder()
-	started := time.Now()
-	h.ServeHTTP(w, httptest.NewRequest("POST", "/", nil))
-	if time.Since(started) > 100*time.Millisecond || w.Code != 503 || !strings.Contains(w.Body.String(), "outcome_unknown") {
-		t.Fatal("unbounded or dishonest rejection", w.Code, time.Since(started))
+	go func() { defer close(returned); h.ServeHTTP(w, httptest.NewRequest("POST", "/", nil)) }()
+	var ctx context.Context
+	select {
+	case ctx = <-entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("handler readiness timed out")
+	}
+	time.Sleep(125 * time.Millisecond)
+	select {
+	case <-returned:
+		t.Fatal("latency ended request")
+	default:
+	}
+	if ctx.Err() != nil {
+		t.Fatal("latency canceled request")
 	}
 	second := httptest.NewRecorder()
 	h.ServeHTTP(second, httptest.NewRequest("POST", "/", nil))
 	if second.Code != 503 || !strings.Contains(second.Body.String(), "request_not_started") || calls.Load() != 1 {
-		t.Fatal("timed-out worker capacity was released")
+		t.Fatal("slow worker admission was released")
 	}
 	releaseWork()
-	awaitBoundary(t, exited, "handler exit")
-	if w.Header().Get("Private") != "" || strings.Contains(w.Body.String(), "private") {
-		t.Fatal("late success escaped")
+	awaitBoundary(t, returned, "slow response completion")
+	if w.Code != 200 || w.Body.String() != "slow success" || w.Header().Get("Result") != "preserved" {
+		t.Fatal("slow response was changed", w)
 	}
 }
 func TestCompletedResponseKeepsWorkerThroughAuditAndReportsWireOutcome(t *testing.T) {
@@ -158,7 +169,7 @@ func TestSSEHandshakeRetainsStreamAndCancelsOnDisconnect(t *testing.T) {
 		t.Fatal("stream ignored disconnect")
 	}
 }
-func TestNonSSEFlushCannotEscapeDeadlineAndLivePanicPropagates(t *testing.T) {
+func TestNonSSEFlushPreservesCallerCancellationAndLivePanicPropagates(t *testing.T) {
 	b := boundary{make(chan struct{}, 1), Duration, 32}
 	h := b.wrap(context.Background(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "premature")
@@ -166,7 +177,9 @@ func TestNonSSEFlushCannotEscapeDeadlineAndLivePanicPropagates(t *testing.T) {
 		<-r.Context().Done()
 	}))
 	w := httptest.NewRecorder()
-	h.ServeHTTP(w, httptest.NewRequest("GET", "/", nil))
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Millisecond)
+	defer cancel()
+	h.ServeHTTP(w, httptest.NewRequest("GET", "/", nil).WithContext(ctx))
 	if w.Code != 503 || strings.Contains(w.Body.String(), "premature") {
 		t.Fatal("nonstream Flush bypassed budget")
 	}
@@ -180,7 +193,7 @@ func TestNonSSEFlushCannotEscapeDeadlineAndLivePanicPropagates(t *testing.T) {
 	}()
 }
 
-func TestEmptyOrPrimingSSEFlushDoesNotAcknowledgeDelayedStream(t *testing.T) {
+func TestEmptyOrPrimingSSEFlushPreservesDelayedStream(t *testing.T) {
 	for _, priming := range []string{"", ": ok\n\n"} {
 		t.Run(priming, func(t *testing.T) {
 			b := boundary{make(chan struct{}, 1), Duration, 128}
@@ -197,8 +210,8 @@ func TestEmptyOrPrimingSSEFlushDoesNotAcknowledgeDelayedStream(t *testing.T) {
 			w := httptest.NewRecorder()
 			started := time.Now()
 			h.ServeHTTP(w, httptest.NewRequest("GET", "/", nil))
-			if w.Code != 503 || time.Since(started) > 100*time.Millisecond || strings.Contains(w.Body.String(), "late-ack") {
-				t.Fatal("empty Flush evaded handshake budget", w.Code, time.Since(started))
+			if w.Code != 200 || time.Since(started) < 125*time.Millisecond || !strings.Contains(w.Body.String(), "late-ack") {
+				t.Fatal("delayed stream acknowledgement was lost", w.Code, time.Since(started))
 			}
 			awaitBoundary(t, exited, "handler exit")
 		})
@@ -216,7 +229,9 @@ func TestLateHandlerPanicRetainsSanitizedOwnerDiagnostic(t *testing.T) {
 	releaseWork := releaseBoundaryOnExit(t, &b, release)
 	h := b.wrap(context.Background(), http.HandlerFunc(func(http.ResponseWriter, *http.Request) { <-release; panic("private-panic-value") }))
 	w := httptest.NewRecorder()
-	h.ServeHTTP(w, httptest.NewRequest("GET", "/private-route?secret=private-query", nil))
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Millisecond)
+	defer cancel()
+	h.ServeHTTP(w, httptest.NewRequest("GET", "/private-route?secret=private-query", nil).WithContext(ctx))
 	if w.Code != 503 {
 		t.Fatal("late panic did not time out")
 	}

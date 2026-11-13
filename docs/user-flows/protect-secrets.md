@@ -82,8 +82,9 @@ flowchart TD
 - [internal/store/redactor.go](../../internal/store/redactor.go) — Current protect-secrets implementation or fixture/build dependency.
 - [cmd/code-factory/main.go](../../cmd/code-factory/main.go) — Serve opens the retained connection vault solely as a redaction source while fresh application state remains separate. (`func run(`)
 - [internal/transport/operations.go](../../internal/transport/operations.go) — Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects. (`func (q *operationQueue) submit(`)
-- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime. (`func Wrap(`)
 - [internal/transport/operations.go](../../internal/transport/operations.go) — Immediate memory admission with explicit operation state and original daemon/request identity; metadata durability precedes effects. (`func (q *operationQueue) submit(`)
+- [internal/httpbudget/latency.go](../../internal/httpbudget/latency.go) — Bounded asynchronous sanitized latency signals retain process-local request identity, actual status and exact slow/drop counters without canceling business work. (`func observeLatency(`)
 
 ## Test references
 
@@ -102,6 +103,8 @@ flowchart TD
 - [cmd/code-factory/proxy_budget_test.go](../../cmd/code-factory/proxy_budget_test.go) — `func TestProxyUnknownOutcomeDoesNotReplayMutation(`; S1. Actual stdio caller reports unknown outcome after503 and sends the original mutation once.
 - [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestOperationJournalPrecedesEffectsAndNeverStoresAnswers(`; S5. The effect observes its durable running intent; the operation journal contains neither answer bodies nor results.
 - [internal/transport/operations_test.go](../../internal/transport/operations_test.go) — `func TestCompletedOperationQueueClearsObsoleteInputClosures(`; S5. Decreasing bursts of 8, 5 and 3 payload-capturing operations execute once, drain all live byte/scope accounting and leave every obsolete pending backing slot zero, releasing completed input closures.
+- [internal/httpbudget/latency_test.go](../../internal/httpbudget/latency_test.go) — `func TestSlowRequestSignalsBeforeCompletionAndCorrelatesOutcome(`; S1. Observe one threshold warning before completion and a matching final successful outcome; raw paths, queries, bodies and custom methods are excluded.
+- [internal/httpbudget/latency_test.go](../../internal/httpbudget/latency_test.go) — `func TestLatencyMetadataDoesNotRetainCallerRequestLines(`; S1. Behind a blocked sink,32parsed megabyte request lines retain only fixed methods, owned bounded endpoint labels and exact numeric identities; live heap stays below8MiB over baseline. Oversized metadata becomes other rather than retaining caller allocations.
 
 ## Verification and gaps
 

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/modelcontextprotocol/go-sdk/jsonrpc"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +22,7 @@ import (
 	"time"
 )
 
-func TestAPILogSlowSinkPreservesSuccessAndLateBusinessLogs503(t *testing.T) {
+func TestAPILogSlowSinkAndSlowBusinessPreserveSuccess(t *testing.T) {
 	s := apiLogFixture(t)
 	log := s.callLog()
 	log.mu.Lock()
@@ -51,18 +52,46 @@ func TestAPILogSlowSinkPreservesSuccessAndLateBusinessLogs503(t *testing.T) {
 		io.WriteString(w, "private-late-success")
 	}))
 	w = httptest.NewRecorder()
-	started = time.Now()
-	h.ServeHTTP(w, httptest.NewRequest("GET", "/healthz", nil))
-	if w.Code != 503 || time.Since(started) > 100*time.Millisecond || strings.Contains(w.Body.String(), "private-late-success") {
-		t.Fatal("late business escaped boundary", w)
+	returned := make(chan struct{})
+	go func() { defer close(returned); h.ServeHTTP(w, httptest.NewRequest("GET", "/healthz", nil)) }()
+	time.Sleep(125 * time.Millisecond)
+	select {
+	case <-returned:
+		t.Fatal("slow business ended before completion")
+	default:
 	}
 	releaseWork()
 	awaitTransportSignal(t, exited, "business handler exit")
+	awaitTransportSignal(t, returned, "slow business response")
+	if w.Code != 200 || w.Body.String() != "private-late-success" {
+		t.Fatal("slow response lost", w)
+	}
 	records = apiLogRecords(t, filepath.Join(s.App.DataDir, "logs", "api-calls.jsonl"), 2)
-	if records[1].HTTPStatus != 503 {
-		t.Fatal("late audit mislabeled actual503", records)
+	if records[1].HTTPStatus != 200 || !records[1].BudgetBreached || records[1].RequestID == 0 || records[1].DurationMS < 75 {
+		t.Fatal("slow success not tracked accurately", records)
 	}
 }
+func TestSlowMCPDispatchPreservesResultAndContext(t *testing.T) {
+	f := newTrackingFixture(t)
+	// A real tool handler runs inside the production receiving middleware,
+	// so restoring its former 80 ms deadline also makes this assertion fail.
+	mcp.AddTool(f.server.MCP, &mcp.Tool{Name: "slow_dispatch_fixture", Description: "Slow useful dispatch fixture"}, func(ctx context.Context, _ *mcp.CallToolRequest, _ Empty) (*mcp.CallToolResult, map[string]any, error) {
+		time.Sleep(125 * time.Millisecond)
+		if ctx.Err() != nil {
+			t.Error("latency canceled tool dispatch", ctx.Err())
+		}
+		return nil, map[string]any{"value": "slow useful result"}, nil
+	})
+	result, _, _, err := trackingCall(&http.Client{Timeout: 2 * time.Second}, f.http.URL, f.token, "slow_dispatch_fixture", map[string]any{})
+	if err != nil || result["isError"] == true {
+		t.Fatal("slow MCP dispatch failed", err, result)
+	}
+	data := result["structuredContent"].(map[string]any)
+	if data["value"] != "slow useful result" {
+		t.Fatal("lost useful tool response", data)
+	}
+}
+
 func TestMCPActualSubscriptionListenHandshakeAndCancellation(t *testing.T) {
 	subscriptionListenHandshake(t)
 }
