@@ -509,6 +509,10 @@ func (g *GitHub) SyncIndex(ctx context.Context, repo domain.Repository, full boo
 	return items, *observed, nil
 }
 func (g *GitHub) ItemDetail(ctx context.Context, item domain.Item) (domain.Item, error) {
+	return g.itemDetail(ctx, item, true)
+}
+
+func (g *GitHub) itemDetail(ctx context.Context, item domain.Item, history bool) (domain.Item, error) {
 	ctx, observed := observeReads(ctx, g.now())
 	var i ghIssue
 	if _, err := g.get(ctx, fmt.Sprintf("/repos/%s/issues/%d", item.Repository, item.Number), &i); err != nil {
@@ -520,8 +524,10 @@ func (g *GitHub) ItemDetail(ctx context.Context, item domain.Item) (domain.Item,
 	if item.Kind == "pr" {
 		i.Pull = json.RawMessage(`{}`)
 	}
-	v, err := g.syncItem(ctx, domain.Repository{ID: item.Repository}, i)
-	v.DetailSyncedAt = *observed
+	v, err := g.syncItemParts(ctx, domain.Repository{ID: item.Repository}, i, history)
+	if history {
+		v.DetailSyncedAt = *observed
+	}
 	if v.Kind == "pr" {
 		v.ReviewObservedAt = *observed
 	}
@@ -529,6 +535,10 @@ func (g *GitHub) ItemDetail(ctx context.Context, item domain.Item) (domain.Item,
 }
 
 func (g *GitHub) syncItem(ctx context.Context, repo domain.Repository, i ghIssue, force ...bool) (domain.Item, error) {
+	return g.syncItemParts(ctx, repo, i, true, force...)
+}
+
+func (g *GitHub) syncItemParts(ctx context.Context, repo domain.Repository, i ghIssue, history bool, force ...bool) (domain.Item, error) {
 	ctx = g.Operation(ctx, nil, false)
 	scope, err := g.Scope(ctx)
 	if err != nil {
@@ -558,28 +568,30 @@ func (g *GitHub) syncItem(ctx context.Context, repo domain.Repository, i ghIssue
 		if pr.Merged {
 			v.State = "merged"
 		}
-		for _, part := range []struct{ path, kind string }{{fmt.Sprintf("/pulls/%d/reviews", i.Number), "review"}, {fmt.Sprintf("/pulls/%d/comments", i.Number), "review-comment"}} {
-			a, e := g.activities(ctx, path+part.path+"?per_page=100", part.kind)
-			if e != nil {
-				return domain.Item{}, e
+		if history {
+			for _, part := range []struct{ path, kind string }{{fmt.Sprintf("/pulls/%d/reviews", i.Number), "review"}, {fmt.Sprintf("/pulls/%d/comments", i.Number), "review-comment"}} {
+				a, e := g.activities(ctx, path+part.path+"?per_page=100", part.kind)
+				if e != nil {
+					return domain.Item{}, e
+				}
+				v.Activity = append(v.Activity, a...)
 			}
-			v.Activity = append(v.Activity, a...)
+			signature, _ := json.Marshal(struct{ Head, Base ghBranch }{pr.Head, pr.Base})
+			commitKey := fmt.Sprintf("commits:%s:%s:%d:%s", scope, repo.ID, i.Number, signature)
+			var commits []domain.Activity
+			cached, ok := g.CachedBlob(commitKey)
+			if (len(force) > 0 && force[0]) || !pr.complete() || !ok || json.Unmarshal(cached, &commits) != nil {
+				commits, e = g.activities(ctx, fmt.Sprintf("%s/pulls/%d/commits?per_page=100", path, i.Number), "commit")
+				if e != nil {
+					return domain.Item{}, e
+				}
+				if pr.complete() {
+					b, _ := json.Marshal(commits)
+					g.CacheBlob(commitKey, b, 0)
+				}
+			}
+			v.Activity = append(v.Activity, commits...)
 		}
-		signature, _ := json.Marshal(struct{ Head, Base ghBranch }{pr.Head, pr.Base})
-		commitKey := fmt.Sprintf("commits:%s:%s:%d:%s", scope, repo.ID, i.Number, signature)
-		var commits []domain.Activity
-		cached, ok := g.CachedBlob(commitKey)
-		if (len(force) > 0 && force[0]) || !pr.complete() || !ok || json.Unmarshal(cached, &commits) != nil {
-			commits, e = g.activities(ctx, fmt.Sprintf("%s/pulls/%d/commits?per_page=100", path, i.Number), "commit")
-			if e != nil {
-				return domain.Item{}, e
-			}
-			if pr.complete() {
-				b, _ := json.Marshal(commits)
-				g.CacheBlob(commitKey, b, 0)
-			}
-		}
-		v.Activity = append(v.Activity, commits...)
 		checksObj := struct {
 			Total int               `json:"total_count"`
 			Runs  []json.RawMessage `json:"check_runs"`
@@ -624,6 +636,10 @@ func (g *GitHub) syncItem(ctx context.Context, repo domain.Repository, i ghIssue
 		}
 		v.Checks, _ = json.Marshal(map[string]any{"checks": checksObj.Runs, "statuses": statuses})
 		g.EnrichPullRequest(ctx, &v)
+	}
+	if !history {
+		v.Revision = v.ContentRevision()
+		return v, nil
 	}
 	comments, e := g.activities(ctx, fmt.Sprintf("%s/issues/%d/comments?per_page=100", path, i.Number), "comment")
 	if e != nil {

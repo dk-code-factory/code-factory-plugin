@@ -1093,6 +1093,16 @@
         {
           "path": "internal/providers/github.go",
           "purpose": "Current sync-inbox implementation or fixture/build dependency."
+        },
+        {
+          "path": "internal/providers/github_facets.go",
+          "anchor": "func RefreshItemState(",
+          "purpose": "Optional current-state facet reads omit activity history while preserving explicit complete-detail reads and source compatibility."
+        },
+        {
+          "path": "internal/factory/github_facets.go",
+          "anchor": "func (s *Service) detailFacetsDue(",
+          "purpose": "Rule/work/viewer-aware history selection and accepted-observation checkpoints retain independent current-state and full-history freshness."
         }
       ],
       "tests": [
@@ -1591,6 +1601,92 @@
           "purpose": "Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.",
           "scenarios": [
             "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_facets_test.go",
+          "anchor": "func TestItemStateSeparatesMutableFacetsFromFullHistory(",
+          "purpose": "Actual managed HTTP counts distinguish five-request current-state reads from complete history, separate composite cache identities, unchanged-timestamp CI changes, live errors and changed-head promotion.",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/providers/github_facets_test.go",
+          "anchor": "func TestItemStateFallbackRetainsCompleteSourceContract(",
+          "purpose": "Sources without the optional current-state capability retain complete detail and activity through direct and cached adapters.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_facets_test.go",
+          "anchor": "func TestRoutineFacetsReduceHTTPWithoutThreeSecondAmplification(",
+          "purpose": "Real managed HTTP refresh reads five current-state endpoints once across ten three-second passes, repeats mutable state at its cadence, and later full history discovers missed discussion without promoting its timestamp early.",
+          "scenarios": [
+            "S2",
+            "S4",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/github_facets_test.go",
+          "anchor": "func TestRoutineFacetsPromoteHistoryForRulesWorkAndViewers(",
+          "purpose": "A newly applicable discussion rule, retained work or recent viewer promotes complete history despite a fresh current-state checkpoint; discussion rules observe current activity.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/github_facets_test.go",
+          "anchor": "func TestRoutineFacetCheckpointRequiresAcceptedSuccessfulObservation(",
+          "purpose": "Component failures, changed saved observations and cancellation cannot advance facet checkpoints or reverse a concurrent webhook edit.",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/github_facets_test.go",
+          "anchor": "func TestRoutineStateRuleRefreshesHistoryBeforeQueuingWork(",
+          "purpose": "A matching CI transition promotes live full history before queuing work, including an owner-confirmed rule enabled during provider I/O; the next three-second pass performs no duplicate refresh.",
+          "scenarios": [
+            "S2",
+            "S4",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/github_facets_test.go",
+          "anchor": "func TestRoutineFacetEnrichmentErrorRetainsSavedDiagnostics(",
+          "purpose": "A real GraphQL failure remains visible on the saved PR without replacing successful metadata or freshness; repeated polls honor retry and a later successful read clears the error.",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/github_facets_test.go",
+          "anchor": "func TestFreshFacetSelectionDoesNotDecodeRetainedQueue(",
+          "purpose": "Fresh retained work still requires full history when due, while allocation counts for selecting freshness remain independent of 512 queued 32 KiB event details through small transactional runtime records.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/github_facets_test.go",
+          "anchor": "func TestRoutineFacetRecoveryUsesDurableRoutingBaseline(",
+          "purpose": "A SQLite fault aborts routing after a partial item commit; an owner-confirmed CI rule then requires live full history against the old durable routing baseline before one event queues, with20 total HTTP requests.",
+          "scenarios": [
+            "S2",
+            "S4",
+            "S5"
           ]
         }
       ],
@@ -3352,7 +3448,7 @@
         {
           "path": "web/tests/wrapper.spec.ts",
           "anchor": "question pages retain exact requests beyond the first page",
-          "purpose": "Navigate to requests 51\u201355 and deliver the exact second-page question identity and free-text answer.",
+          "purpose": "Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.",
           "scenarios": [
             "S1",
             "S2"

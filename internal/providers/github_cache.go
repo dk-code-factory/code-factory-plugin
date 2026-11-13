@@ -170,6 +170,10 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	// Enrichment may return partial data with its own visible error. Do not
 	// promote that incomplete observation into a successful cached result.
 	switch v := out.(type) {
+	case *GitHubItemState:
+		if v.PR != nil && v.PR.Error != "" {
+			return nil
+		}
 	case *domain.Item:
 		if v.PR != nil && v.PR.Error != "" {
 			return nil
