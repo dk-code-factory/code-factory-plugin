@@ -41,6 +41,9 @@ func WithGitHubRead(ctx context.Context, mode GitHubReadMode) context.Context {
 }
 
 func (g *GitHub) CacheScope(ctx context.Context) (string, error) {
+	if pinned, _ := ctx.Value(githubReadCredentialKey{}).(*operation); pinned != nil && pinned.client == g && ctx.Value(operationKey{}) == pinned {
+		return g.credentialCacheScope(ctx, pinned.token)
+	}
 	if g.publicRead {
 		return g.credentialCacheScope(ctx, "")
 	}
@@ -49,6 +52,26 @@ func (g *GitHub) CacheScope(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return g.credentialCacheScope(ctx, token)
+}
+
+type githubReadCredentialKey struct{}
+
+// PinGitHubRead starts one read with the same credentials for cache identities
+// and HTTP requests. A later read resolves credentials again. Cache hits need
+// no dispatch lock after this operation's credentials have been resolved.
+func PinGitHubRead(ctx context.Context, source GitHubSource, ledger *store.Store) (context.Context, error) {
+	g := LiveGitHub(source)
+	if g == nil {
+		return ctx, nil
+	}
+	ctx = g.StartOperation(ctx, ledger, false)
+	op := ctx.Value(operationKey{}).(*operation)
+	// The new operation is private until returned; resolving it cannot race
+	// with another caller or wait behind an unrelated HTTP dispatch.
+	if err := g.resolve(ctx, op); err != nil {
+		return ctx, err
+	}
+	return context.WithValue(ctx, githubReadCredentialKey{}, op), nil
 }
 
 var _ GitHubSource = (*GitHub)(nil)

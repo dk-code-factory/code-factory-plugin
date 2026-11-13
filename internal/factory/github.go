@@ -139,6 +139,7 @@ func observations(item domain.Item) []Event {
 // Poll reads saved provider observations. Initial import establishes a baseline;
 // later newly discovered PRs produce observable current state, never past events.
 func (s *Service) Poll(ctx context.Context) error {
+	ctx = context.WithValue(ctx, ciRefreshContext{}, &ciRefreshBatch{Snapshots: map[ciRefreshKey]*ciRefreshSnapshot{}})
 	at, offset := s.Now(), 0
 	for {
 		ds, err := store.DueRecordsPage[delivery](ctx, s.Store, "factory-delivery", at, 64, offset)
@@ -507,6 +508,12 @@ func (p githubPR) item(repo string) domain.Item {
 	return i
 }
 func (s *Service) processDelivery(ctx context.Context, d delivery) error {
+	if batch, _ := ctx.Value(ciRefreshContext{}).(*ciRefreshBatch); batch != nil && !isCIDelivery(d.Type) {
+		// A lifecycle or discussion delivery can replace the context retained by
+		// a previous CI read, even when it reports the same issue timestamp.
+		batch.Snapshots = map[ciRefreshKey]*ciRefreshSnapshot{}
+		batch.Bytes = 0
+	}
 	var p struct {
 		Action     string `json:"action"`
 		Repository struct {
@@ -566,6 +573,7 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 		return s.Store.Put(ctx, "factory-delivery", d.ID, d, "")
 	}
 	items := []domain.Item{}
+	ciReads := map[string]ciRefreshRead{}
 	if p.PR.Number > 0 {
 		items = append(items, p.PR.item(r.ID))
 	} else if p.Issue.PR != nil && p.Issue.Number > 0 {
@@ -617,13 +625,14 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 		candidates := items
 		items = []domain.Item{}
 		for _, i := range candidates {
-			fresh, e := s.App.GitHub.PullRequest(providers.WithGitHubRead(ctx, providers.RequireLive), r.ID, i.Number)
+			fresh, read, e := s.refreshCI(ctx, d, r.ID, i.Number, head)
 			if e != nil {
 				return e
 			}
 			// Saved head metadata can change while provider reads are in flight.
 			if head != "" && fresh.Head == head {
 				items = append(items, fresh)
+				ciReads[fresh.ID] = read
 			}
 		}
 	}
@@ -640,7 +649,8 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 	if err != nil {
 		return err
 	}
-	return s.Store.Write(ctx, func(t *store.Tx) error {
+	applied := map[string]ciRefreshVersion{}
+	err = s.Store.Write(ctx, func(t *store.Tx) error {
 		var current delivery
 		if e := t.Get("factory-delivery", d.ID, &current); e != nil {
 			return e
@@ -652,6 +662,11 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 		for _, i := range items {
 			var old domain.Item
 			if e := t.Get("item", i.ID, &old); e == nil {
+				if read := ciReads[i.ID]; read.Reused && (old.Head != i.Head || ciVersion(old) != read.Snapshot.Saved) {
+					// Another observer replaced the saved snapshot after the cache
+					// lookup. Leave this delivery pending for a fresh pass.
+					return errObservationBusy
+				}
 				if i.Activity == nil || d.Type == "check_run" || d.Type == "check_suite" || d.Type == "workflow_run" || d.Type == "status" {
 					i.Activity = old.Activity
 				}
@@ -729,6 +744,7 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 			if e := t.Put("item", i.ID, i); e != nil {
 				return e
 			}
+			applied[i.ID] = ciVersion(i)
 			if old.ID == "" || old.Revision != i.Revision {
 				if e := t.Event("item.changed", i.ID, map[string]string{"id": i.ID}); e != nil {
 					return e
@@ -811,6 +827,15 @@ func (s *Service) processDelivery(ctx context.Context, d delivery) error {
 		d.Error = ""
 		return t.Put("factory-delivery", d.ID, d)
 	})
+	if err == nil {
+		for id, version := range applied {
+			if snapshot := ciReads[id].Snapshot; snapshot != nil {
+				snapshot.Saved = version
+				snapshot.Applied = true
+			}
+		}
+	}
+	return err
 }
 
 func newerActivity(retained, incoming string) bool {

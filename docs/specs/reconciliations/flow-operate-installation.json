@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "c44fa7c7038a250be1cda654369510d9eab30435197ba0f2d04d11f862d9cf93",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "49f29e79617467d917b0ce940aef926e204c6307aa606316d5137a51479ed297",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions.",
-    "implementation": "Reviewed the pinned change against operate-installation implementation mappings. Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified."
+    "kind": "refactor",
+    "description": "Service installation, upgrade rollback and cleanup remain unchanged; the new factory helper is included by existing build/release suites.",
+    "implementation": "Service installation, upgrade rollback and cleanup remain unchanged; the new factory helper is included by existing build/release suites. Reassessed exactd485 integration by inspecting all changed communication implementation/assertions, UI/flow/catalog entries and generated bundles. All36 upstreamchanged files other than semantically mergedcatalog are byte-identical to target; every targetcatalogflow row and allsix communicationassertions/consumingUI entries are preserved. Four ownedGo files remain byte-identical to clean-reviewed f177 implementation. Authoredcatalog adds only ownCI2implementation/9tests per sync/route; AGENTS/CIpolicy75ms/cancellation,2000allowance and Makebatch remain target.",
+    "tests": "test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall checks stable owner identity, database backups, failed-upgrade rollback and uninstall preservation. Read actual newcommunication assertions before review: message deduplication/redaction, suspended exactquestion reply, invalid/duplicateanswer rejection, no proposalconfirmation or transcriptanswerleak; nativecatalog resume preserves legacy/newtools; payloadbounds/sessionisolation/expiry; legacyintentionalmessage and changed-only complete settingsdiff; browserplain escaping/hiddennarration and explicitunselected exactquestionanswer cannot approveproposal. The sequential durableworker first runs allnine webhook regressions plus four configurationcommunication Go race tests, then two exactnewcommunication browserfixtures, and only proceeds to required reviewedCLI if both focus phases pass. These comments describe inspected assertions and the execution dependency; actualcurrentphase exits/suite results are retained by the worker/CLI. Historical focused/CLI/review/mutation evidence remains explicitly historical."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.551
+      "seconds": 36.156
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 84.171
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.412
+      "seconds": 3.632
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.971
+      "seconds": 3.03
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.248
+      "seconds": 21.263
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.663
+      "seconds": 0.662
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.245
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 675.847
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 456.549
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.815
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 61.512
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "ce81cea95ce349ece3def1ea299b7d687a12515177604fad955373638fa9f16b",
+    "flow:operate-installation": "9785681b0c82fd5771cff8e40818688b20bba009956d901de169164cbaa56ac6",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "3d8e79341fc2093623bc67acd48ed8ac9e74f8c3f9808dbdcfd6a81a31a40e59",
-    "ui:P-BROWSER-LAB": "3d81ee13eb25c7041ae64ac52dce2b575ff9b35da3a79110e446ecd5ab896f84",
-    "ui:PAGE-BROWSER-LAB": "22423ec5d16bfe4d378c00f9f7f6fcf874fc71ba3be1ce70661606dbc91da188",
-    "ui:W-BROWSER-LAB": "c6047c261a98ae88e9d4cf3a30b6be073a367bc67a4bc00c77a6449eae4e4724"
+    "ui:C-BROWSER-LAB": "3264edd4ef9655c1e16ed655c73d0e69b88f9da098a17ae7225df50ba1d55c92",
+    "ui:P-BROWSER-LAB": "48cf7804cd5e570440cd404e80bdf1122da7b464cbe9f4714f60a0da1d35ee9a",
+    "ui:PAGE-BROWSER-LAB": "9fc7c42fd9d973cc2dbf081599d3edea3e28cd8b77b8d7e12d93c08abfb51b0a",
+    "ui:W-BROWSER-LAB": "5bb2ec463b6c2beec3daae5bf498b41ba531f8e51acae9b1a8db24d13f63ad12"
   }
 }

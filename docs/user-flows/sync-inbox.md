@@ -20,6 +20,16 @@ The private owner connection is established. Application data starts clean in th
 
 5. Normalize comments, reviews, threads and lifecycle updates across webhook and polling sources.
 
+Queued CI deliveries for the same repository, PR and head may share a successful
+current observation within one polling pass. Each delivery still commits its own
+processing, and unchanged CI observations do not duplicate rule actions. Only
+deliveries received strictly before that provider read began may share it; later
+or equal-time deliveries, changed saved observations or credentials, and an
+intervening lifecycle or discussion delivery require another live read. The
+live read and its cache identity share one pinned credential resolution, including
+when authentication changes during the read. Failed reads remain pending for
+retry, and no shared snapshot survives the polling pass.
+
 ## Alternatives and recovery
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees. A busy conversation defers only its own ingestion; polling continues discovering independent changes in the same repository and other repositories, including their quiet deadlines. Deferred baseline observations stay historical, deferred webhooks remain durable without artificial failure backoff, and cancellation stops the poll. Changed webhook source commits a metadata-only inbox notification; redelivery and unchanged source do not create extra notifications.
@@ -82,6 +92,8 @@ flowchart TD
 - [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Current sync-inbox implementation or fixture/build dependency.
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Current sync-inbox implementation or fixture/build dependency.
 - [internal/providers/github.go](../../internal/providers/github.go) — Current sync-inbox implementation or fixture/build dependency.
+- [internal/factory/github_ci.go](../../internal/factory/github_ci.go) — Bounded polling-pass CI snapshot reuse with strict delivery/read ordering, credential and saved-observation isolation. (`func (s *Service) refreshCI(`)
+- [internal/providers/github_source.go](../../internal/providers/github_source.go) — Pins one read operation so HTTP Authorization and query/batch cache identities use the same resolved credentials. (`func PinGitHubRead(`)
 
 ## Test references
 
@@ -146,6 +158,15 @@ flowchart TD
 - [internal/providers/github_transport_cache_test.go](../../internal/providers/github_transport_cache_test.go) — `func TestGitHubCacheGenerationFailuresCannotReturnCachedSuccess(`; S3. A real SQLite trigger rejecting generation writes blocks subsequent same-client response/query cache hits; malformed persisted generation data fails closed after client restart without contacting GitHub. Mixed GraphQL auth/rate generation-write failure returns cache failure before rate classification and blocks that client query hits.
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestGitHubDefaultBudgetAndExplicitOverride(`; S3. Application policy defaults to 2,000 request attempts per hour while retaining an explicit 600-request override.
 - [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubDefaultBudgetReportingAndAdmission(`; S3. Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBurstSharesLiveRequestsAcrossDeliveryPages(`; S4. Seventy queued mixed CI deliveries across two pages share eight real HTTP requests for two current-head PRs; every delivery commits, unchanged CI queues once per PR, and a later poll reads live and queues a changed CI result.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchRefreshesDeliveriesReceivedDuringRead(`; S4. A delivery arriving during the first provider read forces another four-request live read in the same polling pass.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchEqualArrivalTimesReadLive(`; S4. Deliveries whose receipt time equals the read start never reuse an ambiguously ordered observation.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchFailureRemainsDurableAndRetryable(`; S3, S4. Failed reads remain pending with durable retry state and are not cached; a later successful retry batch shares one live observation.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchSeparatesHeads(`; S4. An old-head CI event cannot reverse a lifecycle head update; a new-head event reads live.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchSeparatesCredentialsAndSavedObservations(`; S4. Changed credentials and a concurrently replaced saved item each force another live provider read.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchWithoutHeadNeverSharesSnapshot(`; S4. Missing-head deliveries force separate live reads and never apply CI without a verified head association.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchInvalidatesAfterLifecycleWithUnchangedVersion(`; S4. An intervening lifecycle delivery leaves the head and saved version unchanged, yet the next queued CI delivery must make four fresh HTTP requests and observe changed CI.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchPinsCredentialScopeToLiveRead(`; S4. A credential resolver returning A then B cannot label B HTTP observations as A; return to A safely reuses only an A-authenticated live read.
 
 ## Verification and gaps
 

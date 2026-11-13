@@ -28,6 +28,16 @@ The private owner connection is established. Application data starts clean in th
 
 9. Inspect bounded event, webhook-delivery, batch and ordered-rule archive pages without starting work.
 
+Already queued CI deliveries may share one successful live observation per
+repository, PR and head within the same polling pass, with separate durable
+processing for every delivery. Reuse requires receipt strictly before the live
+read started and the same credentials and saved observation. The live read and
+its cache identity use one pinned credential resolution, even if authentication
+changes during the read. Later arrivals,
+ambiguous equal timestamps and intervening lifecycle or discussion events require
+fresh reads. Failed reads retain their delivery retry, and subsequent polling
+passes refresh CI again so newly observable changes still reach matching rules.
+
 ## Alternatives and recovery
 
 Read-only inspection does not launch a model turn. Begin with 50 records and offer 100 or 200 per page, previous/next navigation and manual refresh. Selecting a record reveals compact metadata and a bounded preview, including truncation and original byte counts where available; rule metadata lists are bounded and report total counts. Read full rule instructions through Configuration. Kind and size changes reset selection and offset. Hide the unavailable same-query page and selection on a pending or failed refresh; a changed query must never show the previous kind's records. Discard late superseded responses and reread the archive when reopening Events. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Both retry and discard require a successful history lookup: unavailable history preserves the uncertain claim, confirmed delivery is reconciled as delivered, and only confirmed absence permits either choice. Recovery itself starts no turn. Explicit cleanup preserves dirty worktrees. A busy conversation must not delay independent event discovery or quiet deadlines in its repository or other repositories. Defer its own pending webhook or baseline without losing it, inventing historical work or treating contention as a provider failure.
@@ -114,6 +124,8 @@ flowchart TD
 - [internal/transport/factory_events.go](../../internal/transport/factory_events.go) — Page each archive independently and return bounded compact record metadata. (`func factoryEvents(`)
 - [internal/store/reads.go](../../internal/store/reads.go) — Select bounded compact archive records before Go decoding rather than reading retained full-history payloads. (`func (s *Store) FactoryArchive(`)
 - [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime. (`func Wrap(`)
+- [internal/factory/github_ci.go](../../internal/factory/github_ci.go) — Bounded polling-pass CI snapshot reuse with strict delivery/read ordering, credential and saved-observation isolation. (`func (s *Service) refreshCI(`)
+- [internal/providers/github_source.go](../../internal/providers/github_source.go) — Pins one read operation so HTTP Authorization and query/batch cache identities use the same resolved credentials. (`func PinGitHubRead(`)
 
 ## Test references
 
@@ -165,6 +177,15 @@ flowchart TD
 - [internal/factory/webhook_budget_test.go](../../internal/factory/webhook_budget_test.go) — `func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(`; S1. Explicit caller cancellation reports uncertainty during held secret/store access, prevents late persistence and preserves safe exact-id redelivery.
 - [internal/factory/api_performance_test.go](../../internal/factory/api_performance_test.go) — `func TestWebhookAPILatency(`; S1. Twenty isolated successful signed webhook acknowledgements each retain a durable delivery before202 and satisfy the75ms verification gate; deliberate slow/canceled paths are separate correctness fixtures.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `an open archive retires its page and selection when the daemon changes`; S9. Loaded archive replacement observes daemon identity, hides old page/selection while pending, then displays current records without manual refresh, preserving query controls and navigation without chat.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBurstSharesLiveRequestsAcrossDeliveryPages(`; S2. Seventy queued mixed CI deliveries across two pages share eight real HTTP requests for two current-head PRs; every delivery commits, unchanged CI queues once per PR, and a later poll reads live and queues a changed CI result.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchRefreshesDeliveriesReceivedDuringRead(`; S2. A delivery arriving during the first provider read forces another four-request live read in the same polling pass.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchEqualArrivalTimesReadLive(`; S2. Deliveries whose receipt time equals the read start never reuse an ambiguously ordered observation.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchFailureRemainsDurableAndRetryable(`; S2. Failed reads remain pending with durable retry state and are not cached; a later successful retry batch shares one live observation.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchSeparatesHeads(`; S2. An old-head CI event cannot reverse a lifecycle head update; a new-head event reads live.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchSeparatesCredentialsAndSavedObservations(`; S2. Changed credentials and a concurrently replaced saved item each force another live provider read.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchWithoutHeadNeverSharesSnapshot(`; S2. Missing-head deliveries force separate live reads and never apply CI without a verified head association.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchInvalidatesAfterLifecycleWithUnchangedVersion(`; S2. An intervening lifecycle delivery leaves the head and saved version unchanged, yet the next queued CI delivery must make four fresh HTTP requests and observe changed CI.
+- [internal/factory/github_ci_test.go](../../internal/factory/github_ci_test.go) — `func TestCIWebhookBatchPinsCredentialScopeToLiveRead(`; S2. A credential resolver returning A then B cannot label B HTTP observations as A; return to A safely reuses only an A-authenticated live read.
 
 ## Verification and gaps
 
