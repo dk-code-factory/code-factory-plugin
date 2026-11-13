@@ -14,6 +14,36 @@ import (
 	"codefactory/internal/store"
 )
 
+func TestGitHubDefaultBudgetAndExplicitOverride(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		configured int
+		want       int
+	}{
+		{"default", 0, 2000},
+		{"explicit override", 600, 600},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a, ctx := fixture(t)
+			c, err := a.Config(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			c.GitHubRequestsPerHour = tc.configured
+			if err := a.SaveConfig(ctx, c); err != nil {
+				t.Fatal(err)
+			}
+			if err := a.EnableGitHubUsage(ctx); err != nil {
+				t.Fatal(err)
+			}
+			status, err := a.GitHubStatus(ctx)
+			if err != nil || status.Budget != tc.want {
+				t.Fatalf("budget = %d, want %d; err = %v", status.Budget, tc.want, err)
+			}
+		})
+	}
+}
+
 func TestNotificationReviewHintsAreScopedReadOnlyAndRestartSafe(t *testing.T) {
 	a, ctx := fixture(t)
 	var requests atomic.Int32

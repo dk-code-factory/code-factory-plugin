@@ -26,7 +26,7 @@ func (a *App) EnableGitHubUsage(ctx context.Context) error {
 		}
 		budget := c.GitHubRequestsPerHour
 		if budget == 0 {
-			budget = 600
+			budget = 2000
 		}
 		reserve := 100
 		if c.GitHubReserve != nil {

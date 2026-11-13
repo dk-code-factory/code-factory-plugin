@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
-  "fingerprint": "500f9582dbe6d5176d4893f1a8766391a4a8a762806b4fda6df96feae0e4c517",
+  "base": "49b774a8cab46761c64480270cf6b3e069743193",
+  "fingerprint": "74b3e8bc96e0e97650f88e321dc8a1239e902c082d3292fabe715c1ac3c48d62",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S1/S2 slow management now waits through store contention and completes; only actual caller/service cancellation prevents late subscription changes. Callback proof remains separately bounded.",
-    "implementation": "Shared response observation does not cancel SDK methods; events request-origin cancellation still propagates across detached old/new protocol contexts.",
-    "tests": "Read both protocol versions and subscribe/unsubscribe cases in TestEventStoreAdmissionPreservesRequestCancellation:125ms slow operations change state exactly once while deliberately canceled calls preserve the original subscription."
+    "kind": "refactor",
+    "description": "Reviewed receive-notifications scenarios S1, S2, S3, S4 against unchanged authored flow and mapped dependencies. The default provider allowance is changed in sync-inbox S3; this flow has no direct behavior, authority, lifecycle or scenario change and is selected through shared verification dependencies.",
+    "implementation": "Checked receive-notifications against the bounded fallback diff in internal/app/github_usage.go and internal/providers/github_usage.go. No scheduler, native session, event, authentication, UI or transport mutation logic changes; existing owned source anchors remain valid. Also reviewed native Make ownership export: five per-field Python helpers become one complete private batch with the same literal values, while the hosted verification deadline rises from 45 to 60 minutes. Product runtime behavior is unaffected by that operational change.",
+    "tests": "For receive-notifications, existing assertion mappings and open gaps remain intact. New default-policy and request-2000/2001 tests exercise the shared dependency; required mapped fixture suites are rerun without claiming new real-host or unrelated scenario coverage. Batch-specific tests verify native caller/worker export counts, raw bytes, private permissions, legacy equivalence and cleanup after a failed partial write; existing lifecycle and hostile-path assertions remain authoritative."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.097
+      "seconds": 70.388
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.224
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 677.862
+      "seconds": 658.869
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 497.942
+      "seconds": 444.887
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.755
+      "seconds": 4.796
     },
     {
       "command": [
@@ -69,16 +69,16 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.85
+      "seconds": 61.923
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "56e8229b3873caf45e156b89ff5c0b152df772d9719e2bd39421696d0778f7c2",
-    "term:attention-request": "73984fc21eb95722b7ed8b6aa86b4cb35b6e7ad0549a4a104c974d9667abd4d7",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:host": "ee1b68f918767b4c8e303634da6fe67fb81b3d85b90f05e82d5c14211a745d97",
-    "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
-    "term:subscription": "87e899717051b06fffbc8073e3615c0e28a862d6763aaffb6c56137a125b4f81",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b"
+    "flow:receive-notifications": "16979ecba7909e370054e69cf7f0e7e99c82fcbd278cdc4342b335ddf16b1041",
+    "term:attention-request": "4c7d7cb37fc9519d236979855f5a28d9b2bb63231973d556eecb5384aca955d8",
+    "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
+    "term:host": "7485127d9f66ced31cf4a8f4cd75f62757c0198b26a41bf13361f0cdbd9bacd7",
+    "term:known-limitation": "d24b615b373f9b9fd4e0b8ad8bd78ded4af9a1e74db85626f169df9cbe58458e",
+    "term:subscription": "16f7962f2ee1a7318f8434b64d09d7420f26879db617a660834f08f2742de3a0",
+    "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26"
   }
 }

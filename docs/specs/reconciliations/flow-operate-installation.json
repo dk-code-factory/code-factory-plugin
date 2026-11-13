@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
-  "fingerprint": "89722889493b614d2597daaedbfdff2ec6dea73e6c2b79958fe73ce4c68b330f",
+  "base": "49b774a8cab46761c64480270cf6b3e069743193",
+  "fingerprint": "6d4e797405bddcf6f9682b82abaf3ace65c46ff9be8b623ceaeff18b9c475e9d",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S4/S5 diagnostics now correlate threshold/completion metadata and retain slow/active/dropped counters while preserving successful request outcomes and existing private-log rotation.",
-    "implementation": "Read bounded latency observer queue, RequestID and ResponseDuration propagation into owner API/gateway records. Only safe route labels, normalized methods and numeric identities enter warnings. Threshold observation now runs independently of blocked wire I/O with synchronized once-only accounting; stream duration freezes only after the first data flush returns. Endpoint labels are bounded owned copies and method tokens are static, including admission-rejection diagnostics; every production classifier returns a fixed label and request identity remains a process-local uint64.",
-    "tests": "Read the before-completion warning assertion and blocked-sink/64-record saturation assertion; they establish correlation, successful final status, redaction, bounded memory and explicit overflow counts. Read TestSlowWireSignalsWhilePendingAndIncludesAcknowledgement: finite Write and stream Flush are held, active counters and threshold warning appear before release, then exact200/body and125ms duration survive. The blocked-sink parsed-request-line heap regression preserves all32numeric identities and useful endpoint/method labels while proving neither short metadata substring retains private megabyte request lines."
+    "kind": "refactor",
+    "description": "Reviewed operate-installation scenarios S1, S2, S3, S4, S5 against unchanged authored flow and mapped dependencies. The default provider allowance is changed in sync-inbox S3; this flow has no direct behavior, authority, lifecycle or scenario change and is selected through shared verification dependencies.",
+    "implementation": "Checked operate-installation against the bounded fallback diff in internal/app/github_usage.go and internal/providers/github_usage.go. No scheduler, native session, event, authentication, UI or transport mutation logic changes; existing owned source anchors remain valid. Also reviewed native Make ownership export: five per-field Python helpers become one complete private batch with the same literal values, while the hosted verification deadline rises from 45 to 60 minutes. Product runtime behavior is unaffected by that operational change.",
+    "tests": "For operate-installation, existing assertion mappings and open gaps remain intact. New default-policy and request-2000/2001 tests exercise the shared dependency; required mapped fixture suites are rerun without claiming new real-host or unrelated scenario coverage. Batch-specific tests verify native caller/worker export counts, raw bytes, private permissions, legacy equivalence and cleanup after a failed partial write; existing lifecycle and hostile-path assertions remain authoritative."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.141
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 35.571
+      "seconds": 36.343
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.097
+      "seconds": 70.388
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.109
+      "seconds": 3.412
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.548
+      "seconds": 2.589
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.185
+      "seconds": 21.447
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.202
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.663
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.202
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.224
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 677.862
+      "seconds": 658.869
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 497.942
+      "seconds": 444.887
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.755
+      "seconds": 4.796
     },
     {
       "command": [
@@ -156,36 +156,36 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.85
+      "seconds": 61.923
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "8215f2eac046b539196a8536a2ea56fb11e8e78c8a7502d6107c591194409d59",
-    "term:connection-submits": "d4e13d8d6fd26f7a72f5d77b2325daf1eca0fc72102faec1ac78de107881cb30",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:dependency-operation": "312e5dd6f1ddfdfc1ecea784922bfd8f66ef3d5869742388f43972b1aa3dfaa3",
-    "term:element-w-browser-lab-key-controls": "d1dc8eb6b7a9967474df0b40b4756fc68d04d0eb111671ce14d1b8d88bcaf350",
-    "term:element-w-browser-lab-location": "7b1d170eac2a84bf84b1f00499b6b233a2216d6a3bacfac39aea214d372fdd63",
-    "term:element-w-browser-lab-message": "72e74fe44e775fc45130b47936c683d5de5d343c50fa38467c06460a58a11051",
-    "term:element-w-browser-lab-navigate": "e8d1d98af2b7836b66bcd8f89387fb83c727bbe30df73a78ddd729fea37c72fb",
-    "term:element-w-browser-lab-refresh": "9f27cd525e3f199a8c040a0da6e3d78399252295d5b6f2c341e52ad41afb36f0",
-    "term:element-w-browser-lab-screenshot": "0c39d988bcf326732b66f1d0266f2999de1375401b79137f1c8f340cdc158fcb",
-    "term:element-w-browser-lab-scroll-up-down": "b4c09876170b7b61378fbb4477939188e638ec5af09f37094f0ad04239ae9eb4",
-    "term:element-w-browser-lab-send-text": "8b1d4d04299f29a2e06fba5788df47305753362e2697f4677081dfcf10578d15",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "9149693f51bbae30140e7d657106458eeef59b8e847a581f525e2dfae900fdfa",
-    "term:element-w-browser-lab-text-to-send": "8ddebdffc074797c4d9237eee792558f885b43e548d276ca4ce9cdaeeb94c842",
-    "term:element-w-browser-lab-url": "cf0620274830a77fe93f0c6e7c5fe503107cf542d2d34206a73f99cbfc0e1dd7",
-    "term:github-skill-source": "7fd7a75ab391d9f7cba0b42bf3c5eb93286b8cb5469713113fa710c174f2913b",
-    "term:owner": "2682dc63ff4d3ca6d82b42c261a7f276ad964e994b48a4ef4c8ef0dfc0ec34a8",
-    "term:ui-c-browser-lab": "3dc48f72542d82e96ccc7c5c7a3ee421ca1166ac46c6d4c89c356e6f09b2953a",
-    "term:ui-p-browser-lab": "8c0da77238e42874b4215e2fc4cd9fb10a4244c58e1a34d8eb6964270a3f69d2",
-    "term:ui-page-browser-lab": "5d1919bad914fbb7a2af15374ab9815f2dd9d5167b74e059ef41a1a56e224e89",
-    "term:ui-w-browser-lab": "3c9f629261ad98429ac379b806f76ed72d440343f0b666e1b032fb30d73afc0d",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
-    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe",
-    "ui:C-BROWSER-LAB": "a903fe58c72f830109f85c01be4c2e0b248eb77bf73e9404e37d83cd57979f2e",
-    "ui:P-BROWSER-LAB": "dea83c767de92c046aa834d7ffcda31c8e4ec2e5c34a6623e0410a55ddc9ff2e",
-    "ui:PAGE-BROWSER-LAB": "57c78fe65c8c1556e2b1a9705a295d68cafd436d1a80b8d8bc6fd967fec173ba",
-    "ui:W-BROWSER-LAB": "007e75c1288929bdd919ef1fd5863871bed0aa66527f99e6f45e6a6ee818705d"
+    "flow:operate-installation": "62e822988efd5b5887dfdfc78a0f41bed8bcfec3f1445b105956db41c382926a",
+    "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
+    "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
+    "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
+    "term:element-w-browser-lab-key-controls": "b6dd7fc82946aeb502aee913eafcb8a4a72c4c56ec75304bbb048a534cdecc54",
+    "term:element-w-browser-lab-location": "8012047279001cc2e8142c4b640084e5e0d1cb8b791cf185eeba6ed48ed632f4",
+    "term:element-w-browser-lab-message": "08d25bdda6de6ff08744659e561eedca339e9cac4e7257b5dada9da13b417a55",
+    "term:element-w-browser-lab-navigate": "d141de4a1e5c570f8346357018e01c47e6c484d56582533bc787a2b2b03170f7",
+    "term:element-w-browser-lab-refresh": "ecc85d7ac7c31a67d063078833883b9d1cbcd94a48df3ba8cac7ad3a3b298deb",
+    "term:element-w-browser-lab-screenshot": "7ac5e963d6e54b71fa42e36f8a2612e7f4a0d3df1fd7f612da23fe31efb74ffe",
+    "term:element-w-browser-lab-scroll-up-down": "5af3aec9e598dd42adb5f4bb7a0f1dff9afffa0c0819e5411239379523468ee7",
+    "term:element-w-browser-lab-send-text": "dc62ed76d1af81f578210f632c166d9d2f4832ac5cb01c7ce33a852fbcec5b84",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "5b0d0664bf706e9fcd01197b167a23009e08a44a502e381e6d403f8718f0a91f",
+    "term:element-w-browser-lab-text-to-send": "1cc04cc6c8c7d84865084e2f51bb79716670ba17fbb696ef8979ca0464b2728a",
+    "term:element-w-browser-lab-url": "13ee778203f355946b4f0b16590cddb33e7db4f2b4bdfb8c06c98c7a2decdbeb",
+    "term:github-skill-source": "b4a760695547b04551bcbc1213e31ff972ee79fe7373b43e19a678752d9faf7b",
+    "term:owner": "4e893062466b6f5f9858bc3eb6dfbc4a65e20f47c07d4f2821b7a323b1277fda",
+    "term:ui-c-browser-lab": "04572880b62253dfaef4696b55d465d49b34a4470b681001bc61d25eabaf3c4d",
+    "term:ui-p-browser-lab": "79c74b7d3c96f818e82cb1eb3ca4d51732d72f1e1fde01d75ee1b6c10e771522",
+    "term:ui-page-browser-lab": "badcef1d7cb7945b09e98b90726b9883585d07e9d9f724fbfa174fdc0f08f4c3",
+    "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
+    "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
+    "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
+    "ui:C-BROWSER-LAB": "929610f2fbd1238489b67ca9779843940899e08581bea35da6f575df1cd8fc68",
+    "ui:P-BROWSER-LAB": "23c3963917c3d49f9ffa6f2e2eff1601c337e711eaa3630d8d0640f402f4768d",
+    "ui:PAGE-BROWSER-LAB": "d0296e52927478f5102bbed10c4c420cb51b63070f1a8ee56c9d2f5d6b1d9ea3",
+    "ui:W-BROWSER-LAB": "7efe3b5c569b9e249e640a1533df503cb76adb2aed2448ca52ee9398c166e118"
   }
 }
