@@ -16,12 +16,15 @@ import (
 	"time"
 )
 
-func sharedComponentFixture(t *testing.T) (*CachedGitHub, func() *CachedGitHub, *time.Time, *string, map[string]int) {
+func sharedComponentFixture(t *testing.T, headers ...func(http.ResponseWriter, *http.Request)) (*CachedGitHub, func() *CachedGitHub, *time.Time, *string, map[string]int) {
 	t.Helper()
 	now, head := time.Now().UTC(), "head"
 	calls := map[string]int{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls[r.URL.Path]++
+		for _, set := range headers {
+			set(w, r)
+		}
 		if r.URL.Path == "/graphql" {
 			fmt.Fprintf(w, `{"data":{"repository":{"pullRequest":{"headRefOid":%q,"reviewDecision":"APPROVED","statusCheckRollup":{"state":"SUCCESS"}}}}}`, head)
 			return
@@ -55,6 +58,93 @@ func sharedComponentFixture(t *testing.T) (*CachedGitHub, func() *CachedGitHub, 
 		return g
 	}
 	return newClient(), newClient, &now, &head, calls
+}
+
+func TestGitHubCompositeKeepsShorterRESTComponentExpiry(t *testing.T) {
+	g, _, now, _, calls := sharedComponentFixture(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/repos/o/r/pulls/1" {
+			w.Header().Set("X-Poll-Interval", "60")
+		}
+	})
+	ctx := context.Background()
+	original := *now
+	if _, err := g.ReviewRequest(ctx, "o/r", 1); err != nil {
+		t.Fatal(err)
+	}
+	*now = original.Add(30 * time.Second)
+	if item, err := g.PullRequest(ctx, "o/r", 1); err != nil || item.PR.Error != "" || calls["/repos/o/r/pulls/1"] != 1 {
+		t.Fatal("second query did not reuse fresh REST data", item, calls, err)
+	}
+	entries, err := store.List[githubQueryEntry](ctx, g.state, "github-query-cache")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if !entry.Until.Equal(original.Add(time.Minute)) {
+			t.Fatal("query extended the component's shorter deadline", entry.Until)
+		}
+	}
+	*now = original.Add(time.Minute + time.Second)
+	if item, err := g.PullRequest(ctx, "o/r", 1); err != nil || item.PR.Error != "" || calls["/repos/o/r/pulls/1"] != 2 || calls["/graphql"] != 1 {
+		t.Fatal("expired REST data was retained or fresh GraphQL data was repeated", item, calls, err)
+	}
+}
+
+func TestGitHubCompositeUnmanagedIdentityHonorsExpiryAndInvalidation(t *testing.T) {
+	ctx := context.Background()
+	now, login, calls, reject := time.Now().UTC(), "first", 0, false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if reject {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		fmt.Fprintf(w, `{"login":%q}`, login)
+	}))
+	defer server.Close()
+	source := NewGitHub()
+	source.BaseURL, source.Client = server.URL, server.Client()
+	source.Token = func(context.Context) (string, error) { return "credential", nil }
+	source.clock = func() time.Time { return now }
+	g := NewCachedGitHub(source)
+	g.clock = func() time.Time { return now }
+	original := now
+	if user, err := g.User(ctx); err != nil || user != "first" || calls != 1 {
+		t.Fatal(user, calls, err)
+	}
+	now = original.Add(time.Minute)
+	var user string
+	if err := g.query(ctx, "other-identity-query", "identity", nil, &user, 5*time.Minute, func(ctx context.Context) (err error) {
+		user, err = source.User(ctx)
+		return err
+	}); err != nil || user != "first" || calls != 1 {
+		t.Fatal("overlapping identity did not reuse its blob", user, calls, err)
+	}
+	for _, entry := range g.entries {
+		if !entry.CheckedAt.Equal(original) || !entry.Until.Equal(original.Add(5*time.Minute)) {
+			t.Fatal("identity blob acquired a new observation or expiry", entry.CheckedAt, entry.Until)
+		}
+	}
+	login = "second"
+	if err := g.Invalidate(ctx, "identity"); err != nil {
+		t.Fatal(err)
+	}
+	if user, err := g.User(ctx); err != nil || user != "second" || calls != 2 {
+		t.Fatal("identity invalidation reused its old blob", user, calls, err)
+	}
+	reject = true
+	if _, err := g.User(WithGitHubRead(ctx, RequireLive)); err == nil || calls != 3 {
+		t.Fatal("explicit live identity failure returned an older success", calls, err)
+	}
+	reject, login = false, "third"
+	if user, err := g.User(ctx); err != nil || user != "third" || calls != 4 {
+		t.Fatal("credential rejection reused its previous identity generation", user, calls, err)
+	}
+	now = now.Add(5*time.Minute + time.Second)
+	login = "fourth"
+	if user, err := g.User(ctx); err != nil || user != "fourth" || calls != 5 {
+		t.Fatal("expired identity remained fresh", user, calls, err)
+	}
 }
 
 func TestGitHubCompositeMissSharesComponentsWithoutRenewingTheirObservation(t *testing.T) {

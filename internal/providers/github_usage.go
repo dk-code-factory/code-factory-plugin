@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"codefactory/internal/store"
@@ -518,7 +519,9 @@ func (g *GitHub) SeedCooldown(ctx context.Context, until time.Time) error {
 
 type readObservation struct{}
 type readObservations struct {
+	mu     sync.Mutex
 	at     *time.Time
+	until  time.Time
 	parent *readObservations
 }
 
@@ -527,12 +530,39 @@ func observeReads(ctx context.Context, now time.Time) (context.Context, *time.Ti
 	parent, _ := ctx.Value(readObservation{}).(*readObservations)
 	return context.WithValue(ctx, readObservation{}, &readObservations{at: &observed, parent: parent}), &observed
 }
-func noteRead(ctx context.Context, at time.Time) {
+func noteRead(ctx context.Context, at time.Time, until ...time.Time) {
 	for observed, _ := ctx.Value(readObservation{}).(*readObservations); observed != nil; observed = observed.parent {
+		observed.mu.Lock()
 		if at.Before(*observed.at) {
 			*observed.at = at
 		}
+		for _, deadline := range until {
+			if !deadline.IsZero() && (observed.until.IsZero() || deadline.Before(observed.until)) {
+				observed.until = deadline
+			}
+		}
+		observed.mu.Unlock()
 	}
+}
+
+func noteCachedRead(ctx context.Context, entry cacheEntry) {
+	// A zero transport TTL supplies validators, not a component freshness lease.
+	if entry.Until.After(entry.CheckedAt) {
+		noteRead(ctx, entry.CheckedAt, entry.Until)
+	} else {
+		noteRead(ctx, entry.CheckedAt)
+	}
+}
+
+func readDeadline(ctx context.Context, fallback time.Time) time.Time {
+	if observed, _ := ctx.Value(readObservation{}).(*readObservations); observed != nil {
+		observed.mu.Lock()
+		defer observed.mu.Unlock()
+		if !observed.until.IsZero() && observed.until.Before(fallback) {
+			return observed.until
+		}
+	}
+	return fallback
 }
 func (g *GitHub) requestSucceeded(ctx context.Context) error {
 	if !g.Managed() {

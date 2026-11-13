@@ -166,7 +166,7 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		if cached.Redirect != "" {
 			return nil, &githubRedirect{location: cached.Redirect}
 		}
-		noteRead(ctx, cached.CheckedAt)
+		noteCachedRead(ctx, cached)
 		return cached.Header.Clone(), json.Unmarshal(cached.Body, out)
 	}
 	if hasCache {
@@ -229,9 +229,9 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		if err = g.requestSucceeded(ctx); err != nil {
 			return nil, fmt.Errorf("GitHub request budget unavailable")
 		}
-		noteRead(ctx, g.now())
 		cached.CheckedAt = g.now()
 		cached.Until = cached.CheckedAt.Add(restTTL(parsed.Path, res.Header))
+		noteCachedRead(ctx, cached)
 		for k, v := range safeCacheHeader(res.Header) {
 			cached.Header[k] = v
 		}
@@ -253,6 +253,7 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 	ttl := restTTL(parsed.Path, res.Header)
 	if res.Header.Get("ETag") != "" || res.Header.Get("Last-Modified") != "" || ttl > 0 {
 		entry := cacheEntry{ETag: res.Header.Get("ETag"), Body: body, Header: safeCacheHeader(res.Header), CheckedAt: g.now(), Until: g.now().Add(ttl)}
+		noteCachedRead(ctx, entry)
 		if e = g.remember(ctx, cacheKey, entry); e != nil {
 			return nil, fmt.Errorf("GitHub cache unavailable")
 		}
@@ -291,13 +292,21 @@ func (g *GitHub) User(ctx context.Context) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	if b, ok := g.CachedBlob("identity:" + scope); !g.Managed() && ctx.Value(requireFreshRead{}) != true && ok {
-		return string(b), nil
+	scope, e = g.credentialCacheScope(ctx, ctx.Value(operationKey{}).(*operation).token)
+	if e != nil {
+		return "", e
+	}
+	key := "blob:identity:" + scope
+	if entry, ok := g.cacheGet(key); !g.Managed() && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true && ok && entry.QueryBarrier == queryBarrierFrom(ctx) {
+		noteCachedRead(ctx, entry)
+		return string(entry.Body), nil
 	}
 	var u struct{ Login string }
 	_, e = g.get(ctx, "/user", &u)
 	if !g.Managed() && e == nil && u.Login != "" {
-		g.CacheBlob("identity:"+scope, []byte(u.Login), 5*time.Minute)
+		entry := cacheEntry{Body: []byte(u.Login), CheckedAt: g.now(), Until: g.now().Add(5 * time.Minute), Expires: g.now().Add(5 * time.Minute), QueryBarrier: queryBarrierFrom(ctx)}
+		g.cachePut(key, entry)
+		noteCachedRead(ctx, entry)
 	}
 	return u.Login, e
 }

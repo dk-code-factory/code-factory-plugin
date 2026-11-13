@@ -68,7 +68,7 @@ func (g *CachedGitHub) cachedQuery(ctx context.Context, id, barrier string, out 
 	if err := json.Unmarshal(e.Body, out); err != nil {
 		return false, fmt.Errorf("GitHub query cache is invalid")
 	}
-	noteRead(ctx, e.CheckedAt)
+	noteRead(ctx, e.CheckedAt, e.Until)
 	return true, nil
 }
 
@@ -187,7 +187,8 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	if currentBarrier != barrier {
 		return fmt.Errorf("GitHub cache invalidated during the query; refresh before reading again")
 	}
-	noteRead(ctx, *observed)
+	until := readDeadline(loadCtx, observed.Add(ttl))
+	noteRead(ctx, *observed, until)
 	// Enrichment may return partial data with its own visible error. Do not
 	// promote that incomplete observation into a successful cached result.
 	switch v := out.(type) {
@@ -216,7 +217,7 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	if len(body) > 64<<20 {
 		return nil
 	}
-	return g.rememberQuery(ctx, githubQueryEntry{ID: id, Scope: scope, Resource: resource, Body: body, Size: len(body), CheckedAt: *observed, Until: observed.Add(ttl), Barrier: barrier})
+	return g.rememberQuery(ctx, githubQueryEntry{ID: id, Scope: scope, Resource: resource, Body: body, Size: len(body), CheckedAt: *observed, Until: until, Barrier: barrier})
 }
 
 // Invalidate removes this principal's cached queries for a repository/item.

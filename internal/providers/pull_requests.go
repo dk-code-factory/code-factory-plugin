@@ -58,7 +58,7 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 		return fmt.Errorf("GitHub cache unavailable")
 	}
 	if g.Managed() && ok && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true {
-		noteRead(ctx, cached.CheckedAt)
+		noteCachedRead(ctx, cached)
 		return json.Unmarshal(cached.Body, out)
 	}
 	// Retain an in-memory hint for clients without attached durable accounting.
@@ -144,7 +144,7 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	if err = json.Unmarshal(result.Data, out); err != nil {
 		return fmt.Errorf("GitHub metadata unavailable")
 	}
-	noteRead(ctx, g.now())
+	noteRead(ctx, g.now(), g.now().Add(GitHubDetailTTL))
 	if err = g.requestSucceeded(ctx); err != nil {
 		return fmt.Errorf("GitHub request budget unavailable")
 	}

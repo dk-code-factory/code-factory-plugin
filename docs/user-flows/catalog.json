@@ -1642,6 +1642,26 @@
             "S2",
             "S3"
           ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeKeepsShorterRESTComponentExpiry(",
+          "purpose": "A ReviewRequest REST response with a one-minute server polling lease is reused by PullRequest at30seconds, retains its original one-minute expiry and revalidates at61seconds while fresh GraphQL metadata remains shared.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeUnmanagedIdentityHonorsExpiryAndInvalidation(",
+          "purpose": "In-memory identity data preserves its oldest observation and expiry across overlapping queries, refreshes after explicit invalidation and credential rejection, propagates explicit live failure and refreshes at expiry.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
         }
       ],
       "suites": [
