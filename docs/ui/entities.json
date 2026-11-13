@@ -6297,13 +6297,13 @@
       "id": "NATIVE-CONFIG-PUBLIC-URL",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeNonsecretURLsRemainEditable(",
-      "assertion": "Each noncredential URL retains its exact query/anchor spelling, including semicolon anchors and escaped noncredential fragment values, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+      "assertion": "Each noncredential URL retains its exact query/anchor spelling, including semicolon anchors, escaped fragment values and literal quotes/angle brackets, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
     },
     {
       "id": "NATIVE-CONFIG-URL-PARAMETERS",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
-      "assertion": "Malformed parameter components and escaped URL credentials, including userinfo, are hidden in inspection, persisted proposals and legacy proposal/event projections, including encoded and decoded copies. Credential URL edits are refused without persistence or native writes; a remaining noncredential fragment value keeps its escaped ampersand."
+      "assertion": "Twenty-one isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings and a remaining escaped fragment value are preserved."
     }
   ],
   "source_map": [

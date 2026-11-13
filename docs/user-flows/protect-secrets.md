@@ -26,6 +26,12 @@ The private owner connection is established. Application data starts clean in th
    Ordinary anchors retain their spelling. Encoded credential values and their
    copied forms remain private. An unreadable query or parameter fragment is
    hidden as a whole and cannot be edited through Code Factory.
+   Quotes and angle brackets within URL values do not end credential detection.
+   Raw credential components are collected independently, so an invalid path or
+   fragment does not expose a valid query credential or password copied elsewhere.
+   Ambiguous semicolon separators cannot hide a later credential parameter behind
+   an ordinary parameter. Native edits containing these copied values are refused
+   before persistence.
 
 2. Encrypt secret answers for retained redaction before native delivery.
 
