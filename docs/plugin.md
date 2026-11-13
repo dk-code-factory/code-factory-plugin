@@ -103,6 +103,18 @@ changes wait for safe turn boundaries. Native Codex configuration and skills sta
 native; there is no separate pipeline/profile-authoring format or built-in plugin
 updater. Install or update skills through the native Codex tooling.
 
+Configuration agents use `code_factory_communicate` with `kind`, `title`, `body`
+and optional question `options` (label/description). Messages render as titled
+plain-text cards. Questions render as forms, suspend the tool call and resume
+once with the owner's `answer`; options are suggestions and free text is allowed.
+Only explicit communication, owner messages, questions and proposal controls
+appear in the configuration conversation. Ordinary native assistant narration
+and status summaries remain diagnostic history. Existing retained threads keep
+their tool catalog and use explicit status-tool results/questions as a compatible
+communication path. Application proposal diffs omit unchanged settings; the
+existing `code_factory_propose_configuration` tool requests owner approval through
+the separate Confirm/Reject controls. Answering a question never confirms a change.
+
 The bundled status skill teaches agents to call `code_factory_report_status` with
 working, done or blocked. Blocked requires a concrete human question or requested
 action. Native questions and approvals appear in the same attention queue with

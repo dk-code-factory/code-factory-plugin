@@ -21,6 +21,10 @@ The private owner connection is established. Application data starts clean in th
 
 3. Stream and page redacted native output in the owning conversation.
 
+   In Configuration, show owner messages and intentional communication cards,
+   questions and proposal controls. Keep ordinary native narration and internal
+   status summaries in diagnostics rather than the visible conversation.
+
 4. Retain conversation history when a turn completes or source work closes.
 
 ## Alternatives and recovery
@@ -198,6 +202,7 @@ flowchart TD
 - [internal/httpbudget/latency_test.go](../../internal/httpbudget/latency_test.go) — `func TestPerformanceGateFailsSlowSuccess(`; S6. A subprocess runs a slow useful 200 response through the actual isolated timing assertion and must fail verification above 75 ms.
 - [internal/transport/response_budget_test.go](../../internal/transport/response_budget_test.go) — `func TestSlowMCPDispatchPreservesResultAndContext(`; S6. An authenticated real tool handler delayed125ms inside production receiving middleware retains its context and exact useful response; the regression also detects reinstating the80ms tool deadline.
 - [internal/httpbudget/latency_test.go](../../internal/httpbudget/latency_test.go) — `func TestSlowWireSignalsWhilePendingAndIncludesAcknowledgement(`; S6. A blocked finite wire write or initial SSE flush emits the pending threshold warning and active count without cancellation; release preserves useful success and records the full output duration, including the initial stream flush.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `configuration renders explicit communication cards and hides agent narration`; S2, S3. Configuration retains owner text and escaped titled tool messages while raw streamed/completed narration and internal summary are absent from the rendered view.
 
 ## Verification and gaps
 

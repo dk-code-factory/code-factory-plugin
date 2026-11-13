@@ -132,6 +132,7 @@ article,
 }
 .transcript {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   max-height: 50vh;
   overflow: auto;
   padding-block: 10px;
@@ -152,6 +153,10 @@ pre {
 fieldset {
   border: 1px solid #bdcbc0;
   margin: 10px 0;
+}
+.question legend {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 summary {
   cursor: pointer;

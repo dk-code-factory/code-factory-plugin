@@ -547,6 +547,140 @@ test("configuration proposals require explicit confirmation", async ({
     confirm: true,
   });
 });
+test("configuration renders explicit communication cards and hides agent narration", async ({
+  page,
+}) => {
+  const state = initial();
+  state.sessions = [
+    {
+      id: "configuration",
+      kind: "configuration",
+      execution: "idle",
+      reported: "done",
+      summary: "Internal status narration",
+      agent: {},
+    },
+  ];
+  const { ui } = await host(page, {
+    state,
+    transcript: [
+      { seq: 1, data: { text: "Add the five drivers", role: "user" } },
+      {
+        seq: 2,
+        data: {
+          method: "item/agentMessage/delta",
+          params: { itemId: "a", delta: "I will inspect everything" },
+        },
+      },
+      {
+        seq: 3,
+        data: {
+          method: "item/completed",
+          params: {
+            item: {
+              id: "a",
+              type: "agentMessage",
+              text: "Repeated internal explanation",
+            },
+          },
+        },
+      },
+      { seq: 4, data: { text: "Unstructured agent output" } },
+      {
+        seq: 5,
+        data: {
+          interaction: {
+            kind: "message",
+            title: "Repository scope",
+            body: "Five CQL drivers.\nRust variants are excluded. <script>alert(1)</script>",
+          },
+        },
+      },
+    ],
+  });
+  await ui.getByRole("button", { name: "Configuration", exact: true }).click();
+  const log = ui.getByLabel("Conversation transcript");
+  await expect(log.getByText("You: Add the five drivers")).toBeVisible();
+  const card = log.getByRole("article", { name: "Repository scope" });
+  await expect(
+    card.getByRole("heading", { name: "Repository scope" }),
+  ).toBeVisible();
+  await expect(card).toContainText(
+    "Rust variants are excluded. <script>alert(1)</script>",
+  );
+  await expect(card.locator("script")).toHaveCount(0);
+  for (const text of [
+    "I will inspect everything",
+    "Repeated internal explanation",
+    "Unstructured agent output",
+    "Internal status narration",
+  ])
+    await expect(ui.getByText(text, { exact: true })).toHaveCount(0);
+});
+
+test("configuration communication questions require an owner answer and never approve proposals", async ({
+  page,
+}) => {
+  const state = initial();
+  state.questions = [
+    {
+      id: "communication-question",
+      sessionId: "configuration",
+      status: "pending",
+      blocking: true,
+      method: "code_factory_communicate",
+      params: {
+        kind: "question",
+        title: "Choose repository scope",
+        body: "Which repositories should be monitored?",
+        options: [
+          { label: "Drivers", description: "CQL drivers only" },
+          { label: "Connectors" },
+        ],
+      },
+    },
+  ];
+  state.proposals = [
+    { id: "p1", state: "proposed", diff: "quietSeconds\n- 120\n+ 30" },
+  ];
+  const { ui, calls } = await host(page, { state });
+  await ui.getByRole("button", { name: "Configuration", exact: true }).click();
+  const form = ui.getByRole("form", { name: "Human input request" });
+  await expect(
+    form.getByRole("heading", { name: "Choose repository scope" }),
+  ).toBeVisible();
+  await expect(
+    form.getByText("Which repositories should be monitored?", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    form.getByRole("radio", { name: "Drivers — CQL drivers only" }),
+  ).not.toBeChecked();
+  await expect(form.getByLabel("Response JSON")).toHaveCount(0);
+  await ui
+    .getByLabel("Message", { exact: true })
+    .fill("Cannot bypass a question");
+  await expect(
+    ui.getByRole("button", { name: "Send", exact: true }),
+  ).toBeDisabled();
+  await form.getByRole("button", { name: "Send answer" }).click();
+  expect(calls.some((c) => c.name === "answer_session_question")).toBe(false);
+  await form.getByRole("radio", { name: "Drivers — CQL drivers only" }).check();
+  await form.getByRole("button", { name: "Send answer" }).click();
+  await expect
+    .poll(
+      () => calls.find((c) => c.name === "answer_session_question")?.arguments,
+    )
+    .toEqual({
+      requestId: expect.any(String),
+      instanceId: "fixture",
+      id: "communication-question",
+      answer: { answer: "Drivers" },
+    });
+  await expect(form).toHaveCount(0);
+  expect(calls.some((c) => c.name === "confirm_configuration")).toBe(false);
+  await expect(ui.getByText("Proposal p1 · proposed")).toBeVisible();
+});
+
 test("configuration chat and readable effective settings replace forms", async ({
   page,
 }) => {

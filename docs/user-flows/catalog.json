@@ -752,6 +752,11 @@
         {
           "path": "plugin/skills/code-factory-report-issue/SKILL.md",
           "purpose": "Current configure-work implementation or fixture/build dependency."
+        },
+        {
+          "path": "internal/factory/communication.go",
+          "anchor": "func (s *Service) communicate(",
+          "purpose": "Intentional structured configuration messages and questions; pending questions suspend until the exact owner answer."
         }
       ],
       "tests": [
@@ -847,6 +852,59 @@
           "scenarios": [
             "S4",
             "S5"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "configuration renders explicit communication cards and hides agent narration",
+          "purpose": "Configuration shows owner messages and titled plain-text communication cards, escapes HTML, and hides streamed/completed agent narration and internal status summaries.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "configuration communication questions require an owner answer and never approve proposals",
+          "purpose": "Configuration question form preserves title, body and optional choices, starts unselected, requires an explicit answer, blocks chat and sends the exact question identity; answering leaves the proposal unconfirmed.",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/communication_test.go",
+          "anchor": "func TestConfigurationCommunicationMessagesAndQuestions(",
+          "purpose": "New configuration thread exposes communication; repeated native message IDs record one redacted card, questions suspend their replies, invalid/duplicate answers fail, and an exact successful tool response does not confirm a proposal.",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/communication_test.go",
+          "anchor": "func TestConfigurationCommunicationValidationAndExpiry(",
+          "purpose": "Communication rejects invalid/bounded payloads and non-configuration sessions; expiring a blocked question rejects its answer.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "internal/factory/communication_test.go",
+          "anchor": "func TestConfigurationLegacyCommunicationAndCompactDiff(",
+          "purpose": "Retained legacy configuration status results record intentional communication cards; settings diffs retain changed values and omit unchanged and absent fields.",
+          "scenarios": [
+            "S1",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/factory/communication_test.go",
+          "anchor": "func TestConfigurationCommunicationRetainsNativeCatalog(",
+          "purpose": "New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs.",
+          "scenarios": [
+            "S1"
           ]
         }
       ],
@@ -3230,6 +3288,11 @@
           "path": "internal/transport/questions.go",
           "anchor": "func questionPage(",
           "purpose": "Bounded session/status question collections preserve exact payloads and total counts."
+        },
+        {
+          "path": "internal/factory/communication.go",
+          "anchor": "func (s *Service) communicate(",
+          "purpose": "Configuration clarification questions suspend the native tool response until the exact owner answer, preserving the existing answer/expiry lifecycle."
         }
       ],
       "tests": [
@@ -3379,6 +3442,34 @@
           "scenarios": [
             "S1",
             "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/communication_test.go",
+          "anchor": "func TestConfigurationCommunicationMessagesAndQuestions(",
+          "purpose": "Configuration question replies wait for explicit valid owner input, reject duplicate answers and cannot confirm proposals.",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/communication_test.go",
+          "anchor": "func TestConfigurationCommunicationValidationAndExpiry(",
+          "purpose": "Invalid question payloads and expired owner answers are rejected.",
+          "scenarios": [
+            "S5"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "configuration communication questions require an owner answer and never approve proposals",
+          "purpose": "Structured title/body/options render as an answer form, block ordinary chat and submit the exact request without confirming any proposal.",
+          "scenarios": [
+            "S2",
+            "S3",
+            "S4"
           ]
         }
       ],
@@ -4636,6 +4727,15 @@
             "S6"
           ],
           "purpose": "A blocked finite wire write or initial SSE flush emits the pending threshold warning and active count without cancellation; release preserves useful success and records the full output duration, including the initial stream flush."
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "configuration renders explicit communication cards and hides agent narration",
+          "purpose": "Configuration retains owner text and escaped titled tool messages while raw streamed/completed narration and internal summary are absent from the rendered view.",
+          "scenarios": [
+            "S2",
+            "S3"
+          ]
         }
       ],
       "suites": [

@@ -12,6 +12,12 @@ diff and explicit user confirmation. Confirmed edits wait until active turns fin
 stale proposals must be regenerated against current settings. Never restart active
 work silently. Native writes use layer versions and preserve unrelated keys.
 
+Configuration uses structured communication cards, answer forms and proposal
+confirmation controls. Ordinary configuration-agent commentary is diagnostic
+history and is not shown in the configuration view. Do not relay that commentary
+or repeat routine progress updates. Present the useful result and confirmation
+state once; an answer to a question never approves a configuration proposal.
+
 Rules select repositories, event types, optional actions/labels/author/draft filters,
 instructions and installed skills. Rules execute in stored order, all matches
 contribute, and no review skill is special. Automatic rules initially target PRs;

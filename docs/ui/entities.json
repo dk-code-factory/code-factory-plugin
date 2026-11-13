@@ -1008,7 +1008,8 @@
         "SECRET-QUESTION-ID",
         "API-V2-CURRENT",
         "API-V2-CHUNKS",
-        "API-V2-READ-ID"
+        "API-V2-READ-ID",
+        "WRAP-CONFIG-COMMUNICATION"
       ],
       "gaps": [
         {
@@ -1027,7 +1028,7 @@
       ],
       "context": "Paged retained output; an idle turn without a status report remains idle.",
       "composition": "Paged retained output; an idle turn without a status report remains idle.",
-      "interactions": "Paged retained output; an idle turn without a status report remains idle.",
+      "interactions": "Paged retained output; an idle turn without a status report remains idle. Item conversations combine native streams/completions; Configuration displays only owner messages and intentional communication cards, with raw native narration retained for diagnostics.",
       "state_description": "Paged retained output; an idle turn without a status report remains idle. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Paged retained output; an idle turn without a status report remains idle.",
       "purpose": "Paged retained output; an idle turn without a status report remains idle."
@@ -1225,7 +1226,10 @@
         "API-V2-CHUNKS",
         "API-V2-QUESTION-PAGES",
         "API-V2-QUESTION-DRAFTS",
-        "API-V2-QUESTION-DRAIN"
+        "API-V2-QUESTION-DRAIN",
+        "WRAP-CONFIG-QUESTION",
+        "CONFIG-COMMUNICATION",
+        "CONFIG-COMMUNICATION-EXPIRY"
       ],
       "gaps": [
         {
@@ -1244,7 +1248,7 @@
       ],
       "context": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
       "composition": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
-      "interactions": "Native options, free text and secret input preserve question IDs; blocked status waits for answers. Previous and next question-page controls retain exact question identities beyond the first page. When answers shrink the final page, return to the last valid page of remaining questions.",
+      "interactions": "Native options, free text and secret input preserve question IDs; blocked status waits for answers. Previous and next question-page controls retain exact question identities beyond the first page. When answers shrink the final page, return to the last valid page of remaining questions. Configuration communication questions render a title, body, optional unselected choices and free-text answer; an answer resumes the exact tool call once and never approves configuration.",
       "state_description": "Native options, free text and secret input preserve question IDs; blocked status waits for answers. Loading while the requested saved revision is pending; older content is unavailable for dependent actions. Question drafts remain in memory through loading and navigation until successful delivery.",
       "element_description": "Native options, free text and secret input preserve question IDs; blocked status waits for answers.",
       "purpose": "Native options, free text and secret input preserve question IDs; blocked status waits for answers."
@@ -1400,13 +1404,29 @@
           "path": "internal/transport/operations.go",
           "anchor": "func (q *operationQueue) submit(",
           "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
+        },
+        {
+          "path": "internal/factory/communication.go",
+          "anchor": "func (s *Service) communicate(",
+          "purpose": "Validate session-bound structured messages/questions, persist redacted deduplicated message events and suspend exact question calls."
+        },
+        {
+          "path": "internal/factory/native.go",
+          "anchor": "func (s *Service) attach(",
+          "purpose": "New configuration threads register communication tools; retained older threads keep their native tool catalog and receive compatible guidance."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
         "NATIVE-AGENT",
         "API-V2-FEEDBACK",
-        "API-V2-RESTART"
+        "API-V2-RESTART",
+        "WRAP-CONFIG-COMMUNICATION",
+        "WRAP-CONFIG-QUESTION",
+        "CONFIG-COMMUNICATION",
+        "CONFIG-COMMUNICATION-EXPIRY",
+        "CONFIG-COMMUNICATION-LEGACY",
+        "CONFIG-COMMUNICATION-CATALOG"
       ],
       "gaps": [],
       "suites": [
@@ -1414,8 +1434,8 @@
         "go"
       ],
       "context": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
-      "composition": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
-      "interactions": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
+      "composition": "Owner messages, titled plain-text result cards and separate question/proposal controls. Ordinary configuration-agent narration and internal status summaries are hidden.",
+      "interactions": "The configuration agent communicates intentionally through message/question tools or a concrete proposal. Questions suspend until an explicit owner answer. Older retained tool catalogs use status results and blocked requests without replacing the native thread.",
       "state_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
       "purpose": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills."
@@ -1509,6 +1529,11 @@
           "path": "internal/transport/operations.go",
           "anchor": "func (q *operationQueue) submit(",
           "purpose": "Memory admission and original-identity recovery; journal intent precedes effects."
+        },
+        {
+          "path": "internal/factory/configuration.go",
+          "anchor": "func settingsDiff(",
+          "purpose": "Deterministic complete before/after values for changed top-level settings only."
         }
       ],
       "assertions": [
@@ -1519,7 +1544,9 @@
         "CONFIG-BINDINGS-ATOMIC",
         "CONFIG-RETIRED-EPOCH",
         "API-V2-FEEDBACK",
-        "API-V2-RESTART"
+        "API-V2-RESTART",
+        "CONFIG-COMMUNICATION-LEGACY",
+        "WRAP-CONFIG-QUESTION"
       ],
       "gaps": [],
       "suites": [
@@ -1527,7 +1554,7 @@
         "go"
       ],
       "context": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
-      "composition": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
+      "composition": "Concrete diff and proposed/confirmed/applied/stale state with explicit Confirm or Reject. Application diffs include only changed settings and their complete before/after values.",
       "interactions": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
       "state_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
@@ -6139,6 +6166,42 @@
       "path": "internal/httpbudget/latency_test.go",
       "anchor": "func TestSlowWireSignalsWhilePendingAndIncludesAcknowledgement(",
       "assertion": "A blocked finite wire write or initial SSE flush emits a slow signal and active count while still pending; release preserves the200 response and measured duration includes the125ms output delay."
+    },
+    {
+      "id": "WRAP-CONFIG-COMMUNICATION",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "configuration renders explicit communication cards and hides agent narration",
+      "assertion": "Configuration shows owner messages and titled plain-text communication cards, escapes HTML, and hides streamed/completed agent narration and internal status summaries."
+    },
+    {
+      "id": "WRAP-CONFIG-QUESTION",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "configuration communication questions require an owner answer and never approve proposals",
+      "assertion": "Configuration question form preserves title, body and optional choices, starts unselected, requires an explicit answer, blocks chat and sends the exact question identity; answering leaves the proposal unconfirmed."
+    },
+    {
+      "id": "CONFIG-COMMUNICATION",
+      "path": "internal/factory/communication_test.go",
+      "anchor": "func TestConfigurationCommunicationMessagesAndQuestions(",
+      "assertion": "New configuration thread exposes communication; repeated native message IDs record one redacted card, questions suspend their replies, invalid/duplicate answers fail, and an exact successful tool response does not confirm a proposal."
+    },
+    {
+      "id": "CONFIG-COMMUNICATION-EXPIRY",
+      "path": "internal/factory/communication_test.go",
+      "anchor": "func TestConfigurationCommunicationValidationAndExpiry(",
+      "assertion": "Communication rejects invalid/bounded payloads and non-configuration sessions; expiring a blocked question rejects its answer."
+    },
+    {
+      "id": "CONFIG-COMMUNICATION-LEGACY",
+      "path": "internal/factory/communication_test.go",
+      "anchor": "func TestConfigurationLegacyCommunicationAndCompactDiff(",
+      "assertion": "Retained legacy configuration status results record intentional communication cards; settings diffs retain changed values and omit unchanged and absent fields."
+    },
+    {
+      "id": "CONFIG-COMMUNICATION-CATALOG",
+      "path": "internal/factory/communication_test.go",
+      "anchor": "func TestConfigurationCommunicationRetainsNativeCatalog(",
+      "assertion": "New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs."
     }
   ],
   "source_map": [
@@ -6195,6 +6258,12 @@
       "anchor": "func (s *Store) Revision(",
       "entities": "Committed saved-state dependencies",
       "detail": "Immutable commit revisions are published without request-time database access."
+    },
+    {
+      "path": "internal/factory/communication.go",
+      "anchor": "func (s *Service) communicate(",
+      "entities": "Configuration communication messages and questions",
+      "detail": "Intentional plain-text messages and exact pending question identities are prepared by the worker; cached transcript/question projections remain the read path."
     }
   ],
   "coverage_groups": [
