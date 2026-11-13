@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -348,6 +349,9 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, error) {
 	v, ok := g.cacheGet(key)
 	if ok {
+		// Revalidation may merge headers before the durable replacement commits.
+		// Keep those tentative changes separate from the retained memory entry.
+		v.Header = v.Header.Clone()
 		return v, true, nil
 	}
 	if g.usageStore == nil {
@@ -433,36 +437,87 @@ func (g *GitHub) invalidateRejectedCredential(ctx context.Context, token string,
 }
 
 func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
-	g.cachePut(key, v)
-	if g.usageStore != nil {
-		// Keep the complete private persistent cache bounded as well as memory.
-		id := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
-		entries, err := g.usageStore.JSONByteSizes(ctx, "github-cache", "$.Body")
+	if g.usageStore == nil {
+		g.cachePut(key, v)
+		return nil
+	}
+	id := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
+	v.ID = id
+	persisted := v
+	persisted.Header = safeCacheHeader(v.Header)
+	evicted := map[string]bool{}
+	err := g.usageStore.Write(ctx, func(t *store.Tx) error {
+		// An oversized response is usable by its caller, but cannot displace the
+		// complete cache or leave an older replacement behind after restart.
+		if len(v.Body) > cacheLimit {
+			evicted[id] = true
+			return t.Delete("github-cache", id)
+		}
+		entries, err := t.JSONByteEntries("github-cache", "$.Body", "CheckedAt", "Expires")
 		if err != nil {
 			return err
 		}
-		total := int64(len(v.Body))
-		for entryID, size := range entries {
-			if entryID != id {
-				total += size
-			}
+		type candidate struct {
+			store.JSONByteEntry
+			checked time.Time
+			expired bool
 		}
-		if total > 64<<20 {
-			if err := g.usageStore.Write(ctx, func(t *store.Tx) error {
-				for entryID := range entries {
-					if err := t.Delete("github-cache", entryID); err != nil {
-						return err
-					}
-				}
-				return nil
-			}); err != nil {
+		candidates := make([]candidate, 0, len(entries))
+		total, count := int64(len(v.Body)), 1
+		now := g.now()
+		for _, entry := range entries {
+			if entry.ID == id {
+				continue
+			}
+			var metadata cacheEntry
+			if err := json.Unmarshal(entry.Metadata, &metadata); err != nil {
 				return err
 			}
+			expired := now.Sub(metadata.CheckedAt) > 24*time.Hour || !metadata.Expires.IsZero() && !now.Before(metadata.Expires)
+			candidates = append(candidates, candidate{entry, metadata.CheckedAt, expired})
+			total += entry.Size
+			count++
 		}
-		v.ID = id
-		v.Header = safeCacheHeader(v.Header)
-		return g.usageStore.Put(ctx, "github-cache", id, v, "")
+		sort.Slice(candidates, func(i, j int) bool {
+			a, b := candidates[i], candidates[j]
+			if a.expired != b.expired {
+				return a.expired
+			}
+			if !a.checked.Equal(b.checked) {
+				return a.checked.Before(b.checked)
+			}
+			return a.ID < b.ID
+		})
+		for _, entry := range candidates {
+			if !entry.expired && total <= cacheLimit && count <= cacheEntries {
+				break
+			}
+			if err := t.Delete("github-cache", entry.ID); err != nil {
+				return err
+			}
+			evicted[entry.ID] = true
+			total -= entry.Size
+			count--
+		}
+		return t.Put("github-cache", id, persisted)
+	})
+	if err != nil {
+		return err
 	}
+	// Durable eviction must also retire any matching in-memory conditional
+	// response. Blob entries share memory but have no persistent row to evict.
+	if len(evicted) > 0 {
+		g.mu.Lock()
+		for cacheKey, entry := range g.cache {
+			cacheID := fmt.Sprintf("%x", sha256.Sum256([]byte(cacheKey)))
+			if evicted[cacheID] {
+				g.cacheBytes -= entry.Size
+				delete(g.cache, cacheKey)
+			}
+		}
+		g.mu.Unlock()
+	}
+	g.cachePut(key, v)
 	return nil
 }
 func safeCacheHeader(h http.Header) http.Header {

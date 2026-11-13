@@ -24,6 +24,19 @@ The private owner connection is established. Application data starts clean in th
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees. A busy conversation defers only its own ingestion; polling continues discovering independent changes in the same repository and other repositories, including their quiet deadlines. Deferred baseline observations stay historical, deferred webhooks remain durable without artificial failure backoff, and cancellation stops the poll. Changed webhook source commits a metadata-only inbox notification; redelivery and unchanged source do not create extra notifications.
 
+The shared GitHub response cache retains at most 64 MiB of response bodies and
+4,096 responses across credential scopes. A new response first retires expired
+entries, then only the oldest validated entries needed to fit these limits.
+Unrelated recent responses keep their conditional validators across restart.
+In-memory entries retain the headers supplied at admission. Durable entries keep
+only approved validator and pagination headers. Eviction inspects freshness
+metadata without loading retained bodies or headers.
+Replacement and eviction commit together; a failed write does not publish a new
+memory response, change its retained headers or discard its eviction candidates.
+HTTP readers reject responses above their 16 MiB limit before cache admission.
+If an internal cache admission exceeds the 64 MiB body allowance, it retains
+neither that value nor an older response at the same key, preserving other entries.
+
 ## Scenarios
 
 - **S1** — Establish initial PR and activity baselines without launching historical work.
@@ -82,6 +95,7 @@ flowchart TD
 - [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Current sync-inbox implementation or fixture/build dependency.
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Current sync-inbox implementation or fixture/build dependency.
 - [internal/providers/github.go](../../internal/providers/github.go) — Current sync-inbox implementation or fixture/build dependency.
+- [internal/store/store.go](../../internal/store/store.go) — Bodyless cache metadata and authoritative storage IDs are inventoried within the same transaction as eviction and replacement. (`func (t *Tx) JSONByteEntries(`)
 
 ## Test references
 
@@ -146,6 +160,15 @@ flowchart TD
 - [internal/providers/github_transport_cache_test.go](../../internal/providers/github_transport_cache_test.go) — `func TestGitHubCacheGenerationFailuresCannotReturnCachedSuccess(`; S3. A real SQLite trigger rejecting generation writes blocks subsequent same-client response/query cache hits; malformed persisted generation data fails closed after client restart without contacting GitHub. Mixed GraphQL auth/rate generation-write failure returns cache failure before rate classification and blocks that client query hits.
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestGitHubDefaultBudgetAndExplicitOverride(`; S3. Application policy defaults to 2,000 request attempts per hour while retaining an explicit 600-request override.
 - [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubDefaultBudgetReportingAndAdmission(`; S3. Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCachePressureRetainsHotConditionalResponses(`; S1, S3. Real 64 MiB pressure evicts one oldest response, retains hot memory data and preserves a conditional 304 read after restart.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheEvictsExpiredMemoryAndKeepsReplacement(`; S1, S3. Age-expired and endpoint-expired rows leave durable and memory caches while a replacement stays identical after restart.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheRejectedWriteDoesNotPublishOrEvictMemory(`; S3. An SQLite rejection rolls back prior expiry deletions and does not publish a fresh response or remove the old memory copy.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheRejectedRevalidationPreservesMemoryHeaders(`; S3. A managed live304 with changed pagination headers and a rejected cache INSERT leaves body, headers and freshness identical in memory and after restart; the next ordinary read stays local.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheKeepsLiveHeadersInMemoryAndFiltersDurableCopy(`; S3. A generic managed GET and its local hit preserve full live headers with one request, while a restarted provider reuses only approved durable headers without another request.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheOversizedReplacementPreservesOtherEntries(`; S3. An oversized replacement is not retained in memory or durable state, removes its old same-key response and preserves unrelated entries.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheEntryPressureEvictsOneOldestRow(`; S1, S3. The 4,096-entry bound evicts only one oldest row with deterministic storage-ID tie breaking.
+- [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(`; S1, S3. Transactional inventory selects only requested metadata fields and decoded byte sizes, keeping large headers and other unselected payloads inside SQLite; source rows, storage identities, bound SQL inputs and cursor closure remain intact.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheEvictionKeepsLargeHeadersAfterRestart(`; S1, S3. Eviction reads scalar freshness fields, retires an old large-header response and preserves an unrelated approved Link header and body across restart.
 
 ## Verification and gaps
 
