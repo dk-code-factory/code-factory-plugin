@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -93,9 +94,7 @@ func (s *Service) propose(ctx context.Context, after *Settings, native *NativeEd
 			return p, err
 		}
 		p.After = *after
-		old, _ := json.MarshalIndent(before, "", "  ")
-		next, _ := json.MarshalIndent(after, "", "  ")
-		p.Diff = "--- effective settings\n" + string(old) + "\n+++ proposed settings\n" + string(next)
+		p.Diff = settingsDiff(before, *after)
 	} else {
 		if native.CWD == "" || !filepath.IsAbs(native.CWD) || native.File == "" || !filepath.IsAbs(native.File) || native.Version == "" || len(native.Edits) == 0 {
 			return p, fmt.Errorf("native edits need inspected cwd, absolute layer file, version and edits")
@@ -118,6 +117,54 @@ func (s *Service) propose(ctx context.Context, after *Settings, native *NativeEd
 		p.Diff = "--- native configuration layers\n" + string(actual) + "\n+++ proposed native key edits\n" + string(bytes(copy.Edits))
 	}
 	return p, s.Store.Put(ctx, "factory-proposal", p.ID, p, "configuration.proposed")
+}
+
+// Include only changed top-level settings. Values remain complete, so the owner
+// can review repository/rule replacements without unrelated settings noise.
+func settingsDiff(before, after Settings) string {
+	var old, next map[string]json.RawMessage
+	_ = json.Unmarshal(bytes(before), &old)
+	_ = json.Unmarshal(bytes(after), &next)
+	keys := map[string]bool{}
+	for k := range old {
+		keys[k] = true
+	}
+	for k := range next {
+		keys[k] = true
+	}
+	ordered := make([]string, 0, len(keys))
+	for k := range keys {
+		ordered = append(ordered, k)
+	}
+	sort.Strings(ordered)
+	var diff strings.Builder
+	for _, k := range ordered {
+		if string(old[k]) == string(next[k]) {
+			continue
+		}
+		fmt.Fprintf(&diff, "%s\n", k)
+		for i, value := range []json.RawMessage{old[k], next[k]} {
+			if len(value) == 0 {
+				value = json.RawMessage("null")
+			}
+			var formatted strings.Builder
+			var v any
+			_ = json.Unmarshal(value, &v)
+			b, _ := json.MarshalIndent(v, "", "  ")
+			prefix := "- "
+			if i == 1 {
+				prefix = "+ "
+			}
+			for _, line := range strings.Split(string(b), "\n") {
+				formatted.WriteString(prefix + line + "\n")
+			}
+			diff.WriteString(formatted.String())
+		}
+	}
+	if diff.Len() == 0 {
+		return "No settings changes."
+	}
+	return diff.String()
 }
 func checkLayer(data json.RawMessage, n NativeEdit) error {
 	var config struct {

@@ -85,6 +85,7 @@ type Session struct {
 	Repository     string    `json:"repository,omitempty"`
 	Agent          Agent     `json:"agent"`
 	ThreadID       string    `json:"threadId,omitempty"`
+	Communication  bool      `json:"communicationTools,omitempty"`
 	ThreadPending  bool      `json:"threadPending,omitempty"`
 	TurnID         string    `json:"turnId,omitempty"`
 	Worktree       string    `json:"worktree,omitempty"`

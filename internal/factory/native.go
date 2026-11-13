@@ -385,6 +385,11 @@ func (s *Service) attach(ctx context.Context, v *Session) (RPC, error) {
 		params["sandbox"] = "read-only"
 		params["approvalPolicy"] = "never"
 		params["developerInstructions"] = configurationGuidance
+		// Dynamic tools are fixed at thread creation by the native protocol.
+		// Keep older retained threads usable through their existing status tool.
+		if v.ThreadID != "" && !v.Communication {
+			params["developerInstructions"] = configurationLegacyGuidance
+		}
 	}
 	if v.Kind == "priority" || v.Kind == "configuration" {
 		params["sandbox"] = "read-only"
@@ -418,6 +423,7 @@ func (s *Service) attach(ctx context.Context, v *Session) (RPC, error) {
 		params["excludeTurns"] = true
 	} else {
 		params["dynamicTools"] = toolsFor(v.Kind)
+		v.Communication = v.Kind == "configuration"
 		v.ThreadPending = true
 		if err = s.save(ctx, *v); err != nil {
 			_ = c.Close()

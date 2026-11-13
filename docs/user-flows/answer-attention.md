@@ -16,6 +16,10 @@ The private owner connection is established. Application data starts clean in th
 
 3. Suspend a blocked status tool response until the human answers its concrete questions.
 
+   Configuration communication questions also suspend their tool response. Show
+   the question title, body, suggested choices and free-text answer form. An answer
+   resumes that request once and never approves a configuration proposal.
+
 4. Require an explicit decision for approvals and permission requests.
 
 5. Expire disconnected identities and retain history without replaying answered requests.
@@ -92,6 +96,7 @@ flowchart TD
 - [internal/transport/factory.go](../../internal/transport/factory.go) — Session, configuration, event and retained triage APIs. (`func NewFactory(`)
 - [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Bounded view-specific bodyless inbox and compact session/question state; source detail and configuration are separate. (`func factoryState(`)
 - [internal/transport/questions.go](../../internal/transport/questions.go) — Bounded session/status question collections preserve exact payloads and total counts. (`func questionPage(`)
+- [internal/factory/communication.go](../../internal/factory/communication.go) — Configuration clarification questions suspend the native tool response until the exact owner answer, preserving the existing answer/expiry lifecycle. (`func (s *Service) communicate(`)
 
 ## Test references
 
@@ -112,6 +117,9 @@ flowchart TD
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `question pages retain exact requests beyond the first page`; S1, S2. Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `question text and JSON drafts survive pending reads and navigation`; S1, S2. Free-text and elicitation JSON drafts remain keyed by exact question identity through pending reads and navigation while stale forms are hidden.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `answering the final question page returns to remaining requests`; S1, S2. Answer all five final-page requests and automatically return to the remaining 50 requests without a false empty state.
+- [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationMessagesAndQuestions(`; S2, S3, S4. Configuration question replies wait for explicit valid owner input, reject duplicate answers and cannot confirm proposals.
+- [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationValidationAndExpiry(`; S5. Invalid question payloads and expired owner answers are rejected.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `configuration communication questions require an owner answer and never approve proposals`; S2, S3, S4. Structured title/body/options render as an answer form, block ordinary chat and submit the exact request without confirming any proposal.
 
 ## Verification and gaps
 
