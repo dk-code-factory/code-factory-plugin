@@ -352,7 +352,8 @@
         "WRAP-PROJECTION",
         "WRAP-BOOT-FILTER",
         "API-V2-CURRENT",
-        "API-V2-CHUNKS"
+        "API-V2-CHUNKS",
+        "WRAP-PROJECTION-PREPARED"
       ],
       "gaps": [
         {
@@ -3674,7 +3675,8 @@
         "API-V2-READ-ID",
         "API-V2-DEPENDENCY-ERROR",
         "API-V2-RELATIONSHIP-CAS",
-        "API-V2-FIRST-INSTANCE"
+        "API-V2-FIRST-INSTANCE",
+        "WRAP-PROJECTION-PREPARED"
       ],
       "gaps": [
         {
@@ -6202,6 +6204,12 @@
       "path": "internal/factory/communication_test.go",
       "anchor": "func TestConfigurationCommunicationRetainsNativeCatalog(",
       "assertion": "New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs."
+    },
+    {
+      "id": "WRAP-PROJECTION-PREPARED",
+      "path": "internal/transport/projection_preparation_test.go",
+      "anchor": "func TestTrackingReadPreparationWaitsForExactCurrentProducer(",
+      "assertion": "A real HTTP pending read remains unusable while its exact producer is blocked; preparation rejects another ready key and stale revision, then accepts the completed current producer and returns its useful HTTP value."
     }
   ],
   "source_map": [
@@ -6433,7 +6441,8 @@
         "WEBHOOK-INBOX-NOTIFY",
         "POLL-PEER-DISCOVERY",
         "WORKTREE-INTENT-RECOVERY",
-        "WORKTREE-RECOVERY-BOUNDARY"
+        "WORKTREE-RECOVERY-BOUNDARY",
+        "WRAP-PROJECTION-PREPARED"
       ],
       "gap": {
         "version": 1,

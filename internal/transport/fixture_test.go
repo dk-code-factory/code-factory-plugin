@@ -74,6 +74,54 @@ func newTrackingFixtureAt(t *testing.T, dir string) *trackingFixture {
 	t.Cleanup(f.close)
 	return f
 }
+
+// prepareRead separates expensive background fixture preparation from the
+// existing call guard. Request latency is asserted by the dedicated API gates.
+// Start through the real HTTP endpoint, then wait for this exact current entry.
+func (f *trackingFixture) prepareRead(t *testing.T, name string, args map[string]any) {
+	t.Helper()
+	result, _, _, err := trackingCall(f.http.Client(), f.http.URL, f.token, name, args)
+	if err != nil || result["isError"] == true {
+		t.Fatal("start read projection", err, result)
+	}
+	response := result["structuredContent"].(map[string]any)["data"].(map[string]any)["response"].(map[string]any)
+	if response["state"] == "ready" {
+		return
+	}
+	if response["state"] != "pending" {
+		t.Fatal("unexpected projection preparation response", response)
+	}
+	ctx, cancel := context.WithTimeout(f.ctx, 30*time.Second)
+	defer cancel()
+	if err := f.awaitReadProjection(ctx, name, args); err != nil {
+		t.Fatal("read projection did not prepare", name, err)
+	}
+}
+
+func (f *trackingFixture) awaitReadProjection(ctx context.Context, name string, args map[string]any) error {
+	key := projectionKey(name, mustJSON(args))
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		cache := f.server.projections
+		cache.mu.Lock()
+		entry, exists := cache.entries[key]
+		ready := exists && !entry.preparing && entry.revision == cache.db.Revision(entry.dependencies...)
+		cache.mu.Unlock()
+		if ready {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+		}
+	}
+}
+
 func (f *trackingFixture) call(t *testing.T, name string, args map[string]any) (map[string]any, bool) {
 	t.Helper()
 	f.calls = append(f.calls, name)

@@ -135,6 +135,7 @@ flowchart TD
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestProjectionDependencyFailureIsVisibleAndRecoversAfterRepair(`; S7. Cold malformed relationship IDs and malformed source/target endpoints inserted after a useful prepared read report failed with a nonzero saved revision for item detail and conversation state; replacing the record restores current source.
 - [internal/transport/factory_test.go](../../internal/transport/factory_test.go) — `func TestRelationshipCASInvalidatesPreparedSelectedReads(`; S7. Warm selected item and conversation reads refresh after relationship CAS insertion and a move touching both old and new endpoints.
 - [internal/store/revisions_test.go](../../internal/store/revisions_test.go) — `func TestRelationshipCASEndpointsAdvanceOnlyOnSuccessfulWrites(`; S7. CAS insertion and replacement publish old/new endpoint revisions. Stale and absence-predicate rejections preserve all revisions; unrelated endpoints stay unchanged.
+- [internal/transport/projection_preparation_test.go](../../internal/transport/projection_preparation_test.go) — `func TestTrackingReadPreparationWaitsForExactCurrentProducer(`; S1, S5. Real HTTP pending stays unusable until the exact current projection producer completes; another ready key and a stale revision cannot satisfy functional fixture preparation. Existing paged/search payload assertions and separate API latency gates remain unchanged.
 
 ## Verification and gaps
 

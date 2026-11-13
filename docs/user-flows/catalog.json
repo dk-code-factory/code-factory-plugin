@@ -2162,6 +2162,15 @@
           "scenarios": [
             "S7"
           ]
+        },
+        {
+          "path": "internal/transport/projection_preparation_test.go",
+          "anchor": "func TestTrackingReadPreparationWaitsForExactCurrentProducer(",
+          "purpose": "Real HTTP pending stays unusable until the exact current projection producer completes; another ready key and a stale revision cannot satisfy functional fixture preparation. Existing paged/search payload assertions and separate API latency gates remain unchanged.",
+          "scenarios": [
+            "S1",
+            "S5"
+          ]
         }
       ],
       "suites": [
@@ -4763,6 +4772,15 @@
           "scenarios": [
             "S2",
             "S3"
+          ]
+        },
+        {
+          "path": "internal/transport/projection_preparation_test.go",
+          "anchor": "func TestTrackingReadPreparationWaitsForExactCurrentProducer(",
+          "purpose": "Real HTTP pending stays unusable until the exact current projection producer completes; another ready key and a stale revision cannot satisfy functional fixture preparation. Existing paged/search payload assertions and separate API latency gates remain unchanged.",
+          "scenarios": [
+            "S1",
+            "S2"
           ]
         }
       ],

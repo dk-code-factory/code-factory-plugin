@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "c44fa7c7038a250be1cda654369510d9eab30435197ba0f2d04d11f862d9cf93",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "ad384b0e79c1259140ab4d11c590ccec3272b7521ea792c5508efa43d2c64172",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions.",
-    "implementation": "Reviewed the pinned change against operate-installation implementation mappings. Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified."
+    "description": "S1-S5 keep release upgrade, rollback, private diagnostics and explicit operator configuration authority. No service, browser, runtime profile or installation operation changes.",
+    "implementation": "Compared the provider/factory-only source diff with untouched setup/gateway code. The new durable record is application SQLite state and contains only revision/current-state/retry timing; failure reporting continues through the existing factory health path. Current-target AGENTS API-read requirements were reviewed: these changes execute in background GitHub reconciliation and use existing Store.Write invalidation; no request handler, projection construction, authorization or operation-receipt path changes. The current exact f1769f6 target raises the GitHub default allowance to2,000 attempts/hour while preserving explicit overrides and rolling-window admission, batches Make ownership exports, adds budget/ownership assertions and retains the60-minute hosted bound. Compared actual target changes and assertions: all target runtime/tooling/test bytes are preserved, maintain-flow-contracts catalog matches target exactly, all target sync-inbox implementation/test rows remain, and this PR adds only facet and fixture-assertion coverage. Existing75ms useful-success gates and production cancellation rules remain unchanged. The runtime diff remains limited to facet-related provider/factory code; the subsequent repair changes only transport fixture preparation and assertion metadata. No production75ms deadline is introduced. Integrated exact d485 structured configuration communication: actual messages/questions tests distinguish redacted deduplicated cards, suspended exact native replies, invalid/duplicate/expired answers, unchanged proposal authority, retained native tool catalogs and compact changed-setting diffs. Browser assertions require escaped plain-text cards, hidden narration, initially unselected choices, exact question identity and no proposal confirmation. Keyed semantic merge retains all six new assertion IDs and their consuming entities, all configure-work/answer-attention/view-live-work source/test rows, plugin guidance and generated bundles. Facet and producer-helper Go implementation bytes are unchanged by configuration communication integration; communication/runtime/UI/bundle sources match the target. Shared Session.Communication and settingsDiff participate in fixture projection/rule-confirmation flows; communication, facet and producer assertions cover those interactions. Existing75ms useful-success gates, default2,000, explicit overrides, rolling admission, Makebatch and cancellation behavior remain unchanged.",
+    "tests": "Read TestRollbackRestoresGatewayProfileAndArchivesCurrent: compatible profile selection, one private0600 archive, old release selection and consumed-reference clearing are asserted. The existing installer and diagnostics suites remain required; no real-host operational acceptance is inferred. On the new target, inspected and ran TestSlowResponseRetainsAdmissionAndReturnsSuccess (125ms wait retains admission, then200/useful body), TestSlowRequestSignalsBeforeCompletionAndCorrelatesOutcome (pending/finished sanitized correlation), TestSlowRequestBodyStillCompletes and TestPerformanceGateFailsSlowSuccess (child returns useful200 but verification fails exceeded75ms). Provider/factory/httpbudget race compatibility suites passed. The transport fixture preparation change is verification-only: the large saved-source paging/search fixture now starts through the real HTTP pending response and waits for its exact projection key and current revision before the original functional call. Its original five-second call guard, all page/body/search/delivery assertions, and every separate 75ms successful-response gate remain intact. The blocked-producer regression rejects a different ready key and stale revision; a skip-producer mutation fails. Identical one-CPU/five-busy-process control fails the reviewed test at factory_test.go:236 and passes the repaired fixture with all assertions."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.221
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.551
+      "seconds": 36.656
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 80.45
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.412
+      "seconds": 2.95
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.971
+      "seconds": 2.428
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.248
+      "seconds": 21.125
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.663
+      "seconds": 0.662
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 659.228
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 440.945
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.795
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 61.105
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "ce81cea95ce349ece3def1ea299b7d687a12515177604fad955373638fa9f16b",
+    "flow:operate-installation": "612f38751bf927ebb56e86b7d23f1a28316ab042d5ca4170ec5087260ee6c9dc",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "3d8e79341fc2093623bc67acd48ed8ac9e74f8c3f9808dbdcfd6a81a31a40e59",
-    "ui:P-BROWSER-LAB": "3d81ee13eb25c7041ae64ac52dce2b575ff9b35da3a79110e446ecd5ab896f84",
-    "ui:PAGE-BROWSER-LAB": "22423ec5d16bfe4d378c00f9f7f6fcf874fc71ba3be1ce70661606dbc91da188",
-    "ui:W-BROWSER-LAB": "c6047c261a98ae88e9d4cf3a30b6be073a367bc67a4bc00c77a6449eae4e4724"
+    "ui:C-BROWSER-LAB": "7e53c0a0cff28e1f0aa269f2ee2a65de50c73fab5b0fe27b0e5737e22b912620",
+    "ui:P-BROWSER-LAB": "7123dece6379f453db43ae5fd336a9df746cd0d509e2dfdd73247ff55e94d470",
+    "ui:PAGE-BROWSER-LAB": "9bd36b1c1c5c7ff046616dea341f51bd355ff58ba09cb910c0d5f44b9b00be8f",
+    "ui:W-BROWSER-LAB": "07cf1020cbbcfae4b80035c1f6aee172adf30ddbc90268cfcd2480f340e04d18"
   }
 }
