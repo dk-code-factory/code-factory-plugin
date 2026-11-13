@@ -73,7 +73,13 @@ Device verification requires native host support; the UI never fabricates proof.
 ## Configuration and events
 
 Configuration has persistent chat, readable effective application/native settings
-and concrete proposed diffs. Every edit needs explicit confirmation separate from
+and concrete proposed diffs. Display intentional agent communication as titled
+plain-text cards and questions as answer forms with optional choices and free
+text. Hide ordinary assistant commentary and status summaries in this view;
+retain them for diagnostics. New threads use the communication tool, while
+older retained threads use explicit status-tool results and blocked questions.
+Application proposals show only changed settings with complete before/after
+values. Every edit needs explicit confirmation separate from
 the proposing agent. Stale previews are rejected; confirmed changes wait for safe
 turn boundaries. Native profiles, agent definitions and installed skills remain
 the configuration source. Events exposes separate event, webhook-delivery, batch and ordered-rule archive

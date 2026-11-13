@@ -75,6 +75,12 @@ type State = {
   proposals?: Proposal[];
   settings?: Record<string, unknown>;
 };
+type Communication = {
+  kind: "message" | "question";
+  title: string;
+  body: string;
+  options?: { label: string; description?: string }[];
+};
 type Transcript = {
   events: {
     seq: number;
@@ -91,6 +97,8 @@ type Transcript = {
         item?: { id?: string; type?: string; text?: string };
       };
       text?: string;
+      role?: string;
+      interaction?: Communication;
     };
   }[];
   cursor: number;
@@ -197,8 +205,8 @@ function Factory() {
     hasMore: false,
   });
   const messages = useMemo(
-    () => transcriptMessages(transcript.events),
-    [transcript.events],
+    () => transcriptMessages(transcript.events, tab === "Configuration"),
+    [transcript.events, tab],
   );
   const current =
     tab === "Configuration"
@@ -986,7 +994,9 @@ function Factory() {
               <p>Batch due: {new Date(session.due).toLocaleTimeString()}</p>
             ) : null}
             {session?.hold && <p>Queue held for explicit continuation</p>}
-            {session?.summary && <p>{session.summary}</p>}
+            {tab !== "Configuration" && session?.summary && (
+              <p>{session.summary}</p>
+            )}
             {session?.error && <p role="alert">{session.error}</p>}
             {session && (
               <p>
@@ -1083,9 +1093,19 @@ function Factory() {
             role="log"
             aria-label="Conversation transcript"
           >
-            {messages.map((entry) => (
-              <p key={entry.key}>{entry.text}</p>
-            ))}
+            {messages.map((entry) =>
+              entry.interaction ? (
+                <article key={entry.key} aria-label={entry.interaction.title}>
+                  <h3>{entry.interaction.title}</h3>
+                  <p>{entry.interaction.body}</p>
+                </article>
+              ) : (
+                <p key={entry.key}>
+                  {tab === "Configuration" && <strong>You: </strong>}
+                  {entry.text}
+                </p>
+              ),
+            )}
           </div>
           <form onSubmit={(e) => void send(e)}>
             <label>
@@ -1398,8 +1418,12 @@ function Archive({
     </section>
   );
 }
-function transcriptMessages(events: Transcript["events"]) {
-  const rows: { key: number; text: string }[] = [];
+function transcriptMessages(
+  events: Transcript["events"],
+  configuration = false,
+) {
+  const rows: { key: number; text?: string; interaction?: Communication }[] =
+    [];
   const indexes = new Map<string, number>();
   let fragments:
     | { id: string; count: number; parts: string[]; seq: number }
@@ -1445,6 +1469,11 @@ function transcriptMessages(events: Transcript["events"]) {
       }
     } else fragments = undefined;
     const p = data.params;
+    if (data.interaction?.kind === "message") {
+      rows.push({ key: seq, interaction: data.interaction });
+      continue;
+    }
+    if (configuration && data.role !== "user") continue;
     if (data.text) {
       rows.push({ key: seq, text: data.text });
       continue;
@@ -1456,7 +1485,7 @@ function transcriptMessages(events: Transcript["events"]) {
       if (index === undefined) {
         indexes.set(key, rows.length);
         rows.push({ key: seq, text: p.delta });
-      } else rows[index].text += p.delta;
+      } else rows[index].text = (rows[index].text || "") + p.delta;
     } else if (item?.type === "agentMessage" && item.text) {
       const index = indexes.get(key);
       if (index === undefined) {
@@ -1500,7 +1529,18 @@ function QuestionForm({
   const setAdvanced = (next: string) => changeDraft({ values, advanced: next });
   const [error, setError] = useState("");
   const params = q.params;
-  const questions = (params.questions || []) as (
+  const communication = q.method === "code_factory_communicate";
+  const questions = (
+    communication
+      ? [
+          {
+            id: "answer",
+            question: String(params.body || ""),
+            options: params.options,
+          },
+        ]
+      : params.questions || []
+  ) as (
     | string
     | {
         id: string;
@@ -1519,7 +1559,8 @@ function QuestionForm({
     setError("");
     try {
       let value: Record<string, unknown>;
-      if (native)
+      if (communication) value = { answer: values.answer };
+      else if (native)
         value = {
           answers: Object.fromEntries(
             questions.map((entry) => {
@@ -1543,9 +1584,11 @@ function QuestionForm({
       onSubmit={(e) => void submit(e)}
     >
       <h3>
-        {q.method === "code_factory_report_status"
-          ? String(params.summary || "Agent needs your input")
-          : "Agent request"}
+        {communication
+          ? String(params.title)
+          : q.method === "code_factory_report_status"
+            ? String(params.summary || "Agent needs your input")
+            : "Agent request"}
       </h3>
       {error && <p role="alert">{error}</p>}
       {elicitation && (
