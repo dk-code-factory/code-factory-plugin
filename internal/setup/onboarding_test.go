@@ -118,8 +118,8 @@ func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(t *testin
 		return ctx.Err()
 	}}
 	f.ready.Store(true)
-	post := func() *httptest.ResponseRecorder {
-		r := httptest.NewRequest("POST", f.origin+"/credential", strings.NewReader("key=private-key"))
+	post := func(ctx context.Context) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("POST", f.origin+"/credential", strings.NewReader("key=private-key")).WithContext(ctx)
 		r.Header.Set("Origin", f.origin)
 		r.Header.Set("Authorization", "Bearer "+f.nonce)
 		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -128,12 +128,14 @@ func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(t *testin
 		return w
 	}
 	started := time.Now()
-	w := post()
+	requestCtx, cancelRequest := context.WithTimeout(context.Background(), 25*time.Millisecond)
+	defer cancelRequest()
+	w := post(requestCtx)
 	awaitOnboarding(t, entered, "credential save readiness")
 	if time.Since(started) > 100*time.Millisecond || w.Code != 503 || !strings.Contains(w.Body.String(), "outcome_unknown") || strings.Contains(w.Body.String(), "private-key") {
 		t.Fatal("save did not expose bounded uncertainty", w.Code, w.Body.String())
 	}
-	if post().Code != 409 || saves.Load() != 1 {
+	if post(context.Background()).Code != 409 || saves.Load() != 1 {
 		t.Fatal("uncertain credential was replayed")
 	}
 	time.Sleep(time.Until(started.Add(125 * time.Millisecond)))
@@ -150,6 +152,40 @@ func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(t *testin
 	}
 	if strings.Contains(w.Body.String(), "Credential saved") {
 		t.Fatal("late onboarding success escaped")
+	}
+}
+
+func TestCredentialFormSlowSaveCompletesOnce(t *testing.T) {
+	var saves atomic.Int32
+	f := &credentialForm{origin: "http://127.0.0.1:8787", nonce: "fixture-nonce", expires: time.Now().Add(time.Minute), done: make(chan error, 1), save: func(ctx context.Context, _ string) error {
+		saves.Add(1)
+		time.Sleep(125 * time.Millisecond)
+		return ctx.Err()
+	}}
+	f.ready.Store(true)
+	post := func() *httptest.ResponseRecorder {
+		r := httptest.NewRequest("POST", f.origin+"/credential", strings.NewReader("key=fixture-key"))
+		r.Header.Set("Origin", f.origin)
+		r.Header.Set("Authorization", "Bearer "+f.nonce)
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		w := httptest.NewRecorder()
+		f.ServeHTTP(w, r)
+		return w
+	}
+	w := post()
+	if w.Code != 200 || !strings.Contains(w.Body.String(), "Credential saved") || saves.Load() != 1 || strings.Contains(w.Body.String(), "fixture-key") {
+		t.Fatal("slow credential save lost its successful result", w.Code)
+	}
+	if post().Code != 409 || saves.Load() != 1 {
+		t.Fatal("slow credential save was replayed")
+	}
+	select {
+	case err := <-f.done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("slow save did not finish")
 	}
 }
 

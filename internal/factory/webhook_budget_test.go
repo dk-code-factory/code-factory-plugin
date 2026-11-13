@@ -57,8 +57,8 @@ func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(t *testing.T) {
 			body := `{"action":"opened"}`
 			mac := hmac.New(sha256.New, []byte("fixture-private-key"))
 			mac.Write([]byte(body))
-			request := func() *httptest.ResponseRecorder {
-				r := httptest.NewRequest("POST", "/github/webhook", strings.NewReader(body))
+			request := func(ctx context.Context) *httptest.ResponseRecorder {
+				r := httptest.NewRequest("POST", "/github/webhook", strings.NewReader(body)).WithContext(ctx)
 				r.Header.Set("X-GitHub-Delivery", "bounded-delivery")
 				r.Header.Set("X-GitHub-Event", "issues")
 				r.Header.Set("X-Hub-Signature-256", "sha256="+hex.EncodeToString(mac.Sum(nil)))
@@ -67,7 +67,9 @@ func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(t *testing.T) {
 				return w
 			}
 			started := time.Now()
-			w := request()
+			ctx, cancelRequest := context.WithTimeout(context.Background(), 25*time.Millisecond)
+			defer cancelRequest()
+			w := request(ctx)
 			if time.Since(started) > 100*time.Millisecond || w.Code != 503 || !strings.Contains(w.Body.String(), "outcome_unknown") {
 				t.Fatal("blocked durable acknowledgement", w.Code, time.Since(started))
 			}
@@ -94,7 +96,7 @@ func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(t *testing.T) {
 			}
 			key = func(context.Context) (string, error) { return "fixture-private-key", nil }
 			started = time.Now()
-			if retry := request(); retry.Code != 202 || time.Since(started) > 100*time.Millisecond {
+			if retry := request(context.Background()); retry.Code != 202 || time.Since(started) > 100*time.Millisecond {
 				t.Fatal("deliberate exact-id redelivery failed", retry.Code)
 			}
 			if err := s.Store.Get(context.Background(), "factory-delivery", "bounded-delivery", &d); err != nil {

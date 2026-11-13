@@ -1,8 +1,8 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
-  "fingerprint": "4a70f028782b32100a51b4730a8b937114eb22a7bc5643e269de81758503c2e4",
+  "base": "49b774a8cab46761c64480270cf6b3e069743193",
+  "fingerprint": "24ec1a4f4bc5317b1280e72d4b69c241026e1987df3b05e34e608c62b8952a29",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 35.435
+      "seconds": 36.359
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 79.658
+      "seconds": 80.728
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 2.989
+      "seconds": 3.791
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.368
+      "seconds": 2.929
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.125
+      "seconds": 21.087
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.663
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.206
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 681.4
+      "seconds": 681.216
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 523.407
+      "seconds": 504.335
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.755
+      "seconds": 4.735
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.231
+      "seconds": 60.879
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "493c2c454cf512bd95fe1f27a7cd0497b8c313d0afa6295960ffd904a6045f44",
+    "flow:operate-installation": "9ee9db1959ebe2fac783a6d1642c563db49b0f839e8868b7b783006ace6978c2",
     "term:connection-submits": "d4e13d8d6fd26f7a72f5d77b2325daf1eca0fc72102faec1ac78de107881cb30",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:dependency-operation": "312e5dd6f1ddfdfc1ecea784922bfd8f66ef3d5869742388f43972b1aa3dfaa3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "3c9f629261ad98429ac379b806f76ed72d440343f0b666e1b032fb30d73afc0d",
     "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
     "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe",
-    "ui:C-BROWSER-LAB": "19f778ec77fe7887c60fa33d678cd3487524f74bdd121d52f2ebc3cd71081e4e",
-    "ui:P-BROWSER-LAB": "830a5b212a95831470146584099a6b047c97f7cede171045ce7781fd3353f4fd",
-    "ui:PAGE-BROWSER-LAB": "5ceff1c63d130e951f398063c181c6642d6ca3dacb7476a0fd8af90ff9e59f62",
-    "ui:W-BROWSER-LAB": "0f6637fb382bf50bd7dd9fff030e8d20fecc1136c677142ac6a62723903932e6"
+    "ui:C-BROWSER-LAB": "6a0aa0223f5e2a09b5431e05bdd1015d8c025a8abe2a5d1448e506f421d631df",
+    "ui:P-BROWSER-LAB": "343f939184ff29bf341f9233f2a032d92bd18ee1533238b646a7aeaf56f7688b",
+    "ui:PAGE-BROWSER-LAB": "e1490b50b291ce38cb5768f5a71d8c509f3bcf3ef8f1ed0474091c2be2b6771e",
+    "ui:W-BROWSER-LAB": "014d6a792433e9fd20dda718af1b03077c79e9effc430b9ab3014452e5e5f2ec"
   }
 }

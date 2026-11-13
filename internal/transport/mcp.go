@@ -367,8 +367,6 @@ func registerToolBudget(server *mcp.Server) {
 			if method != "tools/call" {
 				return next(ctx, method, req)
 			}
-			ctx, cancel := context.WithTimeout(ctx, 80*time.Millisecond)
-			defer cancel()
 			result, err := next(ctx, method, req)
 			if err != nil {
 				encoded, encodeErr := jsonrpc.EncodeMessage(&jsonrpc.Response{Error: err})

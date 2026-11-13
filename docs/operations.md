@@ -114,6 +114,18 @@ headers, raw request bodies and exception text are not logged. Rejected requests
 that reach these endpoints are recorded too, without reading an unauthorized
 request body. This does not enable raw gateway/tunnel or outbound GitHub logging.
 
+Requests crossing 75 ms keep running. The user journal emits sanitized latency
+warnings at the threshold and completion, correlated by a process-local
+`request_id`; API JSON records retain that identity as `requestId` and mark
+`budgetBreached` above 75 ms, including successful responses. Gateway audit records
+include `budget_breached`. Duration ends at the first acknowledged data frame for
+SSE; a healthy long-lived subscription is not itself a slow response. The latency
+observer retains one sink call plus 64 queued metadata records; warnings include
+exact `slow_requests`, `active_slow_requests` and `dropped_latency_records` counters.
+Method tokens are static and endpoint labels own at most 64 bytes; short metadata
+fields cannot retain the original private request-line allocation.
+An unavailable diagnostic sink never cancels or delays the business response.
+
 The log directory is private (0700), files are 0600, and rotation retains the
 current 10 MiB file plus up to three numbered backups. A failed log write emits
 one generic service warning and never retries or changes the API operation.

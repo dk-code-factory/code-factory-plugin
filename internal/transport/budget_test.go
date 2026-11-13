@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"codefactory/internal/app"
 	"codefactory/internal/domain"
+	"codefactory/internal/httpbudget"
 	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
@@ -30,8 +31,9 @@ type budgetSample struct {
 }
 
 // This gate runs by itself after the heavy verification suites. It measures the
-// authenticated production handler through complete JSON serialization and log
-// admission. Socket/host transit and background completion are separate evidence.
+// authenticated production handler through complete JSON serialization and wire
+// completion. Logging admission, socket/host transit and background completion
+// are separate evidence.
 func TestPluginAPIBudget(t *testing.T) {
 	if os.Getenv("CODE_FACTORY_API_PERFORMANCE") != "1" {
 		t.Skip("isolated API performance gate")
@@ -57,7 +59,7 @@ func TestPluginAPIBudget(t *testing.T) {
 			sort.Float64s(values)
 			stats[tool] = map[string]float64{"max": values[len(values)-1], "p50": values[(len(values)-1)/2], "p95": values[(len(values)-1)*95/100], "p99": values[(len(values)-1)*99/100]}
 		}
-		report := map[string]any{"apiVersion": APIVersion, "boundary": "authenticated HTTP handler, including validation, serialization and logging admission; excludes network transit and background completion", "samples": samples, "tools": stats}
+		report := map[string]any{"apiVersion": APIVersion, "boundary": "authenticated HTTP response, including validation, serialization and wire completion; excludes logging admission, network transit and background completion", "samples": samples, "tools": stats}
 		data, err := json.MarshalIndent(report, "", "  ")
 		if err != nil {
 			t.Error(err)
@@ -73,8 +75,8 @@ func TestPluginAPIBudget(t *testing.T) {
 		}
 
 		for _, sample := range samples {
-			if sample.Milliseconds > 100 {
-				t.Errorf("%s/%s exceeded 100 ms: %.3f", sample.Scenario, sample.Tool, sample.Milliseconds)
+			if sample.Milliseconds > float64(httpbudget.Duration)/float64(time.Millisecond) {
+				t.Errorf("%s/%s exceeded 75 ms: %.3f", sample.Scenario, sample.Tool, sample.Milliseconds)
 			}
 			if sample.Bytes > responseLimit {
 				t.Errorf("%s/%s exceeded 64 KiB: %d", sample.Scenario, sample.Tool, sample.Bytes)

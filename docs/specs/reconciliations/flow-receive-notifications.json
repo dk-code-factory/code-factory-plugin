@@ -1,8 +1,8 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
-  "fingerprint": "205472f0a18dd7e83480c495778a10e1deb382c6f48db67fa3b43bf77a028ae9",
+  "base": "49b774a8cab46761c64480270cf6b3e069743193",
+  "fingerprint": "6e77e27a643c0a3f598d767d4cba1f7bec19be2757e0e81ae370181514dc59f9",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 79.658
+      "seconds": 80.728
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.206
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 681.4
+      "seconds": 681.216
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 523.407
+      "seconds": 504.335
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.755
+      "seconds": 4.735
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.231
+      "seconds": 60.879
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "f2179bbb7b887dc4e95f6572e6de353440bf0f804b4ff0574cc034bca2c8b755",
+    "flow:receive-notifications": "7e0ee1f4230ce312de4c216d90a3d43e70aa60d5f2a4b8dd783a19d0609ab9e3",
     "term:attention-request": "73984fc21eb95722b7ed8b6aa86b4cb35b6e7ad0549a4a104c974d9667abd4d7",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:host": "ee1b68f918767b4c8e303634da6fe67fb81b3d85b90f05e82d5c14211a745d97",

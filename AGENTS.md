@@ -39,3 +39,14 @@ Maintain structured registries and generated sections, preserve stable IDs and t
 pinned historical adoption policy, and write review records with the CLI after
 successful verification. Do not edit reconciliation receipts by hand. UI changes
 must include meaningful implementation and test cochanges when behavior changes.
+
+Latency targets are verification gates and production observability thresholds,
+never production request deadlines. Requests exceeding 75 ms must continue to
+completion unless the caller cancels, the service shuts down, or a separately
+justified functional limit applies. Signal and track slow requests with bounded,
+nonblocking, sanitized diagnostics, stable request identities and actual outcomes.
+Performance tests must fail on slow useful responses; a fast timeout/error must
+never satisfy a success-latency assertion. Include regressions proving slow
+production requests succeed and preserve caller/service cancellation, admission
+and response-size limits. Do not introduce runtime cancellation to make a timing
+test pass.
