@@ -281,7 +281,10 @@
         "API-V2-FIRST-INSTANCE",
         "HTTP-SLOW-SUCCESS",
         "MCP-SLOW-SUCCESS",
-        "HTTP-WIRE-SLOW"
+        "HTTP-WIRE-SLOW",
+        "GO-SCAN-WAIT",
+        "WRAP-SCAN-WAIT",
+        "GO-SCAN-ALIAS"
       ],
       "gaps": [
         {
@@ -300,8 +303,8 @@
       ],
       "context": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
       "composition": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
-      "interactions": "Slow actions remain pending while their exact accepted result is read. Temporary result-read503 failures preserve that identity. An original deadline rejection reports uncertain outcome without replay; terminal result-size failures retain the draft and require inspection.",
-      "state_description": "Pending accepted action; completed result; temporary result-read outage; original action outcome unknown; terminal result failure with draft retained; unavailable expired or restarted result. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery. Uncertain and lost outcomes retain their explicit classification and inspect-before-retry instruction alongside any error detail. A daemon change retires prior versions and displayed-detail ownership while preserving navigation and drafts; content becomes usable only after a current-instance read. A latency threshold breach alone does not interrupt the connection or fail a request.",
+      "interactions": "Slow actions remain pending while their exact accepted result is read. Temporary result-read503 failures preserve that identity. An original deadline rejection reports uncertain outcome without replay; terminal result-size failures retain the draft and require inspection. Sync starts one accepted refresh; repeated clicks join it. Safe reads resume after the retained cooldown without replaying uncertain mutations.",
+      "state_description": "Pending accepted action; completed result; temporary result-read outage; original action outcome unknown; terminal result failure with draft retained; unavailable expired or restarted result. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery. Uncertain and lost outcomes retain their explicit classification and inspect-before-retry instruction alongside any error detail. A daemon change retires prior versions and displayed-detail ownership while preserving navigation and drafts; content becomes usable only after a current-instance read. A latency threshold breach alone does not interrupt the connection or fail a request. A throttled synchronization remains waiting with a concrete reason and UTC retry time; saved PR data stays available and Sync stays disabled until the original operation finishes. Busy status reads and temporary connection outages retain the last known retry reason and time.",
       "element_description": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations.",
       "purpose": "Connection state; bounded retries for ordinary reads, continued exact-result reads for accepted actions, no replay of uncertain mutations."
     },
@@ -343,6 +346,16 @@
           "path": "internal/store/revisions.go",
           "anchor": "func (s *Store) Revision(",
           "purpose": "Committed dependency revisions are published independently of request-time SQL."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) execute(",
+          "purpose": "Coalesce scans, expose waiting status and schedule safe synchronization retries without replaying other operations."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export async function call",
+          "purpose": "Poll the original accepted operation and deliver retained throttle progress to the UI."
         }
       ],
       "assertions": [
@@ -352,7 +365,10 @@
         "WRAP-PROJECTION",
         "WRAP-BOOT-FILTER",
         "API-V2-CURRENT",
-        "API-V2-CHUNKS"
+        "API-V2-CHUNKS",
+        "GO-SCAN-WAIT",
+        "WRAP-SCAN-WAIT",
+        "GO-SCAN-ALIAS"
       ],
       "gaps": [
         {
@@ -371,8 +387,8 @@
       ],
       "context": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
       "composition": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
-      "interactions": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
-      "state_description": "Search and open/all/new/unread filter; show 50 rows and explicit Show more. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
+      "interactions": "Search and open/all/new/unread filter; show 50 rows and explicit Show more. Sync starts one accepted refresh; repeated clicks join it. Safe reads resume after the retained cooldown without replaying uncertain mutations.",
+      "state_description": "Search and open/all/new/unread filter; show 50 rows and explicit Show more. Loading while the requested saved revision is pending; older content is unavailable for dependent actions. A throttled synchronization remains waiting with a concrete reason and UTC retry time; saved PR data stays available and Sync stays disabled until the original operation finishes. Busy status reads and temporary connection outages retain the last known retry reason and time.",
       "element_description": "Search and open/all/new/unread filter; show 50 rows and explicit Show more.",
       "purpose": "Search and open/all/new/unread filter; show 50 rows and explicit Show more."
     },
@@ -6202,6 +6218,24 @@
       "path": "internal/factory/communication_test.go",
       "anchor": "func TestConfigurationCommunicationRetainsNativeCatalog(",
       "assertion": "New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs."
+    },
+    {
+      "id": "GO-SCAN-WAIT",
+      "path": "internal/transport/operations_retry_test.go",
+      "anchor": "func TestScanWaitsCoalescesAndReleasesWorkers(",
+      "assertion": "Waiting scans expose a concrete retry reason/time, coalesce different click IDs, free all ordinary workers and resume the original task once after controlled time advances."
+    },
+    {
+      "id": "WRAP-SCAN-WAIT",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "throttled PR synchronization shows retained retry state and resumes without a second scan",
+      "assertion": "The PR pane retains saved rows and a disabled Sync control while displaying the exact reason/time through busy status responses followed by connection outages, then completes by polling the original identity without another scan."
+    },
+    {
+      "id": "GO-SCAN-ALIAS",
+      "path": "internal/transport/operations_retry_test.go",
+      "anchor": "func TestScanAliasAdmissionIsBoundedAndReleased(",
+      "assertion": "Scan aliases obey identity and byte admission bounds; rejected IDs retain nothing, exact accepted duplicates retain their original result and completion releases active scan admission."
     }
   ],
   "source_map": [
@@ -6433,7 +6467,10 @@
         "WEBHOOK-INBOX-NOTIFY",
         "POLL-PEER-DISCOVERY",
         "WORKTREE-INTENT-RECOVERY",
-        "WORKTREE-RECOVERY-BOUNDARY"
+        "WORKTREE-RECOVERY-BOUNDARY",
+        "GO-SCAN-WAIT",
+        "WRAP-SCAN-WAIT",
+        "GO-SCAN-ALIAS"
       ],
       "gap": {
         "version": 1,
