@@ -1093,6 +1093,16 @@
         {
           "path": "internal/providers/github.go",
           "purpose": "Current sync-inbox implementation or fixture/build dependency."
+        },
+        {
+          "path": "internal/factory/github_ci.go",
+          "anchor": "func (s *Service) refreshCI(",
+          "purpose": "Bounded polling-pass CI snapshot reuse with strict delivery/read ordering, credential and saved-observation isolation."
+        },
+        {
+          "path": "internal/providers/github_source.go",
+          "anchor": "func PinGitHubRead(",
+          "purpose": "Pins one read operation so HTTP Authorization and query/batch cache identities use the same resolved credentials."
         }
       ],
       "tests": [
@@ -1591,6 +1601,79 @@
           "purpose": "Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.",
           "scenarios": [
             "S3"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBurstSharesLiveRequestsAcrossDeliveryPages(",
+          "purpose": "Seventy queued mixed CI deliveries across two pages share eight real HTTP requests for two current-head PRs; every delivery commits, unchanged CI queues once per PR, and a later poll reads live and queues a changed CI result.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchRefreshesDeliveriesReceivedDuringRead(",
+          "purpose": "A delivery arriving during the first provider read forces another four-request live read in the same polling pass.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchEqualArrivalTimesReadLive(",
+          "purpose": "Deliveries whose receipt time equals the read start never reuse an ambiguously ordered observation.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchFailureRemainsDurableAndRetryable(",
+          "purpose": "Failed reads remain pending with durable retry state and are not cached; a later successful retry batch shares one live observation.",
+          "scenarios": [
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchSeparatesHeads(",
+          "purpose": "An old-head CI event cannot reverse a lifecycle head update; a new-head event reads live.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchSeparatesCredentialsAndSavedObservations(",
+          "purpose": "Changed credentials and a concurrently replaced saved item each force another live provider read.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchWithoutHeadNeverSharesSnapshot(",
+          "purpose": "Missing-head deliveries force separate live reads and never apply CI without a verified head association.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchInvalidatesAfterLifecycleWithUnchangedVersion(",
+          "purpose": "An intervening lifecycle delivery leaves the head and saved version unchanged, yet the next queued CI delivery must make four fresh HTTP requests and observe changed CI.",
+          "scenarios": [
+            "S4"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchPinsCredentialScopeToLiveRead(",
+          "purpose": "A credential resolver returning A then B cannot label B HTTP observations as A; return to A safely reuses only an A-authenticated live read.",
+          "scenarios": [
+            "S4"
           ]
         }
       ],
@@ -3352,7 +3435,7 @@
         {
           "path": "web/tests/wrapper.spec.ts",
           "anchor": "question pages retain exact requests beyond the first page",
-          "purpose": "Navigate to requests 51\u201355 and deliver the exact second-page question identity and free-text answer.",
+          "purpose": "Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.",
           "scenarios": [
             "S1",
             "S2"
@@ -11401,6 +11484,16 @@
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
           "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
+        },
+        {
+          "path": "internal/factory/github_ci.go",
+          "anchor": "func (s *Service) refreshCI(",
+          "purpose": "Bounded polling-pass CI snapshot reuse with strict delivery/read ordering, credential and saved-observation isolation."
+        },
+        {
+          "path": "internal/providers/github_source.go",
+          "anchor": "func PinGitHubRead(",
+          "purpose": "Pins one read operation so HTTP Authorization and query/batch cache identities use the same resolved credentials."
         }
       ],
       "tests": [
@@ -11808,6 +11901,78 @@
           "purpose": "Loaded archive replacement observes daemon identity, hides old page/selection while pending, then displays current records without manual refresh, preserving query controls and navigation without chat.",
           "scenarios": [
             "S9"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBurstSharesLiveRequestsAcrossDeliveryPages(",
+          "purpose": "Seventy queued mixed CI deliveries across two pages share eight real HTTP requests for two current-head PRs; every delivery commits, unchanged CI queues once per PR, and a later poll reads live and queues a changed CI result.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchRefreshesDeliveriesReceivedDuringRead(",
+          "purpose": "A delivery arriving during the first provider read forces another four-request live read in the same polling pass.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchEqualArrivalTimesReadLive(",
+          "purpose": "Deliveries whose receipt time equals the read start never reuse an ambiguously ordered observation.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchFailureRemainsDurableAndRetryable(",
+          "purpose": "Failed reads remain pending with durable retry state and are not cached; a later successful retry batch shares one live observation.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchSeparatesHeads(",
+          "purpose": "An old-head CI event cannot reverse a lifecycle head update; a new-head event reads live.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchSeparatesCredentialsAndSavedObservations(",
+          "purpose": "Changed credentials and a concurrently replaced saved item each force another live provider read.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchWithoutHeadNeverSharesSnapshot(",
+          "purpose": "Missing-head deliveries force separate live reads and never apply CI without a verified head association.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchInvalidatesAfterLifecycleWithUnchangedVersion(",
+          "purpose": "An intervening lifecycle delivery leaves the head and saved version unchanged, yet the next queued CI delivery must make four fresh HTTP requests and observe changed CI.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/github_ci_test.go",
+          "anchor": "func TestCIWebhookBatchPinsCredentialScopeToLiveRead(",
+          "purpose": "A credential resolver returning A then B cannot label B HTTP observations as A; return to A safely reuses only an A-authenticated live read.",
+          "scenarios": [
+            "S2"
           ]
         }
       ],

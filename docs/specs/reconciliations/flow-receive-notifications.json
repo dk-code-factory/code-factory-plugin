@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "8fc4c3e67fdb3c0038cf1f314e3643152fe69aed6d6b577f265ab3bb9e5c663d",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "e9c8eff0120bea1aa17f2d4a4991236f003a8b0fc305c4cbbce1e15029877529",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Signed subscription delivery, renewal, retry and notification privacy remain unchanged. New configuration questions reuse the existing metadata-only attention.required envelope.",
-    "implementation": "Reviewed the pinned change against receive-notifications implementation mappings. Signed subscription delivery, renewal, retry and notification privacy remain unchanged. New configuration questions reuse the existing metadata-only attention.required envelope. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications verifies supported notification identity and private-content exclusion; communicate emits only sessionId in attention metadata. Real-host callback and soak gaps remain open."
+    "kind": "refactor",
+    "description": "The event callback protocol, subscription lifetimes and saved inbox notification delivery remain unchanged. Each CI delivery still uses the same item-change transaction.",
+    "implementation": "The event callback protocol, subscription lifetimes and saved inbox notification delivery remain unchanged. Each CI delivery still uses the same item-change transaction. Reassessed exactd485 integration by inspecting all changed communication implementation/assertions, UI/flow/catalog entries and generated bundles. All36 upstreamchanged files other than semantically mergedcatalog are byte-identical to target; every targetcatalogflow row and allsix communicationassertions/consumingUI entries are preserved. Four ownedGo files remain byte-identical to clean-reviewed f177 implementation. Authoredcatalog adds only ownCI2implementation/9tests per sync/route; AGENTS/CIpolicy75ms/cancellation,2000allowance and Makebatch remain target.",
+    "tests": "TestSubscriptionVerificationRetryDedupRefreshAndExpiry checks signed retry identity, acknowledgement deduplication and expired subscriptions; existing signed webhook coverage retains inbox metadata notifications. Read actual newcommunication assertions before review: message deduplication/redaction, suspended exactquestion reply, invalid/duplicateanswer rejection, no proposalconfirmation or transcriptanswerleak; nativecatalog resume preserves legacy/newtools; payloadbounds/sessionisolation/expiry; legacyintentionalmessage and changed-only complete settingsdiff; browserplain escaping/hiddennarration and explicitunselected exactquestionanswer cannot approveproposal. The sequential durableworker first runs allnine webhook regressions plus four configurationcommunication Go race tests, then two exactnewcommunication browserfixtures, and only proceeds to required reviewedCLI if both focus phases pass. These comments describe inspected assertions and the execution dependency; actualcurrentphase exits/suite results are retained by the worker/CLI. Historical focused/CLI/review/mutation evidence remains explicitly historical."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 84.171
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.245
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 675.847
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 456.549
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.815
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 61.512
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "8eb381a10ccb9e9a4bc084dc9eca78878de6100db094396da763588a68cb1213",
+    "flow:receive-notifications": "403f61ec419521c3b7f17fed042ffde75321dc053e66d3b7a4b1541b3759c029",
     "term:attention-request": "4c7d7cb37fc9519d236979855f5a28d9b2bb63231973d556eecb5384aca955d8",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:host": "7485127d9f66ced31cf4a8f4cd75f62757c0198b26a41bf13361f0cdbd9bacd7",
