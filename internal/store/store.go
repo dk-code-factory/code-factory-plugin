@@ -235,6 +235,35 @@ func (s *Store) JSONByteSizes(ctx context.Context, kind, path string) (map[strin
 	return out, rows.Err()
 }
 
+// JSONByteEntry keeps a row's storage identity and byte size beside metadata
+// with that byte field removed. The encoded body never leaves SQLite.
+type JSONByteEntry struct {
+	ID       string
+	Size     int64
+	Metadata json.RawMessage
+}
+
+// JSONByteEntries inventories byte fields inside the same transaction that
+// will replace or evict rows. Both the bucket and JSON path are bound values.
+func (t *Tx) JSONByteEntries(kind, path string) ([]JSONByteEntry, error) {
+	rows, err := t.tx.QueryContext(t.ctx, "SELECT id,coalesce(length(rtrim(json_extract(data, ?), '='))*3/4,0),json_remove(data, ?) FROM entities WHERE kind=?", path, path, kind)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []JSONByteEntry{}
+	for rows.Next() {
+		var entry JSONByteEntry
+		var metadata []byte
+		if err := rows.Scan(&entry.ID, &entry.Size, &metadata); err != nil {
+			return nil, err
+		}
+		entry.Metadata = metadata
+		out = append(out, entry)
+	}
+	return out, rows.Err()
+}
+
 func (t *Tx) Put(kind, id string, v any) error {
 	t.touch(kind, id)
 	t.invalidate(kind, id)
