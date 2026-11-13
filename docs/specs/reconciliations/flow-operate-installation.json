@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
-  "fingerprint": "be6a39118b31ee2a576366b60d69774a2c2167a027fab53f81607cab50e14569",
+  "fingerprint": "cbd6e420815458c4cbe8ba5e0623f9f497f811b1397440ddab129146253f9c7b",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.321
+      "seconds": 0.301
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.931
+      "seconds": 37.039
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.701
+      "seconds": 72.521
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 4.033
+      "seconds": 3.353
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 3.252
+      "seconds": 2.789
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.521
+      "seconds": 21.085
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.181
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.663
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.224
+      "seconds": 1.205
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 663.944
+      "seconds": 661.509
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 443.327
+      "seconds": 435.692
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.894
+      "seconds": 4.716
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 63.084
+      "seconds": 60.781
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "337bd0eefa462484d1a71ba2695b69f25f9e030dfc3d8663b45f027eaf1f1aae",
+    "flow:operate-installation": "61166fbcd2b8e2d2499a102367793a6c2b9eeab69fd98f2cbe90fa6dfa4acfb8",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "16720a502c0089288900dad31db08bb37869f93fb8f67b425e2346f199a5ee98",
-    "ui:P-BROWSER-LAB": "7338e052e306ad7dd2593042b449f7f06740f309ba7127b7cc5755f1f1a323a7",
-    "ui:PAGE-BROWSER-LAB": "558740aa1d30392ee935181ceb6aa8138f00a04b91d138bf40b46411931e8b47",
-    "ui:W-BROWSER-LAB": "1d937f691c77110bfe9499aa4e7b83c006e02652ca95c7c0ae5476dc8d193e16"
+    "ui:C-BROWSER-LAB": "62620ea573767fab63a932b1fe1f5dbdc258b6270551463c7430def548ea71b6",
+    "ui:P-BROWSER-LAB": "0176df9dc12887129fcb72618ce969ef1dfdf6c458ba4544aa40139cc2506a37",
+    "ui:PAGE-BROWSER-LAB": "8762c79b7a4b8d4c519d8ccc081c99ac9ec49ea65d99362a4d9b3901d06472a8",
+    "ui:W-BROWSER-LAB": "2458962bf2d3d04b019f188d46e0faf1a287d6e8fbca12d2465441c4b85da156"
   }
 }

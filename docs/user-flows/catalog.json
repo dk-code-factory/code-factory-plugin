@@ -945,7 +945,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes."
+          "purpose": "Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes."
         },
         {
           "path": "internal/factory/native_projection_test.go",
@@ -974,7 +974,18 @@
             "S2",
             "S3"
           ],
-          "purpose": "Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
+          "purpose": "Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
+        },
+        {
+          "path": "internal/factory/native_projection_test.go",
+          "anchor": "func TestNativeNonsecretURLsRemainEditable(",
+          "scenarios": [
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ],
+          "purpose": "Noncredential URL query parameters and anchors retain their exact values in inspection, proposed edits and one confirmed native write; no write occurs before confirmation."
         }
       ],
       "suites": [
@@ -5544,7 +5555,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes."
+          "purpose": "Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes."
         },
         {
           "path": "internal/factory/native_projection_test.go",
@@ -5568,7 +5579,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
+          "purpose": "Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
         }
       ],
       "suites": [

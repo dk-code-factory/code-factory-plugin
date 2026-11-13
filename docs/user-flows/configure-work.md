@@ -25,6 +25,10 @@ The private owner connection is established. Application data starts clean in th
    must be edited outside Code Factory; redacted placeholders cannot be submitted
    as native edits. Question answers do not confirm proposals.
 
+   Named profile identifiers retain their exact spelling, including short
+   token-like names. Noncredential URL queries and anchors retain their values
+   through inspection, proposal and confirmed native application.
+
 4. Explicitly confirm or reject against the inspected versions.
 
    Changes to hidden native credentials also invalidate an older proposal.
@@ -120,10 +124,11 @@ flowchart TD
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationRetainsNativeCatalog(`; S1. New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionRedactsUnmanagedCredentials(`; S1, S3, S4. Native inspection and the configuration-agent tool redact unmanaged environment, header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeProposalRetainsRedactedSnapshotAndRawFreshness(`; S1, S3, S4. Stored proposals contain redacted snapshots; an invisible credential rotation rejects confirmation, and a fresh confirmed profile edit sends exactly one scoped native write.
-- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialEditsAreRejectedWithoutPersistence(`; S1, S3, S4. Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialEditsAreRejectedWithoutPersistence(`; S1, S3, S4. Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeLegacyProposalMigrationPreservesStaleness(`; S1, S3, S4. Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(`; S1, S3. Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal.
-- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1, S2, S3. Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1, S2, S3. Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeNonsecretURLsRemainEditable(`; S1, S3, S4, S5. Noncredential URL query parameters and anchors retain their exact values in inspection, proposed edits and one confirmed native write; no write occurs before confirmation.
 
 ## Verification and gaps
 

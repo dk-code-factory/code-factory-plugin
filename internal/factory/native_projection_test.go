@@ -18,13 +18,16 @@ func nativeCredentialFixture(file string) map[string]any {
 		"profiles": map[string]any{"pilot": map[string]any{"sandbox_mode": "read-only", "approval_policy": "never"}},
 		"mcp_servers": map[string]any{"fixture": map[string]any{
 			"env":          map[string]any{"CUSTOM_ACCESS": "fixture-env-credential", "SHORT": "x"},
-			"http_headers": map[string]any{"Authorization": "fixture-header-credential"},
+			"http_headers": map[string]any{"Authorization": "fixture-header-credential", "X-Auth": "fixture-custom-header-credential", "X-Workspace": "fixture-opaque-header-credential"},
 			"args":         []any{"--credential", "fixture-argument-credential"},
-			"url":          "https://user:fixture-url-password@example.test/mcp?token=fixture-query-credential#fixture-fragment",
+			"url":          "https://user:fixture-url-password@example.test/mcp?token=fixture-query-credential#access_token=fixture-fragment",
 		}},
 		"password": "fixture-password-credential", "custom_note": "copied fixture-env-credential",
 		"access_token": "fixture-token-credential", "unknown": "ghp_fixturePatternCredential",
-		"access_key": "fixture-access-credential",
+		"access_key":             "fixture-access-credential",
+		"developer_instructions": "copied fixture-custom-header-credential",
+		"custom_header_copy":     "copied fixture-opaque-header-credential",
+		"opaque_pattern":         "sk-fixtureOpaquePatternCredential",
 	}
 	return map[string]any{"config": config, "layers": []any{map[string]any{
 		"name": map[string]any{"type": "user", "file": file}, "version": "v1", "config": config,
@@ -34,7 +37,7 @@ func nativeCredentialFixture(file string) map[string]any {
 func assertNativeCredentialsHidden(t *testing.T, value any) {
 	t.Helper()
 	data := string(bytes(value))
-	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential"} {
+	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential"} {
 		if strings.Contains(data, private) {
 			t.Fatal("native credential escaped its projection")
 		}
@@ -82,7 +85,7 @@ func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(t *testing.T) {
 	server["env"].(map[string]any)["MODE"] = "read-only"
 	server["args"] = []any{"user", "--model", "fixture-model", "--sandbox", "read-only", "--credential", "fixture-argument-credential"}
 	server["url"] = "https://user:p4ss@example.test/mcp?token=fixture-query-credential&mode=read-only#access_token=fixture-fragment-credential"
-	config["copied_url_password"] = "copied p4ss"
+	config["ordinary_url_copy"] = "copied p4ss"
 	config["copied_url_query"] = "copied fixture-query-credential"
 	config["copied_url_fragment"] = "copied fixture-fragment-credential"
 	view, err := s.NativeConfig(ctx, s.Dir)
@@ -111,6 +114,39 @@ func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(t *testing.T) {
 	must(t, err) // The displayed selector must remain usable for a safe proposal.
 }
 
+func TestNativeNonsecretURLsRemainEditable(t *testing.T) {
+	s, rpc, _ := fixture(t)
+	ctx := context.Background()
+	file := filepath.Join(s.Dir, "config.toml")
+	rpc.native = nativeCredentialFixture(file)
+	config := rpc.native["config"].(map[string]any)
+	server := config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)
+	publicURL := "https://example.test/mcp?transport=sse&mode=read-only&profile=sk-dev#secret-guide"
+	server["url"] = publicURL
+	view, err := s.NativeConfig(ctx, s.Dir)
+	must(t, err)
+	var projected struct{ Config map[string]any }
+	must(t, json.Unmarshal(view, &projected))
+	if projected.Config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)["url"] != publicURL {
+		t.Fatal("native inspection changed a nonsecret URL")
+	}
+	p, err := s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{{KeyPath: "mcp_servers.fixture.url", Value: publicURL, MergeStrategy: "replace"}}})
+	must(t, err)
+	if p.Native.Edits[0].Value != publicURL || len(rpc.writes) != 0 {
+		t.Fatal("ordinary URL proposal changed its value or wrote before confirmation")
+	}
+	_, err = s.Confirm(ctx, p.ID, true)
+	must(t, err)
+	if len(rpc.writes) != 1 {
+		t.Fatal("confirmed ordinary URL did not produce one native write")
+	}
+	var write struct{ Edits []ConfigEdit }
+	must(t, json.Unmarshal(rpc.writes[0], &write))
+	if len(write.Edits) != 1 || write.Edits[0].Value != publicURL {
+		t.Fatal("native write changed the ordinary URL")
+	}
+}
+
 func TestNativeCredentialWordsInNamesRemainEditable(t *testing.T) {
 	s, rpc, _ := fixture(t)
 	ctx := context.Background()
@@ -118,18 +154,20 @@ func TestNativeCredentialWordsInNamesRemainEditable(t *testing.T) {
 	rpc.native = nativeCredentialFixture(file)
 	config := rpc.native["config"].(map[string]any)
 	profiles := config["profiles"].(map[string]any)
-	for _, name := range []string{"secret-scan", "token", "secret.scan"} {
+	for _, name := range []string{"secret-scan", "token", "secret.scan", "sk-dev"} {
 		profiles[name] = map[string]any{"model": "fixture-model", "sandbox_mode": "read-only", "approval_policy": "never"}
 	}
 	project := filepath.Join(s.Dir, ".secrets", "project")
 	config["projects"] = map[string]any{project: map[string]any{"trust_level": "trusted"}}
 	config["plugins"] = map[string]any{"secret-scan@market": map[string]any{"enabled": true}}
+	config["model_provider"] = "sk-dev"
+	config["model_providers"] = map[string]any{"sk-dev": map[string]any{"name": "Development provider"}}
 	config["mcp_servers"].(map[string]any)["secret-server"] = map[string]any{"enabled": true, "env": map[string]any{"API_KEY": "fixture-named-server-credential"}}
 	view, err := s.NativeConfig(ctx, s.Dir)
 	must(t, err)
 	var projected struct{ Config map[string]json.RawMessage }
 	must(t, json.Unmarshal(view, &projected))
-	if string(projected.Config["profiles"]) != string(bytes(profiles)) || string(projected.Config["projects"]) != string(bytes(config["projects"])) || string(projected.Config["plugins"]) != string(bytes(config["plugins"])) {
+	if string(projected.Config["profiles"]) != string(bytes(profiles)) || string(projected.Config["projects"]) != string(bytes(config["projects"])) || string(projected.Config["plugins"]) != string(bytes(config["plugins"])) || string(projected.Config["model_provider"]) != `"sk-dev"` || string(projected.Config["model_providers"]) != string(bytes(config["model_providers"])) {
 		t.Fatal("credential words in user-defined names hid ordinary settings")
 	}
 	if strings.Contains(string(view), "fixture-named-server-credential") {
@@ -138,6 +176,8 @@ func TestNativeCredentialWordsInNamesRemainEditable(t *testing.T) {
 	for _, edit := range []ConfigEdit{
 		{KeyPath: "profiles.secret-scan", Value: profiles["secret-scan"], MergeStrategy: "upsert"},
 		{KeyPath: "profiles.token.model", Value: "next-model", MergeStrategy: "replace"},
+		{KeyPath: "profiles.sk-dev.model", Value: "next-model", MergeStrategy: "replace"},
+		{KeyPath: "model_provider", Value: "sk-dev", MergeStrategy: "replace"},
 		{KeyPath: `profiles."secret.scan".model`, Value: "next-model", MergeStrategy: "replace"},
 		{KeyPath: "profiles", Value: profiles, MergeStrategy: "upsert"},
 		{KeyPath: fmt.Sprintf("projects.%q.trust_level", project), Value: "trusted", MergeStrategy: "replace"},
@@ -146,7 +186,7 @@ func TestNativeCredentialWordsInNamesRemainEditable(t *testing.T) {
 		_, err = s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{edit}})
 		must(t, err)
 	}
-	for _, path := range []string{`profiles.token.api_key`, `profiles."secret.scan".password`, `mcp_servers."secret-server".env.API_KEY`} {
+	for _, path := range []string{`profiles.token.api_key`, `profiles.sk-dev.api_key`, `profiles."secret.scan".password`, `mcp_servers."secret-server".env.API_KEY`} {
 		_, err = s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{{KeyPath: path, Value: "new-credential", MergeStrategy: "replace"}}})
 		if err == nil {
 			t.Fatal("a named-entry path bypassed rejection of a credential setting")
@@ -205,8 +245,14 @@ func TestNativeCredentialEditsAreRejectedWithoutPersistence(t *testing.T) {
 		{KeyPath: "mcp_servers.fixture.env.NEW_KEY", Value: "new-credential", MergeStrategy: "upsert"},
 		{KeyPath: "mcp_servers.fixture", Value: map[string]any{"env": map[string]any{"CUSTOM": "new-credential"}}, MergeStrategy: "replace"},
 		{KeyPath: "model", Value: "fixture-env-credential", MergeStrategy: "replace"},
+		{KeyPath: "developer_instructions", Value: "copied fixture-custom-header-credential", MergeStrategy: "replace"},
+		{KeyPath: "model", Value: "fixture-opaque-header-credential", MergeStrategy: "replace"},
 		{KeyPath: "model", Value: "ghp_fixtureNewCredential", MergeStrategy: "replace"},
+		{KeyPath: "model", Value: "sk-fixtureOpaquePatternCredential", MergeStrategy: "replace"},
 		{KeyPath: "mcp_servers.fixture.url", Value: "https://user:pass@example.test?key=new-credential", MergeStrategy: "replace"},
+		{KeyPath: "mcp_servers.fixture.url", Value: "https://example.test?transport=sse&token=new-credential", MergeStrategy: "replace"},
+		{KeyPath: "mcp_servers.fixture.url", Value: "https://example.test#access_token=new-credential", MergeStrategy: "replace"},
+		{KeyPath: "[profiles.pilot]\nmodel", Value: "next-model", MergeStrategy: "replace"},
 		{KeyPath: "profiles.extra", Value: map[string]any{"model": "[redacted]"}, MergeStrategy: "upsert"},
 	} {
 		_, err := s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{edit}})
