@@ -5096,7 +5096,7 @@
             "S1",
             "S2"
           ],
-          "purpose": "Both 2025 and 2026 custom subscribe/unsubscribe calls succeed through 125 ms store contention; deliberate caller cancellation instead prevents late subscription activation or deletion."
+          "purpose": "Both 2025 and 2026 custom subscribe/unsubscribe calls succeed through 125 ms store contention. Cancellation cases keep the writer held until the real HTTP handler acknowledges cancellation, including after a 150 ms scheduling delay, and forbid late subscription activation or deletion."
         },
         {
           "path": "internal/events/events_test.go",

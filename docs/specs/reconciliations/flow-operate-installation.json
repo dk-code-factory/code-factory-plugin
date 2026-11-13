@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "c44fa7c7038a250be1cda654369510d9eab30435197ba0f2d04d11f862d9cf93",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "b1b52dc4f3297b3614d14f38b2457fb5b13fcd52aae1bc66c3134e5ed33462e9",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions.",
-    "implementation": "Reviewed the pinned change against operate-installation implementation mappings. Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified."
+    "kind": "refactor",
+    "description": "Install, upgrade rollback and explicit uninstall preserve runtime data and shared service routes; cache barrier metadata lives in the same private database and introduces no service or installed-host action.",
+    "implementation": "Historical observations through f176, retained as historical evidence and not current-target completion: Historical implementation observations through old49 (retained, not current-target completion): Reviewed main and current provider cache, REST/GraphQL cache admission and nested observation propagation against this contract. Only cache reuse, scoped invalidation barriers and truthful oldest freshness change; no source in this flow's action/delivery implementation is edited. Follow-up review also traces unmanaged identity blob admission/credential epochs and earliest positive component expiry through nested REST/GraphQL observations; all other action and delivery paths remain untouched. Reassessed against previous target bde94be contributor guidance: changed provider caches remain behind unchanged application/factory synchronization and detail preparation; this PR adds no request handler, database/projection construction or native/provider I/O to user-facing API reads. Existing authorization/revision checks and pending operation behavior remain in their owning paths. Cycle2 follow-up reviewed the known-head constraint at both managed REST and generic memo admission, local User observation propagation and positive-lease memo expiry. Only exact PR issue/pull metadata is constrained by the caller-known head; validators, request budgets, provider backoff, credential isolation and zero-TTL operation deduplication remain owned by the existing paths. Reassessed the full branch comparison against exact current target49b774: all target registry/scenario/graph/assertion entries are semantically retained, including new slow-success/cancellation/diagnostic contracts. No provider/store production source changed on that target advance; all21 provider files remain byte-identical to the focused-tested snapshot. This provider PR adds no request handler or deadline and cannot cancel a production request merely for crossing75ms. New runtime latency observation and preserved useful outcomes remain in their target-owned boundary paths. Cycle3 factual correction narrows assertion attribution to managed GraphQL sharing and states the intentional global rollover exception to ordinary scoped freshness, including the public Invalidate comment. Executable provider behavior and existing nine regression stimuli/assertions are unchanged. This does not change other contracts or add runtime latency cancellation. Current exact f176 reassessment: inspected actual upstream default-policy, Make ownership batch and CI-budget changes and all affected specification subjects. Semantic merge retains every target catalog flow/scenario/graph/implementation/assertion, including both new 2000-default budget tests, three batch-export tests and the60-minute hosted-job assertion. This branch adds only its nine HTTP cache regression references. The target-owned Makefile, ownership helper, local-verifier pin, hosted workflow, maintained flow prose and usage tests remain byte-identical to f176. Cache source differs from old tested optimization only by two target-owned600-to2000 fallback substitutions. Explicit allowances, rolling admission, lifecycle, known-head coherence, original component/memo observation and expiry, credential isolation and conditional validation remain intact. Both corrected managed-only sharing attribution and global-rollover exception are preserved. No glossary/UI contract or production request deadline is added. Whole target generated receipts were selected for CLI regeneration, never hand-edited. Subsequent current-input test-fixture correction: the full current-target reconciliation failed one unchanged transport cancellation case; its failed attempt and invalidated receipts remain preserved. Source-provenance confirms unchanged f176 events/store/httpbudget/mcp behavior. Only the transport test helper accepts an optional real HTTP wrapper and cancellation fixture now holds its writer through actual canceled HTTP-origin return, avoiding a fixed125ms release precondition. Immediate and150ms-delayed cancellation cases cover both protocol versions and subscribe/unsubscribe;125ms slow-success,1s worker/client/drain guards and all75ms successful-response gates remain unchanged. No production request behavior, schema, UI ownership, glossary meaning or API/provider code changes. The owning receive-notifications authored purpose and CLI-rendered reference state the new synchronization condition; stable IDs/scenarios remain. Current exact d485 integration review: read actual37-file upstream communication/UI change and configuration question/answer/settings-diff tests. Every target glossary/catalog field, flow/scenario/graph/implementation and assertion remains; the sole target test-purpose adjustment is the already corrected cancellation-fixture condition, with nine cache HTTP assertions retained. All six communication assertion IDs and consuming UI entries are byte-exact target, as are communication code/tests, native/request/session changes, wrapper sources/tests, plugin guidance and generated bundle sources. Provider cache source and corrected cancellation fixture are byte-identical to the successfully reconciled pre-integration627882c snapshot. No cache path supplies model narration or confirms proposals; existing app/factory cached preparation and operation boundaries remain. The receiving/configure/answer/view ownership and pinned adoption policy are preserved. All generated receipts begin from complete exact-target baseline for fresh CLI regeneration only.",
+    "tests": "Historical assertion review and execution through old49 (not substituted for fresh f176 verification): Inspected packaged installer rerun/token preservation, failed-upgrade rollback, successful-upgrade current link, backup and uninstall-retains-database assertions; fixture success still does not establish installed-host acceptance. Current-target reconciliation reruns applicable maintained suites, including existing fixture API latency and response-boundary assertions. Earlier source-identical suite evidence is retained historically, not substituted for workflow-required execution. Inspected the new complete/incomplete metadata and managed/unmanaged HTTP cases: an older positive REST lease cannot replace a caller-known newer head, the managed path returns its polling backoff without dispatch and succeeds after the deadline, and same-head managed GraphQL is shared. The ledger-backed identity fixture uses actual bounded LRU eviction, preserves the memo observation/deadline when rebuilding a blob, propagates a current 503 after expiry, then observes the new identity; a zero-TTL request remains deduplicated after one hour. All provider race tests passed (14.759s); retained red logs show both freshness defects on the prior implementation. Inspected actual target TestSlowResponseRetainsAdmissionAndReturnsSuccess (uncanceled context, retained admission, original200 after125ms), TestSlowRequestSignalsBeforeCompletionAndCorrelatesOutcome (stable safe identity and201), bounded diagnostic/metadata assertions, and TestPerformanceGateFailsSlowSuccess (actual child200 must fail75ms measurement). Focused current-target httpbudget suite passed1.454s; byte-identical provider race proof is preserved rather than repeated. Per the explicit current-main policy, only required CLI reconciliation/check runs locally now; full hosted CI is still required for the final published head. Re-read the exact known-head fixture branches: managed graphCalls1, unmanaged graphCalls2; the authored purpose/generated reference now preserve those conditions. Re-read scoped/bounded generation assertions and global barrier admission: normal unrelated generations stay equal, overflow changes the global digest. Product prose and Invalidate comment now explicitly qualify ordinary isolation. Current render/validate/diff checks pass; no redundant focused provider rerun is claimed for these prose/comment-only edits. Required CLI reconciliation remains a fresh current-input execution. Current f176 focused integration: actual go test -race ./internal/providers ./internal/app -run TestGitHub(Composite|DefaultBudget) -count=1 exited0 (providers2.066s/app1.043s), covering all nine realHTTP composite freshness/lease/invalidation regressions and new default/explicit budget+rolling admission assertions. Four actual Python tests passed2.373s: hosted route60-minute budget, exactly one ownership batch per native caller/worker, raw-value/private-mode/legacy framing, and partial-write cleanup. Render23/validate666terms80entities16flows and diffcheck passed. Upstream default test seeds1999attempts, admits2000 and rejects2001 until onehour+one second; explicit600 override remains. Full current-input required CLI reconciliation/check runs next; its actual successful verification is required before receipts/check completion. Explicit current-main policy prohibits localmakeCI; full hostedCI remains required for exact final published head. Actual post-failure evidence: original isolated cancellation test -race count20 passed29.340s, while controlled150ms delayed cancellation against that original fixture failed all4protocol\u00d7method cases with successful200 responses. Exact scheduling in the earlier full-suite failure was not captured, so it remains unknown rather than called a proven flake. Corrected realHTTP cancellation fixture -race count20 passed35.587s (12cases per iteration); private overlay removing actual WithRequestContext propagation failed all8normal/delayed cancellation cases at the unchanged subscription-state assertion, demonstrating real production-defect sensitivity. No redundant provider/source suites are rerun. Render23/validate666terms80entities16flows and diffcheck pass after the owning purpose/generated-reference update; fresh full current-input CLI reconciliation/check remains required before success receipts. Current d485 assertion review: TestConfigurationCommunicationMessagesAndQuestions checks new-thread tool exposure, single redacted message on repeated native ID, suspended exact question response, invalid/duplicate rejection and no proposal confirmation; validation/expiry rejects oversized, duplicate-label and wrong-session payloads plus expired answers. Retained-catalog test resumes both legacy and communication native threads once with compatible guidance and no dynamic-tool replacement. Legacy/diff test preserves intentional old-tool cards and complete changed before/after values without unchanged fields. The two wrapper assertions show escaped titled cards with owner text while hiding ordinary narration/status; questions begin unselected, disable ordinary chat, send the exact question identity/answer and leave proposals unconfirmed. Focused Go race assertions cover cache/defaults, all four communication tests and corrected cancellation; mocked wrapper configuration assertions cover the communication cards and questions. Complete reviewed reconciliation and specification checks establish current validation. No redundant provider-only run outside this bundle; no localmakeCI. The real fixture runner builds current testhost, browser reconciliation builds fakecodex and release reconciliation owns current makebuild before package/installer/smoke, so no stale old-target compiled artifact is substituted."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.181
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.551
+      "seconds": 36.572
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 82.876
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.412
+      "seconds": 2.849
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.971
+      "seconds": 2.367
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.248
+      "seconds": 21.145
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.225
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 665.185
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 441.282
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.735
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 61.165
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "ce81cea95ce349ece3def1ea299b7d687a12515177604fad955373638fa9f16b",
+    "flow:operate-installation": "e0fa50efa546a88360fbf1d220b56a09b925c10ee98c355e5984029e23a81add",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "3d8e79341fc2093623bc67acd48ed8ac9e74f8c3f9808dbdcfd6a81a31a40e59",
-    "ui:P-BROWSER-LAB": "3d81ee13eb25c7041ae64ac52dce2b575ff9b35da3a79110e446ecd5ab896f84",
-    "ui:PAGE-BROWSER-LAB": "22423ec5d16bfe4d378c00f9f7f6fcf874fc71ba3be1ce70661606dbc91da188",
-    "ui:W-BROWSER-LAB": "c6047c261a98ae88e9d4cf3a30b6be073a367bc67a4bc00c77a6449eae4e4724"
+    "ui:C-BROWSER-LAB": "ee30d1c1da5299605919569b41048d050f045d26d01d74713374e0a5c3cc55e5",
+    "ui:P-BROWSER-LAB": "f8b1ffe5791aabc95650d5444ab0340d27feb60b673b6c34627f1edfc92e0832",
+    "ui:PAGE-BROWSER-LAB": "1ea98d4fe9848ad33db97d15f6b6a7df1b75dd3878ab7188911ca2b9022c8f8a",
+    "ui:W-BROWSER-LAB": "63e48990a1619343274683eb8b8569595dd4f8e686ad3edd3b50beb90426b818"
   }
 }
