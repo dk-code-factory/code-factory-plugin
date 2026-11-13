@@ -167,17 +167,36 @@ type Ticket struct {
 	Error       string          `json:"error"`
 }
 type Config struct {
-	ID                    string         `json:"id"`
-	GitHubRequestsPerHour int            `json:"githubRequestsPerHour,omitempty"`
-	GitHubReserve         *int           `json:"githubReserve,omitempty"`
-	GitHubPollSeconds     int            `json:"githubPollSeconds,omitempty"`
-	PriorityLabels        map[string]int `json:"priorityLabels"`
-	AssessmentPrompt      string         `json:"assessmentPrompt"`
-	PolicyVersion         string         `json:"policyVersion"`
-	JiraURL               string         `json:"jiraUrl"`
-	JiraEmail             string         `json:"jiraEmail"`
-	Notifications         bool           `json:"notifications"`
+	ID                          string         `json:"id"`
+	GitHubRequestsPerHour       int            `json:"githubRequestsPerHour,omitempty"`
+	GitHubReserve               *int           `json:"githubReserve,omitempty"`
+	GitHubPollSeconds           int            `json:"githubPollSeconds,omitempty"`
+	GitHubRepositoryPollSeconds int            `json:"githubRepositoryPollSeconds,omitempty"`
+	GitHubDetailPollSeconds     int            `json:"githubDetailPollSeconds,omitempty"`
+	PriorityLabels              map[string]int `json:"priorityLabels"`
+	AssessmentPrompt            string         `json:"assessmentPrompt"`
+	PolicyVersion               string         `json:"policyVersion"`
+	JiraURL                     string         `json:"jiraUrl"`
+	JiraEmail                   string         `json:"jiraEmail"`
+	Notifications               bool           `json:"notifications"`
 }
+
+// GitHubRepositoryPollInterval preserves the legacy index cadence for old settings.
+func (c Config) GitHubRepositoryPollInterval() time.Duration {
+	if c.GitHubRepositoryPollSeconds > 0 {
+		return time.Duration(c.GitHubRepositoryPollSeconds) * time.Second
+	}
+	return 15 * time.Minute
+}
+
+// GitHubDetailPollInterval bounds saved detail freshness independently of notifications.
+func (c Config) GitHubDetailPollInterval() time.Duration {
+	if c.GitHubDetailPollSeconds > 0 {
+		return time.Duration(c.GitHubDetailPollSeconds) * time.Second
+	}
+	return 15 * time.Minute
+}
+
 type Event struct {
 	Seq    int64           `json:"seq"`
 	Kind   string          `json:"kind"`

@@ -53,11 +53,15 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 		return fmt.Errorf("GitHub cache unavailable")
 	}
 	key := fmt.Sprintf("graphql:%s:%x", scope, sha256.Sum256(append(b, []byte(fmt.Sprint(ctx.Value(githubHeadContext{})))...)))
+	ttl, err := githubDetailTTL(ctx, g.policy)
+	if err != nil {
+		return err
+	}
 	cached, ok, err := g.cached(ctx, key)
 	if err != nil {
 		return fmt.Errorf("GitHub cache unavailable")
 	}
-	if g.Managed() && ok && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true {
+	if g.Managed() && ok && cached.Until.After(g.now()) && cached.CheckedAt.Add(ttl).After(g.now()) && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true {
 		noteRead(ctx, cached.CheckedAt)
 		return json.Unmarshal(cached.Body, out)
 	}
@@ -148,7 +152,7 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	if err = g.requestSucceeded(ctx); err != nil {
 		return fmt.Errorf("GitHub request budget unavailable")
 	}
-	if err = g.remember(ctx, key, cacheEntry{Body: result.Data, Header: http.Header{}, CheckedAt: g.now(), Until: g.now().Add(GitHubDetailTTL)}); err != nil {
+	if err = g.remember(ctx, key, cacheEntry{Body: result.Data, Header: http.Header{}, CheckedAt: g.now(), Until: g.now().Add(ttl)}); err != nil {
 		return fmt.Errorf("GitHub cache unavailable")
 	}
 	return nil

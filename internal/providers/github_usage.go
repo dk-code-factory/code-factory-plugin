@@ -21,7 +21,22 @@ type GitHubPolicy struct {
 	RequestsPerHour int
 	Reserve         int
 	MinInterval     time.Duration
+	DetailTTL       time.Duration
 }
+
+func githubDetailTTL(ctx context.Context, policy func(context.Context) (GitHubPolicy, error)) (time.Duration, error) {
+	if policy != nil {
+		p, err := policy(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("GitHub detail policy unavailable")
+		}
+		if p.DetailTTL > 0 {
+			return p.DetailTTL, nil
+		}
+	}
+	return GitHubDetailTTL, nil
+}
+
 type githubRemoteLimit struct {
 	Remaining int
 	Reset     time.Time

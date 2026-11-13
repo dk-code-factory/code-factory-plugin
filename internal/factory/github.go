@@ -363,6 +363,7 @@ func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 			break
 		}
 	}
+	detailInterval := (domain.Config{GitHubDetailPollSeconds: c.GitHubDetailPollSeconds}).GitHubDetailPollInterval()
 	var firstErr error
 	for n := 0; n < min(8, len(items)); n++ {
 		item := items[(start+n)%len(items)]
@@ -371,7 +372,7 @@ func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 			return err
 		}
 		r, ok := repository(c, item.Repository)
-		if !ok || r.Paused || s.Now().Sub(item.DetailSyncedAt) < providers.GitHubDetailTTL {
+		if !ok || r.Paused || s.Now().Sub(item.DetailSyncedAt) < detailInterval {
 			continue
 		}
 		var baseline struct{ Ready bool }

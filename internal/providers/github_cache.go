@@ -33,6 +33,7 @@ type CachedGitHub struct {
 	state   *store.Store
 	fetch   chan struct{}
 	clock   func() time.Time
+	policy  func(context.Context) (GitHubPolicy, error)
 }
 
 func NewCachedGitHub(source GitHubSource) *CachedGitHub {
@@ -43,11 +44,12 @@ func (g *CachedGitHub) ConfigureUsage(s *store.Store, policy func(context.Contex
 	g.GitHubSource.ConfigureUsage(s, policy)
 	g.mu.Lock()
 	g.state = s
+	g.policy = policy
 	g.entries = map[string]githubQueryEntry{}
 	g.mu.Unlock()
 }
 
-func (g *CachedGitHub) cachedQuery(ctx context.Context, id string, out any) (bool, error) {
+func (g *CachedGitHub) cachedQuery(ctx context.Context, id string, out any, ttl time.Duration) (bool, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	e, ok := g.entries[id]
@@ -58,7 +60,7 @@ func (g *CachedGitHub) cachedQuery(ctx context.Context, id string, out any) (boo
 		}
 		ok = err == nil
 	}
-	if !ok || !e.Until.After(g.clock()) {
+	if !ok || !e.Until.After(g.clock()) || !e.CheckedAt.Add(ttl).After(g.clock()) {
 		return false, nil
 	}
 	if err := json.Unmarshal(e.Body, out); err != nil {
@@ -130,6 +132,13 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	if name == "detail" || name == "pull" {
+		var err error
+		ttl, err = githubDetailTTL(ctx, g.policy)
+		if err != nil {
+			return err
+		}
+	}
 	scope, err := g.CacheScope(ctx)
 	if err != nil {
 		return err
@@ -141,7 +150,7 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	id := fmt.Sprintf("%x", sha256.Sum256([]byte(scope+"\x00"+name+"\x00"+string(b))))
 	direct := ctx.Value(requireFreshRead{}) == true
 	if !direct {
-		if hit, err := g.cachedQuery(ctx, id, out); err != nil || hit {
+		if hit, err := g.cachedQuery(ctx, id, out, ttl); err != nil || hit {
 			return err
 		}
 	}
@@ -153,7 +162,7 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	}
 	defer func() { <-g.fetch }()
 	if !direct {
-		if hit, err := g.cachedQuery(ctx, id, out); err != nil || hit {
+		if hit, err := g.cachedQuery(ctx, id, out, ttl); err != nil || hit {
 			return err
 		}
 	}

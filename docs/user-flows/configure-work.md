@@ -29,6 +29,13 @@ The private owner connection is established. Application data starts clean in th
 
 ## Alternatives and recovery
 
+Repository polling, detail polling and review notifications have independent intervals.
+Existing settings retain fifteen-minute repository and detail intervals and two-minute
+notifications. Repository and detail intervals accept one minute through one day;
+notification intervals accept one minute through one hour. Zero selects the existing
+default. A cadence-only edit preserves the priority assessment policy and follows the
+same inspected proposal and explicit confirmation as other application settings.
+
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
 
 
@@ -112,6 +119,8 @@ flowchart TD
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationValidationAndExpiry(`; S1. Communication rejects invalid/bounded payloads and non-configuration sessions; expiring a blocked question rejects its answer.
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationLegacyCommunicationAndCompactDiff(`; S1, S3. Retained legacy configuration status results record intentional communication cards; settings diffs retain changed values and omit unchanged and absent fields.
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationRetainsNativeCatalog(`; S1. New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs.
+- [internal/factory/github_cadence_test.go](../../internal/factory/github_cadence_test.go) — `func TestConfirmedGitHubCadencesReachRuntimeWithoutChangingPriorityPolicy(`; S1, S3, S4, S5. The compact proposal shows complete before/after notification, repository and detail values while omitting unchanged settings; unconfirmed runtime remains unchanged; confirmation projects the intervals without changing assessment policy; invalid intervals are rejected.
+- [internal/app/github_cadence_test.go](../../internal/app/github_cadence_test.go) — `func TestGitHubCadenceValidationPreservesSavedSettings(`; S3, S5. Legacy settings retain fifteen-minute repository/detail and two-minute notification defaults; invalid cadence values cannot replace saved settings or assessment policy.
 
 ## Verification and gaps
 
