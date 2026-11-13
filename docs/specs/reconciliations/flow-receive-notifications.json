@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "5097e2a7d87c6e312da960c10998956a69115228",
-  "fingerprint": "4f7ce2123088182e926a805fc1b21dc2c5d6e2c12bd1cba7a067b146d1690953",
+  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
+  "fingerprint": "205472f0a18dd7e83480c495778a10e1deb382c6f48db67fa3b43bf77a028ae9",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Host subscription verification and notification delivery retain explicit activation and cancellation semantics. Only contributor guidance changes.",
-    "implementation": "Background callback delivery remains outside application read handlers; cache access is not an alternative authorization path.",
-    "tests": "Inspected TestPluginAPIBudget assertions: authenticated exposed tools must remain within 100 ms and 64 KiB with cold reads, blocked DB/provider/log dependencies and saturated queues; healthy reads and operations must eventually complete. Existing assertions are unchanged; fixture success does not establish real-host acceptance."
+    "kind": "refactor",
+    "description": "Metadata-only owner notifications and subscription challenge/retry/deduplication retain their contracts; fewer dormant source reads may delay discovery within documented bounds.",
+    "implementation": "Existing importDetail and event writer remain responsible for actual source transitions; notification delivery and user read/new state are not modified.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry signature/challenge assertions and new daily reopen integration test verifying real observations and rule actions."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 328.488
+      "seconds": 79.658
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.55
+      "seconds": 1.204
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 1004.223
+      "seconds": 681.4
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 869.737
+      "seconds": 523.407
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 5.852
+      "seconds": 4.755
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 80.479
+      "seconds": 61.231
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "796f7c7a84bf491f4bd98f39696069d3dd4029bc391bd6c49c73ee2374c21de6",
+    "flow:receive-notifications": "f2179bbb7b887dc4e95f6572e6de353440bf0f804b4ff0574cc034bca2c8b755",
     "term:attention-request": "73984fc21eb95722b7ed8b6aa86b4cb35b6e7ad0549a4a104c974d9667abd4d7",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:host": "ee1b68f918767b4c8e303634da6fe67fb81b3d85b90f05e82d5c14211a745d97",
