@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "c44fa7c7038a250be1cda654369510d9eab30435197ba0f2d04d11f862d9cf93",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "6a71c0779f59c9155f27fd8b96dcf26ddd78515378719f713fa31ca5707ab76a",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions.",
-    "implementation": "Reviewed the pinned change against operate-installation implementation mappings. Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified."
+    "kind": "refactor",
+    "description": "Health, release replacement, compatible rollback, private diagnostics and preservation of unrelated installation state remain accurate; no real-host acceptance is inferred.",
+    "implementation": "No setup, installation journal, transport profile, diagnostics or release code changes. The optimization is confined to an existing authenticated provider read and the sync-inbox assertion inventory. Against the previous exact target49b774, the new cached API read rule remains satisfied: no request handler, projection dispatch/preparation, mutation receipt or cache-miss path changes; this diff changes only page selection within existing provider reads. Rechecked the new75ms observation-only contract: this provider-page refactor adds no production HTTP deadline or dispatch budget and changes no cached request-path/projection behavior. Target registry additions merged; all newly inherited latency mappings and user-facing API rules remain intact. Current comparison is exact f1769f6: inspected the full target advance and the four authored files against that target. Both GraphQL implementation/test files match the historically reviewed bytes. The target Makefile, batch-export helper, local verifier prologue pin, hosted 60-minute limit, application/provider allowance defaults and authored maintain-flow-contracts mappings are inherited unchanged; the PR diff only adds its two existing sync-inbox assertion mappings and omits completed connection selections. No new production budget/deadline or request-path work is introduced. Current comparison is exact d485a63, not f176/49. Reviewed upstream structured communication separately from this pagination refactor: all20 changed non-receipt upstream files except the authored catalog are byte-identical to target, including factory communication/configuration/native/request sources, wrapper UI/CSS, entities/prose and generated bundles. The merged catalog diff against target contains exactly the original two pagination assertion mappings; all six new communication IDs, their UI consumers and configure-work/answer-attention/view-live-work mappings remain. The optimization leaves question answers, proposal authority, cached background projections and native catalogs intact.",
+    "tests": "Inspected TestRollbackRestoresGatewayProfileAndArchivesCurrent: rollback preserves the expected old or legacy profile, archives the replaced profile privately, restores the old release and clears the consumed snapshot reference. Packaging assertions retain deterministic complete artifacts. Current target assertions reviewed: SlowResponseRetainsAdmissionAndReturnsSuccess preserves useful body and admission after125ms; SlowRequestSignalsBeforeCompletionAndCorrelatesOutcome retains201/body and matching safe request identity; PerformanceGateFailsSlowSuccess requires a failed75ms timing assertion while production succeeds; SlowMCPDispatchPreservesResultAndContext preserves the useful real-tool response after125ms. Existing subject-specific assertions above retain their stated coverage; fixture reconciliation will execute current target suites. Rechecked current-target assertion bodies in TestGitHubDefaultBudgetAndExplicitOverride (default2000/explicit600), TestGitHubDefaultBudgetReportingAndAdmission (saved1999 retained, attempt2000 admitted, attempt2001 deferred until the rolling window), MakeOwnerFieldTests (exact byte framing, private modes, legacy equivalence and failed-batch removal), test_make_exports_ownership_with_one_batch_per_make_process (exactly two batch exports with shared-once graph), and test_workflow_routes_features_through_pull_requests (hosted verify timeout60). These are inherited coverage, not newly authored fixes or prior-target verification claims; current focused checks and required reconciliation execute the current source. Inspected current communication_test.go and both new wrapper test bodies. Message/question regression checks one redacted card per native ID, no question reply before explicit answer, waiting/chat rejection, invalid and duplicate answer rejection, exact native request102 successful response, unchanged proposed state/quiet120, and no answer body in the journal. Expiry/validation checks bounded kinds/options, configuration scope and rejected expired answers; catalog test retains identical native thread with one resume, compatible legacy/current guidance and no replacement dynamicTools. Legacy compact-diff test includes changed quiet120\u21927/skill and excludes unchanged repositories/priorityInstructions/optional skill. Browser assertions check escaped script as text/no script element, visible owner text/titled card, absent streamed/completed/raw narration and summary; question title/body, unselected choices, disabled chat, rejected empty answer, exact question ID and Drivers response, and no confirm_configuration call/proposal remains proposed. These inherited assertions are integration checks, not newly authored features; fresh focused and reconciliation results are recorded separately."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.121
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.551
+      "seconds": 35.768
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 81.032
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.412
+      "seconds": 2.59
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.971
+      "seconds": 3.211
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.248
+      "seconds": 21.356
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 653.068
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 429.559
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.767
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 60.98
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "ce81cea95ce349ece3def1ea299b7d687a12515177604fad955373638fa9f16b",
+    "flow:operate-installation": "9a9350a72cb19cc221b0656b59b1ada4879a50cc36b0e58f35431262405dc7bc",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "3d8e79341fc2093623bc67acd48ed8ac9e74f8c3f9808dbdcfd6a81a31a40e59",
-    "ui:P-BROWSER-LAB": "3d81ee13eb25c7041ae64ac52dce2b575ff9b35da3a79110e446ecd5ab896f84",
-    "ui:PAGE-BROWSER-LAB": "22423ec5d16bfe4d378c00f9f7f6fcf874fc71ba3be1ce70661606dbc91da188",
-    "ui:W-BROWSER-LAB": "c6047c261a98ae88e9d4cf3a30b6be073a367bc67a4bc00c77a6449eae4e4724"
+    "ui:C-BROWSER-LAB": "970b331b16c521b3b79406c4eb3c22b4c0104c34a5365f62bbf3107f269d9550",
+    "ui:P-BROWSER-LAB": "ae3353f9ef19449e6fb521276ea18cc721bca1973c16e53362a1de69ad5bd8ac",
+    "ui:PAGE-BROWSER-LAB": "f786b00ad3caea876a931ec575a04c4c93cdd0ce2273531c63707ba352496f2a",
+    "ui:W-BROWSER-LAB": "c3924f9748da023aefd6b9d878b37b1d7d564a831cac14868e1c089aa1a7ec88"
   }
 }

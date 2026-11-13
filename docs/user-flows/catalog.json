@@ -1147,6 +1147,24 @@
           ]
         },
         {
+          "path": "internal/providers/pull_requests_test.go",
+          "anchor": "func TestPullRequestMetadataOmitsCompletedConnections(",
+          "purpose": "Uneven GraphQL connection lengths resolve each connection only until complete, advance independent cursors and retain every linked issue, review thread and fallback review opinion.",
+          "scenarios": [
+            "S1",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/providers/pull_requests_test.go",
+          "anchor": "func TestPullRequestMetadataRejectsHeadChangeAfterConnectionCompletes(",
+          "purpose": "A changed head on a later GraphQL page rejects the composite observation and preserves saved linked issues and review threads without a successful freshness checkpoint.",
+          "scenarios": [
+            "S1",
+            "S4"
+          ]
+        },
+        {
           "path": "internal/providers/github_cache_bounds_test.go",
           "anchor": "func TestGitHubPersistentCacheAccountingPreservesLegacyEntriesAndReplacement(",
           "purpose": "Current sync-inbox fixture assertion TestGitHubPersistentCacheAccountingPreservesLegacyEntriesAndReplacement. Inspect its exact assertion scope.",

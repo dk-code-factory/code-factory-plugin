@@ -202,15 +202,35 @@ func (g *GitHub) EnrichPullRequest(ctx context.Context, item *domain.Item) {
 			}
 		}
 	}
-	query := `query($owner:String!,$name:String!,$number:Int!,$after:String,$reviewAfter:String,$threadAfter:String){repository(owner:$owner,name:$name){pullRequest(number:$number){headRefOid reviewDecision statusCheckRollup{state} latestOpinionatedReviews(first:100,after:$reviewAfter){nodes{state} pageInfo{hasNextPage endCursor}} closingIssuesReferences(first:100,after:$after){nodes{number repository{nameWithOwner}} pageInfo{hasNextPage endCursor}} reviewThreads(first:100,after:$threadAfter){nodes{id isResolved} pageInfo{hasNextPage endCursor}}}}}`
 	var after, reviewAfter, threadAfter any
 	threadsDone := false
 	threads := []domain.ReviewThread{}
 	closingDone, reviewsDone, approved, changesRequested := false, false, false, false
 	closings := []string{}
 	for page := 0; page < 10000; page++ {
+		variables := map[string]any{"owner": parts[0], "name": parts[1], "number": item.Number}
+		query := "query($owner:String!,$name:String!,$number:Int!"
+		fields := "headRefOid reviewDecision statusCheckRollup{state}"
+		// Connections finish independently. Keep checking the head on every page,
+		// but stop resolving a connection once all of its nodes have been read.
+		if !reviewsDone {
+			query += ",$reviewAfter:String"
+			fields += " latestOpinionatedReviews(first:100,after:$reviewAfter){nodes{state} pageInfo{hasNextPage endCursor}}"
+			variables["reviewAfter"] = reviewAfter
+		}
+		if !closingDone {
+			query += ",$after:String"
+			fields += " closingIssuesReferences(first:100,after:$after){nodes{number repository{nameWithOwner}} pageInfo{hasNextPage endCursor}}"
+			variables["after"] = after
+		}
+		if !threadsDone {
+			query += ",$threadAfter:String"
+			fields += " reviewThreads(first:100,after:$threadAfter){nodes{id isResolved} pageInfo{hasNextPage endCursor}}"
+			variables["threadAfter"] = threadAfter
+		}
+		query += "){repository(owner:$owner,name:$name){pullRequest(number:$number){" + fields + "}}}"
 		response.Repository = nil
-		err := g.graph(ctx, query, map[string]any{"owner": parts[0], "name": parts[1], "number": item.Number, "after": after, "reviewAfter": reviewAfter, "threadAfter": threadAfter}, &response)
+		err := g.graph(ctx, query, variables, &response)
 		if err != nil || response.Repository == nil || response.Repository.PullRequest == nil {
 			var rate *RateLimitError
 			if errors.As(err, &rate) {
