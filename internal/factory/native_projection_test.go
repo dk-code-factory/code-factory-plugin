@@ -28,7 +28,12 @@ func nativeCredentialFixture(file string) map[string]any {
 		"developer_instructions": "copied fixture-custom-header-credential",
 		"custom_header_copy":     "copied fixture-opaque-header-credential",
 		"opaque_pattern":         "sk-fixtureOpaquePatternCredential",
+		"ordinary_query_copy":    "fixture-malformed-query-credential;part",
+		"ordinary_fragment_copy": "&fixture-encoded-fragment-credential",
 	}
+	servers := config["mcp_servers"].(map[string]any)
+	servers["query-boundary"] = map[string]any{"url": "https://example.test/mcp?token=fixture-malformed-query-credential;part"}
+	servers["fragment-boundary"] = map[string]any{"url": "https://example.test/mcp#access_token=%26fixture-encoded-fragment-credential"}
 	return map[string]any{"config": config, "layers": []any{map[string]any{
 		"name": map[string]any{"type": "user", "file": file}, "version": "v1", "config": config,
 	}}}
@@ -37,7 +42,7 @@ func nativeCredentialFixture(file string) map[string]any {
 func assertNativeCredentialsHidden(t *testing.T, value any) {
 	t.Helper()
 	data := string(bytes(value))
-	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential"} {
+	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential", "fixture-malformed-query-credential", "fixture-encoded-fragment-credential"} {
 		if strings.Contains(data, private) {
 			t.Fatal("native credential escaped its projection")
 		}
@@ -115,35 +120,110 @@ func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(t *testing.T) {
 }
 
 func TestNativeNonsecretURLsRemainEditable(t *testing.T) {
-	s, rpc, _ := fixture(t)
-	ctx := context.Background()
-	file := filepath.Join(s.Dir, "config.toml")
-	rpc.native = nativeCredentialFixture(file)
-	config := rpc.native["config"].(map[string]any)
-	server := config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)
-	publicURL := "https://example.test/mcp?transport=sse&mode=read-only&profile=sk-dev#secret-guide"
-	server["url"] = publicURL
-	view, err := s.NativeConfig(ctx, s.Dir)
-	must(t, err)
-	var projected struct{ Config map[string]any }
-	must(t, json.Unmarshal(view, &projected))
-	if projected.Config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)["url"] != publicURL {
-		t.Fatal("native inspection changed a nonsecret URL")
+	for i, publicURL := range []string{
+		"https://example.test/mcp?transport=sse&mode=read-only&profile=sk-dev#secret-guide",
+		"https://example.test/mcp?transport=sse#section;two",
+		"https://example.test/mcp?transport=sse#next=section%26two&label=space+title",
+	} {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			s, rpc, _ := fixture(t)
+			ctx := context.Background()
+			file := filepath.Join(s.Dir, "config.toml")
+			rpc.native = nativeCredentialFixture(file)
+			config := rpc.native["config"].(map[string]any)
+			server := config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)
+			server["url"] = publicURL
+			view, err := s.NativeConfig(ctx, s.Dir)
+			must(t, err)
+			var projected struct{ Config map[string]any }
+			must(t, json.Unmarshal(view, &projected))
+			if projected.Config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)["url"] != publicURL {
+				t.Fatal("native inspection changed a nonsecret URL")
+			}
+			p, err := s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{{KeyPath: "mcp_servers.fixture.url", Value: publicURL, MergeStrategy: "replace"}}})
+			must(t, err)
+			if p.Native.Edits[0].Value != publicURL || len(rpc.writes) != 0 {
+				t.Fatal("ordinary URL proposal changed its value or wrote before confirmation")
+			}
+			_, err = s.Confirm(ctx, p.ID, true)
+			must(t, err)
+			if len(rpc.writes) != 1 {
+				t.Fatal("confirmed ordinary URL did not produce one native write")
+			}
+			var write struct{ Edits []ConfigEdit }
+			must(t, json.Unmarshal(rpc.writes[0], &write))
+			if len(write.Edits) != 1 || write.Edits[0].Value != publicURL {
+				t.Fatal("native write changed the ordinary URL")
+			}
+		})
 	}
-	p, err := s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{{KeyPath: "mcp_servers.fixture.url", Value: publicURL, MergeStrategy: "replace"}}})
-	must(t, err)
-	if p.Native.Edits[0].Value != publicURL || len(rpc.writes) != 0 {
-		t.Fatal("ordinary URL proposal changed its value or wrote before confirmation")
-	}
-	_, err = s.Confirm(ctx, p.ID, true)
-	must(t, err)
-	if len(rpc.writes) != 1 {
-		t.Fatal("confirmed ordinary URL did not produce one native write")
-	}
-	var write struct{ Edits []ConfigEdit }
-	must(t, json.Unmarshal(rpc.writes[0], &write))
-	if len(write.Edits) != 1 || write.Edits[0].Value != publicURL {
-		t.Fatal("native write changed the ordinary URL")
+}
+
+func TestNativeURLParameterBoundariesRejectCredentials(t *testing.T) {
+	for _, tc := range []struct{ name, url, decoded, encoded, marker string }{
+		{"query-semicolon", "https://example.test/mcp?token=opaque-query-value;part&mode=read-only", "opaque-query-value;part", "opaque-query-value;part", "opaque-query-value"},
+		{"query-invalid-escape", "https://example.test/mcp?token=opaque%zzquery-value", "opaque%zzquery-value", "opaque%zzquery-value", "query-value"},
+		{"fragment-semicolon", "https://example.test/mcp#access_token=opaque-fragment-value;part", "opaque-fragment-value;part", "opaque-fragment-value;part", "opaque-fragment-value"},
+		{"fragment-escaped-ampersand", "https://example.test/mcp#access_token=%26opaque-fragment-value&next=section%26two", "&opaque-fragment-value", "%26opaque-fragment-value", "opaque-fragment-value"},
+		{"fragment-escaped-semicolon", "https://example.test/mcp#access_token=%3Bopaque-fragment-value", ";opaque-fragment-value", "%3Bopaque-fragment-value", "opaque-fragment-value"},
+		{"query-escaped-ampersand", "https://example.test/mcp?token=%26opaque-query-value", "&opaque-query-value", "%26opaque-query-value", "opaque-query-value"},
+		{"userinfo-escaped-password", "https://user:%6Fpaque-userinfo-value@example.test/mcp", "opaque-userinfo-value", "%6Fpaque-userinfo-value", "opaque-userinfo-value"},
+		{"userinfo-escaped-username", "https://%6Fpaque-userinfo-value@example.test/mcp", "opaque-userinfo-value", "%6Fpaque-userinfo-value", "opaque-userinfo-value"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s, rpc, _ := fixture(t)
+			ctx := context.Background()
+			file := filepath.Join(s.Dir, "config.toml")
+			credentialURL := tc.url
+			config := map[string]any{"model": "fixture-model", "sandbox_mode": "read-only", "mcp_servers": map[string]any{"fixture": map[string]any{"url": credentialURL}}, "ordinary_copy": tc.decoded, "encoded_copy": tc.encoded}
+			rpc.native = map[string]any{"config": config, "layers": []any{map[string]any{"name": map[string]any{"type": "user", "file": file}, "version": "v1", "config": config}}}
+			assertHidden := func(label string, value any) {
+				t.Helper()
+				data := string(bytes(value))
+				for _, secret := range []string{tc.marker, tc.decoded, tc.encoded} {
+					encoded := bytes(secret)
+					if strings.Contains(data, string(encoded[1:len(encoded)-1])) {
+						t.Errorf("%s retained a URL credential or its copied value", label)
+						break
+					}
+				}
+			}
+			view, err := s.NativeConfig(ctx, s.Dir)
+			must(t, err)
+			assertHidden("inspection", view)
+			var projected struct{ Config map[string]any }
+			must(t, json.Unmarshal(view, &projected))
+			if projected.Config["sandbox_mode"] != "read-only" {
+				t.Error("malformed credential parameters changed an unrelated ordinary setting")
+			}
+			if tc.name == "fragment-escaped-ampersand" {
+				if projected.Config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)["url"] != "https://example.test/mcp#next=section%26two" {
+					t.Error("redaction changed the remaining fragment parameter encoding")
+				}
+			}
+			edit := ConfigEdit{KeyPath: "model", Value: "next-model", MergeStrategy: "replace"}
+			p, err := s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{edit}})
+			must(t, err)
+			assertHidden("proposal", p)
+			var saved Proposal
+			must(t, s.Store.Get(ctx, "factory-proposal", p.ID, &saved))
+			assertHidden("persisted proposal", saved)
+			legacy := Proposal{State: "proposed", Native: &NativeEdit{Before: bytes(rpc.native), Edits: []ConfigEdit{edit}}, Diff: string(bytes(rpc.native))}
+			event, err := sanitizeNativeProposalEvent(bytes(legacy))
+			must(t, err)
+			assertHidden("legacy event", event)
+			sanitizeNativeProposal(&legacy)
+			assertHidden("legacy proposal", legacy)
+			_, err = s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{{KeyPath: "mcp_servers.fixture.url", Value: credentialURL, MergeStrategy: "replace"}}})
+			if err == nil {
+				t.Error("credential-bearing URL edit was accepted")
+			}
+			proposals, err := store.List[Proposal](ctx, s.Store, "factory-proposal")
+			must(t, err)
+			if len(proposals) != 1 || len(rpc.writes) != 0 {
+				t.Fatal("URL edit persisted or native configuration was written")
+			}
+		})
 	}
 }
 

@@ -26,8 +26,10 @@ The private owner connection is established. Application data starts clean in th
    as native edits. Question answers do not confirm proposals.
 
    Named profile identifiers retain their exact spelling, including short
-   token-like names. Noncredential URL queries and anchors retain their values
-   through inspection, proposal and confirmed native application.
+   token-like names. Ordinary credential-free URLs retain their spelling through
+   inspection, proposal and confirmed native application. An unreadable query or
+   parameter fragment is hidden and refused as an edit. Encoded credential values
+   remain private.
 
 4. Explicitly confirm or reject against the inspected versions.
 
@@ -128,7 +130,8 @@ flowchart TD
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeLegacyProposalMigrationPreservesStaleness(`; S1, S3, S4. Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(`; S1, S3. Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1, S2, S3. Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
-- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeNonsecretURLsRemainEditable(`; S1, S3, S4, S5. Noncredential URL query parameters and anchors retain their exact values in inspection, proposed edits and one confirmed native write; no write occurs before confirmation.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeNonsecretURLsRemainEditable(`; S1, S3, S4, S5. Each noncredential URL retains its exact query/anchor spelling, including semicolon anchors and escaped noncredential fragment values, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeURLParameterBoundariesRejectCredentials(`; S1, S3, S4. Malformed parameter components and escaped URL credentials, including userinfo, are hidden in inspection, persisted proposals and legacy proposal/event projections, including encoded and decoded copies. Credential URL edits are refused without persistence or native writes; a remaining noncredential fragment value keeps its escaped ampersand.
 
 ## Verification and gaps
 

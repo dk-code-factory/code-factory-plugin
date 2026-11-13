@@ -1443,7 +1443,8 @@
         "NATIVE-CONFIG-LEGACY-REDACTION",
         "NATIVE-CONFIG-SELECTORS",
         "NATIVE-CONFIG-NAMED-ENTRIES",
-        "NATIVE-CONFIG-PUBLIC-URL"
+        "NATIVE-CONFIG-PUBLIC-URL",
+        "NATIVE-CONFIG-URL-PARAMETERS"
       ],
       "gaps": [],
       "suites": [
@@ -1513,7 +1514,8 @@
         "NATIVE-CONFIG-LEGACY-REDACTION",
         "NATIVE-CONFIG-SELECTORS",
         "NATIVE-CONFIG-NAMED-ENTRIES",
-        "NATIVE-CONFIG-PUBLIC-URL"
+        "NATIVE-CONFIG-PUBLIC-URL",
+        "NATIVE-CONFIG-URL-PARAMETERS"
       ],
       "gaps": [],
       "suites": [
@@ -1597,7 +1599,8 @@
         "NATIVE-CONFIG-LEGACY-REDACTION",
         "NATIVE-CONFIG-SELECTORS",
         "NATIVE-CONFIG-NAMED-ENTRIES",
-        "NATIVE-CONFIG-PUBLIC-URL"
+        "NATIVE-CONFIG-PUBLIC-URL",
+        "NATIVE-CONFIG-URL-PARAMETERS"
       ],
       "gaps": [],
       "suites": [
@@ -6294,7 +6297,13 @@
       "id": "NATIVE-CONFIG-PUBLIC-URL",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeNonsecretURLsRemainEditable(",
-      "assertion": "Noncredential URL query parameters and anchors retain their exact values in inspection, proposed edits and one confirmed native write; no write occurs before confirmation."
+      "assertion": "Each noncredential URL retains its exact query/anchor spelling, including semicolon anchors and escaped noncredential fragment values, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+    },
+    {
+      "id": "NATIVE-CONFIG-URL-PARAMETERS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
+      "assertion": "Malformed parameter components and escaped URL credentials, including userinfo, are hidden in inspection, persisted proposals and legacy proposal/event projections, including encoded and decoded copies. Credential URL edits are refused without persistence or native writes; a remaining noncredential fragment value keeps its escaped ampersand."
     }
   ],
   "source_map": [

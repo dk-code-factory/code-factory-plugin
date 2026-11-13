@@ -21,8 +21,11 @@ The private owner connection is established. Application data starts clean in th
 
    Custom header values are collected for redaction in ordinary copied-value
    fields even when their names do not identify authentication. URL userinfo and
-   credential-bearing query or fragment parameters are removed without dropping
-   noncredential parameters or anchors.
+   credential-bearing query or fragment parameters are removed. Within readable
+   query or parameter-fragment components, noncredential values are preserved.
+   Ordinary anchors retain their spelling. Encoded credential values and their
+   copied forms remain private. An unreadable query or parameter fragment is
+   hidden as a whole and cannot be edited through Code Factory.
 
 2. Encrypt secret answers for retained redaction before native delivery.
 
@@ -125,6 +128,7 @@ flowchart TD
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeLegacyProposalMigrationPreservesStaleness(`; S1. Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(`; S1. Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1. Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeURLParameterBoundariesRejectCredentials(`; S1. Malformed parameter components and escaped URL credentials, including userinfo, are hidden in inspection, persisted proposals and legacy proposal/event projections, including encoded and decoded copies. Credential URL edits are refused without persistence or native writes; a remaining noncredential fragment value keeps its escaped ampersand.
 
 ## Verification and gaps
 
