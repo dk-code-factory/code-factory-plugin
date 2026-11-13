@@ -19,6 +19,11 @@ The private owner connection is established. Application data starts clean in th
    Credential edits stay outside Code Factory;
    hidden credential changes still invalidate stale proposals.
 
+   Custom header values are collected for redaction in ordinary copied-value
+   fields even when their names do not identify authentication. URL userinfo and
+   credential-bearing query or fragment parameters are removed without dropping
+   noncredential parameters or anchors.
+
 2. Encrypt secret answers for retained redaction before native delivery.
 
 3. Redact secrets across split streaming and completed output after resumption.
@@ -116,10 +121,10 @@ flowchart TD
 - [internal/httpbudget/latency_test.go](../../internal/httpbudget/latency_test.go) — `func TestLatencyMetadataDoesNotRetainCallerRequestLines(`; S1. Behind a blocked sink,32parsed megabyte request lines retain only fixed methods, owned bounded endpoint labels and exact numeric identities; live heap stays below8MiB over baseline. Oversized metadata becomes other rather than retaining caller allocations.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionRedactsUnmanagedCredentials(`; S1. Native inspection and the configuration-agent tool redact unmanaged environment, header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeProposalRetainsRedactedSnapshotAndRawFreshness(`; S1. Stored proposals contain redacted snapshots; an invisible credential rotation rejects confirmation, and a fresh confirmed profile edit sends exactly one scoped native write.
-- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialEditsAreRejectedWithoutPersistence(`; S1. Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialEditsAreRejectedWithoutPersistence(`; S1. Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeLegacyProposalMigrationPreservesStaleness(`; S1. Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(`; S1. Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal.
-- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1. Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1. Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
 
 ## Verification and gaps
 

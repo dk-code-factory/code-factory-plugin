@@ -12,7 +12,7 @@ import (
 
 // Native configuration can include credentials that are not managed by our vault.
 // Keep those values out of inspection results, proposals and retained snapshots.
-var nativeCredential = regexp.MustCompile(`(?i)(?:github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9]+|sk-[A-Za-z0-9_-]+|bearer\s+[A-Za-z0-9._~+/-]+=*)`)
+var nativeCredential = regexp.MustCompile(`(?i)(?:github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|bearer\s+[A-Za-z0-9._~+/-]+=*)`)
 var nativeURL = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://[^\s<>"']+`)
 
 func privateNativeKey(key string) bool {
@@ -59,7 +59,8 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 				if !private && !named && (k == "env" || k == "headers" || k == "http_headers") {
 					if env, ok := child.(map[string]any); ok {
 						for name, entry := range env {
-							credential := privateNativeKey(name)
+							// Header credentials can use arbitrary names.
+							credential := k != "env" || privateNativeKey(name)
 							if k == "env" {
 								credential = credential || strings.Contains(strings.ToLower(name), "access_key") || strings.HasSuffix(strings.ToLower(name), "_access")
 							}
@@ -130,7 +131,17 @@ func (r nativeRedactor) text(value string) string {
 		if err != nil {
 			return "[redacted URL]"
 		}
-		u.User, u.RawQuery, u.Fragment, u.RawFragment = nil, "", "", ""
+		changed := u.User != nil
+		u.User = nil
+		if query, redacted := redactNativeURLParameters(u.RawQuery); redacted {
+			u.RawQuery, changed = query, true
+		}
+		if fragment, redacted := redactNativeURLParameters(u.Fragment); redacted {
+			u.Fragment, u.RawFragment, changed = fragment, "", true
+		}
+		if !changed {
+			return raw
+		}
 		return u.String()
 	})
 	for _, secret := range r.secrets {
@@ -141,12 +152,36 @@ func (r nativeRedactor) text(value string) string {
 	return nativeCredential.ReplaceAllString(value, "[redacted]")
 }
 
+func redactNativeURLParameters(raw string) (string, bool) {
+	parameters, _ := url.ParseQuery(raw)
+	changed := false
+	for key, values := range parameters {
+		if privateNativeKey(key) {
+			for _, value := range values {
+				if value != "" {
+					parameters.Del(key)
+					changed = true
+					break
+				}
+			}
+		}
+	}
+	if !changed {
+		return raw, false
+	}
+	return parameters.Encode(), true
+}
+
 func (r nativeRedactor) value(value any, private, named bool) any {
 	switch v := value.(type) {
 	case map[string]any:
 		out := map[string]any{}
 		for k, child := range v {
-			out[nativeCredential.ReplaceAllString(k, "[redacted]")] = r.value(child, private || (!named && privateNativeKey(k)), !named && nativeNamedEntries(k))
+			key := k
+			if !named {
+				key = nativeCredential.ReplaceAllString(k, "[redacted]")
+			}
+			out[key] = r.value(child, private || (!named && privateNativeKey(k)), !named && nativeNamedEntries(k))
 		}
 		return out
 	case []any:
@@ -208,14 +243,16 @@ func validateNativeEdits(actual json.RawMessage, edits []ConfigEdit) error {
 		if err != nil {
 			return err
 		}
-		private, named := false, false
+		private, named, credentialPath := false, false, false
 		for _, key := range path {
 			private = private || (!named && privateNativeKey(key))
+			credentialPath = credentialPath || (!named && nativeCredential.MatchString(key))
 			named = !named && nativeNamedEntries(key)
 		}
 		var value any
 		_ = json.Unmarshal(bytes(edit.Value), &value)
-		if private || nativeCredential.MatchString(edit.KeyPath) || strings.Contains(string(bytes(value)), "[redacted]") || string(bytes(value)) != string(bytes(r.value(value, false, named))) {
+		encodedValue := string(bytes(value))
+		if private || credentialPath || strings.Contains(encodedValue, "[redacted]") || encodedValue != string(bytes(r.value(value, false, named))) {
 			return fmt.Errorf("credential-bearing native edits must be made outside Code Factory")
 		}
 	}
@@ -224,7 +261,7 @@ func validateNativeEdits(actual json.RawMessage, edits []ConfigEdit) error {
 
 func nativeKeyPath(path string) ([]string, error) {
 	var tree map[string]any
-	if toml.Unmarshal([]byte(path+" = 0"), &tree) != nil {
+	if strings.ContainsAny(path, "\r\n") || toml.Unmarshal([]byte(path+" = 0"), &tree) != nil {
 		return nil, fmt.Errorf("native edits require a valid dotted key path")
 	}
 	keys := []string{}

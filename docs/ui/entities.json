@@ -1442,7 +1442,8 @@
         "NATIVE-CONFIG-PRIVATE-EDITS",
         "NATIVE-CONFIG-LEGACY-REDACTION",
         "NATIVE-CONFIG-SELECTORS",
-        "NATIVE-CONFIG-NAMED-ENTRIES"
+        "NATIVE-CONFIG-NAMED-ENTRIES",
+        "NATIVE-CONFIG-PUBLIC-URL"
       ],
       "gaps": [],
       "suites": [
@@ -1511,7 +1512,8 @@
         "NATIVE-CONFIG-PRIVATE-EDITS",
         "NATIVE-CONFIG-LEGACY-REDACTION",
         "NATIVE-CONFIG-SELECTORS",
-        "NATIVE-CONFIG-NAMED-ENTRIES"
+        "NATIVE-CONFIG-NAMED-ENTRIES",
+        "NATIVE-CONFIG-PUBLIC-URL"
       ],
       "gaps": [],
       "suites": [
@@ -1594,7 +1596,8 @@
         "NATIVE-CONFIG-PRIVATE-EDITS",
         "NATIVE-CONFIG-LEGACY-REDACTION",
         "NATIVE-CONFIG-SELECTORS",
-        "NATIVE-CONFIG-NAMED-ENTRIES"
+        "NATIVE-CONFIG-NAMED-ENTRIES",
+        "NATIVE-CONFIG-PUBLIC-URL"
       ],
       "gaps": [],
       "suites": [
@@ -6255,7 +6258,7 @@
       "id": "NATIVE-CONFIG-REDACTION",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeInspectionRedactsUnmanagedCredentials(",
-      "assertion": "Native inspection and the configuration-agent tool redact unmanaged environment, header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities. Large integer settings retain exact JSON precision."
+      "assertion": "Native inspection and the configuration-agent tool redact unmanaged environment, arbitrary header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities. Large integer settings retain exact JSON precision."
     },
     {
       "id": "NATIVE-CONFIG-PRIVATE-FRESHNESS",
@@ -6267,7 +6270,7 @@
       "id": "NATIVE-CONFIG-PRIVATE-EDITS",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeCredentialEditsAreRejectedWithoutPersistence(",
-      "assertion": "Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes."
+      "assertion": "Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes."
     },
     {
       "id": "NATIVE-CONFIG-LEGACY-REDACTION",
@@ -6285,7 +6288,13 @@
       "id": "NATIVE-CONFIG-NAMED-ENTRIES",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeCredentialWordsInNamesRemainEditable(",
-      "assertion": "Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
+      "assertion": "Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
+    },
+    {
+      "id": "NATIVE-CONFIG-PUBLIC-URL",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeNonsecretURLsRemainEditable(",
+      "assertion": "Noncredential URL query parameters and anchors retain their exact values in inspection, proposed edits and one confirmed native write; no write occurs before confirmation."
     }
   ],
   "source_map": [
