@@ -203,6 +203,7 @@ flowchart TD
 - [internal/transport/response_budget_test.go](../../internal/transport/response_budget_test.go) — `func TestSlowMCPDispatchPreservesResultAndContext(`; S6. An authenticated real tool handler delayed125ms inside production receiving middleware retains its context and exact useful response; the regression also detects reinstating the80ms tool deadline.
 - [internal/httpbudget/latency_test.go](../../internal/httpbudget/latency_test.go) — `func TestSlowWireSignalsWhilePendingAndIncludesAcknowledgement(`; S6. A blocked finite wire write or initial SSE flush emits the pending threshold warning and active count without cancellation; release preserves useful success and records the full output duration, including the initial stream flush.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `configuration renders explicit communication cards and hides agent narration`; S2, S3. Configuration retains owner text and escaped titled tool messages while raw streamed/completed narration and internal summary are absent from the rendered view.
+- [internal/transport/projection_preparation_test.go](../../internal/transport/projection_preparation_test.go) — `func TestTrackingReadPreparationWaitsForExactCurrentProducer(`; S1, S2. Real HTTP pending stays unusable until the exact current projection producer completes; another ready key and a stale revision cannot satisfy functional fixture preparation. Existing paged/search payload assertions and separate API latency gates remain unchanged.
 
 ## Verification and gaps
 

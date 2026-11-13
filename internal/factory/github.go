@@ -371,7 +371,14 @@ func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 			return err
 		}
 		r, ok := repository(c, item.Repository)
-		if !ok || r.Paused || s.Now().Sub(item.DetailSyncedAt) < providers.GitHubDetailTTL {
+		if !ok || r.Paused {
+			continue
+		}
+		history, due, e := s.detailFacetsDue(ctx, c, item)
+		if e != nil {
+			return e
+		}
+		if !due {
 			continue
 		}
 		var baseline struct{ Ready bool }
@@ -387,9 +394,38 @@ func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 			}
 		}
 		started := s.Now()
-		fresh, e := s.App.GitHub.ItemDetail(ctx, item)
+		var fresh domain.Item
+		partial := false
+		if history {
+			fresh, e = s.App.GitHub.ItemDetail(ctx, item)
+		} else {
+			var state providers.GitHubItemState
+			state, e = providers.RefreshItemState(ctx, s.App.GitHub, item)
+			fresh, partial = state.Item, state.Partial
+		}
 		if e == nil {
-			e = s.importDetail(ctx, r, fresh, started)
+			e = s.importDetailFacets(ctx, r, item, fresh, started, partial)
+		}
+		if errors.Is(e, errFacetHistoryRequired) {
+			// Import checks the current rules under the configuration gate.
+			// Release it before provider I/O, then retry with complete history.
+			fresh, e = s.App.GitHub.ItemDetail(providers.WithGitHubRead(ctx, providers.RequireLive), item)
+			if e == nil {
+				e = s.importDetailFacets(ctx, r, item, fresh, started, false)
+			}
+		}
+		if e != nil && ctx.Err() == nil {
+			var retryAt time.Time
+			var rate *providers.RateLimitError
+			if errors.As(e, &rate) {
+				retryAt = rate.Until
+			}
+			if fresh.PR != nil && fresh.PR.RetryAt.After(retryAt) {
+				retryAt = fresh.PR.RetryAt
+			}
+			if saveErr := s.deferDetailFacets(ctx, item, retryAt, fresh); saveErr != nil {
+				return saveErr
+			}
 		}
 		if e != nil && firstErr == nil {
 			firstErr = fmt.Errorf("reconcile %s: %w", item.ID, e)
@@ -406,6 +442,10 @@ func (s *Service) importDetail(ctx context.Context, repo Repository, fresh domai
 		return nil
 	}
 	defer release()
+	return s.importDetailLocked(ctx, repo, fresh, started)
+}
+
+func (s *Service) importDetailLocked(ctx context.Context, repo Repository, fresh domain.Item, started time.Time) error {
 	if fresh.ReviewObservedAt.IsZero() {
 		fresh.ReviewObservedAt = fresh.DetailSyncedAt
 		if fresh.ReviewObservedAt.IsZero() {

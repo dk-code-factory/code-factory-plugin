@@ -216,7 +216,9 @@ func TestFactoryStatePagesCompactDataAndExplicitDelivery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	page, failed := f.call(t, "factory_state", map[string]any{"view": "issues", "limit": 50, "offset": 50, "filter": "all"})
+	pageArgs := map[string]any{"view": "issues", "limit": 50, "offset": 50, "filter": "all"}
+	f.prepareRead(t, "factory_state", pageArgs)
+	page, failed := f.call(t, "factory_state", pageArgs)
 	if failed {
 		t.Fatal(page)
 	}
@@ -233,7 +235,9 @@ func TestFactoryStatePagesCompactDataAndExplicitDelivery(t *testing.T) {
 	if len(page["questions"].([]any)) > 25 {
 		t.Fatal("historical questions unbounded")
 	}
-	searched, failed := f.call(t, "factory_state", map[string]any{"view": "issues", "search": "unique-body-search", "filter": "new"})
+	searchArgs := map[string]any{"view": "issues", "search": "unique-body-search", "filter": "new"}
+	f.prepareRead(t, "factory_state", searchArgs)
+	searched, failed := f.call(t, "factory_state", searchArgs)
 	if failed {
 		t.Fatal(searched)
 	}
