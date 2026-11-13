@@ -345,8 +345,14 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 	return out, nil
 }
 
-func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, error) {
-	v, ok := g.cacheGet(key)
+func (g *GitHub) cached(ctx context.Context, key string) (v cacheEntry, ok bool, err error) {
+	defer func() {
+		if ok && v.QueryBarrier != queryBarrierFrom(ctx) {
+			// Retain the body and validators for conditional revalidation.
+			v.Until = time.Time{}
+		}
+	}()
+	v, ok = g.cacheGet(key)
 	if ok {
 		return v, true, nil
 	}
@@ -354,7 +360,7 @@ func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, erro
 		return v, false, nil
 	}
 	id := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
-	err := g.usageStore.Get(ctx, "github-cache", id, &v)
+	err = g.usageStore.Get(ctx, "github-cache", id, &v)
 	if errors.Is(err, store.ErrNotFound) {
 		return v, false, nil
 	}
@@ -433,6 +439,7 @@ func (g *GitHub) invalidateRejectedCredential(ctx context.Context, token string,
 }
 
 func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
+	v.QueryBarrier = queryBarrierFrom(ctx)
 	g.cachePut(key, v)
 	if g.usageStore != nil {
 		// Keep the complete private persistent cache bounded as well as memory.
@@ -510,14 +517,21 @@ func (g *GitHub) SeedCooldown(ctx context.Context, until time.Time) error {
 }
 
 type readObservation struct{}
+type readObservations struct {
+	at     *time.Time
+	parent *readObservations
+}
 
 func observeReads(ctx context.Context, now time.Time) (context.Context, *time.Time) {
 	observed := now
-	return context.WithValue(ctx, readObservation{}, &observed), &observed
+	parent, _ := ctx.Value(readObservation{}).(*readObservations)
+	return context.WithValue(ctx, readObservation{}, &readObservations{at: &observed, parent: parent}), &observed
 }
 func noteRead(ctx context.Context, at time.Time) {
-	if observed, ok := ctx.Value(readObservation{}).(*time.Time); ok && at.Before(*observed) {
-		*observed = at
+	for observed, _ := ctx.Value(readObservation{}).(*readObservations); observed != nil; observed = observed.parent {
+		if at.Before(*observed.at) {
+			*observed.at = at
+		}
 	}
 }
 func (g *GitHub) requestSucceeded(ctx context.Context) error {

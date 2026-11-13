@@ -1592,6 +1592,56 @@
           "scenarios": [
             "S3"
           ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeMissSharesComponentsWithoutRenewingTheirObservation(",
+          "purpose": "Ordinary PR and detail query misses share one fresh GraphQL response, retain its oldest observation and expiry, refresh at that deadline, and never reuse metadata from another head.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeInvalidationFencesOverlappingComponentsAcrossRestart(",
+          "purpose": "Explicit item invalidation survives restart and forces component refresh; overlapping query types reuse the refreshed component, while RequireLive obtains current data and writes reusable components through.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeBarrierPreservesGenericConditionalValidationAndMemoization(",
+          "purpose": "A shared generic REST batch preserves ETag conditional validation across explicit invalidation and does not let its earlier memo bypass the new component generation.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeBarriersAreScopedAndBounded(",
+          "purpose": "Item invalidation affects its repository index and exact item, preserves unrelated items and principals, and bounded generation rollover never resurrects an old generation.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeInvalidationRejectsConcurrentAndUnreadableGenerations(",
+          "purpose": "A real blocked HTTP read cannot promote a result invalidated by another cache instance; retry refreshes the old response and malformed durable generation state fails closed without an HTTP request.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
         }
       ],
       "suites": [

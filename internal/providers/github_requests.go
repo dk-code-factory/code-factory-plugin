@@ -172,7 +172,7 @@ func (g *GitHub) cachePut(key string, c cacheEntry) {
 		g.cacheBytes -= old.Size
 		delete(g.cache, key)
 	}
-	c.Size = len(key) + len(c.Body)
+	c.Size = len(key) + len(c.Body) + len(c.QueryBarrier)
 	for k, v := range c.Header {
 		c.Size += len(k)
 		for _, s := range v {
@@ -307,7 +307,7 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 			return fail(BeforeDispatch, 0, errors.New("GitHub cache unavailable"))
 		}
 		fresh := ctx.Value(requireFreshRead{}) == true || ctx.Value(revalidateKey{}) == true
-		if cached && c.Redirect == "" && !fresh && (op.memoize && op.memo[key] || (g.Managed() || g.publicRead) && c.Until.After(g.now())) {
+		if cached && c.QueryBarrier == queryBarrierFrom(ctx) && c.Redirect == "" && !fresh && (op.memoize && op.memo[key] || (g.Managed() || g.publicRead) && c.Until.After(g.now())) {
 			noteRead(ctx, c.CheckedAt)
 			return append([]byte(nil), c.Body...), c.Header.Clone(), nil
 		}

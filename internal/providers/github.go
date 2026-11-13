@@ -18,13 +18,14 @@ import (
 )
 
 type cacheEntry struct {
-	Expires   time.Time
-	Used      uint64
-	Size      int
-	Redirect  string
-	ID        string
-	CheckedAt time.Time
-	Until     time.Time
+	Expires      time.Time
+	Used         uint64
+	Size         int
+	Redirect     string
+	ID           string
+	CheckedAt    time.Time
+	Until        time.Time
+	QueryBarrier string
 
 	ETag   string
 	Body   []byte
