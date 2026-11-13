@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"codefactory/internal/domain"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -17,6 +18,20 @@ import (
 )
 
 const GitHubDetailTTL = 15 * time.Minute
+
+type githubKnownHead struct{}
+
+// A caller-known PR head constrains metadata cache hits before REST data can
+// replace it. Validators remain available for revalidation through the usual
+// request budget and provider backoff gates.
+func cachedMatchesKnownHead(ctx context.Context, path string, entry cacheEntry) bool {
+	item, ok := ctx.Value(githubKnownHead{}).(domain.Item)
+	if !ok || path != fmt.Sprintf("/repos/%s/issues/%d", item.Repository, item.Number) && path != fmt.Sprintf("/repos/%s/pulls/%d", item.Repository, item.Number) {
+		return true
+	}
+	var metadata ghIssue
+	return json.Unmarshal(entry.Body, &metadata) == nil && metadata.Head.SHA == item.Head
+}
 
 type GitHubPolicy struct {
 	RequestsPerHour int

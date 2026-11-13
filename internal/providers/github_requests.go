@@ -307,7 +307,8 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 			return fail(BeforeDispatch, 0, errors.New("GitHub cache unavailable"))
 		}
 		fresh := ctx.Value(requireFreshRead{}) == true || ctx.Value(revalidateKey{}) == true
-		if cached && c.QueryBarrier == queryBarrierFrom(ctx) && c.Redirect == "" && !fresh && (op.memoize && op.memo[key] || (g.Managed() || g.publicRead) && c.Until.After(g.now())) {
+		memo := op.memoize && op.memo[key] && (!c.Until.After(c.CheckedAt) || c.Until.After(g.now()))
+		if cached && c.QueryBarrier == queryBarrierFrom(ctx) && c.Redirect == "" && !fresh && cachedMatchesKnownHead(ctx, req.URL.Path, c) && (memo || (g.Managed() || g.publicRead) && c.Until.After(g.now())) {
 			noteCachedRead(ctx, c)
 			return append([]byte(nil), c.Body...), c.Header.Clone(), nil
 		}

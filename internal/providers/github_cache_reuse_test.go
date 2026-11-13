@@ -5,6 +5,7 @@ import (
 	"codefactory/internal/store"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -16,14 +17,16 @@ import (
 	"time"
 )
 
-func sharedComponentFixture(t *testing.T, headers ...func(http.ResponseWriter, *http.Request)) (*CachedGitHub, func() *CachedGitHub, *time.Time, *string, map[string]int) {
+func sharedComponentFixture(t *testing.T, headers ...func(http.ResponseWriter, *http.Request) bool) (*CachedGitHub, func() *CachedGitHub, *time.Time, *string, map[string]int) {
 	t.Helper()
 	now, head := time.Now().UTC(), "head"
 	calls := map[string]int{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls[r.URL.Path]++
 		for _, set := range headers {
-			set(w, r)
+			if set(w, r) {
+				return
+			}
 		}
 		if r.URL.Path == "/graphql" {
 			fmt.Fprintf(w, `{"data":{"repository":{"pullRequest":{"headRefOid":%q,"reviewDecision":"APPROVED","statusCheckRollup":{"state":"SUCCESS"}}}}}`, head)
@@ -61,10 +64,11 @@ func sharedComponentFixture(t *testing.T, headers ...func(http.ResponseWriter, *
 }
 
 func TestGitHubCompositeKeepsShorterRESTComponentExpiry(t *testing.T) {
-	g, _, now, _, calls := sharedComponentFixture(t, func(w http.ResponseWriter, r *http.Request) {
+	g, _, now, _, calls := sharedComponentFixture(t, func(w http.ResponseWriter, r *http.Request) bool {
 		if r.URL.Path == "/repos/o/r/pulls/1" {
 			w.Header().Set("X-Poll-Interval", "60")
 		}
+		return false
 	})
 	ctx := context.Background()
 	original := *now
@@ -87,6 +91,135 @@ func TestGitHubCompositeKeepsShorterRESTComponentExpiry(t *testing.T) {
 	*now = original.Add(time.Minute + time.Second)
 	if item, err := g.PullRequest(ctx, "o/r", 1); err != nil || item.PR.Error != "" || calls["/repos/o/r/pulls/1"] != 2 || calls["/graphql"] != 1 {
 		t.Fatal("expired REST data was retained or fresh GraphQL data was repeated", item, calls, err)
+	}
+}
+
+func TestGitHubCompositeKnownHeadRejectsOlderRESTLease(t *testing.T) {
+	for _, managed := range []bool{true, false} {
+		for _, complete := range []bool{true, false} {
+			t.Run(fmt.Sprintf("managed=%t/complete=%t", managed, complete), func(t *testing.T) {
+				g, _, now, head, calls := sharedComponentFixture(t, func(w http.ResponseWriter, r *http.Request) bool {
+					if r.URL.Path == "/repos/o/r/issues/1" || r.URL.Path == "/repos/o/r/pulls/1" {
+						w.Header().Set("X-Poll-Interval", "900")
+					}
+					if !complete && r.URL.Path == "/repos/o/r/issues/1" {
+						fmt.Fprint(w, `{"number":1,"title":"PR","state":"open","pull_request":{}}`)
+						return true
+					}
+					return false
+				})
+				ctx := context.Background()
+				if !managed {
+					source := g.GitHubSource.(*GitHub)
+					source.ConfigureUsage(nil, nil)
+					ctx = source.StartOperation(ctx, g.state, true)
+				}
+				item := domain.Item{ID: "o/r#1", Repository: "o/r", Number: 1, Kind: "pr", Head: *head}
+				if first, err := g.ItemDetail(ctx, item); err != nil || first.PR == nil || first.PR.Error != "" || first.Head != *head {
+					t.Fatal("initial detail", first, calls, err)
+				}
+				original := *now
+				*now = original.Add(time.Minute)
+				// A second query type still shares the same head's GraphQL snapshot.
+				graphCalls := 1
+				if !managed {
+					graphCalls = 2 // Unmanaged GraphQL has no cross-query TTL admission.
+				}
+				if same, err := g.PullRequest(ctx, "o/r", 1); err != nil || same.PR.Error != "" || calls["/graphql"] != graphCalls {
+					t.Fatal("same-head overlap repeated fresh metadata", same, calls, err)
+				}
+				*head, item.Head = "next-head", "next-head"
+				fresh, err := g.ItemDetail(ctx, item)
+				if managed {
+					var limited *RateLimitError
+					if !errors.As(err, &limited) || calls["/repos/o/r/issues/1"] != 1 || calls["/graphql"] != 1 {
+						t.Fatal("known newer head became an old success or bypassed provider backoff", fresh, calls, err)
+					}
+					*now = original.Add(GitHubDetailTTL + time.Second)
+					fresh, err = g.ItemDetail(ctx, item)
+				}
+				if err != nil || fresh.PR == nil || fresh.PR.Error != "" || fresh.Head != *head || fresh.PR.Head != *head || calls["/graphql"] != graphCalls+1 {
+					t.Fatal("new head reused an older REST lease or batch memo", fresh, calls, err)
+				}
+				if calls["/repos/o/r/issues/1"] != 2 || !complete && calls["/repos/o/r/pulls/1"] != 2 {
+					t.Fatal("head-sensitive metadata was not revalidated", calls)
+				}
+			})
+		}
+	}
+}
+
+func TestGitHubCompositeUnmanagedMemoPreservesIdentityLease(t *testing.T) {
+	now, login, calls, reject := time.Now().UTC(), "first", 0, false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if reject {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		fmt.Fprintf(w, `{"login":%q}`, login)
+	}))
+	defer server.Close()
+	db, err := store.Open(filepath.Join(t.TempDir(), "ledger.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	source := NewGitHub()
+	source.BaseURL, source.Client = server.URL, server.Client()
+	source.Token = func(context.Context) (string, error) { return "credential", nil }
+	source.clock = func() time.Time { return now }
+	g := NewCachedGitHub(source)
+	g.clock = func() time.Time { return now }
+	ctx := source.StartOperation(context.Background(), db, true)
+	original := now
+	if user, err := g.User(ctx); err != nil || user != login || calls != 1 {
+		t.Fatal(user, calls, err)
+	}
+	// Real LRU pressure evicts the identity blob but retains its newer HTTP memo.
+	if _, _, err := source.Request(ctx, http.MethodGet, "/user", nil, ""); err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < cacheEntries-1; i++ {
+		source.CacheBlob(fmt.Sprint("pressure-", i), []byte("x"), 0)
+	}
+	scope, err := source.credentialCacheScope(ctx, "credential")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := source.CachedBlob("identity:" + scope); ok {
+		t.Fatal("LRU pressure did not evict identity")
+	}
+	now = original.Add(time.Minute)
+	var user string
+	if err := g.query(ctx, "overlap", "identity", nil, &user, 5*time.Minute, func(ctx context.Context) (err error) {
+		user, err = source.User(ctx)
+		return err
+	}); err != nil || user != login || calls != 1 {
+		t.Fatal("fresh memo was not reused", user, calls, err)
+	}
+	for _, entry := range g.entries {
+		if !entry.CheckedAt.Equal(original) || !entry.Until.Equal(original.Add(5*time.Minute)) {
+			t.Error("rebuilt identity acquired a new observation or lease", entry.CheckedAt, entry.Until)
+		}
+	}
+	if entry, ok := source.cacheGet("blob:identity:" + scope); !ok || !entry.CheckedAt.Equal(original) || !entry.Until.Equal(original.Add(5*time.Minute)) {
+		t.Error("identity blob renewed the underlying memo's lease", entry.CheckedAt, entry.Until, ok)
+	}
+	now, reject = original.Add(5*time.Minute+time.Second), true
+	if _, err := g.User(ctx); err == nil || calls != 2 {
+		t.Fatal("expired memo hid a current HTTP failure", calls, err)
+	}
+	reject, login = false, "second"
+	if user, err := g.User(ctx); err != nil || user != login || calls != 3 {
+		t.Fatal("expired memo hid a current identity", user, calls, err)
+	}
+	if _, _, err := source.Request(ctx, http.MethodGet, "/zero-ttl", nil, ""); err != nil || calls != 4 {
+		t.Fatal("zero-TTL batch request", calls, err)
+	}
+	now = now.Add(time.Hour)
+	if _, _, err := source.Request(ctx, http.MethodGet, "/zero-ttl", nil, ""); err != nil || calls != 4 {
+		t.Fatal("zero-TTL operation deduplication was lost", calls, err)
 	}
 }
 

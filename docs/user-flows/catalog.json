@@ -1662,6 +1662,26 @@
             "S2",
             "S3"
           ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeKnownHeadRejectsOlderRESTLease(",
+          "purpose": "Managed and unmanaged HTTP fixtures with complete and incomplete issue metadata reject an older positive REST lease when the caller knows a new PR head, retain same-head GraphQL sharing, honor provider polling backoff and obtain the new head after permitted revalidation.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_reuse_test.go",
+          "anchor": "func TestGitHubCompositeUnmanagedMemoPreservesIdentityLease(",
+          "purpose": "A real ledger-backed operation and bounded LRU eviction rebuild an identity blob from a fresh HTTP memo without renewing its observation or deadline; an expired positive lease exposes a current HTTP failure and new identity while zero-TTL operation deduplication remains available.",
+          "scenarios": [
+            "S1",
+            "S2",
+            "S3"
+          ]
         }
       ],
       "suites": [

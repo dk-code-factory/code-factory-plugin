@@ -162,7 +162,7 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 	if err != nil {
 		return nil, fmt.Errorf("GitHub cache unavailable")
 	}
-	if g.Managed() && hasCache && cached.Until.After(g.now()) && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true {
+	if g.Managed() && hasCache && cached.Until.After(g.now()) && cachedMatchesKnownHead(ctx, parsed.Path, cached) && ctx.Value(requireFreshRead{}) != true && ctx.Value(revalidateKey{}) != true {
 		if cached.Redirect != "" {
 			return nil, &githubRedirect{location: cached.Redirect}
 		}
@@ -287,6 +287,7 @@ func (g *GitHub) pages(ctx context.Context, path string) ([]json.RawMessage, err
 	return out, nil
 }
 func (g *GitHub) User(ctx context.Context) (string, error) {
+	ctx, observed := observeReads(ctx, g.now())
 	ctx = g.Operation(ctx, nil, false)
 	scope, e := g.Scope(ctx)
 	if e != nil {
@@ -304,7 +305,8 @@ func (g *GitHub) User(ctx context.Context) (string, error) {
 	var u struct{ Login string }
 	_, e = g.get(ctx, "/user", &u)
 	if !g.Managed() && e == nil && u.Login != "" {
-		entry := cacheEntry{Body: []byte(u.Login), CheckedAt: g.now(), Until: g.now().Add(5 * time.Minute), Expires: g.now().Add(5 * time.Minute), QueryBarrier: queryBarrierFrom(ctx)}
+		until := readDeadline(ctx, observed.Add(5*time.Minute))
+		entry := cacheEntry{Body: []byte(u.Login), CheckedAt: *observed, Until: until, Expires: until, QueryBarrier: queryBarrierFrom(ctx)}
 		g.cachePut(key, entry)
 		noteCachedRead(ctx, entry)
 	}
@@ -520,6 +522,9 @@ func (g *GitHub) SyncIndex(ctx context.Context, repo domain.Repository, full boo
 }
 func (g *GitHub) ItemDetail(ctx context.Context, item domain.Item) (domain.Item, error) {
 	ctx, observed := observeReads(ctx, g.now())
+	if item.Kind == "pr" && item.Head != "" {
+		ctx = context.WithValue(ctx, githubKnownHead{}, item)
+	}
 	var i ghIssue
 	if _, err := g.get(ctx, fmt.Sprintf("/repos/%s/issues/%d", item.Repository, item.Number), &i); err != nil {
 		return domain.Item{}, err
