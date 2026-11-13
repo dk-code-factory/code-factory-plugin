@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "8f780d4cd55a8f5a96052d48a357df2cdd34157ed4cc6218c83e628d9dcc5be3",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "5a1245cf20933dbe5b0b619a75b82d0c56cc60cdea52d72908562d1ef29dd5d4",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "The maintenance procedure, dependency direction and pinned adoption policy are unchanged. docs/ci.md now describes the API v2 runtime and the existing fixture-performance boundary, selecting this operational consumer conservatively.",
-    "implementation": "No reconciliation tooling or policy implementation changes. Existing registry/source/assertion mappings are rendered deterministically; review records will be written only by the CLI after its real suites succeed. Integrating target3413d63 retains its streaming verification digests and bounded-read regressions unchanged; only generated receipts overlap the API feature. Rebase preserves all API implementation and assertion bytes. Fresh CLI reconciliation binds the current target comparison.",
-    "tests": "The tooling suite validates schemas, complete review decisions, cochange requirements and generated output. This review makes no new product behavior or installed-host coverage claim for the maintenance flow. The incoming bounded-read hashing assertion now belongs to the comparison baseline and remains intact; full fixture verification is rerun with its streaming implementation, without treating target-owned work as a new API feature."
+    "description": "AGENTS.md now requires cached background-prepared API reads and focused local checks, with full verification hosted before merge. Its explicit precedence overrides complete-local-CI instructions in docs/ci.md; registry ownership and pinned adoption remain unchanged.",
+    "implementation": "Only contributor guidance changes: no source, catalog, assertion mapping or verification command changes. AGENTS.md remains a conservative maintenance input selecting all layers. Reconciliation executes unchanged fixture suites in hosted Actions on the exact final source head; local work is limited to focused checks.",
+    "tests": "Inspected the maintained API budget and specification CLI assertions. Current-source full reconciliation runs in hosted Actions, never by reusing stale receipts or rerunning the whole local pipeline. Subsequent local specs.py check verifies CLI-written artifact fingerprints; final hosted PR CI verifies the published head."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.55
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 1004.223
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 869.737
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 5.852
     },
     {
       "command": [
@@ -58,11 +58,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 80.479
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "93dc325df4fda2c1019b6b6a3875d42ea3643682262141686e416d8483efcb7a",
+    "flow:maintain-flow-contracts": "ad814bbd03f66d38eaf0354afd728c5c6c87f5acb115657da9f60c9e910db497",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:entity": "c00dea15a34a8b066c9f3f5d727d1f2d34590a8133ce052fd04fa266be16b513",
     "term:glossary": "c1a8303e0e5372eb92225e89752c0f441d80234a7bee5f07c7e1eb14e382e5ac",

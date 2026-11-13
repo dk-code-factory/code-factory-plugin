@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "f8ebb2854a515b4129e992f6d86bd7866c630087cfb41bda5968ec8681d2ec37",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "4f7ce2123088182e926a805fc1b21dc2c5d6e2c12bd1cba7a067b146d1690953",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "refactor",
-    "description": "The custom event subscription, callback proof and cancellation behavior are unchanged by API v2 tool routing. Event handshakes remain a separately measured protocol boundary, not operation receipts.",
-    "implementation": "Handler continues to attach events.WithRequestContext to preserve real request cancellation. Existing BoundHTTP admission, signed callbacks and event custom-method registration remain the authoritative subscription implementation.",
-    "tests": "Existing event API latency and response-budget assertions still verify initial SSE acknowledgement, rejection and cancellation. The isolated API gate retains those protocol samples separately from the dynamically enumerated plugin tools."
+    "kind": "structure",
+    "description": "Host subscription verification and notification delivery retain explicit activation and cancellation semantics. Only contributor guidance changes.",
+    "implementation": "Background callback delivery remains outside application read handlers; cache access is not an alternative authorization path.",
+    "tests": "Inspected TestPluginAPIBudget assertions: authenticated exposed tools must remain within 100 ms and 64 KiB with cold reads, blocked DB/provider/log dependencies and saturated queues; healthy reads and operations must eventually complete. Existing assertions are unchanged; fixture success does not establish real-host acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 85.109
+      "seconds": 328.488
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.55
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 1004.223
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 869.737
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 5.852
     },
     {
       "command": [
@@ -69,7 +69,7 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 80.479
     }
   ],
   "dependencies": {
