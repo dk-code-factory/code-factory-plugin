@@ -67,7 +67,7 @@ func TestEventCallbackAPILatency(t *testing.T) {
 			t.Error(e)
 			return
 		}
-		b, e := json.MarshalIndent(map[string]any{"limit_ms": 100, "samples": samples}, "", "  ")
+		b, e := json.MarshalIndent(map[string]any{"limit_ms": httpbudget.Duration.Milliseconds(), "samples": samples}, "", "  ")
 		if e != nil {
 			t.Error(e)
 			return
@@ -79,15 +79,10 @@ func TestEventCallbackAPILatency(t *testing.T) {
 	record := func(t *testing.T, label, outcome string, got response) {
 		t.Helper()
 		samples = append(samples, sample{Name: label, Outcome: outcome, MS: float64(got.elapsed) / float64(time.Millisecond), Bytes: len(got.body)})
-		if got.elapsed > 100*time.Millisecond {
-			t.Errorf("%s exceeded 100 ms: %s", label, got.elapsed)
+		if got.elapsed > httpbudget.Duration {
+			t.Errorf("%s exceeded 75 ms: %s", label, got.elapsed)
 		}
-		if outcome == "deadline_rejected" {
-			if got.err != nil || got.status != http.StatusServiceUnavailable || got.envelope["error"] != "outcome_unknown" {
-				t.Fatalf("%s did not return truthful timeout: %d %v %s", label, got.status, got.err, got.body)
-			}
-			return
-		}
+
 		if got.err != nil || got.status != http.StatusOK {
 			t.Fatalf("%s HTTP failure: %d %v %s", label, got.status, got.err, got.body)
 		}
@@ -101,7 +96,7 @@ func TestEventCallbackAPILatency(t *testing.T) {
 			t.Fatalf("%s did not succeed: %s", label, got.body)
 		}
 	}
-	for _, phase := range []string{"verification-headers", "verification-body", "delivery-headers", "delivery-body", "store-admission"} {
+	for _, phase := range []string{"verification-headers", "verification-body", "delivery-headers", "delivery-body"} {
 		t.Run(phase, func(t *testing.T) {
 			f := newEventLatencyFixture(t)
 			f.http.Client().Timeout = 2 * time.Second
@@ -189,12 +184,7 @@ func TestEventCallbackAPILatency(t *testing.T) {
 			delayed := subscription("delayed")
 			slow := make(chan response, 1)
 			tick := make(chan error, 1)
-			if phase == "store-admission" {
-				launch(func() {
-					tick <- f.a.Store.Write(workCtx, func(tx *store.Tx) error { close(started); time.Sleep(125 * time.Millisecond); return nil })
-					close(closed)
-				})
-			} else if strings.HasPrefix(phase, "delivery-") {
+			if strings.HasPrefix(phase, "delivery-") {
 				record(t, phase+"/events/subscribe/verified", "success", rpc("events/subscribe", delayed))
 				if e := f.a.Store.Write(f.ctx, func(tx *store.Tx) error { return tx.Event("inbox.changed", "item-1", nil) }); e != nil {
 					t.Fatal(e)
@@ -220,9 +210,6 @@ func TestEventCallbackAPILatency(t *testing.T) {
 			for range calls {
 				got := latencyAwait(t, "concurrent event response", parallel)
 				outcome := "success"
-				if phase == "store-admission" && got.method != "events/list" {
-					outcome = "deadline_rejected"
-				}
 				record(t, phase+"/"+got.method+"/concurrent", outcome, got)
 			}
 			if strings.HasPrefix(phase, "verification-") {
@@ -233,7 +220,7 @@ func TestEventCallbackAPILatency(t *testing.T) {
 			case <-time.After(time.Second):
 				t.Fatal("delayed callback did not close")
 			}
-			if strings.HasPrefix(phase, "delivery-") || phase == "store-admission" {
+			if strings.HasPrefix(phase, "delivery-") {
 				if e := latencyAwait(t, "background event/store worker", tick); e != nil {
 					t.Fatal(e)
 				}
@@ -241,14 +228,11 @@ func TestEventCallbackAPILatency(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			if e := httpbudget.Drain(ctx); e != nil {
-				t.Fatal("timed-out handler did not exit", e)
+				t.Fatal("actual handler did not exit", e)
 			}
 			rows, e := store.List[map[string]any](f.ctx, f.a.Store, "subscription")
 			if e != nil {
 				t.Fatal(e)
-			}
-			if phase == "store-admission" && (len(rows) != 1 || rows[0]["url"] != "https://callback.example.invalid/remove") {
-				t.Fatal("canceled store waiter changed subscription state", rows)
 			}
 			for _, row := range rows {
 				if row["url"] == "https://callback.example.invalid/delayed" {
@@ -261,8 +245,8 @@ func TestEventCallbackAPILatency(t *testing.T) {
 	t.Run("subscriptions/listen-first-ack", func(t *testing.T) {
 		elapsed, n := subscriptionListenHandshake(t)
 		samples = append(samples, sample{Name: "subscriptions/listen/first-ack", Outcome: "stream_ack", MS: float64(elapsed) / float64(time.Millisecond), Bytes: n})
-		if elapsed > 100*time.Millisecond {
-			t.Errorf("stream acknowledgement exceeded 100 ms: %s", elapsed)
+		if elapsed > httpbudget.Duration {
+			t.Errorf("stream acknowledgement exceeded 75 ms: %s", elapsed)
 		}
 	})
 	for _, sample := range samples {
@@ -363,7 +347,7 @@ func newEventLatencyFixture(t *testing.T) *trackingFixture {
 func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 	for _, version := range []string{"2025-11-25", "2026-07-28"} {
 		for _, method := range []string{"events/subscribe", "events/unsubscribe"} {
-			for _, trigger := range []string{"response-deadline", "caller-cancel"} {
+			for _, trigger := range []string{"slow-success", "caller-cancel"} {
 				t.Run(version+"/"+method+"/"+trigger, func(t *testing.T) {
 					f := newEventLatencyFixture(t)
 					f.http.Client().Timeout = time.Second
@@ -459,8 +443,8 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 						}
 					} else {
 						var failure map[string]any
-						if got.err != nil || got.status != 503 || json.Unmarshal(got.body, &failure) != nil || failure["error"] != "outcome_unknown" {
-							t.Fatal("deadline did not return truthful503", got.status, got.err, string(got.body))
+						if got.err != nil || got.status != 200 || json.Unmarshal(got.body, &failure) != nil || failure["result"] == nil {
+							t.Fatal("slow custom request did not succeed", got.status, got.err, string(got.body))
 						}
 					}
 					if e := latencyAwait(t, "released store writer", writerResult); e != nil {
@@ -472,8 +456,21 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 						t.Fatal("late custom handler did not exit", e)
 					}
 					rows, e := store.List[map[string]any](f.ctx, f.a.Store, "subscription")
-					if e != nil || len(rows) != 1 || rows[0]["url"] != "https://callback.example.invalid/remove" {
-						t.Fatal("canceled late admission changed subscription state", rows, e)
+					if e != nil {
+						t.Fatal(e)
+					}
+					if trigger == "caller-cancel" {
+						if len(rows) != 1 || rows[0]["url"] != "https://callback.example.invalid/remove" {
+							t.Fatal("canceled admission changed subscription state", rows)
+						}
+					} else {
+						want := 0
+						if method == "events/subscribe" {
+							want = 2
+						}
+						if len(rows) != want {
+							t.Fatal("slow successful operation was lost", rows)
+						}
 					}
 				})
 			}
@@ -496,7 +493,7 @@ func testProtocolAPILatency(t *testing.T) {
 		for _, s := range samples {
 			maxima[s.Name] = max(maxima[s.Name], s.MS)
 		}
-		data, err := json.MarshalIndent(map[string]any{"limit_ms": 100, "samples": samples, "maxima": maxima}, "", "  ")
+		data, err := json.MarshalIndent(map[string]any{"limit_ms": httpbudget.Duration.Milliseconds(), "samples": samples, "maxima": maxima}, "", "  ")
 		path := filepath.Join("..", "..", "verification-results", "protocol-api-latency.json")
 		if err == nil {
 			err = os.MkdirAll(filepath.Dir(path), 0700)
@@ -515,8 +512,8 @@ func testProtocolAPILatency(t *testing.T) {
 			outcome = outcomes[0]
 		}
 		samples = append(samples, sample{name, float64(elapsed) / float64(time.Millisecond), n, outcome})
-		if elapsed > 100*time.Millisecond {
-			t.Errorf("%s exceeded 100 ms: %s", name, elapsed)
+		if elapsed > httpbudget.Duration {
+			t.Errorf("%s exceeded 75 ms: %s", name, elapsed)
 		}
 	}
 	seenMethods := map[string]bool{}

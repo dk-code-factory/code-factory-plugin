@@ -33,29 +33,38 @@ tests. After the heavy suites, `make test-api-performance` checks authenticated
 MCP tools and protocol methods, local OAuth, health, signed webhook, artifact and
 onboarding handlers through their response boundaries. The five Go packages run
 sequentially. Every measured finite response and initial subscription-stream
-acknowledgement is limited to 100 ms; an acknowledged stream can remain open until
+acknowledgement is limited to 75 ms in verification; an acknowledged stream can remain open until
 cancellation. Successful responses, accepted pending work, callback rejection,
-deadline rejection and terminal response-size rejection are separate outcomes.
+caller cancellation and terminal response-size rejection are separate outcomes.
 A fast rejection is never counted as successful completion. Immediate and 125 ms
 provider fixtures retain 1,000 saved sources. Additional controlled callback,
 database, lock, filesystem, audit and service delays exercise the response boundary
 and actual caller recovery without running real services.
 
-Finite handlers have a 75 ms response allowance, 32 admitted workers and an 8 MiB
-buffer limit. Capacity remains owned until a handler and its audit actually exit.
-Completed business responses can finish before slow audit storage; records retain
-the committed wire status when available; an uncommitted panic records an explicit
-unknown status separately from its handler failure. Requests rejected before admission use a separate bounded audit lane: one sink call, 32 queued records and one overflow aggregate per observer. The aggregate retains exact rejection counts and their UTC interval, with individual request identities omitted. Diagnostic sinks receive the service lifetime; drain waits for their actual exit. A delayed or saturated handler reports a sanitized 503;
-an admitted action can have an unknown outcome and must not be replayed blindly.
-An oversized response reports a terminal error. Only a real flushed SSE data
-acknowledgement opens a long-lived stream; headers or priming comments cannot
-bypass the response allowance. Callback verification has a separate 50 ms bound
+Production uses 75 ms as an observation threshold, never a request deadline.
+A slow request retains its context, admission and original result until completion
+or caller/service cancellation. Threshold and completion warnings correlate a
+process-local request identity, safe endpoint/method, UTC start, elapsed time and
+actual status. One asynchronous sink and 64 queued metadata records bound latency
+logging; exact slow/active/drop counters survive queue saturation. Diagnostics do
+not retain request bodies, raw paths, queries, credentials or exception text.
+Finite handlers retain 32 admitted workers and an 8 MiB response buffer limit.
+Capacity remains owned until a handler and its audit actually exit. Completed
+business responses can finish before slow audit storage; records retain committed
+wire status when available and distinguish an uncommitted panic from a known status.
+Requests rejected before admission retain the separate bounded rejection audit
+lane and exact-count overflow aggregate. Diagnostic sinks receive the service
+lifetime; drain waits for actual sink exit. Cancellation after admission can leave
+an unknown action outcome; never replay blindly. Oversized responses remain
+terminal errors. SSE response latency ends at a real flushed data acknowledgement;
+slow handshakes continue, and acknowledged stream lifetime is excluded.
+Callback verification has a separate 50 ms bound
 and never activates a canceled or late proof. Callback I/O holds no shared event
 state lock, and obsolete delivery results cannot recreate or overwrite subscriptions.
 
 Plugin API v2 handlers perform memory reads and bounded operation admission. They
-use an 80 ms internal budget within the 100 ms per-sample gate, with the existing
-75 ms finite-HTTP allowance as a defensive backstop. Openers return bootstrap and
+are checked against a 75 ms per-sample verification gate; dispatch imposes no
+latency-based production cancellation. Openers return bootstrap and
 the UI resource immediately. Saved reads return pending until immutable projections
 match the domain and selected-item revisions observed at dispatch. Transcript
 traffic does not invalidate unrelated inbox pages. Saved state is distinct from

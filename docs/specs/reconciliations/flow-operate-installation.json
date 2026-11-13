@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "5097e2a7d87c6e312da960c10998956a69115228",
-  "fingerprint": "1dcf688600e7a62103827dc7aa9d2bce0b5be62e9381bb46d72972c4f11c3124",
+  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
+  "fingerprint": "89722889493b614d2597daaedbfdff2ec6dea73e6c2b79958fe73ce4c68b330f",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Diagnostics, upgrades and rollback retain explicit outcomes and saved-state preservation. Only contributor guidance changes.",
-    "implementation": "The rule routes diagnostics and native inspection through existing background operations; it adds no installation or real-host procedure.",
-    "tests": "Inspected TestPluginAPIBudget assertions: authenticated exposed tools must remain within 100 ms and 64 KiB with cold reads, blocked DB/provider/log dependencies and saturated queues; healthy reads and operations must eventually complete. Existing assertions are unchanged; fixture success does not establish real-host acceptance."
+    "kind": "behavior",
+    "description": "S4/S5 diagnostics now correlate threshold/completion metadata and retain slow/active/dropped counters while preserving successful request outcomes and existing private-log rotation.",
+    "implementation": "Read bounded latency observer queue, RequestID and ResponseDuration propagation into owner API/gateway records. Only safe route labels, normalized methods and numeric identities enter warnings. Threshold observation now runs independently of blocked wire I/O with synchronized once-only accounting; stream duration freezes only after the first data flush returns. Endpoint labels are bounded owned copies and method tokens are static, including admission-rejection diagnostics; every production classifier returns a fixed label and request identity remains a process-local uint64.",
+    "tests": "Read the before-completion warning assertion and blocked-sink/64-record saturation assertion; they establish correlation, successful final status, redaction, bounded memory and explicit overflow counts. Read TestSlowWireSignalsWhilePendingAndIncludesAcknowledgement: finite Write and stream Flush are held, active counters and threshold warning appear before release, then exact200/body and125ms duration survive. The blocked-sink parsed-request-line heap regression preserves all32numeric identities and useful endpoint/method labels while proving neither short metadata substring retains private megabyte request lines."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 5.537
+      "seconds": 0.281
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 73.468
+      "seconds": 35.571
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 328.488
+      "seconds": 70.097
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 6.635
+      "seconds": 3.109
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 21.104
+      "seconds": 2.548
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 25.273
+      "seconds": 21.185
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.242
+      "seconds": 0.181
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.222
+      "seconds": 0.161
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.726
+      "seconds": 0.662
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.283
+      "seconds": 0.181
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.223
+      "seconds": 0.161
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.55
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 1004.223
+      "seconds": 677.862
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 869.737
+      "seconds": 497.942
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 5.852
+      "seconds": 4.755
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 80.479
+      "seconds": 61.85
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "023e6e755af2edc9e4eeed2d4792dd05763e20d76bc794d853c95f0408c31812",
+    "flow:operate-installation": "8215f2eac046b539196a8536a2ea56fb11e8e78c8a7502d6107c591194409d59",
     "term:connection-submits": "d4e13d8d6fd26f7a72f5d77b2325daf1eca0fc72102faec1ac78de107881cb30",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:dependency-operation": "312e5dd6f1ddfdfc1ecea784922bfd8f66ef3d5869742388f43972b1aa3dfaa3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "3c9f629261ad98429ac379b806f76ed72d440343f0b666e1b032fb30d73afc0d",
     "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
     "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe",
-    "ui:C-BROWSER-LAB": "cbca260d543fdca1a04c5fbb4230b59fe719b0d13c4e64541f5c5b13eb702c77",
-    "ui:P-BROWSER-LAB": "f0c0aa49a0b88b70cd4674d37daa104e6c23fb089c5a7f78740a79091f0e1b47",
-    "ui:PAGE-BROWSER-LAB": "dcc5330ae4a56c2801a3b8a3349ec8842e0a6ad6cb2308ce3ba977c187c0b382",
-    "ui:W-BROWSER-LAB": "fd61d4ada7221042794534249bb1f77ee3bc3c82150963b22fc69f20e303d928"
+    "ui:C-BROWSER-LAB": "a903fe58c72f830109f85c01be4c2e0b248eb77bf73e9404e37d83cd57979f2e",
+    "ui:P-BROWSER-LAB": "dea83c767de92c046aa834d7ffcda31c8e4ec2e5c34a6623e0410a55ddc9ff2e",
+    "ui:PAGE-BROWSER-LAB": "57c78fe65c8c1556e2b1a9705a295d68cafd436d1a80b8d8bc6fd967fec173ba",
+    "ui:W-BROWSER-LAB": "007e75c1288929bdd919ef1fd5863871bed0aa66527f99e6f45e6a6ee818705d"
   }
 }

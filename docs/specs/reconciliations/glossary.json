@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "glossary",
-  "base": "5097e2a7d87c6e312da960c10998956a69115228",
-  "fingerprint": "a4affd384731fc710357a0a5b5d589249e1b7164f2b472c47f07298178b1645b",
+  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
+  "fingerprint": "5cd9251d72b45591235031b661666bc7d159d4858d0d6c48f62304a2211b1299",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "All existing meanings and stable term IDs remain unchanged; AGENTS.md makes cache-backed API reads an explicit contributor requirement without introducing product terminology.",
-    "implementation": "The read-projection, daemon-instance, operation-receipt and document-chunk meanings remain compatible with revision-matched background snapshots and queued operations. No consumer backlink or implementation detail is added to glossary definitions.",
-    "tests": "No glossary or assertion inventory changes. Specification render/validate and tooling verification check dependency ownership and registry structure; API budget assertions establish only their existing fixture scope."
+    "description": "Glossary definitions, canonical names, scopes and stable IDs are unchanged; the new contributor latency policy consumes existing request/operation meanings without adding backlinks.",
+    "implementation": "Read the boundary/telemetry code against the existing operation-receipt, daemon-instance and connection meanings; local diagnostic request IDs are explicitly process-local and distinct from mutation receipt IDs.",
+    "tests": "Existing terminology validation remains applicable. New latency assertions verify transport results and diagnostics and do not claim new glossary definitions or installed-host acceptance."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.55
+      "seconds": 1.204
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 1004.223
+      "seconds": 677.862
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 869.737
+      "seconds": 497.942
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 5.852
+      "seconds": 4.755
     },
     {
       "command": [
@@ -58,7 +58,7 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 80.479
+      "seconds": 61.85
     }
   ],
   "dependencies": {

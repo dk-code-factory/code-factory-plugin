@@ -24,6 +24,7 @@ const apiLogBodyLimit = 1 << 20
 const apiLogQueueBytes = 8 << 20
 
 type apiCallRecord struct {
+	RequestID       uint64     `json:"requestId"`
 	StartedAt       time.Time  `json:"startedAt"`
 	API             string     `json:"api"`
 	RPCMethod       string     `json:"rpcMethod,omitempty"`
@@ -164,7 +165,7 @@ func (s *Server) LogAPI(boundary, token string, next http.Handler) http.Handler 
 			if log == nil {
 				return
 			}
-			record := apiCallRecord{StartedAt: started.UTC(), HTTPMethod: r.Method, HTTPStatus: response.status, Panicked: !finished, APIVersion: APIVersion, ResponseBytes: response.bytes, Outcome: "returned"}
+			record := apiCallRecord{RequestID: httpbudget.RequestID(r.Context()), StartedAt: started.UTC(), HTTPMethod: r.Method, HTTPStatus: response.status, Panicked: !finished, APIVersion: APIVersion, ResponseBytes: response.bytes, Outcome: "returned"}
 			if record.HTTPStatus == 0 {
 				if finished {
 					record.HTTPStatus = http.StatusOK
@@ -198,8 +199,9 @@ func (s *Server) LogAPI(boundary, token string, next http.Handler) http.Handler 
 				log.retained.Add(-retained)
 				dropped.Add(1)
 			}
-			job.record.DurationMS = float64(time.Since(started).Nanoseconds()) / 1e6
-			job.record.BudgetBreached = job.record.DurationMS > 80
+			elapsed := httpbudget.ResponseDuration(r.Context())
+			job.record.DurationMS = float64(elapsed.Nanoseconds()) / 1e6
+			job.record.BudgetBreached = elapsed > httpbudget.Duration
 			job.record.DroppedLogs = dropped.Load()
 			close(job.done)
 		}()

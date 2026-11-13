@@ -40,17 +40,22 @@ func budgetGateway(t *testing.T, backend string) *Gateway {
 }
 func boundedGatewayRequest(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
+	started := time.Now()
+	w := gatewayRequest(t, h, method, path, body)
+	recordGatewayTiming(t, method, path, w.Code, started)
+	if time.Since(started) > 100*time.Millisecond {
+		t.Fatal("response exceeded100ms", path, time.Since(started))
+	}
+	return w
+}
+func gatewayRequest(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {
+	t.Helper()
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(method, path, strings.NewReader(body))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Set("Tailscale-User-Login", "owner@example.com")
 	r.Header.Set("Origin", "https://private.example:8444")
-	started := time.Now()
 	h.ServeHTTP(w, r)
-	recordGatewayTiming(t, method, path, w.Code, started)
-	if time.Since(started) > 100*time.Millisecond {
-		t.Fatal("response exceeded100ms", path, time.Since(started))
-	}
 	return w
 }
 func TestGatewayFiniteResponseContentionAndDelayedProxy(t *testing.T) {
@@ -59,13 +64,14 @@ func TestGatewayFiniteResponseContentionAndDelayedProxy(t *testing.T) {
 	for _, row := range []struct {
 		h                  http.Handler
 		method, path, body string
-	}{{public, "POST", "/register", `{"redirect_uris":["https://chatgpt.com/connector_platform_oauth_redirect"]}`}, {public, "GET", "/authorize", ""}, {public, "POST", "/token", "grant_type=refresh_token"}, {public, "POST", "/revoke", "token=x"}, {public, "POST", "/mcp", "{}"}, {private, "GET", "/approve?request=x", ""}, {private, "POST", "/approve", "request=x"}} {
+		status             int
+	}{{public, "POST", "/register", `{"redirect_uris":["https://chatgpt.com/connector_platform_oauth_redirect"]}`, 201}, {public, "GET", "/authorize", "", 400}, {public, "POST", "/token", "grant_type=refresh_token", 400}, {public, "POST", "/revoke", "token=x", 200}, {public, "POST", "/mcp", "{}", 401}, {private, "GET", "/approve?request=x", "", 410}, {private, "POST", "/approve", "request=x", 410}} {
 		g.mu.Lock()
 		released := make(chan struct{})
 		go func() { time.Sleep(125 * time.Millisecond); g.mu.Unlock(); close(released) }()
-		w := boundedGatewayRequest(t, row.h, row.method, row.path, row.body)
-		if w.Code != 503 || !strings.Contains(w.Body.String(), "outcome_unknown") {
-			t.Fatal("contention claimed success", row.path, w.Code)
+		w := gatewayRequest(t, row.h, row.method, row.path, row.body)
+		if w.Code != row.status {
+			t.Fatal("slow request changed protocol result", row.path, w.Code, "want", row.status, w.Body.String())
 		}
 		awaitGatewaySignal(t, released, "gateway mutex release")
 	}
@@ -82,9 +88,9 @@ func TestGatewayFiniteResponseContentionAndDelayedProxy(t *testing.T) {
 	}))
 	defer func() { backend.CloseClientConnections(); backend.Close() }()
 	proxied := budgetGateway(t, strings.TrimPrefix(backend.URL, "http://"))
-	w := boundedGatewayRequest(t, proxied.Public(), "POST", "/github/webhook", "{}")
-	if w.Code != 503 || strings.Contains(w.Body.String(), "private-partial") || strings.Contains(w.Body.String(), "late-success") {
-		t.Fatal("partial upstream response escaped", w)
+	w := gatewayRequest(t, proxied.Public(), "POST", "/github/webhook", "{}")
+	if w.Code != 200 || w.Body.String() != "private-partiallate-success" {
+		t.Fatal("slow upstream response was lost", w)
 	}
 }
 func TestGatewayDelayedRegistrationMappingRemainsFinite(t *testing.T) {
@@ -97,6 +103,7 @@ func TestGatewayDelayedRegistrationMappingRemainsFinite(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			done := make(chan struct{})
+			requestDone := make(chan struct{})
 			// Replacement prevents a handler that arrives late from opening a FIFO with
 			// no writer. The old inode is also released for an already-blocked reader.
 			defer func() {
@@ -112,6 +119,11 @@ func TestGatewayDelayedRegistrationMappingRemainsFinite(t *testing.T) {
 				case <-done:
 				case <-time.After(2 * time.Second):
 					t.Error("mapping writer cleanup timed out")
+				}
+				select {
+				case <-requestDone:
+				case <-time.After(2 * time.Second):
+					t.Error("mapping request cleanup timed out")
 				}
 				waitBudgetWorkers(t)
 			}()
@@ -145,9 +157,17 @@ func TestGatewayDelayedRegistrationMappingRemainsFinite(t *testing.T) {
 					}
 				}
 			}()
-			w := boundedGatewayRequest(t, g.Public(), "GET", path, "")
-			if w.Code != 503 {
-				t.Fatal("delayed registration read claimed success", w.Code)
+			var w *httptest.ResponseRecorder
+			go func() {
+				defer close(requestDone)
+				h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					g.Public().ServeHTTP(w, r.WithContext(ctx))
+				})
+				w = gatewayRequest(t, h, "GET", path, "")
+			}()
+			awaitGatewaySignal(t, requestDone, "delayed registration response")
+			if w.Code != 200 {
+				t.Fatal("delayed registration read failed", w.Code)
 			}
 			awaitGatewaySignal(t, done, "mapping writer exit")
 		})
@@ -213,10 +233,11 @@ func TestGatewayAuditKeepsActualWireStatusWithSlowSink(t *testing.T) {
 	var unlockOnce sync.Once
 	unlockMu := func() { unlockOnce.Do(g.mu.Unlock) }
 	defer unlockMu()
-	w = boundedGatewayRequest(t, g.Public(), "POST", "/token", "grant_type=refresh_token")
+	go func() { time.Sleep(125 * time.Millisecond); unlockMu() }()
+	w = gatewayRequest(t, g.Public(), "POST", "/token", "grant_type=refresh_token")
 	unlockMu()
-	if w.Code != 503 {
-		t.Fatal("slow business did not reject")
+	if w.Code != 400 {
+		t.Fatal("slow business lost protocol result")
 	}
 	record = awaitGatewayAudit(t, sink.records)
 	record.Attrs(func(a slog.Attr) bool {
@@ -225,8 +246,8 @@ func TestGatewayAuditKeepsActualWireStatusWithSlowSink(t *testing.T) {
 		}
 		return true
 	})
-	if status != 503 {
-		t.Fatal("late audit mislabeled503 as business result", status)
+	if status != 400 {
+		t.Fatal("late audit lost protocol result", status)
 	}
 	// Restoring slog alone leaves the standard-log bridge aimed at the test
 	// sink when old used the default handler. More than capacity requests must
@@ -247,8 +268,10 @@ func TestOAuthDeadlineDoesNotReplayConsumedRefresh(t *testing.T) {
 	// The business mutation settles once. A lost response must expose uncertainty,
 	// and the exact consumed refresh cannot authorize a second exchange.
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { g.token(w, r); <-r.Context().Done() })
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Millisecond)
+	defer cancel()
 	// Use a separate wrapper because normal production audit signals completion.
-	h := httpbudget.Wrap(inner)
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { httpbudget.Wrap(inner).ServeHTTP(w, r.WithContext(ctx)) })
 	w := boundedGatewayRequest(t, h, "POST", "/token", "grant_type=refresh_token&refresh_token="+secret+"&client_id=client&resource=https%3A%2F%2Fpublic.example%2Fmcp")
 	if w.Code != 503 {
 		t.Fatal("lost token exchange claimed success", w.Code)
@@ -312,28 +335,27 @@ func TestGatewaySSERequiresFirstDataAndKeepsAcknowledgedStream(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer res.Body.Close()
-			if delay > 0 {
-				body, _ := io.ReadAll(io.LimitReader(res.Body, 64<<10))
-				recordGatewayTiming(t, "POST", "/mcp", res.StatusCode, started)
-				if res.StatusCode != 503 || time.Since(started) > 100*time.Millisecond || strings.Contains(string(body), "acknowledged") {
-					t.Fatal("empty upstream header Flush bypassed budget", res.StatusCode)
-				}
-				return
-			}
 			body := make([]byte, len(ackFrame))
 			if _, err := io.ReadFull(res.Body, body); err != nil {
 				t.Fatal(err)
 			}
-			recordGatewayTiming(t, "POST", "/mcp", res.StatusCode, started)
-			if *apiPerformance {
+			if delay == 0 {
+				recordGatewayTiming(t, "POST", "/mcp", res.StatusCode, started)
+			}
+			if *apiPerformance && delay == 0 {
 				gatewaySamples.Lock()
 				gatewaySamples.Rows[len(gatewaySamples.Rows)-1].Outcome = "stream_ack"
 				gatewaySamples.Unlock()
 			}
-			if res.StatusCode != 200 || string(body) != ackFrame || time.Since(started) > 100*time.Millisecond {
+			if res.StatusCode != 200 || string(body) != ackFrame || (delay == 0 && time.Since(started) > 100*time.Millisecond) {
 				t.Fatal("slow real proxy stream handshake", res.StatusCode)
 			}
-			acknowledged := <-acknowledgedAt
+			var acknowledged time.Time
+			select {
+			case acknowledged = <-acknowledgedAt:
+			case <-ctx.Done():
+				t.Fatal("upstream acknowledgement timestamp unavailable", ctx.Err())
+			}
 			alive := make([]byte, len(aliveFrame))
 			if _, err := io.ReadFull(res.Body, alive); err != nil {
 				t.Fatal("proxy closed after acknowledgement instead of retaining stream", err)
@@ -369,11 +391,17 @@ func awaitGatewaySignal(t *testing.T, signal <-chan struct{}, label string) {
 }
 func awaitGatewayAudit(t *testing.T, records <-chan slog.Record) slog.Record {
 	t.Helper()
-	select {
-	case record := <-records:
-		return record
-	case <-time.After(2 * time.Second):
-		t.Fatal("gateway audit completion timed out")
-		return slog.Record{}
+	timer := time.NewTimer(2 * time.Second)
+	defer timer.Stop()
+	for {
+		select {
+		case record := <-records:
+			if record.Message == "Code Factory gateway request" {
+				return record
+			}
+		case <-timer.C:
+			t.Fatal("gateway audit completion timed out")
+			return slog.Record{}
+		}
 	}
 }

@@ -16,7 +16,7 @@ The owner controls the computer, has existing provider access, and can approve a
 
 ## Alternatives and recovery
 
-Invalid packages, unrelated identities, invalid connection identifiers and unauthorized requests are rejected. Existing host setup is preserved. A locally healthy connection does not establish host acceptance. When local setup or authorization cannot finish promptly, the response reports that its outcome may be unknown. Inspect saved state or reconnect through fresh owner authorization before retrying; do not replay a consumed grant or a submitted credential. A deadline rejection never means that setup or authorization completed.
+Invalid packages, unrelated identities, invalid connection identifiers and unauthorized requests are rejected. Existing host setup is preserved. A locally healthy connection does not establish host acceptance. Slow setup and authorization continue to their actual result; latency alone does not reject them. If the caller cancels or the service stops after work starts, its outcome may be unknown. Inspect saved state or reconnect through fresh owner authorization before retrying; do not replay a consumed grant or a submitted credential. An interrupted request never establishes that setup or authorization completed.
 
 ## Scenarios
 
@@ -50,7 +50,7 @@ flowchart TD
     N4 -->|"retry"| N0
     N2 -->|"observed host success"| N5
     N2 -->|"local health alone"| N6
-    N1 -->|"response deadline or unknown outcome"| N7
+    N1 -->|"caller cancellation or unknown outcome"| N7
     N7 -->|"fresh authorization after inspection"| N1
 ```
 
@@ -90,7 +90,7 @@ flowchart TD
 - [internal/web/embed.go](../../internal/web/embed.go) — Configuration opens through its own bridged document entry. (`func SettingsHTML(`)
 - [plugin/skills/code-factory-admin/SKILL.md](../../plugin/skills/code-factory-admin/SKILL.md) — Third packaged skill ships in portable and browser artifacts. (`name: code-factory-admin`)
 - [internal/gateway/audit.go](../../internal/gateway/audit.go) — Current install-connect implementation or fixture/build dependency.
-- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Finite response deadlines, bounded admission/body buffer and explicit response outcome; acknowledged SSE retains its cancellation lifetime. (`func Wrap(`)
+- [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime. (`func Wrap(`)
 - [internal/setup/onboarding.go](../../internal/setup/onboarding.go) — Single-use local authorization distinguishes successful save from deadline uncertainty and locks ambiguous submissions. (`func (f *credentialForm) ServeHTTP(`)
 
 ## Test references
@@ -111,12 +111,13 @@ flowchart TD
 - [internal/gateway/audit_test.go](../../internal/gateway/audit_test.go) — `func TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails(`; S1. Current install-connect fixture assertion TestRequestAuditIncludesUnknownRoutesWithoutRequestDetails. Inspect its exact assertion scope.
 - [internal/setup/dependencies_test.go](../../internal/setup/dependencies_test.go) — `func TestTunnelReleaseDiscoveryUsesPublicGitHubCache(`; S1. Tunnel release discovery reuses the shared anonymous GET cache, validates live reads conditionally and rejects anonymous mutation before dispatch.
 - [internal/gateway/api_performance_test.go](../../internal/gateway/api_performance_test.go) — `func TestGatewayAPILatency(`; S1. Public mux registrations and generated artifact routes are the completeness oracle. Local wire samples cover GET/HEAD at root and configured prefix, RFC metadata aliases and accepted webhook proxying, plus existing OAuth/private consent fixtures, with each finite response or real stream acknowledgement within100ms. Status/body/metadata identity assertions distinguish success, accepted response and rejection; no public-network/real-host claim.
-- [internal/setup/onboarding_test.go](../../internal/setup/onboarding_test.go) — `func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(`; S2. A stalled save returns503 uncertainty without credential echo, accepts one submission and never claims late success.
-- [internal/setup/api_performance_test.go](../../internal/setup/api_performance_test.go) — `func TestOnboardingAPILatency(`; S2. Immediate successful page/readiness/save cases and125ms dependency rejection are timed as distinct outcomes; no installed-host claim.
-- [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestGatewayFiniteResponseContentionAndDelayedProxy(`; S2. Every registered mutable OAuth/private-consent entry point and delayed finite proxy response rejects within100ms under a held authentication lock; partial body cannot escape.
-- [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestGatewayDelayedRegistrationMappingRemainsFinite(`; S1. Landing and browser-package routes reject boundedly when registered-app filesystem input is delayed.
+- [internal/setup/onboarding_test.go](../../internal/setup/onboarding_test.go) — `func TestCredentialFormDeadlinePreservesSingleSubmissionAndUncertainty(`; S2. An explicit caller deadline interrupts a held credential save, preserves its single-submission identity, reports uncertainty and never echoes the private input.
+- [internal/setup/api_performance_test.go](../../internal/setup/api_performance_test.go) — `func TestOnboardingAPILatency(`; S2. Twenty isolated successful local form/reachability/save sequences each satisfy the75ms verification gate; deliberately slow and canceled saves have separate correctness fixtures.
+- [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestGatewayFiniteResponseContentionAndDelayedProxy(`; S2. Gateway authorization and token routes retain actual protocol results during 125 ms mutex contention; a slow finite upstream returns its entire response.
+- [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestGatewayDelayedRegistrationMappingRemainsFinite(`; S1. A registration mapping held for 125 ms still returns the requested package or browser archive.
 - [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestOAuthDeadlineDoesNotReplayConsumedRefresh(`; S2. A completed but lost token exchange is reported unknown, and a consumed refresh cannot authorize another exchange.
-- [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestGatewaySSERequiresFirstDataAndKeepsAcknowledgedStream(`; S2. Actual proxy acknowledges within100ms, forwards a second real data frame sent150ms later, remains live until body close and promptly cancels upstream after disconnect; delayed first acknowledgement still rejects despite header flush.
+- [internal/gateway/response_budget_test.go](../../internal/gateway/response_budget_test.go) — `func TestGatewaySSERequiresFirstDataAndKeepsAcknowledgedStream(`; S2. Immediate and 125 ms delayed real proxy acknowledgements succeed; later stream frames remain live and caller body close cancels upstream.
+- [internal/setup/onboarding_test.go](../../internal/setup/onboarding_test.go) — `func TestCredentialFormSlowSaveCompletesOnce(`; S2. A125ms private credential save completes successfully once without echoing its input; a repeated submission cannot save again.
 
 ## Verification and gaps
 

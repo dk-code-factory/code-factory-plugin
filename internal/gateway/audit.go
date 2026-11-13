@@ -5,7 +5,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"time"
 )
 
 // Only fixed endpoint labels, response status and elapsed time are logged. URLs, queries,
@@ -13,7 +12,6 @@ import (
 func audit(surface string, next http.Handler) http.Handler {
 	return httpbudget.AuditRejections(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route := auditRoute(r)
-		started := time.Now()
 		response := &statusWriter{ResponseWriter: w}
 		next.ServeHTTP(response, r)
 		actual := httpbudget.Complete(r.Context())
@@ -24,7 +22,7 @@ func audit(surface string, next http.Handler) http.Handler {
 		if actual != 0 {
 			status = actual
 		}
-		slog.Info("Code Factory gateway request", "surface", surface, "route", route, "status", status, "duration_ms", time.Since(started).Milliseconds())
+		slog.Info("Code Factory gateway request", "surface", surface, "route", route, "request_id", httpbudget.RequestID(r.Context()), "budget_breached", httpbudget.ResponseDuration(r.Context()) > httpbudget.Duration, "status", status, "duration_ms", httpbudget.ResponseDuration(r.Context()).Milliseconds())
 	}), auditRoute, func(ctx context.Context, rejection httpbudget.Rejection) {
 		slog.InfoContext(ctx, "Code Factory gateway request", "surface", surface, "route", rejection.API,
 			"status", http.StatusServiceUnavailable, "rejection_reason", "request_not_started",
