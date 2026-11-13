@@ -1414,6 +1414,16 @@
           "path": "internal/factory/native.go",
           "anchor": "func (s *Service) attach(",
           "purpose": "New configuration threads register communication tools; retained older threads keep their native tool catalog and receive compatible guidance."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "assertions": [
@@ -1426,7 +1436,13 @@
         "CONFIG-COMMUNICATION",
         "CONFIG-COMMUNICATION-EXPIRY",
         "CONFIG-COMMUNICATION-LEGACY",
-        "CONFIG-COMMUNICATION-CATALOG"
+        "CONFIG-COMMUNICATION-CATALOG",
+        "NATIVE-CONFIG-REDACTION",
+        "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+        "NATIVE-CONFIG-PRIVATE-EDITS",
+        "NATIVE-CONFIG-LEGACY-REDACTION",
+        "NATIVE-CONFIG-SELECTORS",
+        "NATIVE-CONFIG-NAMED-ENTRIES"
       ],
       "gaps": [],
       "suites": [
@@ -1434,7 +1450,7 @@
         "go"
       ],
       "context": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
-      "composition": "Owner messages, titled plain-text result cards and separate question/proposal controls. Ordinary configuration-agent narration and internal status summaries are hidden.",
+      "composition": "Owner messages, titled plain-text result cards and separate question/proposal controls. Ordinary configuration-agent narration and internal status summaries are hidden. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory.",
       "interactions": "The configuration agent communicates intentionally through message/question tools or a concrete proposal. Questions suspend until an explicit owner answer. Older retained tool catalogs use status results and blocked requests without replacing the native thread.",
       "state_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
@@ -1473,13 +1489,29 @@
           "path": "internal/transport/projections.go",
           "anchor": "func (c *projectionCache) read(",
           "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
         "NATIVE-CONFIG",
         "API-V2-CURRENT",
-        "API-V2-CHUNKS"
+        "API-V2-CHUNKS",
+        "NATIVE-CONFIG-REDACTION",
+        "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+        "NATIVE-CONFIG-PRIVATE-EDITS",
+        "NATIVE-CONFIG-LEGACY-REDACTION",
+        "NATIVE-CONFIG-SELECTORS",
+        "NATIVE-CONFIG-NAMED-ENTRIES"
       ],
       "gaps": [],
       "suites": [
@@ -1487,7 +1519,7 @@
         "go"
       ],
       "context": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
-      "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
+      "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory.",
       "interactions": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
@@ -1534,6 +1566,16 @@
           "path": "internal/factory/configuration.go",
           "anchor": "func settingsDiff(",
           "purpose": "Deterministic complete before/after values for changed top-level settings only."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "assertions": [
@@ -1546,7 +1588,13 @@
         "API-V2-FEEDBACK",
         "API-V2-RESTART",
         "CONFIG-COMMUNICATION-LEGACY",
-        "WRAP-CONFIG-QUESTION"
+        "WRAP-CONFIG-QUESTION",
+        "NATIVE-CONFIG-REDACTION",
+        "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+        "NATIVE-CONFIG-PRIVATE-EDITS",
+        "NATIVE-CONFIG-LEGACY-REDACTION",
+        "NATIVE-CONFIG-SELECTORS",
+        "NATIVE-CONFIG-NAMED-ENTRIES"
       ],
       "gaps": [],
       "suites": [
@@ -1554,7 +1602,7 @@
         "go"
       ],
       "context": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
-      "composition": "Concrete diff and proposed/confirmed/applied/stale state with explicit Confirm or Reject. Application diffs include only changed settings and their complete before/after values.",
+      "composition": "Concrete diff and proposed/confirmed/applied/stale state with explicit Confirm or Reject. Application diffs include only changed settings and their complete before/after values. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory.",
       "interactions": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
       "state_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
@@ -6202,6 +6250,42 @@
       "path": "internal/factory/communication_test.go",
       "anchor": "func TestConfigurationCommunicationRetainsNativeCatalog(",
       "assertion": "New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs."
+    },
+    {
+      "id": "NATIVE-CONFIG-REDACTION",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeInspectionRedactsUnmanagedCredentials(",
+      "assertion": "Native inspection and the configuration-agent tool redact unmanaged environment, header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities. Large integer settings retain exact JSON precision."
+    },
+    {
+      "id": "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeProposalRetainsRedactedSnapshotAndRawFreshness(",
+      "assertion": "Stored proposals contain redacted snapshots; an invisible credential rotation rejects confirmation, and a fresh confirmed profile edit sends exactly one scoped native write."
+    },
+    {
+      "id": "NATIVE-CONFIG-PRIVATE-EDITS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeCredentialEditsAreRejectedWithoutPersistence(",
+      "assertion": "Credential-bearing native edits and redacted placeholders are rejected before proposal persistence or native writes."
+    },
+    {
+      "id": "NATIVE-CONFIG-LEGACY-REDACTION",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeLegacyProposalMigrationPreservesStaleness(",
+      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+    },
+    {
+      "id": "NATIVE-CONFIG-SELECTORS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(",
+      "assertion": "Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal."
+    },
+    {
+      "id": "NATIVE-CONFIG-NAMED-ENTRIES",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeCredentialWordsInNamesRemainEditable(",
+      "assertion": "Profile/plugin/project/server identifiers containing credential words preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
     }
   ],
   "source_map": [
@@ -6264,6 +6348,18 @@
       "anchor": "func (s *Service) communicate(",
       "entities": "Configuration communication messages and questions",
       "detail": "Intentional plain-text messages and exact pending question identities are prepared by the worker; cached transcript/question projections remain the read path."
+    },
+    {
+      "path": "internal/factory/native_projection.go",
+      "anchor": "func nativeSnapshot(",
+      "entities": "Native configuration inspection and proposal displays",
+      "detail": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+    },
+    {
+      "path": "internal/store/proposal_migration.go",
+      "anchor": "func (s *Store) RedactNativeProposalEvents(",
+      "entities": "Retained native configuration proposal history",
+      "detail": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
     }
   ],
   "coverage_groups": [
