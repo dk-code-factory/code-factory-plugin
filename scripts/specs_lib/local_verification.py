@@ -43,7 +43,7 @@ LOADER_CARRIERS = ('LD_PRELOAD', 'LD_AUDIT', 'LD_LIBRARY_PATH')
 # Reviewed native ownership plumbing from main. Planning omits only this exact
 # prologue under the already authenticated managed() owner; all selected native
 # prerequisites and recipes still come from the inspected current Makefile.
-MAKE_OWNER_PROLOGUE = 'e2e524d325c5b0d9f2c35788ad7dccb40ff1684d3123544849966a67e38800c8'
+MAKE_OWNER_PROLOGUE = 'ca1d8d068df16b86408e92171b19ff4b30db6242b757565aa1bdb5260976f322'
 MAKE_OWNER_RECIPES = {
     '7286dbcb2cf606f203c91fcb7efe6acc51ec626778909ca0906c191f28226e0e',
     'acc6ceab8d0bb3a146a9230ab6bc11a14e2d2acbc19177c10530b21e2ae21f7f',

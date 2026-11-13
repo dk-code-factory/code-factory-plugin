@@ -1525,6 +1525,22 @@
           "purpose": "A real SQLite trigger rejecting generation writes blocks subsequent same-client response/query cache hits; malformed persisted generation data fails closed after client restart without contacting GitHub. Mixed GraphQL auth/rate generation-write failure returns cache failure before rate classification and blocks that client query hits."
         },
         {
+          "path": "internal/app/github_usage_test.go",
+          "anchor": "func TestGitHubDefaultBudgetAndExplicitOverride(",
+          "purpose": "Application policy defaults to 2,000 request attempts per hour while retaining an explicit 600-request override.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_usage_test.go",
+          "anchor": "func TestGitHubDefaultBudgetReportingAndAdmission(",
+          "purpose": "Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
           "path": "internal/factory/background_refresh_test.go",
           "anchor": "func TestBackgroundDetailTrafficUsesActivityAndDormantDeadlines(",
           "purpose": "Controlled passes retain the active detail cadence, postpone old untracked open PRs until hourly and dormant terminal PRs/issues until daily.",
@@ -6712,6 +6728,11 @@
           "path": "web/fixture-listener.mjs",
           "anchor": "async function main(",
           "purpose": "Run Vite in an owned child with atomic actual-origin/error readiness and signal-driven close; imports remain passive through typed exact real-path main identity. Parent ownership can terminate an initializer that never settles."
+        },
+        {
+          "path": "scripts/specs_lib/make_owner.py",
+          "anchor": "def fields(",
+          "purpose": "Export one complete private, framed ownership batch through the live guardian descriptor alias; remove partial exports on failure."
         }
       ],
       "tests": [
@@ -8420,7 +8441,7 @@
           "scenarios": [
             "S5"
           ],
-          "purpose": "The checked workflow admits PRs to main and sync/local-development only, retains main-only pushes and keeps manual dispatch available under its main guard."
+          "purpose": "The checked workflow admits PRs to main and sync/local-development only, retains main-only pushes and keeps manual dispatch available under its main guard. The complete hosted verification job retains a bounded 60-minute budget."
         },
         {
           "path": "scripts/test_ci.py",
@@ -11064,6 +11085,33 @@
             "S1"
           ],
           "purpose": "The actual Make API command, all five serial Go packages, timing phase identity and successful emitted journal row must match exactly; command metadata cannot understate executed scope."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_make_exports_ownership_with_one_batch_per_make_process(",
+          "purpose": "The real native caller and worker each launch one batch-export helper while all preparation, serial verification and downstream commands remain present.",
+          "scenarios": [
+            "S4",
+            "S5"
+          ]
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_complete_batch_preserves_raw_values_private_modes_and_legacy_fields(",
+          "purpose": "Batch and legacy fields retain exact raw bytes including dollars, quotes, CR/LF and inherited Git ceilings, with a safe numeric descriptor alias and 0700/0600 permissions.",
+          "scenarios": [
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "path": "scripts/test_specs_isolation.py",
+          "anchor": "def test_failed_batch_removes_partial_fields_before_returning_an_alias(",
+          "purpose": "A controlled later field-write failure removes the partial batch and raises before publishing an alias.",
+          "scenarios": [
+            "S3",
+            "S4"
+          ]
         }
       ],
       "suites": [

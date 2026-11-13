@@ -111,7 +111,7 @@ their original options. A completed turn without a status report appears idle.
 ## GitHub API allowance
 
 Inspect and propose the shared application GitHub budget through configuration
-chat. Defaults are 600 request attempts/hour, 100 reported quota units reserved,
+chat. Defaults are 2,000 request attempts/hour, 100 reported quota units reserved,
 and a 120-second notification interval. REST quota uses requests and GraphQL quota
 uses points; the local allowance counts actual HTTP attempts. Reads honor the
 provider's server cooldown, conditional cache and persistent shared gate.

@@ -59,7 +59,7 @@ func (g *GitHub) Managed() bool { return g.policy != nil }
 // no authenticated transport and cannot reserve or perform a provider request.
 func SavedGitHubUsage(ctx context.Context, s *store.Store, budget int, reserve *int) (GitHubUsage, error) {
 	if budget == 0 {
-		budget = 600
+		budget = 2000
 	}
 	r := 100
 	if reserve != nil {
@@ -286,7 +286,7 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 		g.requestMu.Lock()
 		defer g.requestMu.Unlock()
 	}
-	p := GitHubPolicy{RequestsPerHour: 600, Reserve: 100}
+	p := GitHubPolicy{RequestsPerHour: 2000, Reserve: 100}
 	if g.policy != nil {
 		var err error
 		p, err = g.policy(ctx)

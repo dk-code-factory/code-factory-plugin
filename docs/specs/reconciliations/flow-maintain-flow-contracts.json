@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "bde94be31fa596b8c4987d8dddec705cc2878fa6",
-  "fingerprint": "c4b9a8ca362c88b415498db1f4e826a3633b9804a5115fa1eb3714f934c55eb1",
+  "base": "49b774a8cab46761c64480270cf6b3e069743193",
+  "fingerprint": "19d2c416109700a458f11832bdaee3472dece1533cb92bc7488cecfa7a54af1a",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Reviewed maintain-flow-contracts scenarios S1, S2, S3, S4, S5: the operational AGENTS policy and shared transport references change, while the authored domain transitions and stable scenario identities remain accurate. Existing real-host gaps remain open.",
-    "implementation": "Inspected maintain-flow-contracts implementation mappings and the shared response wrapper:75ms now signals delay without changing domain authority, confirmation, ordering, recovery or replay rules. Independent cancellation, capacity and response-size guards remain.",
-    "tests": "Read mapped assertion anchors def test_code_and_test_changes_require_reconciliation(, def test_description_changes_require_both_code_and_tests(, def test_removed_flow_needs_implementation_and_test_changes( and the new shared slow-response/cancellation regressions. Domain assertions retain their original scope; latency observations establish no additional real-host or provider coverage."
+    "kind": "behavior",
+    "description": "Reviewed maintain-flow-contracts S1-S5. S3/S4/S5 retain owned verification, literal inherited paths, failure cleanup and native graph ordering while exporting each Make process ownership fields as one complete private batch. Hosted verification is allowed 60 minutes; no suite or assertion is removed, and historical adoption and open gaps remain unchanged.",
+    "implementation": "Makefile now calls --make-owner-fields once per native Make process and rejects an empty export before work. make_owner.fields writes all six fixed fields with legacy CRLF framing into a 0700 batch using 0600 files under the live owner directory-FD alias; it returns the alias only after successful closes and removes partial batches on failure. The legacy field endpoint remains. local_verification pins the reviewed prologue; verification_run dispatches the new endpoint.",
+    "tests": "test_make_exports_ownership_with_one_batch_per_make_process exercises the real caller/worker graph and retains shared preparation/order assertions while requiring exactly two batched exports and no legacy calls. MakeOwnerFieldTests asserts hostile raw bytes, exact field set, directory/file modes, legacy equivalence and controlled fifth-write cleanup. Existing hostile TMPDIR, re-exec/nested clients, stdin remake, readiness rejection and owner-death tests passed focused execution. HostedCITests asserts the 60-minute deadline. Fixture benchmarks are evidence of overhead reduction only, not new product or real-host acceptance."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.224
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 677.862
+      "seconds": 658.869
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 497.942
+      "seconds": 444.887
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.755
+      "seconds": 4.796
     },
     {
       "command": [
@@ -58,17 +58,17 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.85
+      "seconds": 61.923
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "0ddc3b0e3e067096374f82f0fd51fbaf4a57fabb150b8fc705c1b94c0b44549f",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:entity": "c00dea15a34a8b066c9f3f5d727d1f2d34590a8133ce052fd04fa266be16b513",
-    "term:glossary": "c1a8303e0e5372eb92225e89752c0f441d80234a7bee5f07c7e1eb14e382e5ac",
-    "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
-    "term:reconciliation": "69aabae63c127bdae8cb3b01c8d360d88affca7a957845ff7bdfb925799fa181",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
-    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe"
+    "flow:maintain-flow-contracts": "be5735b90c7cd08c1e1cce9cc6859a7607f093e8dd85ddec76ce2d00989a0a8a",
+    "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
+    "term:entity": "cf65eb0f03e706b33032e3fa67b2b0fc90b66445fb15aa7638a42a1107edf551",
+    "term:glossary": "9c2f8c1f37bad28ff2708f21d05bbb11174b0dac123786aa43be5256112b0723",
+    "term:known-limitation": "d24b615b373f9b9fd4e0b8ad8bd78ded4af9a1e74db85626f169df9cbe58458e",
+    "term:reconciliation": "528d98a10870109bbe786c3e1c27b0d364b78b8161fcdafe9aeade7e09ec0e7b",
+    "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
+    "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8"
   }
 }

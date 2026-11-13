@@ -18,6 +18,49 @@ import (
 	"codefactory/internal/store"
 )
 
+func TestGitHubDefaultBudgetReportingAndAdmission(t *testing.T) {
+	ctx := context.Background()
+	g := NewGitHub()
+	status, err := g.UsageStatus(ctx)
+	if err != nil || status.Budget != 2000 {
+		t.Fatalf("unmanaged budget = %d, want 2000; err = %v", status.Budget, err)
+	}
+	db, err := store.Open(filepath.Join(t.TempDir(), "state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	now := time.Now().UTC()
+	calls := make([]time.Time, 1999)
+	for i := range calls {
+		calls[i] = now
+	}
+	if err := db.Put(ctx, "github-usage", "application", githubUsage{Calls: calls}, ""); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct{ configured, want int }{{0, 2000}, {600, 600}} {
+		status, err := SavedGitHubUsage(ctx, db, tc.configured, nil)
+		if err != nil || status.Budget != tc.want || status.RequestsLastHour != 1999 {
+			t.Fatalf("saved usage = %+v, want budget %d and 1999 requests; err = %v", status, tc.want, err)
+		}
+	}
+	g.ConfigureUsage(db, func(ctx context.Context) (GitHubPolicy, error) {
+		status, err := SavedGitHubUsage(ctx, db, 0, nil)
+		return GitHubPolicy{RequestsPerHour: status.Budget}, err
+	})
+	g.clock = func() time.Time { return now }
+	if err := g.beginRequest(ctx, "fixture", "core", "/user"); err != nil {
+		t.Fatalf("request 2000 rejected: %v", err)
+	}
+	var limited *RateLimitError
+	if err := g.beginRequest(ctx, "fixture", "core", "/user"); !errors.As(err, &limited) {
+		t.Fatalf("request 2001 should be rate limited: %v", err)
+	}
+	if !limited.Until.Equal(now.Add(time.Hour + time.Second)) {
+		t.Fatalf("unexpected retry deadline: %v", limited.Until)
+	}
+}
+
 func TestManagedTransportsShareProcessGateAndPreserveCooldown(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

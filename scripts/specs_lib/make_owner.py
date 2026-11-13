@@ -6,6 +6,7 @@ from pathlib import Path
 import select
 import selectors
 import signal
+import shutil
 import socket
 import struct
 import subprocess
@@ -83,7 +84,7 @@ def acquire(root, pid):
         process.stdout.close()
 
 
-def field(encoded, key):
+def field_values(encoded):
     run = Path(os.fsdecode(base64.b64decode(encoded, validate=True)))
     state = json.loads((run / 'owner.json').read_text())
     values = {
@@ -94,9 +95,30 @@ def field(encoded, key):
         'TMPDIR': str(run / 'tmp'),
         'GIT_CEILING_DIRECTORIES': git_ceiling(run, state),
     }
-    value = values[key]
     directory = Path(f"/proc/{state['pid']}/fd/{state['directory_fd']}") / 'make-fields'
     directory.mkdir(mode=0o700, exist_ok=True)
+    return directory, values
+
+
+def fields(encoded):
+    """Publish one complete field batch through the live owner's safe alias."""
+    parent, values = field_values(encoded)
+    directory = Path(tempfile.mkdtemp(prefix='batch-', dir=parent))
+    try:
+        for key, value in values.items():
+            with (directory / key).open('xb') as output:
+                os.fchmod(output.fileno(), 0o600)
+                # Match field(): GNU Make strips one terminal LF and CR.
+                output.write(os.fsencode(value) + b'\r\n')
+        return str(directory)
+    except BaseException:
+        shutil.rmtree(directory)
+        raise
+
+
+def field(encoded, key):
+    directory, values = field_values(encoded)
+    value = values[key]
     with tempfile.NamedTemporaryFile(prefix=key + '-', dir=directory, delete=False) as output:
         # Make removes a terminal LF and preceding CR. Frame both so genuine
         # trailing CR/LF data remains intact, along with interior pathname bytes.
