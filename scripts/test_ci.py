@@ -80,6 +80,75 @@ class HostedCITests(unittest.TestCase):
         self.assertIn("  pull_request:\n    branches: [main, sync/local-development]\n", triggers)
         self.assertIn("  workflow_dispatch:\n", triggers)
 
+    def test_hosted_python_jobs_gate_runtime_performance_and_package_production(self):
+        workflow = yaml.safe_load((Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text())
+        python, runtime = workflow['jobs']['python'], workflow['jobs']['verify']
+        self.assertEqual(runtime['needs'], 'python')
+        self.assertEqual(runtime['if'], '${{ !cancelled() }}')
+        self.assertNotIn('if', python)
+        gate = runtime['steps'][0]
+        self.assertEqual(gate['env'], {'PYTHON_SUITE_RESULT': '${{ needs.python.result }}'})
+        self.assertNotIn('if', gate)
+        self.assertNotIn('continue-on-error', gate)
+        for status in ('success', 'failure', 'cancelled', 'skipped', ''):
+            result = subprocess.run(['sh', '-c', gate['run']],
+                                    env={**os.environ, 'PYTHON_SUITE_RESULT': status})
+            self.assertEqual(result.returncode == 0, status == 'success')
+        self.assertEqual(python['strategy']['matrix'], {'suite': ['ci', 'specs']})
+        self.assertFalse(python['strategy']['fail-fast'])
+        for job in (python, runtime):
+            self.assertNotIn('continue-on-error', job)
+            self.assertEqual(job['env']['CODE_FACTORY_REAL_CODEX'], '0')
+            checkout = next(step for step in job['steps'] if step.get('uses', '').startswith('actions/checkout@'))
+            self.assertEqual(checkout['with']['ref'], '${{ github.event.pull_request.head.sha || github.sha }}')
+            self.assertEqual(checkout['with']['fetch-depth'], 0)
+            self.assertFalse(checkout['with']['persist-credentials'])
+            verify = next(step for step in job['steps'] if step.get('name', '').startswith('Verify exact source'))
+            self.assertNotIn('continue-on-error', verify)
+            self.assertNotIn('if', verify)
+        self.assertEqual(next(step['run'] for step in python['steps']
+                              if step.get('name', '').startswith('Verify exact source')),
+                         'python3 scripts/ci.py verify-python-${{ matrix.suite }}')
+        self.assertEqual(next(step['run'] for step in runtime['steps']
+                              if step.get('name', '').startswith('Verify exact source')),
+                         'python3 scripts/ci.py verify-runtime')
+        self.assertFalse(any(step.get('with', {}).get('name') == 'linux-amd64-packages'
+                             for step in python['steps']))
+
+    def test_partial_hosted_scopes_preserve_exact_comparison_and_fixture_mode(self):
+        head = self.change('two')
+        for scope, target in (('runtime', 'hosted-runtime-verify'),
+                              ('python-ci', 'hosted-python-ci'), ('python-specs', 'hosted-python-specs')):
+            for bootstrap in (False, True):
+                calls = []
+                with self.subTest(scope=scope, bootstrap=bootstrap), patch.dict(os.environ, {'CODE_FACTORY_REAL_CODEX': '1'}):
+                    ci.run_verification({'base': self.first, 'head': head, 'bootstrap': bootstrap},
+                                        lambda argv, **kwargs: calls.append((argv, kwargs)), scope=scope)
+                self.assertEqual(calls[0][1]['env']['CODE_FACTORY_REAL_CODEX'], '0')
+                expected = ['make', target + '-bootstrap'] if bootstrap else [
+                    'make', target, 'FLOW_ARGS=--base ' + self.first + ' --head ' + head]
+                self.assertEqual(calls[0][0], expected)
+
+    def test_python_dispatch_never_publishes_packages_and_rejects_wrong_comparison_first(self):
+        event = self.root / 'event.json'
+        event.write_text('{}')
+        plan = {'base': self.first, 'head': self.first, 'bootstrap': False}
+        for command in ('verify-python-ci', 'verify-python-specs'):
+            with self.subTest(command=command), patch.object(sys, 'argv', ['ci.py', command, '--event', str(event)]), \
+                    patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_REF': 'refs/pull/1/head'}), \
+                    patch.object(ci, 'comparison', return_value=plan) as comparison, \
+                    patch.object(ci, 'run_verification') as verify, patch.object(ci, 'artifact_manifest') as manifest:
+                ci.main()
+                comparison.assert_called_once()
+                verify.assert_called_once_with(plan, scope=command.removeprefix('verify-'))
+                manifest.assert_not_called()
+                comparison.side_effect = ValueError('wrong source comparison')
+                verify.reset_mock()
+                with self.assertRaises(SystemExit):
+                    ci.main()
+                verify.assert_not_called()
+                manifest.assert_not_called()
+
     def test_hosted_checkout_ownership_spans_artifact_manifest_publication(self):
         from specs_lib.isolation import isolated
         event = self.root / 'event.json'
@@ -619,6 +688,36 @@ record('end')
         self.assertLess(starts.index('npm run test:performance'), starts.index('python3 scripts/package.py'))
         self.assertLess(starts.index('python3 scripts/package.py'), starts.index('python3 scripts/test_installer.py'))
         self.assertLess(starts.index('python3 scripts/test_installer.py'), starts.index('python3 scripts/smoke.py'))
+
+    def test_hosted_scopes_partition_complete_verification_without_duplicate_tests(self):
+        preparation = {'npm ci', 'npm run build', 'python3 scripts/package_plugin.py --embed',
+                       'go build -trimpath -o bin/code-factory ./cmd/code-factory',
+                       'go build -o bin/fake-codex ./internal/testutil/fakecodex',
+                       'python3 -m pip install -r scripts/requirements-dev.txt',
+                       'npx playwright install --with-deps chromium'}
+        def starts(events):
+            return [event['key'] for event in events if event['event'] == 'start']
+        def admission(command):
+            return command.startswith('python3 scripts/specs.py check') or command == 'python3 scripts/specs.py validate'
+        def checks(events):
+            return [key for key in starts(events) if key not in preparation and not admission(key)]
+        for bootstrap in (False, True):
+            suffix = '-bootstrap' if bootstrap else ''
+            targets = [target + suffix for target in
+                       ('hosted-python-ci', 'hosted-python-specs', 'hosted-runtime-verify')]
+            with self.subTest(bootstrap=bootstrap):
+                full = self.successful('hosted-verify' + suffix)
+                parts = [self.successful(target) for target in targets]
+                self.assertCountEqual(checks(full), [command for events in parts for command in checks(events)])
+                self.assertEqual(checks(parts[0]), ['python3 scripts/test_ci.py'])
+                self.assertEqual(checks(parts[1]), ["python3 -m unittest discover -s scripts -p test_specs*.py"])
+                self.assertNotIn('python3 scripts/test_ci.py', checks(parts[2]))
+                for target, events in zip(targets[:2], parts[:2]):
+                    gate = next(key for key in starts(events) if admission(key))
+                    self.assertLess(starts(events).index(gate), starts(events).index(checks(events)[0]))
+                    result, failed = self.run_make(target, fail=gate, flags=('-j4',), inherited_flags='-k')
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertFalse(checks(failed), starts(failed))
 
     def test_local_hosted_and_direct_entrypoints_share_preparation_once(self):
         for goal in ('verify', 'ci', 'hosted-verify', 'hosted-verify-bootstrap', 'direct'):
@@ -1284,18 +1383,21 @@ time.sleep(60)
         self.assertEqual(json.loads(journal.read_text())['outcome'], 'interrupted')
 
     def test_workflow_finalizes_timing_before_every_artifact_transfer(self):
-        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()
-        steps = workflow.split('      - ')[1:]
-        verify = next(i for i, step in enumerate(steps) if step.startswith('name: Verify exact source'))
-        self.assertTrue(steps[verify + 1].startswith('name: Finish verification timing'))
-        self.assertIn('if: always()', steps[verify + 1])
-        self.assertIn('hosted-finish --outcome', steps[verify + 1])
-        uploads = [i for i, step in enumerate(steps) if 'uses: actions/upload-artifact@' in step]
-        self.assertTrue(all(i > verify + 1 for i in uploads))
-        self.assertEqual(uploads[-1], len(steps) - 1)
-        self.assertIn('name: verification-phase-timings', steps[-1])
-        self.assertIn('continue-on-error: true', steps[-1])
-        self.assertIn('retention-days: 7', steps[-1])
+        workflow = yaml.safe_load((Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text())
+        for name, job in workflow['jobs'].items():
+            with self.subTest(job=name):
+                steps = job['steps']
+                verify = next(i for i, step in enumerate(steps) if step.get('name', '').startswith('Verify exact source'))
+                self.assertEqual(steps[verify + 1]['name'], 'Finish verification timing')
+                expected = "always() && needs.python.result == 'success'" if name == 'verify' else 'always()'
+                self.assertEqual(steps[verify + 1]['if'], expected)
+                self.assertIn('hosted-finish --outcome', steps[verify + 1]['run'])
+                uploads = [i for i, step in enumerate(steps) if step.get('uses', '').startswith('actions/upload-artifact@')]
+                self.assertTrue(all(i > verify + 1 for i in uploads))
+                self.assertEqual(uploads[-1], len(steps) - 1)
+                self.assertTrue(steps[-1]['with']['name'].startswith('verification-phase-timings'))
+                self.assertTrue(steps[-1]['continue-on-error'])
+                self.assertEqual(steps[-1]['with']['retention-days'], 7)
 
     def test_workflow_does_not_prepare_npm_outside_graph(self):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()

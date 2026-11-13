@@ -56,6 +56,8 @@ endif
 
 .PHONY: build test test-api-performance test-performance test-real-provider check ui package verify plugin connection-test connection-sdk-test flows-validate flows-check specs-validate specs-check specs-ci specs-report specs-gaps ci npm-deps plugin-embed fake-provider hosted-prerequisites python-deps browser-deps hosted-verify hosted-verify-bootstrap verify-bootstrap test-installer smoke
 .PHONY: local-verification-prepare verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps verification-context
+.PHONY: test-runtime test-python hosted-python-ci hosted-python-specs hosted-runtime-verify hosted-runtime-verify-bootstrap hosted-runtime-verify-steps hosted-runtime-verify-bootstrap-steps
+.PHONY: hosted-python-ci-bootstrap hosted-python-specs-bootstrap
 .DEFAULT_GOAL := ui
 # Ordinary verification is deterministic even with inherited or command-line opt-ins.
 override export CODE_FACTORY_REAL_CODEX := 0
@@ -65,6 +67,8 @@ FLOW_ARGS ?= --base $(if $(FLOW_BASE),$(FLOW_BASE),HEAD)
 # prepare current inputs, including changed tooling and missing outputs.
 # Serialize phases even when the caller supplies -j or inherited MAKEFLAGS.
 .NOTPARALLEL: verify-steps verify-bootstrap-steps hosted-verify-steps hosted-verify-bootstrap-steps hosted-prerequisites build test test-api-performance test-performance
+.NOTPARALLEL: test-runtime test-python hosted-runtime-verify-steps hosted-runtime-verify-bootstrap-steps hosted-python-ci hosted-python-specs
+.NOTPARALLEL: hosted-python-ci-bootstrap hosted-python-specs-bootstrap
 npm-deps:
 	cd web && python3 ../scripts/verification_timing.py command npm-install -- npm ci
 ui: npm-deps
@@ -81,7 +85,8 @@ check: npm-deps
 	python3 scripts/verification_timing.py command specifications-validate -- python3 scripts/specs.py validate
 	python3 scripts/verification_timing.py command static -- go vet ./...
 	cd web && python3 ../scripts/verification_timing.py command frontend-check -- npm run check
-test: ui plugin-embed fake-provider
+test: test-runtime test-python
+test-runtime: ui plugin-embed fake-provider
 	python3 scripts/verification_timing.py command correctness -- go test -race -count=1 ./...
 	cd web && python3 ../scripts/verification_timing.py command frontend-tests -- npm test
 	python3 scripts/verification_timing.py command tooling-packaging -- python3 scripts/test_packaging.py
@@ -90,9 +95,10 @@ test: ui plugin-embed fake-provider
 	python3 scripts/verification_timing.py command browser-lab -- node --test scripts/test_browser_lab.mjs
 	python3 scripts/verification_timing.py command browser-control -- node --test scripts/test_browser_control.mjs
 	python3 scripts/verification_timing.py command fixture-listener -- node --test scripts/test_fixture_listener.mjs
-	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/test_ci.py
 	python3 scripts/verification_timing.py command tooling-browser-benchmark -- python3 scripts/test_browser_benchmark.py
 	python3 scripts/verification_timing.py command tooling-user-flows -- python3 scripts/test_user_flows.py
+test-python: ui plugin-embed fake-provider
+	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/test_ci.py
 	python3 scripts/verification_timing.py command specification-tests -- python3 -m unittest discover -s scripts -p 'test_specs*.py'
 test-api-performance: ui plugin-embed fake-provider
 	python3 scripts/verification_timing.py command api-performance -- go test -p 1 -count=1 -run APILatency ./internal/transport ./internal/gateway ./internal/setup ./internal/factory ./internal/httpbudget -args -api-performance
@@ -101,7 +107,7 @@ test-performance: test-api-performance ui plugin-embed fake-provider
 	cd web && python3 ../scripts/verification_timing.py command performance -- npm run test:performance
 package: build
 	python3 scripts/verification_timing.py command packaging -- python3 scripts/package.py
-verify verify-bootstrap hosted-verify hosted-verify-bootstrap:
+verify verify-bootstrap hosted-verify hosted-verify-bootstrap hosted-runtime-verify hosted-runtime-verify-bootstrap:
 	+@python3 scripts/verification_run.py --make-parent $(shell echo $$PPID) -- $(verification-runner) $(MAKE) $(verification-options) --no-keep-going $@-steps $(verification-overrides)
 
 verification-context:
@@ -133,6 +139,19 @@ hosted-prerequisites: python-deps browser-deps
 hosted-verify-steps: verification-context hosted-prerequisites verify-steps
 
 hosted-verify-bootstrap-steps: verification-context hosted-prerequisites verify-bootstrap-steps
+
+# Hosted Python jobs must succeed before the workflow admits this runtime graph.
+# Ordinary local verification continues to execute both test prerequisites.
+hosted-runtime-verify-steps: verification-context hosted-prerequisites specs-check build check test-runtime test-performance package test-installer smoke
+hosted-runtime-verify-bootstrap-steps: verification-context hosted-prerequisites specs-validate build check test-runtime test-performance package test-installer smoke
+hosted-python-ci: python-deps specs-check
+	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/test_ci.py
+hosted-python-ci-bootstrap: python-deps specs-validate
+	python3 scripts/verification_timing.py command tooling-ci -- python3 scripts/test_ci.py
+hosted-python-specs: python-deps specs-check hosted-prerequisites build fake-provider
+	python3 scripts/verification_timing.py command specification-tests -- python3 -m unittest discover -s scripts -p 'test_specs*.py'
+hosted-python-specs-bootstrap: python-deps specs-validate hosted-prerequisites build fake-provider
+	python3 scripts/verification_timing.py command specification-tests -- python3 -m unittest discover -s scripts -p 'test_specs*.py'
 
 flows-validate: specs-validate
 

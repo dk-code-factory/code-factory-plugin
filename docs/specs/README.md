@@ -205,7 +205,10 @@ and runs again in a separate invocation, so changed inputs and deleted outputs
 cannot hide behind a preparation stamp. Standalone build and test commands also
 prepare their prerequisites. Verification phases remain ordered under parallel
 Make flags, with performance after heavy suites. Hosted Python/browser setup
-belongs to that graph after exact comparison selection. Separate reconciliation and local CI invocations remain independent verification runs. The explicit `scripts/verify_local.py --base BASE --review FILE` command can share exact check execution within its one local process, using a constrained native Make plan, unchanged source/prepared inputs, executable and environment identity, complete subject reviews and final receipt validation. Persisted receipts or summaries never authorize execution reuse; unsupported graph changes and any uncertain input fail closed.
+belongs to each selected job's graph after exact comparison selection. The two
+complete hosted Python suites run on independent runners and both gate runtime,
+performance and package work; the complete local graph retains all suites.
+Separate reconciliation and local CI invocations remain independent verification runs. The explicit `scripts/verify_local.py --base BASE --review FILE` command can share exact check execution within its one local process, using a constrained native Make plan, unchanged source/prepared inputs, executable and environment identity, complete subject reviews and final receipt validation. Persisted receipts or summaries never authorize execution reuse; unsupported graph changes and any uncertain input fail closed.
 The tooling suite declares the provider/helper packages and module file copied by
 its cache regression as indirect inputs.
 

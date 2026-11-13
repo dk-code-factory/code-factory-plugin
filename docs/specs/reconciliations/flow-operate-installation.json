@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "761060af1ea13a7fee63e58cf68e000d23171ffccf193d8f90044b99cf32f7b2",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "690705dfd52e4049b067b034296781e8da45d72f399ab8f868395b1635fefcfd",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "S4 diagnostics now starts background work and follows its original operation receipt to completion. API audit records are admitted without disk or redaction waits; dropped-log counts and outcomes distinguish accepted work from delivered results. Background logging is bounded by queued payload bytes across handlers as well as per-handler job count. Redaction and filesystem work remain outside responses, and byte-pressure drops are counted without command payloads on disk.",
-    "implementation": "FetchDiagnostics bootstraps API v2, generates one identity and polls status under one total20second deadline including chunk retrieval. LogAPI captures bounded response metadata, admits a bounded background job and omits MCP arguments before writing private logs. Existing owner/event response boundaries remain active. Every direct logging fixture supplies a cancellable service lifetime and joins actual workers before TempDir cleanup; manual factory/event fixtures also join after store cancellation. Production request-time admission remains nonblocking. apiCallLog reserves at most8MiB of captured buffer capacities, response capacities and cloned method/path/query bytes using bounded CAS attempts. Jobs hold only a consumed-buffer value and minimal request metadata, never replay Body/readers, headers or request contexts; active work retains its byte reservation until processing returns. Existing cancellation/join ownership is unchanged.",
-    "tests": "The total-deadline fixture repeats fast running/busy responses and proves retrieval terminates without resubmission. Diagnostics operation fixtures validate pending completion and failure without resubmission; the exact-chunk regression handles busy status/chunks, reconstructs a large Unicode report and rejects corrupted data. TestAPILogQueueDropsAndRecordsOutcomeWithoutCommandPayload blocks the sink, saturates admission, then verifies drops, completion outcome and absence of private command data. TestAPILogWorkersFinishBeforeFixtureStorageDisposal blocks one shared sink behind two Handler workers, cancels their service lifetime, joins both actual workers and disposes storage without recreation. The linked-path logging refusal test awaits the actual queued warning before checking unchanged API success and preserved owner bytes. Focused repeated logger races include held sinks and all direct handler constructions. The actual authenticated64near-limit unknown-tool regression failed before the fix with131465328heap bytes versus3615464baseline. Final assertion uses two Handler instances sharing one budget, checks post-GC heap below32MiB over baseline plus actual retained-buffer count within8MiB, and observes same-handler drop counts after the held sink drains without private command text. Race instrumentation may reach the truthful HTTP deadline during large decoding; the test drains that exact owned handler before heap measurement and never calls that a successful tool result. Repeated race and existing logging tests pass. The standalone two-handler logging lifetime test installs cancellation, bounded worker joining and rejection-audit drain cleanup before any failure-capable assertion, ahead of temporary directory disposal. Deferred sink unlock still precedes cleanup on fatal assertions."
+    "kind": "refactor",
+    "description": "Compared operate-installation specification and catalog contract with main; authored scenarios and dependency ownership are unchanged. The change is limited to contributor verification: the two exact-source Python suite jobs run concurrently and both gate the runtime, isolated performance and package job; local make ci retains every check.",
+    "implementation": "This proposal preserves the product implementation and its catalog mappings. Inspected scripts/test_installer.py at def test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall(: Install/rerun preserves owner token; returned upgrade failure retains old current release and backup; explicit rollback precedes successful upgrade/rollback; uninstall preserves database, vault and app metadata across reinstall. It does not interrupt the installer.",
+    "tests": "Install/rerun preserves owner token; returned upgrade failure retains old current release and backup; explicit rollback precedes successful upgrade/rollback; uninstall preserves database, vault and app metadata across reinstall. It does not interrupt the installer. This assertion stays selected by the complete suite inventory. Inspection is distinct from final execution; complete reconciliation and separate local CI remain required, and no real-host acceptance is claimed."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 1.677
+      "seconds": 0.121
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 41.371
+      "seconds": 35.972
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 85.109
+      "seconds": 69.1
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 9.627
+      "seconds": 2.509
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 8.956
+      "seconds": 2.228
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 27.505
+      "seconds": 21.126
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.186
+      "seconds": 0.201
     },
     {
       "command": [
@@ -83,7 +83,7 @@
         "scripts/test_live_connection_test.py"
       ],
       "exit_code": 0,
-      "seconds": 0.17
+      "seconds": 0.162
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.667
+      "seconds": 0.666
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.188
+      "seconds": 0.202
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.169
+      "seconds": 0.161
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.227
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 660.09
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 495.277
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 4.945
     },
     {
       "command": [
@@ -156,36 +156,36 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 60.419
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "5e791e9eb23a67bff760e6ff07acb36ddb0aca37d0e3618958fdaa134ccf1904",
-    "term:connection-submits": "d4e13d8d6fd26f7a72f5d77b2325daf1eca0fc72102faec1ac78de107881cb30",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:dependency-operation": "312e5dd6f1ddfdfc1ecea784922bfd8f66ef3d5869742388f43972b1aa3dfaa3",
-    "term:element-w-browser-lab-key-controls": "d1dc8eb6b7a9967474df0b40b4756fc68d04d0eb111671ce14d1b8d88bcaf350",
-    "term:element-w-browser-lab-location": "7b1d170eac2a84bf84b1f00499b6b233a2216d6a3bacfac39aea214d372fdd63",
-    "term:element-w-browser-lab-message": "72e74fe44e775fc45130b47936c683d5de5d343c50fa38467c06460a58a11051",
-    "term:element-w-browser-lab-navigate": "e8d1d98af2b7836b66bcd8f89387fb83c727bbe30df73a78ddd729fea37c72fb",
-    "term:element-w-browser-lab-refresh": "9f27cd525e3f199a8c040a0da6e3d78399252295d5b6f2c341e52ad41afb36f0",
-    "term:element-w-browser-lab-screenshot": "0c39d988bcf326732b66f1d0266f2999de1375401b79137f1c8f340cdc158fcb",
-    "term:element-w-browser-lab-scroll-up-down": "b4c09876170b7b61378fbb4477939188e638ec5af09f37094f0ad04239ae9eb4",
-    "term:element-w-browser-lab-send-text": "8b1d4d04299f29a2e06fba5788df47305753362e2697f4677081dfcf10578d15",
-    "term:element-w-browser-lab-sign-in-boundary-notice": "9149693f51bbae30140e7d657106458eeef59b8e847a581f525e2dfae900fdfa",
-    "term:element-w-browser-lab-text-to-send": "8ddebdffc074797c4d9237eee792558f885b43e548d276ca4ce9cdaeeb94c842",
-    "term:element-w-browser-lab-url": "cf0620274830a77fe93f0c6e7c5fe503107cf542d2d34206a73f99cbfc0e1dd7",
-    "term:github-skill-source": "7fd7a75ab391d9f7cba0b42bf3c5eb93286b8cb5469713113fa710c174f2913b",
-    "term:owner": "2682dc63ff4d3ca6d82b42c261a7f276ad964e994b48a4ef4c8ef0dfc0ec34a8",
-    "term:ui-c-browser-lab": "3dc48f72542d82e96ccc7c5c7a3ee421ca1166ac46c6d4c89c356e6f09b2953a",
-    "term:ui-p-browser-lab": "8c0da77238e42874b4215e2fc4cd9fb10a4244c58e1a34d8eb6964270a3f69d2",
-    "term:ui-page-browser-lab": "5d1919bad914fbb7a2af15374ab9815f2dd9d5167b74e059ef41a1a56e224e89",
-    "term:ui-w-browser-lab": "3c9f629261ad98429ac379b806f76ed72d440343f0b666e1b032fb30d73afc0d",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
-    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe",
-    "ui:C-BROWSER-LAB": "cbca260d543fdca1a04c5fbb4230b59fe719b0d13c4e64541f5c5b13eb702c77",
-    "ui:P-BROWSER-LAB": "f0c0aa49a0b88b70cd4674d37daa104e6c23fb089c5a7f78740a79091f0e1b47",
-    "ui:PAGE-BROWSER-LAB": "dcc5330ae4a56c2801a3b8a3349ec8842e0a6ad6cb2308ce3ba977c187c0b382",
-    "ui:W-BROWSER-LAB": "fd61d4ada7221042794534249bb1f77ee3bc3c82150963b22fc69f20e303d928"
+    "flow:operate-installation": "436cd257a45ec3d37953b326363f71224bcb8521a39d5082d5a364777aa64b27",
+    "term:connection-submits": "e70325a0bfba0b7a2440ebc438305bb3f0e51c3d20048e7f2eb6fff61699959f",
+    "term:coverage-gap": "ea0663ed0782056055e1f22fd57808e6c607af99bceedab7042bf638a502e810",
+    "term:dependency-operation": "d9a5745acec18a9d7119cc7aeeab0957f255f8cf025ca0ab162052f85f5ab2ea",
+    "term:element-w-browser-lab-key-controls": "7043de322264c5941b4cb0c41241fcf5028ec36404e10c311eac0b3498781397",
+    "term:element-w-browser-lab-location": "24b3d3e7bb34641dd56f14d882bcb36ae364e8b200ffab42d27fa1eb55389039",
+    "term:element-w-browser-lab-message": "b5a76767635bbdac4d5d84d35d826068a93ed968cf42ca5f5467f37d6305d7fd",
+    "term:element-w-browser-lab-navigate": "16083f8e9677adccc967cc62a72a31f48c5840a0f96cdde0f3e50150295598fd",
+    "term:element-w-browser-lab-refresh": "b17c0671bfa1995c2491c0a7aee77b18fda8a36ecde816c95b8982886824fb9d",
+    "term:element-w-browser-lab-screenshot": "e66e0cbde9b410b489d9670c368ee941bc255ea7d3d34516ebcaa0c6d6f45946",
+    "term:element-w-browser-lab-scroll-up-down": "5c48ed16563d15970eb0019468c5b76f8be989257e7230533e5bedaa80570ab6",
+    "term:element-w-browser-lab-send-text": "bbae9b7c1ec3d0a5521d656a0e43dc02f57d6b4ed094f5ec2b862083e46411f0",
+    "term:element-w-browser-lab-sign-in-boundary-notice": "10402f0f92987e38b00cba11594d45029d43f268ac19b5606933b60492726d70",
+    "term:element-w-browser-lab-text-to-send": "b362ea37dbfdd44389d61fb59e296eeb5b28e2c73350e03c2bc5756e511cfea6",
+    "term:element-w-browser-lab-url": "f3e8a78d524017b8918df8d21a3409d7fdb128f54a40a4523ed7523656edffbc",
+    "term:github-skill-source": "b04aba2350f783fa0956c95b1622a01f3cfce09d2d0040c7c8b94a8ea175a11e",
+    "term:owner": "8c74e8e85d6f47209b079c0136dffb5f857325907c5ff98008b73fa004c1790c",
+    "term:ui-c-browser-lab": "c798ac1a7a627e29c13579a56b64424821602669c2440a7babf4c63f9f18ff20",
+    "term:ui-p-browser-lab": "378b56d7e7a978aed040d2a779ec4629349c9f1c59ed1ba76f0dce273adf3850",
+    "term:ui-page-browser-lab": "28dc69c0e0e64b655122fe8f2e1458faa7fc7b5d41615a5662ddda9beb353c2b",
+    "term:ui-w-browser-lab": "7c8dfa91303ee62963d5bc21306246f65f310a3108da8bfb4077b08d8920bfc4",
+    "term:unverified-behavior": "a267c4a9301e2009be5453cc30178073e73d5bdbded665deb9ba14afa083df31",
+    "term:verification": "fe64bf8dc8d3657ea9874f41e5226d203ffb4f96d552e052b7b9d315a5b5df1b",
+    "ui:C-BROWSER-LAB": "3ca10502d61af56f7a91212a0b6cdbe4ecc6f54c4fa2062da61c53254f1f4d89",
+    "ui:P-BROWSER-LAB": "cb6b5a7dc3ad6b67fc3b3583be303e9a5fb9caa7ceb79126a8dfb64069295ed1",
+    "ui:PAGE-BROWSER-LAB": "806420ba61591cf6665b2d8568303d9fa1ba8991a966237875bd29a71c37cf97",
+    "ui:W-BROWSER-LAB": "87abe3848a0965666d4e53e2041f0f267bfd4daba129c978897d031ed6d43a56"
   }
 }

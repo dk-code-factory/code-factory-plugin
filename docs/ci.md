@@ -29,7 +29,31 @@ Standalone goals retain the requested Make keep-going behavior.
 
 The job validates specifications, checks Go/TypeScript, runs uncached Go race and
 browser/accessibility fixtures, tooling, packaging, installer and compiled smoke
-tests. After the heavy suites, `make test-api-performance` checks authenticated
+tests. Hosted CI runs the complete CI-tooling and specification Python suites in
+two independent matrix jobs, each checked out at the same event-pinned source.
+Both must succeed before the `verify` job starts runtime correctness,
+performance, packaging, installer and smoke checks. A failed Python job therefore
+prevents performance measurements and verified package production. The existing
+`verify` check evaluates its dependency guard while the workflow is active and
+accepts only success, before source preparation. Cancelling the workflow also
+cancels runtime verification; the job does not override cancellation with
+`always()`. Each admitted verification scope retains its own phase journal;
+Python artifacts use the
+`verification-phase-timings-python-ci` and `verification-phase-timings-python-specs`
+names. Workflow elapsed time includes the parallel jobs and their dependency wait;
+phase durations from different runners must not be summed as wall time.
+
+`scripts/ci.py verify-python-ci` and `verify-python-specs` select exact source
+comparisons before entering their Make graphs and produce no package manifest.
+Each checks the specification records for that comparison before the long suite;
+the reviewed public-root bootstrap validates registries without inventing a diff.
+`verify-runtime` runs the remaining hosted graph and writes the package manifest;
+its verification step is admitted only after both Python jobs succeed. These are
+partial hosted scopes. Ordinary `make ci`, `make verify` and `scripts/ci.py verify`
+retain complete verification, with every Python suite included. Release delivery still requires
+success of the entire exact-source main push workflow, not one individual job.
+
+After the heavy suites, `make test-api-performance` checks authenticated
 MCP tools and protocol methods, local OAuth, health, signed webhook, artifact and
 onboarding handlers through their response boundaries. The five Go packages run
 sequentially. Every measured finite response and initial subscription-stream

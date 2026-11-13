@@ -70,20 +70,23 @@ def comparison(event, name, bootstrap_sha, ref):
     return {"base": commit(base), "head": head, "bootstrap": False}
 
 
-def run_verification(plan, runner=None):
+def run_verification(plan, runner=None, *, scope='full'):
     env = {**os.environ, "CODE_FACTORY_REAL_CODEX": "0"}
     journal = timing.selected()
     if journal:
         if plan["bootstrap"]:
             timing.observe(journal.bootstrap)
         timing.observe(journal.refresh, plan={"status": "resolved", **plan, "selection": "commit"})
+    targets = {'full': 'hosted-verify', 'runtime': 'hosted-runtime-verify',
+               'python-ci': 'hosted-python-ci', 'python-specs': 'hosted-python-specs'}
+    target = targets[scope]
     if plan["bootstrap"]:
         # No fabricated ancestor or HEAD-to-HEAD comparison: this single reviewed
         # public root has no publishable predecessor. Every source check runs.
-        print("Reviewed public root import: full validation/tests; no Git diff exists.", flush=True)
-        commands = [["make", "hosted-verify-bootstrap"]]
+        print("Reviewed public root import: " + scope + " validation scope; no Git diff exists.", flush=True)
+        commands = [["make", target + "-bootstrap"]]
     else:
-        commands = [["make", "hosted-verify", "FLOW_ARGS=--base " + plan["base"] + " --head " + plan["head"]]]
+        commands = [["make", target, "FLOW_ARGS=--base " + plan["base"] + " --head " + plan["head"]]]
     for argv in commands:
         if runner is None:
             # Keep the owner alive for nested timing cleanup and final evidence.
@@ -194,19 +197,26 @@ def verify_artifacts(directory, head):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("command", choices=["verify", "manifest", "verify-artifacts"])
+    scopes = {'verify': 'full', 'verify-runtime': 'runtime',
+              'verify-python-ci': 'python-ci', 'verify-python-specs': 'python-specs'}
+    p.add_argument("command", choices=[*scopes, "manifest", "verify-artifacts"])
     p.add_argument("--event", type=Path)
     p.add_argument("--head")
     p.add_argument("--directory", type=Path, default=ROOT / "dist")
     args = p.parse_args()
     try:
-        if args.command == "verify":
+        if args.command in scopes:
             # Retain checkout ownership through timed manifest publication.
             with managed(ROOT):
                 event = json.loads((args.event or Path(os.environ["GITHUB_EVENT_PATH"])).read_text())
                 plan = comparison(event, os.environ["GITHUB_EVENT_NAME"], os.environ.get("CI_BOOTSTRAP_SHA", ""), os.environ["GITHUB_REF"])
                 print(json.dumps(plan), flush=True)
-                run_verification(plan)
+                if args.command == 'verify':
+                    run_verification(plan)
+                else:
+                    run_verification(plan, scope=scopes[args.command])
+                if scopes[args.command].startswith('python-'):
+                    return
                 journal = timing.selected()
                 identifier = timing.observe(journal.start, "manifest") if journal else None
                 code, interrupted = 1, False

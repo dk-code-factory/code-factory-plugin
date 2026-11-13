@@ -10893,6 +10893,42 @@
             "S1"
           ],
           "purpose": "The actual Make API command, all five serial Go packages, timing phase identity and successful emitted journal row must match exactly; command metadata cannot understate executed scope."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_hosted_python_jobs_gate_runtime_performance_and_package_production(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Both exact-source fixture Python jobs are required matrix dependencies of runtime verification; neither job may ignore failures or publish packages. While the workflow is active, verify evaluates its dependency guard and accepts only success; actual guard execution rejects failure, cancellation, skipped and unavailable results before preparation. Its job condition preserves workflow cancellation."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_partial_hosted_scopes_preserve_exact_comparison_and_fixture_mode(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Runtime and Python scopes preserve ordinary and bootstrap target selection and forcibly disable real-provider mode."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_python_dispatch_never_publishes_packages_and_rejects_wrong_comparison_first(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Python CLI scopes reject invalid source comparisons before executing tests and never invoke package-manifest publication."
+        },
+        {
+          "path": "scripts/test_ci.py",
+          "anchor": "def test_hosted_scopes_partition_complete_verification_without_duplicate_tests(",
+          "scenarios": [
+            "S4",
+            "S5"
+          ],
+          "purpose": "Actual ordinary and bootstrap Make graphs prove that the Python and runtime scopes retain every hosted test exactly once. Each Python scope checks specification records or bootstrap registries before its suite; a failed admission check prevents test execution even with parallel or keep-going flags."
         }
       ],
       "suites": [

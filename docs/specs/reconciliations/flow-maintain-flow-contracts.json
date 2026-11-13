@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "8f780d4cd55a8f5a96052d48a357df2cdd34157ed4cc6218c83e628d9dcc5be3",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "969394f8c514cf61d0e839ee1a66a765c517ec4ae9f3b770ec157a98662af95f",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "The maintenance procedure, dependency direction and pinned adoption policy are unchanged. docs/ci.md now describes the API v2 runtime and the existing fixture-performance boundary, selecting this operational consumer conservatively.",
-    "implementation": "No reconciliation tooling or policy implementation changes. Existing registry/source/assertion mappings are rendered deterministically; review records will be written only by the CLI after its real suites succeed. Integrating target3413d63 retains its streaming verification digests and bounded-read regressions unchanged; only generated receipts overlap the API feature. Rebase preserves all API implementation and assertion bytes. Fresh CLI reconciliation binds the current target comparison.",
-    "tests": "The tooling suite validates schemas, complete review decisions, cochange requirements and generated output. This review makes no new product behavior or installed-host coverage claim for the maintenance flow. The incoming bounded-read hashing assertion now belongs to the comparison baseline and remains intact; full fixture verification is rerun with its streaming implementation, without treating target-owned work as a new API feature."
+    "kind": "behavior",
+    "description": "Reviewed maintain-flow-contracts S3/S4/S5 against main: the two exact-source Python suite jobs run concurrently and both gate the runtime, isolated performance and package job; local make ci retains every check. Stable flow IDs, dependency ownership and pinned adoption remain unchanged.",
+    "implementation": "Reviewed scoped exact-source comparison and forced fixture mode. The two Python matrix jobs run complete suites, and runtime verification excludes only those required suites. The verify job uses !cancelled() and executes a success-only dependency guard before checkout, preserving workflow cancellation. Each ordinary Python target checks records for its exact comparison before executing the long suite; reviewed bootstrap targets validate registries without inventing a comparison. Runtime and complete local graphs retain all other checks and package publication boundaries.",
+    "tests": "Four new test methods assert exact-source fixture job dependencies, execute the actual shell guard for success and unsuccessful or unavailable results, reject wrong comparisons before dispatch and package publication, and compare actual ordinary/bootstrap Make graph multisets. Failed admission prevents the Python suite even under parallel and keep-going flags. Five focused controls passed19.335s on the accepted-base source, to which this proposal has returned byte-for-byte after rejecting the sharding dependency. Full fresh54tooling/437specification suite execution, all other catalog gates and separate local CI remain required. No sharding behavior or unmerged dependency is retained."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.227
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 660.09
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 495.277
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 4.945
     },
     {
       "command": [
@@ -58,17 +58,17 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 60.419
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "93dc325df4fda2c1019b6b6a3875d42ea3643682262141686e416d8483efcb7a",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:entity": "c00dea15a34a8b066c9f3f5d727d1f2d34590a8133ce052fd04fa266be16b513",
-    "term:glossary": "c1a8303e0e5372eb92225e89752c0f441d80234a7bee5f07c7e1eb14e382e5ac",
-    "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
-    "term:reconciliation": "69aabae63c127bdae8cb3b01c8d360d88affca7a957845ff7bdfb925799fa181",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
-    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe"
+    "flow:maintain-flow-contracts": "77b54ebf8d50446b76ccc69a51a344338ad9357ad9972af600e016db5536860e",
+    "term:coverage-gap": "ea0663ed0782056055e1f22fd57808e6c607af99bceedab7042bf638a502e810",
+    "term:entity": "8d71341401235307247ea906ef657c3dd103e16dd1d4e02ab93bb3a15db0c95a",
+    "term:glossary": "a262ab1d9a6f58b89c1bf0fa3757275f7516a7100cbe026253bb0aa00cb3b146",
+    "term:known-limitation": "ad52343111dbaeb7b0e19a180fd6b3d4d2b38ed57767d025929337998ebe8d93",
+    "term:reconciliation": "ea61d7223fd3149e7acd53af32242c80c72000e3adad47269a6a5cb32db02ac1",
+    "term:unverified-behavior": "a267c4a9301e2009be5453cc30178073e73d5bdbded665deb9ba14afa083df31",
+    "term:verification": "fe64bf8dc8d3657ea9874f41e5226d203ffb4f96d552e052b7b9d315a5b5df1b"
   }
 }

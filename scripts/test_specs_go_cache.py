@@ -16,7 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 def configured_go_commands():
     makefile = (ROOT / 'Makefile').read_text()
-    recipe = re.search(r'^test:[^\n]*\n((?:\t[^\n]*\n)*)', makefile, re.MULTILINE).group(1)
+    recipe = re.search(r'^test-runtime:[^\n]*\n((?:\t[^\n]*\n)*)', makefile, re.MULTILINE).group(1)
     make_commands = []
     for line in recipe.splitlines():
         argv = shlex.split(line.strip())

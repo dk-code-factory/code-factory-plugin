@@ -18,6 +18,21 @@ The contributor has the source checkout, an available comparison base and the lo
 6. A pull request to main or sync/local-development, a push to main or a manual check on main selects exact comparison commits, installs locked prerequisites and runs the same fixture suites without model credentials. The production embedded UI launch gate runs after heavy suites with one worker, zero retries and all timing samples retained. Feature branches receive remote verification through a PR to main or sync/local-development; without one they receive no automatic checks or package artifacts. Manual verification on a feature branch fails before source checks or verified-build/package artifact creation; partial timing summaries may remain. A narrowly pinned, reviewed first public root has no predecessor; it receives full source checks without a fabricated Git comparison. Hosted setup and verification retain the same bounded phase journal, finalized before artifact transfers with an always-attempted upload.
 7. Package delivery promotes unchanged checksummed artifacts only from successful main-branch push verification for the exact tagged source; dry-run delivery verifies without publishing or installing. Component versions come from those exact package bytes; explicit fixed-issue references require ancestor fix commits with matching fixing or closing references.
 
+Hosted CI checks out the same event-pinned source in two independent Python
+suite jobs. Both must succeed before runtime correctness, isolated performance
+gates and package production begin. While the workflow is active, the existing
+verify check accepts only successful Python results before source preparation.
+Cancelling the workflow also cancels runtime verification. Python-only jobs
+publish no package manifest.
+Each Python job checks the exact comparison's specification records before its
+long suite; the reviewed public-root bootstrap validates registries without a
+fabricated comparison.
+The complete local gate retains every suite; partial hosted scopes do not supply
+standalone full-verification evidence. Release admission requires success of the
+entire main push workflow for the exact packaged commit. Retain separate phase
+journals and measure workflow wall time across the parallel jobs and dependency
+wait rather than adding durations from different runners.
+
 Verification owns one checkout before preparing mutable artifacts. Separate
 worktrees can run concurrently with distinct configured fixture listener ports. Each invocation propagates private temporary state
 and confines fixture repository discovery to that state. Nested verification
@@ -999,6 +1014,10 @@ flowchart TD
 - [scripts/test_fixture_listener.mjs](../../scripts/test_fixture_listener.mjs) — `test("owned UI module imports and CLI aliases preserve lifecycle identity"`; S4. Importing the listener with absent or flag-like argv leaves no CLI lifecycle; executing a symlink alias starts the actual retained loopback UI, serves a real client and closes naturally on SIGTERM before safety cleanup.
 - [scripts/test_fixture_listener.mjs](../../scripts/test_fixture_listener.mjs) — `test("owned UI exit fails active browser verification and drains retained children"`; S4. Kill the captured owned UI handle after actual browser-child startup. The runner must report failure and remove all three retained UI/daemon/browser children plus private state before supervisor cleanup is released.
 - [scripts/test_specs_timing.py](../../scripts/test_specs_timing.py) — `def test_api_phase_records_exact_make_command_and_serial_package_scope(`; S1. The actual Make API command, all five serial Go packages, timing phase identity and successful emitted journal row must match exactly; command metadata cannot understate executed scope.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_hosted_python_jobs_gate_runtime_performance_and_package_production(`; S4, S5. Both exact-source fixture Python jobs are required matrix dependencies of runtime verification; neither job may ignore failures or publish packages. While the workflow is active, verify evaluates its dependency guard and accepts only success; actual guard execution rejects failure, cancellation, skipped and unavailable results before preparation. Its job condition preserves workflow cancellation.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_partial_hosted_scopes_preserve_exact_comparison_and_fixture_mode(`; S4, S5. Runtime and Python scopes preserve ordinary and bootstrap target selection and forcibly disable real-provider mode.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_python_dispatch_never_publishes_packages_and_rejects_wrong_comparison_first(`; S4, S5. Python CLI scopes reject invalid source comparisons before executing tests and never invoke package-manifest publication.
+- [scripts/test_ci.py](../../scripts/test_ci.py) — `def test_hosted_scopes_partition_complete_verification_without_duplicate_tests(`; S4, S5. Actual ordinary and bootstrap Make graphs prove that the Python and runtime scopes retain every hosted test exactly once. Each Python scope checks specification records or bootstrap registries before its suite; a failed admission check prevents test execution even with parallel or keep-going flags.
 
 ## Verification and gaps
 
