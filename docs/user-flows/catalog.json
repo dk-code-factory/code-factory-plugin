@@ -1660,7 +1660,16 @@
         {
           "path": "internal/store/store_test.go",
           "anchor": "func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(",
-          "purpose": "Transactional inventory exposes current rows and decoded byte sizes without their encoded bodies; metadata, source bodies, storage identities and bound SQL inputs remain intact.",
+          "purpose": "Transactional inventory selects only requested metadata fields and decoded byte sizes, keeping large headers and other unselected payloads inside SQLite; source rows, storage identities, bound SQL inputs and cursor closure remain intact.",
+          "scenarios": [
+            "S1",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheEvictionKeepsLargeHeadersAfterRestart(",
+          "purpose": "Eviction reads scalar freshness fields, retires an old large-header response and preserves an unrelated approved Link header and body across restart.",
           "scenarios": [
             "S1",
             "S3"
@@ -3425,7 +3434,7 @@
         {
           "path": "web/tests/wrapper.spec.ts",
           "anchor": "question pages retain exact requests beyond the first page",
-          "purpose": "Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.",
+          "purpose": "Navigate to requests 51\u201355 and deliver the exact second-page question identity and free-text answer.",
           "scenarios": [
             "S1",
             "S2"

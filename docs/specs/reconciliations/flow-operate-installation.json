@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "c44fa7c7038a250be1cda654369510d9eab30435197ba0f2d04d11f862d9cf93",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "f713ecedd1956e3d0d5c1e55df76b3e5d72f8cdfb6c7a9ce4d148284dfb4924d",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions.",
-    "implementation": "Reviewed the pinned change against operate-installation implementation mappings. Installation, diagnostic receipts, recovery and explicit confirmation boundaries retain their behavior. Compact diff presentation affects configuration UX without changing installation state transitions. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified."
+    "description": "Operation S1-S5 retain installation diagnosis, validated upgrades, rollback and unrelated-service preservation. Response-cache bounds do not change installer schema, service control or browser acceptance.",
+    "implementation": "No setup, installer, service management, package or browser-runbook source changed. The store helper preserves authoritative IDs and row content; the only new writes replace or evict private github-cache rows. Eviction inventories only CheckedAt and Expires alongside authoritative storage IDs and decoded body sizes. Unselected bodies, Header, ETag and Redirect payloads remain in SQLite. Metadata selectors are appended to \"$.\" as JSON paths and retained as output member labels. Dots and brackets traverse nested values rather than literal same-named top-level members. The eviction caller selects only CheckedAt and Expires. Selectors, byte path and kind remain bound values; cursor closure permits subsequent mutation within the same transaction. The durable response itself remains unchanged, and in-memory changes follow durable commit.",
+    "tests": "Read test_install_rerun_paths_backup_failed_upgrade_rollback_uninstall: owner token survives reruns/upgrades, failed upgrade retains active release, rollback restores version and uninstall preserves factory-v1.db/vault.key. Provider pressure/rollback assertions cover only cache rows and make no live-installation claim. TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity seeds five rows with 128 KiB each of Link, ETag and Redirect data; selected CheckedAt/ID metadata stays within 128 bytes and two fields per row. It checks authoritative IDs/decoded sizes, bound bucket/path/field inputs, empty selection and unchanged persisted body/ETag after mutation. TestGitHubPersistentCacheEvictionKeepsLargeHeadersAfterRestart seeds two 1 MiB Link responses, retires the 25 hour old row and preserves the fresh exact Link/body through restart. Both use temporary SQLite state; the provider fixture has a 10 second failure bound and deferred cleanup. The store assertion also stores literal a.b and items[0] members beside matching nested and array values, then selects both suffixes. It requires the nested values under the original selector labels together with the authoritative row ID and decoded byte size, distinguishing JSON path traversal from literal member lookup. This preserves existing selection behavior."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.161
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.551
+      "seconds": 37.527
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 82.832
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.412
+      "seconds": 3.973
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.971
+      "seconds": 3.331
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.248
+      "seconds": 21.164
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.663
+      "seconds": 0.662
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.244
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 662.614
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 439.607
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.773
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 61.712
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "ce81cea95ce349ece3def1ea299b7d687a12515177604fad955373638fa9f16b",
+    "flow:operate-installation": "cf279d6a39eb3b038112d223773ab55c4d43e8c454ea447d103b8f136b316e35",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "3d8e79341fc2093623bc67acd48ed8ac9e74f8c3f9808dbdcfd6a81a31a40e59",
-    "ui:P-BROWSER-LAB": "3d81ee13eb25c7041ae64ac52dce2b575ff9b35da3a79110e446ecd5ab896f84",
-    "ui:PAGE-BROWSER-LAB": "22423ec5d16bfe4d378c00f9f7f6fcf874fc71ba3be1ce70661606dbc91da188",
-    "ui:W-BROWSER-LAB": "c6047c261a98ae88e9d4cf3a30b6be073a367bc67a4bc00c77a6449eae4e4724"
+    "ui:C-BROWSER-LAB": "a4fe583004a8e40b6388dc8352fab0d548f3cdf1f587e18e9b5da1a255d1ecdc",
+    "ui:P-BROWSER-LAB": "4f838aab8556deadcae6fded5d61001f747adc188a01e8248907bcac1b0875ef",
+    "ui:PAGE-BROWSER-LAB": "6bddcc986e38b2b559ff592fe8de033c3aad4864f59056e4ad9cd584efe21f5c",
+    "ui:W-BROWSER-LAB": "50a2f05762e0b466675beeb07810dab90c1c01a26e95bf4986b5d333c502c4bb"
   }
 }
