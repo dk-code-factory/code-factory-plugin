@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-resolve-priority",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "ed0784e50f65e33f5474a63fe06e7d612da6edd29a162c24e5c7f3cf67e702ff",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "b1fce4930a92f9f6b8b86d2ac4e27ab2d39b4ead5f0daa80ea795048424878ca",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "Local priority and read-state edits return receipts, and dependent content remains unavailable until its current saved projection is ready. Existing priority source and override meanings remain unchanged.",
-    "implementation": "user_action runs the unchanged app.UserAction in a background operation; committed user/item/assessment revisions invalidate the appropriate projections. The wrapper scopes conflicting controls while allowing unrelated navigation.",
-    "tests": "Existing browser priority assertions send the selected ID/override and verify clearing, now through API v2 receipts. Current-read tests prove a newly committed source cannot return ready with the older projection, and the all-tool gate includes user_action."
+    "kind": "structure",
+    "description": "Manual, label and native assessment precedence remain intact; caching cannot declare a stale revision current. Only contributor guidance changes.",
+    "implementation": "Background projection construction consumes saved priorities and relationship dependencies; native assessment stays outside the request path.",
+    "tests": "Inspected TestPluginAPIBudget assertions: authenticated exposed tools must remain within 100 ms and 64 KiB with cold reads, blocked DB/provider/log dependencies and saturated queues; healthy reads and operations must eventually complete. Existing assertions are unchanged; fixture success does not establish real-host acceptance."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 1.677
+      "seconds": 5.537
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 41.371
+      "seconds": 73.468
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 85.109
+      "seconds": 328.488
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.55
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 1004.223
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 869.737
     },
     {
       "command": [
@@ -81,7 +81,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 5.852
     },
     {
       "command": [
@@ -90,14 +90,14 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 80.479
     }
   ],
   "dependencies": {
     "flow:resolve-priority": "ff2675abaa7be79f1fc2279672ae30cdf1de2cf246f9453c9e02d7375441dd35",
     "term:connection-submits": "d4e13d8d6fd26f7a72f5d77b2325daf1eca0fc72102faec1ac78de107881cb30",
-    "term:daemon-instance": "a6f708da7c06399b9534d33038c4687a1f9da35907f69c3c22b1091a02b6df5c",
-    "term:document-chunk": "e277fd89846cf42e63374074e7660ced66a6c1c8dc0d8abe861bd01ddef88b6e",
+    "term:daemon-instance": "229452c41ce0d680a5d36c69a805d0c4aebdb74d71cbc45db6ce542921017008",
+    "term:document-chunk": "6662b95ca514bcfcf172b90ac31f10ed5f12f0d36ba8235b60cb41b58474127e",
     "term:element-w-item-overview-body": "2af9bc256c69dbc31e002ea2cc7dfcd27852430dc2569f3c7488acdc970a3bfe",
     "term:element-w-item-overview-id": "50dfe7df443ac2c7e1132384bc027565f640cd1a624266b0ea90e25d5a863943",
     "term:element-w-item-overview-state": "3d356b0e89d2a2f3cfbf88de97e114a523b0a86f5aa99e6d3c7085610e492aa1",
@@ -133,13 +133,13 @@
     "term:element-w-run-controls-workspace": "86b47f60d7d8943f85972d818aef869a557d44e76f6408dffaa09d3cca77ef4e",
     "term:element-w-transcript-read-error": "83ea5797a9c808ba16e17ce9dfab09d15edc2219eba5a8f49c4297d9933f43fe",
     "term:element-w-work-status-value": "919b8eb10f3ec264cd9985ddde98958d4d609d6333f6b756d7bbd198cd933a5b",
-    "term:lost-operation": "2057871a93ac418a19a4bad0e73b2a7525ccfe7a3c2a6cb1509e09592fbeebca",
-    "term:operation-receipt": "752a4847a76f4696e5596c505b42b3b4e37bb2f93a22809fd47f6a860357ef62",
-    "term:pending-projection": "71c494472ff3950bd87c40f74c7615ff026dd0b1083a16a523d02a75131f7ec6",
+    "term:lost-operation": "bb8705fdb522aeae9f549737815fee8e98ff2441ebd230eefdf7d378cd1c833b",
+    "term:operation-receipt": "9fcba152fe25cbb39e64576fbbd3347bd65a3c00d95771dea88ad9cc4e427dbb",
+    "term:pending-projection": "eb81995ee4763860a481a4f850ad1b41f6a23d57994cbfcfe9c389dc8ff9b386",
     "term:profile": "87aa94ea769837a816958ea4791ecc27371697fd45a0d6422ea73252a99a0383",
-    "term:queued-operation": "e82bb0c4329d04d245afb13c6890cbc59a40b40d34908ad0df8d64bc8ff7c7a6",
-    "term:read-projection": "1c2e9f6d2884f028208958532e35b8a433729ba806cde379947bdfb103760bc2",
-    "term:running-operation": "18b5ae2c06da17d604a14bfae7e2c2dcb9096f56cbd10cbe0f35a878503759ed",
+    "term:queued-operation": "986cb8c891353dc54ffab200992f00e4eb7dfb3416df6a3031c33a62aa6462af",
+    "term:read-projection": "5e37f136146f629a11ddf2ed540b7c2b21a6c32dd804750f31569f6ccee94a25",
+    "term:running-operation": "c48c990ba6a98658a3ef5d5aab0b0889d220a735867201c6ad5e97ede29ef44f",
     "term:skill": "572e7e5772643619508a4fe525eccbd586ffdc1fb44b96394d3311e162792fa7",
     "term:ui-c-answer": "d77c047b90cf67eb6943a3ce6be6f42138e1da138dbf8d2289a068d3c0d71606",
     "term:ui-c-configuration-confirm": "1df16d9e3d3c444d341f1c00574f17695ee836f129412dca38c72e12c906c4e0",
@@ -203,29 +203,29 @@
     "term:ui-w-transcript": "7643d90253d3425c122aad94489bdf89978909f18dc7c4147e51c124eef0669f",
     "term:ui-w-waiting-row": "a0f87fe0816179f0360a6be4bda6b5ce8c43027815442beb26c1ced6a7148f46",
     "term:ui-w-work-status": "9f1ca60b6aa2be8b11d1dad25a03860fb39b7cd123f6f588970ea68edf7d2113",
-    "term:uncertain-operation": "fab1953177815ea2709f6c4cbe911d98bb5fc5b40fbb71c1a93bf7369c7a2107",
+    "term:uncertain-operation": "9feb5c67e13521dbc0a9b1d5944a45a177d6d10682f169ee294c6010bf37aa4e",
     "term:work-item": "f499ac9b118a92f09975e30a1da7338c7ac7eada55fa336d522dbaa3cce56339",
-    "ui:C-ANSWER": "44dd4b9dbdd50e9c95d49dcc1b12c11464ff5d82f1bd38e2a05d6ce2a8e90522",
-    "ui:C-CONFIGURATION-CONFIRM": "4b5fecf71d0af4797cae03bb56797d8ffac8a125e0f39dd3a52e4cbd2a538d66",
-    "ui:C-CONFIGURATION-PROPOSE": "50a22a9a88edccd46f8604e33354a49475db0ee586da7852eac0ef5eade8db19",
-    "ui:C-EVENT-INSPECT": "b2c8ec25e18eae0f873926dd5e4648852d0e088650b7b4e18e3887eb3f68cb25",
+    "ui:C-ANSWER": "74c8d9c7401c75ebd5219175ba1a639c53375734bafdd179d9b467b6a0e84836",
+    "ui:C-CONFIGURATION-CONFIRM": "b5934985e48d649a3e0b1edcab5bbb1d57f9f9038673ee72dd52e269d143170d",
+    "ui:C-CONFIGURATION-PROPOSE": "89e51a9aa1739d57ba1cabac2c8236b2175f86a10272eb0186d90d6f92f9f67c",
+    "ui:C-EVENT-INSPECT": "ae6c1793afb46b1dbe79d2f227cc629d59642ef4e631f8c295bfd5e63fad390f",
     "ui:C-FILTER": "4f80393877afe4b4523136f93e47f4036b1b4f1da5578151f7a09d81ab18c39c",
-    "ui:C-FOLLOW-UP": "6fe0a05f0335b65cffe6e5cb32373dcff7275dea5372a0315a6ee083ee2d9a43",
+    "ui:C-FOLLOW-UP": "bbf63ed10e92fe03d182ad41122a36ac76329100896be781a09c71de64b0110b",
     "ui:C-ITEM-STATE": "399809df4966b8b1b4275485375f28e61a3a78cb64a9320dee302febcd8150eb",
     "ui:C-LINK": "0e3845d927f901c2f45b2828c4e7d695a56b85a1654b96041c0c4d1b6fb894df",
     "ui:C-NAVIGATE": "cc6f161cdd94dbd5f6784e6866979d774de8feb429fa342659f29a78bf8c47ab",
     "ui:C-OPEN-SETTINGS": "4034f8872e2d67399e80e3d04e292c8ba50603b2ee1861540a899219d5ac2e99",
     "ui:C-PRIORITY": "31a72879594087087c6dc907e9cce1faf6783b2be0ebea867cd3b5b8f85eb0e7",
-    "ui:C-RUN-ACTION": "1f3ead4a163258385f09afc27556f0c17ef8ee9e16bdc05c3f1d8981fa7b05c5",
-    "ui:C-SELECT-ITEM": "d646aae9897445e4ef22a66917645b68115d9513a6f34e8bdc7d39712ae6f67f",
-    "ui:C-START-CHAT": "e912298200866fafbbcecb67491b98c51143f445a5ec6bdad89113b6d4f271a1",
-    "ui:C-STATE-REFRESH": "073341e32867e66bda546791a58ecb5d9efe29ac0d06b782c0e98f6ad8a5f867",
+    "ui:C-RUN-ACTION": "324f14d1bf94ecfbfd9ce706a48cbde5577acb1791fbcff7eeafbbff6bcd768a",
+    "ui:C-SELECT-ITEM": "548c045af5e683190ab96c1b8c1f9f3e0a9bad8f921043d82a544b7e8883fb7f",
+    "ui:C-START-CHAT": "29c1e98f29b735749b8378ef2edf32a52e0dec9c19c3b4cf4c0496db5f849ae8",
+    "ui:C-STATE-REFRESH": "113aebf687381396b84a2c153c5517734e093b2a096cb4d44e6706f3e09d318e",
     "ui:C-TRANSCRIPT": "2015ea778bc2ec3029d6e8065ca3268e100b1d298b97f6f71f17bca3f42e6348",
     "ui:P-APPROVAL": "31a5f22bef4e25ba65f6c7d5c17042b96eef0c008f6a6505db75c74aa4431ae8",
     "ui:P-CONFIGURATION": "72ef822a4ba44ed6644214fbb656288cb10dfebc034083cd5df31125915674c1",
     "ui:P-ELICITATION": "053c87ddc0b75c597fbed8d4905a962dec4f6fc47ad15a3eb23df8efa3c40e1f",
-    "ui:P-EVENTS": "545f357268d5da2f13264609934a7e7c4eaa74c90f6e129a0490a268c9e81fa7",
-    "ui:P-FEEDBACK": "8717bbac88a2735bdf5e8968e3c622dfd480f21abb10aba8c9b03e29dbfd1dd1",
+    "ui:P-EVENTS": "dd8d79bfb587a6af01d7536cdd7d3158237ec9e4ea198136be9bb5e949c9aee4",
+    "ui:P-FEEDBACK": "c00bfc96fb8ad5333cac255444921cdd71ddd46b1619e95d2fa3c3083eaa9443",
     "ui:P-IDENTITY": "e032119a57eee94ea8eb3062c0654086fbff547002fc8ed92bf9165eda831881",
     "ui:P-INBOX-LIST": "06eec0de005dd8a8ba83ca5a1bfe5fcc80d2e60963136a3cee52dae44bb5fe23",
     "ui:P-INBOX-QUERY": "85c15901d402127aad86f158a2fee9f3d0845d94675aa9dfbad5e9f69178d1e4",
@@ -236,35 +236,35 @@
     "ui:P-WAITING-QUEUE": "e12af2fdaa045ed64f03cb960bbdc1001a5c67fa200b174845e5a92f196695aa",
     "ui:PAGE-AGENT": "710f83547cd76d02c016715ee580f4790eccb024ca70dc11bf1fce0fc1c315b3",
     "ui:PAGE-AGENTS": "188204a6140a23330e6b31aaa94231e84c4cab862d0a00e48fd92ef3ea222f3d",
-    "ui:PAGE-EVENTS": "b0deb1173269b36d5eea5e612e872cd0946f59e48d3615df1bcb4aa7e2040515",
+    "ui:PAGE-EVENTS": "eebb4baa69e1a2561fd45cbb264d184e6a0a49d18476335b434b40a93f08cd8a",
     "ui:PAGE-INBOX": "1cc641fc8cdd8b3758c6db1eb51f2de02b3058f3c861d57c47794a00f56a8a72",
     "ui:PAGE-MY-PRS": "8d43813bca4767a3ac13faaad3a2a866c9457a72e718ff6c31295c220d0defc7",
     "ui:PAGE-REVIEW-PRS": "7ad6fa6ce6690538d318b5eba5abb2d39abf5a081f010e3c6af48a44bd036f8d",
     "ui:PAGE-SETTINGS": "80076c0e3d27e15098da2088530b7b4b3d45e8b5cdc21de3b2c8a4369d383b43",
     "ui:PAGE-WORKING": "55e02c0f997d4813333dfcf515fe78085c707b996e4dd40c23239f2222391198",
-    "ui:S-FACTORY": "ed935acc9671175da371c6b15e6ace5dded4b15729979eae19a56e0aa1bd1904",
-    "ui:S-SETTINGS": "8914d5f3ef1a760349faaa97a70d6994c6dae8dc4d02910941df9c22749daa73",
+    "ui:S-FACTORY": "69aa438c5f371d1a7da6c4819311ee0456a95b384242360fa3bcb02c36a8a9e7",
+    "ui:S-SETTINGS": "e56c2a24e84d849dce41d960ab496220642e5bb79cd6a95e0d46254638afc396",
     "ui:W-APPROVAL": "75288c41a353e431523ad96b4cf567cf6ea24a561961b45b4a1dade253480764",
-    "ui:W-CONFIGURATION-CHAT": "ae04f841f54b0eae3f277be9aff0cf46bd528125898faad64c5a02b89ce0d052",
-    "ui:W-CONFIGURATION-PROPOSAL": "b2541b18f5d5ea2aaa6432559b2a0c1d3c5bf770d457cd665f7af32d55d184a2",
-    "ui:W-CONNECTION-BLOCKER": "2d4d6146ec804b534bdda5c01ba99d98fbf6809e8c8e2ac1a093736673bf79a1",
-    "ui:W-EFFECTIVE-SETTINGS": "a834a9dff00fb12206756bbeebc6cbe09d228eb8880e7b5868e0e8b50d3bb976",
-    "ui:W-ELICITATION": "d44bd5189b1ea7f8aec5ff4d3c995f0e6197794c9cc46c08b2e6fb1d51b4d4c9",
-    "ui:W-EVENT-BATCHES": "f1aa90279c277af24f3b9feeaa46c6ab68c3606f3964b643c33675f6544ad51c",
-    "ui:W-GLOBAL-ERROR": "34dab963c0f532cb149cbf165ab932b01a361c1bc14582f47dad4222981dd57e",
+    "ui:W-CONFIGURATION-CHAT": "ad89760d97cfb6d2c17f507dd1e54ad257917b118cd844ec4901f537e304e259",
+    "ui:W-CONFIGURATION-PROPOSAL": "628229a69b4037599cb6951873bfd54ff9a065443d581f9663c71be27f2a326d",
+    "ui:W-CONNECTION-BLOCKER": "a3d5c127360d82d9ff44c5a1ccf9f65b456e8783eace02d2fad2e6e06c7b00ec",
+    "ui:W-EFFECTIVE-SETTINGS": "af1d6fd4ea4b54be5f62ca763d64c7eb7510556455c4577720dcad3bb62323ad",
+    "ui:W-ELICITATION": "a07e2d6f8c1aa885f6766c10ec7b085c6b1b82ebba8fd871c79afa99da4ab05e",
+    "ui:W-EVENT-BATCHES": "f1773c7cbed1afe9b61a3771034be9f97d3550ab9e43c9ed4d966bd01d03e989",
+    "ui:W-GLOBAL-ERROR": "699c28aab2f30f07a457a1022093dbbe14abbce820e4f04c9ecc7854428aa852",
     "ui:W-IDENTITY": "c898a5b94b97b90d6bb2ec7cb72d2a387d767bf3222c17a68c4065e5a6dc6493",
-    "ui:W-INBOX-EMPTY": "553c28b62add7b713c85f1f6ba992e0842e8a463e08f5daf2c6d3aaf052b16c1",
-    "ui:W-INBOX-QUERY": "614925f1baa6a462118b3868beabfd5b875661108152e01557c423c0f648354e",
+    "ui:W-INBOX-EMPTY": "cd4924ff3a5b858590d619401ebea8199cc59f5acd64baa52f7af4cde947adc5",
+    "ui:W-INBOX-QUERY": "15acaddca234b084052713e6bb5a01dff672ffa4eb3748af572ee45bf87d766a",
     "ui:W-ITEM-ACTIONS": "c02d4be9a0e124cd915a9517e2e4f2632ff71585df4721cde839c24d33c9ae61",
-    "ui:W-ITEM-OVERVIEW": "af1b32e03fb7bbf27bf1997633bef63bbaecd51780a8717ac5aae177aff100de",
+    "ui:W-ITEM-OVERVIEW": "53da3f8484ba9fcb33645923214e5b8f1c4d60a64962a7e75020a809928b745f",
     "ui:W-ITEM-ROW": "2f27c65f0497bcb1023d179fd454c76325ae51fd077ce3fb76d748f8f138d3df",
-    "ui:W-MESSAGE": "178d0727bcb09d43b1b13a4ca9f265884a78771004d7433067bdac3d2f9b3096",
+    "ui:W-MESSAGE": "86105141c7bc8e8dc5b9579f64b30f2e78b86ac357d9e077f026a0ad452aef6d",
     "ui:W-NAVIGATION": "177316ddd1dfa1f0dda1b42df82feda47762d879f1a15c7aafc13cb57145a277",
     "ui:W-PRIORITY": "12743f80f3221265391f85cf157dc2e9c508153fe97459603213d5d7e02bd495",
-    "ui:W-QUESTIONS": "a9d581c42162f44819ea6b3afef7958197760ce19405545c88baca98a55d86de",
+    "ui:W-QUESTIONS": "ad8d5d117c73120e2d650f3668ef2fa96e518d5b35f3ee1c3ecf9b4d906d103e",
     "ui:W-RELATIONSHIPS": "553ecbd122611795f04d3e5f484c7f6c2fc231f29af6b01bc612fd9ee6036a59",
-    "ui:W-RUN-CONTROLS": "f4188e1900677d5d3d03b07e45d013a0cd8817cb29969058a953b3bd9a391559",
-    "ui:W-TRANSCRIPT": "72e3bf3f05156df8b67f922390c7fa9aa53a4b3cdf5816900f5b5225dc2021f4",
+    "ui:W-RUN-CONTROLS": "90c67c65e31efd1046c8eb6118cb986f76d643ed4aa3f18821d6e51b87a710e8",
+    "ui:W-TRANSCRIPT": "52f3ae9ff9da03ca34c55078a1dbac332bf6b56fcd17c198f07f41d968c2ef94",
     "ui:W-WAITING-ROW": "3e7e5ac99f329e7fccbd458df445b265dd8275e8896c63b69064767e3186e24c",
     "ui:W-WORK-STATUS": "00d0e5b0b1840e4bcdd1c0ea17dc7e23e6d356ff4815eb9f54c116bab4162195"
   }

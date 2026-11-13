@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "glossary",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "e3f22426fd80c106d22a3b9a24604855064dbff04657460ff484af936d338bce",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "a4affd384731fc710357a0a5b5d589249e1b7164f2b472c47f07298178b1645b",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "terminology",
-    "description": "Define operation-receipt, daemon-instance, read-projection, document-chunk and the five queued/running/uncertain/lost/pending states as meanings. Preserve existing IDs, aliases and the pinned historical adoption policy; definitions contain no consumer backlinks. Clarify read-projection meaning: committed revisions are identified with their daemon instance; retain all666 term IDs and dependency ownership.",
-    "implementation": "The foundational registry contains meaning-only application terms. UI states reference those stable IDs; behavior consumes UI and glossary. Generated glossary content follows the registry without implementing operation policy. This definition carries no consumer backlinks or implementation procedure. Existing daemon-instance meaning supplies the namespace for comparing saved-state revisions.",
-    "tests": "Validate uniqueness, known state-term references and dependency direction through the actual specification validator and tooling suite. Product assertions remain owned by the UI/flow layers and do not turn vocabulary into execution coverage."
+    "kind": "structure",
+    "description": "All existing meanings and stable term IDs remain unchanged; AGENTS.md makes cache-backed API reads an explicit contributor requirement without introducing product terminology.",
+    "implementation": "The read-projection, daemon-instance, operation-receipt and document-chunk meanings remain compatible with revision-matched background snapshots and queued operations. No consumer backlink or implementation detail is added to glossary definitions.",
+    "tests": "No glossary or assertion inventory changes. Specification render/validate and tooling verification check dependency ownership and registry structure; API budget assertions establish only their existing fixture scope."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.55
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 1004.223
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 869.737
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 5.852
     },
     {
       "command": [
@@ -58,7 +58,7 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 80.479
     }
   ],
   "dependencies": {
@@ -78,12 +78,12 @@
     "term:connection-submits": "d4e13d8d6fd26f7a72f5d77b2325daf1eca0fc72102faec1ac78de107881cb30",
     "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
     "term:credential": "6509ba0eb49cc7ccd6aa770fdd43f49b6cd9520009bfff1274321629099708c6",
-    "term:daemon-instance": "a6f708da7c06399b9534d33038c4687a1f9da35907f69c3c22b1091a02b6df5c",
+    "term:daemon-instance": "229452c41ce0d680a5d36c69a805d0c4aebdb74d71cbc45db6ce542921017008",
     "term:delivery-evidence": "798f038dcde37efee5f5460d6c8aa570788b250a2f2c94b967cafe662a203615",
     "term:dependency-operation": "312e5dd6f1ddfdfc1ecea784922bfd8f66ef3d5869742388f43972b1aa3dfaa3",
     "term:dialog": "0995e9ab92972b0f12aac5aa2fcc0609bceea787512bb239fab2c33b63cb01f1",
     "term:direct-launch": "2a1d3cb1754e9ba65b1d7a4102402e07c0833c63def3d6fd193c9cb2d0e4959d",
-    "term:document-chunk": "e277fd89846cf42e63374074e7660ced66a6c1c8dc0d8abe861bd01ddef88b6e",
+    "term:document-chunk": "6662b95ca514bcfcf172b90ac31f10ed5f12f0d36ba8235b60cb41b58474127e",
     "term:element": "463e1a137d42176c4432b94ddee1ab9eb235faf8215fa79073f6c6d876394f77",
     "term:element-w-approval-approve-requested-for-turn": "21738214db068c2570d71fac0eba57542527426b5681d4fbc7bc1c57e4f186da",
     "term:element-w-approval-available-decision": "fb52cbcd32af3a918ff06052b2efdeb141a76314a44934e476163469c68cc4e3",
@@ -483,15 +483,15 @@
     "term:issue-report": "4e9d92a5e350e9721960755b56cc8f9dcfe098ba51f79b16eceecf7484d0a3f6",
     "term:keyboard-focus": "05871cbfce160aec7acfa3b22a2cc5e8281e25b5562754ea0f05344b6558caec",
     "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
-    "term:lost-operation": "2057871a93ac418a19a4bad0e73b2a7525ccfe7a3c2a6cb1509e09592fbeebca",
+    "term:lost-operation": "bb8705fdb522aeae9f549737815fee8e98ff2441ebd230eefdf7d378cd1c833b",
     "term:modal-dialog": "9e8b83ad68c66dec2daddf00fb690c018fba1e39c0e3b792539ae19b1aa96dec",
     "term:normalized-event": "2b281cffe3d788a124e633d1672f3dda778dbc1d3dc19b218580f24e95910c76",
-    "term:operation-receipt": "752a4847a76f4696e5596c505b42b3b4e37bb2f93a22809fd47f6a860357ef62",
+    "term:operation-receipt": "9fcba152fe25cbb39e64576fbbd3347bd65a3c00d95771dea88ad9cc4e427dbb",
     "term:ordered-reviewer": "03247adfd6215165d7670dba97b526b6ed823b97b0f7a1d14c4d948b761c93d4",
     "term:owner": "2682dc63ff4d3ca6d82b42c261a7f276ad964e994b48a4ef4c8ef0dfc0ec34a8",
     "term:page": "52afbecbf869caef06a8cd8dd54199007aee560fc2dc509e54fc532bca758fee",
     "term:pane": "38eeed03a01cce47eae676bd098123a1cb4a775d38edcca73126494e21a83f72",
-    "term:pending-projection": "71c494472ff3950bd87c40f74c7615ff026dd0b1083a16a523d02a75131f7ec6",
+    "term:pending-projection": "eb81995ee4763860a481a4f850ad1b41f6a23d57994cbfcfe9c389dc8ff9b386",
     "term:plugin-inventory": "3dafc7ab1c96efa8def91cc5f2f5aa765a13b9c6d50a064660fa7298551a07e4",
     "term:plugin-maintenance": "f27c0a74c5081a6165a2557c50c52bb2fa7dd938a84b83187f2e408968a06bee",
     "term:plugin-marketplace": "6d8527ce7050916ffbc8f55d62328e3559b2a25cdc11431b7ac7991e9c784b1c",
@@ -500,9 +500,9 @@
     "term:profile": "87aa94ea769837a816958ea4791ecc27371697fd45a0d6422ea73252a99a0383",
     "term:published-review": "d85a3c5c06ff3f1b10d7c41d070539989f426184fc3ce5f2117baf96f7b785b4",
     "term:question-recovery": "87a9f8373d0609d7b5b79593ee75d1f92111a6c4e164051088b214feab3891a0",
-    "term:queued-operation": "e82bb0c4329d04d245afb13c6890cbc59a40b40d34908ad0df8d64bc8ff7c7a6",
+    "term:queued-operation": "986cb8c891353dc54ffab200992f00e4eb7dfb3416df6a3031c33a62aa6462af",
     "term:quiet-period": "b27c5631af6967953bd6a99e0056fbea9e218bf46b5925a948677d5e19370bea",
-    "term:read-projection": "1c2e9f6d2884f028208958532e35b8a433729ba806cde379947bdfb103760bc2",
+    "term:read-projection": "5e37f136146f629a11ddf2ed540b7c2b21a6c32dd804750f31569f6ccee94a25",
     "term:reconciliation": "69aabae63c127bdae8cb3b01c8d360d88affca7a957845ff7bdfb925799fa181",
     "term:relationship": "4c2b0382d284271d5620f13d7a18b0f3c8a7cb8b77a7d0e390a2d1d6a125b528",
     "term:report-ledger": "9d57d703baf67c7643240c81a521468e657313a538c9ad29aee612bfef62a79f",
@@ -520,7 +520,7 @@
     "term:review-request-claim": "9ade0011e594fa59afbc9b458d7ad8652587b5889325b59520e5e858e30683ee",
     "term:review-workflow": "860891725d62c1557ccd9d39222f81efdfb2d3f66c971af0f4775ab497be562d",
     "term:reviewer-checkpoint": "ef6af122ff27d56bcb9f0a9ed724e29667b7dd42fe1b41207f1e27234ac2597e",
-    "term:running-operation": "18b5ae2c06da17d604a14bfae7e2c2dcb9096f56cbd10cbe0f35a878503759ed",
+    "term:running-operation": "c48c990ba6a98658a3ef5d5aab0b0889d220a735867201c6ad5e97ede29ef44f",
     "term:session-console": "3865204c2e5ee4ed50786b7c9eae30097947844395bd176f7f1bbbff9268c979",
     "term:shell": "4be3e92c11bf08e68bc957ef7a2342e8875f8cf1d6a21ebd2fb6a038c992300c",
     "term:skill": "572e7e5772643619508a4fe525eccbd586ffdc1fb44b96394d3311e162792fa7",
@@ -720,7 +720,7 @@
     "term:ui-w-transcript": "7643d90253d3425c122aad94489bdf89978909f18dc7c4147e51c124eef0669f",
     "term:ui-w-waiting-row": "a0f87fe0816179f0360a6be4bda6b5ce8c43027815442beb26c1ced6a7148f46",
     "term:ui-w-work-status": "9f1ca60b6aa2be8b11d1dad25a03860fb39b7cd123f6f588970ea68edf7d2113",
-    "term:uncertain-operation": "fab1953177815ea2709f6c4cbe911d98bb5fc5b40fbb71c1a93bf7369c7a2107",
+    "term:uncertain-operation": "9feb5c67e13521dbc0a9b1d5944a45a177d6d10682f169ee294c6010bf37aa4e",
     "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
     "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe",
     "term:widget-instance": "f9a701c23b894de3135f1a83d35540ebe5ecebc995893b284866714b614734c3",
