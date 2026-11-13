@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-maintain-flow-contracts",
-  "base": "3413d6356457896abcbaf2c85b81f444f124d23e",
-  "fingerprint": "8f780d4cd55a8f5a96052d48a357df2cdd34157ed4cc6218c83e628d9dcc5be3",
+  "base": "5097e2a7d87c6e312da960c10998956a69115228",
+  "fingerprint": "cc059e58c8991b21959d2013805b96c378381ea8b081cac58fbabf5919f36798",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "The maintenance procedure, dependency direction and pinned adoption policy are unchanged. docs/ci.md now describes the API v2 runtime and the existing fixture-performance boundary, selecting this operational consumer conservatively.",
-    "implementation": "No reconciliation tooling or policy implementation changes. Existing registry/source/assertion mappings are rendered deterministically; review records will be written only by the CLI after its real suites succeed. Integrating target3413d63 retains its streaming verification digests and bounded-read regressions unchanged; only generated receipts overlap the API feature. Rebase preserves all API implementation and assertion bytes. Fresh CLI reconciliation binds the current target comparison.",
-    "tests": "The tooling suite validates schemas, complete review decisions, cochange requirements and generated output. This review makes no new product behavior or installed-host coverage claim for the maintenance flow. The incoming bounded-read hashing assertion now belongs to the comparison baseline and remains intact; full fixture verification is rerun with its streaming implementation, without treating target-owned work as a new API feature."
+    "kind": "refactor",
+    "description": "Reviewed maintain-flow-contracts S3/S4/S5 against main: two runner deadline fixtures accelerate their private cleanup observation while retaining original timer-value assertions; production runner cleanup is unchanged. Stable flow IDs, dependency ownership and pinned adoption remain unchanged.",
+    "implementation": "The Go/UI startup fixtures preload an exact 5000 ms timer recorder and fire only that fixture timer at 100 ms. Existing unresponsive-build cancellation still exercises the real production cleanup timer. Child disappearance, private-state cleanup and supervisor ordering assertions remain active. Four fresh alternating runs on accepted main5097 each passed37/37 tests; baseline mean60.442s and candidate45.702s. Go correctness/performance startup assertions preserve60000/120000ms, UI preserves60000ms, and both assert original5000ms cleanup delay. The unresponsive-build cancellation case has no timer preload, sends SIGTERM twice3s apart and still checks exit143, child disappearance and private-directory cleanup within its existing bounds. Fresh full reconciliation and separate CI remain required.",
+    "tests": "The Go/UI startup fixtures preload an exact 5000 ms timer recorder and fire only that fixture timer at 100 ms. Existing unresponsive-build cancellation still exercises the real production cleanup timer. Child disappearance, private-state cleanup and supervisor ordering assertions remain active. Four fresh alternating runs on accepted main5097 each passed37/37 tests; baseline mean60.442s and candidate45.702s. Go correctness/performance startup assertions preserve60000/120000ms, UI preserves60000ms, and both assert original5000ms cleanup delay. The unresponsive-build cancellation case has no timer preload, sends SIGTERM twice3s apart and still checks exit143, child disappearance and private-directory cleanup within its existing bounds. Fresh full reconciliation and separate CI remain required. Full reconciliation and final make ci remain required; timing samples alone do not establish acceptance."
   },
   "verification": [
     {
@@ -19,7 +19,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.211
+      "seconds": 1.246
     },
     {
       "command": [
@@ -33,7 +33,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.74
+      "seconds": 663.483
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 517.627
+      "seconds": 479.758
     },
     {
       "command": [
@@ -49,7 +49,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.972
+      "seconds": 4.941
     },
     {
       "command": [
@@ -58,17 +58,17 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 67.281
+      "seconds": 45.577
     }
   ],
   "dependencies": {
-    "flow:maintain-flow-contracts": "93dc325df4fda2c1019b6b6a3875d42ea3643682262141686e416d8483efcb7a",
-    "term:coverage-gap": "b1be015bf142ee4f92932e671ba6dfbe202acfe905d9f290f431a13bec0c37e8",
-    "term:entity": "c00dea15a34a8b066c9f3f5d727d1f2d34590a8133ce052fd04fa266be16b513",
-    "term:glossary": "c1a8303e0e5372eb92225e89752c0f441d80234a7bee5f07c7e1eb14e382e5ac",
-    "term:known-limitation": "ed8b27d6b3e838788d9cba1ae4c204eb2f859fca594d252726188f1aa688044b",
-    "term:reconciliation": "69aabae63c127bdae8cb3b01c8d360d88affca7a957845ff7bdfb925799fa181",
-    "term:unverified-behavior": "b26da5642568e494f600cc4e8f7c8823e27553ed33ff62259d7c71108b58a56b",
-    "term:verification": "22d7874ec45a5d3f84c68d75084f5c9a0176020019577a95004b67d36053e2fe"
+    "flow:maintain-flow-contracts": "f35e2410be27effbfd3584d86d052b4cdda0406d730697d28faea8826f5a5b69",
+    "term:coverage-gap": "baea6f280b1f7a3f61a484d98f96e3e91e9da43a9140d30b30c429334652a93e",
+    "term:entity": "de6f2d64ffcf486583a6671591a6ccb8cccd1822f2098bc94d4b237994564d1b",
+    "term:glossary": "78e2fed840174d7e4c88fa70f1258e113471ede5a152760fa418efd7731f3c42",
+    "term:known-limitation": "b0691641a3cd2b680d0d454060c0fd9c3a3be2fca589add1034ceaec412b9c0d",
+    "term:reconciliation": "0b782e7ecb04231e3edf0785ca5ccd4362ecc4ed7e03fb9d78cd758a76b04fe4",
+    "term:unverified-behavior": "09d7601481038cf01be7e2699f8e71c6dd417ac9cb30931a8b7a8c7ea3441d3d",
+    "term:verification": "8db72879524d8113f596879ffb0006826b171edad853058ed98fa6a04c5a3d96"
   }
 }

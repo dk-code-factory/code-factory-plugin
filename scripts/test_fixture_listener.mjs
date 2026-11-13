@@ -181,6 +181,7 @@ test("runner bounds Go startup by its maintained mode", async (t) => {
     const directory = await mkdtemp(join(tmpdir(), "factory-build-timeout-test-"));
     const ready = join(directory, "build-ready");
     const timer = join(directory, "timer");
+    const cleanupTimer = join(directory, "cleanup-timer");
     const preload = join(directory, "preload.mjs");
     t.after(() => bounded(rm(directory, { recursive: true, force: true }), "startup timeout probe removal"));
     await writeFile(join(directory, "go"), `#!${process.execPath}
@@ -194,6 +195,12 @@ const timeout = globalThis.setTimeout;
 const now = Date.now();
 Date.now = () => now;
 globalThis.setTimeout = (callback, milliseconds, ...args) => {
+  // Exercise escalation without waiting through the production grace period.
+  // The unresponsive-build cancellation test below retains the real timer.
+  if (milliseconds === 5000) {
+    writeFileSync(${JSON.stringify(cleanupTimer)}, String(milliseconds));
+    return timeout(callback, 100, ...args);
+  }
   if (milliseconds > 10000) {
     writeFileSync(${JSON.stringify(timer)}, String(milliseconds));
     return timeout(callback, 250, ...args);
@@ -215,6 +222,7 @@ globalThis.setTimeout = (callback, milliseconds, ...args) => {
       { code: 1, signal: null }, child.errors);
     const expected = performance ? 120000 : 60000;
     assert.equal(Number(await readFile(timer, "utf8")), expected);
+    assert.equal(Number(await readFile(cleanupTimer, "utf8")), 5000);
     assert.match(child.errors, new RegExp("Owned Go fixture startup timed out after " + expected + "ms"));
     await assert.rejects(readFile(`/proc/${pid}/stat`), { code: "ENOENT" });
     assert.equal((await readdir(directory)).filter((name) => name.startsWith("factory-fixtures-")).length, 0);
@@ -228,6 +236,7 @@ test("runner bounds owned UI startup before supervisor fallback", async (t) => {
   const marker = join(directory, "cache-wait");
   const retained = join(directory, "children");
   const timer = join(directory, "timer");
+  const cleanupTimer = join(directory, "cleanup-timer");
   const preload = join(directory, "preload.mjs");
   t.after(() => bounded(rm(directory, { recursive: true, force: true }), "UI timeout probe removal"));
   await writeFile(preload, `import fs from "node:fs";
@@ -240,6 +249,10 @@ const now = Date.now();
 Date.now = () => now;
 let uiStarted = false;
 globalThis.setTimeout = (callback, milliseconds, ...args) => {
+  if (milliseconds === 5000) {
+    fs.writeFileSync(${JSON.stringify(cleanupTimer)}, String(milliseconds));
+    return timeout(callback, 100, ...args);
+  }
   if (uiStarted && milliseconds > 10000) {
     fs.writeFileSync(${JSON.stringify(timer)}, String(milliseconds));
     return timeout(callback, 1000, ...args);
@@ -273,6 +286,7 @@ syncBuiltinESMExports();
   assert.deepEqual(await bounded(child.leaderExited, "UI startup timeout before supervisor fallback", 7500),
     { code: 1, signal: null }, child.errors);
   assert.equal(Number(await readFile(timer, "utf8")), 60000);
+  assert.equal(Number(await readFile(cleanupTimer, "utf8")), 5000);
   assert.match(child.errors, /Owned UI fixture startup timed out after 60000ms/);
   const pids = (await readFile(retained, "utf8")).trim().split(/\s+/).map(Number);
   assert.equal(pids.length, 2, "expected retained daemon and UI children before browser startup");
