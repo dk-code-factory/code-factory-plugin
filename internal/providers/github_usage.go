@@ -443,7 +443,8 @@ func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
 	}
 	id := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
 	v.ID = id
-	v.Header = safeCacheHeader(v.Header)
+	persisted := v
+	persisted.Header = safeCacheHeader(v.Header)
 	evicted := map[string]bool{}
 	err := g.usageStore.Write(ctx, func(t *store.Tx) error {
 		// An oversized response is usable by its caller, but cannot displace the
@@ -498,7 +499,7 @@ func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
 			total -= entry.Size
 			count--
 		}
-		return t.Put("github-cache", id, v)
+		return t.Put("github-cache", id, persisted)
 	})
 	if err != nil {
 		return err

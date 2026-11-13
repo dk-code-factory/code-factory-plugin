@@ -1093,6 +1093,11 @@
         {
           "path": "internal/providers/github.go",
           "purpose": "Current sync-inbox implementation or fixture/build dependency."
+        },
+        {
+          "path": "internal/store/store.go",
+          "anchor": "func (t *Tx) JSONByteEntries(",
+          "purpose": "Bodyless cache metadata and authoritative storage IDs are inventoried within the same transaction as eviction and replacement."
         }
       ],
       "tests": [
@@ -1590,6 +1595,74 @@
           "anchor": "func TestGitHubDefaultBudgetReportingAndAdmission(",
           "purpose": "Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.",
           "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCachePressureRetainsHotConditionalResponses(",
+          "purpose": "Real 64 MiB pressure evicts one oldest response, retains hot memory data and preserves a conditional 304 read after restart.",
+          "scenarios": [
+            "S1",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheEvictsExpiredMemoryAndKeepsReplacement(",
+          "purpose": "Age-expired and endpoint-expired rows leave durable and memory caches while a replacement stays identical after restart.",
+          "scenarios": [
+            "S1",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheRejectedWriteDoesNotPublishOrEvictMemory(",
+          "purpose": "An SQLite rejection rolls back prior expiry deletions and does not publish a fresh response or remove the old memory copy.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheRejectedRevalidationPreservesMemoryHeaders(",
+          "purpose": "A managed live304 with changed pagination headers and a rejected cache INSERT leaves body, headers and freshness identical in memory and after restart; the next ordinary read stays local.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheKeepsLiveHeadersInMemoryAndFiltersDurableCopy(",
+          "purpose": "A generic managed GET and its local hit preserve full live headers with one request, while a restarted provider reuses only approved durable headers without another request.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheOversizedReplacementPreservesOtherEntries(",
+          "purpose": "An oversized replacement is not retained in memory or durable state, removes its old same-key response and preserves unrelated entries.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_cache_bounds_test.go",
+          "anchor": "func TestGitHubPersistentCacheEntryPressureEvictsOneOldestRow(",
+          "purpose": "The 4,096-entry bound evicts only one oldest row with deterministic storage-ID tie breaking.",
+          "scenarios": [
+            "S1",
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/store/store_test.go",
+          "anchor": "func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(",
+          "purpose": "Transactional inventory exposes current rows and decoded byte sizes without their encoded bodies; metadata, source bodies, storage identities and bound SQL inputs remain intact.",
+          "scenarios": [
+            "S1",
             "S3"
           ]
         }
@@ -3352,7 +3425,7 @@
         {
           "path": "web/tests/wrapper.spec.ts",
           "anchor": "question pages retain exact requests beyond the first page",
-          "purpose": "Navigate to requests 51\u201355 and deliver the exact second-page question identity and free-text answer.",
+          "purpose": "Navigate to requests 51–55 and deliver the exact second-page question identity and free-text answer.",
           "scenarios": [
             "S1",
             "S2"

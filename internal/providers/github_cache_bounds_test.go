@@ -262,6 +262,39 @@ func TestGitHubPersistentCacheRejectedRevalidationPreservesMemoryHeaders(t *test
 	}
 }
 
+func TestGitHubPersistentCacheKeepsLiveHeadersInMemoryAndFiltersDurableCopy(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	now := time.Now().UTC()
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Fixture-Observation", "retained-in-memory")
+		w.Header().Set("ETag", `"user"`)
+		w.Header().Set("Link", `<https://example.invalid/next>; rel="next"`)
+		fmt.Fprint(w, `{"login":"fixture"}`)
+	}))
+	defer server.Close()
+	db, err := store.Open(filepath.Join(t.TempDir(), "cache.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	g := managedFixture(t, server, db, &now, 100, 0)
+	for _, phase := range []string{"live", "memory"} {
+		body, header, err := g.Request(ctx, http.MethodGet, "/user", nil, "")
+		if err != nil || string(body) != `{"login":"fixture"}` || header.Get("Content-Type") != "application/json" || header.Get("X-Fixture-Observation") != "retained-in-memory" || calls.Load() != 1 {
+			t.Fatal("live headers lost across local reuse", phase, string(body), header, calls.Load(), err)
+		}
+	}
+	restarted := managedFixture(t, server, db, &now, 100, 0)
+	body, header, err := restarted.Request(ctx, http.MethodGet, "/user", nil, "")
+	if err != nil || string(body) != `{"login":"fixture"}` || header.Get("Content-Type") != "" || header.Get("X-Fixture-Observation") != "" || header.Get("ETag") != `"user"` || header.Get("Link") == "" || calls.Load() != 1 {
+		t.Fatal("durable copy did not retain only approved headers", string(body), header, calls.Load(), err)
+	}
+}
+
 func TestGitHubPersistentCacheOversizedReplacementPreservesOtherEntries(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
