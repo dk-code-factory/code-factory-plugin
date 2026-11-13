@@ -4,6 +4,7 @@ import (
 	"codefactory/internal/app"
 	"codefactory/internal/domain"
 	"codefactory/internal/factory"
+	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
 	"crypto/sha256"
@@ -213,6 +214,11 @@ func factoryState(ctx context.Context, a *app.App, in factoryStateInput, cache *
 		}
 		result["settings"] = settings
 		result["proposals"] = proposals
+		usage, e := providers.SavedGitHubUsage(ctx, a.Store, settings.GitHubRequestsPerHour, settings.GitHubReserve)
+		if e != nil {
+			return nil, e
+		}
+		result["githubUsage"] = usage
 	}
 	return result, nil
 }

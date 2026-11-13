@@ -23,8 +23,11 @@ type GitHubPolicy struct {
 	MinInterval     time.Duration
 }
 type githubRemoteLimit struct {
-	Remaining int
-	Reset     time.Time
+	Remaining  int
+	Reset      time.Time
+	Used       *int
+	Limit      *int
+	ObservedAt time.Time
 }
 type githubBurstCall struct {
 	At       time.Time
@@ -36,6 +39,7 @@ type githubUsage struct {
 	PollUntil       map[string]time.Time
 	ActiveScope     string
 	Calls           []time.Time
+	NotModified     []time.Time
 	Next            time.Time
 	SecondaryUntil  time.Time
 	Retry           map[string]time.Time
@@ -45,14 +49,49 @@ type githubUsage struct {
 	SecondaryReason string
 }
 type GitHubUsage struct {
-	RequestsLastHour int       `json:"requestsLastHour"`
-	Budget           int       `json:"budget"`
-	Reserve          int       `json:"reserve"`
-	NextRequest      time.Time `json:"nextRequest"`
-	RESTRemaining    *int      `json:"restRemaining,omitempty"`
-	RESTReset        time.Time `json:"restReset"`
-	GraphQLRemaining *int      `json:"graphqlRemaining,omitempty"`
-	GraphQLReset     time.Time `json:"graphqlReset"`
+	// Both attempt fields include conservative reservations, even when a send's
+	// outcome is uncertain. They are not GitHub primary-quota consumption.
+	RequestsLastHour        int                  `json:"requestsLastHour"`
+	RequestAttemptsLastHour int                  `json:"requestAttemptsLastHour"`
+	NotModifiedLastHour     int                  `json:"notModifiedLastHour"`
+	AccountingAsOf          time.Time            `json:"accountingAsOf"`
+	Budget                  int                  `json:"budget"`
+	Reserve                 int                  `json:"reserve"`
+	NextRequest             time.Time            `json:"nextRequest"`
+	RESTRemaining           *int                 `json:"restRemaining,omitempty"`
+	RESTReset               time.Time            `json:"restReset"`
+	GraphQLRemaining        *int                 `json:"graphqlRemaining,omitempty"`
+	GraphQLReset            time.Time            `json:"graphqlReset"`
+	RESTQuota               *GitHubQuotaSnapshot `json:"restQuota,omitempty"`
+	GraphQLQuota            *GitHubQuotaSnapshot `json:"graphqlQuota,omitempty"`
+}
+
+// GitHubQuotaSnapshot describes the bucket reported by GitHub, which can include
+// other clients sharing the same principal. Used is never inferred from deltas.
+type GitHubQuotaSnapshot struct {
+	Unit       string     `json:"unit"`
+	Remaining  int        `json:"remaining"`
+	Reset      time.Time  `json:"reset"`
+	Used       *int       `json:"used,omitempty"`
+	Limit      *int       `json:"limit,omitempty"`
+	ObservedAt *time.Time `json:"observedAt,omitempty"`
+}
+
+func quotaSnapshot(limit githubRemoteLimit, unit string) *GitHubQuotaSnapshot {
+	snapshot := &GitHubQuotaSnapshot{Unit: unit, Remaining: limit.Remaining, Reset: limit.Reset}
+	if limit.Used != nil {
+		used := *limit.Used
+		snapshot.Used = &used
+	}
+	if limit.Limit != nil {
+		maximum := *limit.Limit
+		snapshot.Limit = &maximum
+	}
+	if !limit.ObservedAt.IsZero() {
+		observed := limit.ObservedAt
+		snapshot.ObservedAt = &observed
+	}
+	return snapshot
 }
 
 // ConfigureUsage attaches private durable state to the one application provider.
@@ -242,6 +281,7 @@ func (g *GitHub) beginCostedRequest(ctx context.Context, token, resource, route 
 			reason = "GitHub request reserve reached; synchronization will retry"
 		}
 		u.Calls = recentCalls(u.Calls, now)
+		u.NotModified = recentCalls(u.NotModified, now)
 		if len(u.Calls) >= p.RequestsPerHour {
 			t := u.Calls[len(u.Calls)-p.RequestsPerHour].Add(time.Hour + time.Second)
 			if t.After(until) {
@@ -303,7 +343,14 @@ func (g *GitHub) observe(ctx context.Context, token, resource, route string, h h
 	remaining, e := strconv.Atoi(h.Get("X-RateLimit-Remaining"))
 	epoch, resetErr := strconv.ParseInt(h.Get("X-RateLimit-Reset"), 10, 64)
 	if e == nil && resetErr == nil {
-		u.Limits[usageKey(token, resource)] = githubRemoteLimit{Remaining: remaining, Reset: time.Unix(epoch, 0)}
+		limit := githubRemoteLimit{Remaining: remaining, Reset: time.Unix(epoch, 0), ObservedAt: g.now()}
+		if used, parseErr := strconv.Atoi(h.Get("X-RateLimit-Used")); parseErr == nil && used >= 0 {
+			limit.Used = &used
+		}
+		if maximum, parseErr := strconv.Atoi(h.Get("X-RateLimit-Limit")); parseErr == nil && maximum >= 0 {
+			limit.Limit = &maximum
+		}
+		u.Limits[usageKey(token, resource)] = limit
 		changed = true
 	}
 	if changed {
@@ -410,7 +457,8 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 		return GitHubUsage{}, err
 	}
 	now := g.now()
-	out := GitHubUsage{RequestsLastHour: len(recentCalls(u.Calls, now)), Budget: p.RequestsPerHour, Reserve: p.Reserve, NextRequest: u.SecondaryUntil}
+	attempts := len(recentCalls(u.Calls, now))
+	out := GitHubUsage{RequestsLastHour: attempts, RequestAttemptsLastHour: attempts, NotModifiedLastHour: len(recentCalls(u.NotModified, now)), AccountingAsOf: now, Budget: p.RequestsPerHour, Reserve: p.Reserve, NextRequest: u.SecondaryUntil}
 	for key, l := range u.Limits {
 		if u.ActiveScope != "" && !strings.HasPrefix(key, u.ActiveScope+":") {
 			continue
@@ -423,6 +471,7 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 			if out.RESTRemaining == nil || v < *out.RESTRemaining {
 				out.RESTRemaining = &v
 				out.RESTReset = l.Reset
+				out.RESTQuota = quotaSnapshot(l, "requests")
 			}
 		}
 		if strings.HasSuffix(key, ":graphql") {
@@ -430,6 +479,7 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 			if out.GraphQLRemaining == nil || v < *out.GraphQLRemaining {
 				out.GraphQLRemaining = &v
 				out.GraphQLReset = l.Reset
+				out.GraphQLQuota = quotaSnapshot(l, "points")
 			}
 		}
 	}
@@ -631,7 +681,7 @@ func noteRead(ctx context.Context, at time.Time) {
 		*observed = at
 	}
 }
-func (g *GitHub) requestSucceeded(ctx context.Context) error {
+func (g *GitHub) requestSucceeded(ctx context.Context, notModified bool) error {
 	if !g.Managed() {
 		return nil
 	}
@@ -639,8 +689,11 @@ func (g *GitHub) requestSucceeded(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if u.Strikes == 0 {
+	if u.Strikes == 0 && !notModified {
 		return nil
+	}
+	if notModified {
+		u.NotModified = append(recentCalls(u.NotModified, g.now()), g.now())
 	}
 	u.Strikes = 0
 	u.SecondaryUntil = time.Time{}

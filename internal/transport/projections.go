@@ -260,7 +260,7 @@ func projectionDependencies(name string, raw json.RawMessage) []string {
 	case "factory_state":
 		deps := []string{"factory-question", "factory-session", "factory-batch"}
 		if in.View == "configuration" {
-			return append(deps, "factory-settings", "factory-proposal")
+			return append(deps, "factory-settings", "factory-proposal", "github-usage")
 		}
 		if in.View == "conversation" && in.ItemID != "" {
 			return append(deps, "item/"+in.ItemID, "user/"+in.ItemID, "assessment/"+in.ItemID, "related/"+in.ItemID, "ticket", "identity", "config", "repository")

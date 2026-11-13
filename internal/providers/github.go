@@ -225,9 +225,6 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		return nil, fmt.Errorf("GitHub access revoked or insufficient repository permissions")
 	}
 	if res.StatusCode == 304 && hasCache {
-		if err = g.requestSucceeded(ctx); err != nil {
-			return nil, fmt.Errorf("GitHub request budget unavailable")
-		}
 		noteRead(ctx, g.now())
 		cached.CheckedAt = g.now()
 		cached.Until = cached.CheckedAt.Add(restTTL(parsed.Path, res.Header))
@@ -237,7 +234,14 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		if e = g.remember(ctx, cacheKey, cached); e != nil {
 			return nil, fmt.Errorf("GitHub cache unavailable")
 		}
-		return cached.Header.Clone(), json.Unmarshal(cached.Body, out)
+		if err = json.Unmarshal(cached.Body, out); err != nil {
+			return cached.Header.Clone(), err
+		}
+		validated := len(cached.Body) > 0 && (req.Header.Get("If-None-Match") != "" || req.Header.Get("If-Modified-Since") != "")
+		if err = g.requestSucceeded(ctx, validated); err != nil {
+			return nil, fmt.Errorf("GitHub request budget unavailable")
+		}
+		return cached.Header.Clone(), nil
 	}
 	if res.StatusCode != 200 {
 		return nil, fmt.Errorf("GitHub request failed (HTTP %d)", res.StatusCode)
@@ -246,7 +250,7 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 		return nil, fmt.Errorf("GitHub response unavailable")
 	}
 	noteRead(ctx, g.now())
-	if err = g.requestSucceeded(ctx); err != nil {
+	if err = g.requestSucceeded(ctx, false); err != nil {
 		return nil, fmt.Errorf("GitHub request budget unavailable")
 	}
 	ttl := restTTL(parsed.Path, res.Header)

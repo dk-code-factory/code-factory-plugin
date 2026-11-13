@@ -475,7 +475,8 @@
       "assertions": [
         "WRAP-CONFIG",
         "API-V2-CURRENT",
-        "API-V2-CHUNKS"
+        "API-V2-CHUNKS",
+        "GITHUB-ACCOUNTING-VIEW-ISOLATION"
       ],
       "gaps": [
         {
@@ -562,7 +563,8 @@
         "API-V2-VIEW-INSTANCE",
         "API-V2-STALE-INSTANCE",
         "API-V2-READ-ID",
-        "API-V2-FIRST-INSTANCE"
+        "API-V2-FIRST-INSTANCE",
+        "GITHUB-ACCOUNTING-VIEW-ISOLATION"
       ],
       "gaps": [
         {
@@ -1489,13 +1491,25 @@
           "path": "internal/transport/projections.go",
           "anchor": "func (c *projectionCache) read(",
           "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "internal/transport/factory_projection.go",
+          "anchor": "func factoryState(",
+          "purpose": "Configuration saved-state responses expose local-only GitHub attempt accounting and observed shared quota snapshots."
+        },
+        {
+          "path": "internal/factory/requests.go",
+          "anchor": "func (s *Service) dynamic(",
+          "purpose": "Configuration inspection returns the same saved accounting without a GitHub read."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
         "NATIVE-CONFIG",
         "API-V2-CURRENT",
-        "API-V2-CHUNKS"
+        "API-V2-CHUNKS",
+        "GITHUB-SAVED-ACCOUNTING",
+        "GITHUB-INSPECT-ACCOUNTING"
       ],
       "gaps": [],
       "suites": [
@@ -1505,7 +1519,7 @@
       "context": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "interactions": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
-      "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
+      "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout. Loading while the requested saved revision is pending; older content is unavailable for dependent actions. Saved GitHub accounting separates application request attempts and completed conditional validations from observed shared quotas, with capture and observation times; inspecting it makes no GitHub request.",
       "element_description": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "purpose": "Readable saved application settings and actual native configuration layers for an inspected checkout."
     },
@@ -6236,6 +6250,24 @@
       "path": "internal/transport/operations_retry_test.go",
       "anchor": "func TestScanAliasAdmissionIsBoundedAndReleased(",
       "assertion": "Scan aliases obey identity and byte admission bounds; rejected IDs retain nothing, exact accepted duplicates retain their original result and completion releases active scan admission."
+    },
+    {
+      "id": "GITHUB-SAVED-ACCOUNTING",
+      "path": "internal/transport/github_usage_test.go",
+      "anchor": "func TestConfigurationProjectionReportsSavedGitHubAccounting(",
+      "assertion": "Saved configuration responses include sanitized attempts, conditional304 counts and shared REST quota units with capture/observation times; accounting updates refresh configuration only and preserve assessment policy."
+    },
+    {
+      "id": "GITHUB-INSPECT-ACCOUNTING",
+      "path": "internal/factory/github_accounting_test.go",
+      "anchor": "func TestConfigurationInspectionReportsSavedGitHubAccounting(",
+      "assertion": "The existing configuration-agent tool exposes saved request accounting alongside native settings and skills, without GitHub credential resolution, a model turn or native write."
+    },
+    {
+      "id": "GITHUB-ACCOUNTING-VIEW-ISOLATION",
+      "path": "internal/transport/github_usage_test.go",
+      "anchor": "func TestGitHubAccountingPreservesEmptyInboxAndSelectedDetail(",
+      "assertion": "Accounting writes refresh configuration while already prepared empty inbox, selected overview and complete source detail remain ready with identical content and revision, without GitHub credential resolution."
     }
   ],
   "source_map": [

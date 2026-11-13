@@ -125,7 +125,8 @@ their original options. A completed turn without a status report appears idle.
 Inspect and propose the shared application GitHub budget through configuration
 chat. Defaults are 2,000 request attempts/hour, 100 reported quota units reserved,
 and a 120-second notification interval. REST quota uses requests and GraphQL quota
-uses points; the local allowance counts actual HTTP attempts. Reads honor the
+uses points; the local allowance counts conservative request reservations, including
+uncertain sends and completed conditional validations. Reads honor the
 provider's server cooldown, conditional cache and persistent shared gate.
 
 Managed REST reads, GraphQL queries and the generic REST mutation transport share
@@ -164,6 +165,15 @@ also include account-wide concurrency, CPU/resource limits, lower endpoint limit
 and undisclosed costs. Local serialization and conservative accounting cannot
 measure other clients or guarantee absence of server throttling; response headers
 and throttle errors remain authoritative.
+
+Configuration inspection exposes saved `githubUsage`: `requestAttemptsLastHour`
+(and compatible `requestsLastHour`) counts local reservations, while
+`notModifiedLastHour` counts completed conditional validations. REST and GraphQL
+quota snapshots identify their request/point units and observation time; reported
+usage can include other clients sharing the principal and is never treated as
+per-plugin cost. Missing quota observations remain unknown. These saved reads
+make no GitHub request. See [request accounting](operations.md#github-request-budget)
+for snapshot capture and aging semantics.
 
 Repository summary synchronization and detailed reconciliation recover observable
 changes even when the app is closed. Initial import establishes a baseline without

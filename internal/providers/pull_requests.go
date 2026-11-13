@@ -162,7 +162,7 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 		return fmt.Errorf("GitHub metadata unavailable")
 	}
 	noteRead(ctx, g.now())
-	if err = g.requestSucceeded(ctx); err != nil {
+	if err = g.requestSucceeded(ctx, false); err != nil {
 		return fmt.Errorf("GitHub request budget unavailable")
 	}
 	if err = g.remember(ctx, key, cacheEntry{Body: result.Data, Header: http.Header{}, CheckedAt: g.now(), Until: g.now().Add(GitHubDetailTTL)}); err != nil {
