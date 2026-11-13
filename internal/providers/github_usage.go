@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"codefactory/internal/domain"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -10,12 +11,27 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"codefactory/internal/store"
 )
 
 const GitHubDetailTTL = 15 * time.Minute
+
+type githubKnownHead struct{}
+
+// A caller-known PR head constrains metadata cache hits before REST data can
+// replace it. Validators remain available for revalidation through the usual
+// request budget and provider backoff gates.
+func cachedMatchesKnownHead(ctx context.Context, path string, entry cacheEntry) bool {
+	item, ok := ctx.Value(githubKnownHead{}).(domain.Item)
+	if !ok || path != fmt.Sprintf("/repos/%s/issues/%d", item.Repository, item.Number) && path != fmt.Sprintf("/repos/%s/pulls/%d", item.Repository, item.Number) {
+		return true
+	}
+	var metadata ghIssue
+	return json.Unmarshal(entry.Body, &metadata) == nil && metadata.Head.SHA == item.Head
+}
 
 type GitHubPolicy struct {
 	RequestsPerHour int
@@ -345,8 +361,14 @@ func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 	return out, nil
 }
 
-func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, error) {
-	v, ok := g.cacheGet(key)
+func (g *GitHub) cached(ctx context.Context, key string) (v cacheEntry, ok bool, err error) {
+	defer func() {
+		if ok && v.QueryBarrier != queryBarrierFrom(ctx) {
+			// Retain the body and validators for conditional revalidation.
+			v.Until = time.Time{}
+		}
+	}()
+	v, ok = g.cacheGet(key)
 	if ok {
 		return v, true, nil
 	}
@@ -354,7 +376,7 @@ func (g *GitHub) cached(ctx context.Context, key string) (cacheEntry, bool, erro
 		return v, false, nil
 	}
 	id := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
-	err := g.usageStore.Get(ctx, "github-cache", id, &v)
+	err = g.usageStore.Get(ctx, "github-cache", id, &v)
 	if errors.Is(err, store.ErrNotFound) {
 		return v, false, nil
 	}
@@ -433,6 +455,7 @@ func (g *GitHub) invalidateRejectedCredential(ctx context.Context, token string,
 }
 
 func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
+	v.QueryBarrier = queryBarrierFrom(ctx)
 	g.cachePut(key, v)
 	if g.usageStore != nil {
 		// Keep the complete private persistent cache bounded as well as memory.
@@ -510,15 +533,51 @@ func (g *GitHub) SeedCooldown(ctx context.Context, until time.Time) error {
 }
 
 type readObservation struct{}
+type readObservations struct {
+	mu     sync.Mutex
+	at     *time.Time
+	until  time.Time
+	parent *readObservations
+}
 
 func observeReads(ctx context.Context, now time.Time) (context.Context, *time.Time) {
 	observed := now
-	return context.WithValue(ctx, readObservation{}, &observed), &observed
+	parent, _ := ctx.Value(readObservation{}).(*readObservations)
+	return context.WithValue(ctx, readObservation{}, &readObservations{at: &observed, parent: parent}), &observed
 }
-func noteRead(ctx context.Context, at time.Time) {
-	if observed, ok := ctx.Value(readObservation{}).(*time.Time); ok && at.Before(*observed) {
-		*observed = at
+func noteRead(ctx context.Context, at time.Time, until ...time.Time) {
+	for observed, _ := ctx.Value(readObservation{}).(*readObservations); observed != nil; observed = observed.parent {
+		observed.mu.Lock()
+		if at.Before(*observed.at) {
+			*observed.at = at
+		}
+		for _, deadline := range until {
+			if !deadline.IsZero() && (observed.until.IsZero() || deadline.Before(observed.until)) {
+				observed.until = deadline
+			}
+		}
+		observed.mu.Unlock()
 	}
+}
+
+func noteCachedRead(ctx context.Context, entry cacheEntry) {
+	// A zero transport TTL supplies validators, not a component freshness lease.
+	if entry.Until.After(entry.CheckedAt) {
+		noteRead(ctx, entry.CheckedAt, entry.Until)
+	} else {
+		noteRead(ctx, entry.CheckedAt)
+	}
+}
+
+func readDeadline(ctx context.Context, fallback time.Time) time.Time {
+	if observed, _ := ctx.Value(readObservation{}).(*readObservations); observed != nil {
+		observed.mu.Lock()
+		defer observed.mu.Unlock()
+		if !observed.until.IsZero() && observed.until.Before(fallback) {
+			return observed.until
+		}
+	}
+	return fallback
 }
 func (g *GitHub) requestSucceeded(ctx context.Context) error {
 	if !g.Managed() {

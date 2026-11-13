@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "ui",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "d4dcc8d0d2cb709fd8fa7d60df69d362977d890c6856c6dc7f4e53425041c0f3",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "0084b107f5390ef880611a9e0eb3d6dea0759ba7ee6e65877f600d629a677176",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
-    "description": "W-CONFIGURATION-CHAT and W-TRANSCRIPT now show intentional titled plain-text communication cards and owner messages while suppressing raw configuration narration. W-QUESTIONS renders explicit choices/free text; W-CONFIGURATION-PROPOSAL shows only changed top-level settings with complete before/after values. Existing item, navigation, approval and transport surfaces retain their behavior.",
-    "implementation": "Reviewed transcriptMessages configuration filtering, QuestionForm communication answer shape, the configuration session summary guard, communicate persistence and suspension, retained native catalog selection, and settingsDiff deterministic key ordering. All new behavior stays in worker-owned factory handling and existing cached projections; proposal confirmation remains a separate mutation. The tracked embedded HTML and plugin archive are refreshed from the reviewed UI/admin sources; a second make build reproduces their digests, so these generated outputs do not add independent behavior. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "Read actual assertions: TestConfigurationCommunicationMessagesAndQuestions now records native RPC reply destination and requires request102, one successful reply with owner text, invalid/duplicate rejection, proposal separation and answer-body privacy. RetainsNativeCatalog records actual resume count and rejects any dynamicTools field while asserting unchanged thread/guidance and one original start. The browser question fixture explicitly requires its complete question body, unselected options, exact public question answer ID, disabled chat and no proposal confirmation; card escaping/narration assertions remain intact."
+    "kind": "refactor",
+    "description": "All80 UI entities are indirect review subjects from existing shared suite inputs. No UI entity, endpoint, interaction or foundational term changes. PAGE-INBOX, W-ITEM-ROW, W-ITEM-OVERVIEW, S-FACTORY and C-STATE-REFRESH continue consuming saved revision projections; upstream freshness remains independently reported. Reassessed preserved new target configuration communication cards/questions, compatible retained catalogs and explicit independent proposal confirmation; no optimization changes these target-owned behaviors.",
+    "implementation": "Historical observations through f176, retained as historical evidence and not current-target completion: Historical implementation observations through old49 (retained, not current-target completion): Reviewed those entity definitions and their implementation anchors in wrapper.tsx, transport/factory.go and immutable projection boundaries. The diff changes provider cache reuse and source timestamps, never view ownership, operation identity, UI structure or model/session activation. Stable registry IDs and historical adoption pin are retained. Follow-up review also traces unmanaged identity blob admission/credential epochs and earliest positive component expiry through nested REST/GraphQL observations; all other action and delivery paths remain untouched. Reassessed against previous target bde94be contributor guidance: changed provider caches remain behind unchanged application/factory synchronization and detail preparation; this PR adds no request handler, database/projection construction or native/provider I/O to user-facing API reads. Existing authorization/revision checks and pending operation behavior remain in their owning paths. Cycle2 follow-up reviewed the known-head constraint at both managed REST and generic memo admission, local User observation propagation and positive-lease memo expiry. Only exact PR issue/pull metadata is constrained by the caller-known head; validators, request budgets, provider backoff, credential isolation and zero-TTL operation deduplication remain owned by the existing paths. Reassessed the full branch comparison against exact current target49b774: all target registry/scenario/graph/assertion entries are semantically retained, including new slow-success/cancellation/diagnostic contracts. No provider/store production source changed on that target advance; all21 provider files remain byte-identical to the focused-tested snapshot. This provider PR adds no request handler or deadline and cannot cancel a production request merely for crossing75ms. New runtime latency observation and preserved useful outcomes remain in their target-owned boundary paths. Cycle3 factual correction narrows assertion attribution to managed GraphQL sharing and states the intentional global rollover exception to ordinary scoped freshness, including the public Invalidate comment. Executable provider behavior and existing nine regression stimuli/assertions are unchanged. This does not change other contracts or add runtime latency cancellation. Current exact f176 reassessment: inspected actual upstream default-policy, Make ownership batch and CI-budget changes and all affected specification subjects. Semantic merge retains every target catalog flow/scenario/graph/implementation/assertion, including both new 2000-default budget tests, three batch-export tests and the60-minute hosted-job assertion. This branch adds only its nine HTTP cache regression references. The target-owned Makefile, ownership helper, local-verifier pin, hosted workflow, maintained flow prose and usage tests remain byte-identical to f176. Cache source differs from old tested optimization only by two target-owned600-to2000 fallback substitutions. Explicit allowances, rolling admission, lifecycle, known-head coherence, original component/memo observation and expiry, credential isolation and conditional validation remain intact. Both corrected managed-only sharing attribution and global-rollover exception are preserved. No glossary/UI contract or production request deadline is added. Whole target generated receipts were selected for CLI regeneration, never hand-edited. Subsequent current-input test-fixture correction: the full current-target reconciliation failed one unchanged transport cancellation case; its failed attempt and invalidated receipts remain preserved. Source-provenance confirms unchanged f176 events/store/httpbudget/mcp behavior. Only the transport test helper accepts an optional real HTTP wrapper and cancellation fixture now holds its writer through actual canceled HTTP-origin return, avoiding a fixed125ms release precondition. Immediate and150ms-delayed cancellation cases cover both protocol versions and subscribe/unsubscribe;125ms slow-success,1s worker/client/drain guards and all75ms successful-response gates remain unchanged. No production request behavior, schema, UI ownership, glossary meaning or API/provider code changes. The owning receive-notifications authored purpose and CLI-rendered reference state the new synchronization condition; stable IDs/scenarios remain. Current exact d485 integration review: read actual37-file upstream communication/UI change and configuration question/answer/settings-diff tests. Every target glossary/catalog field, flow/scenario/graph/implementation and assertion remains; the sole target test-purpose adjustment is the already corrected cancellation-fixture condition, with nine cache HTTP assertions retained. All six communication assertion IDs and consuming UI entries are byte-exact target, as are communication code/tests, native/request/session changes, wrapper sources/tests, plugin guidance and generated bundle sources. Provider cache source and corrected cancellation fixture are byte-identical to the successfully reconciled pre-integration627882c snapshot. No cache path supplies model narration or confirms proposals; existing app/factory cached preparation and operation boundaries remain. The receiving/configure/answer/view ownership and pinned adoption policy are preserved. All generated receipts begin from complete exact-target baseline for fresh CLI regeneration only.",
+    "tests": "Historical assertion review and execution through old49 (not substituted for fresh f176 verification): Inspected actual wrapper assertions for saved issue/PR opening without session mutation, exact priority/link actions, configuration chat and exact native option answers. New provider request-count/freshness and invalidation tests cover the changed behavior below the UI. Existing accessibility/installed-host gaps remain open; render/validate are structural evidence only. Current-target reconciliation reruns applicable maintained suites, including existing fixture API latency and response-boundary assertions. Earlier source-identical suite evidence is retained historically, not substituted for workflow-required execution. Inspected the new complete/incomplete metadata and managed/unmanaged HTTP cases: an older positive REST lease cannot replace a caller-known newer head, the managed path returns its polling backoff without dispatch and succeeds after the deadline, and same-head managed GraphQL is shared. The ledger-backed identity fixture uses actual bounded LRU eviction, preserves the memo observation/deadline when rebuilding a blob, propagates a current 503 after expiry, then observes the new identity; a zero-TTL request remains deduplicated after one hour. All provider race tests passed (14.759s); retained red logs show both freshness defects on the prior implementation. Inspected actual target TestSlowResponseRetainsAdmissionAndReturnsSuccess (uncanceled context, retained admission, original200 after125ms), TestSlowRequestSignalsBeforeCompletionAndCorrelatesOutcome (stable safe identity and201), bounded diagnostic/metadata assertions, and TestPerformanceGateFailsSlowSuccess (actual child200 must fail75ms measurement). Focused current-target httpbudget suite passed1.454s; byte-identical provider race proof is preserved rather than repeated. Per the explicit current-main policy, only required CLI reconciliation/check runs locally now; full hosted CI is still required for the final published head. Re-read the exact known-head fixture branches: managed graphCalls1, unmanaged graphCalls2; the authored purpose/generated reference now preserve those conditions. Re-read scoped/bounded generation assertions and global barrier admission: normal unrelated generations stay equal, overflow changes the global digest. Product prose and Invalidate comment now explicitly qualify ordinary isolation. Current render/validate/diff checks pass; no redundant focused provider rerun is claimed for these prose/comment-only edits. Required CLI reconciliation remains a fresh current-input execution. Current f176 focused integration: actual go test -race ./internal/providers ./internal/app -run TestGitHub(Composite|DefaultBudget) -count=1 exited0 (providers2.066s/app1.043s), covering all nine realHTTP composite freshness/lease/invalidation regressions and new default/explicit budget+rolling admission assertions. Four actual Python tests passed2.373s: hosted route60-minute budget, exactly one ownership batch per native caller/worker, raw-value/private-mode/legacy framing, and partial-write cleanup. Render23/validate666terms80entities16flows and diffcheck passed. Upstream default test seeds1999attempts, admits2000 and rejects2001 until onehour+one second; explicit600 override remains. Full current-input required CLI reconciliation/check runs next; its actual successful verification is required before receipts/check completion. Explicit current-main policy prohibits localmakeCI; full hostedCI remains required for exact final published head. Actual post-failure evidence: original isolated cancellation test -race count20 passed29.340s, while controlled150ms delayed cancellation against that original fixture failed all4protocol\u00d7method cases with successful200 responses. Exact scheduling in the earlier full-suite failure was not captured, so it remains unknown rather than called a proven flake. Corrected realHTTP cancellation fixture -race count20 passed35.587s (12cases per iteration); private overlay removing actual WithRequestContext propagation failed all8normal/delayed cancellation cases at the unchanged subscription-state assertion, demonstrating real production-defect sensitivity. No redundant provider/source suites are rerun. Render23/validate666terms80entities16flows and diffcheck pass after the owning purpose/generated-reference update; fresh full current-input CLI reconciliation/check remains required before success receipts. Current d485 assertion review: TestConfigurationCommunicationMessagesAndQuestions checks new-thread tool exposure, single redacted message on repeated native ID, suspended exact question response, invalid/duplicate rejection and no proposal confirmation; validation/expiry rejects oversized, duplicate-label and wrong-session payloads plus expired answers. Retained-catalog test resumes both legacy and communication native threads once with compatible guidance and no dynamic-tool replacement. Legacy/diff test preserves intentional old-tool cards and complete changed before/after values without unchanged fields. The two wrapper assertions show escaped titled cards with owner text while hiding ordinary narration/status; questions begin unselected, disable ordinary chat, send the exact question identity/answer and leave proposals unconfirmed. Focused Go race assertions cover cache/defaults, all four communication tests and corrected cancellation; mocked wrapper configuration assertions cover the communication cards and questions. Complete reviewed reconciliation and specification checks establish current validation. No redundant provider-only run outside this bundle; no localmakeCI. The real fixture runner builds current testhost, browser reconciliation builds fakecodex and release reconciliation owns current makebuild before package/installer/smoke, so no stale old-target compiled artifact is substituted."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.181
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.551
+      "seconds": 36.572
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 82.876
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.225
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 665.185
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 441.282
     },
     {
       "command": [
@@ -81,7 +81,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.735
     },
     {
       "command": [
@@ -90,7 +90,7 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 61.165
     }
   ],
   "dependencies": {
@@ -260,85 +260,85 @@
     "term:ui-w-work-status": "d117098e012432dab39d5b327a5d9095d64f85418b7db6e35f83d570c59d0dfc",
     "term:uncertain-operation": "e5808790f69713e7d0155139fef47ed953581d1b2baec8a675912f2cfa3460c5",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
-    "ui:C-ANSWER": "7f39aaa8a1c3921292b59b4a0372597e1514c8c21f59928247efddc0f4347aec",
-    "ui:C-BROWSER-LAB": "3d8e79341fc2093623bc67acd48ed8ac9e74f8c3f9808dbdcfd6a81a31a40e59",
-    "ui:C-CONFIGURATION-CONFIRM": "753d58c1f02c8cf07df42d524e5422169f44af5fba2d72f955ff21a82f0c20a3",
-    "ui:C-CONFIGURATION-PROPOSE": "475c9adf95aa5b2bd6d4b906a666a4848562f470bb24b76046246aa6755c9a3c",
-    "ui:C-CONSENT": "b391db840b9f99916e2a6fd3f74ed94b5e5771b11676b0da8cdd7586174e496b",
-    "ui:C-EVENT-INSPECT": "189382ba2c6bb7e21a0ed0bca4492dbc74ce48a529b4beecbf35429b4b3dc437",
-    "ui:C-FILTER": "b6ad483d6d69dce7a297eb3d554e92f6ac917fe427fe4d8b1cc8ff5ed33a4205",
-    "ui:C-FOLLOW-UP": "0bd4e3c74b00271c833a63689db9dd58f85eac6702123ae680b68ef8e6b3d3ce",
-    "ui:C-ITEM-STATE": "55a90fa93bf368cdfcb274f72884749c6dd4b3ef8e7eb7a122af2a92835b1712",
-    "ui:C-LINK": "b3e8d6955cd49e4e32e01ac6e910758ade06694eecc8b4c737fdb5c20aa684a9",
-    "ui:C-NAVIGATE": "418d899ede98cf57097cd768b582f08a6302718c2300cd10c62fe39837b0dbb0",
-    "ui:C-OPEN-SETTINGS": "b6b77708cf011a103e9d2731ce3c6aa6f90d55b9320efc11593015194fd80363",
-    "ui:C-PACKAGE": "95cec44fe87b08fe54412a97b4246b46018e6010f96304eb2b5bd31eaae68bd7",
-    "ui:C-PRIORITY": "63153fca410d9ed0565bac22cfe3d76233644017a6132b1a4eb0940fd72a0760",
-    "ui:C-RUN-ACTION": "b2f0d970a245639126dac46e4fcb6ad80b18695910723978ba4f8bef9cacc551",
-    "ui:C-SELECT-ITEM": "825cab7e654ee41aaf299e20c6664046b8608cad66e8959746c2af82264ba9dd",
-    "ui:C-START-CHAT": "1276d8972a07403aab8cfb2046f1d77ca70699822cef666c7accde7cf8e1243d",
-    "ui:C-STATE-REFRESH": "76ab2af11692f70a62e13e7a26f6bfd87c7dfd15bf0509c1657221b8c94b13fa",
-    "ui:C-TRANSCRIPT": "1152f8f838b1ec3a78375cd5bc36a12271e8a1cdc9bd3dc80138bd424efd78a8",
-    "ui:C-TUNNEL-KEY": "a8a7ce2441f3f9ee89ca87bde0f493c17c083886ae90503a36c662a1b69cd8b6",
-    "ui:P-APPROVAL": "7b90ec548f40f254a35e8a16fa39a3bea84be7f09310167f5278df940b4e0a61",
-    "ui:P-BROWSER-LAB": "3d81ee13eb25c7041ae64ac52dce2b575ff9b35da3a79110e446ecd5ab896f84",
-    "ui:P-CONFIGURATION": "cc0128b5da720463d797eded1b9360122935268118a9cab3f04de713b3345a7e",
-    "ui:P-CONNECTION-GUIDE": "c35cb36c25945528ac88d76e6dae7b885272b7b7e48be27771ea266e97048428",
-    "ui:P-ELICITATION": "edae0f1eeb30a1fdc8dbbd575832307e1750281742b0eb2c52aa07319fa7ea03",
-    "ui:P-EVENTS": "231c37aaf5e0c1e1093387d7d210684a0ec316eb3db36a657a1ec245e75e70dd",
-    "ui:P-FEEDBACK": "d0d9a35aaefdefbe396b38bd80edc2cd4893a0f0f3cd50d1d0d6fa1b26706e11",
-    "ui:P-IDENTITY": "12828f82defc80e2ce7e6899bf39b304758ab887214c53f05d4524b189a43c85",
-    "ui:P-INBOX-LIST": "b904b011797c74afdba5dfd6ab559638f13cec9b9e472f8b42ad198f32da52e2",
-    "ui:P-INBOX-QUERY": "7fd73aa7726b8ee0d7e75e38e8d182e1344b601031ff16b1048a133837e32d59",
-    "ui:P-ITEM-DETAIL": "2dbfc2fa6579905c5da2e59c52f85a0d5cf7d85eb385f4cff1249c4e957c7305",
-    "ui:P-LOCAL-TUNNEL-KEY": "5e9b0886fd8522fb79608b0cee7dc2f12a34d4fbb7205285073d5104ddb98510",
-    "ui:P-NAVIGATION": "86bbd25cf27c69cd864b3ae25ccad602392ff302dd9fcf3d133db177bece4fbe",
-    "ui:P-OWNER-CONSENT": "5ec56e53f1b7a9855b151d973b6b4d7ede6fe612e20f4f884e57079530960634",
-    "ui:P-PACKAGE-OVERVIEW": "0843fd9ea0e236dcda5c5636e71d3c162cdd38fdda76a3704fe5885aea6337c1",
-    "ui:P-QUESTIONS": "f6fb0d3f79dbb6e226875b84df8faa1ddacf4bd563819878c9beac790772633d",
-    "ui:P-RUN-DETAIL": "0617b8f491b36bdac0870444e441c8e7406418110f744d059523f825922dd143",
-    "ui:P-WAITING-QUEUE": "fc2846346ff408266cdd7c661b968345d6a7631089f970c821ca45361b922152",
-    "ui:PAGE-AGENT": "20ab27bd3bed2653b7d2c71986e6e5fba7e3631da8de3eb1e6cc7e7102477fd5",
-    "ui:PAGE-AGENTS": "ccd1df782879e7240fca0acb07f7262762515f7a82807084b3376f563ed2ea1c",
-    "ui:PAGE-BROWSER-LAB": "22423ec5d16bfe4d378c00f9f7f6fcf874fc71ba3be1ce70661606dbc91da188",
-    "ui:PAGE-EVENTS": "82d1422333b405d9f2238d59d24e3fe1ad64708462035d33e1804d5182da09e5",
-    "ui:PAGE-INBOX": "1bf3ac0cc4acb16c24e79a0421b1e5e7ed432185025e0a3eb284febe08bd8431",
-    "ui:PAGE-LOCAL-TUNNEL-SETUP": "de8d49e16ce04928a0317db76da9531ad721b4bfc74a3766cf973a12321815dd",
-    "ui:PAGE-MY-PRS": "9bc7fa33ec320a3d8f9cfdb43aa94e94b118532bc4aafb1a5de2a23240bf489c",
-    "ui:PAGE-OWNER-CONSENT": "0bb40d8a84f84d117ddb1e3223b15af3c3f7dd525fb8731e7030bc09695d2b1c",
-    "ui:PAGE-PACKAGE": "c74cd575fb3a093c2dfa3d1471b99145be164b292c203f0c1229d5cb337d03ca",
-    "ui:PAGE-REVIEW-PRS": "15c9952af221d2156e15ade163bed93af8feadac778c3b29e2d3e7bf4b0267cf",
-    "ui:PAGE-SETTINGS": "87f5da91db47b681387add3c3e359a69a483211e22146b17f3a8ff5a39659bf3",
-    "ui:PAGE-WORKING": "804515fa028ae815240dd208da5628cb0173b54a9a3b8714938f2851161b13a7",
-    "ui:S-FACTORY": "3bebf51ae60993bb441276d334bea034948c1b2f7bcafbdaf3deaeeb9dd5f2b5",
-    "ui:S-SETTINGS": "943f69006c0d9721cb0dd79f65678cf64f4e64e5778d0d969ecd07738ab8ac45",
-    "ui:W-APPROVAL": "c485e698fd84ace18f35c73ff00930d633cbb25becf5f5f9d445e5c32b109e7c",
-    "ui:W-BROWSER-LAB": "c6047c261a98ae88e9d4cf3a30b6be073a367bc67a4bc00c77a6449eae4e4724",
-    "ui:W-CONFIGURATION-CHAT": "5391893350e57de2ec31d3f7653d0b6b481b0b26b53a91829a310b3adb360c65",
-    "ui:W-CONFIGURATION-PROPOSAL": "cb67f4c835eb214076d50422c7a5aadcebb8f79909eacd73de0f0f17397d0750",
-    "ui:W-CONNECTION-BLOCKER": "ed08c5e5728b5ac80e9180949f49b0420ab95fc19cf886f27496f5a8e2e54c54",
-    "ui:W-CONNECTION-GUIDE": "cfc0d0235006206c9f25166bc7750ada14a8dbf9fee24a1ddd53e8bc03a722bf",
-    "ui:W-EFFECTIVE-SETTINGS": "ce8494013a6efd236b47720a9229e9c5992f4a09d2d6f0f00840508924f52324",
-    "ui:W-ELICITATION": "38bf744d7bbe7fe23d645cf4b52205095175311ab5a0a255ffd8ab32033eb090",
-    "ui:W-EVENT-BATCHES": "58193d1ea1dd054497d213f18ce7442f540ece1decb8b62c8b54e1696b8d63e1",
-    "ui:W-GLOBAL-ERROR": "6ea5202cda08e7c0697e6bb7cd34b1835df8470105585c9d19699324634b75a9",
-    "ui:W-IDENTITY": "09cc91078b3cb25c7b7d152743870304239e6af3e0d7fe96d0597c10e3a7cc56",
-    "ui:W-INBOX-EMPTY": "a77ed32c77b30dd17bf196ebc05d358dbf88d0266141e1460e30d2e84f11a257",
-    "ui:W-INBOX-QUERY": "5c49c78db75cb0703c32ed6c6c680b628582f19b343b4e71d6b69e953057d692",
-    "ui:W-ITEM-ACTIONS": "d1d0f766487341d33427b0cb1695af04fa1ca7883eba968a21fde3f3a009c430",
-    "ui:W-ITEM-OVERVIEW": "403d94009aa55b25a6d1cd994f59ac823e8c587e1208cc2d297e172fd1eaf34f",
-    "ui:W-ITEM-ROW": "d75574c9cd3f56babb102bea5b5ab36fd3ed3704725b2e9400a74560de581bd1",
-    "ui:W-LOCAL-TUNNEL-KEY": "4bf9745f9fe5a847a090df082d661cb0fb61fa8ccd24afe6a60db621dfffd7d9",
-    "ui:W-MESSAGE": "63a733543e330d8eac3c425cf573bf24d4a51a4854431a04b1de6121a65aa64a",
-    "ui:W-NAVIGATION": "d8cc321875e46e7d992f89a72539a057beed0cfa6d2eb894ecf215d9a4da7e40",
-    "ui:W-OWNER-CONSENT": "7bb095e9dbbebb59a667cead33bd123f7c400f6ec26ad1338191e0d2494b6cd0",
-    "ui:W-PACKAGE-OVERVIEW": "b87ed86aee17d403d9d55bc995e14264efca890e931418f78f156709fb04d603",
-    "ui:W-PRIORITY": "72b8643a835be0a0b42eaf18dfeaa8831480c1d5f014459b1a783d8aabd584fb",
-    "ui:W-QUESTIONS": "1a7b3a803ec01b440459af83c53bc0009e059d7dfd098768a850a9ac8f6bcd33",
-    "ui:W-RELATIONSHIPS": "e0980258ab0985a571d9e519fdf674f72e6563b078ddc2e54942d7b7fa22b3fb",
-    "ui:W-RUN-CONTROLS": "11d0f23c951f8069e6078e617e582d64a968e4cbad2ca8de0939dc429a0b3dcd",
-    "ui:W-TRANSCRIPT": "91b72f6ee80262efcbef0cdb1610bb913423b692cd713600cdeb807c0554c7d7",
-    "ui:W-WAITING-ROW": "64a64a50f7c05561c159702afcae959574b34f31b59766ab3b1d4b60b571b321",
-    "ui:W-WORK-STATUS": "99a7e814b4c21f3078d2a6f36b756dd3a4621583ba6699379b0552f50fcf7c76"
+    "ui:C-ANSWER": "b3cd790a621ee6ed86c82bc5ea50fb86c177c5fc6513ea1cad81d455a6cd5663",
+    "ui:C-BROWSER-LAB": "ee30d1c1da5299605919569b41048d050f045d26d01d74713374e0a5c3cc55e5",
+    "ui:C-CONFIGURATION-CONFIRM": "dc49304a2785237fe772357a7c6a1f82f4c7494bcab84236babafcfdac3c1ec1",
+    "ui:C-CONFIGURATION-PROPOSE": "31364a91346e5bd541ab9e4e4c2b3bf3a6fe1a5bdb8d5e723eee2cce347dafe1",
+    "ui:C-CONSENT": "c623eae75e6c34eda609d9a36580f82fa36ebecff9c2a894ba21926ede86b454",
+    "ui:C-EVENT-INSPECT": "936611f35082651159c7bb69ebdec73065d3c8a181ebee8398ccab2b90cd4db0",
+    "ui:C-FILTER": "048dc9278d17fd7d861c0ce4c1406f3705796416e453de08c9b48c839fc47e28",
+    "ui:C-FOLLOW-UP": "7866f9005f5904a36650c5580bffef68fb6c2739e795a0898dbfcd63133163b7",
+    "ui:C-ITEM-STATE": "66c1527194aa263b19721b73d3b400da104440458558cd11ce6f4ec22af81010",
+    "ui:C-LINK": "54388ed3f0776bf1444c1d5a94ccdff2f38aa9465bb016e49014600ddc627189",
+    "ui:C-NAVIGATE": "f17f8eb5cf474dcb13766c76764d0e1873292540a07fec53f8a42338e59afd99",
+    "ui:C-OPEN-SETTINGS": "bb64e0b0833132f48f7b0b45fbdc7418a549cccb7dcae5b8f30e39e4e1e489d2",
+    "ui:C-PACKAGE": "96a06b7731204cabe7e7b2b2d2371361f4a790c597dd926c81cf7b5de77196ab",
+    "ui:C-PRIORITY": "8b24bc695562335efe68b272fcf3852c8d4a2e46b8d732a30dd0253fceb05696",
+    "ui:C-RUN-ACTION": "d2ba3bda0d598837f6297d3c2f8e3d1b64f130f77fe27fdd2fbf5047cfad0065",
+    "ui:C-SELECT-ITEM": "5317837b2513c93489fb44bb41b3431f763029745b4b0c12a80eec491e45d84e",
+    "ui:C-START-CHAT": "2d1ee549ad787283e8a5e98b2eb1fc872f9cc0a555229019f1a2af5623da1884",
+    "ui:C-STATE-REFRESH": "b9da274633d0c163eeb9af51b7dffa34bcfa786b8864d1ebc26b17c9548dc3c2",
+    "ui:C-TRANSCRIPT": "b681e35f4e2ee58b953e02e6433cbc06af9ae28540ec26da6f8e1a60f77a7dc2",
+    "ui:C-TUNNEL-KEY": "ce68e97dd37341bcebd80744a5de2265f064918a52d1d85a4744f073f698f1b2",
+    "ui:P-APPROVAL": "3888ddcc3067872671357c05b6c52ad048b317498ba942ba472571cfdaaeefbb",
+    "ui:P-BROWSER-LAB": "f8b1ffe5791aabc95650d5444ab0340d27feb60b673b6c34627f1edfc92e0832",
+    "ui:P-CONFIGURATION": "8327b18328bfb443290e0f0f98db5ce2042fdb84069d39e96e842da578fbc702",
+    "ui:P-CONNECTION-GUIDE": "2d2b99de481d2d51bd355b853814e06c3fce6707d565569b13a94679e6d3fe47",
+    "ui:P-ELICITATION": "b598084854ca96c44ad305f38f862692a37bf689ebc82f1404e36d7a19a2d4db",
+    "ui:P-EVENTS": "069d8d6f625181ca0135773209bf504372b3192cde27fe43c4615eb9453b8993",
+    "ui:P-FEEDBACK": "08ab96a29171a07e2cddfdbd26fa5ac0e8dc86f6f5ec8493272e20da7b614bfe",
+    "ui:P-IDENTITY": "30c5e587e0790b1730b9431898f2f04fc02cc4e14a7f62db979ec77391d89f4b",
+    "ui:P-INBOX-LIST": "457ed1c5bd58f3d9126055412218f2245c0ddc25d6ef0751f43e7b7ef595198d",
+    "ui:P-INBOX-QUERY": "ef467013bd82804b00c9b71312de6a00caaf9cc3b34a2e3d32b09c6790ecf2e0",
+    "ui:P-ITEM-DETAIL": "62f8e2d7ad06916a983cbded1bd0147447661a7b4dfe75ab7e7d7ec27a0a3ca1",
+    "ui:P-LOCAL-TUNNEL-KEY": "8dc3170a5acd9fe5444f3c322047b6c0b25b6ed4f2bcfdd0aa625c0f756af3e2",
+    "ui:P-NAVIGATION": "ac1842d28c915f1d504332517f678f8bde773b745db92ce00a3a4327be974611",
+    "ui:P-OWNER-CONSENT": "861329bc9bb6d92ac08c252da19bbb1fd15584d01ac62211392c846132271110",
+    "ui:P-PACKAGE-OVERVIEW": "781705574dc605de9562862e6dc94b8ff95e48577cc098628d552a26114d79b5",
+    "ui:P-QUESTIONS": "9be372209758d01dbd1ce5d75b6bf5333d5d5f6cf91e4d18530524cea66ecc3c",
+    "ui:P-RUN-DETAIL": "7381e2d6d1dc7117179575722149353f6e69e54fbd979b5746a024ce7f3933ef",
+    "ui:P-WAITING-QUEUE": "48f330f83eab1ad64b79dd04e0d52562754a9b5ccf1e2810d85d92a1afc49967",
+    "ui:PAGE-AGENT": "5d1b6ec5c5f24ace78df2ee1a3146f4d436e0d34cf5c08f69e41b1884fdf7f53",
+    "ui:PAGE-AGENTS": "b4b36e8acb8059d0db35b550a11a07f9b628fddbdfd10b4ddf6956bdd6f4e38d",
+    "ui:PAGE-BROWSER-LAB": "1ea98d4fe9848ad33db97d15f6b6a7df1b75dd3878ab7188911ca2b9022c8f8a",
+    "ui:PAGE-EVENTS": "dac3a0cb704fa09d397da11cc709148d80fce7abaafbbd537f850a2876a16084",
+    "ui:PAGE-INBOX": "1411be4e79e705fd93909b596d1170f30035eade68d606e29a573b0ade3b2252",
+    "ui:PAGE-LOCAL-TUNNEL-SETUP": "a1cd06d4997a2440218f691b92dc410848e9eacdf89eb91bb8809f9ec349634f",
+    "ui:PAGE-MY-PRS": "0d24c3ff0988e85ba7e8fc365fbbbe411cddbbef202760073aa2867b8e4ddb1c",
+    "ui:PAGE-OWNER-CONSENT": "554d4f436edd3cb357f218ba37848df0b62e9fea9e0b30336acf1b7501f0a9b3",
+    "ui:PAGE-PACKAGE": "c231e57885a205582d3dc241fc95b0fd6434772020eeed2f68f79b6feac34a32",
+    "ui:PAGE-REVIEW-PRS": "f730b71e54857dfcfca8060ad2e99cc2d5c99496843117e0e791a6bc07d2ba87",
+    "ui:PAGE-SETTINGS": "2cf29d36082cff99fe6c55ecd584a21de16ea45b73167fd595d4b318c73ef52d",
+    "ui:PAGE-WORKING": "f3efbdb40ecab1bf1b7f251a74641b5bd1ccb06a17c38175e66f83ecb91dc3f2",
+    "ui:S-FACTORY": "53a96e78a73ced223fd041b80f3a2dddf61f7c7affbcb0b98f9263a2db73cee1",
+    "ui:S-SETTINGS": "8d3a84f6ee27a6dd74174a860488a10445dbe50144eea6bf53b8603a02222e97",
+    "ui:W-APPROVAL": "7df0403af97a476ef8e51cb5a11747ed6c1d86e5912207de4c2b6a0ef5691dad",
+    "ui:W-BROWSER-LAB": "63e48990a1619343274683eb8b8569595dd4f8e686ad3edd3b50beb90426b818",
+    "ui:W-CONFIGURATION-CHAT": "676695681a2d069152be47fc7f27bd351dd2010aed0edaf540e0f4e6b7c96345",
+    "ui:W-CONFIGURATION-PROPOSAL": "f760f7c0e72b535c7ff8a58345e0018f30623aae9326532e7f1b556e40172815",
+    "ui:W-CONNECTION-BLOCKER": "ba310260cb8e130d9f49cc4216a69e01b45ffcdd01959bc39be5c8c21671af34",
+    "ui:W-CONNECTION-GUIDE": "4c82d65345928c709e4476cd0a66c6d8951ed3795195effa2bc2399d287bf183",
+    "ui:W-EFFECTIVE-SETTINGS": "666f7bd5120c69e3f0a89e1e64c75bbfdd2cc0088b9a96d6315fbac71ac991c6",
+    "ui:W-ELICITATION": "276f3e462fd34c558dafbf7430909d6cc9ff052d37932a47d19e2a6c6d3694ec",
+    "ui:W-EVENT-BATCHES": "8728b334ab2ec75dc146c978c503f1acc1f677779838d97993ccc68cf75260b8",
+    "ui:W-GLOBAL-ERROR": "91cf3db8a01e3fd361a743f4e13840dbcccd4515b73f26cc2c759c502190188f",
+    "ui:W-IDENTITY": "f21f103688dc7e087ea168b91626428353504433437217752ed51d415ea57e67",
+    "ui:W-INBOX-EMPTY": "d81da46b1688c7f6f55ab9e5bed69df6b86783ec8de47428f56ee23b1681e7ea",
+    "ui:W-INBOX-QUERY": "bbfc8c8e8051d5d27d229a69e83b7bf5acb52cd7d48cacdeb56180f0c0015b3b",
+    "ui:W-ITEM-ACTIONS": "3a528557bc5288e3c06838c491da9a6d693d601a158270e7aa8198ed23c8ab46",
+    "ui:W-ITEM-OVERVIEW": "0b9fb387ed0870809e2c011271e48957942738040452b7eb7cbb452e7008e5cb",
+    "ui:W-ITEM-ROW": "ebeb445dadd848e053c135a7e985f9ff782359443b184d6623be85afc6540b6d",
+    "ui:W-LOCAL-TUNNEL-KEY": "307866c47ace390ea3f8cb782fb79a3137045f80af0aaa5b7457ae5aa37c2f77",
+    "ui:W-MESSAGE": "d4b7afe26fc8f088aa4718032a8a1433babb4cbbaf0280d55a952fdd9cd736f3",
+    "ui:W-NAVIGATION": "6c7333f576f8a523216018bcc51530064e2ba3b7b887974473fd6b94f7c27c1d",
+    "ui:W-OWNER-CONSENT": "e87f627dbd9aade8f71f7304917e63b27452022f8dea9229444d7e36a011d7d1",
+    "ui:W-PACKAGE-OVERVIEW": "486b55ec63541d2522e930e63f020991950fbcc22086d2b52e18a24ab2f3a346",
+    "ui:W-PRIORITY": "8aa5bc00d643ab48a493925b35e006a9d4ea4b3d047e39c37654037319abe1a4",
+    "ui:W-QUESTIONS": "45e7fd6ca8969b6618493178c1db8a6a82682bbe17a762e010f673e7264a7e78",
+    "ui:W-RELATIONSHIPS": "4fb107ffaaf8ea5af83b55ab990d2753c3e39726fc9eb2fe14482c3f05158fca",
+    "ui:W-RUN-CONTROLS": "4a13a91df32aea1fed71059a174618e448f613772b193a9db9b12f474372cdac",
+    "ui:W-TRANSCRIPT": "8900b39531737032346645b84245d3d8a54280263ba564c5743caefc7b950f58",
+    "ui:W-WAITING-ROW": "64758fb78e11b3f2d3bb8f739082e8cda2ea6c5fb63c20710067fa6723fad0eb",
+    "ui:W-WORK-STATUS": "99263e6a4b5aa3f2be4f54396cebdf340776daa136def92d68c1407b3525a93a"
   }
 }

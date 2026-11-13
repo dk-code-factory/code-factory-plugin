@@ -172,7 +172,7 @@ func (g *GitHub) cachePut(key string, c cacheEntry) {
 		g.cacheBytes -= old.Size
 		delete(g.cache, key)
 	}
-	c.Size = len(key) + len(c.Body)
+	c.Size = len(key) + len(c.Body) + len(c.QueryBarrier)
 	for k, v := range c.Header {
 		c.Size += len(k)
 		for _, s := range v {
@@ -307,8 +307,9 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 			return fail(BeforeDispatch, 0, errors.New("GitHub cache unavailable"))
 		}
 		fresh := ctx.Value(requireFreshRead{}) == true || ctx.Value(revalidateKey{}) == true
-		if cached && c.Redirect == "" && !fresh && (op.memoize && op.memo[key] || (g.Managed() || g.publicRead) && c.Until.After(g.now())) {
-			noteRead(ctx, c.CheckedAt)
+		memo := op.memoize && op.memo[key] && (!c.Until.After(c.CheckedAt) || c.Until.After(g.now()))
+		if cached && c.QueryBarrier == queryBarrierFrom(ctx) && c.Redirect == "" && !fresh && cachedMatchesKnownHead(ctx, req.URL.Path, c) && (memo || (g.Managed() || g.publicRead) && c.Until.After(g.now())) {
+			noteCachedRead(ctx, c)
 			return append([]byte(nil), c.Body...), c.Header.Clone(), nil
 		}
 		if cached {
@@ -392,7 +393,7 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 		if err = g.remember(ctx, key, c); err != nil {
 			return fail(Uncertain, res.StatusCode, errors.New("GitHub cache unavailable"))
 		}
-		noteRead(ctx, c.CheckedAt)
+		noteCachedRead(ctx, c)
 		if op.memoize {
 			if len(op.memo) >= cacheEntries {
 				op.memo = map[string]bool{}
@@ -444,7 +445,7 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 			op.memo[key] = true
 		}
 	}
-	noteRead(ctx, entry.CheckedAt)
+	noteCachedRead(ctx, entry)
 	return b, res.Header.Clone(), nil
 }
 

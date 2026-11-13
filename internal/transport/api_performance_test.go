@@ -281,7 +281,7 @@ func latencyAwait[T any](t *testing.T, label string, ch <-chan T) T {
 
 // This event-only fixture owns its cleanup so a missing handler exit fails
 // promptly instead of entering an unconditional database close behind that work.
-func newEventLatencyFixture(t *testing.T) *trackingFixture {
+func newEventLatencyFixture(t *testing.T, wrappers ...func(http.Handler) http.Handler) *trackingFixture {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	dir := t.TempDir()
@@ -338,7 +338,11 @@ func newEventLatencyFixture(t *testing.T) *trackingFixture {
 		t.Fatal(e)
 	}
 	f.server = NewFactory(a, native, events.New(db, vault))
-	f.http = httptest.NewServer(f.server.Handler(f.token))
+	handler := f.server.Handler(f.token)
+	for _, wrap := range wrappers {
+		handler = wrap(handler)
+	}
+	f.http = httptest.NewServer(handler)
 	return f
 }
 
@@ -347,9 +351,16 @@ func newEventLatencyFixture(t *testing.T) *trackingFixture {
 func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 	for _, version := range []string{"2025-11-25", "2026-07-28"} {
 		for _, method := range []string{"events/subscribe", "events/unsubscribe"} {
-			for _, trigger := range []string{"slow-success", "caller-cancel"} {
+			for _, trigger := range []string{"slow-success", "caller-cancel", "caller-cancel-after-delay"} {
 				t.Run(version+"/"+method+"/"+trigger, func(t *testing.T) {
-					f := newEventLatencyFixture(t)
+					canceled := trigger != "slow-success"
+					httpReturned := make(chan context.Context, 2)
+					f := newEventLatencyFixture(t, func(next http.Handler) http.Handler {
+						return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+							next.ServeHTTP(w, r)
+							httpReturned <- r.Context()
+						})
+					})
 					f.http.Client().Timeout = time.Second
 					f.server.Events.Client = &http.Client{Transport: latencyCallbackTransport(func(r *http.Request) (*http.Response, error) {
 						var body map[string]any
@@ -394,6 +405,7 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 					if initial.err != nil || initial.status != 200 || json.Unmarshal(initial.body, &envelope) != nil || envelope["result"] == nil {
 						t.Fatal("initial subscription failed", initial.status, initial.err, string(initial.body))
 					}
+					latencyAwait(t, "initial HTTP handler return", httpReturned)
 					entered := make(chan struct{})
 					var enterOnce sync.Once
 					f.server.MCP.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
@@ -407,8 +419,12 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 					requestCtx, cancelRequest := context.WithCancel(f.ctx)
 					started, writerExited, requestExited := make(chan struct{}), make(chan struct{}), make(chan struct{})
 					writerResult, response := make(chan error, 1), make(chan result, 1)
+					releaseWriter := make(chan struct{})
+					var releaseOnce sync.Once
+					release := func() { releaseOnce.Do(func() { close(releaseWriter) }) }
 					t.Cleanup(func() {
 						cancelRequest()
+						release()
 						for _, exited := range []<-chan struct{}{requestExited, writerExited} {
 							select {
 							case <-exited:
@@ -424,7 +440,15 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 					})
 					go func() {
 						defer close(writerExited)
-						writerResult <- f.a.Store.Write(f.ctx, func(tx *store.Tx) error { close(started); time.Sleep(125 * time.Millisecond); return nil })
+						writerResult <- f.a.Store.Write(f.ctx, func(tx *store.Tx) error {
+							close(started)
+							if canceled {
+								<-releaseWriter
+							} else {
+								time.Sleep(125 * time.Millisecond)
+							}
+							return nil
+						})
 					}()
 					latencyAwait(t, "held store writer", started)
 					args := subscription("remove")
@@ -433,11 +457,30 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 					}
 					go func() { defer close(requestExited); response <- rpc(requestCtx, method, args) }()
 					latencyAwait(t, "actual custom method dispatch", entered)
-					if trigger == "caller-cancel" {
+					if trigger == "caller-cancel-after-delay" {
+						// Scheduling beyond the old 125ms writer lease must not let
+						// the fixture commit before its cancellation precondition.
+						time.Sleep(150 * time.Millisecond)
+					}
+					if canceled {
+						select {
+						case <-writerExited:
+							t.Fatal("store writer released before caller cancellation")
+						default:
+						}
 						cancelRequest()
+						// The real outer HTTP handler returns after the budget
+						// boundary cancels its originating context. Wait for that
+						// acknowledgement before permitting storage admission;
+						// client-side cancellation alone does not establish it.
+						origin := latencyAwait(t, "canceled HTTP handler return", httpReturned)
+						if origin.Err() != context.Canceled {
+							t.Fatal("HTTP handler returned without caller cancellation", origin.Err())
+						}
+						release()
 					}
 					got := latencyAwait(t, "canceled custom method response", response)
-					if trigger == "caller-cancel" {
+					if canceled {
 						if got.err == nil {
 							t.Fatal("caller cancellation returned a response", got.status, string(got.body))
 						}
@@ -459,7 +502,7 @@ func TestEventStoreAdmissionPreservesRequestCancellation(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					if trigger == "caller-cancel" {
+					if canceled {
 						if len(rows) != 1 || rows[0]["url"] != "https://callback.example.invalid/remove" {
 							t.Fatal("canceled admission changed subscription state", rows)
 						}

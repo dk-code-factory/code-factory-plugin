@@ -4,6 +4,7 @@ import (
 	"codefactory/internal/domain"
 	"codefactory/internal/store"
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -22,17 +23,19 @@ type githubQueryEntry struct {
 	Size      int             `json:"size"`
 	Until     time.Time       `json:"until"`
 	CheckedAt time.Time       `json:"checkedAt"`
+	Barrier   string          `json:"barrier,omitempty"`
 }
 
 // CachedGitHub decorates the complete application read API. The underlying live
 // adapter retains its HTTP validators and serialized request-budget accounting.
 type CachedGitHub struct {
 	GitHubSource
-	mu      sync.Mutex
-	entries map[string]githubQueryEntry
-	state   *store.Store
-	fetch   chan struct{}
-	clock   func() time.Time
+	mu       sync.Mutex
+	entries  map[string]githubQueryEntry
+	state    *store.Store
+	fetch    chan struct{}
+	clock    func() time.Time
+	barriers githubQueryBarriers
 }
 
 func NewCachedGitHub(source GitHubSource) *CachedGitHub {
@@ -44,10 +47,11 @@ func (g *CachedGitHub) ConfigureUsage(s *store.Store, policy func(context.Contex
 	g.mu.Lock()
 	g.state = s
 	g.entries = map[string]githubQueryEntry{}
+	g.barriers = githubQueryBarriers{}
 	g.mu.Unlock()
 }
 
-func (g *CachedGitHub) cachedQuery(ctx context.Context, id string, out any) (bool, error) {
+func (g *CachedGitHub) cachedQuery(ctx context.Context, id, barrier string, out any) (bool, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	e, ok := g.entries[id]
@@ -58,13 +62,13 @@ func (g *CachedGitHub) cachedQuery(ctx context.Context, id string, out any) (boo
 		}
 		ok = err == nil
 	}
-	if !ok || !e.Until.After(g.clock()) {
+	if !ok || e.Barrier != barrier || !e.Until.After(g.clock()) {
 		return false, nil
 	}
 	if err := json.Unmarshal(e.Body, out); err != nil {
 		return false, fmt.Errorf("GitHub query cache is invalid")
 	}
-	noteRead(ctx, e.CheckedAt)
+	noteRead(ctx, e.CheckedAt, e.Until)
 	return true, nil
 }
 
@@ -139,9 +143,13 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 		return err
 	}
 	id := fmt.Sprintf("%x", sha256.Sum256([]byte(scope+"\x00"+name+"\x00"+string(b))))
+	barrier, err := g.queryBarrier(ctx, scope, resource)
+	if err != nil {
+		return err
+	}
 	direct := ctx.Value(requireFreshRead{}) == true
 	if !direct {
-		if hit, err := g.cachedQuery(ctx, id, out); err != nil || hit {
+		if hit, err := g.cachedQuery(ctx, id, barrier, out); err != nil || hit {
 			return err
 		}
 	}
@@ -152,12 +160,17 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 		return ctx.Err()
 	}
 	defer func() { <-g.fetch }()
+	barrier, err = g.queryBarrier(ctx, scope, resource)
+	if err != nil {
+		return err
+	}
 	if !direct {
-		if hit, err := g.cachedQuery(ctx, id, out); err != nil || hit {
+		if hit, err := g.cachedQuery(ctx, id, barrier, out); err != nil || hit {
 			return err
 		}
 	}
-	if err := load(WithGitHubRead(ctx, RequireLive)); err != nil {
+	loadCtx, observed := observeReads(context.WithValue(ctx, githubQueryBarrierKey{}, barrier), g.clock().UTC())
+	if err := load(loadCtx); err != nil {
 		return err
 	}
 	currentScope, err := g.CacheScope(ctx)
@@ -167,6 +180,15 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	if currentScope != scope {
 		return fmt.Errorf("GitHub identity changed during the query; refresh before reading again")
 	}
+	currentBarrier, err := g.queryBarrier(ctx, scope, resource)
+	if err != nil {
+		return err
+	}
+	if currentBarrier != barrier {
+		return fmt.Errorf("GitHub cache invalidated during the query; refresh before reading again")
+	}
+	until := readDeadline(loadCtx, observed.Add(ttl))
+	noteRead(ctx, *observed, until)
 	// Enrichment may return partial data with its own visible error. Do not
 	// promote that incomplete observation into a successful cached result.
 	switch v := out.(type) {
@@ -186,7 +208,7 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 		return err
 	}
 	if direct {
-		if err := g.invalidateScope(ctx, scope, resource); err != nil {
+		if err := g.invalidateScope(ctx, scope, resource, false); err != nil {
 			return err
 		}
 	}
@@ -195,12 +217,12 @@ func (g *CachedGitHub) query(ctx context.Context, name, resource string, args, o
 	if len(body) > 64<<20 {
 		return nil
 	}
-	now := g.clock().UTC()
-	return g.rememberQuery(ctx, githubQueryEntry{ID: id, Scope: scope, Resource: resource, Body: body, Size: len(body), CheckedAt: now, Until: now.Add(ttl)})
+	return g.rememberQuery(ctx, githubQueryEntry{ID: id, Scope: scope, Resource: resource, Body: body, Size: len(body), CheckedAt: *observed, Until: until, Barrier: barrier})
 }
 
 // Invalidate removes this principal's cached queries for a repository/item.
-// An item invalidation also expires repository indexes; other repositories stay.
+// An item invalidation also expires repository indexes. Unrelated queries remain
+// reusable unless bounded invalidation metadata rolls over globally.
 // Empty resource explicitly invalidates all queries in this credential scope.
 func (g *CachedGitHub) Invalidate(ctx context.Context, resource string) error {
 	scope, err := g.CacheScope(ctx)
@@ -213,10 +235,10 @@ func (g *CachedGitHub) Invalidate(ctx context.Context, resource string) error {
 		return ctx.Err()
 	}
 	defer func() { <-g.fetch }()
-	return g.invalidateScope(ctx, scope, resource)
+	return g.invalidateScope(ctx, scope, resource, true)
 }
 
-func (g *CachedGitHub) invalidateScope(ctx context.Context, scope, resource string) error {
+func (g *CachedGitHub) invalidateScope(ctx context.Context, scope, resource string, components bool) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	entries := []githubQueryEntry{}
@@ -240,6 +262,18 @@ func (g *CachedGitHub) invalidateScope(ctx context.Context, scope, resource stri
 	}
 	if g.state != nil {
 		if err := g.state.Write(ctx, func(tx *store.Tx) error {
+			if components {
+				var barriers githubQueryBarriers
+				if err := tx.Get("github-query-barriers", "application", &barriers); err != nil && !errors.Is(err, store.ErrNotFound) {
+					return err
+				}
+				if err := barriers.invalidate(scope, resource); err != nil {
+					return err
+				}
+				if err := tx.Put("github-query-barriers", "application", barriers); err != nil {
+					return err
+				}
+			}
 			for _, id := range ids {
 				if err := tx.Delete("github-query-cache", id); err != nil {
 					return err
@@ -249,11 +283,80 @@ func (g *CachedGitHub) invalidateScope(ctx context.Context, scope, resource stri
 		}); err != nil {
 			return err
 		}
+	} else if components {
+		if err := g.barriers.invalidate(scope, resource); err != nil {
+			return err
+		}
 	}
 	for _, id := range ids {
 		delete(g.entries, id)
 	}
 	return nil
+}
+
+// A cache barrier fences only explicit invalidations. Component responses keep
+// their validators and can satisfy other composite queries in the same scope.
+// Global rollover bounds metadata even when callers invalidate many resources.
+const githubQueryBarrierLimit = 4096
+
+type githubQueryBarrierKey struct{}
+
+func queryBarrierFrom(ctx context.Context) string {
+	barrier, _ := ctx.Value(githubQueryBarrierKey{}).(string)
+	return barrier
+}
+
+type githubQueryBarriers struct {
+	Global    string            `json:"global,omitempty"`
+	Resources map[string]string `json:"resources,omitempty"`
+}
+
+func queryBarrierKey(scope, kind, resource string) string {
+	return scope + "\x00" + kind + "\x00" + resource
+}
+
+func (b *githubQueryBarriers) invalidate(scope, resource string) error {
+	var nonce [16]byte
+	if _, err := rand.Read(nonce[:]); err != nil {
+		return err
+	}
+	value := fmt.Sprintf("%x", nonce)
+	if b.Resources == nil {
+		b.Resources = map[string]string{}
+	}
+	b.Resources[queryBarrierKey(scope, "resource", resource)] = value
+	if strings.Contains(resource, "#") {
+		b.Resources[queryBarrierKey(scope, "index", strings.SplitN(resource, "#", 2)[0])] = value
+	}
+	if len(b.Resources) > githubQueryBarrierLimit {
+		b.Global, b.Resources = value, map[string]string{}
+	}
+	return nil
+}
+
+func (g *CachedGitHub) queryBarrier(ctx context.Context, scope, resource string) (string, error) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	b := g.barriers
+	if g.state != nil {
+		if err := g.state.Get(ctx, "github-query-barriers", "application", &b); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return "", err
+		}
+	}
+	values := []string{b.Global, b.Resources[queryBarrierKey(scope, "resource", "")], b.Resources[queryBarrierKey(scope, "resource", resource)]}
+	if strings.Contains(resource, "#") {
+		values = append(values, b.Resources[queryBarrierKey(scope, "resource", strings.SplitN(resource, "#", 2)[0])])
+	} else {
+		values = append(values, b.Resources[queryBarrierKey(scope, "index", resource)])
+	}
+	if strings.Join(values, "") == "" {
+		return "", nil
+	}
+	body, err := json.Marshal(values)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", sha256.Sum256(body)), nil
 }
 
 func (g *CachedGitHub) User(ctx context.Context) (string, error) {
