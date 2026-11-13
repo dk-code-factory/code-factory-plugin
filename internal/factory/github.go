@@ -341,7 +341,7 @@ func (s *Service) Poll(ctx context.Context) error {
 }
 
 // Reconcile detailed observable changes even when nobody is viewing a PR.
-// Freshness and the existing request budget bound provider traffic.
+// Hot work retains the detail cadence; dormant work gets bounded, slower checks.
 func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 	if s.App.GitHub == nil {
 		return nil
@@ -350,52 +350,172 @@ func (s *Service) refreshDetails(ctx context.Context, c Settings) error {
 	if err != nil {
 		return err
 	}
-	var cursor struct {
-		After string `json:"after"`
+	active, err := s.detailRefreshActivity(ctx)
+	if err != nil {
+		return err
 	}
+	var cursor detailRefreshCursor
 	if e := s.Store.Get(ctx, "factory-refresh", "details", &cursor); e != nil && e != store.ErrNotFound {
 		return e
 	}
-	start := 0
-	for i, item := range items {
-		if item.ID > cursor.After {
-			start = i
-			break
+	now := s.Now()
+	hot, cold := []domain.Item{}, []domain.Item{}
+	for _, item := range items {
+		r, ok := repository(c, item.Repository)
+		if !ok || r.Paused || item.PR != nil && now.Before(item.PR.RetryAt) {
+			continue
+		}
+		interval := detailRefreshInterval(item, active[item.ID], c.Rules, now)
+		if now.Sub(item.DetailSyncedAt) < interval {
+			continue
+		}
+		if interval == providers.GitHubDetailTTL {
+			hot = append(hot, item)
+		} else {
+			cold = append(cold, item)
+		}
+	}
+	hot = rotateDetailItems(hot, cursor.After)
+	cold = rotateDetailItems(cold, cursor.ColdAfter)
+	// Reserve one of the eight attempts for dormant work. Alternate which
+	// class starts so a cancelled slow read cannot always block the other class.
+	hotLimit := 8
+	if len(cold) > 0 {
+		hotLimit--
+	}
+	hot = hot[:min(hotLimit, len(hot))]
+	cold = cold[:min(8-len(hot), len(cold))]
+	groups := []struct {
+		items []domain.Item
+		cold  bool
+	}{{hot, false}, {cold, true}}
+	if len(hot) > 0 && len(cold) > 0 {
+		cursor.ColdFirst = !cursor.ColdFirst
+		if cursor.ColdFirst {
+			slices.Reverse(groups)
 		}
 	}
 	var firstErr error
-	for n := 0; n < min(8, len(items)); n++ {
-		item := items[(start+n)%len(items)]
-		cursor.After = item.ID
-		if err = s.Store.Put(ctx, "factory-refresh", "details", cursor, ""); err != nil {
-			return err
-		}
-		r, ok := repository(c, item.Repository)
-		if !ok || r.Paused || s.Now().Sub(item.DetailSyncedAt) < providers.GitHubDetailTTL {
-			continue
-		}
-		var baseline struct{ Ready bool }
-		if e := s.Store.Get(ctx, "factory-baseline", r.ID, &baseline); e != nil && e != store.ErrNotFound {
-			return e
-		}
-		if !baseline.Ready {
-			var observed struct{ Revision string }
-			if e := s.Store.Get(ctx, "factory-item-observed", item.ID, &observed); e == store.ErrNotFound {
-				continue
-			} else if e != nil {
+	for _, group := range groups {
+		for _, item := range group.items {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			if !group.cold {
+				cursor.After = item.ID
+			} else {
+				cursor.ColdAfter = item.ID
+			}
+			if err = s.Store.Put(ctx, "factory-refresh", "details", cursor, ""); err != nil {
+				return err
+			}
+			r, _ := repository(c, item.Repository)
+			var baseline struct{ Ready bool }
+			if e := s.Store.Get(ctx, "factory-baseline", r.ID, &baseline); e != nil && e != store.ErrNotFound {
 				return e
 			}
-		}
-		started := s.Now()
-		fresh, e := s.App.GitHub.ItemDetail(ctx, item)
-		if e == nil {
-			e = s.importDetail(ctx, r, fresh, started)
-		}
-		if e != nil && firstErr == nil {
-			firstErr = fmt.Errorf("reconcile %s: %w", item.ID, e)
+			if !baseline.Ready {
+				var observed struct{ Revision string }
+				if e := s.Store.Get(ctx, "factory-item-observed", item.ID, &observed); e == store.ErrNotFound {
+					continue
+				} else if e != nil {
+					return e
+				}
+			}
+			started := s.Now()
+			fresh, e := s.App.GitHub.ItemDetail(ctx, item)
+			if e == nil {
+				e = s.importDetail(ctx, r, fresh, started)
+			}
+			if e != nil && firstErr == nil {
+				firstErr = fmt.Errorf("reconcile %s: %w", item.ID, e)
+			}
 		}
 	}
 	return firstErr
+}
+
+type detailRefreshCursor struct {
+	After     string `json:"after"`
+	ColdAfter string `json:"coldAfter,omitempty"`
+	ColdFirst bool   `json:"coldFirst,omitempty"`
+}
+
+func rotateDetailItems(items []domain.Item, after string) []domain.Item {
+	start := slices.IndexFunc(items, func(item domain.Item) bool { return item.ID > after })
+	if start <= 0 {
+		return items
+	}
+	return append(items[start:], items[:start]...)
+}
+
+// Read the transactionally maintained runtime bucket, never retained queues.
+// Item sessions use their item ID as the record key; other session keys cannot
+// match source item IDs.
+func (s *Service) detailRefreshActivity(ctx context.Context) (map[string]time.Time, error) {
+	active := map[string]time.Time{}
+	sessions, err := s.Store.Records(ctx, "factory-session-runtime")
+	if err != nil {
+		return nil, err
+	}
+	now := s.Now()
+	for id, raw := range sessions {
+		var session struct {
+			Execution    string
+			Reported     string
+			PendingCount int `json:"pendingCount"`
+			Due          time.Time
+		}
+		if err := json.Unmarshal(raw, &session); err != nil {
+			return nil, err
+		}
+		if session.Execution == "prepared" || session.Execution == "cleaned" || session.Execution == "terminated" {
+			continue
+		}
+		if session.PendingCount > 0 || session.Execution == "running" || session.Execution == "starting" || session.Execution == "waiting" || session.Reported != "done" {
+			active[id] = now
+		} else {
+			active[id] = session.Due
+		}
+	}
+	focuses, err := store.List[struct {
+		ID     string
+		SeenAt time.Time
+	}](ctx, s.Store, "github-detail-focus")
+	if err != nil {
+		return nil, err
+	}
+	for _, focus := range focuses {
+		if now.Sub(focus.SeenAt) < providers.GitHubDetailTTL {
+			active[focus.ID] = now
+		}
+	}
+	return active, nil
+}
+
+func detailRefreshInterval(item domain.Item, activeAt time.Time, rules []Rule, now time.Time) time.Duration {
+	if !activeAt.IsZero() && !activeAt.Before(item.DetailSyncedAt) {
+		return providers.GitHubDetailTTL
+	}
+	if item.Kind != "pr" {
+		return 24 * time.Hour
+	}
+	// A changed index snapshot promotes dormant PRs immediately to the ordinary
+	// detail deadline, including close/reopen transitions and newly seen heads.
+	if item.Updated.After(item.DetailSyncedAt) || !item.Updated.IsZero() && now.Sub(item.Updated) < 24*time.Hour {
+		return providers.GitHubDetailTTL
+	}
+	if item.State != "open" {
+		return 24 * time.Hour
+	}
+	// Do not depend on current labels/author/actions: a future change may cause
+	// any enabled repository rule to match, even when it does not match today.
+	for _, rule := range rules {
+		if !rule.Disabled && (slices.Contains(rule.Repositories, "*") || slices.Contains(rule.Repositories, item.Repository)) && len(rule.Types) > 0 {
+			return providers.GitHubDetailTTL
+		}
+	}
+	return time.Hour
 }
 
 // Import and route only a detail snapshot that is at least as recent as the

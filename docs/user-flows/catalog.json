@@ -1093,6 +1093,11 @@
         {
           "path": "internal/providers/github.go",
           "purpose": "Current sync-inbox implementation or fixture/build dependency."
+        },
+        {
+          "path": "internal/factory/github.go",
+          "anchor": "func (s *Service) refreshDetails(",
+          "purpose": "Prioritize active, recent, viewed and rule-relevant PR detail; rotate hourly untracked open PRs and daily dormant terminal/issue reconciliation without starving peers or bypassing provider retry deadlines."
         }
       ],
       "tests": [
@@ -1591,6 +1596,69 @@
           "purpose": "Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.",
           "scenarios": [
             "S3"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailTrafficUsesActivityAndDormantDeadlines(",
+          "purpose": "Controlled passes retain the active detail cadence, postpone old untracked open PRs until hourly and dormant terminal PRs/issues until daily.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailsPromoteSummaryChangesRulesAndRecentFocus(",
+          "purpose": "Summary changes, recent updates, enabled repository rules, recent detail focus and active retained work promote refresh; held done sessions with a real pending queue retain that cadence across successive successful detail reads.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailRotationReservesDormantWorkDespiteHotFailures(",
+          "purpose": "Fourteen candidates and repeated immediate hot failures enforce exactly eight attempts per actual pass, independent rotating cursors and one newly visited dormant peer each pass.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundTerminalReconciliationCountsHTTPAndDetectsReopen(",
+          "purpose": "Four ordinary passes send zero HTTP requests for an old closed PR; its daily reconciliation executes ten real fixture HTTP requests and imports the reopened PR with current head and successful metadata.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundHotDetailPreservesProviderRetryDeadline(",
+          "purpose": "Hot work makes no provider call before its retained retry deadline and resumes at that deadline.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailRotationSurvivesCancellation(",
+          "purpose": "Repeated context-cancelling reads in either hot or dormant work cannot prevent an attempt in the other class across two mixed passes.",
+          "scenarios": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailActivityUsesCompactRuntimeAndPendingCount(",
+          "purpose": "Retained queue count from the compact runtime keeps pending work active without decoding unrelated canonical cached fields; the runtime excludes the large source payload.",
+          "scenarios": [
+            "S2",
+            "S5"
           ]
         }
       ],
@@ -11401,6 +11469,11 @@
           "path": "internal/httpbudget/budget.go",
           "anchor": "func Wrap(",
           "purpose": "Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime."
+        },
+        {
+          "path": "internal/factory/github.go",
+          "anchor": "func (s *Service) refreshDetails(",
+          "purpose": "Prioritize active, recent, viewed and rule-relevant PR detail; rotate hourly untracked open PRs and daily dormant terminal/issue reconciliation without starving peers or bypassing provider retry deadlines."
         }
       ],
       "tests": [
@@ -11808,6 +11881,62 @@
           "purpose": "Loaded archive replacement observes daemon identity, hides old page/selection while pending, then displays current records without manual refresh, preserving query controls and navigation without chat.",
           "scenarios": [
             "S9"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailTrafficUsesActivityAndDormantDeadlines(",
+          "purpose": "Controlled passes retain the active detail cadence, postpone old untracked open PRs until hourly and dormant terminal PRs/issues until daily.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailsPromoteSummaryChangesRulesAndRecentFocus(",
+          "purpose": "Summary changes, recent updates, enabled repository rules, recent detail focus and active retained work promote refresh; held done sessions with a real pending queue retain that cadence across successive successful detail reads.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailRotationReservesDormantWorkDespiteHotFailures(",
+          "purpose": "Fourteen candidates and repeated immediate hot failures enforce exactly eight attempts per actual pass, independent rotating cursors and one newly visited dormant peer each pass.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundTerminalReconciliationCountsHTTPAndDetectsReopen(",
+          "purpose": "Four ordinary passes send zero HTTP requests for an old closed PR; its daily reconciliation executes ten real fixture HTTP requests and imports the reopened PR with current head and successful metadata.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundHotDetailPreservesProviderRetryDeadline(",
+          "purpose": "Hot work makes no provider call before its retained retry deadline and resumes at that deadline.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailRotationSurvivesCancellation(",
+          "purpose": "Repeated context-cancelling reads in either hot or dormant work cannot prevent an attempt in the other class across two mixed passes.",
+          "scenarios": [
+            "S2"
+          ]
+        },
+        {
+          "path": "internal/factory/background_refresh_test.go",
+          "anchor": "func TestBackgroundDetailActivityUsesCompactRuntimeAndPendingCount(",
+          "purpose": "Retained queue count from the compact runtime keeps pending work active without decoding unrelated canonical cached fields; the runtime excludes the large source payload.",
+          "scenarios": [
+            "S2"
           ]
         }
       ],

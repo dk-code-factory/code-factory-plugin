@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "f1769f6a16ee7168101dc03121df6bf4a7368780",
-  "fingerprint": "8fc4c3e67fdb3c0038cf1f314e3643152fe69aed6d6b577f265ab3bb9e5c663d",
+  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
+  "fingerprint": "d8e5176c4b5711a54bc88ea59a8e505d85f78ce777a2e6a7e417f1af011aac68",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "structure",
-    "description": "Signed subscription delivery, renewal, retry and notification privacy remain unchanged. New configuration questions reuse the existing metadata-only attention.required envelope.",
-    "implementation": "Reviewed the pinned change against receive-notifications implementation mappings. Signed subscription delivery, renewal, retry and notification privacy remain unchanged. New configuration questions reuse the existing metadata-only attention.required envelope. Target advancement review: compare against f1769f6 from PR60, preserving inherited 2,000-request GitHub allowance and batched verification ownership. Those inherited production/tooling changes are outside this feature diff; catalog additions auto-merge without dropping either target assertions or communication mappings.",
-    "tests": "TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications verifies supported notification identity and private-content exclusion; communicate emits only sessionId in attention metadata. Real-host callback and soak gaps remain open."
+    "kind": "refactor",
+    "description": "Metadata-only owner notifications and subscription challenge/retry/deduplication retain their contracts; fewer dormant source reads may delay discovery within documented bounds.",
+    "implementation": "Existing importDetail and event writer remain responsible for actual source transitions; notification delivery and user read/new state are not modified.",
+    "tests": "Read TestSubscriptionVerificationRetryDedupRefreshAndExpiry signature/challenge assertions and new daily reopen integration test verifying real observations and rule actions."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 73.906
+      "seconds": 82.993
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.224
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 655.933
+      "seconds": 681.016
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 444.48
+      "seconds": 444.92
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.916
+      "seconds": 4.835
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.293
+      "seconds": 62.272
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "8eb381a10ccb9e9a4bc084dc9eca78878de6100db094396da763588a68cb1213",
+    "flow:receive-notifications": "b3f85a61152f1fe7ac96d547a31581e7064df3a67efa99523936e77a18627c05",
     "term:attention-request": "4c7d7cb37fc9519d236979855f5a28d9b2bb63231973d556eecb5384aca955d8",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:host": "7485127d9f66ced31cf4a8f4cd75f62757c0198b26a41bf13361f0cdbd9bacd7",

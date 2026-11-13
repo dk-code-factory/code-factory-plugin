@@ -43,6 +43,8 @@ An already open archive reloads its current query when a replacement service is 
 While the replacement page is unavailable, hide the earlier page and selected record.
 Preserve the archive kind, page size and navigation; inspection launches no work.
 
+Background detail polling prioritizes active retained work and recently updated or viewed PRs. Open PRs with enabled repository rules keep the ordinary detail cadence even when their current labels or author do not match a rule. Dormant work receives slower bounded reconciliation with a reserved rotating slot. Mixed passes alternate their starting group so slow reads that cancel successive passes cannot always precede the other group. Held pending work retains the active cadence across successful observations; daily terminal checks retain reopen discovery.
+
 ## Scenarios
 
 - **S1** — Verify webhook signatures and persist deliveries before acknowledgement.
@@ -114,6 +116,7 @@ flowchart TD
 - [internal/transport/factory_events.go](../../internal/transport/factory_events.go) — Page each archive independently and return bounded compact record metadata. (`func factoryEvents(`)
 - [internal/store/reads.go](../../internal/store/reads.go) — Select bounded compact archive records before Go decoding rather than reading retained full-history payloads. (`func (s *Store) FactoryArchive(`)
 - [internal/httpbudget/budget.go](../../internal/httpbudget/budget.go) — Observe slow finite responses without latency cancellation; bound admission/body buffers and preserve caller/service cancellation and acknowledged SSE lifetime. (`func Wrap(`)
+- [internal/factory/github.go](../../internal/factory/github.go) — Prioritize active, recent, viewed and rule-relevant PR detail; rotate hourly untracked open PRs and daily dormant terminal/issue reconciliation without starving peers or bypassing provider retry deadlines. (`func (s *Service) refreshDetails(`)
 
 ## Test references
 
@@ -165,6 +168,13 @@ flowchart TD
 - [internal/factory/webhook_budget_test.go](../../internal/factory/webhook_budget_test.go) — `func TestWebhookFiniteResponseForDelayedSecretAndStoreContention(`; S1. Explicit caller cancellation reports uncertainty during held secret/store access, prevents late persistence and preserves safe exact-id redelivery.
 - [internal/factory/api_performance_test.go](../../internal/factory/api_performance_test.go) — `func TestWebhookAPILatency(`; S1. Twenty isolated successful signed webhook acknowledgements each retain a durable delivery before202 and satisfy the75ms verification gate; deliberate slow/canceled paths are separate correctness fixtures.
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `an open archive retires its page and selection when the daemon changes`; S9. Loaded archive replacement observes daemon identity, hides old page/selection while pending, then displays current records without manual refresh, preserving query controls and navigation without chat.
+- [internal/factory/background_refresh_test.go](../../internal/factory/background_refresh_test.go) — `func TestBackgroundDetailTrafficUsesActivityAndDormantDeadlines(`; S2. Controlled passes retain the active detail cadence, postpone old untracked open PRs until hourly and dormant terminal PRs/issues until daily.
+- [internal/factory/background_refresh_test.go](../../internal/factory/background_refresh_test.go) — `func TestBackgroundDetailsPromoteSummaryChangesRulesAndRecentFocus(`; S2. Summary changes, recent updates, enabled repository rules, recent detail focus and active retained work promote refresh; held done sessions with a real pending queue retain that cadence across successive successful detail reads.
+- [internal/factory/background_refresh_test.go](../../internal/factory/background_refresh_test.go) — `func TestBackgroundDetailRotationReservesDormantWorkDespiteHotFailures(`; S2. Fourteen candidates and repeated immediate hot failures enforce exactly eight attempts per actual pass, independent rotating cursors and one newly visited dormant peer each pass.
+- [internal/factory/background_refresh_test.go](../../internal/factory/background_refresh_test.go) — `func TestBackgroundTerminalReconciliationCountsHTTPAndDetectsReopen(`; S2. Four ordinary passes send zero HTTP requests for an old closed PR; its daily reconciliation executes ten real fixture HTTP requests and imports the reopened PR with current head and successful metadata.
+- [internal/factory/background_refresh_test.go](../../internal/factory/background_refresh_test.go) — `func TestBackgroundHotDetailPreservesProviderRetryDeadline(`; S2. Hot work makes no provider call before its retained retry deadline and resumes at that deadline.
+- [internal/factory/background_refresh_test.go](../../internal/factory/background_refresh_test.go) — `func TestBackgroundDetailRotationSurvivesCancellation(`; S2. Repeated context-cancelling reads in either hot or dormant work cannot prevent an attempt in the other class across two mixed passes.
+- [internal/factory/background_refresh_test.go](../../internal/factory/background_refresh_test.go) — `func TestBackgroundDetailActivityUsesCompactRuntimeAndPendingCount(`; S2. Retained queue count from the compact runtime keeps pending work active without decoding unrelated canonical cached fields; the runtime excludes the large source payload.
 
 ## Verification and gaps
 
