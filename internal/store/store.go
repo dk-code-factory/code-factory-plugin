@@ -235,8 +235,8 @@ func (s *Store) JSONByteSizes(ctx context.Context, kind, path string) (map[strin
 	return out, rows.Err()
 }
 
-// JSONByteEntry keeps a row's storage identity and byte size beside metadata
-// with that byte field removed. The encoded body never leaves SQLite.
+// JSONByteEntry keeps a row's storage identity and byte size beside explicitly
+// selected metadata. Unselected fields never leave SQLite.
 type JSONByteEntry struct {
 	ID       string
 	Size     int64
@@ -244,9 +244,18 @@ type JSONByteEntry struct {
 }
 
 // JSONByteEntries inventories byte fields inside the same transaction that
-// will replace or evict rows. Both the bucket and JSON path are bound values.
-func (t *Tx) JSONByteEntries(kind, path string) ([]JSONByteEntry, error) {
-	rows, err := t.tx.QueryContext(t.ctx, "SELECT id,coalesce(length(rtrim(json_extract(data, ?), '='))*3/4,0),json_remove(data, ?) FROM entities WHERE kind=?", path, path, kind)
+// will replace or evict rows. Metadata fields are explicitly selected top-level
+// members; an empty selection returns {}. Bucket, path and field names are bound.
+func (t *Tx) JSONByteEntries(kind, path string, fields ...string) ([]JSONByteEntry, error) {
+	metadata := make([]string, 0, len(fields))
+	args := []any{path}
+	for _, field := range fields {
+		metadata = append(metadata, "?,json_extract(data, ?)")
+		args = append(args, field, "$."+field)
+	}
+	args = append(args, kind)
+	query := "SELECT id,coalesce(length(rtrim(json_extract(data, ?), '='))*3/4,0),json_object(" + strings.Join(metadata, ",") + ") FROM entities WHERE kind=?"
+	rows, err := t.tx.QueryContext(t.ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

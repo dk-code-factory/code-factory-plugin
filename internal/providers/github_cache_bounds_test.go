@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -357,5 +358,41 @@ func TestGitHubPersistentCacheEntryPressureEvictsOneOldestRow(t *testing.T) {
 	}
 	if _, exists := sizes["old-0001"]; !exists {
 		t.Fatal("entry pressure evicted unnecessary responses")
+	}
+}
+
+func TestGitHubPersistentCacheEvictionKeepsLargeHeadersAfterRestart(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	now := time.Now().UTC()
+	db, err := store.Open(filepath.Join(t.TempDir(), "cache.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	link := "<https://example.invalid/" + strings.Repeat("p", 1<<20) + ">; rel=\"next\""
+	for key, checked := range map[string]time.Time{"retained": now, "expired": now.Add(-25 * time.Hour)} {
+		id := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
+		entry := cacheEntry{Body: []byte("ok"), Header: http.Header{"Link": {link}}, CheckedAt: checked}
+		if err := db.Put(ctx, "github-cache", id, entry, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &GitHub{usageStore: db, Now: func() time.Time { return now }}
+	if err := g.remember(ctx, "incoming", cacheEntry{Body: []byte("new"), CheckedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	for _, source := range []*GitHub{g, {usageStore: db, Now: func() time.Time { return now }}} {
+		entry, ok, err := source.cached(ctx, "retained")
+		if err != nil || !ok || entry.Header.Get("Link") != link || string(entry.Body) != "ok" {
+			t.Fatal("eviction projection changed retained header or body", ok, err)
+		}
+		if _, ok, err := source.cached(ctx, "expired"); err != nil || ok {
+			t.Fatal("scalar expiry metadata failed to retire old response", ok, err)
+		}
+	}
+	id := fmt.Sprintf("%x", sha256.Sum256([]byte("expired")))
+	if err := db.Get(ctx, "github-cache", id, &cacheEntry{}); !errors.Is(err, store.ErrNotFound) {
+		t.Fatal("expired large-header response remains durable", err)
 	}
 }

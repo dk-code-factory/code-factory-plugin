@@ -101,11 +101,11 @@ func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(t *testing.
 	defer s.Close()
 	err = s.Write(ctx, func(tx *Tx) error {
 		for id, body := range map[string][]byte{"one": {1}, "two": {1, 2}, "three": {1, 2, 3}, "four": {1, 2, 3, 4}, "null": nil} {
-			if err := tx.Put("cache", id, map[string]any{"ID": "legacy", "Body": body, "CheckedAt": "retained"}); err != nil {
+			if err := tx.Put("cache", id, map[string]any{"ID": "legacy", "Body": body, "CheckedAt": "retained", "Header": map[string]string{"Link": strings.Repeat("h", 128<<10)}, "ETag": strings.Repeat("e", 128<<10), "Redirect": strings.Repeat("r", 128<<10)}); err != nil {
 				return err
 			}
 		}
-		entries, err := tx.JSONByteEntries("cache", "$.Body")
+		entries, err := tx.JSONByteEntries("cache", "$.Body", "CheckedAt", "ID")
 		if err != nil {
 			return err
 		}
@@ -121,8 +121,8 @@ func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(t *testing.
 			if entry.Size != want[entry.ID] || metadata["CheckedAt"] != "retained" || metadata["ID"] != "legacy" {
 				t.Fatal("storage identity, byte size or metadata changed", entry, metadata)
 			}
-			if _, exists := metadata["Body"]; exists {
-				t.Fatal("encoded body left SQLite", entry)
+			if len(entry.Metadata) > 128 || len(metadata) != 2 {
+				t.Fatalf("inventory transferred unselected payloads: metadata bytes=%d fields=%d", len(entry.Metadata), len(metadata))
 			}
 		}
 		if entries, err := tx.JSONByteEntries("cache' OR 1=1 --", "$.Body"); err != nil || len(entries) != 0 {
@@ -131,13 +131,35 @@ func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(t *testing.
 		if entries, err := tx.JSONByteEntries("cache", `$.Body') FROM entities --`); err != nil || len(entries) != 5 {
 			t.Fatal("path must be a bound parameter", entries, err)
 		}
+		entries, err = tx.JSONByteEntries("cache", "$.Body", "CheckedAt') FROM entities --")
+		if err != nil || len(entries) != 5 {
+			t.Fatal("metadata fields must be bound values", err)
+		}
+		for _, entry := range entries {
+			var metadata map[string]any
+			if err := json.Unmarshal(entry.Metadata, &metadata); err != nil {
+				return err
+			}
+			if len(metadata) != 1 || metadata["CheckedAt') FROM entities --"] != nil {
+				t.Fatal("metadata field changed the query", metadata)
+			}
+		}
+		entries, err = tx.JSONByteEntries("cache", "$.Body")
+		if err != nil || len(entries) != 5 {
+			t.Fatal("empty metadata selection", err)
+		}
+		for _, entry := range entries {
+			if string(entry.Metadata) != "{}" {
+				t.Fatal("empty selection transferred metadata", len(entry.Metadata))
+			}
+		}
 		return tx.Delete("cache", "one")
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	var row map[string]any
-	if err := s.Get(ctx, "cache", "four", &row); err != nil || row["Body"] != "AQIDBA==" {
+	if err := s.Get(ctx, "cache", "four", &row); err != nil || row["Body"] != "AQIDBA==" || row["ETag"] != strings.Repeat("e", 128<<10) {
 		t.Fatal("metadata projection modified persisted body", row, err)
 	}
 	if err := s.Get(ctx, "cache", "one", &row); !errors.Is(err, ErrNotFound) {

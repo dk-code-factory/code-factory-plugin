@@ -29,7 +29,8 @@ The shared GitHub response cache retains at most 64 MiB of response bodies and
 entries, then only the oldest validated entries needed to fit these limits.
 Unrelated recent responses keep their conditional validators across restart.
 In-memory entries retain the headers supplied at admission. Durable entries keep
-only approved validator and pagination headers.
+only approved validator and pagination headers. Eviction inspects freshness
+metadata without loading retained bodies or headers.
 Replacement and eviction commit together; a failed write does not publish a new
 memory response, change its retained headers or discard its eviction candidates.
 HTTP readers reject responses above their 16 MiB limit before cache admission.
@@ -166,7 +167,8 @@ flowchart TD
 - [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheKeepsLiveHeadersInMemoryAndFiltersDurableCopy(`; S3. A generic managed GET and its local hit preserve full live headers with one request, while a restarted provider reuses only approved durable headers without another request.
 - [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheOversizedReplacementPreservesOtherEntries(`; S3. An oversized replacement is not retained in memory or durable state, removes its old same-key response and preserves unrelated entries.
 - [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheEntryPressureEvictsOneOldestRow(`; S1, S3. The 4,096-entry bound evicts only one oldest row with deterministic storage-ID tie breaking.
-- [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(`; S1, S3. Transactional inventory exposes current rows and decoded byte sizes without their encoded bodies; metadata, source bodies, storage identities and bound SQL inputs remain intact.
+- [internal/store/store_test.go](../../internal/store/store_test.go) — `func TestJSONByteEntriesKeepBodylessMetadataAndTransactionalIdentity(`; S1, S3. Transactional inventory selects only requested metadata fields and decoded byte sizes, keeping large headers and other unselected payloads inside SQLite; source rows, storage identities, bound SQL inputs and cursor closure remain intact.
+- [internal/providers/github_cache_bounds_test.go](../../internal/providers/github_cache_bounds_test.go) — `func TestGitHubPersistentCacheEvictionKeepsLargeHeadersAfterRestart(`; S1, S3. Eviction reads scalar freshness fields, retires an old large-header response and preserves an unrelated approved Link header and body across restart.
 
 ## Verification and gaps
 

@@ -453,7 +453,7 @@ func (g *GitHub) remember(ctx context.Context, key string, v cacheEntry) error {
 			evicted[id] = true
 			return t.Delete("github-cache", id)
 		}
-		entries, err := t.JSONByteEntries("github-cache", "$.Body")
+		entries, err := t.JSONByteEntries("github-cache", "$.Body", "CheckedAt", "Expires")
 		if err != nil {
 			return err
 		}
