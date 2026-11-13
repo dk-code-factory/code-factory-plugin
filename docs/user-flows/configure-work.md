@@ -29,7 +29,9 @@ The private owner connection is established. Application data starts clean in th
    token-like names. Ordinary credential-free URLs retain their spelling through
    inspection, proposal and confirmed native application. An unreadable query or
    parameter fragment is hidden and refused as an edit. Encoded credential values
-   remain private.
+   remain private. Quotes within URL credentials do not truncate redaction.
+   Invalid URL components do not expose credentials copied from other components;
+   edits containing those copied credentials are also refused.
 
 4. Explicitly confirm or reject against the inspected versions.
 

@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
-  "fingerprint": "c12232c3849518021e5c2c7a18ad9eba0c5da8adfd64e8307c688bacf3a75022",
+  "fingerprint": "e52bb94bab9a3e991e80c8e807b8f6232c54d7db69e78cfcf797d217a00213d5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -10,7 +10,7 @@
     "kind": "structure",
     "description": "Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries.",
     "implementation": "Compared d485a637 with this branch and inspected the mapped implementation and fixture assertions. Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified. Current focused race verification passes for factory and transport. Existing fixture/real-host gaps remain open; no new installed-host claim is made."
+    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified. Current factory race verification passed; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.281
+      "seconds": 0.161
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.401
+      "seconds": 36.359
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 72.387
+      "seconds": 69.293
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.632
+      "seconds": 3.292
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.991
+      "seconds": 2.711
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.549
+      "seconds": 21.087
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.221
+      "seconds": 0.181
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.663
+      "seconds": 0.662
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.181
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.204
+      "seconds": 1.224
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 658.104
+      "seconds": 649.339
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 439.18
+      "seconds": 434.207
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.776
+      "seconds": 4.756
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.865
+      "seconds": 60.622
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "2cc194b4b474133336857bcc0a18d2a75f4072c1c0186b6bc3bb8cc4b4eba2f3",
+    "flow:operate-installation": "89d3e085e294249393e1610a68371d3d671fd34b6db4c3c1df072469c720f73a",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "704a80892455ebe8cb66dfcc860db77fafd7014d176cdb057e627d95c2a77a5f",
-    "ui:P-BROWSER-LAB": "632c5a0cb82cab1d25a0bbf6fb8ee6f58c2bac9d3b7a4d4503bd491a7b9abd3f",
-    "ui:PAGE-BROWSER-LAB": "13a8604beb71a2ed8b4c032a817342ea2c9f45e73f34895c1279526332f083a8",
-    "ui:W-BROWSER-LAB": "fd06f89fcdede9cf29f53693283c03d38beba7c23548aa85e16313c084e9b031"
+    "ui:C-BROWSER-LAB": "6a4b15f4d68ee8ca0251f871f6df77daf7b1a4e5eedffa09bcb61cd26c234e43",
+    "ui:P-BROWSER-LAB": "ba71b93437c057875735a2162fcdd4476b33e00bfa584a350c65898b7f02da51",
+    "ui:PAGE-BROWSER-LAB": "aac6f7eefac4b67ca4450fcdf825c47ae6a7edd0d99c82c170a32faa738cdde6",
+    "ui:W-BROWSER-LAB": "3da3603a9908e25e77a828cb9bc83705a34c59f66210c71d6678571c6bd9de60"
   }
 }

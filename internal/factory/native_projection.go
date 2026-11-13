@@ -13,7 +13,9 @@ import (
 // Native configuration can include credentials that are not managed by our vault.
 // Keep those values out of inspection results, proposals and retained snapshots.
 var nativeCredential = regexp.MustCompile(`(?i)(?:github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|bearer\s+[A-Za-z0-9._~+/-]+=*)`)
-var nativeURL = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://[^\s<>"']+`)
+
+// Values are decoded strings; quotes and angle brackets can be URL content.
+var nativeURL = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://[^\s]+`)
 
 func privateNativeKey(key string) bool {
 	key = strings.Map(func(r rune) rune {
@@ -91,28 +93,7 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 			}
 		case string:
 			for _, raw := range nativeURL.FindAllString(v, -1) {
-				if u, err := url.Parse(raw); err == nil {
-					if u.User != nil {
-						if password, ok := u.User.Password(); ok {
-							r.secrets = append(r.secrets, password)
-						} else {
-							r.secrets = append(r.secrets, u.User.Username())
-						}
-						authority := raw[len(u.Scheme)+3:]
-						if end := strings.IndexAny(authority, "/?#"); end >= 0 {
-							authority = authority[:end]
-						}
-						if at := strings.LastIndexByte(authority, '@'); at >= 0 {
-							encoded := authority[:at]
-							if _, password, ok := strings.Cut(encoded, ":"); ok {
-								encoded = password
-							}
-							r.secrets = append(r.secrets, encoded)
-						}
-					}
-					r.secrets = append(r.secrets, nativeURLParameterSecrets(u.RawQuery)...)
-					r.secrets = append(r.secrets, nativeURLParameterSecrets(u.EscapedFragment())...)
-				}
+				r.secrets = append(r.secrets, nativeURLSecrets(raw)...)
 			}
 			if private && v != "" {
 				r.secrets = append(r.secrets, v)
@@ -122,6 +103,30 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 	collect(value, false, false)
 	sort.Slice(r.secrets, func(i, j int) bool { return len(r.secrets[i]) > len(r.secrets[j]) })
 	return r
+}
+
+// Collect raw components independently: an invalid path or fragment must not
+// suppress a valid credential in another component or its copied values.
+func nativeURLSecrets(raw string) []string {
+	_, rest, _ := strings.Cut(raw, "://")
+	beforeFragment, fragment, _ := strings.Cut(rest, "#")
+	beforeQuery, query, _ := strings.Cut(beforeFragment, "?")
+	authority, _, _ := strings.Cut(beforeQuery, "/")
+	var secrets []string
+	if at := strings.LastIndexByte(authority, '@'); at >= 0 {
+		credential := authority[:at]
+		if _, password, ok := strings.Cut(credential, ":"); ok {
+			credential = password
+		}
+		if credential != "" {
+			secrets = append(secrets, credential)
+			if decoded, err := url.PathUnescape(credential); err == nil && decoded != credential {
+				secrets = append(secrets, decoded)
+			}
+		}
+	}
+	secrets = append(secrets, nativeURLParameterSecrets(query)...)
+	return append(secrets, nativeURLParameterSecrets(fragment)...)
 }
 
 func (r nativeRedactor) text(value string) string {
@@ -183,7 +188,13 @@ func redactNativeURLParameters(raw string) (string, bool) {
 
 func nativeURLParameterSecrets(raw string) []string {
 	var secrets []string
-	for _, pair := range strings.Split(raw, "&") {
+	pairs := strings.Split(raw, "&")
+	if strings.Contains(raw, ";") {
+		// Retain whole credential values and also inspect ambiguous separator
+		// chunks: an ordinary prefix must not hide a later credential pair.
+		pairs = append(pairs, strings.FieldsFunc(raw, func(r rune) bool { return r == '&' || r == ';' })...)
+	}
+	for _, pair := range pairs {
 		key, value, _ := strings.Cut(pair, "=")
 		decodedKey, keyErr := url.QueryUnescape(key)
 		if keyErr == nil && !strings.Contains(key, ";") && !privateNativeKey(decodedKey) {
