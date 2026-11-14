@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-receive-notifications",
   "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
-  "fingerprint": "6e76cbd2cf40e8dea3d4e5818ad1a1b7ba3eba66c79fc7571205ec518f7e396a",
+  "fingerprint": "4fc8c4c94ed34509c0d8561db1d6179d1f40b019eeea267869c9b628cb9a5121",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications.",
-    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged.",
-    "tests": "TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications verifies supported notification identity and private-content exclusion; communicate emits only sessionId in attention metadata. Real-host callback and soak gaps remain open. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made."
+    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged. Test fixture changes only allow a bounded longer readiness wait for the large body search and add pending-to-ready controlled verification; production behavior and independent success-latency/cancellation gates are unchanged.",
+    "tests": "TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications verifies supported notification identity and private-content exclusion; communicate emits only sessionId in attention metadata. Real-host callback and soak gaps remain open. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made. The fixture helper retains5s default; only the large search and controlled6s preparation regression request30s. Existing scenario assertions remain intact, with full fresh consumer verification required."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 69.287
+      "seconds": 74.511
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.245
+      "seconds": 1.247
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 639.447
+      "seconds": 646.621
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 417.341
+      "seconds": 417.706
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.822
+      "seconds": 4.779
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.389
+      "seconds": 60.953
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "1649bb7edd3f6caddb27632a8d536c995ad298852c9942b7130a3dc6ed3d649a",
+    "flow:receive-notifications": "3b8b040943d0830f1cad44cfe9a844221378fa68a7012d836d192ea9e7748e91",
     "term:attention-request": "4c7d7cb37fc9519d236979855f5a28d9b2bb63231973d556eecb5384aca955d8",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:host": "7485127d9f66ced31cf4a8f4cd75f62757c0198b26a41bf13361f0cdbd9bacd7",

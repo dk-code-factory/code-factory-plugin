@@ -2,15 +2,191 @@
   "version": 1,
   "flow": "ui",
   "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
-  "fingerprint": "5c499cef0a69bfd1547aaa4619fea291979b14eef6f778a59a06b75f822cbad8",
+  "fingerprint": "493e1c34bcf8bff50540cb51c94d847856044eb971b6529e2d5ea73ad187cfa4",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
-    "kind": "behavior",
+    "kind": "mixed",
     "description": "Native inspection and current/retained proposal views protect nested URL credentials and copied usernames with empty passwords, including encoded path components, encoded credentials beside readable public schemes and malformed boundaries. Both displayed redaction placeholders are refused before a proposal is saved. Safe nested public URL spelling, exact selectors, raw hidden-change freshness and explicit confirmation remain intact.",
-    "implementation": "Native redaction now inspects every raw nested scheme and iteratively decodes distinct URL components and queues newly decoded schemes even beside readable schemes, including independently readable escapes around malformed components. Decoded-position tracking prevents escaped parameter delimiters from inventing shorter credentials. Further-encoded copied secrets are masked without changing safe public spellings. Discovery preserves literal plus signs in userinfo and raw/decoded copied values. Empty passwords retain the username credential. Projection sanitizes nested URL suffixes before their outer URL; credential-bearing encoded nested parameter values are removed while public nested values remain exact. Both generated redaction placeholders are refused before proposal persistence, including nested and copied occurrences. Raw freshness fingerprints, exact selectors/named identifiers, cached/background API ownership and cancellation remain unchanged. Startup applies the same checks to legacy entities and journal copies, preserving historical identity/state and transactional rollback without replay.",
-    "tests": "Inspected all eight native regression functions and their actual assertions. Sixty-four credential-boundary cases cover the existing malformed, quote, semicolon, whitespace and combined-URL boundaries plus raw/encoded/double-encoded/deep/path nested credentials, malformed encoded nested components, usernames with explicit empty passwords and partially escaped credentials. Each asserts inspection/persisted/legacy secrecy, URL and copied-value edit refusal, no extra persistence/native writes, and exact unrelated sandbox/partial-prefix preservation. Sixteen safe values assert exact inspection, proposal and one confirmed write, including encoded/double-encoded/deep/path nested public URLs and encoded public schemes beside readable schemes and ordinary prose. The edit-refusal test submits the actual displayed malformed-URL placeholder, its nested occurrence and a copied occurrence as well as the existing credential and ordinary placeholder cases. Actual startup migration runs ordinary, credential, URL-placeholder and two encoded-copy pending-edit variants with nested-password/empty-password username copies, encoded nested paths and mixed-scheme copies,37 eligible historical events across32-row pages, injected transactional rollback, unchanged identities/states, no native write and repeat idempotence. The complete factory package passed with race detection in29.635s; all required consumer fixtures remain required by reconciliation. No real-host acceptance is claimed."
+    "implementation": "Native redaction now inspects every raw nested scheme and iteratively decodes distinct URL components and queues newly decoded schemes even beside readable schemes, including independently readable escapes around malformed components. Decoded-position tracking prevents escaped parameter delimiters from inventing shorter credentials. Further-encoded copied secrets are masked without changing safe public spellings. Discovery preserves literal plus signs in userinfo and raw/decoded copied values. Empty passwords retain the username credential. Projection sanitizes nested URL suffixes before their outer URL; credential-bearing encoded nested parameter values are removed while public nested values remain exact. Both generated redaction placeholders are refused before proposal persistence, including nested and copied occurrences. Raw freshness fingerprints, exact selectors/named identifiers, cached/background API ownership and cancellation remain unchanged. Startup applies the same checks to legacy entities and journal copies, preserving historical identity/state and transactional rollback without replay. Test-only transport polling adds an explicit30s readiness budget solely for the1000-source body-search fixture; ordinary calls retain5s. No production request path, cancellation, admission, response size or latency threshold changes.",
+    "tests": "Inspected all eight native regression functions and their actual assertions. Sixty-four credential-boundary cases cover the existing malformed, quote, semicolon, whitespace and combined-URL boundaries plus raw/encoded/double-encoded/deep/path nested credentials, malformed encoded nested components, usernames with explicit empty passwords and partially escaped credentials. Each asserts inspection/persisted/legacy secrecy, URL and copied-value edit refusal, no extra persistence/native writes, and exact unrelated sandbox/partial-prefix preservation. Sixteen safe values assert exact inspection, proposal and one confirmed write, including encoded/double-encoded/deep/path nested public URLs and encoded public schemes beside readable schemes and ordinary prose. The edit-refusal test submits the actual displayed malformed-URL placeholder, its nested occurrence and a copied occurrence as well as the existing credential and ordinary placeholder cases. Actual startup migration runs ordinary, credential, URL-placeholder and two encoded-copy pending-edit variants with nested-password/empty-password username copies, encoded nested paths and mixed-scheme copies,37 eligible historical events across32-row pages, injected transactional rollback, unchanged identities/states, no native write and repeat idempotence. The complete factory package passed with race detection in29.635s; all required consumer fixtures remain required by reconciliation. No real-host acceptance is claimed. Inspected TestFactoryStatePagesCompactDataAndExplicitDelivery: original paging/count/body-elision/search/new-filter/session/detail/mutation/delivery assertions remain unchanged. A new controlled projection-cache lock holds preparation for6s: actual first HTTP read is pending and explicit preparation polling eventually returns the complete empty inbox. Existing useful-response API performance checks remain required.",
+    "contracts": {
+      "ui:C-ANSWER": {
+        "kind": "structure",
+        "description": "ui:C-ANSWER: Existing interaction remains unchanged: Answer the exact live request once; stale identities fail. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:C-ANSWER: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:C-ANSWER: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-QUESTIONS, WRAP-BLOCKED, WRAP-APPROVAL, WRAP-AMENDMENT."
+      },
+      "ui:C-CONFIGURATION-CONFIRM": {
+        "description": "ui:C-CONFIGURATION-CONFIRM: Raw snapshot fingerprints reject invisible credential rotations before native writes; explicit human confirmation remains required. Native inspection and current/retained proposal views protect nested URL credentials and copied usernames with empty passwords, including encoded path components, encoded credentials beside readable public schemes and malformed boundaries. Both displayed redaction placeholders are refused before a proposal is saved. Safe nested public URL spelling, exact selectors, raw hidden-change freshness and explicit confirmation remain intact.",
+        "implementation": "Native redaction now inspects every raw nested scheme and iteratively decodes distinct URL components and queues newly decoded schemes even beside readable schemes, including independently readable escapes around malformed components. Decoded-position tracking prevents escaped parameter delimiters from inventing shorter credentials. Further-encoded copied secrets are masked without changing safe public spellings. Discovery preserves literal plus signs in userinfo and raw/decoded copied values. Empty passwords retain the username credential. Projection sanitizes nested URL suffixes before their outer URL; credential-bearing encoded nested parameter values are removed while public nested values remain exact. Both generated redaction placeholders are refused before proposal persistence, including nested and copied occurrences. Raw freshness fingerprints, exact selectors/named identifiers, cached/background API ownership and cancellation remain unchanged. Startup applies the same checks to legacy entities and journal copies, preserving historical identity/state and transactional rollback without replay. Test-only transport polling adds an explicit30s readiness budget solely for the1000-source body-search fixture; ordinary calls retain5s. No production request path, cancellation, admission, response size or latency threshold changes.",
+        "tests": "Inspected all eight native regression functions and their actual assertions. Sixty-four credential-boundary cases cover the existing malformed, quote, semicolon, whitespace and combined-URL boundaries plus raw/encoded/double-encoded/deep/path nested credentials, malformed encoded nested components, usernames with explicit empty passwords and partially escaped credentials. Each asserts inspection/persisted/legacy secrecy, URL and copied-value edit refusal, no extra persistence/native writes, and exact unrelated sandbox/partial-prefix preservation. Sixteen safe values assert exact inspection, proposal and one confirmed write, including encoded/double-encoded/deep/path nested public URLs and encoded public schemes beside readable schemes and ordinary prose. The edit-refusal test submits the actual displayed malformed-URL placeholder, its nested occurrence and a copied occurrence as well as the existing credential and ordinary placeholder cases. Actual startup migration runs ordinary, credential, URL-placeholder and two encoded-copy pending-edit variants with nested-password/empty-password username copies, encoded nested paths and mixed-scheme copies,37 eligible historical events across32-row pages, injected transactional rollback, unchanged identities/states, no native write and repeat idempotence. The complete factory package passed with race detection in29.635s; all required consumer fixtures remain required by reconciliation. No real-host acceptance is claimed. Inspected TestFactoryStatePagesCompactDataAndExplicitDelivery: original paging/count/body-elision/search/new-filter/session/detail/mutation/delivery assertions remain unchanged. A new controlled projection-cache lock holds preparation for6s: actual first HTTP read is pending and explicit preparation polling eventually returns the complete empty inbox. Existing useful-response API performance checks remain required.",
+        "kind": "behavior"
+      },
+      "ui:C-EVENT-INSPECT": {
+        "kind": "structure",
+        "description": "ui:C-EVENT-INSPECT: Existing interaction remains unchanged: Inspect event rules, normalized changes and delivery claims without flushing. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:C-EVENT-INSPECT: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:C-EVENT-INSPECT: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-EVENTS, QUEUE-CLOCK, WRAP-ARCHIVE-ORDER, ARCHIVE-PAGE-BOUND."
+      },
+      "ui:C-FILTER": {
+        "kind": "structure",
+        "description": "ui:C-FILTER: Existing interaction remains unchanged: Filter saved entries. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:C-FILTER: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:C-FILTER: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-FILTER, WRAP-QUERY-ORDER, WRAP-PROJECTION, WRAP-BOOT-FILTER."
+      },
+      "ui:C-ITEM-STATE": {
+        "kind": "structure",
+        "description": "ui:C-ITEM-STATE: Existing interaction remains unchanged: Acknowledge local discovery. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:C-ITEM-STATE: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:C-ITEM-STATE: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-TRIAGE, WRAP-READ-DISPLAY, DISPLAYED-REVISION."
+      },
+      "ui:C-SELECT-ITEM": {
+        "kind": "structure",
+        "description": "ui:C-SELECT-ITEM: Existing interaction remains unchanged: Read selected item and exact revision; no session creation. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:C-SELECT-ITEM: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:C-SELECT-ITEM: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-VIEW, WRAP-SELECTION, WRAP-DETAIL-REFRESH, WRAP-REOPEN."
+      },
+      "ui:C-STATE-REFRESH": {
+        "kind": "structure",
+        "description": "ui:C-STATE-REFRESH: Existing interaction remains unchanged: Poll pending saved revisions every 250 ms while visible, then every second when idle or ten seconds when hidden; superseded responses cannot replace current content. Read selectors are limited to1,024 UTF-8 bytes and explicitly rejected before projection admission; accepted identities and source documents are complete. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:C-STATE-REFRESH: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:C-STATE-REFRESH: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-VIEW, WRAP-QUERY-ORDER, WRAP-PROJECTION, WRAP-DETAIL-REFRESH."
+      },
+      "ui:P-EVENTS": {
+        "kind": "structure",
+        "description": "ui:P-EVENTS: Existing interaction remains unchanged: Contains W-EVENT-BATCHES. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:P-EVENTS: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:P-EVENTS: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include QUEUE-RECOVERY, WEBHOOK-DURABLE, WRAP-EVENTS, RETRY-HISTORY."
+      },
+      "ui:P-INBOX-QUERY": {
+        "kind": "structure",
+        "description": "ui:P-INBOX-QUERY: Existing interaction remains unchanged: Contains W-INBOX-QUERY. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:P-INBOX-QUERY: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:P-INBOX-QUERY: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-FILTER, WRAP-QUERY-ORDER, WRAP-BACK, WRAP-PROJECTION."
+      },
+      "ui:PAGE-EVENTS": {
+        "kind": "structure",
+        "description": "ui:PAGE-EVENTS: Existing interaction remains unchanged: Displays P-EVENTS. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:PAGE-EVENTS: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:PAGE-EVENTS: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-EVENTS, WRAP-ARCHIVE-ORDER, ARCHIVE-PAGE-BOUND."
+      },
+      "ui:PAGE-INBOX": {
+        "kind": "structure",
+        "description": "ui:PAGE-INBOX: Existing interaction remains unchanged: Displays P-INBOX-QUERY, P-INBOX-LIST. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:PAGE-INBOX: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:PAGE-INBOX: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-VIEW, WRAP-FILTER, WRAP-PROJECTION."
+      },
+      "ui:PAGE-WORKING": {
+        "kind": "structure",
+        "description": "ui:PAGE-WORKING: Existing interaction remains unchanged: Displays P-INBOX-QUERY, P-INBOX-LIST. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:PAGE-WORKING: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:PAGE-WORKING: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-VIEW, WRAP-API."
+      },
+      "ui:S-FACTORY": {
+        "kind": "structure",
+        "description": "ui:S-FACTORY: Existing interaction remains unchanged: Seven navigation tabs and one selected item conversation. Opening does not authorize work. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:S-FACTORY: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:S-FACTORY: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-VIEW, WRAP-AXE, WRAP-API, CI-ASSOCIATION."
+      },
+      "ui:S-SETTINGS": {
+        "kind": "structure",
+        "description": "ui:S-SETTINGS: Existing interaction remains unchanged: Configuration chat can open as a dedicated MCP Apps resource. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:S-SETTINGS: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:S-SETTINGS: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-CONFIG, WRAP-API, API-V2-FEEDBACK, API-V2-RESTART."
+      },
+      "ui:W-APPROVAL": {
+        "kind": "structure",
+        "description": "ui:W-APPROVAL: Existing interaction remains unchanged: Native request details and explicit decision; no implied authorization or automatic approval. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-APPROVAL: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-APPROVAL: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-APPROVAL, WRAP-AMENDMENT."
+      },
+      "ui:W-CONFIGURATION-CHAT": {
+        "description": "ui:W-CONFIGURATION-CHAT: The configuration agent receives the credential-redacted inspection rather than raw native settings. Native inspection and current/retained proposal views protect nested URL credentials and copied usernames with empty passwords, including encoded path components, encoded credentials beside readable public schemes and malformed boundaries. Both displayed redaction placeholders are refused before a proposal is saved. Safe nested public URL spelling, exact selectors, raw hidden-change freshness and explicit confirmation remain intact.",
+        "implementation": "Native redaction now inspects every raw nested scheme and iteratively decodes distinct URL components and queues newly decoded schemes even beside readable schemes, including independently readable escapes around malformed components. Decoded-position tracking prevents escaped parameter delimiters from inventing shorter credentials. Further-encoded copied secrets are masked without changing safe public spellings. Discovery preserves literal plus signs in userinfo and raw/decoded copied values. Empty passwords retain the username credential. Projection sanitizes nested URL suffixes before their outer URL; credential-bearing encoded nested parameter values are removed while public nested values remain exact. Both generated redaction placeholders are refused before proposal persistence, including nested and copied occurrences. Raw freshness fingerprints, exact selectors/named identifiers, cached/background API ownership and cancellation remain unchanged. Startup applies the same checks to legacy entities and journal copies, preserving historical identity/state and transactional rollback without replay. Test-only transport polling adds an explicit30s readiness budget solely for the1000-source body-search fixture; ordinary calls retain5s. No production request path, cancellation, admission, response size or latency threshold changes.",
+        "tests": "Inspected all eight native regression functions and their actual assertions. Sixty-four credential-boundary cases cover the existing malformed, quote, semicolon, whitespace and combined-URL boundaries plus raw/encoded/double-encoded/deep/path nested credentials, malformed encoded nested components, usernames with explicit empty passwords and partially escaped credentials. Each asserts inspection/persisted/legacy secrecy, URL and copied-value edit refusal, no extra persistence/native writes, and exact unrelated sandbox/partial-prefix preservation. Sixteen safe values assert exact inspection, proposal and one confirmed write, including encoded/double-encoded/deep/path nested public URLs and encoded public schemes beside readable schemes and ordinary prose. The edit-refusal test submits the actual displayed malformed-URL placeholder, its nested occurrence and a copied occurrence as well as the existing credential and ordinary placeholder cases. Actual startup migration runs ordinary, credential, URL-placeholder and two encoded-copy pending-edit variants with nested-password/empty-password username copies, encoded nested paths and mixed-scheme copies,37 eligible historical events across32-row pages, injected transactional rollback, unchanged identities/states, no native write and repeat idempotence. The complete factory package passed with race detection in29.635s; all required consumer fixtures remain required by reconciliation. No real-host acceptance is claimed. Inspected TestFactoryStatePagesCompactDataAndExplicitDelivery: original paging/count/body-elision/search/new-filter/session/detail/mutation/delivery assertions remain unchanged. A new controlled projection-cache lock holds preparation for6s: actual first HTTP read is pending and explicit preparation polling eventually returns the complete empty inbox. Existing useful-response API performance checks remain required.",
+        "kind": "behavior"
+      },
+      "ui:W-CONFIGURATION-PROPOSAL": {
+        "description": "ui:W-CONFIGURATION-PROPOSAL: Current and migrated retained native proposals hide credentials and reject credential or generated-placeholder edits before persistence. Native inspection and current/retained proposal views protect nested URL credentials and copied usernames with empty passwords, including encoded path components, encoded credentials beside readable public schemes and malformed boundaries. Both displayed redaction placeholders are refused before a proposal is saved. Safe nested public URL spelling, exact selectors, raw hidden-change freshness and explicit confirmation remain intact.",
+        "implementation": "Native redaction now inspects every raw nested scheme and iteratively decodes distinct URL components and queues newly decoded schemes even beside readable schemes, including independently readable escapes around malformed components. Decoded-position tracking prevents escaped parameter delimiters from inventing shorter credentials. Further-encoded copied secrets are masked without changing safe public spellings. Discovery preserves literal plus signs in userinfo and raw/decoded copied values. Empty passwords retain the username credential. Projection sanitizes nested URL suffixes before their outer URL; credential-bearing encoded nested parameter values are removed while public nested values remain exact. Both generated redaction placeholders are refused before proposal persistence, including nested and copied occurrences. Raw freshness fingerprints, exact selectors/named identifiers, cached/background API ownership and cancellation remain unchanged. Startup applies the same checks to legacy entities and journal copies, preserving historical identity/state and transactional rollback without replay. Test-only transport polling adds an explicit30s readiness budget solely for the1000-source body-search fixture; ordinary calls retain5s. No production request path, cancellation, admission, response size or latency threshold changes.",
+        "tests": "Inspected all eight native regression functions and their actual assertions. Sixty-four credential-boundary cases cover the existing malformed, quote, semicolon, whitespace and combined-URL boundaries plus raw/encoded/double-encoded/deep/path nested credentials, malformed encoded nested components, usernames with explicit empty passwords and partially escaped credentials. Each asserts inspection/persisted/legacy secrecy, URL and copied-value edit refusal, no extra persistence/native writes, and exact unrelated sandbox/partial-prefix preservation. Sixteen safe values assert exact inspection, proposal and one confirmed write, including encoded/double-encoded/deep/path nested public URLs and encoded public schemes beside readable schemes and ordinary prose. The edit-refusal test submits the actual displayed malformed-URL placeholder, its nested occurrence and a copied occurrence as well as the existing credential and ordinary placeholder cases. Actual startup migration runs ordinary, credential, URL-placeholder and two encoded-copy pending-edit variants with nested-password/empty-password username copies, encoded nested paths and mixed-scheme copies,37 eligible historical events across32-row pages, injected transactional rollback, unchanged identities/states, no native write and repeat idempotence. The complete factory package passed with race detection in29.635s; all required consumer fixtures remain required by reconciliation. No real-host acceptance is claimed. Inspected TestFactoryStatePagesCompactDataAndExplicitDelivery: original paging/count/body-elision/search/new-filter/session/detail/mutation/delivery assertions remain unchanged. A new controlled projection-cache lock holds preparation for6s: actual first HTTP read is pending and explicit preparation polling eventually returns the complete empty inbox. Existing useful-response API performance checks remain required.",
+        "kind": "behavior"
+      },
+      "ui:W-CONNECTION-BLOCKER": {
+        "kind": "structure",
+        "description": "ui:W-CONNECTION-BLOCKER: Existing interaction remains unchanged: Slow actions remain pending while their exact accepted result is read. Temporary result-read503 failures preserve that identity. An original deadline rejection reports uncertain outcome without replay; terminal result-size failures retain the draft and require inspection. Sync starts one accepted refresh; repeated clicks join it. Safe reads resume after the retained cooldown without replaying uncertain mutations. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-CONNECTION-BLOCKER: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. This entity has no changed implementation; only its shared transport assertion file changed. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-CONNECTION-BLOCKER: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-UNCERTAIN, WRAP-OPERATION, WRAP-OPERATION-ERROR, GO-OPERATION-ONCE."
+      },
+      "ui:W-EFFECTIVE-SETTINGS": {
+        "description": "ui:W-EFFECTIVE-SETTINGS: Native layer inspection hides unmanaged credentials while retaining usable selectors, named identifiers and exact ordinary settings. Native inspection and current/retained proposal views protect nested URL credentials and copied usernames with empty passwords, including encoded path components, encoded credentials beside readable public schemes and malformed boundaries. Both displayed redaction placeholders are refused before a proposal is saved. Safe nested public URL spelling, exact selectors, raw hidden-change freshness and explicit confirmation remain intact.",
+        "implementation": "Native redaction now inspects every raw nested scheme and iteratively decodes distinct URL components and queues newly decoded schemes even beside readable schemes, including independently readable escapes around malformed components. Decoded-position tracking prevents escaped parameter delimiters from inventing shorter credentials. Further-encoded copied secrets are masked without changing safe public spellings. Discovery preserves literal plus signs in userinfo and raw/decoded copied values. Empty passwords retain the username credential. Projection sanitizes nested URL suffixes before their outer URL; credential-bearing encoded nested parameter values are removed while public nested values remain exact. Both generated redaction placeholders are refused before proposal persistence, including nested and copied occurrences. Raw freshness fingerprints, exact selectors/named identifiers, cached/background API ownership and cancellation remain unchanged. Startup applies the same checks to legacy entities and journal copies, preserving historical identity/state and transactional rollback without replay. Test-only transport polling adds an explicit30s readiness budget solely for the1000-source body-search fixture; ordinary calls retain5s. No production request path, cancellation, admission, response size or latency threshold changes.",
+        "tests": "Inspected all eight native regression functions and their actual assertions. Sixty-four credential-boundary cases cover the existing malformed, quote, semicolon, whitespace and combined-URL boundaries plus raw/encoded/double-encoded/deep/path nested credentials, malformed encoded nested components, usernames with explicit empty passwords and partially escaped credentials. Each asserts inspection/persisted/legacy secrecy, URL and copied-value edit refusal, no extra persistence/native writes, and exact unrelated sandbox/partial-prefix preservation. Sixteen safe values assert exact inspection, proposal and one confirmed write, including encoded/double-encoded/deep/path nested public URLs and encoded public schemes beside readable schemes and ordinary prose. The edit-refusal test submits the actual displayed malformed-URL placeholder, its nested occurrence and a copied occurrence as well as the existing credential and ordinary placeholder cases. Actual startup migration runs ordinary, credential, URL-placeholder and two encoded-copy pending-edit variants with nested-password/empty-password username copies, encoded nested paths and mixed-scheme copies,37 eligible historical events across32-row pages, injected transactional rollback, unchanged identities/states, no native write and repeat idempotence. The complete factory package passed with race detection in29.635s; all required consumer fixtures remain required by reconciliation. No real-host acceptance is claimed. Inspected TestFactoryStatePagesCompactDataAndExplicitDelivery: original paging/count/body-elision/search/new-filter/session/detail/mutation/delivery assertions remain unchanged. A new controlled projection-cache lock holds preparation for6s: actual first HTTP read is pending and explicit preparation polling eventually returns the complete empty inbox. Existing useful-response API performance checks remain required.",
+        "kind": "behavior"
+      },
+      "ui:W-ELICITATION": {
+        "kind": "structure",
+        "description": "ui:W-ELICITATION: Existing interaction remains unchanged: Native elicitation shows message and schema with a JSON response draft, explicit decline/cancel, or host-opened URL and explicit continue. Device verification requires native host support; no proof is fabricated. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-ELICITATION: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-ELICITATION: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-ELICITATION, WRAP-ELICITATION-URL, ELICITATION-SCHEMA, API-V2-QUESTION-DRAFTS."
+      },
+      "ui:W-EVENT-BATCHES": {
+        "kind": "structure",
+        "description": "ui:W-EVENT-BATCHES: Existing interaction remains unchanged: Read-only event, webhook-delivery, batch and ordered-rule archives begin with 50 records; page sizes are 50, 100 or 200. Kind and size changes reset page/selection. Pending or failed refresh hides unavailable page and selection; superseded responses cannot replace the current query. Selected records expose compact metadata, bounded previews and truncation counts. Full rule instructions remain in Configuration; viewing or refreshing never launches work. Observing a replacement daemon retires the displayed archive page and reloads the same kind/page-size; pending replacement hides the previous selection. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-EVENT-BATCHES: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-EVENT-BATCHES: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-EVENTS, QUEUE-RECOVERY, WEBHOOK-DURABLE, RETRY-HISTORY."
+      },
+      "ui:W-INBOX-QUERY": {
+        "kind": "structure",
+        "description": "ui:W-INBOX-QUERY: Existing interaction remains unchanged: Search and open/all/new/unread filter; show 50 rows and explicit Show more. Sync starts one accepted refresh; repeated clicks join it. Safe reads resume after the retained cooldown without replaying uncertain mutations. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-INBOX-QUERY: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-INBOX-QUERY: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-FILTER, WRAP-QUERY-ORDER, WRAP-BACK, WRAP-PROJECTION."
+      },
+      "ui:W-ITEM-ACTIONS": {
+        "kind": "structure",
+        "description": "ui:W-ITEM-ACTIONS: Existing interaction remains unchanged: Acknowledge new, mark unread and record an independent local action without launching or flushing work. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-ITEM-ACTIONS: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-ITEM-ACTIONS: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-VIEW, WRAP-READ-DISPLAY, DISPLAYED-REVISION."
+      },
+      "ui:W-ITEM-OVERVIEW": {
+        "kind": "structure",
+        "description": "ui:W-ITEM-OVERVIEW: Existing interaction remains unchanged: Selected item identifier, state, head and source body; open original URL. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-ITEM-OVERVIEW: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. This entity has no changed implementation; only its shared transport assertion file changed. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-ITEM-OVERVIEW: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-VIEW, WRAP-DETAIL-REFRESH, WRAP-REOPEN, WRAP-DETAIL-VERSION."
+      },
+      "ui:W-MESSAGE": {
+        "kind": "structure",
+        "description": "ui:W-MESSAGE: Existing interaction remains unchanged: Per-item chat draft; Send bypasses timer; native blocking requests disable sending. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-MESSAGE: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-MESSAGE: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-CHAT, WRAP-BLOCKED, WRAP-UNCERTAIN, WRAP-SELECTION."
+      },
+      "ui:W-QUESTIONS": {
+        "kind": "structure",
+        "description": "ui:W-QUESTIONS: Existing interaction remains unchanged: Native options, free text and secret input preserve question IDs; blocked status waits for answers. Previous and next question-page controls retain exact question identities beyond the first page. When answers shrink the final page, return to the last valid page of remaining questions. Configuration communication questions render a title, body, optional unselected choices and free-text answer; an answer resumes the exact tool call once and never approves configuration. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-QUESTIONS: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-QUESTIONS: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-QUESTIONS, WRAP-BLOCKED, WRAP-CROSS-SESSION, WRAP-SECRET-INPUT."
+      },
+      "ui:W-RUN-CONTROLS": {
+        "kind": "structure",
+        "description": "ui:W-RUN-CONTROLS: Existing interaction remains unchanged: Explicit run, resume, interrupt and cleanup; dirty worktree cleanup fails visibly. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-RUN-CONTROLS: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-RUN-CONTROLS: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-CONTROLS, WRAP-RECOVERY, QUEUE-CHAT, WORKTREE-DIRTY."
+      },
+      "ui:W-TRANSCRIPT": {
+        "kind": "structure",
+        "description": "ui:W-TRANSCRIPT: Existing interaction remains unchanged: Paged retained output; an idle turn without a status report remains idle. Item conversations combine native streams/completions; Configuration displays only owner messages and intentional communication cards, with raw native narration retained for diagnostics. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-TRANSCRIPT: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-TRANSCRIPT: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-STREAM, WRAP-ASSEMBLED, NATIVE-SECRETS, WRAP-HISTORY-DRAIN."
+      },
+      "ui:W-WORK-STATUS": {
+        "kind": "structure",
+        "description": "ui:W-WORK-STATUS: Existing interaction remains unchanged: Execution, reported work status, summary, hold, due time, agent and pending events are separate. The fixture repair changes bounded readiness polling, not this contract or its authorization.",
+        "implementation": "ui:W-WORK-STATUS: Compared the complete a25-to-candidate changes. Native redaction and digest/migration effects remain scoped to configuration inspection/proposals and their explicit-confirmation widgets. Shared factory implementation mappings create this direct review, but this interaction retains its existing control/data ownership. The only new current source delta is test-only polling/preparation verification; cached-background dispatch and production cancellation/latency ownership remain intact.",
+        "tests": "ui:W-WORK-STATUS: Existing owned assertion identities and expectations are unchanged. The actual changed large-state test still asserts50of1000compact rows, body-search/new filtering before pagination, selected session/delivery state, full detail and independent mutation. The new controlled6s projection-cache hold asserts pending before eventual complete state through an explicit30s fixture wait; ordinary calls remain5s. Full mapped suites and separate useful-response latency gates remain required. No new installed-host or additional UI coverage is claimed. Existing owned identifiers include WRAP-STATUS, QUEUE-OVERRIDE, RETAINED-REFRESH-FRESH, STATUS-SUBSCRIPTION."
+      }
+    }
   },
   "verification": [
     {
@@ -32,7 +208,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.467
+      "seconds": 35.964
     },
     {
       "command": [
@@ -43,7 +219,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 69.287
+      "seconds": 74.511
     },
     {
       "command": [
@@ -51,7 +227,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.245
+      "seconds": 1.247
     },
     {
       "command": [
@@ -65,7 +241,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 639.447
+      "seconds": 646.621
     },
     {
       "command": [
@@ -73,7 +249,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 417.341
+      "seconds": 417.706
     },
     {
       "command": [
@@ -81,7 +257,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.822
+      "seconds": 4.779
     },
     {
       "command": [
@@ -90,7 +266,7 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.389
+      "seconds": 60.953
     }
   ],
   "dependencies": {
@@ -260,85 +436,85 @@
     "term:ui-w-work-status": "d117098e012432dab39d5b327a5d9095d64f85418b7db6e35f83d570c59d0dfc",
     "term:uncertain-operation": "e5808790f69713e7d0155139fef47ed953581d1b2baec8a675912f2cfa3460c5",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
-    "ui:C-ANSWER": "6be9845eebd454eb56c682d9b7d22a98d7511d113807a2ceca3d20f67f23d80b",
-    "ui:C-BROWSER-LAB": "8bcc8d3b6d5b124d38206226a07c6e98ebafdf3e23ffb2f7c2306d3a50d90124",
-    "ui:C-CONFIGURATION-CONFIRM": "8bcd7656685ba4ac39814c23e4442dfc9cf8675d30611a26f07a770003e58bbf",
-    "ui:C-CONFIGURATION-PROPOSE": "d30b05291c7089c6fe20bafc731ee43b0b8ff75a083138f970190c805ff882c2",
-    "ui:C-CONSENT": "8fb8c2e59c8c26e7920cf6cb24ebb08b8738dc0cea8fe4b342c664c7e620385a",
-    "ui:C-EVENT-INSPECT": "7192412ede97b14d8082413b4be66a986743e949863b110a1547b9b8ea66c0ff",
-    "ui:C-FILTER": "1190ca814d4a8832b39f43a966743a3a4530698410e6c1f26bcf8dc0a5a5b57e",
-    "ui:C-FOLLOW-UP": "b8ad3eb2b7d970f7ee450bf439c49e2dc52ece6fe852658e1907ccf4a6159a88",
-    "ui:C-ITEM-STATE": "e46912d7ba821f457c7086e62216d3c40477f0e396b70f0b7f77607577258901",
-    "ui:C-LINK": "535deda714740298c49a05fd006f8c937f0ca72a0b1bd831218772c24cf19a7f",
-    "ui:C-NAVIGATE": "54b68afd6401e2b9558db7acb3797f6c9e093912f24f02a036d8411dbfa620bc",
-    "ui:C-OPEN-SETTINGS": "0cf2832636da00c37fd7b749d67ef27a2f7d6579b608fcf1e1699dc7faefe820",
-    "ui:C-PACKAGE": "73908fc49eec94a6539f778b4ea09baaf2252e171a0ef550840d03c3ef0645b0",
-    "ui:C-PRIORITY": "4e696ecce73ed7832b80a01578ef91dbf3da0ec55712726f8051c50193754a65",
-    "ui:C-RUN-ACTION": "79cdf489e18abe472e726fa2eff8b2e124ebaa303fc68e939978e17af6106fe0",
-    "ui:C-SELECT-ITEM": "88e17e25e71680556df50a244bef2a4419499dc541fe533218c536abd07f6755",
-    "ui:C-START-CHAT": "1a36146c36961c219f20daba0b6030d5b72c74a5d24628b67542c549ab893aba",
-    "ui:C-STATE-REFRESH": "0fb0e0154463e7ab977121f7844ac3c3465415473b56d81c97eee0fa55573def",
-    "ui:C-TRANSCRIPT": "10c3d6da424a1b7e4bef4b66a89d2e2ab40540b7cc948c99adf2240fde9b87ae",
-    "ui:C-TUNNEL-KEY": "82c7964ce88b5a442a616a616ba80d73d4ef773b7252997ea8e9fd9c65daa944",
-    "ui:P-APPROVAL": "e8ed078af711719505e732a258233384a712a364a09ec925e27e8b353f2fe409",
-    "ui:P-BROWSER-LAB": "56e2863c2f22b25abc01d9b754ef99c0d6fc05ad06a2ea6e6ba59983be959a7d",
-    "ui:P-CONFIGURATION": "31eef7d93f0d50a65268839ee477d3d0cfb5a744b1e45fd8039197a807983ab5",
-    "ui:P-CONNECTION-GUIDE": "ff98609c5ac7577856b2a800366810eabaeca70c9ecbd8b2d63e15e1c8d986b3",
-    "ui:P-ELICITATION": "67767671da7f1e21926d3d064558e14ae00cca25f4a95f729d0abfe40ec694c2",
-    "ui:P-EVENTS": "19f2f19fe91fe91e8d79bafc4c8b0a00b45ef91bc0c1c530d831eec075f89b88",
-    "ui:P-FEEDBACK": "9c1da0cb25ed16fd156466b66e8c4280fd43d02c97542f6e26407061dcec9d4b",
-    "ui:P-IDENTITY": "765bde78fb86e3ee36a71ac3563096718a2209f92cf31787499fd6e08b23b3cc",
-    "ui:P-INBOX-LIST": "7de14a22b4cd45d1afe1e875ddd3e6a37843dd948e68d5dd6fdc9545a85bc538",
-    "ui:P-INBOX-QUERY": "55e811458b49ad959c84faf94970e81d79a13059630fc1d9146ba9e91509106d",
-    "ui:P-ITEM-DETAIL": "dc0c81e04369afbab2e9f91c351a3748ce5e441bf58e21598b2b0bf2ab92aad5",
-    "ui:P-LOCAL-TUNNEL-KEY": "41712a839f691c110ca61431dc25527b1fc597c608d204e7456c8c15f6fc91c7",
-    "ui:P-NAVIGATION": "81e17bccda56527565006b999ac4f9a813d607598a8d4c56f9bee14a426b0002",
-    "ui:P-OWNER-CONSENT": "4f52d51980638cdcdb58b729c3d647154864d26ca0b5c97c8452dfb016069307",
-    "ui:P-PACKAGE-OVERVIEW": "f5db91bf02cb43174524c461e010885502e1a5293ef3ca1e667dc0ec7c12060b",
-    "ui:P-QUESTIONS": "8630d2bd5e5517efeb23cb18ce6c43888268e98f350dedcd86bcb2e850153a70",
-    "ui:P-RUN-DETAIL": "ab2b5b1cf623031b84e851d04c2258369ef066f4d21c0260de81a264c510c158",
-    "ui:P-WAITING-QUEUE": "074bd5a6c1bbd607b7867223596e86b029ac6aaa4c2ced02124aac8120a5e144",
-    "ui:PAGE-AGENT": "b0cfd0e3604d7bde8afa47a0a614aac13e4bc991d07fb3274ebc5ff39e451c20",
-    "ui:PAGE-AGENTS": "a55babd8bd5300af4af137df2ae0430005e11235d7917f01c72aa6171aa73197",
-    "ui:PAGE-BROWSER-LAB": "3afb65f42add0ae74d75302c8f0ad5f592afda3938c268aafa4ec4f62a7cc847",
-    "ui:PAGE-EVENTS": "4ed7530e67d3c48499a132ed14a073f3d215d463e617e642a7007434417b715c",
-    "ui:PAGE-INBOX": "a45ca6b10f11af0a4162c239c98288f49425ce46e43ad943f1af265785d0d47c",
-    "ui:PAGE-LOCAL-TUNNEL-SETUP": "ccacdfd3bc4e615713a1e27ea655dc6fb7649a7ae4b657e498f2b950e91c16e8",
-    "ui:PAGE-MY-PRS": "ea3cfba7d2ba40abdaab12307e0bcfb1e1396f7b4edb349d39033fdd1cd198b9",
-    "ui:PAGE-OWNER-CONSENT": "ce18a07748c459b84a992f215e1d30497491dc9421fc712e457ef86efdb779d3",
-    "ui:PAGE-PACKAGE": "091fccd05a1dadb6c33727ed38e660cef78ca990c4b809a75f9e901cf0447331",
-    "ui:PAGE-REVIEW-PRS": "cf8f008d9581fcdcd0cf444cb18d4b57ceb26e9d203e9158bd0253e85a64969e",
-    "ui:PAGE-SETTINGS": "601bd50cec938ab11d38ff975714386cabb1b50af89f50f5f5a7609bd837d8e4",
-    "ui:PAGE-WORKING": "7417c925d05e2f46a4d8014194e9eb399c7bd70968fa70db9a00c8d1ca9b759b",
-    "ui:S-FACTORY": "b3f3aaebcd903aa1eeb0330f8fb19f16cd7b91c5f05093bfdea08ef846f99b48",
-    "ui:S-SETTINGS": "cb6588d21c9bb7c6380d60b90a5ff0e0796d15a60cca0a240570c310da64d10e",
-    "ui:W-APPROVAL": "62cc292a18d5fb6e295d978c263a69fb4a958c88e95e4fa75b7330b4601e2398",
-    "ui:W-BROWSER-LAB": "38c9924cb0f0d4ca4250c7063425a629609e75f2f118db0d9aaf11ef62329bcf",
-    "ui:W-CONFIGURATION-CHAT": "8506608ee542f7e558ae94d34d5e0a68461026dcfbb909d96ed4e32ceb914be2",
-    "ui:W-CONFIGURATION-PROPOSAL": "487c1381683f276a893da061342afc85bfede1098885088ae7347de89fc92f79",
-    "ui:W-CONNECTION-BLOCKER": "239cd87374293e10347fc5e529179f4b2cdb203b8699346485840f09ffa6fa35",
-    "ui:W-CONNECTION-GUIDE": "e6aa3d0b77575d77feda04ea1333283c0cdb80067241322ab0f9c641110bca0b",
-    "ui:W-EFFECTIVE-SETTINGS": "4e27db97c08f4d621dfb7e0d47d5861b661659070067660d32a5fedc0a23bed8",
-    "ui:W-ELICITATION": "412e9fa840d1eda9ad269c25f1969d1c3fd20ec21ad65c5996c629c244e7d143",
-    "ui:W-EVENT-BATCHES": "e8d1aef81aa0afe18a8dcab43fd1d52c9ba7cb90be8f7f97d82c3b1ade000c39",
-    "ui:W-GLOBAL-ERROR": "c29def7a693df3a5348f2a1c4c4fc6d270745c03a48d75250c5e7688ff92a0df",
-    "ui:W-IDENTITY": "1bf7bcbff62418b4825f5a2ce1ed47018937959452a91f7cda6a362b061f3249",
-    "ui:W-INBOX-EMPTY": "0b539aecbf80cb58f19c6c0d828b2d9c153043165e2b01f981ccc29ec5dfbbd6",
-    "ui:W-INBOX-QUERY": "3b35be7c27e871f90d9bf589d3c4f3e07165d39d52659d376f06084f6673e3e3",
-    "ui:W-ITEM-ACTIONS": "ceddbbc152b4531ef272c306f8d6c2ac43233784ce3993eaf7b78cebe06a73ab",
-    "ui:W-ITEM-OVERVIEW": "a9cfb2e2241f6fe3d19fbe7f737b7503521b36c6a45c355c2ffe9523dad5a31c",
-    "ui:W-ITEM-ROW": "6ee0a0516dbb6ac170d195d99ac83c89162dfcb516b4810bbc7f7483f95ff626",
-    "ui:W-LOCAL-TUNNEL-KEY": "c6ff8e38b67c677589e5fd977d0a4fec088bc24f26799f885d5b446b0db1fd64",
-    "ui:W-MESSAGE": "b99eca233c1f7930ba57fcacc5536afd4a6c9588483623e2eb2d005dc5fba1bd",
-    "ui:W-NAVIGATION": "a36a62eb8a2180ceb689ef0ee0d51deabe667916fbdb958e5bca840490c0c812",
-    "ui:W-OWNER-CONSENT": "fc674b26f3a79fda0c73323457699dbb8e8684807c8ae81f7a4ad49565941aeb",
-    "ui:W-PACKAGE-OVERVIEW": "14bf0047fab6ab650c29b9fa6ee5c3e2def617343081e3b77acc5e7f12d26d83",
-    "ui:W-PRIORITY": "007529886a6035acac751faaeeb73cd3e557f8384612c45506c5b96401503283",
-    "ui:W-QUESTIONS": "f894305bc8bb316040ebc7f9717e928f3f77a590e82778564a248dd366a13011",
-    "ui:W-RELATIONSHIPS": "8092fad1532c590b4d3f5e50c738f0253c50cf79591039e5e2b728a80dddcc21",
-    "ui:W-RUN-CONTROLS": "29919306132526e18d4beda2a10da6c217cc4f89227371789f39a5ec4b494b79",
-    "ui:W-TRANSCRIPT": "7019873a9678a8e8bf58e0bb9975fb6f5e853b4d1315f8d792b28b506a627097",
-    "ui:W-WAITING-ROW": "1f43aa20d97b3ad0272ee84b67a995257610ed8398953a5c5083da02798717e9",
-    "ui:W-WORK-STATUS": "53ecc3c914bf5389b7e9557f7833cb8e94b5cec7ebfe2c36bb1572bdf31330de"
+    "ui:C-ANSWER": "04e9682370175162c57c5583cbf625e7f1646ff03217896a91e558cb2b51f8f3",
+    "ui:C-BROWSER-LAB": "1e2932cb4e8bf49d06744a0c8a4de06b66994331f4232b261a9866ad1b85d166",
+    "ui:C-CONFIGURATION-CONFIRM": "ef21769fd4a216c1dfcd2be140e4dcab302129b15ae365323cc86e00b9ffccee",
+    "ui:C-CONFIGURATION-PROPOSE": "9afce8783a8862860c6e41705ae1c59c2d756a8dacfeb57e6fe3072b5910402e",
+    "ui:C-CONSENT": "691ed0a4ac8d336b7498e1d69b4d547631540d1ce71981e9c6991368f133b156",
+    "ui:C-EVENT-INSPECT": "2c50e2a00818684316c16a1c631393d7870971cc90774fb866cc7591e0746124",
+    "ui:C-FILTER": "66b68f7b787df86d84215c904c91382be935cdd9d10f710e708e655990cd80d6",
+    "ui:C-FOLLOW-UP": "3bff92462ff09153c2d2646d14389ee157807dcfd22364f6a243ac32dd67bff9",
+    "ui:C-ITEM-STATE": "fbdf30a1178f55d6950abf3554c530053c2ca08be4866ea36206e8565b4fef50",
+    "ui:C-LINK": "55b2d9e3f94375a04cedf13e72bf0a631a3f9b83553ddc0fbab20046fd83a05f",
+    "ui:C-NAVIGATE": "a3f1a68db9f2d8704cd7c159252c9eaa5ff59b3d7696c8b9ca2469cda95f9a55",
+    "ui:C-OPEN-SETTINGS": "1c082b59a21e924c6d1b10ec9bde2f580ea5d4e74a8d55b3546ac14a1cb2a35b",
+    "ui:C-PACKAGE": "6646410f69fdc5bfdfdb23239312c3966ebfdbae9556b196a5d6bdaf98b419dc",
+    "ui:C-PRIORITY": "77e9a24ab918c4a163a220205dfc3191c9fa6b69be401ff5c41f656e9158eb9d",
+    "ui:C-RUN-ACTION": "053bf17447477df455ec52e525cfaf951ee2dc78d7ccd726117600bfb342bc42",
+    "ui:C-SELECT-ITEM": "5d13c9a5851a4f2a130b4e338db1fdd653cfc7a3e6a8566877ed3fae781394a6",
+    "ui:C-START-CHAT": "fef3471a9f669e5c0c6191da87698fc925df2248dd59de422721080d1b902fde",
+    "ui:C-STATE-REFRESH": "196dec890c5cf20ad0036c174285f2675418ba0f4aa5a2342a83b4c4ed1b3909",
+    "ui:C-TRANSCRIPT": "1531fe8ddbbab23737e177bb91d12cc13904b2107847694f784824f44fe0d910",
+    "ui:C-TUNNEL-KEY": "0ce18af53c296ba33bb1090d0a85343f469972d6697b618c8317d507fc238977",
+    "ui:P-APPROVAL": "36b9b6795858e1044bab549e7c220a104f042882786e5fd1229821744898179f",
+    "ui:P-BROWSER-LAB": "ca441a268e51800a28a591e56de75ce248efee9faeb522a3f60287da6e8346ab",
+    "ui:P-CONFIGURATION": "8099e59a212af104bb8687d5a1d466d3d0fdefd746cd77ed2ef065e720f10f4c",
+    "ui:P-CONNECTION-GUIDE": "02178776c4007ac051a488e9467329ce23a9ad0de70199939f4fb6cd62f1be64",
+    "ui:P-ELICITATION": "3aeaf48f3f28580f3e40b2016598fcab33b11df39f935468e8d195ffd0666ec3",
+    "ui:P-EVENTS": "43ff56cc2cb6d889179237cda6c5b757f8e63b443723445e9b457b93e4c9ad26",
+    "ui:P-FEEDBACK": "99544dd6fdc3b95d7ef00b1ab08b018ad5e94204aaad491d77aa61a407215a8e",
+    "ui:P-IDENTITY": "8f8580204ba07c75e82706572e1d3a4e24d0e4c4493c7093c02e5ea0a6a3928e",
+    "ui:P-INBOX-LIST": "154b111dec84605368c2ae04adab7c226c166ec1c3c639bec4d34942d7f1a0fa",
+    "ui:P-INBOX-QUERY": "b22c47ae4a6415cc10945be64d19ef02a3dbdd5a76a5e227db367de284940e42",
+    "ui:P-ITEM-DETAIL": "6017db03327047d5c747875817ff1ea9da5507b417f1570bb04ba7dbf33a0fd3",
+    "ui:P-LOCAL-TUNNEL-KEY": "ee9f70c0905a0e37bef53ef40a0e45e20fec73cf93e863cf31d8db211710c48c",
+    "ui:P-NAVIGATION": "aa2213204c1db67950520d86c3bcf1c4ce656a7449a3ffa1313f36beb05c59cc",
+    "ui:P-OWNER-CONSENT": "5a895578e7c5bd4828a0640e8dcfcc3b8d25f04a3df4d36967235d6941eff9c5",
+    "ui:P-PACKAGE-OVERVIEW": "5576c25f4d2509b7caacec7b74166d57ad8405a0d27c35f547982a7d026768fa",
+    "ui:P-QUESTIONS": "04f82faad958bd22a17db27366d20f4c63387df3b63dcbde4d6e16f8a90b51a3",
+    "ui:P-RUN-DETAIL": "ee4a49cdae26b1f9f9d6db08b19525fccaaf6acb1134f817dbb87312679d4499",
+    "ui:P-WAITING-QUEUE": "f1695bccad09dae832d72d285e43b07f72566e80c5ab8d49b0c936ce916757e1",
+    "ui:PAGE-AGENT": "ff5516e4b78a1dd8dfa5987102eccf94a21694ea7f329a8fb035e1ad34f6e66f",
+    "ui:PAGE-AGENTS": "85511d1c22226fd35f6a2427a55313b4a8f29dcb8d6dc54a22e90c6ba7bebbb3",
+    "ui:PAGE-BROWSER-LAB": "aae7e92e802be274e8808a2bd948035e6f047c21f855f1739d777ac3913e7393",
+    "ui:PAGE-EVENTS": "481884f14ec45deb8b9874d25154ba02dc84eddb31fa4d420feeb87109dc877e",
+    "ui:PAGE-INBOX": "a1754523d580a1824633b1f59e9722338439cc5c2b8073e8c9cf15b377670d53",
+    "ui:PAGE-LOCAL-TUNNEL-SETUP": "e43c614dc9c69fee962aacea236b73773f381c5fc2e8663bfafc4d560b399c1a",
+    "ui:PAGE-MY-PRS": "ede948fdf3b20fffa7bf2bb19203625aad7156640f9b9b403169a7b0d25d58df",
+    "ui:PAGE-OWNER-CONSENT": "c64593b628e410f290055412443b1609b625c5b95c327ca75e0dab1ed0da6d2a",
+    "ui:PAGE-PACKAGE": "3cd38534f2d2bec0723e0303ec130ae820aa0313cebbc99feff616d5520b4a0d",
+    "ui:PAGE-REVIEW-PRS": "60c416b20b38fd8bea375099ed1a5e57c2a51d94c23192a200e808914ee591e6",
+    "ui:PAGE-SETTINGS": "75288774478f7b909481790361d3dcb7e62ae3192a44b0aafb327f1916166ca5",
+    "ui:PAGE-WORKING": "5112bb1c48a1d98d60b5e3dbb75f67908103df58dc22637bfc85d78a5b11f760",
+    "ui:S-FACTORY": "9e8a281c452a2ce4e1af51dbc09941bc45c98d092d141318921fe46645817b46",
+    "ui:S-SETTINGS": "92cc68c1524390e49962773d3ce3695443b830300967586d4f74edd50c039d27",
+    "ui:W-APPROVAL": "7ac3518dd557defc466473bb77334d9d9ca3e9d7751f1f6e9ec4a333b0271c22",
+    "ui:W-BROWSER-LAB": "ae854df7d92337820bbef6d26a513ff23cc719ca6e42b870470a60ac8a20a201",
+    "ui:W-CONFIGURATION-CHAT": "76cd93920d1f850eff7eda9ce3e8e52b3421e67501f947e684f885166b584633",
+    "ui:W-CONFIGURATION-PROPOSAL": "90b28747b5ac0f7ed3f2d8e083424f72ec3b63d05aa783e46bd56e12cedb988b",
+    "ui:W-CONNECTION-BLOCKER": "bc36769845dcbaad6036e9b781c21e1698d8a6a20e191a8761727dfa4c985a39",
+    "ui:W-CONNECTION-GUIDE": "5bf7480e6c923a9999d27ece4b7796f4f44d1b701d30855328817b56d93b8bf9",
+    "ui:W-EFFECTIVE-SETTINGS": "73f671281fe3c41a90c08f997acb50068c3c9de790a35fea6b673c26ee019801",
+    "ui:W-ELICITATION": "13da86c1b36f84fc2940f5321375812634a22bb68e4aa2b1764706a143b3383b",
+    "ui:W-EVENT-BATCHES": "3febd0b71de887ff7b3e6a4302e12a0bcb4f67fe8c65a3a750fd92963995a08d",
+    "ui:W-GLOBAL-ERROR": "4fef32de6bc38d202ae1d6e61bf9a65cd0b7ae97f7a0fce8dc8df24ad92d919f",
+    "ui:W-IDENTITY": "846590bdc5ea6f11274d63f28a9d0c9497e500ec49d350c036a2444b2e58cc1a",
+    "ui:W-INBOX-EMPTY": "e9aaa6381c3a467671c23e193c4a1abe0775e54b629fcefa15e877bb23e73ea5",
+    "ui:W-INBOX-QUERY": "3c2a2cb8c0f0305f39495a2354778528e37e6d07ffbc33a03a40f27e67e0bfcf",
+    "ui:W-ITEM-ACTIONS": "f503c20addc7b414691125a4bd4f77c4c66e574f22fb466c7e653d11bb91bc4b",
+    "ui:W-ITEM-OVERVIEW": "87e8ebfe86b73c2a709650d07fe5ec2339128d8b11e16887ea20ee289707e1e7",
+    "ui:W-ITEM-ROW": "29c30af3440ecabaf245588b975efbc29ad1019a1aa4eb53c41db44b9738681d",
+    "ui:W-LOCAL-TUNNEL-KEY": "cfc01fb5e1fecd8f1add40e21cf162c19879e829ef1fb8267cd128aebc6182be",
+    "ui:W-MESSAGE": "7a1a5a4c6f7d9e6a1b50af1c8bb77d4a8ff1cb217a0b454d380c5999a2bc8f15",
+    "ui:W-NAVIGATION": "bf9c91fbaed6d91cc8db303199dc6ecc30fbcf91aeeb914c0dcc75f263324aa8",
+    "ui:W-OWNER-CONSENT": "dd532a8acc2779b84583ff0f0b2dd4b3164cdcd4b1b4154a548abcea7819fe6d",
+    "ui:W-PACKAGE-OVERVIEW": "5ecf7a8ee339cd8f309a30669922537127125206b1f73a5b27a39db0eb7b3983",
+    "ui:W-PRIORITY": "4b0be7de97d1ede0f5afd792e17b786ec9ebb8dfe22a826f7b9ebccb086e8745",
+    "ui:W-QUESTIONS": "d54c7497299633d266712ab037035e1814642cb1dd7c7e822c6740d2f6f05ee2",
+    "ui:W-RELATIONSHIPS": "29cf7899e3ff6d28209da4f5bc7b904f6e2c67ce15ef4ad385844647e06d5807",
+    "ui:W-RUN-CONTROLS": "16f81883dbd8a667caed3df2305e51492112e1186cb1639507e4d94f78c54782",
+    "ui:W-TRANSCRIPT": "fc1081f4fab51706a2dddb073d3b194b875e5befee183da32b26d96fec803283",
+    "ui:W-WAITING-ROW": "8c9a1d49bc358b4def2e633d4b14aa2b6fd30fa92ea9d7f929fb2d2b4fd27515",
+    "ui:W-WORK-STATUS": "e9133f2f7d2adfde087e8fd1bd5cfd3de977ee0f278ea925611850ace06edbe6"
   }
 }
