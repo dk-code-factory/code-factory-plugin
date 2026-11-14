@@ -3,6 +3,7 @@ package factory
 import (
 	"codefactory/internal/codex"
 	"codefactory/internal/domain"
+	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
 	"encoding/json"
@@ -33,7 +34,7 @@ func toolsFor(kind string) []map[string]any {
 				"body":    map[string]any{"type": "string", "minLength": 1, "maxLength": 4096},
 				"options": map[string]any{"type": "array", "maxItems": 6, "items": map[string]any{"type": "object", "properties": map[string]any{"label": map[string]any{"type": "string", "minLength": 1, "maxLength": 160}, "description": map[string]any{"type": "string", "maxLength": 512}}, "required": []string{"label"}, "additionalProperties": false}},
 			}, "kind", "title", "body"),
-			tool("code_factory_inspect_configuration", "Read effective application settings, native Codex layers and installed skills for a repository checkout.", map[string]any{"cwd": str}, "cwd"),
+			tool("code_factory_inspect_configuration", "Read effective application settings, saved GitHub request accounting, native Codex layers and installed skills for a repository checkout.", map[string]any{"cwd": str}, "cwd"),
 			tool("code_factory_propose_configuration", "Propose a concrete settings replacement, or native edits against an inspected file/version. Only the user can confirm.", map[string]any{"settings": map[string]any{"type": "object", "additionalProperties": true}, "native": map[string]any{"type": "object", "additionalProperties": true}}),
 		)
 	}
@@ -295,7 +296,11 @@ func (s *Service) dynamic(ctx context.Context, v *Session, name string, args jso
 		}
 		var skills json.RawMessage
 		err = s.client(v.ID).Call(ctx, "skills/list", map[string]any{"cwds": []string{p.CWD}, "forceReload": true}, &skills)
-		return map[string]any{"settings": c, "native": native, "skills": skills}, false, err
+		if err != nil {
+			return nil, false, err
+		}
+		usage, err := providers.SavedGitHubUsage(ctx, s.Store, c.GitHubRequestsPerHour, c.GitHubReserve)
+		return map[string]any{"settings": c, "native": native, "skills": skills, "githubUsage": usage}, false, err
 	case "code_factory_propose_configuration":
 		if v.Kind != "configuration" {
 			return nil, false, fmt.Errorf("configuration tools are session-bound")

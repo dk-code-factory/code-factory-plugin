@@ -40,6 +40,11 @@ work; connection recovery never submits the command again. After restart, effect
 with retained intent are uncertain and memory-only work can be lost. Neither is
 authority to replay a mutation or reuse an expired answer.
 
+Configuration inspection includes saved GitHub request attempts and completed
+conditional validations, separately from observed shared quota. Capture and quota
+observation times identify the snapshot being shown. Inspection makes no GitHub
+request and does not change the request allowance or assessment policy.
+
 ## Scenarios
 
 - **S1** — Use configuration chat to inspect effective settings and native layers.
@@ -92,6 +97,9 @@ flowchart TD
 - [plugin/skills/code-factory-status/SKILL.md](../../plugin/skills/code-factory-status/SKILL.md) — Current configure-work implementation or fixture/build dependency.
 - [plugin/skills/code-factory-report-issue/SKILL.md](../../plugin/skills/code-factory-report-issue/SKILL.md) — Current configure-work implementation or fixture/build dependency.
 - [internal/factory/communication.go](../../internal/factory/communication.go) — Intentional structured configuration messages and questions; pending questions suspend until the exact owner answer. (`func (s *Service) communicate(`)
+- [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Configuration saved-state response exposes sanitized, local-only GitHub accounting with immutable as-of capture and quota observation timestamps. (`func factoryState(`)
+- [internal/providers/github_usage.go](../../internal/providers/github_usage.go) — Saved application attempts and observed shared-principal quota units are read from SQLite without provider or credential resolution. (`func SavedGitHubUsage(`)
+- [internal/factory/requests.go](../../internal/factory/requests.go) — The existing configuration inspection tool returns saved GitHub accounting alongside settings, native layers and installed skills. (`func (s *Service) dynamic(`)
 
 ## Test references
 
@@ -112,6 +120,8 @@ flowchart TD
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationValidationAndExpiry(`; S1. Communication rejects invalid/bounded payloads and non-configuration sessions; expiring a blocked question rejects its answer.
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationLegacyCommunicationAndCompactDiff(`; S1, S3. Retained legacy configuration status results record intentional communication cards; settings diffs retain changed values and omit unchanged and absent fields.
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationRetainsNativeCatalog(`; S1. New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs.
+- [internal/transport/github_usage_test.go](../../internal/transport/github_usage_test.go) — `func TestConfigurationProjectionReportsSavedGitHubAccounting(`; S1. Configuration projection exposes sanitized saved accounting; usage writes refresh that view without invalidating unrelated inbox data or assessment policy and never resolve provider credentials.
+- [internal/factory/github_accounting_test.go](../../internal/factory/github_accounting_test.go) — `func TestConfigurationInspectionReportsSavedGitHubAccounting(`; S1. Configuration-agent inspection returns local attempt and304 counts alongside native settings and skills without a GitHub credential lookup, model turn or configuration write.
 
 ## Verification and gaps
 

@@ -244,6 +244,25 @@ requests and GraphQL quota uses points. Manual polls obey the same persistent
 provider gate, conditional cache and server cooldown as background synchronization.
 Changing an allowance does not erase prior usage.
 
+Configuration inspection and the configuration saved-state response include
+`githubUsage`. `requestAttemptsLastHour` counts conservative request reservations,
+including uncertain sends and completed conditional `304` validations;
+`requestsLastHour` remains its compatible alias. `notModifiedLastHour` separately
+counts completed conditional validations with saved response bodies. A warm local
+cache hit increments neither count. Authenticated unchanged responses do not use
+[GitHub's primary REST quota](https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api#use-conditional-requests),
+but retain their local request reservation.
+
+`restQuota` and `graphqlQuota` are GitHub-reported shared-principal bucket snapshots,
+measured in requests and points respectively. Their optional `used` and `limit`
+values are reported headers, which can include other clients' traffic. Missing
+headers remain unknown; no per-plugin consumption or GraphQL query cost is inferred.
+`accountingAsOf` identifies the local counting window's capture time; quota
+`observedAt` records the last response supplying that snapshot and is absent for
+legacy records. Saved projections retain their capture time until accounting or
+configuration changes rebuild them. Inspection reads SQLite and never polls
+GitHub or resolves its credentials.
+
 Diagnostics check credential availability without dumping authentication output.
 Managed clones use Git transport and the existing credential helper. Agent/skill
 commands and other GitHub clients remain outside the daemon provider cap.

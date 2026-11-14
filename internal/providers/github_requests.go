@@ -380,9 +380,6 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 		return fail(HTTPRejected, res.StatusCode, op.err)
 	}
 	if res.StatusCode == 304 && method == http.MethodGet && cached {
-		if err = g.requestSucceeded(ctx); err != nil {
-			return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
-		}
 		merged := c.Header.Clone()
 		for k, v := range res.Header {
 			merged[k] = v
@@ -393,6 +390,10 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 		c.Until = c.CheckedAt.Add(restTTL(req.URL.Path, merged))
 		if err = g.remember(ctx, key, c); err != nil {
 			return fail(Uncertain, res.StatusCode, errors.New("GitHub cache unavailable"))
+		}
+		validated := len(c.Body) > 0 && (req.Header.Get("If-None-Match") != "" || req.Header.Get("If-Modified-Since") != "")
+		if err = g.requestSucceeded(ctx, validated); err != nil {
+			return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
 		}
 		noteRead(ctx, c.CheckedAt)
 		if op.memoize {
@@ -431,7 +432,7 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	if resource == "graphql" && graphRateBody(b) {
 		return fail(HTTPRejected, res.StatusCode, g.rateLimited(ctx, op.token, resource, res.Header))
 	}
-	if err = g.requestSucceeded(ctx); err != nil {
+	if err = g.requestSucceeded(ctx, false); err != nil {
 		return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
 	}
 	entry := cacheEntry{ETag: res.Header.Get("ETag"), Body: append([]byte(nil), b...), Header: res.Header.Clone(), CheckedAt: g.now(), Until: g.now().Add(restTTL(req.URL.Path, res.Header))}

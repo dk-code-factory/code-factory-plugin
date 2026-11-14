@@ -757,6 +757,21 @@
           "path": "internal/factory/communication.go",
           "anchor": "func (s *Service) communicate(",
           "purpose": "Intentional structured configuration messages and questions; pending questions suspend until the exact owner answer."
+        },
+        {
+          "path": "internal/transport/factory_projection.go",
+          "anchor": "func factoryState(",
+          "purpose": "Configuration saved-state response exposes sanitized, local-only GitHub accounting with immutable as-of capture and quota observation timestamps."
+        },
+        {
+          "path": "internal/providers/github_usage.go",
+          "anchor": "func SavedGitHubUsage(",
+          "purpose": "Saved application attempts and observed shared-principal quota units are read from SQLite without provider or credential resolution."
+        },
+        {
+          "path": "internal/factory/requests.go",
+          "anchor": "func (s *Service) dynamic(",
+          "purpose": "The existing configuration inspection tool returns saved GitHub accounting alongside settings, native layers and installed skills."
         }
       ],
       "tests": [
@@ -903,6 +918,22 @@
           "path": "internal/factory/communication_test.go",
           "anchor": "func TestConfigurationCommunicationRetainsNativeCatalog(",
           "purpose": "New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "internal/transport/github_usage_test.go",
+          "anchor": "func TestConfigurationProjectionReportsSavedGitHubAccounting(",
+          "purpose": "Configuration projection exposes sanitized saved accounting; usage writes refresh that view without invalidating unrelated inbox data or assessment policy and never resolve provider credentials.",
+          "scenarios": [
+            "S1"
+          ]
+        },
+        {
+          "path": "internal/factory/github_accounting_test.go",
+          "anchor": "func TestConfigurationInspectionReportsSavedGitHubAccounting(",
+          "purpose": "Configuration-agent inspection returns local attempt and304 counts alongside native settings and skills without a GitHub credential lookup, model turn or configuration write.",
           "scenarios": [
             "S1"
           ]
@@ -1750,6 +1781,46 @@
           "scenarios": [
             "S3"
           ]
+        },
+        {
+          "path": "internal/providers/github_accounting_test.go",
+          "anchor": "func TestGitHubAccountingKeepsConditionalReadsInLocalBudget(",
+          "purpose": "Both managed REST transports retain validated conditional304 reads in the local allowance, preserve counts across restart, exclude warm cache hits and age out rolling-hour data without provider reads.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_accounting_test.go",
+          "anchor": "func TestGitHubAccountingSeparatesGraphQLPointsAndLegacyUnknowns(",
+          "purpose": "Legacy quota state remains readable without invented header observations; GraphQL points remain separate from REST requests and shared header usage is never inferred as application cost.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_accounting_test.go",
+          "anchor": "func TestGitHubAccountingRetainsUncertainAttempts(",
+          "purpose": "Uncertain sends still exhaust the local request allowance and cannot fabricate conditional savings or primary-quota observations.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_accounting_test.go",
+          "anchor": "func TestGitHubAccountingCountsOnlyValidatedNotModifiedResponses(",
+          "purpose": "Missing cached data, missing conditional validators and invalid typed cache bodies do not count as completed304 validations.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_accounting_test.go",
+          "anchor": "func TestGitHubAccountingRetainsBurstReservationsAndThrottleState(",
+          "scenarios": [
+            "S3"
+          ],
+          "purpose": "Both REST transports retain completed304 accounting, conservative secondary reservations and shared quota observations across explicit server cooldown/restart; early retry sends nothing and successful recovery clears only throttle state."
         }
       ],
       "suites": [

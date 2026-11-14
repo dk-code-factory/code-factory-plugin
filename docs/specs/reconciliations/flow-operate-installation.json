@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
-  "fingerprint": "8178838f4d67776abee70288e87b5e4752a50ee48bd999ce12bb27d1c5200877",
+  "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
+  "fingerprint": "2d0316773474a4953a2ef7debf8123e052c0221c0842ac25a5a364eeca853233",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1\u2013S5 installation, rollback, diagnostics and explicit settings confirmation remain unchanged. Updated allowance guidance explicitly separates daemon transports from independent agent subprocesses.",
-    "implementation": "No service, route, installer or deployment code changes. A future provider deadline changes safe request admission and scan status only; installation and diagnostic operations remain outside automatic retry. Reviewed follow-up Teams retry and active alias bounds: neither changes this consumer\u2019s owned transitions; accepted terminal identity metadata remains intentionally retained. The follow-up only changes shared browser progress retention and timer-test observation; this subject has no additional owned transition change.",
-    "tests": "Required packaging, installer, smoke, tooling and performance suites remain selected. Local fake-provider/process evidence is not installed-host, login-cycle, power-loss or release-delivery evidence; existing gaps remain intact."
+    "description": "S1-S5 diagnostics, upgrade rollback/uninstall and confirmed native settings keep their behavior; reporting clarifies local/shared accounting without changing installed service operations.",
+    "implementation": "Installer, setup and browser-controller behavior is untouched. Optional persisted accounting fields decode legacy records without credential migration. Native proposal confirmation and safe turn-boundary application remain unchanged.",
+    "tests": "TestRollbackRestoresGatewayProfileAndArchivesCurrent retains legacy/current profile restoration, a private0600 archive and consumed snapshot cleanup. Configuration safe-boundary fixtures defer confirmed changes until the active turn ends and reject stale proposals. No live service or installation acceptance is claimed."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.095
+      "seconds": 35.85
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.41
+      "seconds": 78.573
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.512
+      "seconds": 3.893
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.79
+      "seconds": 3.23
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.187
+      "seconds": 21.043
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.663
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.245
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 650.44
+      "seconds": 652.602
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 440.259
+      "seconds": 439.625
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.775
+      "seconds": 4.818
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.11
+      "seconds": 60.87
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "d2183f6c66958a65d99d9ccd76e808884028efe83ccde28ecd6dc7b56d50b32e",
+    "flow:operate-installation": "5345f4bb2bfd811f862f93f0b0e21c29ddad9d4a00c0a81964d3a8ceef70a6c3",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "e7f4b0ace282f88238a37731f0abc73ba1878207e0dc6012eaed0f859142158d",
-    "ui:P-BROWSER-LAB": "d91786abca02f1f8475f6678a6e3558c0ae4cb8f4e865a75a2da06ad6f2cd7bb",
-    "ui:PAGE-BROWSER-LAB": "592c0f6799bdeb017dc7f030e7af4f59afa035c004b93b1a42f7140d776cdb7f",
-    "ui:W-BROWSER-LAB": "0064ab203441b1c0aa754a96b324b0c7448f00aaf9db8de168e787189686a045"
+    "ui:C-BROWSER-LAB": "926eafa9777594b89e53cd6e37f7091c90aad9c8c7ea7c7a5f7ae656faa75f0a",
+    "ui:P-BROWSER-LAB": "b7466b4b215479ece5656a54c90b9c03002ab0511101456bd28de294ce19a329",
+    "ui:PAGE-BROWSER-LAB": "c9b8d8a8386df345e9e25e308eb37276d81ae4cb60a5c4423a8a12d6b3710778",
+    "ui:W-BROWSER-LAB": "e2d66187b96359ac146554c1ed5f367d50f1ad514a985fb53f9e68a7f16866dd"
   }
 }

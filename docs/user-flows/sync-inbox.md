@@ -30,6 +30,11 @@ Read-only inspection does not launch a model turn. Surface validation or provide
 
 Retain provider cooldowns and successful synchronization cursors across restart. Background reads resume when due. An interrupted accepted operation retains an uncertain outcome for inspection rather than replaying its submitted work. Honor a valid server retry deadline or exhausted-primary reset; otherwise wait at least one minute on secondary throttling and increase the wait on repeated failures. Requests from other GitHub clients and undisclosed provider limits remain outside locally enforceable accounting; provider throttle responses remain authoritative.
 
+Successful conditional validations remain part of the local request-attempt
+allowance. Unknown send outcomes retain their reservation. Inspection distinguishes
+those attempts from completed conditional validations and observed shared GitHub
+quota; cached accounting reads make no provider request.
+
 ## Scenarios
 
 - **S1** — Establish initial PR and activity baselines without launching historical work.
@@ -178,6 +183,11 @@ flowchart TD
 - [internal/providers/github_burst_test.go](../../internal/providers/github_burst_test.go) — `func TestGitHubTransportsReserveTheirOwnSecondaryPointCost(`; S3. Actual typed REST/GraphQL and generic query/mutation transports reserve their respective point costs and reject over-limit attempts before upstream dispatch.
 - [internal/app/github_retry_test.go](../../internal/app/github_retry_test.go) — `func TestScanTeamThrottlePreservesCheckpointsAndRetriesWhenDue(`; S3. A successful index followed by throttled team membership preserves saved source, identity and checkpoints, returns the provider deadline, suppresses early reads and completes the same safe refresh when due.
 - [internal/transport/operations_retry_test.go](../../internal/transport/operations_retry_test.go) — `func TestScanAliasAdmissionIsBoundedAndReleased(`; S3. Unique scan aliases obey identity and byte admission bounds; rejected IDs retain nothing, accepted duplicates resolve before and after completion, and terminal completion releases active capacity without duplicate work.
+- [internal/providers/github_accounting_test.go](../../internal/providers/github_accounting_test.go) — `func TestGitHubAccountingKeepsConditionalReadsInLocalBudget(`; S3. Both managed REST transports retain validated conditional304 reads in the local allowance, preserve counts across restart, exclude warm cache hits and age out rolling-hour data without provider reads.
+- [internal/providers/github_accounting_test.go](../../internal/providers/github_accounting_test.go) — `func TestGitHubAccountingSeparatesGraphQLPointsAndLegacyUnknowns(`; S3. Legacy quota state remains readable without invented header observations; GraphQL points remain separate from REST requests and shared header usage is never inferred as application cost.
+- [internal/providers/github_accounting_test.go](../../internal/providers/github_accounting_test.go) — `func TestGitHubAccountingRetainsUncertainAttempts(`; S3. Uncertain sends still exhaust the local request allowance and cannot fabricate conditional savings or primary-quota observations.
+- [internal/providers/github_accounting_test.go](../../internal/providers/github_accounting_test.go) — `func TestGitHubAccountingCountsOnlyValidatedNotModifiedResponses(`; S3. Missing cached data, missing conditional validators and invalid typed cache bodies do not count as completed304 validations.
+- [internal/providers/github_accounting_test.go](../../internal/providers/github_accounting_test.go) — `func TestGitHubAccountingRetainsBurstReservationsAndThrottleState(`; S3. Both REST transports retain completed304 accounting, conservative secondary reservations and shared quota observations across explicit server cooldown/restart; early retry sends nothing and successful recovery clears only throttle state.
 
 ## Verification and gaps
 
