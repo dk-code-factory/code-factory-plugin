@@ -66,6 +66,7 @@ type Response = {
       | "busy"
       | "queued"
       | "running"
+      | "waiting"
       | "succeeded"
       | "failed"
       | "uncertain"
@@ -75,6 +76,8 @@ type Response = {
     value?: unknown;
     result?: unknown;
     error?: string;
+    retryAt?: string;
+    retryReason?: string;
     resultUnavailable?: boolean;
     errorUnavailable?: boolean;
     [key: string]: unknown;
@@ -83,7 +86,10 @@ type Response = {
 type CallOptions = {
   signal?: AbortSignal;
   onPending?: () => void;
-  onProgress?: (state: string) => void;
+  onProgress?: (
+    state: string,
+    retry?: { retryAt?: string; retryReason?: string },
+  ) => void;
   onInstance?: (instanceId: string) => void;
   expectedInstanceId?: string;
 };
@@ -292,7 +298,10 @@ export async function call<T>(
   for (;;) {
     cancelled(options);
     if (operation) {
-      options.onProgress?.(response.state);
+      options.onProgress?.(response.state, {
+        retryAt: response.retryAt,
+        retryReason: response.retryReason,
+      });
       if (response.state === "succeeded") {
         if (response.resultUnavailable)
           throw new Error(
@@ -343,16 +352,19 @@ export async function call<T>(
       }
       await pause(options);
       try {
-        response = (
+        const latest = (
           await wire(
             "operation_status",
             { requestId, instanceId: submittedInstance },
             true,
           )
         ).response;
+        if (latest.state !== "busy") response = latest;
       } catch (error) {
         if (!isConnectionFailure(error)) throw error;
-        options.onProgress?.("checking");
+        // A temporary status-read outage does not replace the provider's retained
+        // retry reason/deadline or release the owning action lock.
+        if (response.state !== "waiting") options.onProgress?.("checking");
       }
     } else {
       if (responseInstanceId !== instanceId) {

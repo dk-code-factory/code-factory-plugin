@@ -16,6 +16,25 @@ import (
 
 type githubHeadContext struct{}
 
+func graphRateBody(body []byte) bool {
+	var result struct {
+		Errors []struct {
+			Type, Message string
+			Extensions    struct{ Code string }
+		}
+	}
+	if json.Unmarshal(body, &result) != nil {
+		return false
+	}
+	for _, e := range result.Errors {
+		message := strings.ToLower(e.Message)
+		if e.Type == "RATE_LIMITED" || e.Extensions.Code == "RATE_LIMITED" || strings.Contains(message, "rate limit") || strings.Contains(message, "abuse detection") {
+			return true
+		}
+	}
+	return false
+}
+
 // graph only accepts application-owned queries, never mutations or source text.
 func (g *GitHub) graph(ctx context.Context, query string, variables any, out any) error {
 	if g.publicRead {
@@ -130,10 +149,8 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 			return fmt.Errorf("GitHub cache unavailable")
 		}
 	}
-	for _, e := range result.Errors {
-		if e.Type == "RATE_LIMITED" || e.Extensions.Code == "RATE_LIMITED" || strings.Contains(strings.ToLower(e.Message), "rate limit") || res.Header.Get("X-RateLimit-Remaining") == "0" {
-			return rateLimit()
-		}
+	if graphRateBody(body) || len(result.Errors) > 0 && res.Header.Get("X-RateLimit-Remaining") == "0" {
+		return rateLimit()
 	}
 	if authRejected {
 		return fmt.Errorf("GitHub access revoked or insufficient repository permissions")

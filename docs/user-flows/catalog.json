@@ -1093,6 +1093,36 @@
         {
           "path": "internal/providers/github.go",
           "purpose": "Current sync-inbox implementation or fixture/build dependency."
+        },
+        {
+          "path": "internal/app/app.go",
+          "anchor": "func (a *App) sync(",
+          "purpose": "Propagate typed throttle outcomes while preserving repository checkpoints and resuming due reads."
+        },
+        {
+          "path": "internal/app/github_usage.go",
+          "anchor": "func (a *App) saveSyncError(",
+          "purpose": "Retain explicit waiting deadlines and notification cursors independently of ordinary polling cadence."
+        },
+        {
+          "path": "internal/domain/types.go",
+          "anchor": "type Repository struct {",
+          "purpose": "Retain repository wait classification and its next safe read time."
+        },
+        {
+          "path": "internal/transport/operations.go",
+          "anchor": "func (q *operationQueue) execute(",
+          "purpose": "Coalesce scans, expose waiting status and schedule safe synchronization retries without replaying other operations."
+        },
+        {
+          "path": "web/src/bridge.ts",
+          "anchor": "export async function call",
+          "purpose": "Poll the original accepted operation and deliver retained throttle progress to the UI."
+        },
+        {
+          "path": "web/src/wrapper.tsx",
+          "anchor": "function Factory(",
+          "purpose": "Display retry reason/time while saved PR rows remain available and synchronization remains locked."
         }
       ],
       "tests": [
@@ -1592,6 +1622,134 @@
           "scenarios": [
             "S3"
           ]
+        },
+        {
+          "path": "internal/app/github_retry_test.go",
+          "anchor": "func TestScanThrottleReturnsWaitingPreservesDataAndRetriesRecentRepository(",
+          "purpose": "Throttle returns a typed waiting deadline, preserves exact saved source/checkpoints, prevents repeated index reads and retries a recent repository after the retained deadline.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/app/github_retry_test.go",
+          "anchor": "func TestNotificationThrottleRetainsCursorAndUsesProviderDeadline(",
+          "purpose": "Notification throttling retains the successful cursor, suppresses early polls and retries at the provider deadline instead of the ordinary cadence.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/factory/github_retry_test.go",
+          "anchor": "func TestWebhookThrottleRetainsProviderDeadlineAndResumesSavedDelivery(",
+          "purpose": "Controlled-time webhook retry retains the provider deadline and original pending delivery, makes no early provider read and processes the same delivery when due.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_burst_test.go",
+          "anchor": "func TestGitHubThrottleDeadlineUsesApplicableServerHeaders(",
+          "purpose": "Controlled server-header cases distinguish Retry-After seconds/date, exhausted-primary resets and the one-minute secondary fallback.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_burst_test.go",
+          "anchor": "func TestGitHubBurstPointsAndContentAreDistinctPersistentAllowances(",
+          "purpose": "Controlled rolling windows distinguish REST and GraphQL secondary points from content-minute/hour admission and retain limits across provider restart.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_burst_test.go",
+          "anchor": "func TestGitHubSharedContentAdmissionReservesBeforeMutations(",
+          "purpose": "Concurrent managed mutation clients share durable content reservations before sends.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_burst_test.go",
+          "anchor": "func TestGitHubRepeatedSecondaryBackoffSurvivesRestartAcrossTransports(",
+          "purpose": "REST and HTTP200 GraphQL throttle responses retain increasing secondary backoff across restart and prevent early transport dispatch.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_retry_test.go",
+          "anchor": "func TestScanWaitsCoalescesAndReleasesWorkers(",
+          "purpose": "Waiting scans expose retry fields, coalesce independent click IDs, free ordinary workers, retain exact status identity and resume once after controlled time advances.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_retry_test.go",
+          "anchor": "func TestScanRetryTimerAndMutationsNeverRetry(",
+          "purpose": "A real retry timer resumes synchronization without requiring observation of the transient waiting state; a bounded completion signal precedes terminal status assertions, while a throttled mutation executes only once.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_retry_test.go",
+          "anchor": "func TestWaitingScanRestartDoesNotReplayOperation(",
+          "purpose": "Restart retains a waiting operation as uncertain rather than replaying its closure or inputs.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "throttled PR synchronization shows retained retry state and resumes without a second scan",
+          "purpose": "PR synchronization displays the concrete retry reason and time, preserves saved PR rows and scope lock through busy status responses followed by connection outages, then completes using only the original scan identity.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_retry_test.go",
+          "anchor": "func TestScanRetainsAdmissionWhenItLeavesSaturatedWorkers(",
+          "purpose": "A running scan retains one pending admission across throttling so saturated ordinary work cannot prevent it from leaving its worker; overflow remains busy.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_burst_test.go",
+          "anchor": "func TestGitHubBurstAdmissionCoordinatesSeparateProcesses(",
+          "purpose": "A separate fixture executable shares the durable content gate, cannot bypass an exhausted minute allowance and resumes after the controlled deadline.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/providers/github_burst_test.go",
+          "anchor": "func TestGitHubTransportsReserveTheirOwnSecondaryPointCost(",
+          "purpose": "Actual typed REST/GraphQL and generic query/mutation transports reserve their respective point costs and reject over-limit attempts before upstream dispatch.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/app/github_retry_test.go",
+          "anchor": "func TestScanTeamThrottlePreservesCheckpointsAndRetriesWhenDue(",
+          "purpose": "A successful index followed by throttled team membership preserves saved source, identity and checkpoints, returns the provider deadline, suppresses early reads and completes the same safe refresh when due.",
+          "scenarios": [
+            "S3"
+          ]
+        },
+        {
+          "path": "internal/transport/operations_retry_test.go",
+          "anchor": "func TestScanAliasAdmissionIsBoundedAndReleased(",
+          "purpose": "Unique scan aliases obey identity and byte admission bounds; rejected IDs retain nothing, accepted duplicates resolve before and after completion, and terminal completion releases active capacity without duplicate work.",
+          "scenarios": [
+            "S3"
+          ]
         }
       ],
       "suites": [
@@ -1602,7 +1760,9 @@
       "ui": [
         "PAGE-INBOX",
         "W-ITEM-ROW",
-        "W-EVENT-BATCHES"
+        "W-EVENT-BATCHES",
+        "W-INBOX-QUERY",
+        "W-CONNECTION-BLOCKER"
       ],
       "terms": [
         "normalized-event",
@@ -1650,6 +1810,11 @@
             "id": "done",
             "label": "Retain conversation and saved evidence",
             "terminal": true
+          },
+          {
+            "id": "retry",
+            "label": "Wait until the retained retry time while saved observations remain available",
+            "scenario": "S3"
           }
         ],
         "edges": [
@@ -1707,6 +1872,21 @@
             "from": "s5",
             "to": "wait",
             "label": "missing authority, stale identity or unavailable dependency"
+          },
+          {
+            "from": "s3",
+            "to": "retry",
+            "label": "temporary provider throttling"
+          },
+          {
+            "from": "retry",
+            "to": "s2",
+            "label": "retry time reached; safely refresh saved observations"
+          },
+          {
+            "from": "retry",
+            "to": "wait",
+            "label": "service stops; preserve checkpoints for background recovery"
           }
         ]
       }
