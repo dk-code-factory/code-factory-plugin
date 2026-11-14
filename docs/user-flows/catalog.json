@@ -955,7 +955,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+          "purpose": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history and copied first/later URL credentials with internal whitespace; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
         },
         {
           "path": "internal/factory/native_projection_test.go",
@@ -985,7 +985,7 @@
             "S4",
             "S5"
           ],
-          "purpose": "Each noncredential URL retains its exact query/anchor spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets and literal/surrounding whitespace, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+          "purpose": "Ten noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, a nested URL parameter and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
         },
         {
           "path": "internal/factory/native_projection_test.go",
@@ -995,7 +995,7 @@
             "S3",
             "S4"
           ],
-          "purpose": "Thirty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Surrounding whitespace cannot hide credentials; an additional URL in the same value still redacts. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
+          "purpose": "Forty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined URL values protect credentials in both the first and later URLs, including internal whitespace, Unicode separators and a prose prefix. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
         }
       ],
       "suites": [
@@ -5753,7 +5753,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+          "purpose": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history and copied first/later URL credentials with internal whitespace; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
         },
         {
           "path": "internal/factory/native_projection_test.go",
@@ -5777,7 +5777,7 @@
           "scenarios": [
             "S1"
           ],
-          "purpose": "Thirty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Surrounding whitespace cannot hide credentials; an additional URL in the same value still redacts. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
+          "purpose": "Forty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined URL values protect credentials in both the first and later URLs, including internal whitespace, Unicode separators and a prose prefix. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
         }
       ],
       "suites": [

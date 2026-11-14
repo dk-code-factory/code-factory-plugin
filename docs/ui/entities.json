@@ -6295,7 +6295,7 @@
       "id": "NATIVE-CONFIG-LEGACY-REDACTION",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeLegacyProposalMigrationPreservesStaleness(",
-      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history and copied first/later URL credentials with internal whitespace; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
     },
     {
       "id": "NATIVE-CONFIG-SELECTORS",
@@ -6313,13 +6313,13 @@
       "id": "NATIVE-CONFIG-PUBLIC-URL",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeNonsecretURLsRemainEditable(",
-      "assertion": "Each noncredential URL retains its exact query/anchor spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets and literal/surrounding whitespace, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+      "assertion": "Ten noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, a nested URL parameter and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
     },
     {
       "id": "NATIVE-CONFIG-URL-PARAMETERS",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
-      "assertion": "Thirty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Surrounding whitespace cannot hide credentials; an additional URL in the same value still redacts. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
+      "assertion": "Forty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined URL values protect credentials in both the first and later URLs, including internal whitespace, Unicode separators and a prose prefix. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
     },
     {
       "id": "GO-SCAN-WAIT",
