@@ -22,10 +22,26 @@ var nativePercentEscape = regexp.MustCompile(`%[0-9A-Fa-f]{2}`)
 // Credential discovery must retain independently readable escapes when another
 // escape is malformed. URL rendering still uses the strict standard parser.
 func nativeURLPercentDecode(raw string) string {
-	return nativePercentEscape.ReplaceAllStringFunc(raw, func(escape string) string {
-		decoded, _ := url.PathUnescape(escape) // The matched escape is valid.
-		return decoded
-	})
+	decoded, _ := nativeURLPercentDecodePositions(raw)
+	return decoded
+}
+
+func nativeURLPercentDecodePositions(raw string) (string, []int) {
+	var decoded strings.Builder
+	var positions []int
+	offset := 0
+	for _, escape := range nativePercentEscape.FindAllStringIndex(raw, -1) {
+		decoded.WriteString(raw[offset:escape[0]])
+		positions = append(positions, decoded.Len())
+		value, _ := url.PathUnescape(raw[escape[0]:escape[1]])
+		decoded.WriteString(value)
+		offset = escape[1]
+	}
+	if len(positions) == 0 {
+		return raw, nil
+	}
+	decoded.WriteString(raw[offset:])
+	return decoded.String(), positions
 }
 
 // Keep whitespace inside a URL candidate, stopping at the next separate URL.
@@ -160,15 +176,23 @@ func nativeURLSecrets(raw string) []string {
 			continue
 		}
 		seen[candidate] = true
-		starts := nativeURLStart.FindAllStringIndex(candidate, -1)
-		if len(starts) == 0 {
-			// A parameter may encode its nested URL more than once. Iterate
-			// through distinct decoded values without recursive traversal.
-			if decoded := nativeURLPercentDecode(strings.ReplaceAll(candidate, "+", " ")); decoded != candidate {
-				pending = append(pending, decoded)
+		// Discover encoded schemes in every component, even beside readable
+		// schemes. Revisit only newly decoded schemes: decoding an existing
+		// URL's escaped parameter delimiters would invent shorter credentials.
+		for encoded := candidate; ; {
+			decoded, positions := nativeURLPercentDecodePositions(encoded)
+			if decoded == encoded {
+				break
 			}
+			for _, start := range nativeURLStart.FindAllStringIndex(decoded, -1) {
+				index := sort.SearchInts(positions, start[0])
+				if index < len(positions) && positions[index] < start[1] {
+					pending = append(pending, decoded[start[0]:])
+				}
+			}
+			encoded = decoded
 		}
-		for _, start := range starts {
+		for _, start := range nativeURLStart.FindAllStringIndex(candidate, -1) {
 			_, rest, _ := strings.Cut(candidate[start[0]:], "://")
 			beforeFragment, fragment, _ := strings.Cut(rest, "#")
 			beforeQuery, query, _ := strings.Cut(beforeFragment, "?")
@@ -224,6 +248,9 @@ func (r nativeRedactor) text(value string) string {
 			}
 		}
 		if !changed {
+			if len(nativeURLSecrets(raw)) > 0 {
+				return "[redacted URL]"
+			}
 			return raw
 		}
 		return u.String()
@@ -249,6 +276,18 @@ func (r nativeRedactor) text(value string) string {
 		if secret != "" {
 			value = strings.ReplaceAll(value, secret, "[redacted]")
 		}
+	}
+	for encoded := value; ; {
+		decoded := nativeURLPercentDecode(encoded)
+		if decoded == encoded {
+			break
+		}
+		for _, secret := range r.secrets {
+			if secret != "" && strings.Contains(decoded, secret) {
+				return "[redacted]"
+			}
+		}
+		encoded = decoded
 	}
 	return nativeCredential.ReplaceAllString(value, "[redacted]")
 }
