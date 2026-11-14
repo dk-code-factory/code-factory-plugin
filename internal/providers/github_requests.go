@@ -13,7 +13,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -40,6 +39,7 @@ type RequestError struct {
 func (e *RequestError) Error() string          { return e.Cause.Error() }
 func (e *RequestError) Unwrap() error          { return e.Cause }
 func (e *RateLimitError) RetryTime() time.Time { return e.Until }
+func (e *RateLimitError) RetryReason() string  { return e.Error() }
 func CooldownKey(base, token string) string {
 	h := sha256.Sum256([]byte(base + "\x00" + token))
 	return hex.EncodeToString(h[:])
@@ -212,21 +212,7 @@ func (g *GitHub) CacheBlob(key string, b []byte, ttl time.Duration) {
 	g.cachePut("blob:"+key, c)
 }
 func retryDeadline(h http.Header, now time.Time) time.Time {
-	until := now
-	if sec, err := strconv.ParseInt(h.Get("X-RateLimit-Reset"), 10, 64); err == nil && time.Unix(sec, 0).After(until) {
-		until = time.Unix(sec, 0)
-	}
-	if sec, err := strconv.ParseInt(h.Get("Retry-After"), 10, 32); err == nil && sec >= 0 {
-		if t := now.Add(time.Duration(sec) * time.Second); t.After(until) {
-			until = t
-		}
-	} else if t, err := http.ParseTime(h.Get("Retry-After")); err == nil && t.After(until) {
-		until = t
-	}
-	if !until.After(now) {
-		until = now.Add(time.Minute)
-	}
-	return until
+	return retryTime(h, now)
 }
 func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any, accept string) ([]byte, http.Header, error) {
 	fail := func(phase RequestPhase, status int, err error) ([]byte, http.Header, error) {
@@ -321,7 +307,16 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	}
 	safe := *g.Client
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
-	if err = g.beginRequest(ctx, op.token, "core", req.URL.Path); err != nil {
+	resource, points, content := "core", 1, false
+	if method != http.MethodGet && method != http.MethodHead && method != http.MethodOptions {
+		points, content = 5, true
+	}
+	// This generic publication transport does not parse caller GraphQL. Treat
+	// any GraphQL payload as potentially mutative; owned queries use graph().
+	if req.URL.Path == "/graphql" {
+		resource = "graphql"
+	}
+	if err = g.beginCostedRequest(ctx, op.token, resource, req.URL.Path, points, content); err != nil {
 		return fail(BeforeDispatch, 0, err)
 	}
 	res, err := safe.Do(req)
@@ -332,12 +327,19 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	if err := g.invalidateRejectedCredential(ctx, op.token, res.StatusCode, res.Header); err != nil {
 		return fail(HTTPRejected, res.StatusCode, errors.New("GitHub cache unavailable"))
 	}
-	if err = g.observe(ctx, op.token, "core", req.URL.Path, res.Header); err != nil {
+	if err = g.observe(ctx, op.token, resource, req.URL.Path, res.Header); err != nil {
 		return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))
 	}
-	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "") {
+	secondaryBody := false
+	if res.StatusCode == http.StatusForbidden && res.Header.Get("X-RateLimit-Remaining") != "0" && res.Header.Get("Retry-After") == "" {
+		body, readErr := io.ReadAll(io.LimitReader(res.Body, (16<<20)+1))
+		if readErr == nil && len(body) <= 16<<20 {
+			secondaryBody = rateBody(body)
+		}
+	}
+	if res.StatusCode == 429 || res.StatusCode == 403 && (res.Header.Get("X-RateLimit-Remaining") == "0" || res.Header.Get("Retry-After") != "" || secondaryBody) || res.StatusCode >= 500 && res.Header.Get("Retry-After") != "" {
 		if g.Managed() {
-			return fail(HTTPRejected, res.StatusCode, g.rateLimited(ctx, op.token, "core", res.Header))
+			return fail(HTTPRejected, res.StatusCode, g.rateLimited(ctx, op.token, resource, res.Header))
 		}
 		deadline := retryDeadline(res.Header, g.now())
 		if until.After(deadline) {
@@ -425,6 +427,9 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	}
 	if len(b) > 16<<20 {
 		return fail(Uncertain, res.StatusCode, errors.New("GitHub response exceeds limit"))
+	}
+	if resource == "graphql" && graphRateBody(b) {
+		return fail(HTTPRejected, res.StatusCode, g.rateLimited(ctx, op.token, resource, res.Header))
 	}
 	if err = g.requestSucceeded(ctx); err != nil {
 		return fail(Uncertain, res.StatusCode, errors.New("GitHub request budget unavailable"))

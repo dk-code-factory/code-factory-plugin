@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 // Native configuration can include credentials that are not managed by our vault.
@@ -16,6 +17,12 @@ var nativeCredential = regexp.MustCompile(`(?i)(?:github_pat_[A-Za-z0-9_]{20,}|g
 
 // Values are decoded strings; quotes and angle brackets can be URL content.
 var nativeURL = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://[^\s]+`)
+var nativeURLPrefix = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9+.-]*://`)
+
+func nativeURLWithWhitespace(value string) bool {
+	value = strings.TrimSpace(value)
+	return nativeURLPrefix.MatchString(value) && strings.IndexFunc(value, unicode.IsSpace) >= 0
+}
 
 func privateNativeKey(key string) bool {
 	key = strings.Map(func(r rune) rune {
@@ -92,7 +99,15 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 				collect(child, private, false)
 			}
 		case string:
-			for _, raw := range nativeURL.FindAllString(v, -1) {
+			urls := nativeURL.FindAllString(v, -1)
+			if nativeURLWithWhitespace(v) {
+				whole := strings.TrimSpace(v)
+				r.secrets = append(r.secrets, nativeURLSecrets(whole)...)
+				if len(urls) > 0 && strings.HasPrefix(whole, urls[0]) {
+					urls = urls[1:] // The complete value replaces its truncated prefix.
+				}
+			}
+			for _, raw := range urls {
 				r.secrets = append(r.secrets, nativeURLSecrets(raw)...)
 			}
 			if private && v != "" {
@@ -133,7 +148,7 @@ func (r nativeRedactor) text(value string) string {
 	if strings.Contains(value, "-----BEGIN") && strings.Contains(value, "PRIVATE KEY") {
 		return "[redacted]"
 	}
-	value = nativeURL.ReplaceAllStringFunc(value, func(raw string) string {
+	redactURL := func(raw string) string {
 		u, err := url.Parse(raw)
 		if err != nil {
 			return "[redacted URL]"
@@ -154,7 +169,17 @@ func (r nativeRedactor) text(value string) string {
 			return raw
 		}
 		return u.String()
-	})
+	}
+	// A URL-valued string can contain a malformed whitespace-bearing credential.
+	// Process it before token scanning so a credential tail cannot escape; retain
+	// token scanning for additional URLs embedded in otherwise ordinary text.
+	if nativeURLWithWhitespace(value) {
+		raw := strings.TrimSpace(value)
+		if clean := redactURL(raw); clean != raw {
+			value = clean
+		}
+	}
+	value = nativeURL.ReplaceAllStringFunc(value, redactURL)
 	for _, secret := range r.secrets {
 		if secret != "" {
 			value = strings.ReplaceAll(value, secret, "[redacted]")

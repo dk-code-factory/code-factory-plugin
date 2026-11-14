@@ -355,6 +355,7 @@ func (a *App) importItems(ctx context.Context, r domain.Repository, items []doma
 		current.Imported = true
 		current.Error = ""
 		current.SyncFailures = 0
+		current.SyncWaiting = false
 		current.RetryAt = time.Time{}
 		if e := t.Put("repository", r.ID, current); e != nil {
 			return e
@@ -381,7 +382,7 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 	if dueOnly {
 		selected := repos[:0]
 		for _, r := range repos {
-			if !r.Paused && (r.LastSync.IsZero() || time.Since(r.LastSync) >= 15*time.Minute) {
+			if !r.Paused && !time.Now().Before(r.RetryAt) && (r.Error != "" || r.LastSync.IsZero() || time.Since(r.LastSync) >= 15*time.Minute) {
 				selected = append(selected, r)
 			}
 		}
@@ -433,6 +434,9 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 		}
 		derivedLimit := strings.HasPrefix(r.Error, "Code Factory GitHub budget") || strings.HasPrefix(r.Error, "GitHub request reserve")
 		if time.Now().Before(r.RetryAt) && (dueOnly || !derivedLimit) {
+			if r.SyncWaiting {
+				return &providers.RateLimitError{Until: r.RetryAt, Reason: r.Error}
+			}
 			return nil
 		}
 		at := time.Now().UTC()
@@ -442,7 +446,10 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 			at = observed
 		}
 		if err != nil {
-			return a.saveSyncError(ctx, r.ID, err)
+			if saveErr := a.saveSyncError(ctx, r.ID, err); saveErr != nil {
+				return saveErr
+			}
+			return err
 		}
 
 		for _, item := range items {
@@ -451,6 +458,11 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 			}
 			teamsOnce.Do(func() {
 				teams, err := a.GitHub.Teams(ctx)
+				var rate *providers.RateLimitError
+				if errors.As(err, &rate) {
+					teamErr = err
+					return
+				}
 				viewer.Teams = teams
 				viewer.TeamError = ""
 				if err != nil {
@@ -459,6 +471,12 @@ func (a *App) sync(ctx context.Context, dueOnly bool) error {
 				teamErr = saveViewer()
 			})
 			if teamErr != nil {
+				var rate *providers.RateLimitError
+				if errors.As(teamErr, &rate) {
+					if err := a.saveSyncError(ctx, r.ID, teamErr); err != nil {
+						return err
+					}
+				}
 				return teamErr
 			}
 			break

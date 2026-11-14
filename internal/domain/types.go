@@ -9,6 +9,7 @@ import (
 
 type Repository struct {
 	SyncFailures int       `json:"syncFailures,omitempty"`
+	SyncWaiting  bool      `json:"syncWaiting,omitempty"`
 	Paused       bool      `json:"paused,omitempty"`
 	ID           string    `json:"id"`
 	Checkout     string    `json:"checkout"`

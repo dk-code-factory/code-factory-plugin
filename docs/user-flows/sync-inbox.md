@@ -16,6 +16,10 @@ The private owner connection is established. Application data starts clean in th
 
 3. Retain checkpoints across authentication, quota and network failures. Manual scans and background synchronization share a persistent rolling-hour allowance of 2,000 request attempts by default; an explicitly configured allowance takes precedence.
 
+   Temporary throttling shows a waiting state with its concrete reason and earliest retry time. Keep saved PR data available, join repeated scan requests to the accepted scan, and resume safe reads after the retained cooldown. Keep the local hourly allowance, observed primary quota, secondary limits and endpoint polling restrictions distinct.
+
+Include temporarily unavailable team membership in this waiting state while retaining saved membership and repository checkpoints. Admission remains bounded during a waiting scan; accepted request identities continue to resolve to the original outcome without duplicate work.
+
 4. Associate current-head CI changes with all affected PRs.
 
 5. Normalize comments, reviews, threads and lifecycle updates across webhook and polling sources.
@@ -23,6 +27,8 @@ The private owner connection is established. Application data starts clean in th
 ## Alternatives and recovery
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees. A busy conversation defers only its own ingestion; polling continues discovering independent changes in the same repository and other repositories, including their quiet deadlines. Deferred baseline observations stay historical, deferred webhooks remain durable without artificial failure backoff, and cancellation stops the poll. Changed webhook source commits a metadata-only inbox notification; redelivery and unchanged source do not create extra notifications.
+
+Retain provider cooldowns and successful synchronization cursors across restart. Background reads resume when due. An interrupted accepted operation retains an uncertain outcome for inspection rather than replaying its submitted work. Honor a valid server retry deadline or exhausted-primary reset; otherwise wait at least one minute on secondary throttling and increase the wait on repeated failures. Requests from other GitHub clients and undisclosed provider limits remain outside locally enforceable accounting; provider throttle responses remain authoritative.
 
 ## Scenarios
 
@@ -40,7 +46,7 @@ The assertion references below establish their fixture scope. Native installed-h
 ## Terminology and UI references
 
 Glossary: [normalized-event](../glossary/README.md#normalized-event), [repository](../glossary/README.md#repository), [work-item](../glossary/README.md#work-item).
-UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [W-ITEM-ROW](../ui/README.md#W-ITEM-ROW), [W-EVENT-BATCHES](../ui/README.md#W-EVENT-BATCHES).
+UI entities: [PAGE-INBOX](../ui/README.md#PAGE-INBOX), [W-ITEM-ROW](../ui/README.md#W-ITEM-ROW), [W-EVENT-BATCHES](../ui/README.md#W-EVENT-BATCHES), [W-INBOX-QUERY](../ui/README.md#W-INBOX-QUERY), [W-CONNECTION-BLOCKER](../ui/README.md#W-CONNECTION-BLOCKER).
 
 ## Flow diagram
 
@@ -54,6 +60,7 @@ flowchart TD
     N5["Normalize comments, reviews, threads and lifecycle updates across webhook and polling sources #40;S5#41;"]
     N6(["Hold saved work and show the failure or human request"])
     N7(["Retain conversation and saved evidence"])
+    N8["Wait until the retained retry time while saved observations remain available #40;S3#41;"]
     N0 -->|"authorized action"| N1
     N1 -->|"validated or explicitly resumed"| N2
     N1 -->|"missing authority, stale identity or unavailable dependency"| N6
@@ -65,6 +72,9 @@ flowchart TD
     N4 -->|"missing authority, stale identity or unavailable dependency"| N6
     N5 -->|"validated or explicitly resumed"| N7
     N5 -->|"missing authority, stale identity or unavailable dependency"| N6
+    N3 -->|"temporary provider throttling"| N8
+    N8 -->|"retry time reached#59; safely refresh saved observations"| N2
+    N8 -->|"service stops#59; preserve checkpoints for background recovery"| N6
 ```
 
 ## Implementation references
@@ -82,6 +92,12 @@ flowchart TD
 - [internal/providers/github_reviews.go](../../internal/providers/github_reviews.go) — Current sync-inbox implementation or fixture/build dependency.
 - [internal/providers/continuation.go](../../internal/providers/continuation.go) — Current sync-inbox implementation or fixture/build dependency.
 - [internal/providers/github.go](../../internal/providers/github.go) — Current sync-inbox implementation or fixture/build dependency.
+- [internal/app/app.go](../../internal/app/app.go) — Propagate typed throttle outcomes while preserving repository checkpoints and resuming due reads. (`func (a *App) sync(`)
+- [internal/app/github_usage.go](../../internal/app/github_usage.go) — Retain explicit waiting deadlines and notification cursors independently of ordinary polling cadence. (`func (a *App) saveSyncError(`)
+- [internal/domain/types.go](../../internal/domain/types.go) — Retain repository wait classification and its next safe read time. (`type Repository struct {`)
+- [internal/transport/operations.go](../../internal/transport/operations.go) — Coalesce scans, expose waiting status and schedule safe synchronization retries without replaying other operations. (`func (q *operationQueue) execute(`)
+- [web/src/bridge.ts](../../web/src/bridge.ts) — Poll the original accepted operation and deliver retained throttle progress to the UI. (`export async function call`)
+- [web/src/wrapper.tsx](../../web/src/wrapper.tsx) — Display retry reason/time while saved PR rows remain available and synchronization remains locked. (`function Factory(`)
 
 ## Test references
 
@@ -146,6 +162,22 @@ flowchart TD
 - [internal/providers/github_transport_cache_test.go](../../internal/providers/github_transport_cache_test.go) — `func TestGitHubCacheGenerationFailuresCannotReturnCachedSuccess(`; S3. A real SQLite trigger rejecting generation writes blocks subsequent same-client response/query cache hits; malformed persisted generation data fails closed after client restart without contacting GitHub. Mixed GraphQL auth/rate generation-write failure returns cache failure before rate classification and blocks that client query hits.
 - [internal/app/github_usage_test.go](../../internal/app/github_usage_test.go) — `func TestGitHubDefaultBudgetAndExplicitOverride(`; S3. Application policy defaults to 2,000 request attempts per hour while retaining an explicit 600-request override.
 - [internal/providers/github_usage_test.go](../../internal/providers/github_usage_test.go) — `func TestGitHubDefaultBudgetReportingAndAdmission(`; S3. Default and saved usage report 2,000, preserve explicit overrides and prior attempts, admit request 2,000, and defer request 2,001 until the rolling window frees capacity.
+- [internal/app/github_retry_test.go](../../internal/app/github_retry_test.go) — `func TestScanThrottleReturnsWaitingPreservesDataAndRetriesRecentRepository(`; S3. Throttle returns a typed waiting deadline, preserves exact saved source/checkpoints, prevents repeated index reads and retries a recent repository after the retained deadline.
+- [internal/app/github_retry_test.go](../../internal/app/github_retry_test.go) — `func TestNotificationThrottleRetainsCursorAndUsesProviderDeadline(`; S3. Notification throttling retains the successful cursor, suppresses early polls and retries at the provider deadline instead of the ordinary cadence.
+- [internal/factory/github_retry_test.go](../../internal/factory/github_retry_test.go) — `func TestWebhookThrottleRetainsProviderDeadlineAndResumesSavedDelivery(`; S3. Controlled-time webhook retry retains the provider deadline and original pending delivery, makes no early provider read and processes the same delivery when due.
+- [internal/providers/github_burst_test.go](../../internal/providers/github_burst_test.go) — `func TestGitHubThrottleDeadlineUsesApplicableServerHeaders(`; S3. Controlled server-header cases distinguish Retry-After seconds/date, exhausted-primary resets and the one-minute secondary fallback.
+- [internal/providers/github_burst_test.go](../../internal/providers/github_burst_test.go) — `func TestGitHubBurstPointsAndContentAreDistinctPersistentAllowances(`; S3. Controlled rolling windows distinguish REST and GraphQL secondary points from content-minute/hour admission and retain limits across provider restart.
+- [internal/providers/github_burst_test.go](../../internal/providers/github_burst_test.go) — `func TestGitHubSharedContentAdmissionReservesBeforeMutations(`; S3. Concurrent managed mutation clients share durable content reservations before sends.
+- [internal/providers/github_burst_test.go](../../internal/providers/github_burst_test.go) — `func TestGitHubRepeatedSecondaryBackoffSurvivesRestartAcrossTransports(`; S3. REST and HTTP200 GraphQL throttle responses retain increasing secondary backoff across restart and prevent early transport dispatch.
+- [internal/transport/operations_retry_test.go](../../internal/transport/operations_retry_test.go) — `func TestScanWaitsCoalescesAndReleasesWorkers(`; S3. Waiting scans expose retry fields, coalesce independent click IDs, free ordinary workers, retain exact status identity and resume once after controlled time advances.
+- [internal/transport/operations_retry_test.go](../../internal/transport/operations_retry_test.go) — `func TestScanRetryTimerAndMutationsNeverRetry(`; S3. A real retry timer resumes synchronization without requiring observation of the transient waiting state; a bounded completion signal precedes terminal status assertions, while a throttled mutation executes only once.
+- [internal/transport/operations_retry_test.go](../../internal/transport/operations_retry_test.go) — `func TestWaitingScanRestartDoesNotReplayOperation(`; S3. Restart retains a waiting operation as uncertain rather than replaying its closure or inputs.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `throttled PR synchronization shows retained retry state and resumes without a second scan`; S3. PR synchronization displays the concrete retry reason and time, preserves saved PR rows and scope lock through busy status responses followed by connection outages, then completes using only the original scan identity.
+- [internal/transport/operations_retry_test.go](../../internal/transport/operations_retry_test.go) — `func TestScanRetainsAdmissionWhenItLeavesSaturatedWorkers(`; S3. A running scan retains one pending admission across throttling so saturated ordinary work cannot prevent it from leaving its worker; overflow remains busy.
+- [internal/providers/github_burst_test.go](../../internal/providers/github_burst_test.go) — `func TestGitHubBurstAdmissionCoordinatesSeparateProcesses(`; S3. A separate fixture executable shares the durable content gate, cannot bypass an exhausted minute allowance and resumes after the controlled deadline.
+- [internal/providers/github_burst_test.go](../../internal/providers/github_burst_test.go) — `func TestGitHubTransportsReserveTheirOwnSecondaryPointCost(`; S3. Actual typed REST/GraphQL and generic query/mutation transports reserve their respective point costs and reject over-limit attempts before upstream dispatch.
+- [internal/app/github_retry_test.go](../../internal/app/github_retry_test.go) — `func TestScanTeamThrottlePreservesCheckpointsAndRetriesWhenDue(`; S3. A successful index followed by throttled team membership preserves saved source, identity and checkpoints, returns the provider deadline, suppresses early reads and completes the same safe refresh when due.
+- [internal/transport/operations_retry_test.go](../../internal/transport/operations_retry_test.go) — `func TestScanAliasAdmissionIsBoundedAndReleased(`; S3. Unique scan aliases obey identity and byte admission bounds; rejected IDs retain nothing, accepted duplicates resolve before and after completion, and terminal completion releases active capacity without duplicate work.
 
 ## Verification and gaps
 

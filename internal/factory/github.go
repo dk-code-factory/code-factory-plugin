@@ -154,6 +154,10 @@ func (s *Service) Poll(ctx context.Context) error {
 					}
 					d.Error = err.Error()
 					d.RetryAt = s.Now().Add(time.Minute)
+					var rate *providers.RateLimitError
+					if errors.As(err, &rate) {
+						d.RetryAt = rate.Until
+					}
 					if e := s.Store.Put(ctx, "factory-delivery", d.ID, d, ""); e != nil {
 						return e
 					}

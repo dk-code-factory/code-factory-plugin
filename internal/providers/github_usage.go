@@ -26,15 +26,23 @@ type githubRemoteLimit struct {
 	Remaining int
 	Reset     time.Time
 }
+type githubBurstCall struct {
+	At       time.Time
+	Resource string
+	Points   int
+	Content  bool
+}
 type githubUsage struct {
-	PollUntil      map[string]time.Time
-	ActiveScope    string
-	Calls          []time.Time
-	Next           time.Time
-	SecondaryUntil time.Time
-	Retry          map[string]time.Time
-	Limits         map[string]githubRemoteLimit
-	Strikes        int
+	PollUntil       map[string]time.Time
+	ActiveScope     string
+	Calls           []time.Time
+	Next            time.Time
+	SecondaryUntil  time.Time
+	Retry           map[string]time.Time
+	Limits          map[string]githubRemoteLimit
+	Strikes         int
+	Burst           []githubBurstCall
+	SecondaryReason string
 }
 type GitHubUsage struct {
 	RequestsLastHour int       `json:"requestsLastHour"`
@@ -72,8 +80,8 @@ func SavedGitHubUsage(ctx context.Context, s *store.Store, budget int, reserve *
 	return g.UsageStatus(ctx)
 }
 
-// All managed transports, including publication subprocesses, hold the same
-// request lock through reservation, HTTP response and durable observations.
+// All managed transports, including mutation-capable Request callers, hold the
+// same lock through reservation, HTTP response and durable observations.
 func (g *GitHub) lockUsage(ctx context.Context) (func(), error) {
 	g.requestMu.Lock()
 	if g.usageStore == nil {
@@ -137,6 +145,68 @@ func recentCalls(calls []time.Time, now time.Time) []time.Time {
 	return out
 }
 func (g *GitHub) beginRequest(ctx context.Context, token, resource, route string) error {
+	return g.beginCostedRequest(ctx, token, resource, route, 1, false)
+}
+
+// Aggregate REST points conservatively across endpoints and principals. Shared
+// account limits and undisclosed endpoint costs still require server backoff.
+func burstDeadline(calls []githubBurstCall, now time.Time, resource string, points int, content bool) (time.Time, string) {
+	var until time.Time
+	reason := ""
+	selectDeadline := func(candidate time.Time, why string) {
+		if candidate.After(until) {
+			until, reason = candidate, why
+		}
+	}
+	window := func(duration time.Duration, limit int, match func(githubBurstCall) int, added int, why string) {
+		total := added
+		for _, c := range calls {
+			if c.At.After(now.Add(-duration)) {
+				total += match(c)
+			}
+		}
+		if total <= limit {
+			return
+		}
+		for _, c := range calls {
+			if !c.At.After(now.Add(-duration)) {
+				continue
+			}
+			cost := match(c)
+			if cost == 0 {
+				continue
+			}
+			total -= cost
+			if total <= limit {
+				selectDeadline(c.At.Add(duration), why)
+				return
+			}
+		}
+	}
+	limit := 900
+	if resource == "graphql" {
+		limit = 2000
+	}
+	window(time.Minute, limit, func(c githubBurstCall) int {
+		if c.Resource == resource {
+			return c.Points
+		}
+		return 0
+	}, points, "GitHub secondary request-point allowance reached; synchronization will retry")
+	if content {
+		cost := func(c githubBurstCall) int {
+			if c.Content {
+				return 1
+			}
+			return 0
+		}
+		window(time.Minute, 80, cost, 1, "GitHub content creation minute allowance reached; synchronization will retry")
+		window(time.Hour, 500, cost, 1, "GitHub content creation hourly allowance reached; synchronization will retry")
+	}
+	return until, reason
+}
+
+func (g *GitHub) beginCostedRequest(ctx context.Context, token, resource, route string, points int, content bool) error {
 	if !g.Managed() {
 		return nil
 	}
@@ -155,29 +225,34 @@ func (g *GitHub) beginRequest(ctx context.Context, token, resource, route string
 		now := g.now()
 		key := usageKey(token, resource)
 		until := u.SecondaryUntil
+		reason := u.SecondaryReason
+		if reason == "" {
+			reason = "GitHub secondary rate limit; synchronization will retry"
+		}
 		if t := u.PollUntil[usageKey(token, route)]; t.After(until) {
 			until = t
+			reason = "GitHub endpoint polling interval; synchronization will retry"
 		}
 		if u.Retry[key].After(until) {
 			until = u.Retry[key]
+			reason = "GitHub primary quota exhausted; synchronization will retry"
 		}
 		if limit, ok := u.Limits[key]; ok && limit.Reset.After(now) && limit.Remaining <= p.Reserve && limit.Reset.After(until) {
 			until = limit.Reset.Add(time.Second)
+			reason = "GitHub request reserve reached; synchronization will retry"
 		}
 		u.Calls = recentCalls(u.Calls, now)
 		if len(u.Calls) >= p.RequestsPerHour {
 			t := u.Calls[len(u.Calls)-p.RequestsPerHour].Add(time.Hour + time.Second)
 			if t.After(until) {
 				until = t
+				reason = "Code Factory GitHub budget reached; synchronization will retry"
 			}
 		}
+		if t, why := burstDeadline(u.Burst, now, resource, points, content); t.After(until) {
+			until, reason = t, why
+		}
 		if until.After(now) {
-			reason := ""
-			if len(u.Calls) >= p.RequestsPerHour {
-				reason = "Code Factory GitHub budget reached; synchronization will retry"
-			} else if limit, ok := u.Limits[key]; ok && limit.Reset.After(now) && limit.Remaining <= p.Reserve {
-				reason = "GitHub request reserve reached; synchronization will retry"
-			}
 			return &RateLimitError{Until: until, Reason: reason}
 		}
 		if delay := u.Next.Sub(now); delay > 0 {
@@ -196,6 +271,13 @@ func (g *GitHub) beginRequest(ctx context.Context, token, resource, route string
 		}
 		u.ActiveScope = strings.TrimSuffix(usageKey(token, resource), ":"+resource)
 		u.Calls = append(u.Calls, now)
+		retained := make([]githubBurstCall, 0, len(u.Burst)+1)
+		for _, c := range u.Burst {
+			if c.At.After(now.Add(-time.Minute)) || c.Content && c.At.After(now.Add(-time.Hour)) {
+				retained = append(retained, c)
+			}
+		}
+		u.Burst = append(retained, githubBurstCall{At: now, Resource: resource, Points: points, Content: content})
 		u.Next = now.Add(p.MinInterval)
 		// Reserve durably before sending. A crash or an uncertain response never
 		// restores a potentially consumed request to the local budget.
@@ -229,47 +311,76 @@ func (g *GitHub) observe(ctx context.Context, token, resource, route string, h h
 	}
 	return nil
 }
-func retryTime(h http.Header, now time.Time) time.Time {
-	until := now.Add(time.Minute)
+func explicitRetryTime(h http.Header, now time.Time) (time.Time, bool) {
+	until := now
+	explicit := false
 	if h.Get("X-RateLimit-Remaining") == "0" {
 		if n, e := strconv.ParseInt(h.Get("X-RateLimit-Reset"), 10, 64); e == nil && time.Unix(n, 0).After(now) {
 			until = time.Unix(n, 0).Add(time.Second)
+			explicit = true
 		}
 	}
 	if raw := h.Get("Retry-After"); raw != "" {
-		if n, e := strconv.Atoi(raw); e == nil && n >= 0 {
+		if n, e := strconv.ParseInt(raw, 10, 64); e == nil && n >= 0 {
+			if n > int64((time.Duration(1<<63-1))/time.Second) {
+				n = int64((time.Duration(1<<63 - 1)) / time.Second)
+			}
+			explicit = true
 			if t := now.Add(time.Duration(n) * time.Second); t.After(until) {
 				until = t
 			}
 		}
-		if t, e := http.ParseTime(raw); e == nil && t.After(until) {
-			until = t
+		if t, e := http.ParseTime(raw); e == nil && t.After(now) {
+			explicit = true
+			if t.After(until) {
+				until = t
+			}
 		}
+	}
+	return until, explicit
+}
+func retryTime(h http.Header, now time.Time) time.Time {
+	until, explicit := explicitRetryTime(h, now)
+	if !explicit {
+		until = now.Add(time.Minute)
 	}
 	return until
 }
 func (g *GitHub) rateLimited(ctx context.Context, token, resource string, h http.Header) error {
-	until := retryTime(h, g.now())
+	now := g.now()
+	until, explicit := explicitRetryTime(h, now)
+	if !explicit {
+		until = now.Add(time.Minute)
+	}
+	reason := "GitHub secondary rate limit; synchronization will retry"
 	if g.Managed() {
 		u, err := g.usage(ctx)
 		if err != nil {
 			return fmt.Errorf("GitHub request budget unavailable")
 		}
 		if h.Get("X-RateLimit-Remaining") == "0" {
+			reason = "GitHub primary quota exhausted; synchronization will retry"
+			if u.Retry[usageKey(token, resource)].After(until) {
+				until = u.Retry[usageKey(token, resource)]
+			}
 			u.Retry[usageKey(token, resource)] = until
 		} else {
 			u.Strikes = min(u.Strikes+1, 6)
-			exponential := g.now().Add(time.Minute * time.Duration(1<<uint(u.Strikes-1)))
-			if exponential.After(until) {
+			exponential := now.Add(time.Minute * time.Duration(1<<uint(u.Strikes-1)))
+			if !explicit && exponential.After(until) {
 				until = exponential
 			}
+			if u.SecondaryUntil.After(until) {
+				until = u.SecondaryUntil
+			}
 			u.SecondaryUntil = until
+			u.SecondaryReason = reason
 		}
 		if err = g.saveUsage(ctx, u); err != nil {
 			return fmt.Errorf("GitHub request budget unavailable")
 		}
 	}
-	return &RateLimitError{Until: until}
+	return &RateLimitError{Until: until, Reason: reason}
 }
 func rateBody(body []byte) bool {
 	var d struct{ Message string }
@@ -533,5 +644,6 @@ func (g *GitHub) requestSucceeded(ctx context.Context) error {
 	}
 	u.Strikes = 0
 	u.SecondaryUntil = time.Time{}
+	u.SecondaryReason = ""
 	return g.saveUsage(ctx, u)
 }

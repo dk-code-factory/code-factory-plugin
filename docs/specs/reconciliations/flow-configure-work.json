@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-configure-work",
-  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
-  "fingerprint": "ac10e015a59fd6b0a1628d3418b2f3a8bc0c5e0b858c8613f992c659735a4f00",
+  "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
+  "fingerprint": "d95c14ea975e29dc2c4072065cc71e118ce47efcfc2a9e5d15c5f1d0399d1930",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "S1 inspection and S3 persisted/legacy proposals hide private native values, including malformed or encoded credential parameters and copied values. S4 rejects credential edits and stale raw snapshots; S5 applies only exact confirmed edits. Ordinary credential-free URLs preserve spelling through all safe edit stages. Literal URL quotes/angle brackets do not end detection; failed whole-URL parsing cannot suppress copied credentials from independently readable raw components.",
-    "implementation": "Native projection preserves exact layer selectors and named entries while masking private fields, token patterns, arbitrary header values and known copies. Raw authority, query and fragment components are collected independently of whole-URL parsing, with raw and decoded forms retained for masking. Literal quotes and angle brackets do not terminate URL candidates. Incomplete parameter parsing removes the unreadable component; semicolon candidate pairs are inspected without losing complete credential values or collecting valid ordinary siblings. Userinfo decoding preserves literal plus signs and original percent escaping. Raw BeforeDigest governs confirmation and deferred application. Startup sanitizes legacy proposal entities before projections and journal copies in one paged transaction, preserving historical identity and state without replay. Cached/background ownership, caller/service cancellation, admission and response bounds are unchanged.",
-    "tests": "Read the eight native regression functions and their distinguishing assertions. Both inspection interfaces hide unmanaged credentials and copies while preserving numeric precision, exact selectors and named profiles. TestNativeURLParameterBoundariesRejectCredentials covers21 isolated inputs: malformed and escaped parameters, noncanonical userinfo escaping, literal quotes/angle brackets, unrelated invalid URL components, literal userinfo plus signs, and credentials following ordinary semicolon prefixes. Every case checks inspection, persisted proposals, legacy entities/events, refusal of URL and raw/decoded copied-value edits before persistence/native writes, and an unrelated ordinary setting; a remaining escaped fragment is preserved. TestNativeNonsecretURLsRemainEditable checks four exact URLs through inspection, proposal and one native write only after confirmation. Other assertions distinguish invisible credential rotation, quoted safe paths and nested credential refusal. Shared migration fixtures include malformed, quoted and semicolon-prefix URL credentials with ordinary copies;37 matching historical events cross32-row pages and verify rollback, metadata/state preservation, no replay and idempotence. Focused native race regressions pass. Complete consumer fixture suites are required by reconciliation; fixture results do not establish installed-host acceptance."
+    "description": "S1 inspection and S3 persisted/legacy proposals hide private native values, including malformed or encoded credential parameters and copied values. S4 rejects credential edits and stale raw snapshots; S5 applies only exact confirmed edits. Ordinary credential-free URLs preserve spelling through all safe edit stages. Literal URL quotes/angle brackets do not end detection; failed whole-URL parsing cannot suppress copied credentials from independently readable raw components. Whitespace and control characters cannot expose credential tails or bypass protection through surrounding whitespace; ordinary URL spelling remains usable.",
+    "implementation": "Native projection preserves exact layer selectors and named entries while masking private fields, token patterns, arbitrary header values and known copies. Raw authority, query and fragment components are collected independently of whole-URL parsing, with raw and decoded forms retained for masking. Literal quotes and angle brackets do not terminate URL candidates. Incomplete parameter parsing removes the unreadable component; semicolon candidate pairs are inspected without losing complete credential values or collecting valid ordinary siblings. Userinfo decoding preserves literal plus signs and original percent escaping. Raw BeforeDigest governs confirmation and deferred application. Startup sanitizes legacy proposal entities before projections and journal copies in one paged transaction, preserving historical identity and state without replay. Cached/background ownership, caller/service cancellation, admission and response bounds are unchanged. Inspect whitespace-bearing URL-valued strings as a whole before token scanning, collect their trimmed raw components alongside individual URL tokens, and retain token scanning for additional embedded URLs. Preserve the original complete spelling when no credential component changes. The complete primary URL replaces its truncated token during known-value collection; additional embedded URLs are still inspected separately.",
+    "tests": "Read the eight native regression functions and their distinguishing assertions. Both inspection interfaces hide unmanaged credentials and copies while preserving numeric precision, exact selectors and named profiles. TestNativeURLParameterBoundariesRejectCredentials covers30 isolated inputs: malformed and escaped parameters, noncanonical userinfo escaping, literal quotes/angle brackets, unrelated invalid URL components, literal userinfo plus signs, credentials following ordinary semicolon prefixes, query/fragment spaces, userinfo spaces/tabs/newlines/form feeds, surrounding whitespace and a credential URL after an ordinary URL. Every case checks inspection, persisted proposals, legacy entities/events, refusal of URL and raw/decoded copied-value edits before persistence/native writes, and an unrelated ordinary setting; a remaining escaped fragment is preserved. TestNativeNonsecretURLsRemainEditable checks six exact URLs through inspection, proposal and one native write only after confirmation. Other assertions distinguish invisible credential rotation, quoted safe paths and nested credential refusal. Shared migration fixtures include malformed, quoted, semicolon-prefix and whitespace-bearing URL credentials with ordinary copies;37 matching historical events cross32-row pages and verify rollback, metadata/state preservation, no replay and idempotence. Focused native race regressions pass. Complete consumer fixture suites are required by reconciliation; fixture results do not establish installed-host acceptance. Every URL boundary case also preserves an ordinary value equal to only a credential prefix. This assertion failed for space-bearing query/fragment values before the complete-token collection correction. The current full factory package passes with race detection."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.201
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.359
+      "seconds": 36.334
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 69.293
+      "seconds": 71.553
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.224
+      "seconds": 1.186
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 649.339
+      "seconds": 656.673
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 434.207
+      "seconds": 430.213
     },
     {
       "command": [
@@ -90,11 +90,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.622
+      "seconds": 60.988
     }
   ],
   "dependencies": {
-    "flow:configure-work": "931be33ed7b0aa22bfc6d3ac573d89108e9a30f77e0e8d4254ab1923e016367d",
+    "flow:configure-work": "50d8223f0b12c29a601e044fa59742382063db04a7d20ad3e8ed3b7552ba3a53",
     "term:configuration-proposal": "2a7f28adb3bda45a2b763b7233424d8e50d2e659c44722a4e295a72752b6c10d",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:daemon-instance": "4951622c9b6e0852d26f99a3a387fbe6f0b32417e06eaadd1e33cff8cad5df39",
@@ -205,67 +205,67 @@
     "term:ui-w-waiting-row": "442e0bbcfdb98aaf0c67dbbb85d409573b544b8a5f777e92197686717ccd76c8",
     "term:ui-w-work-status": "d117098e012432dab39d5b327a5d9095d64f85418b7db6e35f83d570c59d0dfc",
     "term:uncertain-operation": "e5808790f69713e7d0155139fef47ed953581d1b2baec8a675912f2cfa3460c5",
-    "ui:C-ANSWER": "5cdacf804d83ac6949723e657aeae0f7259a166537112363aa9b52f05c77bb5e",
-    "ui:C-CONFIGURATION-CONFIRM": "a3af3a85daa728a28bf1c14cba5ef8a0a55e7068c609e60a158cf1c9b686dfac",
-    "ui:C-CONFIGURATION-PROPOSE": "d4db228cfdb76651c7eb1827673726547b6378c69adfb0bbb7859388aa301286",
-    "ui:C-EVENT-INSPECT": "47b2713d457cc1995c049f77bc72e3f6b3b16a6df950ea28105dbd952f6cec42",
-    "ui:C-FILTER": "1982097d06bfbc8c956f4a61b8334c0aff5b271e0d58013fd5a70bea90e7f1b8",
-    "ui:C-FOLLOW-UP": "3f66ac55037e58a1e67968f066960c050903873be8813041fdc1a85dcc9cf065",
-    "ui:C-ITEM-STATE": "cfd69b5774f3fe7f792087eba7203ef46d8583af1fe9000bdfa710151f551b6d",
-    "ui:C-LINK": "1150b5cb8eeac35a2d96643d06068fe5a3b3d14bc0668d244b3ed92c126e5543",
-    "ui:C-NAVIGATE": "0442d4e79cd2472d91b36f5bd5ac9e91dec254346310bdbdf2cda130dd83e4f7",
-    "ui:C-OPEN-SETTINGS": "a05b41b1955fb04211b576afc0800494ad4688d937760fe51991d8f48515e2b2",
-    "ui:C-PRIORITY": "c00803fc236672503cbb27994c5a873964af244733c7c2972e278bb47b366546",
-    "ui:C-RUN-ACTION": "b89a98f8d28f93e0df1621a6e2deb5af66339f3a5e7206e3ecb403628ce676fd",
-    "ui:C-SELECT-ITEM": "b5b79b01db2bff1683334d55a0ef40bcb97aeaf176a747c14162fff39adc3992",
-    "ui:C-START-CHAT": "41f2662d2e0a59e13022127eb77554a357ce02b22cbd4c9a36323ef00c241563",
-    "ui:C-STATE-REFRESH": "2662ec2331b5296d14cfa27d26b70eed289fd95db715f0c8edc3c5409a6d7a53",
-    "ui:C-TRANSCRIPT": "8927ccbc6ae13815d2d83b244465ddaac0f9be97dec38e71b370f4cd9f7cec73",
-    "ui:P-APPROVAL": "a58ac6015b9d54c615661bd80a9978c8608bad9a91392803372fccfec82c9a01",
-    "ui:P-CONFIGURATION": "33ec50a03b4309369e5a041d2e9e299bf92021481852ccbf62159a6c90e3c001",
-    "ui:P-ELICITATION": "456a3250a328dd79cb1df5c72f9d96bf6db6d6039bb27e786fd35ca41779cab3",
-    "ui:P-EVENTS": "e0ef986e349b8c411346d3c3453f6aa3598c5f67e4f430d1e0452796bd3ccd4b",
-    "ui:P-FEEDBACK": "6ff3497c057df19889ebe9644f3016622a42192a47fd84b580fb18702b6f444e",
-    "ui:P-IDENTITY": "b59ca74d18bd5d24a858c4598ed751e4977d87809d9c08a0bb264bc22256ef2d",
-    "ui:P-INBOX-LIST": "2cb5bb867ff8c451b0d30eaa740bbd001e474d391554edb2050cb65b03ad8a08",
-    "ui:P-INBOX-QUERY": "0cf8bc60f0d52d1b40d4d243ec7c945a4706e30cacd954c5d0271a662552ab0f",
-    "ui:P-ITEM-DETAIL": "ee9a0c1064d15dcf1889af3cf8fa2fc848e00b76adf32287a50ff5bbf835d162",
-    "ui:P-NAVIGATION": "d45cd134511beb35224945062c3830721bed92996a3e805f8f6973a845b15e11",
-    "ui:P-QUESTIONS": "54707e0f17d5e52df80c70e8a890c232506dfab7da29e83d3f7095bf368b27d2",
-    "ui:P-RUN-DETAIL": "41011574453c2bff67c7df1c44d4ef1476dac8b4974d88a668b7af726f6ba725",
-    "ui:P-WAITING-QUEUE": "8757a2ae1ba6649e93fe68c5c1fa2e5340bd52f88af261fdc51e8fe01d8fe906",
-    "ui:PAGE-AGENT": "4bd1a18b6d53bd902c59d9675a1a98b4c9c1ee35ffa52a8c5c2cc996c79d3950",
-    "ui:PAGE-AGENTS": "808f956ad065619d9084b2abf4e4bb5ada0a16b0b169ab02710a6975f52a7e5d",
-    "ui:PAGE-EVENTS": "a74f48454e6a5d2eeb3e5a38d700f0aef0d9ca2a7cc24c8f831f84515b5b533b",
-    "ui:PAGE-INBOX": "a79b0ed4cefa94105fca4900b00a23263a7653fc4c5683148e07343d93d9b2f1",
-    "ui:PAGE-MY-PRS": "4af9872dbaaed7eebcbe8a32095c2b77daa72a1fd473ca4e3cf4be337fcdfe7f",
-    "ui:PAGE-REVIEW-PRS": "2e817726a4451c63cf1a02901ac5f36d34609f07a036169b52755c173661f1f8",
-    "ui:PAGE-SETTINGS": "6bde3f3dc6da208dff6dfbea4dacde2c63a0837a4c8a84b18dbe08af5f5672b7",
-    "ui:PAGE-WORKING": "90c9fc6433255ce56cf7e9ff699c43da4e36ba88050c8904436836b634eb97a9",
-    "ui:S-FACTORY": "97ffc8e20c46af90749bf217965ae2a3d43de37a0c6ee8fcab67768062148c5e",
-    "ui:S-SETTINGS": "baf74067db05de4f9fa127933277c1bd3a14899e549ea609fb94c4cac318a6ce",
-    "ui:W-APPROVAL": "02db324fbeffb8f68e886fe0c6ef91aaa19f6cef7f23c86cf714394fbb6dd0a6",
-    "ui:W-CONFIGURATION-CHAT": "490e16eca67c6313f8fc557341a59da14a4a4ffadb7a25292974224af21e1b0a",
-    "ui:W-CONFIGURATION-PROPOSAL": "9001dfb9eb44313af03c11ffade57e327470102e0ff8dbfd8f672b83c7a217a5",
-    "ui:W-CONNECTION-BLOCKER": "8ac7ea5610d7c4addcfd1064502efd0b16e46d3809a91ff133cd1b4efb6a6119",
-    "ui:W-EFFECTIVE-SETTINGS": "cf0b287841444360467e480c8b0a0ea784f075f4cc4c8ff0d56cdd0de1cc1a65",
-    "ui:W-ELICITATION": "1103a9c7e301d4db84f10e145aadd30beab81f12d21f40c1c0a4c1b1a2996c19",
-    "ui:W-EVENT-BATCHES": "f640c5943f0e0ee10dd118fe836f80071f2f2fa0df9f5b871b93bff5de8698d2",
-    "ui:W-GLOBAL-ERROR": "fa4da205ae36cec428844c8be719d97f5bf3645dc9d810f2a528379293e71244",
-    "ui:W-IDENTITY": "e3a5bdadfc370817da227b9714a84b47f9c56ce653d90d62f80dde820d2e6831",
-    "ui:W-INBOX-EMPTY": "eae1753dec53ed256595c2ccae2773ef9b3426671077909730701a32effb3ce2",
-    "ui:W-INBOX-QUERY": "5657fff7eac6870ebf784900ed1d8d2ba3f090e238a5efbb36267cb92ee56db7",
-    "ui:W-ITEM-ACTIONS": "a72b10173e63a62682235dc4f3727d6c6cfecff808d7456051f5c1e4053213ba",
-    "ui:W-ITEM-OVERVIEW": "23613761170b85484ed797fee82a9994625b23de726d057e01143acb3c4f7f88",
-    "ui:W-ITEM-ROW": "7c308fcd0c6e5976d6f35efae1e8eb86b609f6e2eb5be42adf3d17416ff5bd0f",
-    "ui:W-MESSAGE": "c631a8c941986421cfb4149b04bde58292a384b0c7b0c55abac3aef07ba758eb",
-    "ui:W-NAVIGATION": "857b4d67a9acc4faeb57d6295c377a335bac26707d34f972d8e46696482c6fc0",
-    "ui:W-PRIORITY": "977e60562e2a228d05a0eefbdf956a1ae61d78959d5014fe2bb2fece0e8319ee",
-    "ui:W-QUESTIONS": "13c5f33ce98b23340e1288aa869c17906b625af0f556a131dd30fbe78da16698",
-    "ui:W-RELATIONSHIPS": "cee0f847381f15e2145db5c02f280099673c11d6c7096da390532df88e14f683",
-    "ui:W-RUN-CONTROLS": "a8efcf8a4888d62964210335360a7c483fbf694f271f338b3b6bfcaa8521677d",
-    "ui:W-TRANSCRIPT": "01de6dcec3b6e9c3cced40b7b9063c3a111cc5f6f52a1b37be1d31c93fe970fe",
-    "ui:W-WAITING-ROW": "fdb65fe60940931c9c0bef04a6faf5560ee4584a6e4444d16570f8e527e070c8",
-    "ui:W-WORK-STATUS": "fce22c9d703a4dba1944e53d40f1ca27f93cc28a2cf1269ede92c5bea1ca5867"
+    "ui:C-ANSWER": "e2271f167c6df4705c01f353f04b3d74253b3e2f60d708ef598ba62b3cbca0c8",
+    "ui:C-CONFIGURATION-CONFIRM": "684a93f13bd8f756f3a40c065836d40473b92f92511fa1b395bae877e1feb717",
+    "ui:C-CONFIGURATION-PROPOSE": "cbc0f97a3e65eada79e6e8a5d6582e5fb765185f465a4ba2c63d5b71b94684d1",
+    "ui:C-EVENT-INSPECT": "6904fe3b2cd3838c4a8053a7881c80b3618f72e70eb7be7979a310feaa375770",
+    "ui:C-FILTER": "4ca1d5523a243495c041d93826b4c366da01b89588d121122a7b1cc509ba5878",
+    "ui:C-FOLLOW-UP": "0380527c0783dad081f98466d5e266d05a7b582c177c3eac527b1f1f22084e35",
+    "ui:C-ITEM-STATE": "fe3c7467339d762c9c561a6dea6a8c3c0be6c132efa3115176d7e8fecbb7b090",
+    "ui:C-LINK": "f48dd65f363dc0422dcb911ce0599ce39a986c454e59329b2fa446d95db8d7fd",
+    "ui:C-NAVIGATE": "a3ab29f9f62efea05bf73e06455f89ad7dde12d54113536cce3884abdeeade7b",
+    "ui:C-OPEN-SETTINGS": "42bf600034e8eb9e69edac59c46162776158963f8e29ba29900692c0d56d7936",
+    "ui:C-PRIORITY": "69d8e99622abb5883395b8904a2609f45c26bbd9d00a4a86b9fd6fa3d932cf50",
+    "ui:C-RUN-ACTION": "f1fc9f13526714c3ebbcf2fbc94473fe8201922f911aea53ba12b6e5f63e14b7",
+    "ui:C-SELECT-ITEM": "389c38e8ffba53004e4914f21e81a42510f53ae6f424bebd6f96d2b8d491192b",
+    "ui:C-START-CHAT": "a910381d0cff3c88237453aa0ed9b74558e8f9734e7f18f6d96a0e7a77f37ce3",
+    "ui:C-STATE-REFRESH": "343a043854404410d5f92cb80ca143e9c438252303038acef4da6ad0ff97d160",
+    "ui:C-TRANSCRIPT": "f44cd8057991c695db845b43ca3cdc8def842892b54362a843fe288e4e8bedcf",
+    "ui:P-APPROVAL": "9f4e4489058730a1dbfd68ac07310767fda7bf905d463a53934ff0bd550851a7",
+    "ui:P-CONFIGURATION": "dcecf46470b3c52d964f472fdc096a93ce15111cfd3686d657f178be8425ac9b",
+    "ui:P-ELICITATION": "bd48c737c8da5b7db09ce1cc935bc73e02537a58fcdb83a0ea3559a614dce86b",
+    "ui:P-EVENTS": "c76b8d75f3dd9b32bff56a0d4937e97bde8029f35b7a1650b3aa3ff1416bb804",
+    "ui:P-FEEDBACK": "681f911608d1da380f8fc5c50393ec41c0fe3ed886b43851051cad47944eca97",
+    "ui:P-IDENTITY": "280029a4c7004fe692a0362d39b704749fce3e2d820c32c30a7e6beb4368fcc9",
+    "ui:P-INBOX-LIST": "fcbfcc53a9f036b5bf27c5ab0bdefe07a29cf3fc627e058262775a0afcbc38bf",
+    "ui:P-INBOX-QUERY": "1cf35671992df74c76176be4b66c154305d2c75c587df5426c109e94444bdad9",
+    "ui:P-ITEM-DETAIL": "66e3dd9fc1fa60c81f4d4b0c64f133ea8f3b64ab3cd50cca71836fd92e8242f3",
+    "ui:P-NAVIGATION": "be0141e862afdee261320309ac2038b769d84a08e5e7261a4bc550801fb330fa",
+    "ui:P-QUESTIONS": "4c459d53520da40a14c29b5b2271e8a8beb040feb6477b9d1c6c6cf6780d046f",
+    "ui:P-RUN-DETAIL": "a76e3ac54ee991636234bb4d46bd3de8e8bfcf5c0337b99811503560be1830db",
+    "ui:P-WAITING-QUEUE": "dd3f46999c2f2cca3f89527e482b67ed957ab2962e86d149987cf638f689e1e0",
+    "ui:PAGE-AGENT": "7322deec09f5a39e60906ecd967a54192bb9d0577abddc4459b27cbc0713cd7c",
+    "ui:PAGE-AGENTS": "09a38c87be15cd7e087e48ab66091571e9aa3d76b5ef6869f65bfadfd14e8cb1",
+    "ui:PAGE-EVENTS": "11c479fb2c414d2e509b2d0dda718522ff16890e6d625242d6cefccfb02e5f59",
+    "ui:PAGE-INBOX": "10b626480beb6d59290279b89058d6c5ce726c0bae462de701967ecf12079ec6",
+    "ui:PAGE-MY-PRS": "609cf856470d73e428b00d7cc20d4bb190540313251575ff959cf8e183f6305d",
+    "ui:PAGE-REVIEW-PRS": "f7ac91438dc055c765a17f9e6d3024e24ec9f4acb206de1b4ebefe8613448393",
+    "ui:PAGE-SETTINGS": "5d3a5d056dc2d4966056b351480b25ce1f9be5b5ce8d982138167b32affb9563",
+    "ui:PAGE-WORKING": "8d0850e5fa09f50d90b1dd64bd42a7a5dafceaf1827072f55476a2795a77e355",
+    "ui:S-FACTORY": "f3214b1a5151e4e089e1af58cf3987cd5a0af1526fe049ea0feceaa64827200a",
+    "ui:S-SETTINGS": "5fd15b84ae9039772d3da184656024e7179bcebecaa0c407196b253ee9f9d604",
+    "ui:W-APPROVAL": "2352da5dc48fcc099c553894353f4c6d83f8be40b7608b48b75ec563443719ad",
+    "ui:W-CONFIGURATION-CHAT": "3c5c4d792ede2596a741e66d5b8238f2b0be5da6233f87be037eb7b56b0480e9",
+    "ui:W-CONFIGURATION-PROPOSAL": "9046eaa1c7ddbc4c43426a74a405bc0c2191e7ac4ba781d1b718eb04a859a84c",
+    "ui:W-CONNECTION-BLOCKER": "bc24599211d94701ac75e9a22b98694fad3ad4d69d407db8cabc77b39ea2c0ef",
+    "ui:W-EFFECTIVE-SETTINGS": "641b2261b07bcc1ec2f3cbd75df5833cfcac16fa30a8689fd93cc45fb658a32e",
+    "ui:W-ELICITATION": "c5a93b931075f0e638e80287524dfb8e05aa07f72bbd718f912e8b54468f4826",
+    "ui:W-EVENT-BATCHES": "5672ed4558c59be6dc8d9b6262490d6f73d5adb913c7a2680d33082e5b930667",
+    "ui:W-GLOBAL-ERROR": "b60b4e072875f66b82bba741e3c9a489db0729d5a5db164075fc4684e0363cc7",
+    "ui:W-IDENTITY": "73e10827961c378bc24a8aa6f688b10ded101deeffa43242179cfdd0377665e1",
+    "ui:W-INBOX-EMPTY": "4f00c3f731d0899af7e0ba170ceef1ab2ebd7fe176f7fb1b876a577f21ec9c66",
+    "ui:W-INBOX-QUERY": "86ef470db5b6958418b0b9d35c892ecbdc014006212e337195760c47215bd16a",
+    "ui:W-ITEM-ACTIONS": "2829aa6a4a8a72bf3ddfc2dbf11df0d5b3adb55bae6351d0b33568fde9e55a87",
+    "ui:W-ITEM-OVERVIEW": "a24a6ff9eebbc268317d86a838cc6a3e6b9d15f350403891c76ff13548f22687",
+    "ui:W-ITEM-ROW": "69eee4ab0ad50ea662e8149c2b909c536a6c7cdd1247fd6049bd9b3fc1f3d3c6",
+    "ui:W-MESSAGE": "318bdbd9bfaee7ecca11ad4babad7a5cc095bc19b3003c7879e481896df2f1d4",
+    "ui:W-NAVIGATION": "edf01b07cc41f7544af176561f267b666c7ba184a0e75f54795d694d0787f397",
+    "ui:W-PRIORITY": "e0331cc7b9a631ffa1129c81814ca8247ba37b586961f31b13c48c1cbc102328",
+    "ui:W-QUESTIONS": "8197008d0028f5c54af0ebce97a600cf6d768d924517e573ad081d5cecd7fe0c",
+    "ui:W-RELATIONSHIPS": "dbfa7f736b665428edba7c14bbaa6276c5b954aa1502cbe76d30f128a61370b6",
+    "ui:W-RUN-CONTROLS": "0e7393ab9a7133612ba2226c80626fe80eb8d1dced78b19e7d482cee665745c7",
+    "ui:W-TRANSCRIPT": "a9cfb6b0785d925ef2d87393513c4e29ec5614c02d11542e6b7d69890e613207",
+    "ui:W-WAITING-ROW": "5270e4e26b6debf6e5e029c69cfda6b73f815b332f14141996aa7358f17b0c3f",
+    "ui:W-WORK-STATUS": "8cb940ab0bdbbed142d5b3a9c74f7be8860b7ed889f70c579644c3342a8969a2"
   }
 }

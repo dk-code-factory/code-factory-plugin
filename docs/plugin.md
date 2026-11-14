@@ -128,6 +128,43 @@ and a 120-second notification interval. REST quota uses requests and GraphQL quo
 uses points; the local allowance counts actual HTTP attempts. Reads honor the
 provider's server cooldown, conditional cache and persistent shared gate.
 
+Managed REST reads, GraphQL queries and the generic REST mutation transport share
+one request lock across clients and processes using the same private state
+database. Admission conservatively aggregates REST endpoints at 900 secondary
+points/minute and GraphQL at 2,000; reads cost one point and generic REST writes
+cost five. Generic POST requests to GraphQL are conservatively counted as
+five-point content operations even for query-only payloads; the application-owned
+GraphQL query transport costs one point. Writes also reserve against 80 content requests/minute and 500/hour
+before sending. These rolling reservations and provider cooldowns survive restart;
+hourly attempts, observed primary quota/reserve and endpoint polling deadlines
+remain independent. There is no built-in publication subprocess in the current
+daemon; agent and skill subprocesses remain independent clients.
+
+A throttled Sync operation shows its reason and UTC retry time while saved PR
+data remains available. Repeated scans join that operation. Safe synchronization
+reads resume after the cooldown without resubmitting the owner action; uncertain
+mutations are never automatically replayed. Restart preserves provider cooldowns
+and background checkpoints, while interrupted operation identities remain
+uncertain for inspection. Server `Retry-After` seconds or HTTP dates and applicable
+exhausted-primary reset times govern retries. Secondary throttling without an
+applicable server deadline waits at least one minute, then increases exponentially
+to a bounded 32-minute wait on repeated failures.
+
+Throttled team-membership reads also keep synchronization waiting without
+advancing saved repository checkpoints or discarding saved membership. Each scan
+admits at most 256 additional request identities; excess unique submissions return
+busy, while already accepted identities still resolve to the original scan.
+Alias identity reservations share the active 64 MiB admission allowance and are
+released when the scan finishes. Accepted terminal identity records remain for
+the daemon lifetime, like other operations: this bounds intake during a blocked
+scan, rather than total lifetime identity storage.
+
+GitHub's [secondary limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#about-secondary-rate-limits)
+also include account-wide concurrency, CPU/resource limits, lower endpoint limits
+and undisclosed costs. Local serialization and conservative accounting cannot
+measure other clients or guarantee absence of server throttling; response headers
+and throttle errors remain authoritative.
+
 Repository summary synchronization and detailed reconciliation recover observable
 changes even when the app is closed. Initial import establishes a baseline without
 launching historical work. Signed webhooks enter the same durable event stream;

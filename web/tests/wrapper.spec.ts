@@ -2890,3 +2890,98 @@ for (const outcome of ["failed", "uncertain", "lost"]) {
     );
   });
 }
+
+test("throttled PR synchronization shows retained retry state and resumes without a second scan", async ({
+  page,
+}) => {
+  let complete = false;
+  let statusMode: "waiting" | "busy" | "outage" = "waiting";
+  let busyPolls = 0;
+  let lostPolls = 0;
+  const retryAt = "2026-11-13T14:05:00Z";
+  const { ui, calls } = await host(page, {
+    deferred: { name: "sync_repositories", complete: () => complete },
+    before: async (call) => {
+      if (
+        call.name === "operation_status" &&
+        !complete &&
+        statusMode === "outage"
+      ) {
+        lostPolls++;
+        throw new Error("Connection failed during status read");
+      }
+    },
+    response: (call, value) => {
+      if (
+        call.name === "operation_status" &&
+        !complete &&
+        statusMode === "busy"
+      ) {
+        busyPolls++;
+        return { state: "busy" };
+      }
+      if (
+        (call.name === "sync_repositories" ||
+          call.name === "operation_status") &&
+        !complete
+      )
+        return {
+          ...value,
+          state: "waiting",
+          retryAt,
+          retryReason: "GitHub secondary limit",
+        };
+      return undefined;
+    },
+  });
+  try {
+    await ui.getByRole("button", { name: "My PRs", exact: true }).click();
+    await expect(
+      ui.getByRole("button", { name: /Reconnect PR/ }),
+    ).toBeVisible();
+    await ui.getByRole("button", { name: "Sync", exact: true }).click();
+    const waiting = ui
+      .getByRole("status")
+      .filter({ hasText: "GitHub secondary limit" });
+    await expect(waiting).toContainText(retryAt);
+    await expect(waiting).toContainText("Saved PR data remains available");
+    await expect(
+      ui.getByRole("button", { name: "Sync", exact: true }),
+    ).toBeDisabled();
+    statusMode = "busy";
+    await expect.poll(() => busyPolls).toBeGreaterThan(0);
+    statusMode = "outage";
+    await expect.poll(() => lostPolls).toBeGreaterThan(1);
+    await expect(waiting).toContainText(retryAt);
+    await expect(waiting).toContainText("Saved PR data remains available");
+    await expect(
+      ui.getByRole("button", { name: "Sync", exact: true }),
+    ).toBeDisabled();
+    await expect(
+      ui.getByRole("button", { name: /Reconnect PR/ }),
+    ).toBeVisible();
+    await expect(ui.getByRole("alert")).toHaveCount(0);
+    expect(
+      calls.filter((call) => call.name === "sync_repositories"),
+    ).toHaveLength(1);
+    complete = true;
+    await expect(
+      ui.getByRole("status").filter({ hasText: "Synchronization completed" }),
+    ).toBeVisible();
+    await expect(
+      ui.getByRole("button", { name: "Sync", exact: true }),
+    ).toBeEnabled();
+    expect(
+      calls.filter((call) => call.name === "sync_repositories"),
+    ).toHaveLength(1);
+    const requestId = calls.find((call) => call.name === "sync_repositories")!
+      .arguments.requestId;
+    expect(
+      calls
+        .filter((call) => call.name === "operation_status")
+        .every((call) => call.arguments.requestId === requestId),
+    ).toBe(true);
+  } finally {
+    complete = true;
+  }
+});

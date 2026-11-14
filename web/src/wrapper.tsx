@@ -521,18 +521,20 @@ function Factory() {
     });
     try {
       const result = await call(name, args, {
-        onProgress: (status) =>
+        onProgress: (status, retry) =>
           reportNotice(
-            (
-              {
-                queued: "Queued…",
-                running: "Running…",
-                succeeded: "Completed",
-                failed: "Failed",
-                uncertain: "Delivery uncertain",
-                lost: "Submitted work lost",
-              } as Record<string, string>
-            )[status] || "Checking operation…",
+            status === "waiting"
+              ? `${retry?.retryReason || "GitHub synchronization is waiting"}. Retry at ${retry?.retryAt || "the provider's next allowed time"}. Saved PR data remains available.`
+              : (
+                  {
+                    queued: "Queued…",
+                    running: "Running…",
+                    succeeded: "Completed",
+                    failed: "Failed",
+                    uncertain: "Delivery uncertain",
+                    lost: "Submitted work lost",
+                  } as Record<string, string>
+                )[status] || "Checking operation…",
           ),
       });
       reportNotice(success);
