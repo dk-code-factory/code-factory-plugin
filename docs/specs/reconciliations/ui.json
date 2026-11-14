@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "ui",
   "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
-  "fingerprint": "3ba6e64c0b1a991790ad89bff7cc29cd5d09ecdc6edd6756f51808a70f6abb1e",
+  "fingerprint": "f4c602fa2d90f42cdda9ed5e480c52165abbef98ccb68e8669bea859c652e780",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "behavior",
-    "description": "W-CONFIGURATION-CHAT, W-EFFECTIVE-SETTINGS and W-CONFIGURATION-PROPOSAL consume private native snapshots and refuse credential edits. Encoded credentials and unreadable parameter components stay private, while safe URLs, identifiers and explicit separate confirmation remain usable. NATIVE-CONFIG-URL-PARAMETERS maps the new distinguishing assertions to these existing widgets. Literal URL quotes/angle brackets do not end detection; failed whole-URL parsing cannot suppress copied credentials from independently readable raw components. Whitespace and control characters cannot expose credential tails or bypass protection through surrounding whitespace; ordinary URL spelling remains usable. Multiple URLs in one native string protect each credential independently, including whitespace inside a later URL, Unicode separators and ordinary prose boundaries. Exact public URL/text spelling remains usable.",
-    "implementation": "Native projection preserves exact layer selectors and named entries while masking private fields, token patterns, arbitrary headers and known copied values. Raw authority, query and fragment credentials are collected independently before URL parsing, preserving raw/decoded forms, literal plus signs and percent escaping. Incomplete parameter parsing hides unreadable components; semicolon alternatives retain complete credential values without classifying ordinary siblings. Shared URL ranges distinguish whitespace-separated later schemes, including Unicode separators, retain whitespace through credential-bearing candidates, and keep nested schemes without separators in their outer URL. Collection and text replacement consume the same ranges: the first credential is never discarded, later whitespace-bearing userinfo is complete, and surrounding/prose text is retained. Public candidates stop before ordinary whitespace prose when no raw credential requires extension. Raw BeforeDigest still governs confirmation and deferred application. Startup sanitizes proposal entities before projections and journal copies in one paged transaction, retaining identity/state without replay. Cached/background API ownership, cancellation, admission and response-size bounds are unchanged.",
-    "tests": "Read all eight native regression functions and their real assertions. Forty isolated URL cases now cover quotes, escaping, semicolon ambiguity, malformed independent components, literal plus signs, spaces/tabs/newlines/form feeds, surrounding whitespace, first and second query copies, a first fragment, internal whitespace in a later userinfo/query URL, Unicode URL separators and a prose prefix. Every case asserts no original/raw/decoded credential copy in inspection, persisted proposals and legacy helpers, URL/copied-value refusal before persistence/native writes, and exact ordinary sandbox/partial-prefix preservation. The independent multi-URL cases reproduced disclosure and copied-edit acceptance before the fix. Ten safe values retain exact URL and surrounding text spelling through inspection, proposal and one write only after confirmation; they include multiple URLs, Unicode separators, nested public URL parameters and ordinary newline prose. The prose preservation assertion failed before public-candidate whitespace handling was corrected. The shared startup fixture adds first-query and later whitespace-userinfo copies, so actual Init sanitation checks both against37 journal events,32-row paging, transactional rollback, identity/state preservation, no replay and idempotence. Raw hidden rotations, safe selectors/quoted paths and nested private edits remain distinguished. The final full factory package passed with race detection. Full consumer fixture suites are required by reconciliation; source fixtures do not establish installed-host acceptance."
+    "description": "Native inspection and current/retained proposal views protect nested URL credentials and copied usernames with empty passwords, including encoded and malformed boundaries. Both displayed redaction placeholders are refused before a proposal is saved. Safe nested public URL spelling, exact selectors, raw hidden-change freshness and explicit confirmation remain intact.",
+    "implementation": "Native redaction now inspects every raw nested scheme and iteratively decodes distinct URL parameter values, including independently readable escapes around malformed components. Discovery preserves literal plus signs in userinfo and raw/decoded copied values. Empty passwords retain the username credential. Projection sanitizes nested URL suffixes before their outer URL; credential-bearing encoded nested parameter values are removed while public nested values remain exact. Both generated redaction placeholders are refused before proposal persistence, including nested and copied occurrences. Raw freshness fingerprints, exact selectors/named identifiers, cached/background API ownership and cancellation remain unchanged. Startup applies the same checks to legacy entities and journal copies, preserving historical identity/state and transactional rollback without replay.",
+    "tests": "Inspected all eight native regression functions and their actual assertions. Fifty-five credential-boundary cases cover the existing malformed, quote, semicolon, whitespace and combined-URL boundaries plus raw/encoded/double-encoded/deep/path nested credentials, malformed encoded nested components, usernames with explicit empty passwords and partially escaped credentials. Each asserts inspection/persisted/legacy secrecy, URL and copied-value edit refusal, no extra persistence/native writes, and exact unrelated sandbox/partial-prefix preservation. Fourteen safe values assert exact inspection, proposal and one confirmed write, including encoded/double-encoded/deep/path nested public URLs and ordinary prose. The edit-refusal test submits the actual displayed malformed-URL placeholder, its nested occurrence and a copied occurrence as well as the existing credential and ordinary placeholder cases. Actual startup migration runs ordinary, credential and URL-placeholder pending-edit variants with nested-password/empty-password username copies,37 eligible historical events across32-row pages, injected transactional rollback, unchanged identities/states, no native write and repeat idempotence. The complete factory package passed with race detection; all required consumer fixtures remain required by reconciliation. No real-host acceptance is claimed."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.666
+      "seconds": 0.555
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 37.065
+      "seconds": 37.821
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.38
+      "seconds": 71.46
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.225
+      "seconds": 1.204
     },
     {
       "command": [
@@ -65,7 +65,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 642.575
+      "seconds": 644.543
     },
     {
       "command": [
@@ -73,7 +73,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 417.498
+      "seconds": 420.655
     },
     {
       "command": [
@@ -81,7 +81,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.698
+      "seconds": 4.779
     },
     {
       "command": [
@@ -90,7 +90,7 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.387
+      "seconds": 60.549
     }
   ],
   "dependencies": {
@@ -260,85 +260,85 @@
     "term:ui-w-work-status": "d117098e012432dab39d5b327a5d9095d64f85418b7db6e35f83d570c59d0dfc",
     "term:uncertain-operation": "e5808790f69713e7d0155139fef47ed953581d1b2baec8a675912f2cfa3460c5",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
-    "ui:C-ANSWER": "80a4b644ba432298ae690d1bcff2768edd7696b6dcfd3214d46361630dbc769f",
-    "ui:C-BROWSER-LAB": "2e1985708b2f95256954b2a012d853e516864d3678aa5b6931e55d2255d45d0e",
-    "ui:C-CONFIGURATION-CONFIRM": "c1dfa08ce8630bb3f7a5bbedd3d32a508cb903b6c8f1d21b491459ed00c954f6",
-    "ui:C-CONFIGURATION-PROPOSE": "debe5bd1e3fad25f9869d6ef7ae1698946e9d64b0f516c8b14cf042f285fdbff",
-    "ui:C-CONSENT": "3dd489022aa96a886cf8e3214b177a68626fe59cee668b4e6b966749b03d433c",
-    "ui:C-EVENT-INSPECT": "16af3e153f58099ebbab659e34cc6b419d4a924929c2618834baecfa1d9cb9b0",
-    "ui:C-FILTER": "e7b7c80316640e30ce12eeccec0b9d2e0af01d17ce237a90e17db789e157be98",
-    "ui:C-FOLLOW-UP": "f24855247a2be89b95adec1f3cf09eedeba5d437977b2f7aece9c434ddb81453",
-    "ui:C-ITEM-STATE": "0d70d70dc795f4d051cf3bd5a0c6140cffbef6d91681d83187501ffdcfd24539",
-    "ui:C-LINK": "fe45ab253ccc5f469531320908fe9670d1795c340b85e9499b025a3f43079c5c",
-    "ui:C-NAVIGATE": "10ce1bf7ac6b88ddedd3094a1398ce8d077061330253846f86e4289aea87648f",
-    "ui:C-OPEN-SETTINGS": "05bc7cf634bc31c1fcc3b41fa5e6d0ffccede5982cb24890eb165482bfca0365",
-    "ui:C-PACKAGE": "84e72e1d60b85374d237332b7cd197e99e93e12ec9f48f3f7be0a00d38456045",
-    "ui:C-PRIORITY": "c72752a8493f0252fcb58d4a89490d0d5698ec6d6084fcf91c788de3641da134",
-    "ui:C-RUN-ACTION": "d39f88f7a692f8c3f0a407edf31e21bd5100855760b84c4a2fe87c3979fb57c4",
-    "ui:C-SELECT-ITEM": "e5af8fd79be595bbd408f6f4ca736eee9121930fde224f25a4c9e1516688e7e2",
-    "ui:C-START-CHAT": "83e3a8bfc83ac345f2436a7d5b2b69e8051472fc32f3f929c8995d923215c062",
-    "ui:C-STATE-REFRESH": "69ea7ea91fddda038dfdcc1ecaa51e7868a72e2f4b15fded1af631d6ec3d3e6f",
-    "ui:C-TRANSCRIPT": "fa6489a4472178353757af2c2aafb9b5910f306177ac90243c5ce2ecfaad7e62",
-    "ui:C-TUNNEL-KEY": "5e486810c7f6a9bb9f2031b5db45f20def3497f0b2ff97dacea11afe916697f1",
-    "ui:P-APPROVAL": "142fdaa4219be2f484c5505a405877d8517ab49d1d41bee64e15740a150b83d0",
-    "ui:P-BROWSER-LAB": "4f104d1a112219b974938977cb1854b99129595a1b362cb592dc4776dcabcc3e",
-    "ui:P-CONFIGURATION": "da6d82ebc56d747c9222fa0db0a4a63668288225a2f57ef3f3366412f2694f81",
-    "ui:P-CONNECTION-GUIDE": "d81d3098956e34d584972095ef242be247f5448f2a3840aad7e23fa2698bac99",
-    "ui:P-ELICITATION": "63ac88db16ec980a6e6fb165da0660452cdf492f85dfa8a2334e171de6ea5ae0",
-    "ui:P-EVENTS": "516220f70e7238599010d77ebe0aa6de56689cadfc7ab2286cf34aedf997c825",
-    "ui:P-FEEDBACK": "491ed1115bd853bde9fbd09df8a8de581ab848410fbe1001ee840df2c843fc73",
-    "ui:P-IDENTITY": "7fcb35527d8c996c15c28cd348bf51b36ff095b86b81b1f28c72e13dac2ff568",
-    "ui:P-INBOX-LIST": "62038a3f644125dd362f17216e4f76edadfa445ff490b3183e6cbbcf7b1516ef",
-    "ui:P-INBOX-QUERY": "c4031f49c40121819b64f9362d6ce2785fdc5b1de4c695f68ff70382fbde7013",
-    "ui:P-ITEM-DETAIL": "5b946c2db720323a628fbc1b893fcf5476b21a858f01b0febe2597907279044e",
-    "ui:P-LOCAL-TUNNEL-KEY": "b89d6046645aad67daa5db3e1293651d2b45df402cab3ee88d198b4b8ff99276",
-    "ui:P-NAVIGATION": "c314659350f1cdd96cefcf2f02de41de0657395be6273d1b1a802e5871df2fa2",
-    "ui:P-OWNER-CONSENT": "8bb760295b2ac123a893019fa086f70849a17c16a0dece90441befdba49b536a",
-    "ui:P-PACKAGE-OVERVIEW": "39eeda26a426a24e9da3de7cd3fc9489e7bcf65179e938a9112eef544b78e3f8",
-    "ui:P-QUESTIONS": "65f06377616eaac0e8144b2bbbd09cdbd7c3f6a1d59db6fabee3a3a464de579b",
-    "ui:P-RUN-DETAIL": "2fe41f30ea4dcfd86cf0392abe9be5a2ad218b6ccf055180c8414076b1f6c5ee",
-    "ui:P-WAITING-QUEUE": "e1acb22774f1fd8f08c1709ad4bc0d475bde8e1b788aaa297fc55c80bdcca49d",
-    "ui:PAGE-AGENT": "d7dc8cc9a09dcbb8da78fb82842f7b567ba93f37f89acfee2a6a69b36a1fcb31",
-    "ui:PAGE-AGENTS": "de2e8da500b1e55dc2c933cf5538d1434fcd9f01a411562d92fb7be052fd54fa",
-    "ui:PAGE-BROWSER-LAB": "e6f9fb567762bf404157292a552eec4add38e124500d028956597bcccb42ff8e",
-    "ui:PAGE-EVENTS": "807b664ed3436e3d7ff55a6b113e366ff8781ba579961ddc02caad0f122f6a67",
-    "ui:PAGE-INBOX": "d59a1ffa1bf8d9e44ad503d23257db67731937571f889ed64e78a06eae97aa4f",
-    "ui:PAGE-LOCAL-TUNNEL-SETUP": "06c8079e7d8a2b18d58e3b5263fc743f61bf32ed343b38afa932f79f2b409b32",
-    "ui:PAGE-MY-PRS": "2ec4e5c36b36345fb5ac5f6ea137a1848eb31dcd961083faa54ac304e7ed2b5b",
-    "ui:PAGE-OWNER-CONSENT": "2893d652610918b264860068a5c6c4dfaf2f132465c18921df76119b271ad0eb",
-    "ui:PAGE-PACKAGE": "237a7d3eee5e741204d50a3c3755c784c3bf71f6c12037b8cded09fe2b1a79ab",
-    "ui:PAGE-REVIEW-PRS": "15f42e39635b73cf5f11b3bec7292b01db9bf5e2230a09409bfbc34ad3fff3bb",
-    "ui:PAGE-SETTINGS": "191a7ffbb8c8d208215ad79791f10a855c792b39de7146f81e8151e27a48e9dc",
-    "ui:PAGE-WORKING": "036183e1222485aef693c14d8411645ec113367497033c8c69b02ab1deb6d7fa",
-    "ui:S-FACTORY": "f024789b60ba9bf0c01ca702feae2454ad075082ab2a979e2b82cab721a295d5",
-    "ui:S-SETTINGS": "7ebfa34653ee8a7dafe14ecb61e4e35fed88068adc5a1fd0fddb95e688601d4a",
-    "ui:W-APPROVAL": "72f88d1acab2e6575d59e23797e4c6e9d41978ad39b7c78dbfa30bf51e8fb84f",
-    "ui:W-BROWSER-LAB": "e6a299df238fb686b7496cd5ec2b3e65d2bff30e69c5398a996f7459f74baa6f",
-    "ui:W-CONFIGURATION-CHAT": "3ff6138d6082b5dd62261b1ef40edcd2563576344cc0a5451e69d56b954d4e34",
-    "ui:W-CONFIGURATION-PROPOSAL": "b39b156efc4e527e0e3bb2ec7b3ed63bee1416741564e7299898f5e68755e779",
-    "ui:W-CONNECTION-BLOCKER": "0458b8049f912d865be6f628f9fdfa51340eb508d71a541481eaa65e7692c6a6",
-    "ui:W-CONNECTION-GUIDE": "afc27b39df0edb30616dedfe09e0011230c0681051aaba3d2be85c8a1eb56041",
-    "ui:W-EFFECTIVE-SETTINGS": "29416e7503fb968a598464a4557a9bc7a4b497ee99c0118b0148bbac8f5078a4",
-    "ui:W-ELICITATION": "f1afb84132314bd3ee3dcee51f2598f9a10f4c2e6641a1bfcb008b5ce46e7a21",
-    "ui:W-EVENT-BATCHES": "35090b833de656ba3328289770411d3d485417632e2880ab48551c44eb9e7f01",
-    "ui:W-GLOBAL-ERROR": "e5ce84699c4aca351b40887f2be60f9e78aa3ea43a6c105a964be7bbb89252de",
-    "ui:W-IDENTITY": "77f28b0f160cd039b9e9b6298f7e0c84ea66abbad29ceb01df74bde1a61f39fe",
-    "ui:W-INBOX-EMPTY": "4f97099d7cbdb10d9819328a20cc9072e212229ee47023e8eb5dfcfe99dc0d57",
-    "ui:W-INBOX-QUERY": "fce66dbf02d0c88986cc22ae383560c5982e7472cba90451a5bb64b78ac9fe7d",
-    "ui:W-ITEM-ACTIONS": "92c25ca9b0cddf0745388ab7f05f5bbd541f3a312647f4a764913266fa191321",
-    "ui:W-ITEM-OVERVIEW": "09c18893096ea857a777c2f46e8b62eca4f55c306b5982b051ff4e1a11558bfa",
-    "ui:W-ITEM-ROW": "41a1563a69c2dc33f12c68704dd3fcf58dd69d122606f730dc0c770e54bd85bd",
-    "ui:W-LOCAL-TUNNEL-KEY": "7e4c585da57f407d42c32c7a8fcca4e114d8a9e78e2d26237201ce6373eccc76",
-    "ui:W-MESSAGE": "b279024c085f7d39cb639dcb0e2b11e692cdd4515ad5a1d40e135bf7eae2ae36",
-    "ui:W-NAVIGATION": "efa7fc867985330dc362522bb3e76d7e9558fd4ed56cd06ffa8ee4d9c4b10e98",
-    "ui:W-OWNER-CONSENT": "0219bec53c40bf8729a4cf49339a32a9bd3c5670ac152ece2b38b677df558fc0",
-    "ui:W-PACKAGE-OVERVIEW": "93715a9086cb16d15c718bae6397048b30476f3484dc591e4f45fe6378736344",
-    "ui:W-PRIORITY": "e1c77ea4083a961c1f3a0c8615a403f491a2b0596db848ec8dccdd95c9e59046",
-    "ui:W-QUESTIONS": "b739a5e62ee987c9b883439f18feb492e42a7b85eb633afc5cb6e06d9dc69e5e",
-    "ui:W-RELATIONSHIPS": "1fe9e3bd42645bed420962904c15c31ae936909bc2ecfcee880be159944bcc48",
-    "ui:W-RUN-CONTROLS": "25375eb3af0e2e86d3811666b04fe1f2bc817157a24fd0ac42648ff25c616c08",
-    "ui:W-TRANSCRIPT": "9960c043967ff0720c690fc4548928b41db7f7488d5cdacbcea350a1c337b39c",
-    "ui:W-WAITING-ROW": "722dabdac39dcc33e81860a2808efa166560babce9eaefa8dd8c5a039cab62a4",
-    "ui:W-WORK-STATUS": "a0ceeeaacee5342a7863701c8a4d0358ae81a115c51df6225f46bed17c8bc37a"
+    "ui:C-ANSWER": "a5d8f8b053fbb3c7d62066cd4563814f22cd4439de8a628481ea126c86a604b7",
+    "ui:C-BROWSER-LAB": "66f694be88388f2f0e4f95666b7a997978c79442bcb2dd2e10dabea815b84bf4",
+    "ui:C-CONFIGURATION-CONFIRM": "6056725e83614ad558214f19e780f38b354971405501506659563874e3fa7dcf",
+    "ui:C-CONFIGURATION-PROPOSE": "0b674f444b6a934a1845fbd9fd6f38784da6ad6d4d5da13a89d90023fd1b6469",
+    "ui:C-CONSENT": "5cb5ca3aac7b3a0432fba6516aa4ffc52e32b28bb21a570f3dc40215911d3691",
+    "ui:C-EVENT-INSPECT": "7e3ec22a9630f9b6e1b83996e09bf41e09c85bd7d99ea01a588b8823525c4c22",
+    "ui:C-FILTER": "722132f608dd42be6d3a4a9a54576da1e1bb3d4ff4496a8dfd50d2fd8cb5d8fe",
+    "ui:C-FOLLOW-UP": "9916d7506343098f5dabdbcd13d854be8156cf295575f2afed9124666e16482a",
+    "ui:C-ITEM-STATE": "dd068b3ef8cce8457f197efe275dd1d255420d55cd2f49e8e5fe464e1655cd00",
+    "ui:C-LINK": "c0ee5257f66ea6437247cb938d05866014a969437a461fe97b454df0381bf8b6",
+    "ui:C-NAVIGATE": "5ed19b22e1bf67a3931a71713bff44d83de49d29a0d039a662d4f375f87230c1",
+    "ui:C-OPEN-SETTINGS": "e9550770706aea30481a1d77aa7d50c724e7be32136ec58825616b76d8d81f1f",
+    "ui:C-PACKAGE": "e59d2431f34f52a1886aeea9cab51b993e730f3d891d842b622450c26f638c17",
+    "ui:C-PRIORITY": "fa738237fb1ca22b4dc54537528bf42fe8ba1194ae165ede29de1b6880a55c53",
+    "ui:C-RUN-ACTION": "2c6513c1ace092a922770a249e88cf985918c5816d723a7c74f6cc3f82266cfb",
+    "ui:C-SELECT-ITEM": "a8ad70e67b98b1f03c57dac25465e17ccf99244682b8272f2b6c4759e708247a",
+    "ui:C-START-CHAT": "13166dbc2660d799e5554d50f0512c14c6216769e227dc80dcec8fd68b2d0dd3",
+    "ui:C-STATE-REFRESH": "423ba2347bc48ed436da0be94ead7d5dea3fb1d4fffe70b3e4baf998ff5ece96",
+    "ui:C-TRANSCRIPT": "47e86aa9ade80fb9e3a9dff8485e6bf19d6cb7e28cf9e4a6b9e974912891e00a",
+    "ui:C-TUNNEL-KEY": "b9ea128d923e123b0411d2d63b07a13ceb27abb0fefcc0459d3c5d3611531869",
+    "ui:P-APPROVAL": "2267e342cac9e247a08355f3d4f48a36d9aeae668f58f1f11133324a4a3d8e8b",
+    "ui:P-BROWSER-LAB": "603963e62cbfbbbfd16270ea824dd2cc4255438d328737d12e8262fe96bfcce4",
+    "ui:P-CONFIGURATION": "fc98139fa30b5dbc36b5e2648d29bdbd3281a337c492473d54703950bbef19a5",
+    "ui:P-CONNECTION-GUIDE": "e448dafd44eab8a19d706e5233b79476dd8c90e72bff9f6ddf91a372b9a8ae13",
+    "ui:P-ELICITATION": "e2aff1b5dbfe7497394d8b669c07ee6f8ab45e4ad8937dc938c605d0d2948baf",
+    "ui:P-EVENTS": "54844a7fadbc84d4640398ca60c772079dd710bb7d68fe8adf403d8d913aa6e4",
+    "ui:P-FEEDBACK": "3259ae0b3d21b4c81334f3540ab958c2a58d6da306595745e41a0448b3f70835",
+    "ui:P-IDENTITY": "33cbae65ca953a224c1b9b94d706fab89c8a57b08e16867ce70a86c4105ff9ae",
+    "ui:P-INBOX-LIST": "9ddb12e247754616261f4f753380f3513af1d5cd9406dfa7a235a49b7f2bb233",
+    "ui:P-INBOX-QUERY": "760e1afe167a4418945bac3e0dc0a5d69b51d9a976d128d6d204d89377676de7",
+    "ui:P-ITEM-DETAIL": "1ab7557ca54166d35003e2d7727668dadf660348428b95015b73c8a39f64d652",
+    "ui:P-LOCAL-TUNNEL-KEY": "879804dc2f7ddef95d6ed6701fc3fcda817ac56231346847f5ff31024d3936c3",
+    "ui:P-NAVIGATION": "d1cd8714058ec59e7a57424f75d09b9bca49f0847db29a75458d5425b416d5dd",
+    "ui:P-OWNER-CONSENT": "70802c506e7ac61db03a01441c97744eec979f95adeac46144feb92070c2c836",
+    "ui:P-PACKAGE-OVERVIEW": "c8240b99fe1de0aba7edc5ed8150569088d7763aac68b8f077cacbff3d99fc36",
+    "ui:P-QUESTIONS": "a6de24fc744f1c3fd289d304048d00b86c77b4675771898bd6f2d7a8fff39a9a",
+    "ui:P-RUN-DETAIL": "a1a7169be2c6468dfbf39f7822d63cedccbab9378ae1a8ccc2c22bb35b003dce",
+    "ui:P-WAITING-QUEUE": "5324a37cfd67e55626aecff2446a7d1dca69b2775a18f919251e92adb9fef88c",
+    "ui:PAGE-AGENT": "ba6cf091771b391eba1fbdffb8e5f133c0ac5f580a1b32e2bfccbfc079c1a6b7",
+    "ui:PAGE-AGENTS": "24ca54b97144070e11a6d3cbd49da54980224a168ad2c3d5e1931b6b9a57d35d",
+    "ui:PAGE-BROWSER-LAB": "47c5fd4afb889c1c9e1d45b250654e24cc52867cec2a07602d3a667f4344f182",
+    "ui:PAGE-EVENTS": "71b5e12cf94cd4ee84df9ff325362ad088ac94d11f1534c0b188f1e27f909aa3",
+    "ui:PAGE-INBOX": "e29aff4e70a96e19a93acf8f87dfab42b3af3c148f78a0ceab4a4f84b68807ba",
+    "ui:PAGE-LOCAL-TUNNEL-SETUP": "8627c8a4aadbc8518ae58542bfb32c277def8f976056651f393e43a4520d3aaf",
+    "ui:PAGE-MY-PRS": "7fda01962e5a843092157781f0a08b813ee156f1639b88eaab18aca9c5587d78",
+    "ui:PAGE-OWNER-CONSENT": "bf438a47d5373f28114ceacc1b2ea18020464d2fba6c5ecf2d16f15b431e3e38",
+    "ui:PAGE-PACKAGE": "e09afaf0dee4437670e8c59dfa5a7fa40405dca8f86f585fd952b59bc06e8fcd",
+    "ui:PAGE-REVIEW-PRS": "ab5ca0c966c37f6bbeb45d2dad8fbce0ac090ebadf69fdb34a4a7a7dd4825082",
+    "ui:PAGE-SETTINGS": "ae6876556ea7f53690aa0052a846d73346aca77d4be15a04164756f377fad2a5",
+    "ui:PAGE-WORKING": "917818224ec3ee3375cbebbfdaa6a4670e3c1088ecf789782d4ce09b2d77ce7b",
+    "ui:S-FACTORY": "4050ce0d7f970f783f075b9f9d718c98f436c92158f27ec08a01d177fe80ac44",
+    "ui:S-SETTINGS": "5b64fff49ab435e9655009288c4e6278a1152815b19cba76e85ef897c4e276bc",
+    "ui:W-APPROVAL": "4e60be54ff05f1b191393fcc47571d9827214521db0b959644498470fde3012a",
+    "ui:W-BROWSER-LAB": "39847cc4c67eb3f8df08b0b286ece1d5ca430fc60390ebaec22a841ca703345d",
+    "ui:W-CONFIGURATION-CHAT": "f7df2a8eac93fde455c40b10267c4adca2e375f6fd0145d6d5e43f82745448e9",
+    "ui:W-CONFIGURATION-PROPOSAL": "d79ab85e5118890117d756a23dd6eaa4dc223ca8c6e429369c0936fac96927e1",
+    "ui:W-CONNECTION-BLOCKER": "def1871ae3b782bf83747353e68140956d519825d4091435b05cb18990c06988",
+    "ui:W-CONNECTION-GUIDE": "e5822e5ab49465d8d1f8ee16796250866b27999ff7642837e5e2540bf09228e5",
+    "ui:W-EFFECTIVE-SETTINGS": "4536982f3f33206820b9540ebec55e79d76a2b631a702f8e277c99ad20e81099",
+    "ui:W-ELICITATION": "239b17cc10b7032554d4976f77d1aaa0e2c09fc30f950311f235682f447a8a5b",
+    "ui:W-EVENT-BATCHES": "b297733e911b7df23c2aebc898f9b07f619036ede7b7d3a2a105b29dbf670a7f",
+    "ui:W-GLOBAL-ERROR": "b7711ea7ba38d86ea654ba59a239b1604437ebcf40ddf803c13cf4c77efb85f1",
+    "ui:W-IDENTITY": "51ee6a98667d23bdb5355d179b96c8e8f012b04d949bb5d4608f4d29bd94b8d6",
+    "ui:W-INBOX-EMPTY": "c84eef94b0e65136078be866394e2d2ff066daa76dbae7a664ac7c776db824b3",
+    "ui:W-INBOX-QUERY": "edc3157278d3befd2d8180542e0e39599ebfd10c82ffb24da31945555970fc1b",
+    "ui:W-ITEM-ACTIONS": "d83942856c1a2cdbf6538e5cc7f49ceab2782053cb054b74e2d866f2db346eb8",
+    "ui:W-ITEM-OVERVIEW": "4005cd89ef68b50d713913e952bc39ebf5955b5c90b896bfdbeb8fc904621a65",
+    "ui:W-ITEM-ROW": "07fd80b510e3bd621e2ba021f1f0e737e91f7708d3c563978d13698d0cd2e5df",
+    "ui:W-LOCAL-TUNNEL-KEY": "c03d20ccf645baf3e8e61ccb92d6d39957eb370a71a2b1f2e4f81fa943dd2f3a",
+    "ui:W-MESSAGE": "87950b44a2ef8872fa5a8147e679c682bedd286667d800f2d675984cf26307b6",
+    "ui:W-NAVIGATION": "dcf05d3bf324ec6d4c48b3f38ac3781210249dbb0ed96da7d057bca8f9e5c174",
+    "ui:W-OWNER-CONSENT": "9fab6e4b8c00e7b358d2da2c9c123a514d10091d867d9c4d8e8c338e36696ab1",
+    "ui:W-PACKAGE-OVERVIEW": "d9b6295a28b530d1a143756f5f2e590b18bb9ff98bff6a3a71b19c90c9a06c4c",
+    "ui:W-PRIORITY": "20994c803659d3e11634e6ecf295f08d39a0e60b9b2e8c804d579d29b0222d9b",
+    "ui:W-QUESTIONS": "aefc297510bb982ff4f499333c429ec384636548422ae50c0572b53a0828c89e",
+    "ui:W-RELATIONSHIPS": "aa27a87504f5021d1f8fe502909f79ba809985986b398cee21271689365f52e5",
+    "ui:W-RUN-CONTROLS": "a285358e727e0092571ab29679b50f169383e8a8b836cadbae2fe79a53924104",
+    "ui:W-TRANSCRIPT": "e0eb7a75f2b0844bfedfa35f5ed339185f8fb3200721fc9c3155b0965dc2d786",
+    "ui:W-WAITING-ROW": "efb4e3d97d7b717715dff6234598daccd32c27b350390f9ce36b21163fbc4a0a",
+    "ui:W-WORK-STATUS": "6dfcd32e1545855f1c9e94edcaca381813cff92246fb779f7d0f09770891e70a"
   }
 }

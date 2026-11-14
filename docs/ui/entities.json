@@ -6289,13 +6289,13 @@
       "id": "NATIVE-CONFIG-PRIVATE-EDITS",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeCredentialEditsAreRejectedWithoutPersistence(",
-      "assertion": "Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes."
+      "assertion": "Credential-bearing native edits, copied custom-header values, URL credentials, both generated redaction placeholders (including the actual displayed malformed-URL placeholder), nested or copied placeholders and table-form key paths are rejected before proposal persistence or native writes."
     },
     {
       "id": "NATIVE-CONFIG-LEGACY-REDACTION",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeLegacyProposalMigrationPreservesStaleness(",
-      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history and copied first/later URL credentials with internal whitespace; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history, copied first/later URL credentials with internal whitespace, nested URL passwords and usernames with empty passwords; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, credential and URL-placeholder pending edits stale without writes, and repeated migration is idempotent."
     },
     {
       "id": "NATIVE-CONFIG-SELECTORS",
@@ -6313,13 +6313,13 @@
       "id": "NATIVE-CONFIG-PUBLIC-URL",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeNonsecretURLsRemainEditable(",
-      "assertion": "Ten noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, a nested URL parameter and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+      "assertion": "Fourteen noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, raw/encoded/double-encoded or deeply nested public URL parameters, nested paths and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
     },
     {
       "id": "NATIVE-CONFIG-URL-PARAMETERS",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
-      "assertion": "Forty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined URL values protect credentials in both the first and later URLs, including internal whitespace, Unicode separators and a prose prefix. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
+      "assertion": "Fifty-five isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined values protect first/later credentials; nested raw, encoded and double-encoded URL credentials remain private despite malformed escapes in another component. Usernames with explicit empty passwords and their encoded copies remain protected. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
     },
     {
       "id": "GO-SCAN-WAIT",

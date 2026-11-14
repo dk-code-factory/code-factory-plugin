@@ -17,6 +17,16 @@ import (
 var nativeCredential = regexp.MustCompile(`(?i)(?:github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|bearer\s+[A-Za-z0-9._~+/-]+=*)`)
 
 var nativeURLStart = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://`)
+var nativePercentEscape = regexp.MustCompile(`%[0-9A-Fa-f]{2}`)
+
+// Credential discovery must retain independently readable escapes when another
+// escape is malformed. URL rendering still uses the strict standard parser.
+func nativeURLPercentDecode(raw string) string {
+	return nativePercentEscape.ReplaceAllStringFunc(raw, func(escape string) string {
+		decoded, _ := url.PathUnescape(escape) // The matched escape is valid.
+		return decoded
+	})
+}
 
 // Keep whitespace inside a URL candidate, stopping at the next separate URL.
 // A nested URL without a whitespace separator remains part of its outer value.
@@ -141,25 +151,55 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 // Collect raw components independently: an invalid path or fragment must not
 // suppress a valid credential in another component or its copied values.
 func nativeURLSecrets(raw string) []string {
-	_, rest, _ := strings.Cut(raw, "://")
-	beforeFragment, fragment, _ := strings.Cut(rest, "#")
-	beforeQuery, query, _ := strings.Cut(beforeFragment, "?")
-	authority, _, _ := strings.Cut(beforeQuery, "/")
 	var secrets []string
-	if at := strings.LastIndexByte(authority, '@'); at >= 0 {
-		credential := authority[:at]
-		if _, password, ok := strings.Cut(credential, ":"); ok {
-			credential = password
+	pending, seen := []string{raw}, map[string]bool{}
+	for len(pending) > 0 {
+		candidate := pending[len(pending)-1]
+		pending = pending[:len(pending)-1]
+		if seen[candidate] {
+			continue
 		}
-		if credential != "" {
-			secrets = append(secrets, credential)
-			if decoded, err := url.PathUnescape(credential); err == nil && decoded != credential {
-				secrets = append(secrets, decoded)
+		seen[candidate] = true
+		starts := nativeURLStart.FindAllStringIndex(candidate, -1)
+		if len(starts) == 0 {
+			// A parameter may encode its nested URL more than once. Iterate
+			// through distinct decoded values without recursive traversal.
+			if decoded := nativeURLPercentDecode(strings.ReplaceAll(candidate, "+", " ")); decoded != candidate {
+				pending = append(pending, decoded)
+			}
+		}
+		for _, start := range starts {
+			_, rest, _ := strings.Cut(candidate[start[0]:], "://")
+			beforeFragment, fragment, _ := strings.Cut(rest, "#")
+			beforeQuery, query, _ := strings.Cut(beforeFragment, "?")
+			authority, _, _ := strings.Cut(beforeQuery, "/")
+			if at := strings.LastIndexByte(authority, '@'); at >= 0 {
+				credential := authority[:at]
+				username, password, hasPassword := strings.Cut(credential, ":")
+				if hasPassword && password != "" {
+					credential = password
+				} else {
+					credential = username
+				}
+				if credential != "" {
+					secrets = append(secrets, credential)
+					if decoded := nativeURLPercentDecode(credential); decoded != credential {
+						secrets = append(secrets, decoded)
+					}
+				}
+			}
+			for _, parameters := range []string{query, fragment} {
+				secrets = append(secrets, nativeURLParameterSecrets(parameters)...)
+				for _, pair := range strings.FieldsFunc(parameters, func(r rune) bool { return r == '&' || r == ';' }) {
+					_, value, _ := strings.Cut(pair, "=")
+					if decoded := nativeURLPercentDecode(strings.ReplaceAll(value, "+", " ")); decoded != value {
+						pending = append(pending, decoded)
+					}
+				}
 			}
 		}
 	}
-	secrets = append(secrets, nativeURLParameterSecrets(query)...)
-	return append(secrets, nativeURLParameterSecrets(fragment)...)
+	return secrets
 }
 
 func (r nativeRedactor) text(value string) string {
@@ -192,7 +232,15 @@ func (r nativeRedactor) text(value string) string {
 	offset := 0
 	for _, span := range nativeURLRanges(value) {
 		clean.WriteString(value[offset:span[0]])
-		clean.WriteString(redactURL(value[span[0]:span[1]]))
+		raw := value[span[0]:span[1]]
+		// Redact inner URLs first, including URLs embedded in a path. Earlier
+		// scheme offsets remain valid when only their suffix has changed.
+		starts := nativeURLStart.FindAllStringIndex(raw, -1)
+		for i := len(starts) - 1; i >= 0; i-- {
+			start := starts[i][0]
+			raw = raw[:start] + redactURL(raw[start:])
+		}
+		clean.WriteString(raw)
 		offset = span[1]
 	}
 	clean.WriteString(value[offset:])
@@ -212,13 +260,11 @@ func redactNativeURLParameters(raw string) (string, bool) {
 	}
 	changed := false
 	for key, values := range parameters {
-		if privateNativeKey(key) {
-			for _, value := range values {
-				if value != "" {
-					parameters.Del(key)
-					changed = true
-					break
-				}
+		for _, value := range values {
+			if value != "" && (privateNativeKey(key) || len(nativeURLSecrets(value)) > 0) {
+				parameters.Del(key)
+				changed = true
+				break
 			}
 		}
 	}
@@ -244,7 +290,7 @@ func nativeURLParameterSecrets(raw string) []string {
 		}
 		if value != "" {
 			secrets = append(secrets, value)
-			if decoded, err := url.QueryUnescape(value); err == nil && decoded != value {
+			if decoded := nativeURLPercentDecode(strings.ReplaceAll(value, "+", " ")); decoded != value {
 				secrets = append(secrets, decoded)
 			}
 		}
@@ -332,7 +378,7 @@ func validateNativeEdits(actual json.RawMessage, edits []ConfigEdit) error {
 		var value any
 		_ = json.Unmarshal(bytes(edit.Value), &value)
 		encodedValue := string(bytes(value))
-		if private || credentialPath || strings.Contains(encodedValue, "[redacted]") || encodedValue != string(bytes(r.value(value, false, named))) {
+		if private || credentialPath || strings.Contains(encodedValue, "[redacted]") || strings.Contains(encodedValue, "[redacted URL]") || encodedValue != string(bytes(r.value(value, false, named))) {
 			return fmt.Errorf("credential-bearing native edits must be made outside Code Factory")
 		}
 	}

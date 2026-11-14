@@ -2,7 +2,7 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
-  "fingerprint": "89309bee0fc967ff6aa4dfa28d1a7ae78bcce18937c7ed3af697aca096434e35",
+  "fingerprint": "9718ca9eb064d8d8b582c6864eab61cf31329087feac4d7b2b88796bd8ef2173",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.666
+      "seconds": 0.555
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 37.065
+      "seconds": 37.821
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.38
+      "seconds": 71.46
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.534
+      "seconds": 3.577
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.83
+      "seconds": 2.852
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.02
+      "seconds": 21.102
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.202
+      "seconds": 0.201
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.162
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.225
+      "seconds": 1.204
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 642.575
+      "seconds": 644.543
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 417.498
+      "seconds": 420.655
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.698
+      "seconds": 4.779
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.387
+      "seconds": 60.549
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "af9071ef8522f19d2a023de8fea99545318ac5fcd13427a52251d9eb70a22b9b",
+    "flow:operate-installation": "ecf264c20da95e38e514e92efb69bcab19f1f28ebb6c41d646aa7d63724be18c",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "2e1985708b2f95256954b2a012d853e516864d3678aa5b6931e55d2255d45d0e",
-    "ui:P-BROWSER-LAB": "4f104d1a112219b974938977cb1854b99129595a1b362cb592dc4776dcabcc3e",
-    "ui:PAGE-BROWSER-LAB": "e6f9fb567762bf404157292a552eec4add38e124500d028956597bcccb42ff8e",
-    "ui:W-BROWSER-LAB": "e6a299df238fb686b7496cd5ec2b3e65d2bff30e69c5398a996f7459f74baa6f"
+    "ui:C-BROWSER-LAB": "66f694be88388f2f0e4f95666b7a997978c79442bcb2dd2e10dabea815b84bf4",
+    "ui:P-BROWSER-LAB": "603963e62cbfbbbfd16270ea824dd2cc4255438d328737d12e8262fe96bfcce4",
+    "ui:PAGE-BROWSER-LAB": "47c5fd4afb889c1c9e1d45b250654e24cc52867cec2a07602d3a667f4344f182",
+    "ui:W-BROWSER-LAB": "39847cc4c67eb3f8df08b0b286ece1d5ca430fc60390ebaec22a841ca703345d"
   }
 }
