@@ -197,6 +197,17 @@ func nativeURLSecrets(raw string) []string {
 			beforeFragment, fragment, _ := strings.Cut(rest, "#")
 			beforeQuery, query, _ := strings.Cut(beforeFragment, "?")
 			authority, _, _ := strings.Cut(beforeQuery, "/")
+			// A readable scheme can still introduce an encoded authority,
+			// including inside another URL's path. Decode that component until
+			// its userinfo delimiter is visible. Once @ is readable, retain the
+			// password's own escapes rather than reinterpreting them as syntax.
+			// Exclude query/fragment values so escaped delimiters there cannot
+			// create shorter credential prefixes.
+			if !strings.Contains(authority, "@") {
+				if decoded := nativeURLPercentDecode(authority); decoded != authority {
+					pending = append(pending, candidate[start[0]:start[1]]+decoded)
+				}
+			}
 			if at := strings.LastIndexByte(authority, '@'); at >= 0 {
 				credential := authority[:at]
 				username, password, hasPassword := strings.Cut(credential, ":")
