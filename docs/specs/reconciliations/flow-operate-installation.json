@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
-  "fingerprint": "e52bb94bab9a3e991e80c8e807b8f6232c54d7db69e78cfcf797d217a00213d5",
+  "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
+  "fingerprint": "f0dae71739e82de1c8376f289fda674c23c9b9fcabad3faaafc6620ee4b307cf",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries.",
-    "implementation": "Compared d485a637 with this branch and inspected the mapped implementation and fixture assertions. Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified. Current factory race verification passed; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made."
+    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged.",
+    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./internal/testutil/fakecodex"
       ],
       "exit_code": 0,
-      "seconds": 0.161
+      "seconds": 0.201
     },
     {
       "command": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.359
+      "seconds": 36.334
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 69.293
+      "seconds": 71.553
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.292
+      "seconds": 3.493
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.711
+      "seconds": 2.87
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.087
+      "seconds": 21.112
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.664
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.224
+      "seconds": 1.186
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 649.339
+      "seconds": 656.673
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 434.207
+      "seconds": 430.213
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.622
+      "seconds": 60.988
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "89d3e085e294249393e1610a68371d3d671fd34b6db4c3c1df072469c720f73a",
+    "flow:operate-installation": "926e1bb8e164557c60b961dac5f2d840b187844fa5cae3495dc903d317db3e3b",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "6a4b15f4d68ee8ca0251f871f6df77daf7b1a4e5eedffa09bcb61cd26c234e43",
-    "ui:P-BROWSER-LAB": "ba71b93437c057875735a2162fcdd4476b33e00bfa584a350c65898b7f02da51",
-    "ui:PAGE-BROWSER-LAB": "aac6f7eefac4b67ca4450fcdf825c47ae6a7edd0d99c82c170a32faa738cdde6",
-    "ui:W-BROWSER-LAB": "3da3603a9908e25e77a828cb9bc83705a34c59f66210c71d6678571c6bd9de60"
+    "ui:C-BROWSER-LAB": "2af3496453a5339f12b38f0687bb783aadc6846ef71ce8d6423103cd9452bdd0",
+    "ui:P-BROWSER-LAB": "1f6409adc331cb7e5c2e3f3dc6a82aecece58f9ec73b47cdd76f9fa051f842a8",
+    "ui:PAGE-BROWSER-LAB": "45f42caf02c151059686cfbe586b46d889cee0839a3ba93bac8c394d4c778ec3",
+    "ui:W-BROWSER-LAB": "1952d22a8a8ce165e1a9882923131dda27591c034f4dd7431d0fa6417c43cfaf"
   }
 }

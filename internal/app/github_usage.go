@@ -68,7 +68,10 @@ func (a *App) saveSyncError(ctx context.Context, id string, cause error) error {
 		delay := min(time.Duration(githubPollSeconds(config))*time.Second*time.Duration(1<<uint(current.SyncFailures-1)), 15*time.Minute)
 		current.RetryAt = time.Now().UTC().Add(delay)
 		var rate *providers.RateLimitError
-		if errors.As(cause, &rate) && rate.Until.After(current.RetryAt) {
+		current.SyncWaiting = errors.As(cause, &rate)
+		if current.SyncWaiting {
+			// Provider admission owns the retry deadline. An unrelated failure
+			// backoff must not postpone an explicitly scheduled safe read.
 			current.RetryAt = rate.Until
 		}
 		if err := t.Put("repository", id, current); err != nil {
@@ -122,6 +125,7 @@ type notificationSync struct {
 	LastAttempt time.Time
 	Since       time.Time
 	Error       string
+	RetryAt     time.Time
 }
 
 func (a *App) SyncNotifications(ctx context.Context) error {
@@ -136,9 +140,10 @@ func (a *App) SyncNotifications(ctx context.Context) error {
 	if err = a.Store.Get(ctx, "github-notifications", "cursor", &checkpoint); err != nil && !errors.Is(err, store.ErrNotFound) {
 		return err
 	}
-	if time.Since(checkpoint.LastAttempt) < time.Duration(githubPollSeconds(c))*time.Second {
+	if time.Now().Before(checkpoint.RetryAt) || (checkpoint.RetryAt.IsZero() && time.Since(checkpoint.LastAttempt) < time.Duration(githubPollSeconds(c))*time.Second) {
 		return nil
 	}
+	checkpoint.RetryAt = time.Time{}
 	checkpoint.LastAttempt = time.Now().UTC()
 	if checkpoint.Since.IsZero() {
 		checkpoint.Since = checkpoint.LastAttempt.Add(-5 * time.Minute)
@@ -164,6 +169,10 @@ func (a *App) SyncNotifications(ctx context.Context) error {
 	login, e := a.GitHub.User(ctx)
 	if e != nil {
 		checkpoint.Error = e.Error()
+		var rate *providers.RateLimitError
+		if errors.As(e, &rate) {
+			checkpoint.RetryAt = rate.Until
+		}
 		if saveErr := a.Store.Put(ctx, "github-notifications", "cursor", checkpoint, ""); saveErr != nil {
 			return saveErr
 		}
@@ -228,8 +237,13 @@ func (a *App) SyncNotifications(ctx context.Context) error {
 		}
 	}
 	checkpoint.Error = ""
+	checkpoint.RetryAt = time.Time{}
 	if err != nil {
 		checkpoint.Error = err.Error()
+		var rate *providers.RateLimitError
+		if errors.As(err, &rate) {
+			checkpoint.RetryAt = rate.Until
+		}
 	} else if next.After(checkpoint.Since) {
 		checkpoint.Since = next
 	}

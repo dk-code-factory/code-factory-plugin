@@ -24,15 +24,16 @@ func nativeCredentialFixture(file string) map[string]any {
 		}},
 		"password": "fixture-password-credential", "custom_note": "copied fixture-env-credential",
 		"access_token": "fixture-token-credential", "unknown": "ghp_fixturePatternCredential",
-		"access_key":              "fixture-access-credential",
-		"developer_instructions":  "copied fixture-custom-header-credential",
-		"custom_header_copy":      "copied fixture-opaque-header-credential",
-		"opaque_pattern":          "sk-fixtureOpaquePatternCredential",
-		"ordinary_query_copy":     "fixture-malformed-query-credential;part",
-		"ordinary_fragment_copy":  "&fixture-encoded-fragment-credential",
-		"ordinary_quote_copy":     "'fixture-quoted-url-credential",
-		"ordinary_parse_copy":     "fixture-unparseable-url-credential",
-		"ordinary_separator_copy": "fixture-separator-url-credential",
+		"access_key":               "fixture-access-credential",
+		"developer_instructions":   "copied fixture-custom-header-credential",
+		"custom_header_copy":       "copied fixture-opaque-header-credential",
+		"opaque_pattern":           "sk-fixtureOpaquePatternCredential",
+		"ordinary_query_copy":      "fixture-malformed-query-credential;part",
+		"ordinary_fragment_copy":   "&fixture-encoded-fragment-credential",
+		"ordinary_quote_copy":      "'fixture-quoted-url-credential",
+		"ordinary_parse_copy":      "fixture-unparseable-url-credential",
+		"ordinary_separator_copy":  "fixture-separator-url-credential",
+		"ordinary_whitespace_copy": "fixture whitespace-credential",
 	}
 	servers := config["mcp_servers"].(map[string]any)
 	servers["query-boundary"] = map[string]any{"url": "https://example.test/mcp?token=fixture-malformed-query-credential;part"}
@@ -40,6 +41,7 @@ func nativeCredentialFixture(file string) map[string]any {
 	servers["quote-boundary"] = map[string]any{"url": "https://example.test/mcp?token='fixture-quoted-url-credential"}
 	servers["parse-boundary"] = map[string]any{"url": "https://example.test/mcp?token=fixture-unparseable-url-credential#bad%zz"}
 	servers["separator-boundary"] = map[string]any{"url": "https://example.test/mcp?mode=read-only;token=fixture-separator-url-credential"}
+	servers["whitespace-boundary"] = map[string]any{"url": "https://user:fixture whitespace-credential@example.test/mcp"}
 	return map[string]any{"config": config, "layers": []any{map[string]any{
 		"name": map[string]any{"type": "user", "file": file}, "version": "v1", "config": config,
 	}}}
@@ -48,7 +50,7 @@ func nativeCredentialFixture(file string) map[string]any {
 func assertNativeCredentialsHidden(t *testing.T, value any) {
 	t.Helper()
 	data := string(bytes(value))
-	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential", "fixture-malformed-query-credential", "fixture-encoded-fragment-credential", "fixture-quoted-url-credential", "fixture-unparseable-url-credential", "fixture-separator-url-credential"} {
+	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential", "fixture-malformed-query-credential", "fixture-encoded-fragment-credential", "fixture-quoted-url-credential", "fixture-unparseable-url-credential", "fixture-separator-url-credential", "whitespace-credential"} {
 		if strings.Contains(data, private) {
 			t.Fatal("native credential escaped its projection")
 		}
@@ -131,6 +133,8 @@ func TestNativeNonsecretURLsRemainEditable(t *testing.T) {
 		"https://example.test/mcp?transport=sse#section;two",
 		"https://example.test/mcp?transport=sse#next=section%26two&label=space+title",
 		"https://example.test/mcp?label=quote'\"<>&mode=read-only#section'\"<>",
+		"https://example.test/mcp?label=ordinary title&mode=read-only#section two",
+		" \thttps://example.test/mcp?label=ordinary title&mode=read-only#section two \r\n",
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			s, rpc, _ := fixture(t)
@@ -189,13 +193,22 @@ func TestNativeURLParameterBoundariesRejectCredentials(t *testing.T) {
 		{"query-semicolon-before-token", "https://example.test/mcp?mode=read-only;token=opaque-query-value", "opaque-query-value", "opaque-query-value", "opaque-query-value"},
 		{"fragment-semicolon-before-token", "https://example.test/mcp#mode=read-only;access_token=opaque-fragment-value", "opaque-fragment-value", "opaque-fragment-value", "opaque-fragment-value"},
 		{"query-multiple-semicolons", "https://example.test/mcp?mode=read-only;transport=sse;token=opaque-query-value", "opaque-query-value", "opaque-query-value", "opaque-query-value"},
+		{"query-literal-space", "https://example.test/mcp?token=opaque query-value", "opaque query-value", "opaque query-value", "query-value"},
+		{"fragment-literal-space", "https://example.test/mcp#access_token=opaque fragment-value", "opaque fragment-value", "opaque fragment-value", "fragment-value"},
+		{"userinfo-literal-space", "https://user:opaque userinfo-value@example.test/mcp", "opaque userinfo-value", "opaque userinfo-value", "userinfo-value"},
+		{"userinfo-tab", "https://user:opaque\tuserinfo-value@example.test/mcp", "opaque\tuserinfo-value", "opaque\tuserinfo-value", "userinfo-value"},
+		{"userinfo-newline", "https://user:opaque\nuserinfo-value@example.test/mcp", "opaque\nuserinfo-value", "opaque\nuserinfo-value", "userinfo-value"},
+		{"userinfo-after-public-url", "https://public.test/mcp https://user:opaque-userinfo-value@example.test/mcp", "opaque-userinfo-value", "opaque-userinfo-value", "opaque-userinfo-value"},
+		{"userinfo-surrounding-space", " \thttps://user:opaque userinfo-value@example.test/mcp \r\n", "opaque userinfo-value", "opaque userinfo-value", "userinfo-value"},
+		{"query-surrounding-space", " https://example.test/mcp?token=opaque query-value \n", "opaque query-value", "opaque query-value", "query-value"},
+		{"userinfo-formfeed", "https://user:opaque\fuserinfo-value@example.test/mcp", "opaque\fuserinfo-value", "opaque\fuserinfo-value", "userinfo-value"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s, rpc, _ := fixture(t)
 			ctx := context.Background()
 			file := filepath.Join(s.Dir, "config.toml")
 			credentialURL := tc.url
-			config := map[string]any{"model": "fixture-model", "sandbox_mode": "read-only", "mcp_servers": map[string]any{"fixture": map[string]any{"url": credentialURL}}, "ordinary_copy": tc.decoded, "encoded_copy": tc.encoded}
+			config := map[string]any{"model": "fixture-model", "sandbox_mode": "read-only", "mcp_servers": map[string]any{"fixture": map[string]any{"url": credentialURL}}, "ordinary_copy": tc.decoded, "encoded_copy": tc.encoded, "ordinary_prefix": "opaque"}
 			rpc.native = map[string]any{"config": config, "layers": []any{map[string]any{"name": map[string]any{"type": "user", "file": file}, "version": "v1", "config": config}}}
 			assertHidden := func(label string, value any) {
 				t.Helper()
@@ -215,6 +228,9 @@ func TestNativeURLParameterBoundariesRejectCredentials(t *testing.T) {
 			must(t, json.Unmarshal(view, &projected))
 			if projected.Config["sandbox_mode"] != "read-only" {
 				t.Error("malformed credential parameters changed an unrelated ordinary setting")
+			}
+			if projected.Config["ordinary_prefix"] != "opaque" {
+				t.Error("a partial credential prefix changed an unrelated ordinary value")
 			}
 			if tc.name == "fragment-escaped-ampersand" {
 				if projected.Config["mcp_servers"].(map[string]any)["fixture"].(map[string]any)["url"] != "https://example.test/mcp#next=section%26two" {

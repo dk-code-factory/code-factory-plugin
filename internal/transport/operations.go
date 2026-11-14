@@ -2,9 +2,11 @@ package transport
 
 import (
 	"codefactory/internal/app"
+	"codefactory/internal/providers"
 	"codefactory/internal/store"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"runtime/debug"
@@ -17,17 +19,21 @@ const pendingLimit = 256
 const payloadLimit = 64 << 20
 const ordinaryWorkers = 8
 const controlWorkers = 2
+const scanAliasMetadataBytes = 512
 
 type operation struct {
-	RequestID         string `json:"requestId"`
-	InstanceID        string `json:"instanceId"`
-	Tool              string `json:"tool"`
-	State             string `json:"state"`
-	Result            any    `json:"result,omitempty"`
-	Error             string `json:"error,omitempty"`
-	ResultUnavailable bool   `json:"resultUnavailable,omitempty"`
-	ErrorDocument     any    `json:"errorDocument,omitempty"`
-	ErrorUnavailable  bool   `json:"errorUnavailable,omitempty"`
+	RequestID         string     `json:"requestId"`
+	InstanceID        string     `json:"instanceId"`
+	Tool              string     `json:"tool"`
+	State             string     `json:"state"`
+	Result            any        `json:"result,omitempty"`
+	Error             string     `json:"error,omitempty"`
+	ResultUnavailable bool       `json:"resultUnavailable,omitempty"`
+	ErrorDocument     any        `json:"errorDocument,omitempty"`
+	ErrorUnavailable  bool       `json:"errorUnavailable,omitempty"`
+	RetryAt           *time.Time `json:"retryAt,omitempty"`
+	RetryReason       string     `json:"retryReason,omitempty"`
+	aliasFor          string
 	retainedBytes     int
 }
 
@@ -59,11 +65,25 @@ type operationQueue struct {
 	resultBytes      int
 	resultOrder      []string
 	executionTimeout time.Duration
+	scanKey          string
+	scanAliases      int
+	scanAliasBytes   int
+	waitingScan      *operationTask
+	retryTimer       *time.Timer
+	now              func() time.Time
 }
 
 func newOperationQueue(db *store.Store, documents *documentCache) *operationQueue {
 	q := &operationQueue{instance: app.ID(), db: db, ctx: db.Context(), operations: map[string]operation{}, active: map[string]bool{}, wake: make(chan struct{}), documents: documents, executionTimeout: 5 * time.Minute}
 	go q.recover()
+	go func() {
+		<-q.ctx.Done()
+		q.mu.Lock()
+		defer q.mu.Unlock()
+		if q.retryTimer != nil {
+			q.retryTimer.Stop()
+		}
+	}()
 	for n := 0; n < ordinaryWorkers; n++ {
 		go q.worker(false)
 	}
@@ -102,11 +122,35 @@ func (q *operationQueue) submit(instance, id, name, scope string, control bool, 
 	if instance != q.instance {
 		return operation{RequestID: id, InstanceID: instance, State: q.missingState()}, nil
 	}
-	if q.ctx.Err() != nil || len(q.pending) >= pendingLimit || q.bytes+size > payloadLimit {
+	// Manual scans share one saved read operation, including during cooldown.
+	// Retain each accepted identity so a lost submission response remains safe.
+	if name == "sync_repositories" && q.scanKey != "" {
+		// Bound intake per accepted scan, including identity storage. Terminal
+		// identities remain available for the existing exact-ID no-replay contract.
+		reserved := scanAliasMetadataBytes + len(key) + len(id) + len(instance) + len(name) + len(q.scanKey)
+		if q.ctx.Err() != nil || q.scanAliases >= pendingLimit || q.bytes+reserved > payloadLimit {
+			return map[string]any{"state": "busy"}, nil
+		}
+		q.operations[key] = operation{RequestID: id, InstanceID: instance, Tool: name, aliasFor: q.scanKey}
+		q.scanAliases++
+		q.scanAliasBytes += reserved
+		q.bytes += reserved
+		return q.receiptLocked(q.operations[q.scanKey]), nil
+	}
+	capacity := pendingLimit
+	if q.scanKey != "" {
+		// Reserve admission for the existing scan to leave its worker and wait.
+		// A concurrent burst cannot make waiting exceed the pending-work bound.
+		capacity--
+	}
+	if q.ctx.Err() != nil || len(q.pending) >= capacity || q.bytes+size > payloadLimit {
 		return map[string]any{"state": "busy"}, nil
 	}
 	op := operation{RequestID: id, InstanceID: instance, Tool: name, State: "queued"}
 	q.operations[key] = op
+	if name == "sync_repositories" {
+		q.scanKey = key
+	}
 	subject := scope
 	if len(target) > 0 {
 		subject = target[0]
@@ -133,6 +177,9 @@ func (q *operationQueue) status(instance, id string) any {
 	return operation{RequestID: id, InstanceID: instance, State: q.missingState()}
 }
 func (q *operationQueue) receiptLocked(op operation) any {
+	if op.aliasFor != "" {
+		op = q.operations[op.aliasFor]
+	}
 	available, busy := q.documents.availability(op.Result)
 	if busy {
 		return map[string]any{"state": "busy"}
@@ -162,7 +209,7 @@ func (q *operationQueue) recover() {
 			continue
 		}
 		state := row.State
-		if state == "running" || state == "queued" {
+		if state == "running" || state == "queued" || state == "waiting" {
 			state = "uncertain"
 		}
 		q.operations[operationKey(row.InstanceID, row.RequestID)] = operation{RequestID: row.RequestID, InstanceID: row.InstanceID, Tool: row.Tool, State: state, ResultUnavailable: true, ErrorUnavailable: state == "failed" || state == "uncertain"}
@@ -172,6 +219,21 @@ func (q *operationQueue) recover() {
 func (q *operationQueue) take(control bool) (operationTask, bool, <-chan struct{}) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
+	if !control && q.waitingScan != nil {
+		task := *q.waitingScan
+		op := q.operations[task.key]
+		now := time.Now()
+		if q.now != nil {
+			now = q.now()
+		}
+		if op.RetryAt != nil && !op.RetryAt.After(now) && !q.active[task.scope] {
+			q.waitingScan = nil
+			q.active[task.scope] = true
+			op.State, op.RetryAt, op.RetryReason = "running", nil, ""
+			q.operations[task.key] = op
+			return task, true, q.wake
+		}
+	}
 	for n, task := range q.pending {
 		if task.control != control || (!control && q.active[task.scope]) {
 			continue
@@ -243,6 +305,41 @@ func (q *operationQueue) execute(task operationTask) {
 			state = "uncertain"
 		}
 	}
+	// A throttled scan has performed only provider reads and idempotent saved
+	// reconciliation. Mutating tools never enter this automatic retry path.
+	var rate *providers.RateLimitError
+	if op.Tool == "sync_repositories" && state == "failed" && ctx.Err() == nil && errors.As(err, &rate) {
+		meta.State = "waiting"
+		if persistErr := q.db.Put(q.ctx, "plugin-api-operation", task.key, meta, ""); persistErr == nil {
+			retryAt := rate.Until
+			q.mu.Lock()
+			if q.ctx.Err() != nil {
+				q.mu.Unlock()
+				state, err = "uncertain", q.ctx.Err()
+			} else {
+				now := time.Now()
+				if q.now != nil {
+					now = q.now()
+				}
+				if !retryAt.After(now) {
+					retryAt = now.Add(time.Second)
+				}
+				op.State, op.RetryAt, op.RetryReason = "waiting", &retryAt, rate.Error()
+				q.operations[task.key] = op
+				q.waitingScan = &task
+				delete(q.active, task.scope)
+				if q.retryTimer != nil {
+					q.retryTimer.Stop()
+				}
+				q.retryTimer = time.AfterFunc(retryAt.Sub(now), q.signal)
+				q.signalLocked()
+				q.mu.Unlock()
+				return
+			}
+		} else {
+			err = fmt.Errorf("retry metadata unavailable; inspect saved state")
+		}
+	}
 	if state == "succeeded" {
 		result, err = q.documents.prepare(result)
 		if err != nil {
@@ -278,6 +375,12 @@ func (q *operationQueue) execute(task operationTask) {
 		q.pruneResultsLocked(payloadLimit)
 	}
 	q.bytes -= task.size
+	if q.scanKey == task.key {
+		// Release active admission, retaining terminal identities like other tools.
+		q.bytes -= q.scanAliasBytes
+		q.scanAliases, q.scanAliasBytes = 0, 0
+		q.scanKey = ""
+	}
 	if !task.control {
 		delete(q.active, task.scope)
 	}

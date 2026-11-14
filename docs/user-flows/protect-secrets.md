@@ -32,6 +32,9 @@ The private owner connection is established. Application data starts clean in th
    Ambiguous semicolon separators cannot hide a later credential parameter behind
    an ordinary parameter. Native edits containing these copied values are refused
    before persistence.
+   Whitespace or control characters within URL values cannot leave credential
+   fragments or copied forms visible. Surrounding whitespace cannot bypass this
+   protection; ordinary URL values retain their spelling.
 
 2. Encrypt secret answers for retained redaction before native delivery.
 
@@ -134,7 +137,7 @@ flowchart TD
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeLegacyProposalMigrationPreservesStaleness(`; S1. Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(`; S1. Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1. Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
-- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeURLParameterBoundariesRejectCredentials(`; S1. Malformed parameter components and escaped URL credentials, including userinfo, are hidden in inspection, persisted proposals and legacy proposal/event projections, including encoded and decoded copies. Credential URL edits are refused without persistence or native writes; a remaining noncredential fragment value keeps its escaped ampersand.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeURLParameterBoundariesRejectCredentials(`; S1. Thirty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Surrounding whitespace cannot hide credentials; an additional URL in the same value still redacts. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved.
 
 ## Verification and gaps
 
