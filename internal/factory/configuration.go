@@ -111,10 +111,14 @@ func (s *Service) propose(ctx context.Context, after *Settings, native *NativeEd
 		if err = checkLayer(actual, *native); err != nil {
 			return p, err
 		}
+		if err = validateNativeEdits(actual, native.Edits); err != nil {
+			return p, err
+		}
 		copy := *native
-		copy.Before = actual
+		copy.BeforeDigest = digest(actual)
+		copy.Before = nativeSnapshot(actual)
 		p.Native = &copy
-		p.Diff = "--- native configuration layers\n" + string(actual) + "\n+++ proposed native key edits\n" + string(bytes(copy.Edits))
+		p.Diff = nativeDiff(copy)
 	}
 	return p, s.Store.Put(ctx, "factory-proposal", p.ID, p, "configuration.proposed")
 }
@@ -226,7 +230,7 @@ func (s *Service) confirm(ctx context.Context, id string, confirm bool) (Proposa
 		if e != nil {
 			return p, e
 		}
-		if digest(actual) != digest(p.Native.Before) {
+		if digest(actual) != p.Native.BeforeDigest {
 			return p, fmt.Errorf("native layers changed; proposal is stale")
 		}
 		if e = checkLayer(actual, *p.Native); e != nil {
@@ -281,7 +285,7 @@ func (s *Service) applyConfirmed(ctx context.Context) error {
 			if e != nil {
 				return e
 			}
-			if digest(actual) != digest(p.Native.Before) {
+			if digest(actual) != p.Native.BeforeDigest {
 				p.State = "stale"
 				if err = s.Store.Put(ctx, "factory-proposal", p.ID, p, "configuration.stale"); err != nil {
 					return err

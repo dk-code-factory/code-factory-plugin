@@ -33,7 +33,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -110,7 +110,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -174,7 +174,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -293,7 +293,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -484,7 +484,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -699,7 +699,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1\u2013P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
+          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1–P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
           "next_verification": "Exercise remaining choices and rejected/concurrent override writes while confirming manual, label and AI precedence."
         }
       ],
@@ -707,12 +707,12 @@
         "browser",
         "go"
       ],
-      "context": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "composition": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "interactions": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "state_description": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "element_description": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error.",
-      "purpose": "Explicit local P0\u2013P3 override or Automatic; display source and assessment error."
+      "context": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "composition": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "interactions": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "state_description": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "element_description": "Explicit local P0–P3 override or Automatic; display source and assessment error.",
+      "purpose": "Explicit local P0–P3 override or Automatic; display source and assessment error."
     },
     {
       "id": "W-RELATIONSHIPS",
@@ -950,7 +950,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -1430,6 +1430,16 @@
           "path": "internal/factory/native.go",
           "anchor": "func (s *Service) attach(",
           "purpose": "New configuration threads register communication tools; retained older threads keep their native tool catalog and receive compatible guidance."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "assertions": [
@@ -1442,7 +1452,15 @@
         "CONFIG-COMMUNICATION",
         "CONFIG-COMMUNICATION-EXPIRY",
         "CONFIG-COMMUNICATION-LEGACY",
-        "CONFIG-COMMUNICATION-CATALOG"
+        "CONFIG-COMMUNICATION-CATALOG",
+        "NATIVE-CONFIG-REDACTION",
+        "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+        "NATIVE-CONFIG-PRIVATE-EDITS",
+        "NATIVE-CONFIG-LEGACY-REDACTION",
+        "NATIVE-CONFIG-SELECTORS",
+        "NATIVE-CONFIG-NAMED-ENTRIES",
+        "NATIVE-CONFIG-PUBLIC-URL",
+        "NATIVE-CONFIG-URL-PARAMETERS"
       ],
       "gaps": [],
       "suites": [
@@ -1450,7 +1468,7 @@
         "go"
       ],
       "context": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
-      "composition": "Owner messages, titled plain-text result cards and separate question/proposal controls. Ordinary configuration-agent narration and internal status summaries are hidden.",
+      "composition": "Owner messages, titled plain-text result cards and separate question/proposal controls. Ordinary configuration-agent narration and internal status summaries are hidden. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory.",
       "interactions": "The configuration agent communicates intentionally through message/question tools or a concrete proposal. Questions suspend until an explicit owner answer. Older retained tool catalogs use status results and blocked requests without replacing the native thread.",
       "state_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Persistent read/propose configuration conversation uses native profiles, agents and installed skills.",
@@ -1489,13 +1507,31 @@
           "path": "internal/transport/projections.go",
           "anchor": "func (c *projectionCache) read(",
           "purpose": "Dependency revisions select prepared immutable views; large documents retain exact chunk versions."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "assertions": [
         "WRAP-CONFIG",
         "NATIVE-CONFIG",
         "API-V2-CURRENT",
-        "API-V2-CHUNKS"
+        "API-V2-CHUNKS",
+        "NATIVE-CONFIG-REDACTION",
+        "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+        "NATIVE-CONFIG-PRIVATE-EDITS",
+        "NATIVE-CONFIG-LEGACY-REDACTION",
+        "NATIVE-CONFIG-SELECTORS",
+        "NATIVE-CONFIG-NAMED-ENTRIES",
+        "NATIVE-CONFIG-PUBLIC-URL",
+        "NATIVE-CONFIG-URL-PARAMETERS"
       ],
       "gaps": [],
       "suites": [
@@ -1503,7 +1539,7 @@
         "go"
       ],
       "context": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
-      "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
+      "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory.",
       "interactions": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
       "element_description": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
@@ -1550,6 +1586,16 @@
           "path": "internal/factory/configuration.go",
           "anchor": "func settingsDiff(",
           "purpose": "Deterministic complete before/after values for changed top-level settings only."
+        },
+        {
+          "path": "internal/factory/native_projection.go",
+          "anchor": "func nativeSnapshot(",
+          "purpose": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+        },
+        {
+          "path": "internal/store/proposal_migration.go",
+          "anchor": "func (s *Store) RedactNativeProposalEvents(",
+          "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
         }
       ],
       "assertions": [
@@ -1562,7 +1608,15 @@
         "API-V2-FEEDBACK",
         "API-V2-RESTART",
         "CONFIG-COMMUNICATION-LEGACY",
-        "WRAP-CONFIG-QUESTION"
+        "WRAP-CONFIG-QUESTION",
+        "NATIVE-CONFIG-REDACTION",
+        "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+        "NATIVE-CONFIG-PRIVATE-EDITS",
+        "NATIVE-CONFIG-LEGACY-REDACTION",
+        "NATIVE-CONFIG-SELECTORS",
+        "NATIVE-CONFIG-NAMED-ENTRIES",
+        "NATIVE-CONFIG-PUBLIC-URL",
+        "NATIVE-CONFIG-URL-PARAMETERS"
       ],
       "gaps": [],
       "suites": [
@@ -1570,7 +1624,7 @@
         "go"
       ],
       "context": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
-      "composition": "Concrete diff and proposed/confirmed/applied/stale state with explicit Confirm or Reject. Application diffs include only changed settings and their complete before/after values.",
+      "composition": "Concrete diff and proposed/confirmed/applied/stale state with explicit Confirm or Reject. Application diffs include only changed settings and their complete before/after values. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory.",
       "interactions": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
       "state_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject. Submitting, queued, running, completed, failed or uncertain; only completion indicates delivery.",
       "element_description": "Concrete diff, pending/confirmed/applied/stale state and explicit Confirm or Reject.",
@@ -1703,7 +1757,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -1751,7 +1805,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -1812,7 +1866,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -2359,7 +2413,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         },
         {
@@ -2368,7 +2422,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -2949,7 +3003,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Light/dark inbox, Configuration and Conversation scans at 390\u00d7844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
+          "reason": "Light/dark inbox, Configuration and Conversation scans at 390×844 cover core fixtures. Initial/poll failure variants, other dynamic forms, assistive technology and installed-host accessibility remain unverified.",
           "next_verification": "Review incomplete automated nodes and exercise remaining failure states, responsive layouts and assistive technology in an explicitly approved installed host; keep fixture and host evidence separate."
         }
       ],
@@ -2978,7 +3032,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-NAVIGATION \u2192 PAGE-INBOX, PAGE-MY-PRS, PAGE-REVIEW-PRS, PAGE-WORKING, PAGE-AGENTS, PAGE-AGENT, PAGE-SETTINGS, PAGE-EVENTS",
+      "endpoint_description": "W-NAVIGATION → PAGE-INBOX, PAGE-MY-PRS, PAGE-REVIEW-PRS, PAGE-WORKING, PAGE-AGENTS, PAGE-AGENT, PAGE-SETTINGS, PAGE-EVENTS",
       "trigger": "Select a saved page without launching an agent."
     },
     {
@@ -3042,7 +3096,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-INBOX-QUERY \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-INBOX-QUERY → W-ITEM-ROW",
       "trigger": "Filter saved entries."
     },
     {
@@ -3119,7 +3173,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-ITEM-ROW, W-WAITING-ROW \u2192 PAGE-AGENT",
+      "endpoint_description": "W-ITEM-ROW, W-WAITING-ROW → PAGE-AGENT",
       "trigger": "Read selected item and exact revision; no session creation."
     },
     {
@@ -3186,7 +3240,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-ITEM-ACTIONS \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-ITEM-ACTIONS → W-ITEM-ROW",
       "trigger": "Acknowledge local discovery."
     },
     {
@@ -3221,7 +3275,7 @@
           "kind": "unverified-behavior",
           "severity": "P2",
           "owner": "ui-specification-maintainer",
-          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1\u2013P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
+          "reason": "Fixtures verify P0 override and clearing plus native bookkeeping revision checks. Every P1–P3 choice, rejected save and concurrent-client override interaction is not browser verified.",
           "next_verification": "Exercise remaining choices and rejected/concurrent override writes while confirming manual, label and AI precedence."
         }
       ],
@@ -3243,7 +3297,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-PRIORITY \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-PRIORITY → W-ITEM-ROW",
       "trigger": "Persist a manual priority override or clear it."
     },
     {
@@ -3308,7 +3362,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-RELATIONSHIPS \u2192 W-ITEM-ROW",
+      "endpoint_description": "W-RELATIONSHIPS → W-ITEM-ROW",
       "trigger": "Add or remove a manual relationship; discovered evidence remains."
     },
     {
@@ -3370,7 +3424,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-MESSAGE \u2192 W-TRANSCRIPT, W-WORK-STATUS",
+      "endpoint_description": "W-MESSAGE → W-TRANSCRIPT, W-WORK-STATUS",
       "trigger": "Authorized first message creates the canonical retained session."
     },
     {
@@ -3442,7 +3496,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-MESSAGE \u2192 W-TRANSCRIPT, W-WORK-STATUS",
+      "endpoint_description": "W-MESSAGE → W-TRANSCRIPT, W-WORK-STATUS",
       "trigger": "Chat attaches queued events and bypasses timer; unblocked active work is steered."
     },
     {
@@ -3525,7 +3579,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-RUN-CONTROLS \u2192 W-WORK-STATUS",
+      "endpoint_description": "W-RUN-CONTROLS → W-WORK-STATUS",
       "trigger": "Explicit run/resume/interrupt/cleanup; interruption holds automatic work."
     },
     {
@@ -3611,7 +3665,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-QUESTIONS, W-APPROVAL, W-ELICITATION \u2192 W-TRANSCRIPT, W-WORK-STATUS",
+      "endpoint_description": "W-QUESTIONS, W-APPROVAL, W-ELICITATION → W-TRANSCRIPT, W-WORK-STATUS",
       "trigger": "Answer the exact live request once; stale identities fail."
     },
     {
@@ -3732,7 +3786,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "S-FACTORY, S-SETTINGS \u2192 W-WORK-STATUS, W-ITEM-ROW",
+      "endpoint_description": "S-FACTORY, S-SETTINGS → W-WORK-STATUS, W-ITEM-ROW",
       "trigger": "Read saved state without a model call."
     },
     {
@@ -3797,7 +3851,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-TRANSCRIPT \u2192 W-TRANSCRIPT",
+      "endpoint_description": "W-TRANSCRIPT → W-TRANSCRIPT",
       "trigger": "Read a bounded page of retained redacted output."
     },
     {
@@ -3844,7 +3898,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-NAVIGATION \u2192 PAGE-SETTINGS",
+      "endpoint_description": "W-NAVIGATION → PAGE-SETTINGS",
       "trigger": "Open configuration chat and settings."
     },
     {
@@ -3907,7 +3961,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-CONFIGURATION-CHAT \u2192 W-CONFIGURATION-PROPOSAL",
+      "endpoint_description": "W-CONFIGURATION-CHAT → W-CONFIGURATION-PROPOSAL",
       "trigger": "Read/propose only; agent cannot confirm."
     },
     {
@@ -3974,7 +4028,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-CONFIGURATION-PROPOSAL \u2192 W-EFFECTIVE-SETTINGS",
+      "endpoint_description": "W-CONFIGURATION-PROPOSAL → W-EFFECTIVE-SETTINGS",
       "trigger": "Explicit human confirmation rejects stale versions and applies at safe turn boundaries."
     },
     {
@@ -4049,7 +4103,7 @@
       ],
       "connection_type": "connection-submits",
       "external_boundary": false,
-      "endpoint_description": "W-NAVIGATION \u2192 W-EVENT-BATCHES",
+      "endpoint_description": "W-NAVIGATION → W-EVENT-BATCHES",
       "trigger": "Inspect event rules, normalized changes and delivery claims without flushing."
     },
     {
@@ -4091,7 +4145,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "Package page links \u2192 artifacts / external host setup",
+      "endpoint_description": "Package page links → artifacts / external host setup",
       "trigger": "Download or follow documented setup instructions.",
       "interactions": "External package downloads and OAuth connection guidance. Only a valid observed registration enables the primary browser package. Portable downloads stay advanced; no connection is fabricated.",
       "from": [
@@ -4145,7 +4199,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-BROWSER-LAB` controls \u2192 isolated browser \u2192 screenshot/location",
+      "endpoint_description": "`W-BROWSER-LAB` controls → isolated browser → screenshot/location",
       "trigger": "Explicit lab navigation/click/key/scroll operations.",
       "interactions": "Developer utility feedback loop; never an Inbox/Agents page transition.",
       "from": [
@@ -4313,7 +4367,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -4474,7 +4528,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -4497,7 +4551,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "External host \u2192 `PAGE-OWNER-CONSENT` \u2192 registered host callback",
+      "endpoint_description": "External host → `PAGE-OWNER-CONSENT` → registered host callback",
       "trigger": "Valid private request; Allow or Deny.",
       "interactions": "External. Consumes request; authentication then occurs in host, not by navigating into a local inbox URL.",
       "from": [
@@ -4551,7 +4605,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -4574,7 +4628,7 @@
         "tooling",
         "go"
       ],
-      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** \u201cConnect Code Factory\u201d, **deny** \u201cCancel\u201d.",
+      "element_description": "**connection-heading**, **client-name**, **callback-destination**, **owner-access-warning**, **allow** “Connect Code Factory”, **deny** “Cancel”.",
       "state_description": "Only a valid owner/private request sees the form. Expired, invalid or unrelated-owner requests return error pages.",
       "interactions": "Allow or Deny consumes the request and redirects to its registered host callback. No credential field."
     },
@@ -4898,7 +4952,7 @@
         "tooling",
         "go"
       ],
-      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` \u2192 alternate local transport session",
+      "endpoint_description": "`W-LOCAL-TUNNEL-KEY` → alternate local transport session",
       "trigger": "Single-use private setup input.",
       "interactions": "A successful private submission removes the form. An unknown save outcome locks the used submission and requires saved-state inspection or fresh setup authorization; the submitted key is never automatically replayed. Alternate transport remains disabled in the pilot.",
       "from": [
@@ -5019,7 +5073,7 @@
         {
           "path": "internal/gateway/gateway.go",
           "anchor": "func (g *Gateway) Private(",
-          "purpose": "Private `/approve` handler; native form buttons are \u201cConnect Code Factory\u201d and \u201cCancel.\u201d Request/nonce values are private hidden session fields and must not appear in examples/evidence."
+          "purpose": "Private `/approve` handler; native form buttons are “Connect Code Factory” and “Cancel.” Request/nonce values are private hidden session fields and must not appear in examples/evidence."
         }
       ],
       "assertions": [
@@ -5317,7 +5371,7 @@
       "id": "WRAP-AXE",
       "path": "web/tests/wrapper.spec.ts",
       "anchor": "wrapper keyboard navigation and contrast pass fixture accessibility",
-      "assertion": "At 390\u00d7844, explicit light and dark inbox including linked row, Configuration and Conversation have no WCAG A/AA axe violations; keyboard Enter opens Configuration."
+      "assertion": "At 390×844, explicit light and dark inbox including linked row, Configuration and Conversation have no WCAG A/AA axe violations; keyboard Enter opens Configuration."
     },
     {
       "id": "WRAP-ASSEMBLED",
@@ -6220,6 +6274,54 @@
       "assertion": "New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs."
     },
     {
+      "id": "NATIVE-CONFIG-REDACTION",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeInspectionRedactsUnmanagedCredentials(",
+      "assertion": "Native inspection and the configuration-agent tool redact unmanaged environment, arbitrary header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities. Large integer settings retain exact JSON precision."
+    },
+    {
+      "id": "NATIVE-CONFIG-PRIVATE-FRESHNESS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeProposalRetainsRedactedSnapshotAndRawFreshness(",
+      "assertion": "Stored proposals contain redacted snapshots; an invisible credential rotation rejects confirmation, and a fresh confirmed profile edit sends exactly one scoped native write."
+    },
+    {
+      "id": "NATIVE-CONFIG-PRIVATE-EDITS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeCredentialEditsAreRejectedWithoutPersistence(",
+      "assertion": "Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes."
+    },
+    {
+      "id": "NATIVE-CONFIG-LEGACY-REDACTION",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeLegacyProposalMigrationPreservesStaleness(",
+      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history and copied first/later URL credentials with internal whitespace; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent."
+    },
+    {
+      "id": "NATIVE-CONFIG-SELECTORS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(",
+      "assertion": "Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal."
+    },
+    {
+      "id": "NATIVE-CONFIG-NAMED-ENTRIES",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeCredentialWordsInNamesRemainEditable(",
+      "assertion": "Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits."
+    },
+    {
+      "id": "NATIVE-CONFIG-PUBLIC-URL",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeNonsecretURLsRemainEditable(",
+      "assertion": "Ten noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, a nested URL parameter and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+    },
+    {
+      "id": "NATIVE-CONFIG-URL-PARAMETERS",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
+      "assertion": "Forty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined URL values protect credentials in both the first and later URLs, including internal whitespace, Unicode separators and a prose prefix. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
+    },
+    {
       "id": "GO-SCAN-WAIT",
       "path": "internal/transport/operations_retry_test.go",
       "anchor": "func TestScanWaitsCoalescesAndReleasesWorkers(",
@@ -6298,6 +6400,18 @@
       "anchor": "func (s *Service) communicate(",
       "entities": "Configuration communication messages and questions",
       "detail": "Intentional plain-text messages and exact pending question identities are prepared by the worker; cached transcript/question projections remain the read path."
+    },
+    {
+      "path": "internal/factory/native_projection.go",
+      "anchor": "func nativeSnapshot(",
+      "entities": "Native configuration inspection and proposal displays",
+      "detail": "Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused."
+    },
+    {
+      "path": "internal/store/proposal_migration.go",
+      "anchor": "func (s *Store) RedactNativeProposalEvents(",
+      "entities": "Retained native configuration proposal history",
+      "detail": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
     }
   ],
   "coverage_groups": [
@@ -6876,7 +6990,7 @@
           ],
           "headers": [
             "ID",
-            "From \u2192 to",
+            "From → to",
             "Trigger and carried context",
             "Result/type"
           ]

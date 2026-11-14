@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-receive-notifications",
-  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
-  "fingerprint": "9691595d65ff2cce28c79e279b5c416c6504eb9e9f0d1caf5f540ca955a19e0e",
+  "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
+  "fingerprint": "5946f4dc6793fbeeec5fc9bb26cab66b4f9c621b5a7c7412d55533a9c332109c",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1\u2013S4 host subscriptions and bounded callback retry policy remain unchanged. GitHub review-notification synchronization is a separate upstream read and now retains its own provider deadline.",
-    "implementation": "Callback delivery code is unchanged. GitHub notification cursors preserve successful Since across throttling and avoid polling before RetryAt; a due provider retry bypasses only the ordinary notification cadence. Reviewed follow-up Teams retry and active alias bounds: neither changes this consumer\u2019s owned transitions; accepted terminal identity metadata remains intentionally retained. The follow-up only changes shared browser progress retention and timer-test observation; this subject has no additional owned transition change.",
-    "tests": "TestNotificationThrottleRetainsCursorAndUsesProviderDeadline directly checks cursor, suppressed early calls and due recovery. Existing subscription assertions remain selected independently; this new read fixture does not close callback/host gaps."
+    "description": "Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications.",
+    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged.",
+    "tests": "TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications verifies supported notification identity and private-content exclusion; communicate emits only sessionId in attention metadata. Real-host callback and soak gaps remain open. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.41
+      "seconds": 70.38
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.225
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 650.44
+      "seconds": 642.575
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 440.259
+      "seconds": 417.498
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.775
+      "seconds": 4.698
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.11
+      "seconds": 60.387
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "b7102d591d60b95e2e962bf0eb64a8c8ba9bfcf34077941694dcb3775b7364d0",
+    "flow:receive-notifications": "bec498ce4fde4fc0f7643cc4f3c78494359854eca9028f92085ea5bc1a7abeef",
     "term:attention-request": "4c7d7cb37fc9519d236979855f5a28d9b2bb63231973d556eecb5384aca955d8",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:host": "7485127d9f66ced31cf4a8f4cd75f62757c0198b26a41bf13361f0cdbd9bacd7",

@@ -21,9 +21,23 @@ The private owner connection is established. Application data starts clean in th
 3. Inspect a concrete application or native configuration proposal.
 
    Application proposals show changed settings and their complete before/after
-   values. Question answers do not confirm proposals.
+   values. Native inspection and proposals mask credential values. Credentials
+   must be edited outside Code Factory; redacted placeholders cannot be submitted
+   as native edits. Question answers do not confirm proposals.
+
+   Named profile identifiers retain their exact spelling, including short
+   token-like names. Ordinary credential-free URLs retain their spelling through
+   inspection, proposal and confirmed native application. An unreadable query or
+   parameter fragment is hidden and refused as an edit. Encoded credential values
+   remain private. Quotes within URL credentials do not truncate redaction.
+   Invalid URL components do not expose credentials copied from other components;
+   edits containing those copied credentials are also refused.
+   Whitespace within a URL value cannot expose part of a credential, and
+   surrounding whitespace cannot hide one. Combined values protect credentials in each URL, including internal whitespace after a public URL. Ordinary URL and surrounding text spelling stays editable.
 
 4. Explicitly confirm or reject against the inspected versions.
+
+   Changes to hidden native credentials also invalidate an older proposal.
 
 5. Apply confirmed changes after active turns finish while preserving unrelated settings.
 
@@ -92,6 +106,8 @@ flowchart TD
 - [plugin/skills/code-factory-status/SKILL.md](../../plugin/skills/code-factory-status/SKILL.md) — Current configure-work implementation or fixture/build dependency.
 - [plugin/skills/code-factory-report-issue/SKILL.md](../../plugin/skills/code-factory-report-issue/SKILL.md) — Current configure-work implementation or fixture/build dependency.
 - [internal/factory/communication.go](../../internal/factory/communication.go) — Intentional structured configuration messages and questions; pending questions suspend until the exact owner answer. (`func (s *Service) communicate(`)
+- [internal/factory/native_projection.go](../../internal/factory/native_projection.go) — Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused. (`func nativeSnapshot(`)
+- [internal/store/proposal_migration.go](../../internal/store/proposal_migration.go) — Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history. (`func (s *Store) RedactNativeProposalEvents(`)
 
 ## Test references
 
@@ -112,6 +128,14 @@ flowchart TD
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationValidationAndExpiry(`; S1. Communication rejects invalid/bounded payloads and non-configuration sessions; expiring a blocked question rejects its answer.
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationLegacyCommunicationAndCompactDiff(`; S1, S3. Retained legacy configuration status results record intentional communication cards; settings diffs retain changed values and omit unchanged and absent fields.
 - [internal/factory/communication_test.go](../../internal/factory/communication_test.go) — `func TestConfigurationCommunicationRetainsNativeCatalog(`; S1. New and legacy configuration conversations resume the same native thread once with compatible communication guidance and without re-registering or replacing their retained tool catalogs.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionRedactsUnmanagedCredentials(`; S1, S3, S4. Native inspection and the configuration-agent tool redact unmanaged environment, header, argument, password/token, URL and copied credential values while preserving profile settings and layer identities.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeProposalRetainsRedactedSnapshotAndRawFreshness(`; S1, S3, S4. Stored proposals contain redacted snapshots; an invisible credential rotation rejects confirmation, and a fresh confirmed profile edit sends exactly one scoped native write.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialEditsAreRejectedWithoutPersistence(`; S1, S3, S4. Credential-bearing native edits, copied custom-header values, URL credentials, redacted placeholders and table-form key paths are rejected before proposal persistence or native writes.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeLegacyProposalMigrationPreservesStaleness(`; S1, S3, S4. Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history and copied first/later URL credentials with internal whitespace; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, unsafe pending edits stale without writes, and repeated migration is idempotent.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInspectionPreservesSelectorsAndRedactsURLCopies(`; S1, S3. Nonsecret MCP environment/argument values preserve exact layer file/type/version and profile values; copied URL password/query/fragment credentials are masked, and the displayed layer selector supports a safe proposal.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeCredentialWordsInNamesRemainEditable(`; S1, S2, S3. Profile/plugin/project/server identifiers containing credential words or short token-like names preserve ordinary settings; quoted dotted profile/project paths and whole-profile replacements remain editable, while credential fields inside named entries still redact and reject edits.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeNonsecretURLsRemainEditable(`; S1, S3, S4, S5. Ten noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, a nested URL parameter and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation.
+- [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeURLParameterBoundariesRejectCredentials(`; S1, S3, S4. Forty isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined URL values protect credentials in both the first and later URLs, including internal whitespace, Unicode separators and a prose prefix. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved.
 
 ## Verification and gaps
 
