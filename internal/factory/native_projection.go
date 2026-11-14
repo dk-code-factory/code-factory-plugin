@@ -9,19 +9,45 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // Native configuration can include credentials that are not managed by our vault.
 // Keep those values out of inspection results, proposals and retained snapshots.
 var nativeCredential = regexp.MustCompile(`(?i)(?:github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|bearer\s+[A-Za-z0-9._~+/-]+=*)`)
 
-// Values are decoded strings; quotes and angle brackets can be URL content.
-var nativeURL = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://[^\s]+`)
-var nativeURLPrefix = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9+.-]*://`)
+var nativeURLStart = regexp.MustCompile(`[A-Za-z][A-Za-z0-9+.-]*://`)
 
-func nativeURLWithWhitespace(value string) bool {
-	value = strings.TrimSpace(value)
-	return nativeURLPrefix.MatchString(value) && strings.IndexFunc(value, unicode.IsSpace) >= 0
+// Keep whitespace inside a URL candidate, stopping at the next separate URL.
+// A nested URL without a whitespace separator remains part of its outer value.
+func nativeURLRanges(value string) [][2]int {
+	var spans [][2]int
+	for _, match := range nativeURLStart.FindAllStringIndex(value, -1) {
+		if len(spans) > 0 {
+			previous, _ := utf8.DecodeLastRuneInString(value[:match[0]])
+			if !unicode.IsSpace(previous) {
+				continue
+			}
+		}
+		spans = append(spans, [2]int{match[0], 0})
+	}
+	for i := range spans {
+		end := len(value)
+		if i+1 < len(spans) {
+			end = spans[i+1][0]
+		}
+		start := spans[i][0]
+		raw := strings.TrimRightFunc(value[start:end], unicode.IsSpace)
+		// Ordinary prose after a public URL is not part of that URL. Extend
+		// through whitespace only when it is needed to retain a credential.
+		if len(nativeURLSecrets(raw)) == 0 {
+			if space := strings.IndexFunc(raw, unicode.IsSpace); space >= 0 {
+				raw = raw[:space]
+			}
+		}
+		spans[i][1] = start + len(raw)
+	}
+	return spans
 }
 
 func privateNativeKey(key string) bool {
@@ -99,16 +125,8 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 				collect(child, private, false)
 			}
 		case string:
-			urls := nativeURL.FindAllString(v, -1)
-			if nativeURLWithWhitespace(v) {
-				whole := strings.TrimSpace(v)
-				r.secrets = append(r.secrets, nativeURLSecrets(whole)...)
-				if len(urls) > 0 && strings.HasPrefix(whole, urls[0]) {
-					urls = urls[1:] // The complete value replaces its truncated prefix.
-				}
-			}
-			for _, raw := range urls {
-				r.secrets = append(r.secrets, nativeURLSecrets(raw)...)
+			for _, span := range nativeURLRanges(v) {
+				r.secrets = append(r.secrets, nativeURLSecrets(v[span[0]:span[1]])...)
 			}
 			if private && v != "" {
 				r.secrets = append(r.secrets, v)
@@ -170,16 +188,15 @@ func (r nativeRedactor) text(value string) string {
 		}
 		return u.String()
 	}
-	// A URL-valued string can contain a malformed whitespace-bearing credential.
-	// Process it before token scanning so a credential tail cannot escape; retain
-	// token scanning for additional URLs embedded in otherwise ordinary text.
-	if nativeURLWithWhitespace(value) {
-		raw := strings.TrimSpace(value)
-		if clean := redactURL(raw); clean != raw {
-			value = clean
-		}
+	var clean strings.Builder
+	offset := 0
+	for _, span := range nativeURLRanges(value) {
+		clean.WriteString(value[offset:span[0]])
+		clean.WriteString(redactURL(value[span[0]:span[1]]))
+		offset = span[1]
 	}
-	value = nativeURL.ReplaceAllStringFunc(value, redactURL)
+	clean.WriteString(value[offset:])
+	value = clean.String()
 	for _, secret := range r.secrets {
 		if secret != "" {
 			value = strings.ReplaceAll(value, secret, "[redacted]")

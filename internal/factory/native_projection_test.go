@@ -24,16 +24,19 @@ func nativeCredentialFixture(file string) map[string]any {
 		}},
 		"password": "fixture-password-credential", "custom_note": "copied fixture-env-credential",
 		"access_token": "fixture-token-credential", "unknown": "ghp_fixturePatternCredential",
-		"access_key":               "fixture-access-credential",
-		"developer_instructions":   "copied fixture-custom-header-credential",
-		"custom_header_copy":       "copied fixture-opaque-header-credential",
-		"opaque_pattern":           "sk-fixtureOpaquePatternCredential",
-		"ordinary_query_copy":      "fixture-malformed-query-credential;part",
-		"ordinary_fragment_copy":   "&fixture-encoded-fragment-credential",
-		"ordinary_quote_copy":      "'fixture-quoted-url-credential",
-		"ordinary_parse_copy":      "fixture-unparseable-url-credential",
-		"ordinary_separator_copy":  "fixture-separator-url-credential",
-		"ordinary_whitespace_copy": "fixture whitespace-credential",
+		"access_key":                 "fixture-access-credential",
+		"developer_instructions":     "copied fixture-custom-header-credential",
+		"custom_header_copy":         "copied fixture-opaque-header-credential",
+		"opaque_pattern":             "sk-fixtureOpaquePatternCredential",
+		"ordinary_query_copy":        "fixture-malformed-query-credential;part",
+		"ordinary_fragment_copy":     "&fixture-encoded-fragment-credential",
+		"ordinary_quote_copy":        "'fixture-quoted-url-credential",
+		"ordinary_parse_copy":        "fixture-unparseable-url-credential",
+		"ordinary_separator_copy":    "fixture-separator-url-credential",
+		"ordinary_whitespace_copy":   "fixture whitespace-credential",
+		"multi_url_note":             "https://one.test/?token=fixture-first-multi-credential https://user:fixture second-multi-credential@example.test/mcp",
+		"ordinary_first_multi_copy":  "fixture-first-multi-credential",
+		"ordinary_second_multi_copy": "fixture second-multi-credential",
 	}
 	servers := config["mcp_servers"].(map[string]any)
 	servers["query-boundary"] = map[string]any{"url": "https://example.test/mcp?token=fixture-malformed-query-credential;part"}
@@ -50,7 +53,7 @@ func nativeCredentialFixture(file string) map[string]any {
 func assertNativeCredentialsHidden(t *testing.T, value any) {
 	t.Helper()
 	data := string(bytes(value))
-	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential", "fixture-malformed-query-credential", "fixture-encoded-fragment-credential", "fixture-quoted-url-credential", "fixture-unparseable-url-credential", "fixture-separator-url-credential", "whitespace-credential"} {
+	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential", "fixture-malformed-query-credential", "fixture-encoded-fragment-credential", "fixture-quoted-url-credential", "fixture-unparseable-url-credential", "fixture-separator-url-credential", "whitespace-credential", "fixture-first-multi-credential", "second-multi-credential"} {
 		if strings.Contains(data, private) {
 			t.Fatal("native credential escaped its projection")
 		}
@@ -135,6 +138,10 @@ func TestNativeNonsecretURLsRemainEditable(t *testing.T) {
 		"https://example.test/mcp?label=quote'\"<>&mode=read-only#section'\"<>",
 		"https://example.test/mcp?label=ordinary title&mode=read-only#section two",
 		" \thttps://example.test/mcp?label=ordinary title&mode=read-only#section two \r\n",
+		"Reference https://example.test/mcp?mode=read-only https://public.test/mcp#section two",
+		" \thttps://example.test/mcp\u00a0https://public.test/mcp \r\n",
+		"https://example.test/mcp?next=https://public.test/mcp&mode=read-only",
+		"Reference https://example.test/mcp\nwith ordinary documentation",
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			s, rpc, _ := fixture(t)
@@ -202,6 +209,16 @@ func TestNativeURLParameterBoundariesRejectCredentials(t *testing.T) {
 		{"userinfo-surrounding-space", " \thttps://user:opaque userinfo-value@example.test/mcp \r\n", "opaque userinfo-value", "opaque userinfo-value", "userinfo-value"},
 		{"query-surrounding-space", " https://example.test/mcp?token=opaque query-value \n", "opaque query-value", "opaque query-value", "query-value"},
 		{"userinfo-formfeed", "https://user:opaque\fuserinfo-value@example.test/mcp", "opaque\fuserinfo-value", "opaque\fuserinfo-value", "userinfo-value"},
+		{"multi-first-query", "https://one.test/?token=first-opaque https://two.test/?token=second-opaque", "first-opaque", "first-opaque", "first-opaque"},
+		{"multi-second-query", "https://one.test/?token=first-opaque https://two.test/?token=second-opaque", "second-opaque", "second-opaque", "second-opaque"},
+		{"multi-first-fragment", "https://one.test/#access_token=first-opaque https://public.test/mcp", "first-opaque", "first-opaque", "first-opaque"},
+		{"multi-first-query-space", "https://one.test/?token=first opaque https://public.test/mcp", "first opaque", "first opaque", "first opaque"},
+		{"multi-userinfo-space", "https://public.test/mcp https://user:alpha beta@example.test/mcp", "alpha beta", "alpha beta", "beta"},
+		{"multi-userinfo-tab", "https://public.test/mcp https://user:alpha\tbeta@example.test/mcp", "alpha\tbeta", "alpha\tbeta", "beta"},
+		{"multi-userinfo-newline", "https://public.test/mcp https://user:alpha\nbeta@example.test/mcp", "alpha\nbeta", "alpha\nbeta", "beta"},
+		{"multi-query-space", "https://public.test/mcp https://example.test/?token=alpha beta", "alpha beta", "alpha beta", "beta"},
+		{"multi-unicode-separator", "https://public.test/mcp\u00a0https://user:alpha beta@example.test/mcp", "alpha beta", "alpha beta", "beta"},
+		{"multi-prose-prefix", "Reference https://user:alpha beta@example.test/mcp", "alpha beta", "alpha beta", "beta"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s, rpc, _ := fixture(t)
