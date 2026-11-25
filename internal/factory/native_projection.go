@@ -46,7 +46,7 @@ func nativeURLPercentDecodePositions(raw string) (string, []int) {
 
 // Keep whitespace inside a URL candidate, stopping at the next separate URL.
 // A nested URL without a whitespace separator remains part of its outer value.
-func nativeURLRanges(value string) [][2]int {
+func nativeURLCandidates(value string) [][2]int {
 	var spans [][2]int
 	for _, match := range nativeURLStart.FindAllStringIndex(value, -1) {
 		if len(spans) > 0 {
@@ -63,7 +63,15 @@ func nativeURLRanges(value string) [][2]int {
 			end = spans[i+1][0]
 		}
 		start := spans[i][0]
-		raw := strings.TrimRightFunc(value[start:end], unicode.IsSpace)
+		spans[i][1] = start + len(strings.TrimRightFunc(value[start:end], unicode.IsSpace))
+	}
+	return spans
+}
+
+func nativeURLRanges(value string) [][2]int {
+	spans := nativeURLCandidates(value)
+	for i, span := range spans {
+		raw := value[span[0]:span[1]]
 		// Ordinary prose after a public URL is not part of that URL. Extend
 		// through whitespace only when it is needed to retain a credential.
 		if len(nativeURLSecrets(raw)) == 0 {
@@ -71,7 +79,7 @@ func nativeURLRanges(value string) [][2]int {
 				raw = raw[:space]
 			}
 		}
-		spans[i][1] = start + len(raw)
+		spans[i][1] = span[0] + len(raw)
 	}
 	return spans
 }
@@ -189,6 +197,14 @@ func nativeURLSecrets(raw string) []string {
 		}
 		seen[entry] = true
 		candidate := entry.value
+		// Decoded values obey the same separate-URL boundaries as readable
+		// input, including whitespace within a credential before the next URL.
+		if spans := nativeURLCandidates(candidate); len(spans) > 1 {
+			for _, span := range spans {
+				pending = append(pending, urlCandidate{candidate[span[0]:span[1]], entry.nested})
+			}
+			continue
+		}
 		// Discover encoded schemes in every component, even beside readable
 		// schemes. Revisit only newly decoded schemes: decoding an existing
 		// URL's escaped parameter delimiters would invent shorter credentials.
@@ -258,7 +274,7 @@ func nativeURLSecrets(raw string) []string {
 				}
 			}
 			for _, parameters := range []string{query, fragment} {
-				secrets = append(secrets, nativeURLParameterSecrets(parameters)...)
+				secrets = append(secrets, nativeURLParameterSecrets(parameters, nested)...)
 				for _, pair := range strings.FieldsFunc(parameters, func(r rune) bool { return r == '&' || r == ';' }) {
 					_, value, _ := strings.Cut(pair, "=")
 					if decoded := nativeURLPercentDecode(strings.ReplaceAll(value, "+", " ")); decoded != value {
@@ -358,7 +374,7 @@ func redactNativeURLParameters(raw string) (string, bool) {
 	return parameters.Encode(), true
 }
 
-func nativeURLParameterSecrets(raw string) []string {
+func nativeURLParameterSecrets(raw string, nested bool) []string {
 	var secrets []string
 	pairs := strings.Split(raw, "&")
 	if strings.Contains(raw, ";") {
@@ -367,8 +383,27 @@ func nativeURLParameterSecrets(raw string) []string {
 		pairs = append(pairs, strings.FieldsFunc(raw, func(r rune) bool { return r == '&' || r == ';' })...)
 	}
 	for _, pair := range pairs {
+		// Nested syntax can have a deeper-encoded assignment separator. Keep
+		// the original pair boundary while exposing that separator, so decoded
+		// ampersands inside the credential never create a shorter secret.
+		if nested {
+			for !strings.Contains(pair, "=") {
+				decoded := nativeURLPercentDecode(pair)
+				if decoded == pair {
+					break
+				}
+				pair = decoded
+			}
+		}
 		key, value, _ := strings.Cut(pair, "=")
 		decodedKey, keyErr := url.QueryUnescape(key)
+		for keyErr == nil && !privateNativeKey(decodedKey) {
+			decoded := nativeURLPercentDecode(decodedKey)
+			if decoded == decodedKey {
+				break
+			}
+			decodedKey = decoded
+		}
 		if keyErr == nil && !strings.Contains(key, ";") && !privateNativeKey(decodedKey) {
 			continue
 		}

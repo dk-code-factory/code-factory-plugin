@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
-  "fingerprint": "725bfbfbd89f61ccdef3f4eeb2ab3fb813d855b630d09835d661e17b2a50630c",
+  "fingerprint": "6a5e13efc80d76acacd31a7bd55c78679ba7411676eb863f3ad3387f2ef5dba5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries.",
-    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged. Test fixture changes only allow a bounded longer readiness wait for the large body search and add pending-to-ready controlled verification; production behavior and independent success-latency/cancellation gates are unchanged. The additional nested path syntax and option-value parsing correction remains inside this same native configuration privacy boundary; no implementation of this consumer changed.",
-    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made. The fixture helper retains5s default; only the large search and controlled6s preparation regression request30s. Existing scenario assertions remain intact, with full fresh consumer verification required. Its existing scenario assertions are untouched by the new correction; the additional native argument and URL cases exercise configuration only. Full mapped consumer suites are rerun by reconciliation."
+    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged. Test fixture changes only allow a bounded longer readiness wait for the large body search and add pending-to-ready controlled verification; production behavior and independent success-latency/cancellation gates are unchanged. The additional nested path syntax and option-value parsing correction remains inside this same native configuration privacy boundary; no implementation of this consumer changed. Additional review: mixed-depth assignment discovery and decoded URL-list boundaries affect only the shared native privacy projection and edit refusal. This consumer retains its previously reviewed UI/flow contract and assertions; no new consumer behavior or foundation dependency was introduced.",
+    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made. The fixture helper retains5s default; only the large search and controlled6s preparation regression request30s. Existing scenario assertions remain intact, with full fresh consumer verification required. Its existing scenario assertions are untouched by the new correction; the additional native argument and URL cases exercise configuration only. Full mapped consumer suites are rerun by reconciliation. Existing consumer assertions remain unchanged; refreshed required fixture verification and dependency fingerprints cover the updated shared source and configuration/privacy mappings."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 39.265
+      "seconds": 36.582
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 122.261
+      "seconds": 90.922
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 10.61
+      "seconds": 3.151
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 8.316
+      "seconds": 2.508
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 28.634
+      "seconds": 21.49
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 1.165
+      "seconds": 0.201
     },
     {
       "command": [
@@ -100,7 +100,7 @@
         "scripts/test_browser_lab.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.181
     },
     {
       "command": [
@@ -109,7 +109,7 @@
         "scripts/test_browser_control.mjs"
       ],
       "exit_code": 0,
-      "seconds": 0.162
+      "seconds": 0.161
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.431
+      "seconds": 1.245
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 678.37
+      "seconds": 713.203
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 451.018
+      "seconds": 426.415
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.673
+      "seconds": 4.654
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 62.24
+      "seconds": 61.713
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "08896adb25f7a978d25e7d6ef75102c434c235120e420f1362b4e274f631469c",
+    "flow:operate-installation": "50eb5318a8223791ecf745404cf37e766acad14002c6ee71c5b303e512df681c",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "6c4bba305cff404a92f06f65db3d9a203afa940d8c5eaae304998239e9ac7d37",
-    "ui:P-BROWSER-LAB": "175e63247eaf33bc4880cc999446052c232964bfc378a3b91e82173c8d81b1ff",
-    "ui:PAGE-BROWSER-LAB": "1e1359bd5ac843ff86c8e72bb30f824085e5288b3e850cdce282a6290e56eff8",
-    "ui:W-BROWSER-LAB": "9195338f7919f8757a840aa105f155e55bf68d45c2817bf5589291f0b2336e21"
+    "ui:C-BROWSER-LAB": "c73df9bff229090b5ab7a6005ab522169ab2911d3ef92e7e8c2eec82666f1e4a",
+    "ui:P-BROWSER-LAB": "226a15d8dbba7167ebcd6e0c482631d92242baa3b1fcc50572bf166ebba6deea",
+    "ui:PAGE-BROWSER-LAB": "0e4c45af6385d9468cceb65004c6dba9d038d5640bb3425b3067e8968c76b174",
+    "ui:W-BROWSER-LAB": "4e52d8ec5797b8c6447927c13e24c56290cd487846808f0cc192c4f52220aca4"
   }
 }

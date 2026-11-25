@@ -47,6 +47,10 @@ func nativeCredentialFixture(file string) map[string]any {
 		"nested_path_query_copy":     "fixture-path-query-credential",
 		"nested_path_fragment_url":   "https://proxy.test/path/https://inner.test/mcp%23access_token=fixture-path-fragment-credential",
 		"nested_path_fragment_copy":  "fixture-path-fragment-credential",
+		"nested_assignment_url":      "https://proxy.test/path/https://inner.test/mcp%23access_token%253Dfixture-assignment-credential",
+		"nested_assignment_copy":     "fixture-assignment-credential",
+		"nested_list_url":            "https://proxy.test/?next=https%3A%2F%2Fone.test%2F%3Ftoken%3Dfixture-list-credential%20https%3A%2F%2Fpublic.test%2Fmcp",
+		"nested_list_copy":           "fixture-list-credential",
 		"encoded_mixed_url":          "https://proxy.test/?next=https%253A%252F%252Fuser%253Afixture-encoded-mixed-credential%2540example.test%252Fmcp%253Fnext%253Dhttps://public.test/mcp",
 		"encoded_mixed_copy":         "fixture-encoded-mixed-credential",
 		"empty_password_url":         "https://fixture-username-credential:@example.test/mcp",
@@ -72,7 +76,7 @@ func assertNativeCredentialsHidden(t *testing.T, value any) {
 			t.Fatal("native credential escaped its projection")
 		}
 	}
-	for _, private := range []string{"fixture-path-query-credential", "fixture-path-fragment-credential"} {
+	for _, private := range []string{"fixture-path-query-credential", "fixture-path-fragment-credential", "fixture-assignment-credential", "fixture-list-credential"} {
 		if strings.Contains(data, private) {
 			t.Fatal("nested path credential escaped its projection")
 		}
@@ -173,6 +177,9 @@ func TestNativeNonsecretURLsRemainEditable(t *testing.T) {
 		"https://proxy.test/path/https://public.test/mcp%3Fmode%3Dread-only",
 		"https://example.test/path%3Ftoken%3Dpublic-path-name",
 		"https://proxy.test/path/https%3A%2F%2Fpublic.test%2Fmcp%253Fmode%253Dread-only",
+		"https://proxy.test/path/https://public.test/mcp%3Fmode%253Dread-only",
+		"https://proxy.test/path/https://public.test/mcp%23section%253Dpublic",
+		"https://proxy.test/?next=https%3A%2F%2Fone.test%2Fmcp%20https%3A%2F%2Ftwo.test%2Fmcp",
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			s, rpc, _ := fixture(t)
@@ -291,6 +298,18 @@ func TestNativeURLParameterBoundariesRejectCredentials(t *testing.T) {
 		{"nested-path-encoded-query-invalid", "https://proxy.test/bad%zz/https://inner.test/mcp%3Ftoken=opaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
 		{"nested-encoded-scheme-path-query", "https://proxy.test/path/https%3A%2F%2Finner.test%2Fmcp%253Ftoken%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
 		{"nested-parameter-encoded-path-query", "https://proxy.test/?next=https%3A%2F%2Finner.test%2Fmcp%253Ftoken%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-path-query-deeper-assignment", "https://proxy.test/path/https://inner.test/mcp%3Ftoken%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-path-fragment-deeper-assignment", "https://proxy.test/path/https://inner.test/mcp%23access_token%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-path-query-deeper-assignment-tail", "https://proxy.test/path/https://inner.test/mcp%3Ftoken%253Dopaque%2526tail", "opaque&tail", "opaque%26tail", "opaque&tail"},
+		{"nested-path-fragment-deeper-assignment-tail", "https://proxy.test/path/https://inner.test/mcp%23access_token%253Dopaque%2526tail", "opaque&tail", "opaque%26tail", "opaque&tail"},
+		{"nested-path-query-deeper-key", "https://proxy.test/path/https://inner.test/mcp%3Ftok%252565n%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"query-deeper-key", "https://example.test/mcp?tok%2565n=opaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-encoded-list-first", "https://proxy.test/?next=https%3A%2F%2Fone.test%2F%3Ftoken%3Dfirst-opaque%20https%3A%2F%2Ftwo.test%2F%3Ftoken%3Dsecond-opaque", "first-opaque", "first-opaque", "first-opaque"},
+		{"nested-encoded-list-second", "https://proxy.test/?next=https%3A%2F%2Fone.test%2F%3Ftoken%3Dfirst-opaque%20https%3A%2F%2Ftwo.test%2F%3Ftoken%3Dsecond-opaque", "second-opaque", "second-opaque", "second-opaque"},
+		{"nested-double-encoded-list-first", "https://proxy.test/?next=https%253A%252F%252Fone.test%252F%253Ftoken%253Dfirst-opaque%2520https%253A%252F%252Ftwo.test%252F%253Ftoken%253Dsecond-opaque", "first-opaque", "first-opaque", "first-opaque"},
+		{"nested-encoded-list-first-space", "https://proxy.test/?next=https%3A%2F%2Fone.test%2F%3Ftoken%3Dfirst%20opaque%20https%3A%2F%2Fpublic.test%2Fmcp", "first opaque", "first opaque", "first opaque"},
+		{"nested-encoded-list-first-fragment", "https://proxy.test/?next=https%3A%2F%2Fone.test%2F%23access_token%3Dfirst-opaque%20https%3A%2F%2Fpublic.test%2Fmcp", "first-opaque", "first-opaque", "first-opaque"},
+		{"nested-encoded-list-unicode", "https://proxy.test/?next=https%3A%2F%2Fone.test%2F%3Ftoken%3Dfirst-opaque%C2%A0https%3A%2F%2Fpublic.test%2Fmcp", "first-opaque", "first-opaque", "first-opaque"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s, rpc, _ := fixture(t)
@@ -524,7 +543,7 @@ func TestNativeCredentialEditsAreRejectedWithoutPersistence(t *testing.T) {
 }
 
 func TestNativeLegacyProposalMigrationPreservesStaleness(t *testing.T) {
-	for _, kind := range []string{"ordinary-edit", "credential-edit", "url-placeholder", "encoded-path-copy", "encoded-mixed-copy", "partial-path-copy", "encoded-query-copy", "encoded-fragment-copy"} {
+	for _, kind := range []string{"ordinary-edit", "credential-edit", "url-placeholder", "encoded-path-copy", "encoded-mixed-copy", "partial-path-copy", "encoded-query-copy", "encoded-fragment-copy", "encoded-assignment-copy", "encoded-list-copy"} {
 		t.Run(kind, func(t *testing.T) {
 			s, rpc, _ := fixture(t)
 			ctx := context.Background()
@@ -547,6 +566,10 @@ func TestNativeLegacyProposalMigrationPreservesStaleness(t *testing.T) {
 				edits = []ConfigEdit{{KeyPath: "ordinary_copy", Value: "fixture-path-query-credential", MergeStrategy: "replace"}}
 			} else if kind == "encoded-fragment-copy" {
 				edits = []ConfigEdit{{KeyPath: "ordinary_copy", Value: "fixture-path-fragment-credential", MergeStrategy: "replace"}}
+			} else if kind == "encoded-assignment-copy" {
+				edits = []ConfigEdit{{KeyPath: "ordinary_copy", Value: "fixture-assignment-credential", MergeStrategy: "replace"}}
+			} else if kind == "encoded-list-copy" {
+				edits = []ConfigEdit{{KeyPath: "ordinary_copy", Value: "fixture-list-credential", MergeStrategy: "replace"}}
 			}
 			p := Proposal{ID: "legacy-native", State: "proposed", Base: digest(settings), Before: settings, After: settings,
 				Native: &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Before: bytes(rpc.native), Edits: edits},
