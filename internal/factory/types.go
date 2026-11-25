@@ -135,11 +135,12 @@ type Proposal struct {
 	Created time.Time   `json:"created"`
 }
 type NativeEdit struct {
-	CWD     string          `json:"cwd"`
-	File    string          `json:"file"`
-	Version string          `json:"version"`
-	Edits   []ConfigEdit    `json:"edits"`
-	Before  json.RawMessage `json:"before"`
+	CWD          string          `json:"cwd"`
+	File         string          `json:"file"`
+	Version      string          `json:"version"`
+	Edits        []ConfigEdit    `json:"edits"`
+	Before       json.RawMessage `json:"before"`
+	BeforeDigest string          `json:"beforeDigest,omitempty"`
 }
 type ConfigEdit struct {
 	KeyPath       string `json:"keyPath"`

@@ -233,7 +233,10 @@ func TestFactoryStatePagesCompactDataAndExplicitDelivery(t *testing.T) {
 	if len(page["questions"].([]any)) > 25 {
 		t.Fatal("historical questions unbounded")
 	}
-	searched, failed := f.call(t, "factory_state", map[string]any{"view": "issues", "search": "unique-body-search", "filter": "new"})
+	// Body search prepares a projection over 1,000 large sources under the
+	// race detector. Allow preparation time independently of response latency;
+	// the dedicated API performance gate still measures every response.
+	searched, failed := f.callWithReadinessTimeout(t, 30*time.Second, "factory_state", map[string]any{"view": "issues", "search": "unique-body-search", "filter": "new"})
 	if failed {
 		t.Fatal(searched)
 	}
@@ -789,5 +792,32 @@ func TestProjectionReadIdentifiersBoundBeforeCacheAdmission(t *testing.T) {
 		if err != nil || result["isError"] == true {
 			t.Fatal("boundary conversation selector rejected before preparation", err, result)
 		}
+	}
+}
+
+func TestTrackingFixtureAllowsSlowProjectionPreparation(t *testing.T) {
+	f := newTrackingFixture(t)
+	// Force a cold read to remain pending beyond the ordinary fixture's five
+	// seconds, then release preparation without canceling the request/service.
+	f.server.projections.mu.Lock()
+	const delay = 6 * time.Second
+	timer := time.AfterFunc(delay, f.server.projections.mu.Unlock)
+	defer func() {
+		if timer.Stop() {
+			f.server.projections.mu.Unlock()
+		}
+	}()
+	args := map[string]any{"view": "issues", "search": "slow-preparation"}
+	result, _, _, err := trackingCall(f.http.Client(), f.http.URL, f.token, "factory_state", args)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := result["structuredContent"].(map[string]any)["data"].(map[string]any)["response"].(map[string]any)
+	if result["isError"] == true || response["state"] != "pending" {
+		t.Fatal("blocked preparation did not return pending")
+	}
+	page, failed := f.callWithReadinessTimeout(t, 30*time.Second, "factory_state", args)
+	if failed || page["inbox"] == nil || len(page["inbox"].([]any)) != 0 {
+		t.Fatal("explicit preparation budget did not yield the completed projection")
 	}
 }

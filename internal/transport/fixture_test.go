@@ -76,6 +76,13 @@ func newTrackingFixtureAt(t *testing.T, dir string) *trackingFixture {
 }
 func (f *trackingFixture) call(t *testing.T, name string, args map[string]any) (map[string]any, bool) {
 	t.Helper()
+	return f.callWithReadinessTimeout(t, 5*time.Second, name, args)
+}
+
+// Preparation can outlive an individual response. Performance fixtures enforce
+// their own response budgets independently of this bounded readiness poll.
+func (f *trackingFixture) callWithReadinessTimeout(t *testing.T, timeout time.Duration, name string, args map[string]any) (map[string]any, bool) {
+	t.Helper()
 	f.calls = append(f.calls, name)
 	argsCopy := map[string]any{}
 	for key, value := range args {
@@ -87,8 +94,11 @@ func (f *trackingFixture) call(t *testing.T, name string, args map[string]any) (
 		argsCopy["instanceId"] = f.server.operations.instance
 	}
 	original := name
-	deadline := time.Now().Add(5 * time.Second)
+	deadline := time.Now().Add(timeout)
+	var lastState any
+	polls := 0
 	for time.Now().Before(deadline) {
+		polls++
 		result, _, _, err := trackingCall(f.http.Client(), f.http.URL, f.token, name, argsCopy)
 		if err != nil {
 			t.Fatal(err)
@@ -98,6 +108,7 @@ func (f *trackingFixture) call(t *testing.T, name string, args map[string]any) (
 		}
 		response := result["structuredContent"].(map[string]any)["data"].(map[string]any)["response"].(map[string]any)
 		state := response["state"]
+		lastState = state
 		if operation && name == original && state == "busy" {
 			time.Sleep(time.Millisecond)
 			continue
@@ -142,7 +153,7 @@ func (f *trackingFixture) call(t *testing.T, name string, args map[string]any) (
 		}
 		time.Sleep(time.Millisecond)
 	}
-	t.Fatalf("%s did not complete", original)
+	t.Fatalf("%s did not complete within %s (last state %v, polls %d)", original, timeout, lastState, polls)
 	return nil, true
 }
 func trackingCall(client *http.Client, url, token, name string, args map[string]any) (map[string]any, int, time.Duration, error) {
