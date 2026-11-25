@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -195,24 +196,7 @@ func TestWebhookSetupTimeoutReleasesProviderForPolling(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	must(t, os.WriteFile(filepath.Join(s.Dir, "tailscale.json"), []byte(`{"publicUrl":"https://plugin.example/code-factory"}`), 0600))
-	var apiCalls atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		apiCalls.Add(1)
-		switch r.URL.Path {
-		case "/repos/o/r/pulls/1":
-			fmt.Fprint(w, `{"number":1,"title":"API after stalled auth","state":"closed","head":{"sha":"polled-head"}}`)
-		case "/repos/o/r/commits/polled-head/check-runs":
-			fmt.Fprint(w, `{"total_count":1,"check_runs":[{"id":1,"name":"fixture-ci","status":"completed","conclusion":"success"}]}`)
-		case "/repos/o/r/commits/polled-head/statuses":
-			fmt.Fprint(w, `[]`)
-		case "/graphql":
-			fmt.Fprint(w, `{"data":{"repository":{"pullRequest":{"headRefOid":"polled-head","reviewDecision":"APPROVED","statusCheckRollup":{"state":"SUCCESS"},"latestOpinionatedReviews":{"nodes":[],"pageInfo":{}},"closingIssuesReferences":{"nodes":[],"pageInfo":{}},"reviewThreads":{"nodes":[],"pageInfo":{}}}}}}`)
-		default:
-			t.Error("unexpected API endpoint", r.URL)
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
-	defer server.Close()
+	server, apiCalls := webhookPollingFixture(t)
 	started := make(chan struct{})
 	var authCalls atomic.Int32
 	s.App.GitHub = &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Token: func(ctx context.Context) (string, error) {
@@ -258,4 +242,122 @@ func TestWebhookSetupTimeoutReleasesProviderForPolling(t *testing.T) {
 	if authCalls.Load() != beforeAuth || apiCalls.Load() != beforeAPI {
 		t.Fatal("expired setup retried before its retained deadline")
 	}
+}
+
+func TestWebhookSetupTimeoutWhilePollingOwnsProvider(t *testing.T) {
+	s, _, now := fixture(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	must(t, os.WriteFile(filepath.Join(s.Dir, "tailscale.json"), []byte(`{"publicUrl":"https://plugin.example/code-factory"}`), 0600))
+	server, apiCalls := webhookPollingFixture(t)
+	authStarted, releaseAuth := make(chan struct{}), make(chan struct{})
+	release := sync.OnceFunc(func() { close(releaseAuth) })
+	var authCalls atomic.Int32
+	g := &providers.GitHub{BaseURL: server.URL, Client: server.Client(), Now: func() time.Time { return *now }, Token: func(ctx context.Context) (string, error) {
+		if authCalls.Add(1) == 1 {
+			close(authStarted)
+			select {
+			case <-releaseAuth:
+			case <-ctx.Done():
+				return "", ctx.Err()
+			}
+		}
+		return "fixture-secret-token", nil
+	}}
+	g.ConfigureUsage(s.Store, func(context.Context) (providers.GitHubPolicy, error) {
+		return providers.GitHubPolicy{RequestsPerHour: 100}, nil
+	})
+	s.App.GitHub = g
+	must(t, s.Store.Put(ctx, "relationship", "watch", domain.Relationship{ID: "watch", Source: "o/r#1", Target: "o/r#1", Manual: true}, ""))
+	pollDone, pollStopped := make(chan error, 1), make(chan struct{})
+	go func() { defer close(pollStopped); pollDone <- s.App.RefreshPullRequests(ctx) }()
+	var setupStopped chan struct{}
+	defer func() {
+		release()
+		cancel()
+		for _, stopped := range []chan struct{}{pollStopped, setupStopped} {
+			if stopped == nil {
+				continue
+			}
+			select {
+			case <-stopped:
+			case <-time.After(time.Second):
+				t.Error("provider fixture did not stop")
+			}
+		}
+	}()
+	select {
+	case <-authStarted:
+	case <-ctx.Done():
+		t.Fatal("ordinary polling did not acquire provider authentication")
+	}
+	setupDone := make(chan error, 1)
+	setupStopped = make(chan struct{})
+	go func() { defer close(setupStopped); setupDone <- s.reconcileWebhooks(ctx, 100*time.Millisecond) }()
+	select {
+	case err := <-setupDone:
+		must(t, err)
+	case <-time.After(time.Second):
+		t.Fatal("setup did not expire while ordinary authentication retained ownership")
+	}
+	// Observe persistence BEFORE releasing the unrelated authentication owner.
+	var failed webhookRecord
+	must(t, s.Store.Get(ctx, "factory-webhook", "o/r", &failed))
+	if failed.State != "polling" || failed.At != *now || failed.RetryAt != now.Add(15*time.Minute) || !strings.Contains(failed.Error, "API polling remains active") || strings.Contains(failed.Error, "fixture-secret") || strings.Contains(failed.Error, "context deadline") {
+		t.Fatal("queued setup lost sanitized durable fallback", failed)
+	}
+	select {
+	case <-pollStopped:
+		t.Fatal("setup canceled unrelated polling")
+	default:
+	}
+	if ctx.Err() != nil || s.Context().Err() != nil || authCalls.Load() != 1 || apiCalls.Load() != 0 {
+		t.Fatal("expired admission performed work or canceled its owner", authCalls.Load(), apiCalls.Load())
+	}
+	must(t, s.ReconcileWebhooks(ctx))
+	usage, err := g.UsageStatus(ctx)
+	must(t, err)
+	if authCalls.Load() != 1 || apiCalls.Load() != 0 || usage.RequestsLastHour != 0 {
+		t.Fatal("expired setup retried or charged an undispatched request", usage)
+	}
+	release()
+	select {
+	case err := <-pollDone:
+		must(t, err)
+	case <-ctx.Done():
+		t.Fatal("ordinary polling did not resume")
+	}
+	var polled domain.Item
+	must(t, s.Store.Get(ctx, "item", "o/r#1", &polled))
+	if polled.Title != "API after stalled auth" || polled.State != "closed" || polled.Head != "polled-head" || polled.PR == nil || polled.PR.CI != "success" || polled.PR.Error != "" || len(polled.PR.Checks) != 1 {
+		t.Fatal("ordinary PR/CI polling lost useful results", polled)
+	}
+	usage, err = g.UsageStatus(ctx)
+	must(t, err)
+	if usage.RequestsLastHour != int(apiCalls.Load()) || apiCalls.Load() == 0 || ctx.Err() != nil || s.Context().Err() != nil {
+		t.Fatal("polling lost accounting or required daemon cancellation", usage, apiCalls.Load())
+	}
+}
+
+func webhookPollingFixture(t *testing.T) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	var apiCalls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiCalls.Add(1)
+		switch r.URL.Path {
+		case "/repos/o/r/pulls/1":
+			fmt.Fprint(w, `{"number":1,"title":"API after stalled auth","state":"closed","head":{"sha":"polled-head"}}`)
+		case "/repos/o/r/commits/polled-head/check-runs":
+			fmt.Fprint(w, `{"total_count":1,"check_runs":[{"id":1,"name":"fixture-ci","status":"completed","conclusion":"success"}]}`)
+		case "/repos/o/r/commits/polled-head/statuses":
+			fmt.Fprint(w, `[]`)
+		case "/graphql":
+			fmt.Fprint(w, `{"data":{"repository":{"pullRequest":{"headRefOid":"polled-head","reviewDecision":"APPROVED","statusCheckRollup":{"state":"SUCCESS"},"latestOpinionatedReviews":{"nodes":[],"pageInfo":{}},"closingIssuesReferences":{"nodes":[],"pageInfo":{}},"reviewThreads":{"nodes":[],"pageInfo":{}}}}}}`)
+		default:
+			t.Error("unexpected API endpoint", r.URL)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(server.Close)
+	return server, &apiCalls
 }

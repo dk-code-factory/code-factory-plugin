@@ -2,14 +2,14 @@
   "version": 1,
   "flow": "flow-operate-installation",
   "base": "366cbb35d03540dd954c2aa8069d84c7eda4e7ba",
-  "fingerprint": "8cfe592fcde48dd8934bacb5587a6a7d8d2138718c5bc722ee9c31a2d152c801",
+  "fingerprint": "da7a0c5551b595786f9c73907b3c645f4ccf914c8208e089be95ad3820971523",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "refactor",
     "description": "Reviewed unchanged Inspect health, upgrade, roll back and uninstall scenarios S1, S2, S3, S4, S5 against main and current mappings. New registration setup belongs to configure-work S6; this contract keeps its authored behavior and existing gaps. Re-evaluated both rebased snapshots against main366cbb35, including unchanged authored scenarios and old/new source/assertion mappings; the target credential-redaction change is retained, not reverted.",
-    "implementation": "Service startup gains a cancellable webhook reconciler beside existing polling. Upgrade, rollback, service ownership and private state preservation keep their original contracts.",
+    "implementation": "Service startup gains a cancellable webhook reconciler beside existing polling. Upgrade, rollback, service ownership and private state preservation keep their original contracts. Reviewed the current shared transport delta against both main366 and the prior c124 source: dispatch and managed-accounting ownership remain serialized, with caller-context admission and no added request deadline or Store change. Indirect unchanged flow contracts and existing acceptance gaps retain their meanings.",
     "tests": "Focused command builds pass with the shared secret reader; existing installation, diagnostics and shutdown assertions remain applicable without live service acceptance. The registration fixture now bounds both shutdown joins, and the setup timeout fixture confirms the daemon remains uncanceled while failed setup releases provider dispatch."
   },
   "verification": [
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.703
+      "seconds": 36.245
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 81.118
+      "seconds": 78.574
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.373
+      "seconds": 3.496
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.85
+      "seconds": 3.011
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.358
+      "seconds": 21.533
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.201
+      "seconds": 0.221
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.664
+      "seconds": 0.683
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.226
+      "seconds": 1.184
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 645.272
+      "seconds": 653.371
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 416.054
+      "seconds": 426.657
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.698
+      "seconds": 4.677
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.224
+      "seconds": 61.243
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "1b4c644b0516e5b2e136b4b169937b471842a4fbcfa530d3e1772e8511594b87",
+    "flow:operate-installation": "ec1e9b080ef9f52577ed0d7de397a710c005e11e2e338d8dd6e1adc367864b01",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "07e3d7c9a3a3873ffe0bf549b2ccc3f46651218e860291f3a4b7cd480e763dea",
-    "ui:P-BROWSER-LAB": "02484820f1ec7110f6ecaaa5ec76860422a83acb060e5fec4f7721ddb94926d3",
-    "ui:PAGE-BROWSER-LAB": "18800ab495e6cce174bb93a71c2f32a6cd9aab9637d7e7f787e71c4dab768d6b",
-    "ui:W-BROWSER-LAB": "a0bf33cd332d11bd1e5055105d2b0874ce86108fa4da291e298d6cdbec659fa9"
+    "ui:C-BROWSER-LAB": "3f560cf47d3a12305067b7529533c36fabe0fa264c1d3ebe4010c57c61c16581",
+    "ui:P-BROWSER-LAB": "7e5fd2f7c40f8df4eb6cc980c6326c9fa37f653ee0fcc9633277d08b5961bc39",
+    "ui:PAGE-BROWSER-LAB": "2ec16da36ad1904ad5d5a689730962a54029ff11c9920ff0fdbcbc1e8b0debd1",
+    "ui:W-BROWSER-LAB": "153bf365ceda91697f4f993b5d8504c4023a423a8960a1f454bef2523856fd78"
   }
 }

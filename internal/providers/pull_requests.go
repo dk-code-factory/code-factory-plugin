@@ -42,7 +42,9 @@ func (g *GitHub) graph(ctx context.Context, query string, variables any, out any
 	}
 	ctx = g.Operation(ctx, nil, false)
 	op := ctx.Value(operationKey{}).(*operation)
-	g.dispatch.Lock()
+	if err := g.dispatch.Lock(ctx); err != nil {
+		return err
+	}
 	defer g.dispatch.Unlock()
 	err := g.resolve(ctx, op)
 	token := op.token

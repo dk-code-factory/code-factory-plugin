@@ -1533,6 +1533,11 @@
           "path": "internal/transport/factory_projection.go",
           "anchor": "func factoryState(",
           "purpose": "Prepared Configuration view exposes sanitized webhook health and follows its revision."
+        },
+        {
+          "path": "internal/providers/github_gate.go",
+          "anchor": "func (g *githubGate) Lock(",
+          "purpose": "Context-aware shared admission lets an expired setup retain status without waiting for unrelated provider ownership."
         }
       ],
       "assertions": [
@@ -1555,7 +1560,10 @@
         "WEBHOOK-SETUP-PAGINATION",
         "WEBHOOK-SETUP-PROJECTION",
         "WRAP-WEBHOOK-SETUP",
-        "WEBHOOK-SETUP-AUTOMATIC"
+        "WEBHOOK-SETUP-AUTOMATIC",
+        "WEBHOOK-SETUP-ADMISSION",
+        "WEBHOOK-SETUP-BUDGET-ADMISSION",
+        "WEBHOOK-SETUP-EXPIRED-ADMISSION"
       ],
       "gaps": [],
       "suites": [
@@ -6411,6 +6419,24 @@
       "path": "internal/factory/webhooks_test.go",
       "anchor": "func TestConfirmedRepositoryRegistrationAutomaticallyProvisionsWebhook(",
       "assertion": "Confirming a repository registration while the ordinary service loop runs creates its webhook automatically without a native turn."
+    },
+    {
+      "id": "WEBHOOK-SETUP-ADMISSION",
+      "path": "internal/factory/webhooks_test.go",
+      "anchor": "func TestWebhookSetupTimeoutWhilePollingOwnsProvider(",
+      "assertion": "An ordinary polling authentication owner remains blocked while setup expires and persists sanitized failure plus fifteen-minute retry; no new auth, HTTP or budget charge occurs before the owner is released. After release, real PR/CI refresh succeeds without daemon cancellation."
+    },
+    {
+      "id": "WEBHOOK-SETUP-BUDGET-ADMISSION",
+      "path": "internal/providers/github_admission_test.go",
+      "anchor": "func TestWebhookAdmissionCancelsBehindManagedHTTP(",
+      "assertion": "After a live authentication latch proves dispatch admission, setup and publication waits cancel before the unrelated managed HTTP owner is released; canceled waiters neither dispatch nor charge, and later requests preserve serialization and exact durable accounting."
+    },
+    {
+      "id": "WEBHOOK-SETUP-EXPIRED-ADMISSION",
+      "path": "internal/providers/github_admission_test.go",
+      "anchor": "func TestExpiredGitHubAdmissionDoesNoWork(",
+      "assertion": "Already-canceled and expired requests return BeforeDispatch without authentication, HTTP or budget charge; a subsequent live zero-value gate request succeeds."
     }
   ],
   "source_map": [

@@ -783,6 +783,11 @@
           "path": "internal/transport/factory_projection.go",
           "anchor": "func factoryState(",
           "purpose": "Expose sanitized setup status in the background-prepared Configuration projection."
+        },
+        {
+          "path": "internal/providers/github_gate.go",
+          "anchor": "func (g *githubGate) Lock(",
+          "purpose": "Cancel the current caller’s admission wait without acquiring or releasing another request’s shared transport/accounting ownership."
         }
       ],
       "tests": [
@@ -1084,6 +1089,30 @@
           "path": "internal/factory/webhooks_test.go",
           "anchor": "func TestWebhookSetupTimeoutReleasesProviderForPolling(",
           "purpose": "A stalled authentication attempt expires while holding the shared provider; ordinary real PR/CI API refresh then updates title, state, head and successful checks without daemon cancellation. Sanitized failure and a fifteen-minute retry deadline survive the child timeout and prevent immediate repeats.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/factory/webhooks_test.go",
+          "anchor": "func TestWebhookSetupTimeoutWhilePollingOwnsProvider(",
+          "purpose": "An ordinary polling authentication owner remains blocked while setup expires and persists sanitized failure plus fifteen-minute retry; no new auth, HTTP or budget charge occurs before the owner is released. After release, real PR/CI refresh succeeds without daemon cancellation.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/providers/github_admission_test.go",
+          "anchor": "func TestWebhookAdmissionCancelsBehindManagedHTTP(",
+          "purpose": "After a live authentication latch proves dispatch admission, setup and publication waits cancel before the unrelated managed HTTP owner is released; canceled waiters neither dispatch nor charge, and later requests preserve serialization and exact durable accounting.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/providers/github_admission_test.go",
+          "anchor": "func TestExpiredGitHubAdmissionDoesNoWork(",
+          "purpose": "Already-canceled and expired requests return BeforeDispatch without authentication, HTTP or budget charge; a subsequent live zero-value gate request succeeds.",
           "scenarios": [
             "S6"
           ]

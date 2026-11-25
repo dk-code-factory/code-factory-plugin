@@ -64,8 +64,10 @@ authority to replay a mutation or reuse an expired answer.
 Webhook setup failures retain registration and API polling. Retry failed setup
 in the background after fifteen minutes or a longer provider cooldown; reconcile
 configured hooks daily. Each repository setup has a thirty-second deadline for
-CLI authentication and all hook reads and writes. Expiration retains a setup
-failure and retry time while releasing the shared provider for API polling.
+provider admission, CLI authentication and all hook reads and writes. Expiration
+cancels this attempt's wait or work and retains a setup failure and retry time.
+It does not cancel an unrelated request that already owns the shared provider;
+API polling continues under its existing request and cancellation rules.
 A changed callback or signing secret is reconciled on the
 next background pass. Missing public gateway configuration and unavailable hook
 permissions remain visible. Reuse the exact callback hook after an uncertain
@@ -136,6 +138,7 @@ flowchart TD
 - [internal/factory/webhooks.go](../../internal/factory/webhooks.go) — Provision registered repositories in the background; retain setup failure and retry independently of polling. (`func (s *Service) ReconcileWebhooks(`)
 - [internal/providers/github_webhooks.go](../../internal/providers/github_webhooks.go) — Reconcile exact callback hooks with live pagination and signed JSON subscriptions. (`func (g *GitHub) EnsureRepositoryWebhook(`)
 - [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Expose sanitized setup status in the background-prepared Configuration projection. (`func factoryState(`)
+- [internal/providers/github_gate.go](../../internal/providers/github_gate.go) — Cancel the current caller’s admission wait without acquiring or releasing another request’s shared transport/accounting ownership. (`func (g *githubGate) Lock(`)
 
 ## Test references
 
@@ -173,6 +176,9 @@ flowchart TD
 - [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `configuration shows webhook failures and API polling fallback without launching work`; S6. Configuration renders pending, configured and polling fallback with a failure and next check time without launching work or synchronization.
 - [internal/factory/webhooks_test.go](../../internal/factory/webhooks_test.go) — `func TestConfirmedRepositoryRegistrationAutomaticallyProvisionsWebhook(`; S6. Confirming a repository registration while the ordinary service loop runs creates its webhook automatically without a native turn.
 - [internal/factory/webhooks_test.go](../../internal/factory/webhooks_test.go) — `func TestWebhookSetupTimeoutReleasesProviderForPolling(`; S6. A stalled authentication attempt expires while holding the shared provider; ordinary real PR/CI API refresh then updates title, state, head and successful checks without daemon cancellation. Sanitized failure and a fifteen-minute retry deadline survive the child timeout and prevent immediate repeats.
+- [internal/factory/webhooks_test.go](../../internal/factory/webhooks_test.go) — `func TestWebhookSetupTimeoutWhilePollingOwnsProvider(`; S6. An ordinary polling authentication owner remains blocked while setup expires and persists sanitized failure plus fifteen-minute retry; no new auth, HTTP or budget charge occurs before the owner is released. After release, real PR/CI refresh succeeds without daemon cancellation.
+- [internal/providers/github_admission_test.go](../../internal/providers/github_admission_test.go) — `func TestWebhookAdmissionCancelsBehindManagedHTTP(`; S6. After a live authentication latch proves dispatch admission, setup and publication waits cancel before the unrelated managed HTTP owner is released; canceled waiters neither dispatch nor charge, and later requests preserve serialization and exact durable accounting.
+- [internal/providers/github_admission_test.go](../../internal/providers/github_admission_test.go) — `func TestExpiredGitHubAdmissionDoesNoWork(`; S6. Already-canceled and expired requests return BeforeDispatch without authentication, HTTP or budget charge; a subsequent live zero-value gate request succeeds.
 
 ## Verification and gaps
 

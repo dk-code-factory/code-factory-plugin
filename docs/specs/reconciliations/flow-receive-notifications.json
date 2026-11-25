@@ -2,14 +2,14 @@
   "version": 1,
   "flow": "flow-receive-notifications",
   "base": "366cbb35d03540dd954c2aa8069d84c7eda4e7ba",
-  "fingerprint": "b376300e8acbb5191b06f8279ee6f4c10360e0492034ea1f990982f794f706ba",
+  "fingerprint": "660ba4cbdef6bef94814ecef6825d9d90d6f0daeaea4483460991a648b20a2ba",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "refactor",
     "description": "Reviewed unchanged Subscribe to host notifications and manage delivery scenarios S1, S2, S3, S4 against main and current mappings. New registration setup belongs to configure-work S6; this contract keeps its authored behavior and existing gaps. Re-evaluated both rebased snapshots against main366cbb35, including unchanged authored scenarios and old/new source/assertion mappings; the target credential-redaction change is retained, not reverted.",
-    "implementation": "Existing Work subscription delivery and metadata-only inbox notifications are untouched; webhook provisioning status is separate from subscription payloads.",
+    "implementation": "Existing Work subscription delivery and metadata-only inbox notifications are untouched; webhook provisioning status is separate from subscription payloads. Reviewed the current shared transport delta against both main366 and the prior c124 source: dispatch and managed-accounting ownership remain serialized, with caller-context admission and no added request deadline or Store change. Indirect unchanged flow contracts and existing acceptance gaps retain their meanings.",
     "tests": "Existing signed webhook subscription tests continue to assert durable source changes and metadata-only notification; no new external notification coverage is claimed."
   },
   "verification": [
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 81.118
+      "seconds": 78.574
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.226
+      "seconds": 1.184
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 645.272
+      "seconds": 653.371
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 416.054
+      "seconds": 426.657
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.698
+      "seconds": 4.677
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.224
+      "seconds": 61.243
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "3a39c562e92b88d2ef7f4825502bf7896fe8216b0a43c7d8787157eded1e396e",
+    "flow:receive-notifications": "71cb8ac11d46fad2303c8db03f9e0596e0150ce2924345dc4b63ecae2c53fb06",
     "term:attention-request": "4c7d7cb37fc9519d236979855f5a28d9b2bb63231973d556eecb5384aca955d8",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:host": "7485127d9f66ced31cf4a8f4cd75f62757c0198b26a41bf13361f0cdbd9bacd7",
