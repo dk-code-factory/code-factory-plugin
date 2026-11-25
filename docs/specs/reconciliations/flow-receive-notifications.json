@@ -2,15 +2,15 @@
   "version": 1,
   "flow": "flow-receive-notifications",
   "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
-  "fingerprint": "63d9c8fa2134fdd32f58db92ee0706965405cdd05b7e01de6657e049b52410ca",
+  "fingerprint": "de61a1c887cc42bab450f5777e3a5d2070e4b8baa6da5eb061246b7d9ab4f430",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
     "description": "Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications.",
-    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged. Test fixture changes only allow a bounded longer readiness wait for the large body search and add pending-to-ready controlled verification; production behavior and independent success-latency/cancellation gates are unchanged.",
-    "tests": "TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications verifies supported notification identity and private-content exclusion; communicate emits only sessionId in attention metadata. Real-host callback and soak gaps remain open. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made. The fixture helper retains5s default; only the large search and controlled6s preparation regression request30s. Existing scenario assertions remain intact, with full fresh consumer verification required."
+    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Subscription signatures, callback retries and notification deduplication are unchanged; this fix registers no new notifications. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged. Test fixture changes only allow a bounded longer readiness wait for the large body search and add pending-to-ready controlled verification; production behavior and independent success-latency/cancellation gates are unchanged. The additional nested path syntax and option-value parsing correction remains inside this same native configuration privacy boundary; no implementation of this consumer changed.",
+    "tests": "TestPRMonitoringAndSessionQuestionsUseMetadataOnlyNotifications verifies supported notification identity and private-content exclusion; communicate emits only sessionId in attention metadata. Real-host callback and soak gaps remain open. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made. The fixture helper retains5s default; only the large search and controlled6s preparation regression request30s. Existing scenario assertions remain intact, with full fresh consumer verification required. Its existing scenario assertions are untouched by the new correction; the additional native argument and URL cases exercise configuration only. Full mapped consumer suites are rerun by reconciliation."
   },
   "verification": [
     {
@@ -22,7 +22,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 77.099
+      "seconds": 122.261
     },
     {
       "command": [
@@ -30,7 +30,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.207
+      "seconds": 1.431
     },
     {
       "command": [
@@ -44,7 +44,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 643.258
+      "seconds": 678.37
     },
     {
       "command": [
@@ -52,7 +52,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 418.5
+      "seconds": 451.018
     },
     {
       "command": [
@@ -60,7 +60,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.9
+      "seconds": 4.673
     },
     {
       "command": [
@@ -69,11 +69,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 60.456
+      "seconds": 62.24
     }
   ],
   "dependencies": {
-    "flow:receive-notifications": "54b1a4203f414983dd4d6d7208b82e79de46a4d0b17bce3b614516402a3ea966",
+    "flow:receive-notifications": "9c3d55ccad77060dff5f628c912a454b2a734e896b34b5729ffd4565acba319a",
     "term:attention-request": "4c7d7cb37fc9519d236979855f5a28d9b2bb63231973d556eecb5384aca955d8",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:host": "7485127d9f66ced31cf4a8f4cd75f62757c0198b26a41bf13361f0cdbd9bacd7",

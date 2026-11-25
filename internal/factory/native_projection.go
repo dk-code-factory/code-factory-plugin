@@ -132,14 +132,22 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 				}
 				if !private && !named && k == "args" {
 					if args, ok := child.([]any); ok {
-						previous := ""
+						privateNext := false
 						for _, entry := range args {
 							text, _ := entry.(string)
-							collect(entry, privateNativeKey(strings.TrimLeft(previous, "-")), false)
-							if flag, val, ok := strings.Cut(text, "="); ok && privateNativeKey(strings.TrimLeft(flag, "-")) {
-								collect(val, true, false)
+							collect(entry, privateNext, false)
+							if privateNext {
+								privateNext = false
+								continue
 							}
-							previous = text
+							flag, val, inline := strings.Cut(text, "=")
+							if strings.HasPrefix(flag, "-") && privateNativeKey(strings.TrimLeft(flag, "-")) {
+								if inline {
+									collect(val, true, false)
+								} else {
+									privateNext = true
+								}
+							}
 						}
 						continue
 					}
@@ -168,14 +176,19 @@ func newNativeRedactor(data json.RawMessage) nativeRedactor {
 // suppress a valid credential in another component or its copied values.
 func nativeURLSecrets(raw string) []string {
 	var secrets []string
-	pending, seen := []string{raw}, map[string]bool{}
+	type urlCandidate struct {
+		value  string
+		nested bool
+	}
+	pending, seen := []urlCandidate{{value: raw}}, map[urlCandidate]bool{}
 	for len(pending) > 0 {
-		candidate := pending[len(pending)-1]
+		entry := pending[len(pending)-1]
 		pending = pending[:len(pending)-1]
-		if seen[candidate] {
+		if seen[entry] {
 			continue
 		}
-		seen[candidate] = true
+		seen[entry] = true
+		candidate := entry.value
 		// Discover encoded schemes in every component, even beside readable
 		// schemes. Revisit only newly decoded schemes: decoding an existing
 		// URL's escaped parameter delimiters would invent shorter credentials.
@@ -187,16 +200,37 @@ func nativeURLSecrets(raw string) []string {
 			for _, start := range nativeURLStart.FindAllStringIndex(decoded, -1) {
 				index := sort.SearchInts(positions, start[0])
 				if index < len(positions) && positions[index] < start[1] {
-					pending = append(pending, decoded[start[0]:])
+					pending = append(pending, urlCandidate{decoded[start[0]:], entry.nested || nativeURLStart.MatchString(decoded[:start[0]])})
 				}
 			}
 			encoded = decoded
 		}
 		for _, start := range nativeURLStart.FindAllStringIndex(candidate, -1) {
+			nested := entry.nested || nativeURLStart.MatchString(candidate[:start[0]])
 			_, rest, _ := strings.Cut(candidate[start[0]:], "://")
 			beforeFragment, fragment, _ := strings.Cut(rest, "#")
 			beforeQuery, query, _ := strings.Cut(beforeFragment, "?")
-			authority, _, _ := strings.Cut(beforeQuery, "/")
+			authority, path, hasPath := strings.Cut(beforeQuery, "/")
+			// A nested path URL may encode only its query/fragment syntax.
+			// Decode its path until that syntax appears, preserving authority
+			// escapes, existing parameter values and any deeper readable URL.
+			if hasPath && nested {
+				suffix := ""
+				if next := nativeURLStart.FindStringIndex(path); next != nil {
+					path, suffix = path[:next[0]], path[next[0]:]
+				}
+				for encoded := path; ; {
+					decoded := nativeURLPercentDecode(encoded)
+					if decoded == encoded {
+						break
+					}
+					if strings.ContainsAny(decoded, "?#") {
+						pending = append(pending, urlCandidate{candidate[start[0]:start[1]] + authority + "/" + decoded + suffix, true})
+						break
+					}
+					encoded = decoded
+				}
+			}
 			// A readable scheme can still introduce an encoded authority,
 			// including inside another URL's path. Decode that component until
 			// its userinfo delimiter is visible. Once @ is readable, retain the
@@ -205,7 +239,7 @@ func nativeURLSecrets(raw string) []string {
 			// create shorter credential prefixes.
 			if !strings.Contains(authority, "@") {
 				if decoded := nativeURLPercentDecode(authority); decoded != authority {
-					pending = append(pending, candidate[start[0]:start[1]]+decoded)
+					pending = append(pending, urlCandidate{candidate[start[0]:start[1]] + decoded, nested})
 				}
 			}
 			if at := strings.LastIndexByte(authority, '@'); at >= 0 {
@@ -228,7 +262,7 @@ func nativeURLSecrets(raw string) []string {
 				for _, pair := range strings.FieldsFunc(parameters, func(r rune) bool { return r == '&' || r == ';' }) {
 					_, value, _ := strings.Cut(pair, "=")
 					if decoded := nativeURLPercentDecode(strings.ReplaceAll(value, "+", " ")); decoded != value {
-						pending = append(pending, decoded)
+						pending = append(pending, urlCandidate{decoded, true})
 					}
 				}
 			}

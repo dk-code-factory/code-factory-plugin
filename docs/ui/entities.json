@@ -1460,7 +1460,8 @@
         "NATIVE-CONFIG-SELECTORS",
         "NATIVE-CONFIG-NAMED-ENTRIES",
         "NATIVE-CONFIG-PUBLIC-URL",
-        "NATIVE-CONFIG-URL-PARAMETERS"
+        "NATIVE-CONFIG-URL-PARAMETERS",
+        "NATIVE-CONFIG-ARGUMENT-VALUES"
       ],
       "gaps": [],
       "suites": [
@@ -1531,7 +1532,8 @@
         "NATIVE-CONFIG-SELECTORS",
         "NATIVE-CONFIG-NAMED-ENTRIES",
         "NATIVE-CONFIG-PUBLIC-URL",
-        "NATIVE-CONFIG-URL-PARAMETERS"
+        "NATIVE-CONFIG-URL-PARAMETERS",
+        "NATIVE-CONFIG-ARGUMENT-VALUES"
       ],
       "gaps": [],
       "suites": [
@@ -1616,7 +1618,8 @@
         "NATIVE-CONFIG-SELECTORS",
         "NATIVE-CONFIG-NAMED-ENTRIES",
         "NATIVE-CONFIG-PUBLIC-URL",
-        "NATIVE-CONFIG-URL-PARAMETERS"
+        "NATIVE-CONFIG-URL-PARAMETERS",
+        "NATIVE-CONFIG-ARGUMENT-VALUES"
       ],
       "gaps": [],
       "suites": [
@@ -6295,7 +6298,7 @@
       "id": "NATIVE-CONFIG-LEGACY-REDACTION",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeLegacyProposalMigrationPreservesStaleness(",
-      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history, copied first/later URL credentials with internal whitespace, nested URL passwords, encoded nested-path and mixed-scheme credential copies, and usernames with empty passwords; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, credential, encoded-copy and URL-placeholder pending edits stale without writes, and repeated migration is idempotent."
+      "assertion": "Startup sanitizes legacy proposal entities and more than one page of journal copies, including orphaned history, copied first/later URL credentials with internal whitespace, nested URL passwords, encoded nested-path query/fragment and mixed-scheme credential copies, and usernames with empty passwords; failure rolls back all journal updates, identities/states/unrelated events remain unchanged, credential, encoded-copy and URL-placeholder pending edits stale without writes, and repeated migration is idempotent."
     },
     {
       "id": "NATIVE-CONFIG-SELECTORS",
@@ -6313,13 +6316,13 @@
       "id": "NATIVE-CONFIG-PUBLIC-URL",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeNonsecretURLsRemainEditable(",
-      "assertion": "Sixteen noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, raw/encoded/double-encoded or deeply nested public URL parameters, raw/encoded nested paths, encoded nested URLs beside readable public schemes and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
+      "assertion": "Noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, raw/encoded/double-encoded or deeply nested public URL parameters, raw/encoded nested paths, encoded nested URLs beside readable public schemes and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation."
     },
     {
       "id": "NATIVE-CONFIG-URL-PARAMETERS",
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeURLParameterBoundariesRejectCredentials(",
-      "assertion": "Sixty-four isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined values protect first/later credentials; nested raw, encoded and double-encoded URL credentials in paths and parameters remain private beside readable public schemes and despite malformed escapes in another component. Escaped query/fragment delimiters retain the full credential boundary without treating an ordinary prefix as a secret. Usernames with explicit empty passwords and their encoded copies remain protected. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved."
+      "assertion": "Isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined values protect first/later credentials; nested raw, encoded and double-encoded URL credentials in paths and parameters remain private beside readable public schemes and despite malformed escapes in another component. Escaped query/fragment delimiters retain the full credential boundary without treating an ordinary prefix as a secret. Usernames with explicit empty passwords and their encoded copies remain protected. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved. Nested path URLs with encoded query or fragment syntax protect copied credentials while preserving complete escaped credential values and unrelated prefixes."
     },
     {
       "id": "GO-SCAN-WAIT",
@@ -6338,6 +6341,12 @@
       "path": "internal/transport/operations_retry_test.go",
       "anchor": "func TestScanAliasAdmissionIsBoundedAndReleased(",
       "assertion": "Scan aliases obey identity and byte admission bounds; rejected IDs retain nothing, exact accepted duplicates retain their original result and completion releases active scan admission."
+    },
+    {
+      "id": "NATIVE-CONFIG-ARGUMENT-VALUES",
+      "path": "internal/factory/native_projection_test.go",
+      "anchor": "func TestNativeInlineCredentialArgumentPreservesFollowingValues(",
+      "assertion": "Inline and separated credential options redact their actual values and copies without tainting a following ordinary model value; an empty inline option also preserves that value, and a confirmed ordinary model edit applies exactly once."
     }
   ],
   "source_map": [

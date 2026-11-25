@@ -43,6 +43,10 @@ func nativeCredentialFixture(file string) map[string]any {
 		"encoded_path_copy":          "fixture-encoded-path-credential",
 		"partial_path_url":           "https://proxy.test/path/https://user%3Afixture-partial-path-credential%40example.test%2Fmcp",
 		"partial_path_copy":          "fixture-partial-path-credential",
+		"nested_path_query_url":      "https://proxy.test/path/https://inner.test/mcp%3Ftoken=fixture-path-query-credential",
+		"nested_path_query_copy":     "fixture-path-query-credential",
+		"nested_path_fragment_url":   "https://proxy.test/path/https://inner.test/mcp%23access_token=fixture-path-fragment-credential",
+		"nested_path_fragment_copy":  "fixture-path-fragment-credential",
 		"encoded_mixed_url":          "https://proxy.test/?next=https%253A%252F%252Fuser%253Afixture-encoded-mixed-credential%2540example.test%252Fmcp%253Fnext%253Dhttps://public.test/mcp",
 		"encoded_mixed_copy":         "fixture-encoded-mixed-credential",
 		"empty_password_url":         "https://fixture-username-credential:@example.test/mcp",
@@ -66,6 +70,11 @@ func assertNativeCredentialsHidden(t *testing.T, value any) {
 	for _, private := range []string{"fixture-env-credential", "fixture-header-credential", "fixture-custom-header-credential", "fixture-opaque-header-credential", "fixture-argument-credential", "fixture-url-password", "fixture-query-credential", "fixture-fragment", "fixture-password-credential", "fixture-token-credential", "fixture-access-credential", "ghp_fixturePatternCredential", "sk-fixtureOpaquePatternCredential", "fixture-malformed-query-credential", "fixture-encoded-fragment-credential", "fixture-quoted-url-credential", "fixture-unparseable-url-credential", "fixture-separator-url-credential", "whitespace-credential", "fixture-first-multi-credential", "second-multi-credential", "fixture-nested-credential", "fixture-username-credential", "fixture-encoded-path-credential", "fixture-encoded-mixed-credential", "fixture-partial-path-credential"} {
 		if strings.Contains(data, private) {
 			t.Fatal("native credential escaped its projection")
+		}
+	}
+	for _, private := range []string{"fixture-path-query-credential", "fixture-path-fragment-credential"} {
+		if strings.Contains(data, private) {
+			t.Fatal("nested path credential escaped its projection")
 		}
 	}
 	if !strings.Contains(data, "[redacted]") {
@@ -161,6 +170,9 @@ func TestNativeNonsecretURLsRemainEditable(t *testing.T) {
 		"https://proxy.test/path/https://public.test/mcp%252Fpublic",
 		"https://proxy.test/path/https://public.test/mcp?label=ordinary%26tail",
 		"https://proxy.test/?next=https%253A%252F%252Fpublic.test%252Fmcp%253Fnext%253Dhttps://public.test/mcp",
+		"https://proxy.test/path/https://public.test/mcp%3Fmode%3Dread-only",
+		"https://example.test/path%3Ftoken%3Dpublic-path-name",
+		"https://proxy.test/path/https%3A%2F%2Fpublic.test%2Fmcp%253Fmode%253Dread-only",
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			s, rpc, _ := fixture(t)
@@ -271,6 +283,14 @@ func TestNativeURLParameterBoundariesRejectCredentials(t *testing.T) {
 		{"fragment-escaped-tail", "https://example.test/mcp#access_token=opaque%26tail", "opaque&tail", "opaque%26tail", "opaque&tail"},
 		{"nested-encoded-path-escaped-password", "https://proxy.test/path/https%3A%2F%2Fuser%3Aopaque%252Btail%40example.test%2Fmcp", "opaque+tail", "opaque%2Btail", "opaque+tail"},
 		{"nested-double-encoded-path-escaped-password", "https://proxy.test/path/https%253A%252F%252Fuser%253Aopaque%25252Btail%2540example.test%252Fmcp", "opaque+tail", "opaque%252Btail", "opaque+tail"},
+		{"nested-path-encoded-query", "https://proxy.test/path/https://inner.test/mcp%3Ftoken=opaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-path-encoded-fragment", "https://proxy.test/path/https://inner.test/mcp%23access_token=opaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-path-double-encoded-query", "https://proxy.test/path/https://inner.test/mcp%253Ftoken%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-path-query-escaped-tail", "https://proxy.test/path/https://inner.test/mcp%3Ftoken%3Dopaque%2526tail", "opaque&tail", "opaque%26tail", "opaque&tail"},
+		{"nested-path-fragment-escaped-tail", "https://proxy.test/path/https://inner.test/mcp%23access_token%3Dopaque%2526tail", "opaque&tail", "opaque%26tail", "opaque&tail"},
+		{"nested-path-encoded-query-invalid", "https://proxy.test/bad%zz/https://inner.test/mcp%3Ftoken=opaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-encoded-scheme-path-query", "https://proxy.test/path/https%3A%2F%2Finner.test%2Fmcp%253Ftoken%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
+		{"nested-parameter-encoded-path-query", "https://proxy.test/?next=https%3A%2F%2Finner.test%2Fmcp%253Ftoken%253Dopaque-native-value", "opaque-native-value", "opaque-native-value", "opaque-native-value"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s, rpc, _ := fixture(t)
@@ -335,6 +355,38 @@ func TestNativeURLParameterBoundariesRejectCredentials(t *testing.T) {
 				t.Fatal("URL edit persisted or native configuration was written")
 			}
 		})
+	}
+}
+
+func TestNativeInlineCredentialArgumentPreservesFollowingValues(t *testing.T) {
+	for _, args := range [][]any{
+		{"--api-key=fixture-inline-credential", "fixture-model"},
+		{"--api-key=", "fixture-model"},
+		{"--api-key", "fixture-inline-credential", "fixture-model"},
+	} {
+		s, rpc, _ := fixture(t)
+		ctx := context.Background()
+		file := filepath.Join(s.Dir, "config.toml")
+		config := map[string]any{"model": "fixture-model", "mcp_servers": map[string]any{"fixture": map[string]any{"args": args}}, "ordinary_copy": "fixture-inline-credential"}
+		rpc.native = map[string]any{"config": config, "layers": []any{map[string]any{"name": map[string]any{"type": "user", "file": file}, "version": "v1", "config": config}}}
+		view, err := s.NativeConfig(ctx, s.Dir)
+		must(t, err)
+		var projected struct{ Config map[string]any }
+		must(t, json.Unmarshal(view, &projected))
+		if projected.Config["model"] != "fixture-model" {
+			t.Fatal("credential argument hid an unrelated model value")
+		}
+		if args[0] != "--api-key=" && strings.Contains(string(view), "fixture-inline-credential") {
+			t.Fatal("credential argument or its copy escaped redaction")
+		}
+		edit := ConfigEdit{KeyPath: "model", Value: "fixture-model", MergeStrategy: "replace"}
+		p, err := s.Propose(ctx, nil, &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Edits: []ConfigEdit{edit}})
+		must(t, err)
+		p, err = s.Confirm(ctx, p.ID, true)
+		must(t, err)
+		if p.State != "applied" || len(rpc.writes) != 1 {
+			t.Fatal("ordinary model edit did not apply exactly once")
+		}
 	}
 }
 
@@ -472,7 +524,7 @@ func TestNativeCredentialEditsAreRejectedWithoutPersistence(t *testing.T) {
 }
 
 func TestNativeLegacyProposalMigrationPreservesStaleness(t *testing.T) {
-	for _, kind := range []string{"ordinary-edit", "credential-edit", "url-placeholder", "encoded-path-copy", "encoded-mixed-copy", "partial-path-copy"} {
+	for _, kind := range []string{"ordinary-edit", "credential-edit", "url-placeholder", "encoded-path-copy", "encoded-mixed-copy", "partial-path-copy", "encoded-query-copy", "encoded-fragment-copy"} {
 		t.Run(kind, func(t *testing.T) {
 			s, rpc, _ := fixture(t)
 			ctx := context.Background()
@@ -491,6 +543,10 @@ func TestNativeLegacyProposalMigrationPreservesStaleness(t *testing.T) {
 				edits = []ConfigEdit{{KeyPath: "ordinary_copy", Value: "fixture-encoded-mixed-credential", MergeStrategy: "replace"}}
 			} else if kind == "url-placeholder" {
 				edits = []ConfigEdit{{KeyPath: "mcp_servers.fixture.url", Value: "[redacted URL]", MergeStrategy: "replace"}}
+			} else if kind == "encoded-query-copy" {
+				edits = []ConfigEdit{{KeyPath: "ordinary_copy", Value: "fixture-path-query-credential", MergeStrategy: "replace"}}
+			} else if kind == "encoded-fragment-copy" {
+				edits = []ConfigEdit{{KeyPath: "ordinary_copy", Value: "fixture-path-fragment-credential", MergeStrategy: "replace"}}
 			}
 			p := Proposal{ID: "legacy-native", State: "proposed", Base: digest(settings), Before: settings, After: settings,
 				Native: &NativeEdit{CWD: s.Dir, File: file, Version: "v1", Before: bytes(rpc.native), Edits: edits},
