@@ -722,7 +722,8 @@
         "S2",
         "S3",
         "S4",
-        "S5"
+        "S5",
+        "S6"
       ],
       "implementation": [
         {
@@ -767,6 +768,26 @@
           "path": "internal/store/proposal_migration.go",
           "anchor": "func (s *Store) RedactNativeProposalEvents(",
           "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
+        },
+        {
+          "path": "internal/factory/webhooks.go",
+          "anchor": "func (s *Service) ReconcileWebhooks(",
+          "purpose": "Provision registered repositories in the background; retain setup failure and retry independently of polling."
+        },
+        {
+          "path": "internal/providers/github_webhooks.go",
+          "anchor": "func (g *GitHub) EnsureRepositoryWebhook(",
+          "purpose": "Reconcile exact callback hooks with live pagination and signed JSON subscriptions."
+        },
+        {
+          "path": "internal/transport/factory_projection.go",
+          "anchor": "func factoryState(",
+          "purpose": "Expose sanitized setup status in the background-prepared Configuration projection."
+        },
+        {
+          "path": "internal/providers/github_gate.go",
+          "anchor": "func (g *githubGate) Lock(",
+          "purpose": "Cancel the current caller’s admission wait without acquiring or releasing another request’s shared transport/accounting ownership."
         }
       ],
       "tests": [
@@ -1007,13 +1028,112 @@
             "S5"
           ],
           "purpose": "Inline and separated credential options redact their actual values and copies without tainting a following ordinary model value; an empty inline option also preserves that value, and a confirmed ordinary model edit applies exactly once."
+        },
+        {
+          "path": "internal/factory/webhooks_test.go",
+          "anchor": "func TestWebhookRegistrationFailureRetainsPollingAndRetries(",
+          "purpose": "A denied setup retains a private sanitized failure and retry time; actual API sync still imports, restart retries successfully and repeated reconciliation skips until due.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/factory/webhooks_test.go",
+          "anchor": "func TestWebhookMissingGatewayAndUnsafeSecretFallBack(",
+          "purpose": "Missing gateway and unsafe secret retain polling fallback; existing unsafe bytes are preserved and symlink secrets are refused.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/providers/github_webhooks_test.go",
+          "anchor": "func TestEnsureRepositoryWebhookRecoversLostCreateResponse(",
+          "purpose": "A committed create with a lost response is found by live listing and updated on retry, with exactly one POST.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/providers/github_webhooks_test.go",
+          "anchor": "func TestEnsureRepositoryWebhookReusesPaginatedCallback(",
+          "purpose": "The exact callback on page two is updated with signed JSON and nine event subscriptions; unrelated hooks and additional event subscriptions are preserved.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/transport/webhooks_test.go",
+          "anchor": "func TestConfigurationWebhookProjectionRefreshesWithoutSecrets(",
+          "purpose": "Webhook status changes invalidate prepared Configuration data; internal fingerprints and hook IDs are omitted and other views receive no webhook diagnostics.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "web/tests/wrapper.spec.ts",
+          "anchor": "configuration shows webhook failures and API polling fallback without launching work",
+          "purpose": "Configuration renders pending, configured and polling fallback with a failure and next check time without launching work or synchronization.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/factory/webhooks_test.go",
+          "anchor": "func TestConfirmedRepositoryRegistrationAutomaticallyProvisionsWebhook(",
+          "purpose": "Confirming a repository registration while the ordinary service loop runs creates its webhook automatically without a native turn.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/factory/webhooks_test.go",
+          "anchor": "func TestWebhookSetupTimeoutReleasesProviderForPolling(",
+          "purpose": "A stalled authentication attempt expires while holding the shared provider; ordinary real PR/CI API refresh then updates title, state, head and successful checks without daemon cancellation. Sanitized failure and a fifteen-minute retry deadline survive the child timeout and prevent immediate repeats.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/factory/webhooks_test.go",
+          "anchor": "func TestWebhookSetupTimeoutWhilePollingOwnsProvider(",
+          "purpose": "An ordinary polling authentication owner remains blocked while setup expires and persists sanitized failure plus fifteen-minute retry; no new auth, HTTP or budget charge occurs before the owner is released. After release, real PR/CI refresh succeeds without daemon cancellation.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/providers/github_admission_test.go",
+          "anchor": "func TestWebhookAdmissionCancelsBehindManagedHTTP(",
+          "purpose": "After a live authentication latch proves dispatch admission, setup and publication waits cancel before the unrelated managed HTTP owner is released; canceled waiters neither dispatch nor charge, and later requests preserve serialization and exact durable accounting.",
+          "scenarios": [
+            "S6"
+          ]
+        },
+        {
+          "path": "internal/providers/github_admission_test.go",
+          "anchor": "func TestExpiredGitHubAdmissionDoesNoWork(",
+          "purpose": "Already-canceled and expired requests return BeforeDispatch without authentication, HTTP or budget charge; a subsequent live zero-value gate request succeeds.",
+          "scenarios": [
+            "S6"
+          ]
         }
       ],
       "suites": [
         "go",
         "browser"
       ],
-      "gaps": [],
+      "gaps": [
+        {
+          "version": 1,
+          "id": "gap-flow-configure-work-webhook-delivery",
+          "scenario": "S6",
+          "kind": "unverified-behavior",
+          "severity": "P2",
+          "owner": "specification-coordinator",
+          "reason": "Fixture tests establish automatic provisioning, safe retry and API fallback, but do not establish actual repository webhook delivery through an installed public gateway.",
+          "next_verification": "In an explicitly approved private test repository, register through the installed plugin, verify signed public delivery and observe permission-denied API fallback without exposing credentials."
+        }
+      ],
       "ui": [
         "PAGE-SETTINGS",
         "W-CONFIGURATION-CHAT",
@@ -1065,6 +1185,21 @@
           {
             "id": "done",
             "label": "Retain conversation and saved evidence",
+            "terminal": true
+          },
+          {
+            "id": "webhook_setup",
+            "label": "Register an active repository and configure signed event delivery",
+            "scenario": "S6"
+          },
+          {
+            "id": "webhook_ready",
+            "label": "Show configured webhook; continue API polling",
+            "terminal": true
+          },
+          {
+            "id": "webhook_fallback",
+            "label": "Retain setup failure and retry time; continue API polling and retry in background",
             "terminal": true
           }
         ],
@@ -1123,6 +1258,21 @@
             "from": "s5",
             "to": "wait",
             "label": "missing authority, stale identity or unavailable dependency"
+          },
+          {
+            "from": "s5",
+            "to": "webhook_setup",
+            "label": "Repository registration applied"
+          },
+          {
+            "from": "webhook_setup",
+            "to": "webhook_ready",
+            "label": "GitHub accepts configuration"
+          },
+          {
+            "from": "webhook_setup",
+            "to": "webhook_fallback",
+            "label": "Missing gateway, permissions or provider failure"
           }
         ]
       }

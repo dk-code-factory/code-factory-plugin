@@ -44,11 +44,11 @@ func (e *RateLimitError) Error() string {
 }
 
 type GitHub struct {
-	dispatch    sync.Mutex
+	dispatch    githubGate
 	tick        uint64
 	cooldowns   map[string]time.Time
 	Now         func() time.Time
-	requestMu   sync.Mutex
+	requestMu   githubGate
 	usageStore  *store.Store
 	usageMemory *githubUsage
 	policy      func(context.Context) (GitHubPolicy, error)
@@ -127,7 +127,9 @@ func (g *GitHub) getOne(ctx context.Context, path string, out any) (http.Header,
 	}
 	ctx = g.Operation(ctx, nil, false)
 	op := ctx.Value(operationKey{}).(*operation)
-	g.dispatch.Lock()
+	if e = g.dispatch.Lock(ctx); e != nil {
+		return nil, e
+	}
 	e = g.resolve(ctx, op)
 	token := op.token
 	g.dispatch.Unlock()

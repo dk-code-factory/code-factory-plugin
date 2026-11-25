@@ -73,6 +73,12 @@ type State = {
   questionOffset?: number;
   questionLimit?: number;
   proposals?: Proposal[];
+  webhooks?: {
+    repository: string;
+    state: string;
+    error?: string;
+    retryAt?: string;
+  }[];
   settings?: Record<string, unknown>;
 };
 type Communication = {
@@ -1136,6 +1142,29 @@ function Factory() {
           </form>
           {tab === "Configuration" && stateKey === requestKey && (
             <>
+              {!!state.webhooks?.length && (
+                <section aria-label="Repository webhooks">
+                  <h3>Repository webhooks</h3>
+                  <p>API polling continues for all active repositories.</p>
+                  {state.webhooks.map((hook) => (
+                    <p key={hook.repository}>
+                      <strong>{hook.repository}</strong>:{" "}
+                      {hook.state === "configured"
+                        ? "Webhook configured"
+                        : hook.state === "polling"
+                          ? "API polling fallback"
+                          : "Webhook setup pending"}
+                      {hook.error && <> — {hook.error}</>}
+                      {hook.retryAt && (
+                        <>
+                          {" "}
+                          Next check: {new Date(hook.retryAt).toLocaleString()}.
+                        </>
+                      )}
+                    </p>
+                  ))}
+                </section>
+              )}
               <h3>Proposed changes</h3>
               {!state.proposals?.length && <p>No configuration proposals.</p>}
               {state.proposals?.map((p) => (

@@ -264,16 +264,7 @@ func run() error {
 	mux := http.NewServeMux()
 	mux.Handle("/mcp", server.Handler(token))
 	mux.Handle("/github/webhook", factoryService.Webhook(func(context.Context) (string, error) {
-		path := filepath.Join(*dir, "github-webhook-secret")
-		info, err := os.Stat(path)
-		if err != nil {
-			return "", err
-		}
-		if info.Mode().Perm()&0077 != 0 {
-			return "", fmt.Errorf("webhook secret must be owner-only")
-		}
-		b, err := os.ReadFile(path)
-		return strings.TrimSpace(string(b)), err
+		return factory.ReadWebhookSecret(*dir)
 	}))
 	mux.Handle("/healthz", server.LogAPI("owner", token, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+token {

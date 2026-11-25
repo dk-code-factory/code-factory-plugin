@@ -83,7 +83,9 @@ func SavedGitHubUsage(ctx context.Context, s *store.Store, budget int, reserve *
 // All managed transports, including mutation-capable Request callers, hold the
 // same lock through reservation, HTTP response and durable observations.
 func (g *GitHub) lockUsage(ctx context.Context) (func(), error) {
-	g.requestMu.Lock()
+	if err := g.requestMu.Lock(ctx); err != nil {
+		return nil, err
+	}
 	if g.usageStore == nil {
 		return g.requestMu.Unlock, nil
 	}
@@ -394,7 +396,9 @@ func rateBody(body []byte) bool {
 // UsageStatus is cached local accounting, never a call to /rate_limit.
 func (g *GitHub) UsageStatus(ctx context.Context) (GitHubUsage, error) {
 	if g.usageStore == nil {
-		g.requestMu.Lock()
+		if err := g.requestMu.Lock(ctx); err != nil {
+			return GitHubUsage{}, err
+		}
 		defer g.requestMu.Unlock()
 	}
 	p := GitHubPolicy{RequestsPerHour: 2000, Reserve: 100}

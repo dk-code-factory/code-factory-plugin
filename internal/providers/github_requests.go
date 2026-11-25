@@ -95,7 +95,9 @@ func (g *GitHub) responseCacheKey(ctx context.Context, target, token, accept str
 func (g *GitHub) Scope(ctx context.Context) (string, error) {
 	ctx = g.Operation(ctx, nil, false)
 	op := ctx.Value(operationKey{}).(*operation)
-	g.dispatch.Lock()
+	if err := g.dispatch.Lock(ctx); err != nil {
+		return "", err
+	}
 	defer g.dispatch.Unlock()
 	if err := g.resolve(ctx, op); err != nil {
 		return "", err
@@ -234,7 +236,9 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 	}
 	ctx = g.Operation(ctx, nil, false)
 	op := ctx.Value(operationKey{}).(*operation)
-	g.dispatch.Lock()
+	if err = g.dispatch.Lock(ctx); err != nil {
+		return fail(BeforeDispatch, 0, err)
+	}
 	defer g.dispatch.Unlock()
 	if err = g.resolve(ctx, op); err != nil {
 		return fail(BeforeDispatch, 0, err)
@@ -456,7 +460,9 @@ func (g *GitHub) Request(ctx context.Context, method, endpoint string, input any
 // Index hydration may overlap independent repositories, while retaining the
 // same authentication and cooldown boundary as publication requests.
 func (g *GitHub) indexCooldown(ctx context.Context, token string) error {
-	g.dispatch.Lock()
+	if err := g.dispatch.Lock(ctx); err != nil {
+		return err
+	}
 	defer g.dispatch.Unlock()
 	until := g.cooldowns[CooldownKey(g.BaseURL, token)]
 	if op, _ := ctx.Value(operationKey{}).(*operation); op != nil && op.ledger != nil {
@@ -482,7 +488,9 @@ func (g *GitHub) indexRateLimited(ctx context.Context, token string, h http.Head
 	if !errors.As(err, &rate) {
 		return err
 	}
-	g.dispatch.Lock()
+	if waitErr := g.dispatch.Lock(ctx); waitErr != nil {
+		return waitErr
+	}
 	defer g.dispatch.Unlock()
 	key := CooldownKey(g.BaseURL, token)
 	if g.cooldowns == nil {

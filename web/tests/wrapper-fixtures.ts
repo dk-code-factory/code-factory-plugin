@@ -53,6 +53,12 @@ export function initial() {
     sessions: [] as any[],
     questions: [] as any[],
     proposals: [] as any[],
+    webhooks: [] as {
+      repository: string;
+      state: string;
+      error?: string;
+      retryAt?: string;
+    }[],
     settings: {
       version: 1,
       quietSeconds: 120,

@@ -2985,3 +2985,37 @@ test("throttled PR synchronization shows retained retry state and resumes withou
     complete = true;
   }
 });
+
+test("configuration shows webhook failures and API polling fallback without launching work", async ({
+  page,
+}) => {
+  const state = initial();
+  state.webhooks = [
+    {
+      repository: "o/r",
+      state: "polling",
+      error: "Webhook permission denied; API polling remains active.",
+      retryAt: "2026-11-25T13:00:00Z",
+    },
+    { repository: "o/ready", state: "configured" },
+    { repository: "o/new", state: "pending" },
+  ];
+  const { ui, calls } = await host(page, { state });
+  await ui.getByRole("button", { name: "Configuration", exact: true }).click();
+  const status = ui.getByRole("region", { name: "Repository webhooks" });
+  await expect(status.getByText(/o\/r: API polling fallback/)).toBeVisible();
+  await expect(status.getByText(/Webhook permission denied/)).toBeVisible();
+  await expect(status.getByText(/Next check:/)).toBeVisible();
+  await expect(status.getByText(/o\/ready: Webhook configured/)).toBeVisible();
+  await expect(status.getByText(/o\/new: Webhook setup pending/)).toBeVisible();
+  expect(
+    calls.some((c) =>
+      [
+        "configuration_chat",
+        "session_chat",
+        "confirm_configuration",
+        "sync_repositories",
+      ].includes(c.name),
+    ),
+  ).toBe(false);
+});

@@ -78,7 +78,20 @@ tunnel linking remain available. See [plugin setup](plugin/README.md),
 restart no services. Merge, release and real-host acceptance require their own
 explicit instructions.
 
-To receive GitHub events, provision a private mode-0600 `github-webhook-secret`
-file in the daemon data directory and configure the repository webhook to the
-existing public base plus `/github/webhook`. HMAC validation protects that route;
-the remaining MCP and owner-consent authentication boundaries are preserved.
+Registering an active repository automatically provisions a GitHub webhook in
+background using the existing GitHub CLI authentication. The public gateway in
+`tailscale.json` supplies the callback base (including its path prefix), and the
+daemon creates an owner-only `github-webhook-secret` when absent. An existing
+private secret is reused. GitHub access needs repository Webhooks write permission.
+Only the hook at this installation's exact callback URL is updated; other hooks
+are preserved. Delivery uses signed JSON with TLS verification.
+
+Configuration displays webhook setup status, sanitized failures and the next
+check time. Missing gateway configuration, insufficient permissions or a provider
+failure leave registration intact and API polling active, including PR and CI
+refreshes. Failed setup retries after 15 minutes (or a longer GitHub cooldown);
+configured hooks are reconciled daily. Changed callback or secret retries on the
+next background pass. Setup recovers across daemon restarts and uncertain creates
+by listing current hooks before writing. Configured status confirms configuration,
+not successful public delivery. HMAC validation and existing MCP authentication
+boundaries remain in force.
