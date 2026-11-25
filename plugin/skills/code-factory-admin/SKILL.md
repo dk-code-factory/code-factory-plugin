@@ -33,11 +33,17 @@ agent/skill. Assessments use reusable read-only repository bookkeeping sessions 
 record only against the supplied item revision and policy context. They never post
 GitHub labels.
 
-For webhook setup, configure the repository's GitHub webhook to the existing public
-base URL plus `/github/webhook`, with a secret provisioned in the daemon's private
-mode-0600 `github-webhook-secret` file. The owner supplies credentials outside chat.
-Signatures and delivery IDs are verified before durable acknowledgement. Polling
-reconciles observable changes; initial synchronization establishes a baseline.
+Registering an active repository also provisions its GitHub webhook automatically
+in the background. Explain this effect with the registration proposal. The daemon
+uses the configured public gateway and existing GitHub CLI authentication, creates
+an owner-only signing secret if absent, and updates only the exact callback hook.
+The owner supplies credentials outside chat; repository Webhooks write permission
+is required. Configuration shows pending/configured setup or a sanitized failure
+and next check time. Failed setup keeps registration and API polling active,
+retries after fifteen minutes or a longer provider cooldown, and survives restart.
+Configured hooks are reconciled daily. Configured status does not prove public
+delivery. Signatures and delivery IDs are verified before durable acknowledgement;
+initial synchronization establishes a baseline without historical execution.
 
 ## API version 2
 

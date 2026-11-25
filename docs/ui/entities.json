@@ -1518,6 +1518,21 @@
           "path": "internal/store/proposal_migration.go",
           "anchor": "func (s *Store) RedactNativeProposalEvents(",
           "purpose": "Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history."
+        },
+        {
+          "path": "internal/factory/webhooks.go",
+          "anchor": "func (s *Service) ReconcileWebhooks(",
+          "purpose": "Background provisioning retains per-repository setup outcome and retry deadline without stopping API scans."
+        },
+        {
+          "path": "internal/providers/github_webhooks.go",
+          "anchor": "func (g *GitHub) EnsureRepositoryWebhook(",
+          "purpose": "Live paginated reconciliation creates or updates the exact callback with signed JSON events and preserves unrelated hooks."
+        },
+        {
+          "path": "internal/transport/factory_projection.go",
+          "anchor": "func factoryState(",
+          "purpose": "Prepared Configuration view exposes sanitized webhook health and follows its revision."
         }
       ],
       "assertions": [
@@ -1533,7 +1548,14 @@
         "NATIVE-CONFIG-NAMED-ENTRIES",
         "NATIVE-CONFIG-PUBLIC-URL",
         "NATIVE-CONFIG-URL-PARAMETERS",
-        "NATIVE-CONFIG-ARGUMENT-VALUES"
+        "NATIVE-CONFIG-ARGUMENT-VALUES",
+        "WEBHOOK-SETUP-FALLBACK",
+        "WEBHOOK-SETUP-SECRET",
+        "WEBHOOK-SETUP-RECOVERY",
+        "WEBHOOK-SETUP-PAGINATION",
+        "WEBHOOK-SETUP-PROJECTION",
+        "WRAP-WEBHOOK-SETUP",
+        "WEBHOOK-SETUP-AUTOMATIC"
       ],
       "gaps": [],
       "suites": [
@@ -1541,9 +1563,9 @@
         "go"
       ],
       "context": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
-      "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory.",
+      "composition": "Readable saved application settings and actual native configuration layers for an inspected checkout. Native inspection and proposal snapshots redact credentials; credential edits require owner tooling outside Code Factory. Repository webhook setup shows pending, configured or API polling fallback, a sanitized failure and the next check time. API polling continues for active repositories.",
       "interactions": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
-      "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout. Loading while the requested saved revision is pending; older content is unavailable for dependent actions.",
+      "state_description": "Readable saved application settings and actual native configuration layers for an inspected checkout. Loading while the requested saved revision is pending; older content is unavailable for dependent actions. Webhook setup failure remains visible while background retries run; configured means GitHub accepted the configuration, not proven delivery.",
       "element_description": "Readable saved application settings and actual native configuration layers for an inspected checkout.",
       "purpose": "Readable saved application settings and actual native configuration layers for an inspected checkout."
     },
@@ -6347,6 +6369,48 @@
       "path": "internal/factory/native_projection_test.go",
       "anchor": "func TestNativeInlineCredentialArgumentPreservesFollowingValues(",
       "assertion": "Inline and separated credential options redact their actual values and copies without tainting a following ordinary model value; an empty inline option also preserves that value, and a confirmed ordinary model edit applies exactly once."
+    },
+    {
+      "id": "WEBHOOK-SETUP-FALLBACK",
+      "path": "internal/factory/webhooks_test.go",
+      "anchor": "func TestWebhookRegistrationFailureRetainsPollingAndRetries(",
+      "assertion": "A denied setup retains a private sanitized failure and retry time; actual API sync still imports, restart retries successfully and repeated reconciliation skips until due."
+    },
+    {
+      "id": "WEBHOOK-SETUP-SECRET",
+      "path": "internal/factory/webhooks_test.go",
+      "anchor": "func TestWebhookMissingGatewayAndUnsafeSecretFallBack(",
+      "assertion": "Missing gateway and unsafe secret retain polling fallback; existing unsafe bytes are preserved and symlink secrets are refused."
+    },
+    {
+      "id": "WEBHOOK-SETUP-RECOVERY",
+      "path": "internal/providers/github_webhooks_test.go",
+      "anchor": "func TestEnsureRepositoryWebhookRecoversLostCreateResponse(",
+      "assertion": "A committed create with a lost response is found by live listing and updated on retry, with exactly one POST."
+    },
+    {
+      "id": "WEBHOOK-SETUP-PAGINATION",
+      "path": "internal/providers/github_webhooks_test.go",
+      "anchor": "func TestEnsureRepositoryWebhookReusesPaginatedCallback(",
+      "assertion": "The exact callback on page two is updated with signed JSON and nine event subscriptions; unrelated hooks and additional event subscriptions are preserved."
+    },
+    {
+      "id": "WEBHOOK-SETUP-PROJECTION",
+      "path": "internal/transport/webhooks_test.go",
+      "anchor": "func TestConfigurationWebhookProjectionRefreshesWithoutSecrets(",
+      "assertion": "Webhook status changes invalidate prepared Configuration data; internal fingerprints and hook IDs are omitted and other views receive no webhook diagnostics."
+    },
+    {
+      "id": "WRAP-WEBHOOK-SETUP",
+      "path": "web/tests/wrapper.spec.ts",
+      "anchor": "configuration shows webhook failures and API polling fallback without launching work",
+      "assertion": "Configuration renders pending, configured and polling fallback with a failure and next check time without launching work or synchronization."
+    },
+    {
+      "id": "WEBHOOK-SETUP-AUTOMATIC",
+      "path": "internal/factory/webhooks_test.go",
+      "anchor": "func TestConfirmedRepositoryRegistrationAutomaticallyProvisionsWebhook(",
+      "assertion": "Confirming a repository registration while the ordinary service loop runs creates its webhook automatically without a native turn."
     }
   ],
   "source_map": [

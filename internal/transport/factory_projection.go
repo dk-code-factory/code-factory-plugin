@@ -211,6 +211,15 @@ func factoryState(ctx context.Context, a *app.App, in factoryStateInput, cache *
 		if e != nil {
 			return nil, e
 		}
+		webhooks := []factory.WebhookStatus{}
+		for _, repo := range settings.Repositories {
+			status := factory.WebhookStatus{Repository: repo.ID, State: "pending"}
+			if e := a.Store.Get(ctx, "factory-webhook", repo.ID, &status); e != nil && e != store.ErrNotFound {
+				return nil, e
+			}
+			webhooks = append(webhooks, status)
+		}
+		result["webhooks"] = webhooks
 		result["settings"] = settings
 		result["proposals"] = proposals
 	}

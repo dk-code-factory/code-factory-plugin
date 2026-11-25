@@ -642,6 +642,9 @@ func (s *Service) tickSession(ctx context.Context, id string) error {
 	return nil
 }
 func (s *Service) Loop(ctx context.Context) {
+	webhooksDone := make(chan struct{})
+	go func() { defer close(webhooksDone); s.webhookLoop(ctx) }()
+	defer func() { <-webhooksDone }()
 	var scheduling sync.WaitGroup
 	defer scheduling.Wait()
 	finished := make(chan struct{})

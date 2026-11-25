@@ -41,6 +41,13 @@ The private owner connection is established. Application data starts clean in th
 
 5. Apply confirmed changes after active turns finish while preserving unrelated settings.
 
+6. Register an active repository and inspect automatic webhook setup status.
+
+   Configure signed event delivery at this installation's public callback while
+   continuing API polling. Show whether setup is pending, configured or using
+   polling fallback, with a sanitized failure and next check time. Configured
+   means the provider accepted the setup; public delivery remains unverified.
+
 ## Alternatives and recovery
 
 Read-only inspection does not launch a model turn. Surface validation or provider errors and retain saved work. Human questions, explicit interruptions and uncertain deliveries hold automatic dispatch. Resume against current retained history; never replay an uncertain send or an answered RPC blindly. Explicit cleanup preserves dirty worktrees.
@@ -54,6 +61,16 @@ work; connection recovery never submits the command again. After restart, effect
 with retained intent are uncertain and memory-only work can be lost. Neither is
 authority to replay a mutation or reuse an expired answer.
 
+Webhook setup failures retain registration and API polling. Retry failed setup
+in the background after fifteen minutes or a longer provider cooldown; reconcile
+configured hooks daily. Each repository setup has a thirty-second deadline for
+CLI authentication and all hook reads and writes. Expiration retains a setup
+failure and retry time while releasing the shared provider for API polling.
+A changed callback or signing secret is reconciled on the
+next background pass. Missing public gateway configuration and unavailable hook
+permissions remain visible. Reuse the exact callback hook after an uncertain
+create, preserving unrelated repository hooks. Pause suspends automatic setup.
+
 ## Scenarios
 
 - **S1** — Use configuration chat to inspect effective settings and native layers.
@@ -61,6 +78,8 @@ authority to replay a mutation or reuse an expired answer.
 - **S3** — Inspect a concrete application or native configuration proposal.
 - **S4** — Explicitly confirm or reject against the inspected versions.
 - **S5** — Apply confirmed changes after active turns finish while preserving unrelated settings.
+
+- **S6** — Register an active repository, configure its webhook automatically and retain API polling with visible failure and retry status when setup fails.
 
 ## Verification scope
 
@@ -84,6 +103,9 @@ flowchart TD
     N5["Apply confirmed changes after active turns finish while preserving unrelated settings #40;S5#41;"]
     N6(["Hold saved work and show the failure or human request"])
     N7(["Retain conversation and saved evidence"])
+    N8["Register an active repository and configure signed event delivery #40;S6#41;"]
+    N9(["Show configured webhook#59; continue API polling"])
+    N10(["Retain setup failure and retry time#59; continue API polling and retry in background"])
     N0 -->|"authorized action"| N1
     N1 -->|"validated or explicitly resumed"| N2
     N1 -->|"missing authority, stale identity or unavailable dependency"| N6
@@ -95,6 +117,9 @@ flowchart TD
     N4 -->|"missing authority, stale identity or unavailable dependency"| N6
     N5 -->|"validated or explicitly resumed"| N7
     N5 -->|"missing authority, stale identity or unavailable dependency"| N6
+    N5 -->|"Repository registration applied"| N8
+    N8 -->|"GitHub accepts configuration"| N9
+    N8 -->|"Missing gateway, permissions or provider failure"| N10
 ```
 
 ## Implementation references
@@ -108,6 +133,9 @@ flowchart TD
 - [internal/factory/communication.go](../../internal/factory/communication.go) — Intentional structured configuration messages and questions; pending questions suspend until the exact owner answer. (`func (s *Service) communicate(`)
 - [internal/factory/native_projection.go](../../internal/factory/native_projection.go) — Credential-redacted native inspection and stored proposal snapshots; raw fingerprints retain stale-version checks and credential edits are refused. (`func nativeSnapshot(`)
 - [internal/store/proposal_migration.go](../../internal/store/proposal_migration.go) — Startup transaction sanitizes legacy native proposal event copies in bounded pages without changing event identities or replaying history. (`func (s *Store) RedactNativeProposalEvents(`)
+- [internal/factory/webhooks.go](../../internal/factory/webhooks.go) — Provision registered repositories in the background; retain setup failure and retry independently of polling. (`func (s *Service) ReconcileWebhooks(`)
+- [internal/providers/github_webhooks.go](../../internal/providers/github_webhooks.go) — Reconcile exact callback hooks with live pagination and signed JSON subscriptions. (`func (g *GitHub) EnsureRepositoryWebhook(`)
+- [internal/transport/factory_projection.go](../../internal/transport/factory_projection.go) — Expose sanitized setup status in the background-prepared Configuration projection. (`func factoryState(`)
 
 ## Test references
 
@@ -137,10 +165,19 @@ flowchart TD
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeNonsecretURLsRemainEditable(`; S1, S3, S4, S5. Noncredential values retain exact URL and surrounding text spelling, including semicolon anchors, escaped fragment values, literal quotes/angle brackets, whitespace, multiple public URLs, Unicode separators, raw/encoded/double-encoded or deeply nested public URL parameters, raw/encoded nested paths, encoded nested URLs beside readable public schemes and ordinary prose after a URL, in inspection, proposed edits and one confirmed native write per case; no write occurs before confirmation.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeURLParameterBoundariesRejectCredentials(`; S1, S3, S4. Isolated URL cases cover malformed parameters with ordinary semicolon prefixes, escaped credentials, quotes, angle brackets, whitespace/control characters and whole-URL parse failures without exposing raw or decoded credential copies in inspection, persisted proposals or legacy projections. Combined values protect first/later credentials; nested raw, encoded and double-encoded URL credentials in paths and parameters remain private beside readable public schemes and despite malformed escapes in another component. Escaped query/fragment delimiters retain the full credential boundary without treating an ordinary prefix as a secret. Usernames with explicit empty passwords and their encoded copies remain protected. URL and copied-value edits are refused before persistence or native writes; unrelated ordinary settings, values matching only a partial credential prefix and a remaining escaped fragment value are preserved. Nested path URLs with query, fragment, assignment and key syntax at different encoding depths protect copied credentials while preserving complete escaped credential values and unrelated prefixes. Decoded nested URL lists protect each credential copy, including whitespace-bearing values and Unicode URL separators.
 - [internal/factory/native_projection_test.go](../../internal/factory/native_projection_test.go) — `func TestNativeInlineCredentialArgumentPreservesFollowingValues(`; S1, S3, S4, S5. Inline and separated credential options redact their actual values and copies without tainting a following ordinary model value; an empty inline option also preserves that value, and a confirmed ordinary model edit applies exactly once.
+- [internal/factory/webhooks_test.go](../../internal/factory/webhooks_test.go) — `func TestWebhookRegistrationFailureRetainsPollingAndRetries(`; S6. A denied setup retains a private sanitized failure and retry time; actual API sync still imports, restart retries successfully and repeated reconciliation skips until due.
+- [internal/factory/webhooks_test.go](../../internal/factory/webhooks_test.go) — `func TestWebhookMissingGatewayAndUnsafeSecretFallBack(`; S6. Missing gateway and unsafe secret retain polling fallback; existing unsafe bytes are preserved and symlink secrets are refused.
+- [internal/providers/github_webhooks_test.go](../../internal/providers/github_webhooks_test.go) — `func TestEnsureRepositoryWebhookRecoversLostCreateResponse(`; S6. A committed create with a lost response is found by live listing and updated on retry, with exactly one POST.
+- [internal/providers/github_webhooks_test.go](../../internal/providers/github_webhooks_test.go) — `func TestEnsureRepositoryWebhookReusesPaginatedCallback(`; S6. The exact callback on page two is updated with signed JSON and nine event subscriptions; unrelated hooks and additional event subscriptions are preserved.
+- [internal/transport/webhooks_test.go](../../internal/transport/webhooks_test.go) — `func TestConfigurationWebhookProjectionRefreshesWithoutSecrets(`; S6. Webhook status changes invalidate prepared Configuration data; internal fingerprints and hook IDs are omitted and other views receive no webhook diagnostics.
+- [web/tests/wrapper.spec.ts](../../web/tests/wrapper.spec.ts) — `configuration shows webhook failures and API polling fallback without launching work`; S6. Configuration renders pending, configured and polling fallback with a failure and next check time without launching work or synchronization.
+- [internal/factory/webhooks_test.go](../../internal/factory/webhooks_test.go) — `func TestConfirmedRepositoryRegistrationAutomaticallyProvisionsWebhook(`; S6. Confirming a repository registration while the ordinary service loop runs creates its webhook automatically without a native turn.
+- [internal/factory/webhooks_test.go](../../internal/factory/webhooks_test.go) — `func TestWebhookSetupTimeoutReleasesProviderForPolling(`; S6. A stalled authentication attempt expires while holding the shared provider; ordinary real PR/CI API refresh then updates title, state, head and successful checks without daemon cancellation. Sanitized failure and a fifteen-minute retry deadline survive the child timeout and prevent immediate repeats.
 
 ## Verification and gaps
 
 Local suites: `go`, `browser`.
 Fixture success does not establish real-host acceptance.
+- **S6** — `gap-flow-configure-work-webhook-delivery` · Unverified behavior · P2 · owner: specification-coordinator. Fixture tests establish automatic provisioning, safe retry and API fallback, but do not establish actual repository webhook delivery through an installed public gateway. Next verification: In an explicitly approved private test repository, register through the installed plugin, verify signed public delivery and observe permission-denied API fallback without exposing credentials.
 
 <!-- /flow-references -->
