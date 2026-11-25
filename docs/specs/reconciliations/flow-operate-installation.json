@@ -1,16 +1,16 @@
 {
   "version": 1,
   "flow": "flow-operate-installation",
-  "base": "d485a637c1622bbe9cd488f272d8185dd2fd45d7",
-  "fingerprint": "8178838f4d67776abee70288e87b5e4752a50ee48bd999ce12bb27d1c5200877",
+  "base": "a25d26f768bd8d0493c0a2d1c7d874b609573807",
+  "fingerprint": "6a5e13efc80d76acacd31a7bd55c78679ba7411676eb863f3ad3387f2ef5dba5",
   "environment": {
     "CODE_FACTORY_REAL_CODEX": "0"
   },
   "review": {
     "kind": "structure",
-    "description": "S1\u2013S5 installation, rollback, diagnostics and explicit settings confirmation remain unchanged. Updated allowance guidance explicitly separates daemon transports from independent agent subprocesses.",
-    "implementation": "No service, route, installer or deployment code changes. A future provider deadline changes safe request admission and scan status only; installation and diagnostic operations remain outside automatic retry. Reviewed follow-up Teams retry and active alias bounds: neither changes this consumer\u2019s owned transitions; accepted terminal identity metadata remains intentionally retained. The follow-up only changes shared browser progress retention and timer-test observation; this subject has no additional owned transition change.",
-    "tests": "Required packaging, installer, smoke, tooling and performance suites remain selected. Local fake-provider/process evidence is not installed-host, login-cycle, power-loss or release-delivery evidence; existing gaps remain intact."
+    "description": "Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries.",
+    "implementation": "Compared a25d26f7 with the combined branch and inspected the mapped implementation and fixture assertions. Startup migrates legacy proposal displays before projections are served; installer backups and rollback preserve their existing private-state boundaries. Common factory native/configuration/type/startup mappings create transitive impact; all new redaction and digest handling stays in existing background operations, with cached reads and receipt identity unchanged. Test fixture changes only allow a bounded longer readiness wait for the large body search and add pending-to-ready controlled verification; production behavior and independent success-latency/cancellation gates are unchanged. The additional nested path syntax and option-value parsing correction remains inside this same native configuration privacy boundary; no implementation of this consumer changed. Additional review: mixed-depth assignment discovery and decoded URL-list boundaries affect only the shared native privacy projection and edit refusal. This consumer retains its previously reviewed UI/flow contract and assertions; no new consumer behavior or foundation dependency was introduced.",
+    "tests": "TestConfigurationConfirmationStalenessAndSafeBoundary prevents pre-confirmation application, defers confirmed edits during active work and rejects stale proposals; the compact diff test verifies only changed settings display. Installed-host gaps stay unverified. Focused native race regressions pass; complete consumer fixture suites are required by reconciliation. Existing fixture/real-host gaps remain open; no new installed-host claim is made. The fixture helper retains5s default; only the large search and controlled6s preparation regression request30s. Existing scenario assertions remain intact, with full fresh consumer verification required. Its existing scenario assertions are untouched by the new correction; the additional native argument and URL cases exercise configuration only. Full mapped consumer suites are rerun by reconciliation. Existing consumer assertions remain unchanged; refreshed required fixture verification and dependency fingerprints cover the updated shared source and configuration/privacy mappings."
   },
   "verification": [
     {
@@ -32,7 +32,7 @@
         "test"
       ],
       "exit_code": 0,
-      "seconds": 36.095
+      "seconds": 36.582
     },
     {
       "command": [
@@ -43,7 +43,7 @@
         "./..."
       ],
       "exit_code": 0,
-      "seconds": 70.41
+      "seconds": 90.922
     },
     {
       "command": [
@@ -51,7 +51,7 @@
         "build"
       ],
       "exit_code": 0,
-      "seconds": 3.512
+      "seconds": 3.151
     },
     {
       "command": [
@@ -59,7 +59,7 @@
         "scripts/package.py"
       ],
       "exit_code": 0,
-      "seconds": 2.79
+      "seconds": 2.508
     },
     {
       "command": [
@@ -67,7 +67,7 @@
         "scripts/test_installer.py"
       ],
       "exit_code": 0,
-      "seconds": 21.187
+      "seconds": 21.49
     },
     {
       "command": [
@@ -75,7 +75,7 @@
         "scripts/smoke.py"
       ],
       "exit_code": 0,
-      "seconds": 0.181
+      "seconds": 0.201
     },
     {
       "command": [
@@ -91,7 +91,7 @@
         "scripts/test_connection_probe.py"
       ],
       "exit_code": 0,
-      "seconds": 0.662
+      "seconds": 0.663
     },
     {
       "command": [
@@ -117,7 +117,7 @@
         "scripts/test_user_flows.py"
       ],
       "exit_code": 0,
-      "seconds": 1.205
+      "seconds": 1.245
     },
     {
       "command": [
@@ -131,7 +131,7 @@
         "test_specs*.py"
       ],
       "exit_code": 0,
-      "seconds": 650.44
+      "seconds": 713.203
     },
     {
       "command": [
@@ -139,7 +139,7 @@
         "scripts/test_ci.py"
       ],
       "exit_code": 0,
-      "seconds": 440.259
+      "seconds": 426.415
     },
     {
       "command": [
@@ -147,7 +147,7 @@
         "scripts/test_browser_benchmark.py"
       ],
       "exit_code": 0,
-      "seconds": 4.775
+      "seconds": 4.654
     },
     {
       "command": [
@@ -156,11 +156,11 @@
         "scripts/test_fixture_listener.mjs"
       ],
       "exit_code": 0,
-      "seconds": 61.11
+      "seconds": 61.713
     }
   ],
   "dependencies": {
-    "flow:operate-installation": "d2183f6c66958a65d99d9ccd76e808884028efe83ccde28ecd6dc7b56d50b32e",
+    "flow:operate-installation": "50eb5318a8223791ecf745404cf37e766acad14002c6ee71c5b303e512df681c",
     "term:connection-submits": "b5daa1ca4b516e36115e026d1439c52244e0ed017357e79cb5a4615c5298b4e1",
     "term:coverage-gap": "cf3988aa8e7c302b9322c398c76b144d32b77ce925f3a34d431c587daaf3fec8",
     "term:dependency-operation": "2128843cd802a00d6399e382f02205a4d0d1e4022f418a009b71e5a2dd200ec3",
@@ -183,9 +183,9 @@
     "term:ui-w-browser-lab": "ed5e46b9fe39bad66d1a182c365246909c2dec97151a8f7cad5cab34a46e05ca",
     "term:unverified-behavior": "9b744e6c7d7117c63ac12cbd81a8f6ff2dfc8be28cfd9cd74d1850d9c9a10a26",
     "term:verification": "82b03f52e0f18c68857b57e776bd87351e0998ab1f727d9a4b30f1762d0ff3e8",
-    "ui:C-BROWSER-LAB": "e7f4b0ace282f88238a37731f0abc73ba1878207e0dc6012eaed0f859142158d",
-    "ui:P-BROWSER-LAB": "d91786abca02f1f8475f6678a6e3558c0ae4cb8f4e865a75a2da06ad6f2cd7bb",
-    "ui:PAGE-BROWSER-LAB": "592c0f6799bdeb017dc7f030e7af4f59afa035c004b93b1a42f7140d776cdb7f",
-    "ui:W-BROWSER-LAB": "0064ab203441b1c0aa754a96b324b0c7448f00aaf9db8de168e787189686a045"
+    "ui:C-BROWSER-LAB": "c73df9bff229090b5ab7a6005ab522169ab2911d3ef92e7e8c2eec82666f1e4a",
+    "ui:P-BROWSER-LAB": "226a15d8dbba7167ebcd6e0c482631d92242baa3b1fcc50572bf166ebba6deea",
+    "ui:PAGE-BROWSER-LAB": "0e4c45af6385d9468cceb65004c6dba9d038d5640bb3425b3067e8968c76b174",
+    "ui:W-BROWSER-LAB": "4e52d8ec5797b8c6447927c13e24c56290cd487846808f0cc192c4f52220aca4"
   }
 }

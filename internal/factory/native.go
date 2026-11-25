@@ -242,12 +242,16 @@ func (s *Service) cleanup(ctx context.Context, v *Session) error {
 	return s.expire(ctx, v.ID, epoch)
 }
 
-// NativeConfig retains the actual effective configuration and its layer versions.
-// Only the owner-facing configuration view receives it; event batches never do.
+// NativeConfig exposes a credential-redacted view and the actual layer versions.
+// Raw native values are used only transiently for native operations/freshness.
 func (s *Service) NativeConfig(ctx context.Context, cwd string) (json.RawMessage, error) {
 	s.configMu.RLock()
 	defer s.configMu.RUnlock()
-	return s.nativeConfig(ctx, cwd)
+	actual, err := s.nativeConfig(ctx, cwd)
+	if err != nil {
+		return nil, err
+	}
+	return nativeSnapshot(actual), nil
 }
 func (s *Service) nativeConfig(ctx context.Context, cwd string) (json.RawMessage, error) {
 	c, err := s.Start(s.ctx, Agent{}, func(codex.Message) {})
